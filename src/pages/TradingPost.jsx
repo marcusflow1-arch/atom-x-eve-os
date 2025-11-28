@@ -1,0 +1,842 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search, Filter, Mic, MicOff, X, Plus, Eye, Clock, Coins, Gavel, ArrowLeftRight,
+  Package, Star, Zap, Shield, Sword, Users, Bot, TrendingUp, Calendar, MessageSquare,
+  Grid, List, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Tag, Gamepad2, Diamond, Heart, Share2, AlertCircle,
+  CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ProtectedRoute from '../components/auth/ProtectedRoute';
+import { useAuth } from '../components/auth/AuthContext';
+import CreateTradeModal from '../components/trading/CreateTradeModal'; 
+import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
+
+const GalacticCard = ({ children, className = "", hoverEffect = true }) => (
+  <div className={`
+    relative bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden
+    ${hoverEffect ? 'hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300' : ''}
+    ${className}
+  `}>
+    {children}
+  </div>
+);
+
+const RarityBadge = ({ rarity }) => {
+  const styles = {
+    Mythic: "bg-red-500/10 text-red-400 border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]",
+    Legendary: "bg-orange-500/10 text-orange-400 border-orange-500/50 shadow-[0_0_10px_rgba(249,115,22,0.3)]",
+    Epic: "bg-purple-500/10 text-purple-400 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.3)]",
+    Rare: "bg-blue-500/10 text-blue-400 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.3)]",
+    Uncommon: "bg-green-500/10 text-green-400 border-green-500/50",
+    Common: "bg-slate-500/10 text-slate-400 border-slate-500/50"
+  };
+
+  return (
+    <Badge variant="outline" className={`${styles[rarity] || styles.Common} border px-2 py-0.5 uppercase tracking-wider text-[10px] font-bold`}>
+      {rarity}
+    </Badge>
+  );
+};
+
+// --- Mock Data ---
+
+const userInventory = [
+  {
+    id: 'inv_1',
+    name: 'Dragonscale Armor Set',
+    type: 'Armor',
+    game: 'Elder Scrolls: Reborn',
+    genre: 'Fantasy RPG',
+    rarity: 'Legendary',
+    quantity: 1,
+    dateAcquired: '2024-01-15',
+    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
+    description: 'Complete armor set forged from ancient dragon scales',
+    stats: { defense: 250, magic_resist: 100 },
+    tradeable: true
+  },
+  {
+    id: 'inv_2',
+    name: 'Cyber Neural Interface',
+    type: 'Cybernetics',
+    game: 'Cyberpunk 2088',
+    genre: 'Sci-Fi',
+    rarity: 'Epic',
+    quantity: 1,
+    dateAcquired: '2024-01-12',
+    image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=300&fit=crop',
+    description: 'Advanced neural interface for enhanced hacking abilities',
+    stats: { hacking: 150, reaction_time: 25 },
+    tradeable: true
+  },
+  {
+    id: 'inv_3',
+    name: 'Phoenix Fire Spell',
+    type: 'Ability',
+    game: 'Mage Wars Online',
+    genre: 'MMORPG',
+    rarity: 'Mythic',
+    quantity: 1,
+    dateAcquired: '2024-01-10',
+    image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=300&fit=crop',
+    description: 'Legendary spell that summons phoenix flames',
+    stats: { damage: 500, mana_cost: 100 },
+    tradeable: true
+  },
+  {
+    id: 'inv_4',
+    name: 'Quantum Rifle MK-VII',
+    type: 'Weapon',
+    game: 'Galactic Warfare',
+    genre: 'Shooter',
+    rarity: 'Epic',
+    quantity: 2,
+    dateAcquired: '2024-01-08',
+    image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300&h=300&fit=crop',
+    description: 'High-tech quantum rifle with energy burst capabilities',
+    stats: { damage: 180, range: 300 },
+    tradeable: true
+  }
+];
+
+const tradeListings = [
+  {
+    id: 'trade_1',
+    item: userInventory[0],
+    owner: { name: 'SkyrimLord', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face' },
+    type: 'trade',
+    seekingItems: ['Plasma Rifle', 'Cyber Armor'],
+    description: 'Looking for sci-fi gear to complete my cyberpunk build',
+    postedDate: '2024-01-16',
+    expiresDate: '2024-01-23',
+    status: 'active',
+    views: 156,
+    offers: 12
+  },
+  {
+    id: 'trade_1_b',
+    item: userInventory[0], // Same item (Dragonscale Armor)
+    owner: { name: 'DragonSlayer99', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=64&h=64&fit=crop&crop=face' },
+    type: 'sale',
+    price: 45000,
+    description: 'Selling my spare armor set. Gold only.',
+    postedDate: '2024-01-17',
+    expiresDate: '2024-01-24',
+    status: 'active',
+    views: 42,
+    offers: 0
+  },
+  {
+    id: 'trade_1_c',
+    item: userInventory[0], // Same item (Dragonscale Armor)
+    owner: { name: 'MerchantGuild_Rep', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=64&h=64&fit=crop&crop=face' },
+    type: 'bid',
+    currentBid: 12000,
+    buyoutPrice: 60000,
+    description: 'Auctioning this legendary set. Starting low!',
+    postedDate: '2024-01-18',
+    expiresDate: '2024-01-25',
+    status: 'active',
+    bidders: 15,
+    views: 300
+  },
+  {
+    id: 'trade_2',
+    item: userInventory[1],
+    owner: { name: 'CyberNinja', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face' },
+    type: 'bid',
+    currentBid: 15000,
+    buyoutPrice: 25000,
+    description: 'Rare cybernetics from the Neural Wars event',
+    postedDate: '2024-01-15',
+    expiresDate: '2024-01-22',
+    status: 'active',
+    bidders: 8,
+    views: 234
+  },
+  {
+    id: 'trade_3',
+    item: userInventory[2],
+    owner: { name: 'MysticMage', avatar: 'https://images.unsplash.com/photo-1494790108755-2616c727e3d9?w=64&h=64&fit=crop&crop=face' },
+    type: 'sale',
+    price: 35000,
+    description: 'Mythic spell from limited-time Phoenix Rising event',
+    postedDate: '2024-01-14',
+    status: 'active',
+    views: 189,
+    watchers: 23
+  }
+];
+
+// --- Specialized Components ---
+
+const GalacticInventoryItem = ({ item, onClick }) => {
+  const rarityColors = {
+    Mythic: "from-red-500/20 to-red-900/20 border-red-500/50",
+    Legendary: "from-orange-500/20 to-orange-900/20 border-orange-500/50",
+    Epic: "from-purple-500/20 to-purple-900/20 border-purple-500/50",
+    Rare: "from-blue-500/20 to-blue-900/20 border-blue-500/50",
+    Uncommon: "from-green-500/20 to-green-900/20 border-green-500/50",
+    Common: "from-slate-500/20 to-slate-900/20 border-slate-500/50"
+  };
+
+  const borderStyle = rarityColors[item.rarity] || rarityColors.Common;
+
+  return (
+    <motion.div
+      whileHover={{ y: -10, scale: 1.02, rotateY: 5 }}
+      transition={{ type: "spring", stiffness: 300 }}
+      onClick={() => onClick(item)}
+      className={`
+        relative group cursor-pointer w-full aspect-[2.5/3.5] rounded-xl overflow-hidden 
+        border-[3px] ${borderStyle.split(' ')[2]} bg-slate-900
+        shadow-xl hover:shadow-2xl transition-all duration-300
+      `}
+    >
+      {/* Holographic Sheen Layer */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-30 z-20 pointer-events-none transition-opacity duration-500 mix-blend-overlay" />
+      
+      {/* Card Header (Top Bar) */}
+      <div className="absolute top-0 left-0 right-0 h-8 bg-slate-950/90 z-10 flex items-center justify-between px-2 border-b border-white/10">
+        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate max-w-[60%]">{item.type}</span>
+        <div className="flex items-center gap-1">
+           {item.quantity > 1 && <span className="text-[10px] font-mono text-cyan-400">x{item.quantity}</span>}
+           <div className={`w-2 h-2 rounded-full ${item.rarity === 'Legendary' || item.rarity === 'Mythic' ? 'bg-yellow-400 animate-pulse' : 'bg-slate-600'}`} />
+        </div>
+      </div>
+
+      {/* Main Image Area */}
+      <div className="absolute top-8 left-1 right-1 bottom-[35%] rounded-lg overflow-hidden border border-white/5 bg-black">
+        <img 
+          src={item.image} 
+          alt={item.name} 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+      </div>
+
+      {/* Card Stats/Info Area (Bottom) */}
+      <div className={`absolute bottom-0 left-0 right-0 h-[35%] bg-gradient-to-b ${borderStyle.split(' ')[0]} ${borderStyle.split(' ')[1]} p-3 flex flex-col justify-between backdrop-blur-sm`}>
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-bold text-white truncate pr-2" title={item.name}>{item.name}</h3>
+            <RarityBadge rarity={item.rarity} />
+          </div>
+          <p className="text-[10px] text-slate-300 line-clamp-2 leading-tight italic opacity-80">
+            "{item.description}"
+          </p>
+        </div>
+
+        <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between">
+          <div className="flex flex-col">
+             <span className="text-[8px] text-slate-400 uppercase">Game Origin</span>
+             <span className="text-[10px] text-white font-medium truncate max-w-[80px]">{item.game}</span>
+          </div>
+          <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] bg-white/10 hover:bg-white/20 text-white border border-white/10">
+            TRADE
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const GalacticItemGroupSummary = ({ item, offers, onSelect, isSelected }) => {
+  const lowestPrice = offers
+    .filter(o => o.type === 'sale' || o.type === 'bid')
+    .map(o => o.price || o.currentBid || Infinity)
+    .sort((a, b) => a - b)[0];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      onClick={() => onSelect(item.name)}
+      className={`
+        group relative p-3 rounded-xl cursor-pointer border transition-all duration-300 mb-3
+        ${isSelected 
+          ? 'bg-blue-900/20 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
+          : 'bg-slate-900/40 border-white/5 hover:bg-slate-800/60 hover:border-white/10'}
+      `}
+    >
+      <div className="flex items-center gap-4">
+        <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          {isSelected && <div className="absolute inset-0 bg-blue-500/20 mix-blend-overlay" />}
+        </div>
+        
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className={`font-bold truncate text-base ${isSelected ? 'text-blue-400' : 'text-white'}`}>{item.name}</h3>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <RarityBadge rarity={item.rarity} />
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider">{item.type}</span>
+          </div>
+          
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1 text-slate-400">
+              <Users className="w-3 h-3" />
+              <span>{offers.length} Offers</span>
+            </div>
+            <div className="font-mono text-green-400">
+               {lowestPrice && lowestPrice !== Infinity ? `${lowestPrice.toLocaleString()} AGP` : 'Trade'}
+            </div>
+          </div>
+        </div>
+        
+        {isSelected && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-500 rounded-l-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+const TradeOffersPanel = ({ item, offers, onTrade }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('lowest_price');
+
+  const filteredOffers = offers.filter(offer => 
+    offer.owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    offer.description.toLowerCase().includes(searchQuery.toLowerCase())
+  ).sort((a, b) => {
+    if (sortBy === 'lowest_price') {
+      const priceA = a.price || a.currentBid || Infinity;
+      const priceB = b.price || b.currentBid || Infinity;
+      return priceA - priceB;
+    }
+    if (sortBy === 'highest_price') {
+      const priceA = a.price || a.currentBid || -1;
+      const priceB = b.price || b.currentBid || -1;
+      return priceB - priceA;
+    }
+    return 0;
+  });
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header Area */}
+      <div className="mb-6 flex items-start gap-6 p-6 bg-slate-900/40 rounded-2xl border border-white/5">
+        <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-white/10 shadow-2xl flex-shrink-0">
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 pt-2">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-3xl font-bold text-white">{item.name}</h2>
+            <RarityBadge rarity={item.rarity} />
+          </div>
+          <div className="flex items-center gap-4 text-sm text-slate-400 mb-4">
+            <span className="flex items-center gap-1"><Gamepad2 className="w-4 h-4" /> {item.game}</span>
+            <span className="w-1 h-1 rounded-full bg-slate-600" />
+            <span className="capitalize">{item.genre}</span>
+          </div>
+          <p className="text-slate-300 italic border-l-2 border-slate-700 pl-4">{item.description}</p>
+        </div>
+      </div>
+
+      {/* Search & Sort Toolbar */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="Search traders..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-800/50 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-blue-500/50 focus:outline-none"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[180px] bg-slate-800/50 border-white/10">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lowest_price">Lowest Price</SelectItem>
+            <SelectItem value="highest_price">Highest Price</SelectItem>
+            <SelectItem value="newest">Newest Listed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Offers List */}
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+        {filteredOffers.map((offer) => (
+          <div key={offer.id} className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all hover:bg-slate-800/50 group">
+            {/* Offer Info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <Badge variant="outline" className={`
+                  ${offer.type === 'trade' ? 'text-blue-400 border-blue-500/30' : 
+                    offer.type === 'bid' ? 'text-purple-400 border-purple-500/30' : 
+                    'text-green-400 border-green-500/30'}
+                  bg-transparent text-[10px] uppercase
+                `}>
+                  {offer.type}
+                </Badge>
+                
+                {(offer.type === 'sale' || offer.type === 'bid') && (
+                  <span className="text-lg font-bold text-green-400">
+                    {offer.price?.toLocaleString() || offer.currentBid?.toLocaleString()} AGP
+                  </span>
+                )}
+                {offer.type === 'trade' && (
+                  <span className="text-sm text-blue-300 font-medium">Item Trade</span>
+                )}
+              </div>
+
+              {offer.type === 'trade' && offer.seekingItems && (
+                <div className="text-xs text-slate-400 mb-1">
+                  <span className="text-blue-400 font-medium">Seeking:</span> {offer.seekingItems.join(', ')}
+                </div>
+              )}
+              
+              <p className="text-sm text-slate-300">{offer.description}</p>
+            </div>
+
+            {/* Vertical Divider Line */}
+            <div className="w-px h-12 bg-white/10 mx-6" />
+
+            {/* Trader Info (Right Side as requested) */}
+            <div className="flex items-center gap-4 min-w-[200px] justify-end">
+              <div className="text-right">
+                <div className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors">{offer.owner.name}</div>
+                <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400">
+                  <Star className="w-3 h-3 text-yellow-500 fill-current" /> 
+                  <span>4.9 (128 Trades)</span>
+                </div>
+              </div>
+              <img src={offer.owner.avatar} alt={offer.owner.name} className="w-10 h-10 rounded-full border border-white/10" />
+              
+              <Button 
+                size="sm"
+                className={`
+                  ${offer.type === 'bid' ? 'bg-purple-600 hover:bg-purple-700' : 
+                    offer.type === 'sale' ? 'bg-green-600 hover:bg-green-700' : 
+                    'bg-blue-600 hover:bg-blue-700'} 
+                  text-white shadow-lg ml-2
+                `}
+                onClick={() => onTrade(offer, offer.type === 'bid' ? 'bid' : offer.type === 'sale' ? 'buy' : 'offer')}
+              >
+                  {offer.type === 'bid' ? 'Bid' : offer.type === 'sale' ? 'Buy' : 'Trade'}
+              </Button>
+            </div>
+          </div>
+        ))}
+        
+        {filteredOffers.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+            <Search className="w-12 h-12 mb-2 opacity-20" />
+            <p>No offers found matching your criteria</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const GalacticGameSummary = ({ gameName, itemCount, image, onSelect }) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, x: -10 }}
+    animate={{ opacity: 1, x: 0 }}
+    onClick={() => onSelect(gameName)}
+    className={`
+      group relative p-3 rounded-xl cursor-pointer border transition-all duration-300 mb-3
+      bg-slate-900/40 border-white/5 hover:bg-slate-800/60 hover:border-blue-500/30
+    `}
+  >
+    <div className="flex items-center gap-4">
+      <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <img src={image} alt={gameName} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+      </div>
+      
+      <div className="min-w-0 flex-1">
+        <h3 className="font-bold text-white truncate text-base group-hover:text-blue-400 transition-colors">{gameName}</h3>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant="outline" className="text-[10px] bg-slate-800/50 border-white/10 text-slate-400">
+            {itemCount} Items
+          </Badge>
+          <span className="text-[10px] text-slate-500">Click to browse</span>
+        </div>
+      </div>
+      
+      <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition-colors" />
+    </div>
+  </motion.div>
+);
+
+// --- Main Page ---
+
+export default function TradingPost() {
+  const { user } = useAuth();
+  
+  // States
+  const [activeTab, setActiveTab] = useState('board');
+  const [inventory] = useState(userInventory);
+  const [listings, setListings] = useState(tradeListings);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showTradeModal, setShowTradeModal] = useState(false);
+  const [selectedListingGroup, setSelectedListingGroup] = useState(null);
+  const [selectedTheme, setSelectedTheme] = useState('cosmic_library');
+  
+  // New states for game-first navigation
+  const [viewMode, setViewMode] = useState('games'); // 'games' or 'items'
+  const [selectedGame, setSelectedGame] = useState(null);
+
+  // Helper to get unique games from listings
+  const gamesList = useMemo(() => {
+    const games = {};
+    listings.forEach(listing => {
+      const game = listing.item.game;
+      if (!games[game]) {
+        games[game] = {
+          name: game,
+          count: 0,
+          image: listing.item.image // Use first item's image as game cover
+        };
+      }
+      games[game].count++;
+    });
+    return Object.values(games);
+  }, [listings]);
+
+  const handleTradePost = (postData) => {
+    const newListing = {
+        id: `trade_${Date.now()}`,
+        item: postData.item,
+        owner: { name: user?.full_name || 'Player', avatar: user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face' },
+        type: postData.type,
+        description: postData.description,
+        seekingItems: postData.seekingItems,
+        minBid: postData.minBid,
+        buyoutPrice: postData.buyoutPrice,
+        price: postData.salePrice,
+        postedDate: new Date().toISOString().split('T')[0],
+        expiresDate: new Date(Date.now() + (postData.expirationDays * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+        status: 'active',
+        views: 0,
+        offers: 0
+      };
+      
+      setListings(prev => [newListing, ...prev]);
+  }
+
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen text-white relative">
+        <ThemeBackground themeId={selectedTheme} />
+        
+        <div className="relative z-10 max-w-7xl mx-auto p-6 pb-20">
+          
+          {/* Page Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6"
+          >
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2 flex items-center gap-3">
+                <Orbit className="w-10 h-10 text-cyan-400" />
+                GALACTIC EXCHANGE
+              </h1>
+              <p className="text-slate-400 text-lg flex items-center gap-2">
+                Interstellar Trading Post <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span> Live Network
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <ThemeToggle selectedTheme={selectedTheme} onThemeSelect={setSelectedTheme} />
+              
+              <div className="bg-slate-900/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
+                  <p className="text-xl font-bold text-white font-mono">24,500 AGP</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Navigation Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex justify-center mb-8">
+              <TabsList className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1 rounded-full">
+                <TabsTrigger 
+                  value="board" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                >
+                  Global Market
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="inventory" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
+                >
+                  My Inventory
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="board" className="space-y-6 h-[calc(100vh-300px)]">
+              {/* Filter Bar */}
+              <GalacticCard className="p-4 flex flex-wrap gap-4 items-center justify-between mb-6">
+                <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg border border-white/5 px-3 py-2 flex-1 min-w-[200px]">
+                  <Search className="w-5 h-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search items..." 
+                    className="bg-transparent border-none outline-none text-white placeholder:text-slate-500 w-full text-sm"
+                  />
+                </div>
+                
+                <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                   <Select defaultValue="newest">
+                    <SelectTrigger className="w-[140px] bg-slate-800/50 border-white/10"><SelectValue placeholder="Sort" /></SelectTrigger>
+                    <SelectContent><SelectItem value="newest">Newest</SelectItem><SelectItem value="price">Price</SelectItem></SelectContent>
+                  </Select>
+                </div>
+              </GalacticCard>
+
+              {/* Split View Layout */}
+              <div className="grid grid-cols-12 gap-6 h-full">
+                {/* Left Side: Games / Items List */}
+                <div className="col-span-12 md:col-span-5 lg:col-span-4 h-full overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between mb-4 px-2">
+                    {viewMode === 'items' ? (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => { setViewMode('games'); setSelectedGame(null); setSelectedListingGroup(null); }}
+                        className="text-slate-400 hover:text-white -ml-2 hover:bg-white/10"
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Games
+                      </Button>
+                    ) : (
+                      <h3 className="text-slate-400 uppercase text-xs font-bold tracking-wider">Select Game</h3>
+                    )}
+                    <Badge variant="outline" className="text-xs bg-slate-800/50">
+                        {viewMode === 'games' ? `${gamesList.length} Games` : selectedGame}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto pr-2">
+                     {viewMode === 'games' ? (
+                       gamesList.map(game => (
+                         <GalacticGameSummary 
+                           key={game.name}
+                           gameName={game.name}
+                           itemCount={game.count}
+                           image={game.image}
+                           onSelect={(name) => { setSelectedGame(name); setViewMode('items'); }}
+                         />
+                       ))
+                     ) : (
+                       (() => {
+                         // Filter listings by selected game
+                         const gameListings = listings.filter(l => l.item.game === selectedGame);
+                         
+                         // Group listings by Item Name
+                         const groupedListings = gameListings.reduce((groups, listing) => {
+                           const key = listing.item.name;
+                           if (!groups[key]) {
+                             groups[key] = {
+                               item: listing.item,
+                               offers: []
+                             };
+                           }
+                           groups[key].offers.push(listing);
+                           return groups;
+                         }, {});
+
+                         return Object.values(groupedListings).map((group) => (
+                          <GalacticItemGroupSummary
+                            key={group.item.id}
+                            item={group.item}
+                            offers={group.offers}
+                            isSelected={selectedListingGroup?.item.name === group.item.name}
+                            onSelect={() => setSelectedListingGroup(group)}
+                          />
+                        ));
+                       })()
+                     )}
+                  </div>
+                </div>
+
+                {/* Vertical Divider Line */}
+                <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent h-full" />
+
+                {/* Right Side: Traders & Details */}
+                <div className="col-span-12 md:col-span-6 lg:col-span-7 h-full overflow-hidden">
+                  {selectedListingGroup ? (
+                    <TradeOffersPanel 
+                      item={selectedListingGroup.item} 
+                      offers={selectedListingGroup.offers} 
+                      onTrade={(offer, type) => console.log("Trade", offer, type)}
+                    />
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-10 border-2 border-dashed border-white/5 rounded-2xl bg-slate-900/20">
+                      <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
+                        <ArrowLeftRight className="w-10 h-10 text-slate-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-300 mb-2">Select an Item to View Offers</h3>
+                      <p className="text-slate-500 max-w-xs">
+                        Choose an item from the list on the left to see all available traders, bids, and sale listings.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="inventory" className="space-y-6">
+               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {inventory.map(item => (
+                    <GalacticInventoryItem 
+                      key={item.id} 
+                      item={item} 
+                      onClick={(itm) => { setSelectedItem(itm); setShowTradeModal(true); }} 
+                    />
+                  ))}
+               </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Trade Modal (Using Internal or Imported one) */}
+          <InternalTradePostModal
+            item={selectedItem}
+            isOpen={showTradeModal}
+            onClose={() => { setShowTradeModal(false); setSelectedItem(null); }}
+            onPost={handleTradePost}
+          />
+
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+}
+
+// Internal Modal Component (Copy from previous file, slightly updated styles)
+const InternalTradePostModal = ({ item, isOpen, onClose, onPost }) => {
+  const [tradeType, setTradeType] = useState('trade');
+  const [description, setDescription] = useState('');
+  const [seekingItems, setSeekingItems] = useState('');
+  const [minBid, setMinBid] = useState('');
+  const [buyoutPrice, setBuyoutPrice] = useState('');
+  const [salePrice, setSalePrice] = useState('');
+  const [expirationDays, setExpirationDays] = useState('7');
+
+  const handlePost = () => {
+    const postData = {
+      item,
+      type: tradeType,
+      description,
+      seekingItems: seekingItems.split(',').map(s => s.trim()).filter(s => s),
+      minBid: minBid ? parseInt(minBid) : null,
+      buyoutPrice: buyoutPrice ? parseInt(buyoutPrice) : null,
+      salePrice: salePrice ? parseInt(salePrice) : null,
+      expirationDays: parseInt(expirationDays)
+    };
+    onPost(postData);
+    onClose();
+  };
+
+  if (!item) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 max-w-2xl text-white">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <Rocket className="w-6 h-6 text-blue-500" />
+            Create Galactic Listing
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          <div className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl border border-white/5">
+            <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+            <div>
+              <h3 className="font-bold text-lg">{item.name}</h3>
+              <RarityBadge rarity={item.rarity} />
+            </div>
+          </div>
+
+          {/* Simplified Trade Type Selection for Demo */}
+          <div className="space-y-4">
+             <label className="text-sm font-medium text-slate-400 uppercase">Listing Type</label>
+             <div className="grid grid-cols-3 gap-3">
+                <Button 
+                  variant={tradeType === 'trade' ? 'default' : 'outline'} 
+                  onClick={() => setTradeType('trade')}
+                  className={tradeType === 'trade' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-700 text-slate-400'}
+                >
+                  Trade
+                </Button>
+                <Button 
+                  variant={tradeType === 'bid' ? 'default' : 'outline'} 
+                  onClick={() => setTradeType('bid')}
+                  className={tradeType === 'bid' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-700 text-slate-400'}
+                >
+                  Auction
+                </Button>
+                <Button 
+                  variant={tradeType === 'sale' ? 'default' : 'outline'} 
+                  onClick={() => setTradeType('sale')}
+                  className={tradeType === 'sale' ? 'bg-green-600 hover:bg-green-700' : 'border-slate-700 text-slate-400'}
+                >
+                  Sell
+                </Button>
+             </div>
+
+             {/* Dynamic Inputs based on Type */}
+             {tradeType === 'trade' && (
+               <div>
+                 <label className="text-xs text-slate-400 mb-1 block">Seeking Items (comma separated)</label>
+                 <Input value={seekingItems} onChange={e => setSeekingItems(e.target.value)} placeholder="e.g. Plasma Rifle, Cyber Armor" className="bg-slate-800 border-slate-700" />
+               </div>
+             )}
+             {tradeType === 'sale' && (
+               <div>
+                 <label className="text-xs text-slate-400 mb-1 block">Price (AGP)</label>
+                 <Input type="number" value={salePrice} onChange={e => setSalePrice(e.target.value)} placeholder="5000" className="bg-slate-800 border-slate-700" />
+               </div>
+             )}
+             {tradeType === 'bid' && (
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-xs text-slate-400 mb-1 block">Min Bid (AGP)</label>
+                   <Input type="number" value={minBid} onChange={e => setMinBid(e.target.value)} className="bg-slate-800 border-slate-700" />
+                 </div>
+                 <div>
+                   <label className="text-xs text-slate-400 mb-1 block">Buyout (AGP)</label>
+                   <Input type="number" value={buyoutPrice} onChange={e => setBuyoutPrice(e.target.value)} className="bg-slate-800 border-slate-700" />
+                 </div>
+               </div>
+             )}
+
+             <div>
+                <label className="text-xs text-slate-400 mb-1 block">Description</label>
+                <Textarea value={description} onChange={e => setDescription(e.target.value)} className="bg-slate-800 border-slate-700 min-h-[80px]" placeholder="Describe your item..." />
+             </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={onClose} className="flex-1 border-slate-700">Cancel</Button>
+            <Button onClick={handlePost} className="flex-1 bg-blue-600 hover:bg-blue-700">Post Listing</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
