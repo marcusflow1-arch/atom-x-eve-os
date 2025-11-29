@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, BookOpen, Zap, Sword, Shield, Bot, Maximize2, Minimize2, X, 
-  Gamepad2, Flame, Cpu, Users, Swords
+  Gamepad2, Flame, Cpu, Users, Swords, Heart, Clock, Filter
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
@@ -131,6 +131,7 @@ export default function AINexusView({ user, setActiveTab, onNavigate }) {
   const navigate = useNavigate();
   const [activeFeature, setActiveFeature] = useState('home');
   const [isMaximized, setIsMaximized] = useState(false);
+  const [skillTreeFilter, setSkillTreeFilter] = useState({ mode: 'all', value: null });
 
   // Animation variants
   const containerVariants = {
@@ -170,7 +171,49 @@ export default function AINexusView({ user, setActiveTab, onNavigate }) {
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <h3 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
               {activeFeature === 'story' && <><BookOpen className="w-4 h-4 text-purple-400" /> AI STORY PROTOCOL</>}
-              {activeFeature === 'skilltree' && <><Zap className="w-4 h-4 text-blue-400" /> NEURAL SKILL TREE</>}
+              {activeFeature === 'skilltree' && (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-blue-400" /> NEURAL SKILL TREE
+                  </div>
+                  <div className="h-4 w-px bg-slate-700 mx-2" />
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <select 
+                      className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                      value={skillTreeFilter.mode === 'genre' ? skillTreeFilter.value : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setSkillTreeFilter({ mode: 'genre', value: e.target.value });
+                        } else {
+                          setSkillTreeFilter({ mode: 'all', value: null });
+                        }
+                      }}
+                    >
+                      <option value="">Genre: All</option>
+                      <option value="RPG">RPG</option>
+                      <option value="Action">Action</option>
+                      <option value="FPS">FPS</option>
+                      <option value="Adventure">Adventure</option>
+                    </select>
+                    
+                    <button 
+                      onClick={() => setSkillTreeFilter(prev => prev.mode === 'favorites' ? { mode: 'all', value: null } : { mode: 'favorites', value: null })}
+                      className={`p-1 rounded hover:bg-slate-700 ${skillTreeFilter.mode === 'favorites' ? 'text-red-400 bg-slate-700' : 'text-slate-400'}`}
+                      title="Favorites"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => setSkillTreeFilter(prev => prev.mode === 'recent' ? { mode: 'all', value: null } : { mode: 'recent', value: null })}
+                      className={`p-1 rounded hover:bg-slate-700 ${skillTreeFilter.mode === 'recent' ? 'text-yellow-400 bg-slate-700' : 'text-slate-400'}`}
+                      title="Recently Played"
+                    >
+                      <Clock className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
               {activeFeature === 'loadout' && <><Sword className="w-4 h-4 text-orange-400" /> TACTICAL LOADOUT</>}
               {activeFeature === 'pingames' && <><Gamepad2 className="w-4 h-4 text-cyan-400" /> GAME LINK MATRIX</>}
               {activeFeature === 'fusion' && <><Flame className="w-4 h-4 text-red-400" /> FUSION CORE SYSTEM</>}
@@ -203,7 +246,7 @@ export default function AINexusView({ user, setActiveTab, onNavigate }) {
               }
             `}</style>
             {activeFeature === 'story' && <Storyline />}
-            {activeFeature === 'skilltree' && <MoveHubTab />}
+            {activeFeature === 'skilltree' && <MoveHubTab filter={skillTreeFilter} />}
             {activeFeature === 'loadout' && <Profile />}
             {activeFeature === 'pingames' && <div className="p-6"><PinGamesContent /></div>}
             {activeFeature === 'fusion' && <FusionCore />}

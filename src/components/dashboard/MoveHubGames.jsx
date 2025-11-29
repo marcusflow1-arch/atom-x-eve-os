@@ -4,6 +4,9 @@ export const moveHubGamesData = [
 {
   id: 1,
   title: 'Star Wars Knights of the Old Republic',
+  genre: 'RPG',
+  isFavorite: true,
+  lastPlayed: '2023-11-25',
   image: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Jedi Master', icon: '⚔️', description: 'Complete the Jedi training' },
@@ -15,6 +18,9 @@ export const moveHubGamesData = [
 {
   id: 2,
   title: 'Legend of Kain Blood Omen',
+  genre: 'Adventure',
+  isFavorite: false,
+  lastPlayed: '2023-10-10',
   image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Vampire Lord', icon: '🦇', description: 'Become the ultimate vampire' },
@@ -26,6 +32,9 @@ export const moveHubGamesData = [
 {
   id: 3,
   title: 'Star Wars Jedi Knight Outcast',
+  genre: 'Action',
+  isFavorite: true,
+  lastPlayed: '2023-11-28',
   image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Lightsaber Master', icon: '🗡️', description: 'Master all lightsaber forms' },
@@ -37,6 +46,9 @@ export const moveHubGamesData = [
 {
   id: 4,
   title: 'Star Wars Jedi Academy',
+  genre: 'Action',
+  isFavorite: false,
+  lastPlayed: '2023-09-15',
   image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Academy Graduate', icon: '🎓', description: 'Complete Jedi training' },
@@ -48,6 +60,9 @@ export const moveHubGamesData = [
 {
   id: 5,
   title: 'Fallout 4',
+  genre: 'RPG',
+  isFavorite: true,
+  lastPlayed: '2023-11-20',
   image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Vault Dweller', icon: '🏠', description: 'Leave Vault 111' },
@@ -59,6 +74,9 @@ export const moveHubGamesData = [
 {
   id: 6,
   title: 'Quake',
+  genre: 'FPS',
+  isFavorite: false,
+  lastPlayed: '2023-08-01',
   image: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Rocket Master', icon: '🚀', description: 'Get 100 rocket kills' },
@@ -70,6 +88,9 @@ export const moveHubGamesData = [
 {
   id: 7,
   title: 'Elder Scrolls',
+  genre: 'RPG',
+  isFavorite: true,
+  lastPlayed: '2023-11-10',
   image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Dragonborn', icon: '🐉', description: 'Discover your true nature' },
@@ -81,6 +102,9 @@ export const moveHubGamesData = [
 {
   id: 8,
   title: 'Star Wars Force Unleashed',
+  genre: 'Action',
+  isFavorite: false,
+  lastPlayed: '2023-10-01',
   image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=80&h=80&fit=crop',
   achievements: [
   { id: 1, name: 'Sith Apprentice', icon: '🔴', description: 'Complete your training' },
@@ -205,9 +229,23 @@ const AbilityTree = ({ achievement }) => {
 
 };
 
-export default function MoveHubTab() {
+export default function MoveHubTab({ filter = { mode: 'all' } }) {
   const [selectedGame, setSelectedGame] = React.useState(null);
   const [selectedAchievement, setSelectedAchievement] = React.useState(null);
+
+  const filteredGames = React.useMemo(() => {
+    let games = [...moveHubGamesData];
+    
+    if (filter.mode === 'favorites') {
+      games = games.filter(g => g.isFavorite);
+    } else if (filter.mode === 'recent') {
+      games.sort((a, b) => new Date(b.lastPlayed) - new Date(a.lastPlayed));
+    } else if (filter.mode === 'genre' && filter.value) {
+      games = games.filter(g => g.genre === filter.value);
+    }
+    
+    return games;
+  }, [filter]);
 
   const handleGameClick = (game) => {
     setSelectedGame(game);
@@ -231,7 +269,7 @@ export default function MoveHubTab() {
     <div className="h-full w-full flex">
       <div className="w-[20%] h-full bg-slate-800/20 relative overflow-hidden">
         <div className="h-full overflow-y-auto">
-          {moveHubGamesData.map((game) =>
+          {filteredGames.map((game) =>
           <div
             key={game.id}
             onClick={() => handleGameClick(game)}
