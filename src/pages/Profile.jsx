@@ -22,9 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Settings, Share2, Edit, Crown, TrendingUp, Zap, Package, 
   Users, Target, Sparkles, Sword, Shield, Heart, Star, Trophy,
-  Gamepad2, Cog, Leaf
+  Gamepad2, Cog, Leaf, ShoppingCart
 } from 'lucide-react';
 import { profileData, inventoryData } from '../components/profile/mockData';
+import MarketplaceHistory from '../components/profile/MarketplaceHistory';
 
 export default function Profile() {
     const { user, avatar, updateUserData } = useAuth();
@@ -288,9 +289,9 @@ export default function Profile() {
                             <TrendingUp className="w-4 h-4" />
                             Stats
                         </TabsTrigger>
-                        <TabsTrigger value="builds" className="gap-2">
-                            <Target className="w-4 h-4" />
-                            Saved Builds
+                        <TabsTrigger value="marketplace" className="gap-2">
+                            <ShoppingCart className="w-4 h-4" />
+                            Market Activity
                         </TabsTrigger>
                     </TabsList>
 
@@ -579,6 +580,10 @@ export default function Profile() {
                                 <p className="text-slate-400">Save and switch between loadouts instantly</p>
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    <TabsContent value="marketplace">
+                        <MarketplaceHistory />
                     </TabsContent>
                 </Tabs>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, Users, MessageSquareText, Info, Swords, Shield, Trophy, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, Info, Swords, Shield, Trophy, Activity, Archive } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +10,7 @@ import DashboardTab from '../components/clan/DashboardTab';
 import MembersTab from '../components/clan/MembersTab';
 import RoomsTab from '../components/clan/RoomsTab';
 import GuildInfoTab from '../components/clan/GuildInfoTab';
+import ResourcesTab from '../components/clan/ResourcesTab';
 import { useAuth } from '../components/auth/AuthContext';
 import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
 
@@ -17,6 +18,7 @@ const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'members', label: 'Members', icon: Users },
     { id: 'rooms', label: 'Divisions', icon: MessageSquareText },
+    { id: 'resources', label: 'Vault & Resources', icon: Archive },
     { id: 'info', label: 'Guild Info', icon: Info },
 ];
 
@@ -61,6 +63,8 @@ export default function ClanPage() {
                 return <MembersTab members={allMembers} onlineMembers={onlineMembers} currentUser={currentUser} />;
             case 'rooms':
                 return <RoomsTab onlineMembers={onlineMembers} currentUser={currentUser} />;
+            case 'resources':
+                return <ResourcesTab currentUser={currentUser} />;
             case 'info':
                 return <GuildInfoTab currentUser={currentUser} />;
             default:
