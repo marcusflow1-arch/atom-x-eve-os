@@ -169,7 +169,17 @@ export default function MarketplaceHistory() {
                                     </div>
                                     <CardContent className="p-4">
                                         <div className="font-bold text-white truncate">{item.name}</div>
-                                        <div className="text-xs text-slate-500">{item.game}</div>
+                                        <div className="text-xs text-slate-500 mb-2">{item.game}</div>
+                                        <button 
+                                            className="text-xs text-red-400 hover:text-red-300 hover:underline"
+                                            onClick={() => {
+                                                const newFavorites = favorites.filter(f => f.id !== item.id);
+                                                setFavorites(newFavorites);
+                                                localStorage.setItem('marketplace_watchlist', JSON.stringify(newFavorites));
+                                            }}
+                                        >
+                                            Remove
+                                        </button>
                                     </CardContent>
                                 </Card>
                             ))
