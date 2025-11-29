@@ -558,26 +558,7 @@ export default function MarketplacePage() {
               </div>
             </div>
 
-            {/* Search Bar with Voice Search */}
-            <div className="flex-1 max-w-2xl mx-8 relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="relative bg-slate-900 border border-slate-700 rounded-lg flex items-center px-4 h-12">
-                <Search className="w-5 h-5 text-slate-400 mr-3" />
-                <input 
-                  type="text" 
-                  placeholder="Search black market goods..." 
-                  className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 font-mono text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <div className="flex items-center gap-2 border-l border-slate-800 pl-3 ml-2">
-                  <button className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-cyan-400" title="Voice Search">
-                    <Mic className="w-4 h-4" />
-                  </button>
-                  <span className="text-slate-600 text-xs font-mono hidden md:inline">CMD+K</span>
-                </div>
-              </div>
-            </div>
+
 
             {/* User Stats */}
             <div className="flex items-center gap-6">
@@ -680,7 +661,7 @@ export default function MarketplacePage() {
                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                      <Filter className="w-4 h-4" /> Filter by Category
                    </h3>
-                   <div className="flex flex-wrap gap-3">
+                   <div className="flex flex-wrap gap-3 mb-6">
                       {['All', 'Weapon', 'Armor', 'Cybernetics', 'Data', 'Misc'].map(cat => (
                         <button
                           key={cat}
@@ -699,6 +680,27 @@ export default function MarketplacePage() {
                         </button>
                       ))}
                    </div>
+
+                   {/* Search Bar (Moved from Header) */}
+                   <div className="relative group max-w-md">
+                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity" />
+                      <div className="relative bg-slate-900 border border-slate-700 rounded-lg flex items-center px-4 h-12">
+                        <Search className="w-5 h-5 text-slate-400 mr-3" />
+                        <input 
+                          type="text" 
+                          placeholder="Search black market goods..." 
+                          className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 font-mono text-sm"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <div className="flex items-center gap-2 border-l border-slate-800 pl-3 ml-2">
+                          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-cyan-400" title="Voice Search">
+                            <Mic className="w-4 h-4" />
+                          </button>
+                          <span className="text-slate-600 text-xs font-mono hidden md:inline">CMD+K</span>
+                        </div>
+                      </div>
+                    </div>
                 </section>
 
                 {/* 3. MAIN MARKET GRID */}
