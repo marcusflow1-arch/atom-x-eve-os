@@ -558,20 +558,23 @@ export default function MarketplacePage() {
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar with Voice Search */}
             <div className="flex-1 max-w-2xl mx-8 relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity" />
               <div className="relative bg-slate-900 border border-slate-700 rounded-lg flex items-center px-4 h-12">
                 <Search className="w-5 h-5 text-slate-400 mr-3" />
                 <input 
                   type="text" 
-                  placeholder="Search for illicit goods, weapons, data..." 
+                  placeholder="Search black market goods..." 
                   className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 font-mono text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div className="flex items-center gap-2 text-slate-600 text-xs font-mono border-l border-slate-800 pl-3 ml-2">
-                  CMD+K
+                <div className="flex items-center gap-2 border-l border-slate-800 pl-3 ml-2">
+                  <button className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-cyan-400" title="Voice Search">
+                    <Mic className="w-4 h-4" />
+                  </button>
+                  <span className="text-slate-600 text-xs font-mono hidden md:inline">CMD+K</span>
                 </div>
               </div>
             </div>
@@ -619,48 +622,174 @@ export default function MarketplacePage() {
           {/* Main Content */}
           <div className="flex-grow overflow-y-auto p-6 custom-scrollbar">
             
-            {/* BROWSE TAB */}
+            {/* BROWSE TAB - REDESIGNED */}
             {activeTab === 'browse' && (
-              <div className="space-y-8">
-                {/* Featured Carousel */}
+              <div className="space-y-10">
+                
+                {/* 1. MOST IN-DEMAND (Trending) Section */}
                 <section>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-yellow-400" /> Featured Contraband
-                    </h2>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <TrendingUp className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-white tracking-tight">MOST IN-DEMAND</h2>
+                      <p className="text-sm text-slate-400">High-traffic items currently dominating the market</p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {featuredItems.map(item => (
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Display top 3 'hot' items */}
+                    {allItems.filter(i => i.hot).slice(0, 3).map((item, idx) => (
                       <div 
                         key={item.id}
                         onClick={() => handleItemClick(item)}
-                        className="relative h-64 rounded-2xl overflow-hidden cursor-pointer group border border-slate-800 hover:border-yellow-500/50 transition-all"
+                        className="relative group cursor-pointer"
                       >
-                        <img src={item.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={item.name} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 p-6">
-                          <Badge className="bg-yellow-500/20 text-yellow-200 border-yellow-500/50 mb-2">Featured</Badge>
-                          <h3 className="text-2xl font-bold text-white mb-1">{item.name}</h3>
-                          <p className="text-slate-300 text-sm line-clamp-1">{item.description}</p>
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-50 transition duration-500" />
+                        <div className="relative h-full bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-row">
+                          <div className="w-1/3 relative">
+                             <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
+                             <div className="absolute top-2 left-2 font-black text-4xl text-white/20 select-none">#{idx + 1}</div>
+                          </div>
+                          <div className="w-2/3 p-4 flex flex-col justify-between">
+                             <div>
+                               <Badge className="bg-red-500/20 text-red-400 border-red-500/30 mb-2 flex w-fit items-center gap-1 text-[10px]">
+                                 <Flame className="w-3 h-3" /> TRENDING
+                               </Badge>
+                               <h3 className="font-bold text-white leading-tight mb-1 line-clamp-2">{item.name}</h3>
+                               <div className="flex items-center gap-2 text-xs text-slate-500">
+                                 <Eye className="w-3 h-3" /> {item.views.toLocaleString()} viewing
+                               </div>
+                             </div>
+                             <div className="flex items-center justify-between mt-3">
+                               <div className="text-lg font-bold text-cyan-400 font-mono">{item.price.toLocaleString()}</div>
+                               <div className={`text-[10px] uppercase font-bold ${item.seller === 'Black Market' ? 'text-yellow-500' : 'text-slate-400'}`}>
+                                 {item.seller === 'Black Market' ? 'Official' : 'Player'}
+                               </div>
+                             </div>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </section>
 
-                {/* All Items Grid */}
+                {/* 2. MARKET LISTINGS (Split View or Unified with Badges) */}
                 <section>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">New Arrivals</h2>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="text-slate-400">View All</Button>
+                  <div className="flex items-center justify-between mb-6 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-20 border-b border-slate-800">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-xl font-bold text-white">Market Listings</h2>
+                      <div className="h-6 w-px bg-slate-700" />
+                      <div className="flex gap-2">
+                         <Badge 
+                           className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+                           onClick={() => setFilters(f => ({...f, sellerType: 'all'}))}
+                         >
+                           All Listings
+                         </Badge>
+                         <Badge 
+                           className="cursor-pointer bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                           onClick={() => setFilters(f => ({...f, sellerType: 'official'}))}
+                         >
+                           <Shield className="w-3 h-3 mr-1" /> Official Supply
+                         </Badge>
+                         <Badge 
+                           className="cursor-pointer bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/30"
+                           onClick={() => setFilters(f => ({...f, sellerType: 'player'}))}
+                         >
+                           <Users className="w-3 h-3 mr-1" /> Player Market
+                         </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-slate-500 font-mono">
+                      Showing {filteredItems.length} results
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {filteredItems.map(item => (
-                      <ItemGridCard key={item.id} item={item} onClick={handleItemClick} />
-                    ))}
+                    {filteredItems.map(item => {
+                      // Simulate seller type logic if not present in mock data
+                      const isOfficial = item.seller === 'Black Market' || item.id === 'i1' || item.id === 'i6'; 
+                      const sellerDisplay = isOfficial ? 'Black Market' : item.seller;
+                      
+                      // Apply local filter for seller type if needed (basic implementation)
+                      // ideally this logic moves to useMemo filter but for UI demo:
+                      if (filters.sellerType === 'official' && !isOfficial) return null;
+                      if (filters.sellerType === 'player' && isOfficial) return null;
+
+                      return (
+                        <NeonCard key={item.id} glowColor={item.rarity === 'Mythic' ? 'red' : item.rarity === 'Legendary' ? 'orange' : 'blue'} className="cursor-pointer h-full flex flex-col">
+                          <div className="relative aspect-square overflow-hidden bg-slate-900" onClick={() => handleItemClick(item)}>
+                            <img 
+                              src={item.image} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                            
+                            {/* Seller Badge */}
+                            <div className="absolute top-2 left-2">
+                              {isOfficial ? (
+                                <Badge className="bg-yellow-500 text-black font-bold border-yellow-400 shadow-lg shadow-yellow-500/20 flex gap-1 items-center">
+                                  <Shield className="w-3 h-3 fill-black" /> OFFICIAL
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-black/50 backdrop-blur-md text-slate-300 border-slate-600 flex gap-1 items-center">
+                                  <User className="w-3 h-3" /> {sellerDisplay}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="absolute top-2 right-2">
+                              <Badge className={`${rarityStyles[item.rarity]?.bg || 'bg-slate-800'} ${rarityStyles[item.rarity]?.text || 'text-white'} border ${rarityStyles[item.rarity]?.border || 'border-slate-700'} backdrop-blur-md`}>
+                                {item.rarity}
+                              </Badge>
+                            </div>
+                            
+                            {item.hot && (
+                              <div className="absolute bottom-20 right-2">
+                                <div className="bg-red-600 p-1.5 rounded-full animate-pulse shadow-lg shadow-red-600/50">
+                                  <Flame className="w-4 h-4 text-white" />
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                              <h3 className="text-white font-bold truncate text-lg mb-1">{item.name}</h3>
+                              <p className="text-xs text-slate-400 flex items-center gap-1">
+                                <Gamepad2 className="w-3 h-3" /> {item.game}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-slate-950/50 flex-grow flex flex-col justify-between border-t border-white/5">
+                            <div className="flex justify-between items-end mb-4">
+                              <div className="text-xs text-slate-500 font-mono uppercase">Price</div>
+                              <div className="text-xl font-bold text-cyan-400 font-mono tracking-tight">
+                                {item.price?.toLocaleString()} <span className="text-xs text-cyan-700">AGP</span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                               <Button 
+                                 className="w-full bg-white/5 hover:bg-white/10 text-white text-xs border border-white/10"
+                                 onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}
+                               >
+                                 Details
+                               </Button>
+                               <Button 
+                                 className="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs border border-cyan-500 shadow-lg shadow-cyan-500/20"
+                                 onClick={(e) => { e.stopPropagation(); /* Add to cart logic */ }}
+                               >
+                                 Buy Now
+                               </Button>
+                            </div>
+                          </div>
+                        </NeonCard>
+                      );
+                    })}
                   </div>
                 </section>
               </div>
