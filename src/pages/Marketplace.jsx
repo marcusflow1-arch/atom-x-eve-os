@@ -622,169 +622,195 @@ export default function MarketplacePage() {
           {/* Main Content */}
           <div className="flex-grow overflow-y-auto p-6 custom-scrollbar">
             
-            {/* BROWSE TAB - REDESIGNED */}
+            {/* BROWSE TAB - ENHANCED UI */}
             {activeTab === 'browse' && (
-              <div className="space-y-10">
+              <div className="space-y-10 pb-12">
                 
-                {/* 1. MOST IN-DEMAND (Trending) Section */}
-                <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                      <TrendingUp className="w-6 h-6 text-red-500" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-black text-white tracking-tight">MOST IN-DEMAND</h2>
-                      <p className="text-sm text-slate-400">High-traffic items currently dominating the market</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Display top 3 'hot' items */}
-                    {allItems.filter(i => i.hot).slice(0, 3).map((item, idx) => (
-                      <div 
-                        key={item.id}
-                        onClick={() => handleItemClick(item)}
-                        className="relative group cursor-pointer"
-                      >
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-50 transition duration-500" />
-                        <div className="relative h-full bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-row">
-                          <div className="w-1/3 relative">
-                             <img src={item.image} className="w-full h-full object-cover" alt={item.name} />
-                             <div className="absolute top-2 left-2 font-black text-4xl text-white/20 select-none">#{idx + 1}</div>
-                          </div>
-                          <div className="w-2/3 p-4 flex flex-col justify-between">
-                             <div>
-                               <Badge className="bg-red-500/20 text-red-400 border-red-500/30 mb-2 flex w-fit items-center gap-1 text-[10px]">
-                                 <Flame className="w-3 h-3" /> TRENDING
-                               </Badge>
-                               <h3 className="font-bold text-white leading-tight mb-1 line-clamp-2">{item.name}</h3>
-                               <div className="flex items-center gap-2 text-xs text-slate-500">
-                                 <Eye className="w-3 h-3" /> {item.views.toLocaleString()} viewing
-                               </div>
-                             </div>
-                             <div className="flex items-center justify-between mt-3">
-                               <div className="text-lg font-bold text-cyan-400 font-mono">{item.price.toLocaleString()}</div>
-                               <div className={`text-[10px] uppercase font-bold ${item.seller === 'Black Market' ? 'text-yellow-500' : 'text-slate-400'}`}>
-                                 {item.seller === 'Black Market' ? 'Official' : 'Player'}
-                               </div>
-                             </div>
-                          </div>
+                {/* 1. FEATURED / HOT SECTION */}
+                <section className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800">
+                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1200&h=400&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+                   <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+                   
+                   <div className="relative p-8 flex flex-col md:flex-row items-end gap-8">
+                     <div className="flex-1 space-y-4">
+                       <Badge className="bg-red-500 text-white border-red-400 animate-pulse shadow-lg shadow-red-500/30">
+                         <Flame className="w-4 h-4 mr-1" /> BLACK MARKET HOT PICK
+                       </Badge>
+                       <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">
+                         The Butcher's <br/>
+                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Crimson Cleaver</span>
+                       </h2>
+                       <p className="text-slate-300 max-w-xl text-lg">
+                         A legendary weapon banned in 12 systems. Increases damage by 200% at the cost of user sanity.
+                         Limited stock available from the Syndicate.
+                       </p>
+                       <div className="flex gap-4 pt-4">
+                          <Button size="lg" className="bg-red-600 hover:bg-red-500 text-white font-bold px-8 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]">
+                            BUY NOW - 35,000 AGP
+                          </Button>
+                          <Button size="lg" variant="outline" className="border-slate-600 text-white hover:bg-white/10 rounded-full px-8">
+                            View Details
+                          </Button>
+                       </div>
+                     </div>
+                     
+                     <div className="w-full md:w-1/3 bg-black/50 backdrop-blur-md border border-white/10 rounded-xl p-4">
+                        <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                           <span className="text-slate-400 font-mono text-xs">TOP DEMAND</span>
+                           <span className="text-green-400 font-mono text-xs flex items-center gap-1"><ArrowUp className="w-3 h-3" /> +24% today</span>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                        <div className="space-y-3">
+                           {allItems.filter(i => i.hot && i.id !== 'i2').slice(0, 3).map((item, i) => (
+                              <div key={item.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => handleItemClick(item)}>
+                                 <div className="text-slate-600 font-black text-lg">0{i+1}</div>
+                                 <img src={item.image} className="w-10 h-10 rounded bg-slate-800 object-cover" />
+                                 <div className="flex-1">
+                                    <div className="text-sm font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{item.name}</div>
+                                    <div className="text-xs text-slate-500">{item.price.toLocaleString()} AGP</div>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                   </div>
                 </section>
 
-                {/* 2. MARKET LISTINGS (Split View or Unified with Badges) */}
+                {/* 2. CATEGORY NAV */}
                 <section>
-                  <div className="flex items-center justify-between mb-6 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-20 border-b border-slate-800">
+                   <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                     <Filter className="w-4 h-4" /> Filter by Category
+                   </h3>
+                   <div className="flex flex-wrap gap-3">
+                      {['All', 'Weapon', 'Armor', 'Cybernetics', 'Data', 'Misc'].map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setFilters(f => ({...f, category: cat}))}
+                          className={`px-6 py-3 rounded-xl border transition-all flex items-center gap-2 font-bold ${
+                            filters.category === cat 
+                            ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
+                            : 'bg-slate-900/50 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                           {cat === 'Weapon' && <Sword className="w-4 h-4" />}
+                           {cat === 'Armor' && <Shield className="w-4 h-4" />}
+                           {cat === 'Cybernetics' && <Zap className="w-4 h-4" />}
+                           {cat === 'Data' && <Radio className="w-4 h-4" />}
+                           {cat}
+                        </button>
+                      ))}
+                   </div>
+                </section>
+
+                {/* 3. MAIN MARKET GRID */}
+                <section>
+                  <div className="flex items-center justify-between mb-6 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/5 sticky top-20 z-20">
                     <div className="flex items-center gap-4">
-                      <h2 className="text-xl font-bold text-white">Market Listings</h2>
-                      <div className="h-6 w-px bg-slate-700" />
-                      <div className="flex gap-2">
-                         <Badge 
-                           className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
+                      <div className="flex p-1 bg-slate-900 rounded-lg border border-slate-800">
+                         <button 
+                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filters.sellerType === 'all' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-white'}`}
                            onClick={() => setFilters(f => ({...f, sellerType: 'all'}))}
                          >
-                           All Listings
-                         </Badge>
-                         <Badge 
-                           className="cursor-pointer bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                           ALL
+                         </button>
+                         <button 
+                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${filters.sellerType === 'official' ? 'bg-yellow-500 text-black' : 'text-slate-500 hover:text-yellow-400'}`}
                            onClick={() => setFilters(f => ({...f, sellerType: 'official'}))}
                          >
-                           <Shield className="w-3 h-3 mr-1" /> Official Supply
-                         </Badge>
-                         <Badge 
-                           className="cursor-pointer bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/30"
+                           <Shield className="w-3 h-3" /> OFFICIAL
+                         </button>
+                         <button 
+                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${filters.sellerType === 'player' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-blue-400'}`}
                            onClick={() => setFilters(f => ({...f, sellerType: 'player'}))}
                          >
-                           <Users className="w-3 h-3 mr-1" /> Player Market
-                         </Badge>
+                           <Users className="w-3 h-3" /> PLAYERS
+                         </button>
                       </div>
                     </div>
                     
-                    <div className="text-xs text-slate-500 font-mono">
-                      Showing {filteredItems.length} results
+                    <div className="flex items-center gap-3">
+                       <span className="text-xs text-slate-500 font-mono uppercase hidden md:inline-block">Sort By:</span>
+                       <Select defaultValue="featured">
+                          <SelectTrigger className="w-[140px] h-9 bg-slate-900 border-slate-700 text-xs"><SelectValue placeholder="Sort" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="featured">Featured</SelectItem>
+                            <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                            <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                            <SelectItem value="newest">Newest Arrivals</SelectItem>
+                          </SelectContent>
+                       </Select>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     {filteredItems.map(item => {
-                      // Simulate seller type logic if not present in mock data
                       const isOfficial = item.seller === 'Black Market' || item.id === 'i1' || item.id === 'i6'; 
                       const sellerDisplay = isOfficial ? 'Black Market' : item.seller;
                       
-                      // Apply local filter for seller type if needed (basic implementation)
-                      // ideally this logic moves to useMemo filter but for UI demo:
                       if (filters.sellerType === 'official' && !isOfficial) return null;
                       if (filters.sellerType === 'player' && isOfficial) return null;
 
                       return (
-                        <NeonCard key={item.id} glowColor={item.rarity === 'Mythic' ? 'red' : item.rarity === 'Legendary' ? 'orange' : 'blue'} className="cursor-pointer h-full flex flex-col">
-                          <div className="relative aspect-square overflow-hidden bg-slate-900" onClick={() => handleItemClick(item)}>
+                        <NeonCard key={item.id} glowColor={item.rarity === 'Mythic' ? 'red' : item.rarity === 'Legendary' ? 'orange' : 'blue'} className="cursor-pointer h-full flex flex-col bg-slate-950/80 border-slate-800">
+                          <div className="relative aspect-[4/3] overflow-hidden bg-slate-900" onClick={() => handleItemClick(item)}>
                             <img 
                               src={item.image} 
                               alt={item.name} 
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100" 
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
                             
-                            {/* Seller Badge */}
-                            <div className="absolute top-2 left-2">
-                              {isOfficial ? (
-                                <Badge className="bg-yellow-500 text-black font-bold border-yellow-400 shadow-lg shadow-yellow-500/20 flex gap-1 items-center">
-                                  <Shield className="w-3 h-3 fill-black" /> OFFICIAL
+                            {/* Top Badges */}
+                            <div className="absolute top-3 left-3 flex flex-col gap-2">
+                              {isOfficial && (
+                                <Badge className="bg-yellow-500 text-black font-bold border-none shadow-lg shadow-yellow-500/20 text-[10px]">
+                                  OFFICIAL
                                 </Badge>
-                              ) : (
-                                <Badge className="bg-black/50 backdrop-blur-md text-slate-300 border-slate-600 flex gap-1 items-center">
-                                  <User className="w-3 h-3" /> {sellerDisplay}
+                              )}
+                              {!isOfficial && (
+                                <Badge className="bg-black/60 backdrop-blur text-slate-300 border border-white/10 text-[10px]">
+                                  PLAYER
                                 </Badge>
                               )}
                             </div>
 
-                            <div className="absolute top-2 right-2">
-                              <Badge className={`${rarityStyles[item.rarity]?.bg || 'bg-slate-800'} ${rarityStyles[item.rarity]?.text || 'text-white'} border ${rarityStyles[item.rarity]?.border || 'border-slate-700'} backdrop-blur-md`}>
-                                {item.rarity}
-                              </Badge>
-                            </div>
-                            
                             {item.hot && (
-                              <div className="absolute bottom-20 right-2">
+                              <div className="absolute top-3 right-3">
                                 <div className="bg-red-600 p-1.5 rounded-full animate-pulse shadow-lg shadow-red-600/50">
-                                  <Flame className="w-4 h-4 text-white" />
+                                  <Flame className="w-3 h-3 text-white" />
                                 </div>
                               </div>
                             )}
-
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                              <h3 className="text-white font-bold truncate text-lg mb-1">{item.name}</h3>
-                              <p className="text-xs text-slate-400 flex items-center gap-1">
-                                <Gamepad2 className="w-3 h-3" /> {item.game}
-                              </p>
-                            </div>
                           </div>
 
-                          <div className="p-4 bg-slate-950/50 flex-grow flex flex-col justify-between border-t border-white/5">
-                            <div className="flex justify-between items-end mb-4">
-                              <div className="text-xs text-slate-500 font-mono uppercase">Price</div>
-                              <div className="text-xl font-bold text-cyan-400 font-mono tracking-tight">
-                                {item.price?.toLocaleString()} <span className="text-xs text-cyan-700">AGP</span>
+                          <div className="p-4 flex-grow flex flex-col relative">
+                            {/* Rarity Line */}
+                            <div className={`absolute top-0 left-0 w-full h-[2px] ${rarityStyles[item.rarity]?.bg.replace('bg-', 'bg-') || 'bg-slate-700'}`} />
+                            
+                            <div className="mb-3">
+                              <div className="flex justify-between items-start mb-1">
+                                <h3 className="text-white font-bold leading-tight line-clamp-2 flex-1 mr-2 text-sm group-hover:text-cyan-400 transition-colors">{item.name}</h3>
+                              </div>
+                              <div className="text-xs text-slate-500 flex items-center gap-1 truncate">
+                                <Gamepad2 className="w-3 h-3" /> {item.game}
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-2">
-                               <Button 
-                                 className="w-full bg-white/5 hover:bg-white/10 text-white text-xs border border-white/10"
-                                 onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}
-                               >
-                                 Details
-                               </Button>
-                               <Button 
-                                 className="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs border border-cyan-500 shadow-lg shadow-cyan-500/20"
-                                 onClick={(e) => { e.stopPropagation(); /* Add to cart logic */ }}
-                               >
-                                 Buy Now
-                               </Button>
+
+                            <div className="mt-auto space-y-3">
+                               <div className="flex justify-between items-end p-2 bg-white/5 rounded-lg border border-white/5">
+                                  <div className="text-[10px] text-slate-400 uppercase font-bold">Price</div>
+                                  <div className="text-lg font-black text-white font-mono">
+                                    {item.price?.toLocaleString()} <span className="text-cyan-500 text-xs">AGP</span>
+                                  </div>
+                               </div>
+                               
+                               <div className="grid grid-cols-2 gap-2">
+                                 <Button size="sm" variant="outline" className="h-8 text-xs border-slate-700 hover:bg-slate-800 text-slate-300" onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}>
+                                   View
+                                 </Button>
+                                 <Button size="sm" className="h-8 text-xs bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg shadow-cyan-500/20">
+                                   Buy
+                                 </Button>
+                               </div>
                             </div>
                           </div>
                         </NeonCard>
