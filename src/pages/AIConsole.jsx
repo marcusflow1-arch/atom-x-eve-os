@@ -10,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 export default function AIConsolePage() {
     const [isNearAI, setIsNearAI] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [viewMode, setViewMode] = useState('first'); // 'first' or 'third'
     const [messages, setMessages] = useState([
         { role: 'system', content: 'Initializing AI Neural Interface...' },
         { role: 'assistant', content: 'Welcome, Traveler. I am the architect of this digital realm. Approach me to converse.' }
@@ -66,7 +67,7 @@ export default function AIConsolePage() {
     return (
         <div className="relative w-full h-screen bg-black overflow-hidden">
             {/* 3D World Layer */}
-            <AI3DScene onNearAI={setIsNearAI} />
+            <AI3DScene onNearAI={setIsNearAI} viewMode={viewMode} />
 
             {/* HUD Layer */}
             <div className="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between">
@@ -83,6 +84,16 @@ export default function AIConsolePage() {
                     <div className="bg-black/60 backdrop-blur-md border border-cyan-500/30 p-4 rounded-lg text-white font-mono text-right">
                         <p className="text-xs opacity-70">COORDINATES</p>
                         <p className="text-lg">X: 42.0 | Y: 12.5 | Z: -08.2</p>
+                        <div className="mt-2 flex justify-end pointer-events-auto">
+                             <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setViewMode(prev => prev === 'first' ? 'third' : 'first')}
+                                className="bg-black/40 border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/30"
+                            >
+                                {viewMode === 'first' ? 'SWITCH TO 3RD PERSON' : 'SWITCH TO 1ST PERSON'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
