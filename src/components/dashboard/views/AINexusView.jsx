@@ -33,16 +33,21 @@ const LiveAI3DAvatar = ({ user }) => {
         {customModelUrl ? (
             <ThreeScene modelUrl={customModelUrl} scale={1.5} />
         ) : (
-            <div className="w-full h-full relative z-10 bg-black/50">
-                {/* Matrix "String Code" Effect */}
-                <ThemeBackground themeId="digital_matrix" />
-                
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                        <div className="text-green-500 font-mono text-xs mb-2 tracking-widest">SYSTEM INITIALIZED</div>
-                        <Bot className="w-16 h-16 text-green-400 mx-auto opacity-80 animate-pulse" />
-                    </div>
-                </div>
+            <div className="w-full h-full relative z-10">
+                <iframe 
+                    title="Sinestrea WAVE (AOV)" 
+                    frameBorder="0" 
+                    allowFullScreen 
+                    mozallowfullscreen="true" 
+                    webkitallowfullscreen="true" 
+                    allow="autoplay; fullscreen; xr-spatial-tracking" 
+                    xr-spatial-tracking="true" 
+                    execution-while-out-of-viewport="true" 
+                    execution-while-not-rendered="true" 
+                    web-share="true" 
+                    src="https://sketchfab.com/models/a6493956f268493c8e40db5bbbca140f/embed?autostart=1&ui_controls=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_hint=0"
+                    className="w-full h-full"
+                />
             </div>
         )}
       </div>
