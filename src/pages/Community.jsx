@@ -4,19 +4,13 @@ import { Comment } from '@/entities/Comment';
 import CreatePostForm from '../components/community/CreatePostForm';
 import PostCard from '../components/community/PostCard';
 import CommentSection from '../components/community/CommentSection';
+import ForumSidebar from '../components/community/ForumSidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft, Star, MessageSquare, Globe, Radio } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, ArrowLeft, Search, Filter, Clock, Flame, Newspaper, LayoutList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
-import ProtectedRoute from '../components/auth/ProtectedRoute';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-
-const tabs = [
-    { id: 'game_review', label: 'Game Reviews', icon: Star },
-    { id: 'game_discussion', label: 'Game Discussion', icon: MessageSquare },
-    { id: 'general_discussion', label: 'General Discussion', icon: Globe },
-];
 
 export default function CommunityPage() {
     const [posts, setPosts] = useState([]);
@@ -24,16 +18,70 @@ export default function CommunityPage() {
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
-    const [activeTab, setActiveTab] = useState('game_review');
+    
+    // Navigation State
+    const [activeSection, setActiveSection] = useState('general_discussion'); // general_discussion, achievement_discussion, game_forums
+    const [activeGame, setActiveGame] = useState(null); // If specific game selected
+    
+    // Filter State
+    const [sortBy, setSortBy] = useState('newest'); // newest, popular
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedGenre, setSelectedGenre] = useState('all');
 
     const { isAuthenticated } = useAuth();
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
-        const fetchedPosts = await Post.filter({ type: activeTab }, '-score');
-        setPosts(fetchedPosts);
-        setLoading(false);
-    }, [activeTab]);
+        try {
+            let filter = {};
+            let sort = '-created_date'; // Default new
+
+            if (sortBy === 'popular') sort = '-score';
+
+            // Section Logic
+            if (activeGame) {
+                filter.game_title = activeGame;
+                // We want all posts for this game (reviews, discussions, etc)
+                // So we don't strictly filter by 'type' if it's a game forum, 
+                // but we might want to exclude 'general_discussion' if it's generic.
+                // Actually, type 'game_review' and 'game_discussion' are what we want.
+                // Post.filter supports limited query ops usually, let's fetch broader and filter client side if needed
+                // or rely on type being specific.
+            } else if (activeSection === 'general_discussion') {
+                filter.type = 'general_discussion';
+            } else if (activeSection === 'achievement_discussion') {
+                filter.type = 'achievement_discussion';
+            }
+
+            // Genre Filter (if implemented in backend or client side)
+            // Since our backend filter is simple key-value, we'll handle genre/search client side if needed
+            // but ideally we filter by what we can.
+
+            const fetchedPosts = await Post.filter(filter, sort);
+            
+            // Client-side filtering for advanced cases (Search, Genre)
+            let filtered = fetchedPosts;
+
+            if (searchQuery) {
+                const lowerQ = searchQuery.toLowerCase();
+                filtered = filtered.filter(p => 
+                    p.title?.toLowerCase().includes(lowerQ) || 
+                    p.content?.toLowerCase().includes(lowerQ)
+                );
+            }
+
+            if (selectedGenre !== 'all' && !activeGame) {
+                // Assuming posts have genre field we added
+                filtered = filtered.filter(p => p.genre === selectedGenre);
+            }
+
+            setPosts(filtered);
+        } catch (e) {
+            console.error("Failed to fetch posts", e);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeSection, activeGame, sortBy, searchQuery, selectedGenre]);
 
     const fetchComments = useCallback(async (postId) => {
         if (!postId) return;
@@ -41,31 +89,19 @@ export default function CommunityPage() {
         setComments(fetchedComments);
     }, []);
 
-    // Initial fetch and real-time polling
     useEffect(() => {
         if (!selectedPost) {
             fetchPosts();
         } else {
             fetchComments(selectedPost.id);
         }
-
-        const intervalId = setInterval(() => {
-            if (!selectedPost && !showCreateForm) {
-                fetchPosts();
-            }
-        }, 15000); // Poll for new posts every 15 seconds
-
-        return () => clearInterval(intervalId);
-    }, [selectedPost, fetchPosts, fetchComments, showCreateForm]);
+    }, [selectedPost, fetchPosts, fetchComments]);
 
     const handleCreatePost = async (postData) => {
-        if (!isAuthenticated) {
-            alert('Please sign in to create posts');
-            return;
-        }
+        if (!isAuthenticated) return;
         await Post.create(postData);
         setShowCreateForm(false);
-        fetchPosts(); // Refetch immediately after posting
+        fetchPosts();
     };
 
     const handleVote = async (post, voteType) => {
@@ -75,160 +111,191 @@ export default function CommunityPage() {
         }
         const newScore = post.score + (voteType === 'up' ? 1 : -1);
         await Post.update(post.id, { score: newScore });
-        // Optimistic update
         setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
+        if (selectedPost?.id === post.id) {
+            setSelectedPost(prev => ({...prev, score: newScore}));
+        }
     };
 
-    const handleCommentVote = async (comment, voteType) => {
-        const newScore = comment.score + (voteType === 'up' ? 1 : -1);
-        await Comment.update(comment.id, { score: newScore });
-        fetchComments(selectedPost.id); // Refetch comments
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+        setActiveGame(null); // Reset game selection when switching main sections
+        setSelectedPost(null);
     };
 
-    const handleAddComment = async (commentData) => {
-        await Comment.create(commentData);
-        fetchComments(selectedPost.id); // Refetch comments
-    };
-
-    const handleTabChange = (tabId) => {
-        setActiveTab(tabId);
-        setSelectedPost(null); // Go back to feed view when changing tabs
+    const handleGameChange = (gameTitle) => {
+        setActiveGame(gameTitle);
+        setActiveSection('game_forums'); // Switch context to game forums
+        setSelectedPost(null);
     };
 
     return (
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-black min-h-screen text-slate-200 p-6 page-container">
-            <style>{`
-                /* Community specific scrollable areas */
-                .community-posts,
-                .comment-section,
-                .post-detail {
-                    scrollbar-width: none;
-                    -ms-overflow-style: none;
-                }
-
-                .community-posts::-webkit-scrollbar,
-                .comment-section::-webkit-scrollbar,
-                .post-detail::-webkit-scrollbar {
-                    display: none;
-                }
-            `}</style>
-
-            <div className="max-w-4xl mx-auto">
-                <header className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-4">
-                        {selectedPost && (
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedPost(null)}>
-                                <ArrowLeft />
-                            </Button>
-                        )}
-                        <h1 className="text-4xl font-extrabold tracking-tight text-white">
-                            {selectedPost ? selectedPost.title : 'Community Hub'}
+        <div className="bg-slate-950 min-h-screen text-slate-200 page-container">
+            <div className="max-w-[1600px] mx-auto p-4 md:p-6">
+                
+                {/* Header */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                    <div>
+                        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                            <LayoutList className="w-8 h-8 text-blue-500" />
+                            COMMUNITY HUB
                         </h1>
+                        <p className="text-slate-400">Connect, discuss, and discover with fellow players</p>
                     </div>
                     <Button
-                        onClick={() => {
-                            if (!isAuthenticated) {
-                                alert('Please sign in to create posts');
-                                return;
-                            }
-                            setShowCreateForm(true);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg flex items-center gap-2"
+                        onClick={() => setShowCreateForm(true)}
+                        className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 font-bold"
                     >
-                        <Plus className="w-5 h-5" />
-                        {isAuthenticated ? 'Create Post' : 'Sign In to Post'}
+                        <Plus className="w-5 h-5 mr-2" /> New Discussion
                     </Button>
                 </header>
 
-                {!isAuthenticated && (
-                    <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
-                        <p className="text-blue-300 text-center">
-                            Sign in to create posts, vote, and participate in discussions
-                        </p>
-                    </div>
-                )}
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Sidebar Navigation */}
+                    <ForumSidebar 
+                        activeSection={activeSection} 
+                        onSectionChange={handleSectionChange}
+                        activeGame={activeGame}
+                        onGameChange={handleGameChange}
+                    />
 
-                {/* Tab Navigation */}
-                <div className="flex border-b border-slate-700 mb-8">
-                    {tabs.map(tab => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors relative ${
-                                    activeTab === tab.id
-                                        ? 'text-blue-400'
-                                        : 'text-slate-400 hover:text-slate-200'
-                                }`}
-                            >
-                                <Icon className="w-4 h-4" />
-                                {tab.label}
-                                {activeTab === tab.id && (
-                                    <motion.div
-                                        className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-400"
-                                        layoutId="underline"
-                                    />
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Posts container with hidden scrollbar */}
-                <div className="community-posts max-h-screen overflow-y-auto">
-                    <AnimatePresence>
-                        {showCreateForm && (
-                            <CreatePostForm
-                                onSubmit={handleCreatePost}
-                                onCancel={() => setShowCreateForm(false)}
-                                initialType={activeTab}
-                            />
-                        )}
-                    </AnimatePresence>
-
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={selectedPost ? `post-${selectedPost.id}` : `feed-${activeTab}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
+                    {/* Main Content Area */}
+                    <main className="flex-1 min-w-0">
+                        <AnimatePresence mode="wait">
                             {selectedPost ? (
-                                <div className="post-detail space-y-4">
-                                    <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
-                                    <CommentSection
-                                        postId={selectedPost.id}
-                                        comments={comments}
-                                        onAddComment={handleAddComment}
-                                        onVote={handleCommentVote}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {loading ? (
-                                        <p className="text-center text-slate-400 py-8">Loading posts...</p>
-                                    ) : posts.length > 0 ? (
-                                        posts.map(post => (
-                                            <PostCard
-                                                key={post.id}
-                                                post={post}
-                                                onVote={handleVote}
-                                                onSelect={() => setSelectedPost(post)}
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden"
+                                >
+                                    <div className="p-4 border-b border-slate-800 flex items-center gap-4 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                                        <Button variant="ghost" size="sm" onClick={() => setSelectedPost(null)}>
+                                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
+                                        </Button>
+                                        <div className="h-4 w-px bg-slate-700" />
+                                        <span className="text-sm text-slate-400 font-medium truncate max-w-[300px]">
+                                            {selectedPost.title}
+                                        </span>
+                                    </div>
+                                    <div className="p-6">
+                                        <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
+                                        <div className="mt-8">
+                                            <CommentSection
+                                                postId={selectedPost.id}
+                                                comments={comments}
+                                                onAddComment={async (data) => {
+                                                    await Comment.create(data);
+                                                    fetchComments(selectedPost.id);
+                                                }}
+                                                onVote={async (c, type) => {
+                                                    // Mock implementation
+                                                    fetchComments(selectedPost.id);
+                                                }}
                                             />
-                                        ))
-                                    ) : (
-                                        <div className="text-center py-16 bg-slate-800/30 rounded-lg">
-                                            <h3 className="text-xl font-semibold text-white">No Posts Yet</h3>
-                                            <p className="text-slate-400 mt-2">Be the first to create a post in this section!</p>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    {/* Feed Header / Filters */}
+                                    <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+                                        <div className="flex items-center gap-3 w-full md:w-auto">
+                                            <div className="bg-slate-800 p-2 rounded-lg">
+                                                {activeGame ? (
+                                                    <Gamepad2 className="w-5 h-5 text-indigo-400" />
+                                                ) : activeSection === 'achievement_discussion' ? (
+                                                    <Trophy className="w-5 h-5 text-yellow-400" />
+                                                ) : (
+                                                    <Globe className="w-5 h-5 text-blue-400" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h2 className="font-bold text-white">
+                                                    {activeGame || (activeSection === 'achievement_discussion' ? 'Achievement Hunters' : 'General Lounge')}
+                                                </h2>
+                                                <p className="text-xs text-slate-400">
+                                                    {posts.length} discussions active
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 w-full md:w-auto">
+                                            <div className="relative flex-1 md:w-64">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                                <Input 
+                                                    placeholder="Search discussions..." 
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="pl-9 bg-slate-950/50 border-slate-800 h-10"
+                                                />
+                                            </div>
+                                            <Select value={sortBy} onValueChange={setSortBy}>
+                                                <SelectTrigger className="w-[140px] bg-slate-950/50 border-slate-800 h-10">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="newest">
+                                                        <div className="flex items-center gap-2"><Clock className="w-3 h-3" /> Newest</div>
+                                                    </SelectItem>
+                                                    <SelectItem value="popular">
+                                                        <div className="flex items-center gap-2"><Flame className="w-3 h-3" /> Popular</div>
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    {/* Posts List */}
+                                    <div className="space-y-4 min-h-[400px]">
+                                        {loading ? (
+                                            <div className="space-y-4">
+                                                {[1,2,3].map(i => (
+                                                    <div key={i} className="h-40 bg-slate-900/30 rounded-xl animate-pulse" />
+                                                ))}
+                                            </div>
+                                        ) : posts.length > 0 ? (
+                                            posts.map(post => (
+                                                <PostCard
+                                                    key={post.id}
+                                                    post={post}
+                                                    onVote={handleVote}
+                                                    onSelect={() => setSelectedPost(post)}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-900/20 rounded-xl border border-slate-800 border-dashed">
+                                                <Newspaper className="w-16 h-16 text-slate-700 mb-4" />
+                                                <h3 className="text-xl font-bold text-slate-400">No discussions found</h3>
+                                                <p className="text-slate-500 max-w-md mt-2 mb-6">
+                                                    Be the first to start a conversation in this section!
+                                                </p>
+                                                <Button onClick={() => setShowCreateForm(true)} variant="outline">
+                                                    Start Discussion
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
                             )}
-                        </motion.div>
-                    </AnimatePresence>
+                        </AnimatePresence>
+                    </main>
                 </div>
+
+                <AnimatePresence>
+                    {showCreateForm && (
+                        <CreatePostForm
+                            onSubmit={handleCreatePost}
+                            onCancel={() => setShowCreateForm(false)}
+                            initialType={activeGame ? 'game_discussion' : 'general_discussion'}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
