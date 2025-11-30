@@ -38,9 +38,9 @@ export default function UserInterfaceView({
     { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
     { id: 'vault', name: 'The Vault', icon: Archive, color: 'bg-cyan-600' },
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
-    { id: 'hall_of_fame', name: 'Hall of Fame', icon: TrendingUp, color: 'bg-yellow-600' },
+    { id: 'hall_of_fame', name: 'Game Index', icon: TrendingUp, color: 'bg-yellow-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
-    { id: 'stream_team', name: 'Stream Team', icon: UsersIcon, color: 'bg-orange-600' }
+    { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
   ];
 
   return (

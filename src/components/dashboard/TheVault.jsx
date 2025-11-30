@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Play, X, Download, Share2, Edit, Save, Sparkles, TrendingUp,
-  Gamepad2, Trophy, Target, Zap, Bot, Database
+  Gamepad2, Trophy, Target, Zap, Bot, Database, Search, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,163 +84,70 @@ const mockClips = [
   }
 ];
 
-// Smart Container Component
-const SmartContainer = ({ clip, onClick, onShare, onEdit }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedDesc, setEditedDesc] = useState(clip.description);
-  const [glowing, setGlowing] = useState(false);
-
-  const handleSave = () => {
-    // Parse keywords from description
-    const keywords = editedDesc.toLowerCase();
-    let detectedAbilities = [];
-    
-    if (keywords.includes('sniper') || keywords.includes('long range')) {
-      detectedAbilities.push('Accuracy');
-    }
-    if (keywords.includes('hidden') || keywords.includes('stealth')) {
-      detectedAbilities.push('Stealth');
-    }
-    if (keywords.includes('magic') || keywords.includes('spell')) {
-      detectedAbilities.push('Intelligence');
-    }
-    
-    if (detectedAbilities.length > 0) {
-      setGlowing(true);
-      setTimeout(() => setGlowing(false), 2000);
-    }
-    
-    setIsEditing(false);
-  };
-
+// Slick & Compact Smart Container Component
+const SmartContainer = ({ clip, onClick, onShare }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-slate-800/40 rounded-xl border overflow-hidden mb-3 transition-all ${
-        glowing ? 'border-blue-500 shadow-lg shadow-blue-500/50' : 'border-slate-700/50'
-      }`}
+      className="group relative bg-slate-900/60 hover:bg-slate-800/80 rounded-lg border border-slate-800/50 hover:border-blue-500/30 transition-all duration-300 overflow-hidden cursor-pointer"
+      onClick={onClick}
     >
-      <div className="flex gap-4 p-4">
-        {/* A. The Anchor - Thumbnail */}
-        <div className="relative flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden group cursor-pointer" onClick={onClick}>
-          <img src={clip.thumbnail} alt={clip.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Play className="w-12 h-12 text-white" fill="white" />
-          </div>
-          <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white font-semibold">
+      <div className="flex h-24">
+        {/* Thumbnail - Compact */}
+        <div className="relative w-36 h-full flex-shrink-0">
+          <img src={clip.thumbnail} alt={clip.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-transparent" />
+          <div className="absolute bottom-1 left-1 bg-black/80 px-1.5 py-0.5 rounded text-[10px] text-white font-mono">
             {clip.duration}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-blue-600/90 rounded-full p-1.5 shadow-lg shadow-blue-500/50 backdrop-blur-sm">
+              <Play className="w-4 h-4 text-white ml-0.5" fill="currentColor" />
+            </div>
           </div>
         </div>
 
-        {/* Right Side Content */}
-        <div className="flex-1 space-y-3">
-          {/* B. The Header - Title */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-white font-bold text-lg">{clip.title}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                {clip.tags.map((tag, i) => (
-                  <Badge key={i} className="bg-blue-600/30 text-blue-400 text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+        {/* Content - Slick & Organized */}
+        <div className="flex-1 p-3 flex flex-col justify-between min-w-0 relative">
+          <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+             <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:text-white" onClick={(e) => { e.stopPropagation(); onShare(); }}>
+                <Share2 className="w-3 h-3" />
+             </Button>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-white font-bold text-sm truncate group-hover:text-blue-400 transition-colors">{clip.title}</h3>
               {clip.tradeable && (
-                <Badge className="bg-green-600/30 text-green-400 border-green-500/50">
+                <Badge variant="outline" className="text-[9px] px-1 py-0 border-green-500/30 text-green-400 h-4">
                   Tradeable
                 </Badge>
               )}
             </div>
+            <p className="text-slate-400 text-xs line-clamp-1 font-light">{clip.description}</p>
           </div>
 
-          {/* C. The Context - Description */}
-          <div className="bg-slate-700/30 rounded-lg p-3">
-            {isEditing ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editedDesc}
-                  onChange={(e) => setEditedDesc(e.target.value)}
-                  className="bg-slate-800/50 border-slate-600 text-white text-sm"
-                  rows={3}
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                    <Save className="w-3 h-3 mr-1" />
-                    Save
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                </div>
-                <p className="text-xs text-slate-400">
-                  💡 Tip: Mention skills like "Sniper", "Stealth", "Magic" to train your AI
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-slate-300 text-sm mb-2">{clip.description}</p>
-                <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
-                  <Edit className="w-3 h-3 mr-1" />
-                  Edit Description
-                </Button>
+          <div className="flex items-end justify-between mt-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {clip.tags.slice(0, 2).map((tag, i) => (
+                <span key={i} className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/50">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            
+            {clip.aiLearning && (
+              <div className="flex items-center gap-2 bg-slate-950/50 px-2 py-1 rounded border border-slate-800/50 group-hover:border-purple-500/30 transition-colors">
+                <Bot className="w-3 h-3 text-purple-400" />
+                <span className="text-[10px] text-slate-300">
+                  {clip.aiLearning.stat} <span className="text-green-400 font-bold">+{clip.aiLearning.value}</span>
+                </span>
               </div>
             )}
           </div>
-
-          {/* D. The AI Learning Value */}
-          {clip.aiLearning && (
-            <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-lg p-3 border border-purple-500/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Bot className="w-5 h-5 text-purple-400" />
-                  <div>
-                    <p className="text-purple-400 font-semibold text-xs">AI LEARNED</p>
-                    <p className="text-white text-sm">{clip.aiLearning.ability}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-400 text-xs">{clip.aiLearning.stat}</span>
-                  <span className="text-green-400 font-bold">+{clip.aiLearning.value}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* E. DNA String & Actions */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
-            <div className="flex items-center gap-2">
-              <Database className="w-3 h-3 text-slate-500" />
-              <code className="text-xs text-slate-500 font-mono">{clip.dna}</code>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={onShare}>
-                <Share2 className="w-3 h-3 mr-1" />
-                Share to Hub
-              </Button>
-              <Button size="sm" variant="outline">
-                <Download className="w-3 h-3 mr-1" />
-                Download
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Glow Effect on Save */}
-      {glowing && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="bg-blue-500/10 border-t border-blue-500/30 p-2 flex items-center justify-center gap-2"
-        >
-          <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-blue-400 text-sm font-semibold">AI analyzing your description...</span>
-        </motion.div>
-      )}
     </motion.div>
   );
 };
@@ -251,39 +158,50 @@ const MediaViewer = ({ clip, onClose }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-8"
+    className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
     onClick={onClose}
   >
-    <div className="relative max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClose}
-        className="absolute -top-12 right-0 text-white hover:bg-white/10"
-      >
-        <X className="w-6 h-6" />
-      </Button>
+    <div className="relative max-w-4xl w-full bg-slate-900/50 rounded-2xl border border-white/10 overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute top-4 right-4 z-10">
+        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full bg-black/50 hover:bg-red-500/20 text-white hover:text-red-400 transition-colors">
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
       
-      <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
-        <video controls className="w-full" autoPlay>
+      <div className="aspect-video bg-black">
+        <video controls className="w-full h-full" autoPlay poster={clip.thumbnail}>
           <source src={clip.thumbnail} type="video/mp4" />
         </video>
-        
-        <div className="p-6">
-          <h3 className="text-white font-bold text-xl mb-2">{clip.title}</h3>
-          <p className="text-slate-400 text-sm mb-4">{clip.description}</p>
+      </div>
+      
+      <div className="p-6 bg-gradient-to-b from-slate-900 to-slate-950">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-2xl font-bold text-white mb-2">{clip.title}</h3>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">{clip.description}</p>
+          </div>
           
           {clip.aiLearning && (
-            <div className="bg-purple-600/20 rounded-lg p-4 border border-purple-500/30">
-              <p className="text-purple-400 font-semibold mb-2">AI Stats from this clip:</p>
-              <div className="flex items-center gap-4">
-                <span className="text-white">{clip.aiLearning.ability}</span>
-                <Badge className="bg-green-500/20 text-green-400">
-                  {clip.aiLearning.stat} +{clip.aiLearning.value}
-                </Badge>
+            <div className="flex-shrink-0 bg-slate-800/50 rounded-xl p-4 border border-purple-500/20 min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2 text-purple-400 text-xs font-bold uppercase tracking-wider">
+                <Sparkles className="w-3 h-3" /> AI Analysis
               </div>
+              <div className="text-white text-sm font-medium mb-1">{clip.aiLearning.ability}</div>
+              <div className="text-green-400 text-lg font-bold">+{clip.aiLearning.value} {clip.aiLearning.stat}</div>
             </div>
           )}
+        </div>
+        
+        <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+          <code className="text-xs text-slate-600 font-mono bg-black/30 px-2 py-1 rounded">{clip.dna}</code>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/5 text-slate-300">
+              <Download className="w-4 h-4 mr-2" /> Export
+            </Button>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white">
+              <Share2 className="w-4 h-4 mr-2" /> Share Clip
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -293,93 +211,135 @@ const MediaViewer = ({ clip, onClose }) => (
 export default function TheVault() {
   const [selectedGame, setSelectedGame] = useState('elden-ring');
   const [selectedClip, setSelectedClip] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredClips = mockClips.filter(clip => clip.gameId === selectedGame);
+  const filteredClips = mockClips.filter(clip => 
+    clip.gameId === selectedGame && 
+    (clip.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     clip.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+  );
 
   const handleShare = (clip) => {
-    alert(`Sharing ${clip.title} to Social Hub with AI stats!`);
+    // Placeholder for share logic
+    console.log(`Sharing ${clip.title}`);
   };
 
   return (
-    <div className="h-full flex gap-4">
+    <div className="h-full flex flex-col lg:flex-row gap-6 p-2">
       {/* LEFT SIDEBAR - Game Index */}
-      <div className="w-64 space-y-3 flex-shrink-0">
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
-          <h3 className="text-white font-bold flex items-center gap-2 mb-4">
-            <Gamepad2 className="w-5 h-5 text-blue-400" />
-            Game Index
-          </h3>
+      <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Input 
+            placeholder="Search vault..." 
+            className="pl-9 bg-slate-900/50 border-slate-700/50 text-sm focus:ring-blue-500/50"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="bg-slate-900/40 rounded-xl border border-slate-700/30 overflow-hidden flex-1">
+          <div className="p-4 border-b border-slate-700/30 bg-slate-900/60">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+              <Database className="w-3 h-3 text-blue-400" />
+              Secure Archives
+            </h3>
+          </div>
           
-          <div className="space-y-2">
+          <div className="p-2 space-y-1">
             {gameIndex.map((game) => (
               <motion.button
                 key={game.id}
-                whileHover={{ x: 5 }}
+                whileHover={{ x: 2 }}
                 onClick={() => setSelectedGame(game.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all border ${
                   selectedGame === game.id
-                    ? `bg-gradient-to-r ${game.color} border border-white/20`
-                    : 'bg-slate-700/30 hover:bg-slate-700/50'
+                    ? `bg-gradient-to-r from-blue-900/40 to-slate-900/40 border-blue-500/30`
+                    : 'bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700/50'
                 }`}
               >
-                <span className="text-2xl">{game.icon}</span>
-                <div className="flex-1 text-left">
-                  <p className="text-white font-semibold text-sm">{game.name}</p>
-                  <p className="text-slate-400 text-xs">{game.count} clips</p>
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-lg bg-gradient-to-br ${game.color} shadow-lg`}>
+                  {game.icon}
                 </div>
-                <Badge className="bg-blue-600/30 text-blue-400">{game.count}</Badge>
+                <div className="flex-1 text-left min-w-0">
+                  <p className={`font-semibold text-sm truncate ${selectedGame === game.id ? 'text-white' : 'text-slate-400'}`}>{game.name}</p>
+                  <p className="text-[10px] text-slate-500 font-mono">{game.dnaPrefix}</p>
+                </div>
+                {selectedGame === game.id && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                )}
               </motion.button>
             ))}
           </div>
         </div>
 
         {/* Quick Stats */}
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
-          <h3 className="text-white font-bold flex items-center gap-2 mb-3">
-            <TrendingUp className="w-5 h-5 text-green-400" />
-            Vault Stats
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Total Clips</span>
-              <span className="text-white font-bold">65</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">AI Learning</span>
-              <span className="text-purple-400 font-bold">+143 XP</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Tradeable</span>
-              <span className="text-green-400 font-bold">32</span>
-            </div>
+        <div className="bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-xl border border-slate-800 p-4 shadow-xl">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase">Capacity</h3>
+            <Zap className="w-3 h-3 text-yellow-500" />
+          </div>
+          <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-[65%]" />
+          </div>
+          <div className="flex justify-between text-[10px] text-slate-500">
+            <span>65% Used</span>
+            <span>1.2TB Free</span>
           </div>
         </div>
       </div>
 
-      {/* MAIN AREA - Smart Containers */}
-      <div className="flex-1 overflow-y-auto pr-2">
-        <div className="mb-6">
-          <h2 className="text-2xl font-black text-white mb-2">
-            {gameIndex.find(g => g.id === selectedGame)?.icon} {gameIndex.find(g => g.id === selectedGame)?.name}
-          </h2>
-          <p className="text-slate-400">
-            {filteredClips.length} clips • Sorted by AI learning value
-          </p>
+      {/* MAIN AREA - Smart Containers Grid */}
+      <div className="flex-1 min-w-0 flex flex-col bg-slate-950/30 rounded-2xl border border-slate-800/30 overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-800/30 flex justify-between items-center bg-slate-900/20 backdrop-blur-sm">
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              {gameIndex.find(g => g.id === selectedGame)?.icon} 
+              {gameIndex.find(g => g.id === selectedGame)?.name}
+              <Badge variant="outline" className="ml-2 border-slate-700 text-slate-400 font-mono text-xs">
+                {gameIndex.find(g => g.id === selectedGame)?.dnaPrefix}
+              </Badge>
+            </h2>
+            <p className="text-slate-500 text-xs mt-1">
+              {filteredClips.length} archived sequences found
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs border-slate-700 text-slate-400 hover:text-white">
+              <Filter className="w-3 h-3 mr-1.5" /> Filter
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs border-slate-700 text-slate-400 hover:text-white">
+              <TrendingUp className="w-3 h-3 mr-1.5" /> Sort
+            </Button>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {filteredClips.map((clip) => (
-            <SmartContainer
-              key={clip.id}
-              clip={clip}
-              onClick={() => setSelectedClip(clip)}
-              onShare={() => handleShare(clip)}
-            />
-          ))}
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredClips.map((clip) => (
+              <SmartContainer
+                key={clip.id}
+                clip={clip}
+                onClick={() => setSelectedClip(clip)}
+                onShare={() => handleShare(clip)}
+              />
+            ))}
+            
+            {/* Empty State */}
+            {filteredClips.length === 0 && (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-600">
+                <Database className="w-12 h-12 mb-4 opacity-20" />
+                <p className="text-sm">No clips found in this archive sector.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Media Viewer */}
+      {/* Media Viewer Modal */}
       <AnimatePresence>
         {selectedClip && (
           <MediaViewer clip={selectedClip} onClose={() => setSelectedClip(null)} />

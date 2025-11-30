@@ -25,7 +25,6 @@ import AvatarStudio from './pages/AvatarStudio';
 import Profile from './pages/Profile';
 import AbilityAchievements from './pages/AbilityAchievements';
 import PlayerProfile from './pages/PlayerProfile';
-import GameIndex from './pages/GameIndex';
 import GameProfile from './pages/GameProfile';
 import Orders from './pages/Orders';
 import __Layout from './Layout.jsx';
@@ -59,7 +58,6 @@ export const PAGES = {
     "Profile": Profile,
     "AbilityAchievements": AbilityAchievements,
     "PlayerProfile": PlayerProfile,
-    "GameIndex": GameIndex,
     "GameProfile": GameProfile,
     "Orders": Orders,
 }

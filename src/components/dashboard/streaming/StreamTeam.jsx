@@ -90,7 +90,7 @@ export default function StreamTeam() {
                         
                         <div>
                             <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-slate-300 flex items-center gap-4 drop-shadow-sm">
-                                STREAM TEAM
+                                CLAN
                                 <Badge variant="outline" className="bg-cyan-500/10 text-cyan-300 border-cyan-500/30 text-[10px] px-2 py-0.5 uppercase tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.2)]">
                                     Official Squad
                                 </Badge>

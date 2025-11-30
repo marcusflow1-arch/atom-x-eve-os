@@ -85,7 +85,6 @@ function LayoutContent({ children, currentPageName }) {
     'Games': {
       icon: Gamepad2,
       items: [
-        { name: 'Game Index', icon: Gamepad2, path: createPageUrl('GameIndex') },
         { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
         { name: 'Library', icon: Library, path: createPageUrl('Library') },
         { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
