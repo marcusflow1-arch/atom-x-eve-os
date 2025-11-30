@@ -39,6 +39,7 @@ import GameAchievementsOverlay from '../components/library/GameAchievementsOverl
 import { allMockGames } from '../components/store/mockData';
 import MoveHubTab from '../components/dashboard/MoveHubGames';
 import ThreeScene from '../components/shared/ThreeScene';
+import { ThemeBackground } from '../components/shared/ThemeSystem';
 
 import PartyPanel from '../components/clan/PartyPanel';
 import DashboardTab from '../components/clan/DashboardTab';
