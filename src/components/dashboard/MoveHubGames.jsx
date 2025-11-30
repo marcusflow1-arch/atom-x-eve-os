@@ -115,170 +115,118 @@ export const moveHubGamesData = [
 }];
 
 
-import { motion } from 'framer-motion';
-import { Zap, Lock, CheckCircle2, Star } from 'lucide-react';
-
-const AbilityNode = ({ x, y, icon: Icon, status = 'locked', label, delay = 0 }) => {
-  const colors = {
-    locked: 'border-slate-700 bg-slate-900/50 text-slate-600',
-    unlocked: 'border-cyan-500/50 bg-cyan-950/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
-    mastered: 'border-yellow-500/50 bg-yellow-950/30 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)]',
-  };
-
-  return (
-    <motion.div
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay, type: 'spring', stiffness: 260, damping: 20 }}
-      className="absolute flex flex-col items-center gap-2 transform -translate-x-1/2 -translate-y-1/2"
-      style={{ left: x, top: y }}
-    >
-      <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center backdrop-blur-sm transition-all duration-300 hover:scale-110 cursor-pointer z-10 ${colors[status]}`}>
-        <Icon size={20} />
-      </div>
-      {label && (
-        <div className="bg-black/60 px-2 py-1 rounded text-[10px] font-mono text-slate-300 whitespace-nowrap backdrop-blur-md border border-white/5">
-          {label}
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
-const ConnectionLine = ({ start, end, active = false, delay = 0 }) => {
-  // Calculate path
-  const midY = start.y + (end.y - start.y) / 2;
-  const path = `M ${start.x} ${start.y} C ${start.x} ${midY}, ${end.x} ${midY}, ${end.x} ${end.y}`;
-
-  return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
-      <motion.path
-        d={path}
-        fill="none"
-        stroke={active ? "url(#gradient-active)" : "#334155"}
-        strokeWidth="2"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        transition={{ delay, duration: 1, ease: "easeInOut" }}
-      />
-      <defs>
-        <linearGradient id="gradient-active" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#06b6d4" />
-          <stop offset="100%" stopColor="#3b82f6" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-};
-
 const AbilityTree = ({ achievement }) => {
-  // Mock tree data structure relative to 100% width/height
-  const nodes = [
-    { id: 'root', x: '50%', y: '85%', icon: Star, status: 'mastered', label: 'Core' },
-    
-    { id: 'l1', x: '30%', y: '60%', icon: Zap, status: 'unlocked', label: 'Power' },
-    { id: 'r1', x: '70%', y: '60%', icon: Lock, status: 'locked', label: 'Control' },
-    
-    { id: 'l2', x: '20%', y: '35%', icon: CheckCircle2, status: 'unlocked', label: 'Efficiency' },
-    { id: 'l3', x: '40%', y: '35%', icon: Lock, status: 'locked', label: 'Overload' },
-    
-    { id: 'r2', x: '60%', y: '35%', icon: Lock, status: 'locked', label: 'Duration' },
-    { id: 'r3', x: '80%', y: '35%', icon: Lock, status: 'locked', label: 'Range' },
-
-    { id: 'top', x: '50%', y: '15%', icon: Trophy, status: 'locked', label: 'Mastery' },
-  ];
-
-  const connections = [
-    { start: 'root', end: 'l1', active: true },
-    { start: 'root', end: 'r1', active: false },
-    { start: 'l1', end: 'l2', active: true },
-    { start: 'l1', end: 'l3', active: false },
-    { start: 'r1', end: 'r2', active: false },
-    { start: 'r1', end: 'r3', active: false },
-    { start: 'l2', end: 'top', active: false },
-    { start: 'l3', end: 'top', active: false },
-    { start: 'r2', end: 'top', active: false },
-    { start: 'r3', end: 'top', active: false },
-  ];
-
-  // Helper to get coordinates from percentage string
-  const getCoords = (node) => {
-    const containerW = 600; // approximate logical width
-    const containerH = 500; // approximate logical height
-    return {
-      x: parseFloat(node.x) / 100 * containerW,
-      y: parseFloat(node.y) / 100 * containerH
-    };
-  };
-
   return (
-    <div className="flex h-full w-full bg-slate-950/50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5" />
-      
-      {/* Main Tree Area */}
-      <div className="flex-1 relative flex items-center justify-center p-8">
-        <div className="relative w-[600px] h-[500px]">
-          {/* Connections Layer */}
-          <div className="absolute inset-0 z-0">
-            {connections.map((conn, idx) => {
-              const startNode = nodes.find(n => n.id === conn.start);
-              const endNode = nodes.find(n => n.id === conn.end);
-              return (
-                <ConnectionLine 
-                  key={idx} 
-                  start={getCoords(startNode)} 
-                  end={getCoords(endNode)} 
-                  active={conn.active}
-                  delay={idx * 0.1} 
-                />
-              );
-            })}
+    <div className="flex h-full w-full">
+      {/* Left Section - 40% - Ability Tree */}
+      <div className="w-[40%] h-full flex items-start justify-start pl-8 pt-8">
+        <div className="relative" style={{ width: '300px', height: '600px' }}>
+          {/* Left Column */}
+          {/* Vertical line for left column */}
+          <div className="absolute bg-blue-500" style={{
+            top: '30px',
+            left: '80px',
+            width: '2px',
+            height: '260px',
+            zIndex: 1
+          }}></div>
+          
+          {/* Top circle - left column */}
+          <div className="absolute" style={{ top: '20px', left: '56px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Second circle - left column */}
+          <div className="absolute" style={{ top: '100px', left: '56px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Third circle - left column */}
+          <div className="absolute" style={{ top: '180px', left: '56px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Bottom circle - left column */}
+          <div className="absolute" style={{ top: '260px', left: '56px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
           </div>
 
-          {/* Nodes Layer */}
-          {nodes.map((node, idx) => (
-            <AbilityNode 
-              key={node.id} 
-              {...node} 
-              delay={0.5 + (idx * 0.1)} 
-            />
-          ))}
+          {/* Right Column */}
+          {/* Vertical line for right column */}
+          <div className="absolute bg-blue-500" style={{
+            top: '30px',
+            left: '180px',
+            width: '2px',
+            height: '260px',
+            zIndex: 1
+          }}></div>
+          
+          {/* Top circle - right column */}
+          <div className="absolute" style={{ top: '20px', left: '156px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Second circle - right column */}
+          <div className="absolute" style={{ top: '100px', left: '156px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Third circle - right column */}
+          <div className="absolute" style={{ top: '180px', left: '156px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+          
+          {/* Bottom circle - right column */}
+          <div className="absolute" style={{ top: '260px', left: '156px', zIndex: 2 }}>
+            <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-slate-800"></div>
+          </div>
+
+          {/* Y-shaped connections from bottom circles to box */}
+          {/* Left diagonal line from left bottom circle */}
+          <div className="absolute bg-blue-500" style={{
+            top: '286px',
+            left: '81px',
+            width: '2px',
+            height: '90px',
+            transformOrigin: 'top center',
+            transform: 'rotate(25deg)',
+            zIndex: 1
+          }}></div>
+
+          {/* Right diagonal line from right bottom circle */}
+          <div className="absolute bg-blue-500" style={{
+            top: '286px',
+            left: '181px',
+            width: '2px',
+            height: '90px',
+            transformOrigin: 'top center',
+            transform: 'rotate(-25deg)',
+            zIndex: 1
+          }}></div>
+
+          {/* Square Box at Bottom */}
+          <div className="absolute" style={{ bottom: '80px', left: '98px', zIndex: 2 }}>
+            <div className="bg-slate-800 my-32 pt-2 w-16 h-16 border-2 border-blue-500"></div>
+          </div>
+
+          {/* Achievement Info */}
+          <div className="absolute" style={{ bottom: '20px', left: '50%', transform: 'translateX(-50%)', width: '250px' }}>
+            <div className="text-center bg-slate-800/80 rounded-lg p-3 border border-blue-500/50">
+              <span className="text-3xl mb-2 block">{achievement.icon}</span>
+              <h4 className="text-white font-bold text-sm">{achievement.name}</h4>
+              <p className="text-slate-400 text-xs mt-1">{achievement.description}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Side Info Panel */}
-      <div className="w-80 h-full border-l border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 flex flex-col">
-        <div className="mb-6">
-          <div className="text-4xl mb-4 animate-bounce">{achievement.icon}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">{achievement.name}</h3>
-          <p className="text-slate-400 leading-relaxed">{achievement.description}</p>
-        </div>
+      {/* Vertical Divider Line at 40% */}
+      <div className="w-[2px] h-full bg-blue-500"></div>
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-bold text-cyan-400 uppercase tracking-wider">Stats Impact</h4>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Power Level</span>
-              <span className="text-white font-mono">+150</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Skill Points</span>
-              <span className="text-white font-mono">3/8</span>
-            </div>
-            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
-              <div className="bg-cyan-500 h-full w-[37%]" />
-            </div>
-          </div>
-        </div>
+      {/* Right Section - 60% - Empty for now */}
+      <div className="flex-1 h-full bg-slate-800/10"></div>
+    </div>);
 
-        <div className="mt-auto">
-           <button className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-cyan-500/20">
-             Upgrade Skill
-           </button>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default function MoveHubTab({ filter = { mode: 'all' } }) {
