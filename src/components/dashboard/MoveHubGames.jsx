@@ -204,17 +204,12 @@ const AbilityTree = ({ achievement }) => {
             zIndex: 1
           }}></div>
 
-          {/* Square Box at Bottom */}
-          <div className="absolute" style={{ bottom: '80px', left: '98px', zIndex: 2 }}>
-            <div className="bg-slate-800 my-32 pt-2 w-16 h-16 border-2 border-blue-500"></div>
-          </div>
-
           {/* Achievement Info */}
           <div className="absolute" style={{ bottom: '20px', left: '50%', transform: 'translateX(-50%)', width: '250px' }}>
-            <div className="text-center bg-slate-800/80 rounded-lg p-3 border border-blue-500/50">
-              <span className="text-3xl mb-2 block">{achievement.icon}</span>
-              <h4 className="text-white font-bold text-sm">{achievement.name}</h4>
-              <p className="text-slate-400 text-xs mt-1">{achievement.description}</p>
+            <div className="text-center p-3">
+              <span className="text-3xl mb-2 block drop-shadow-lg">{achievement.icon}</span>
+              <h4 className="text-cyan-400 font-bold text-sm tracking-wider">{achievement.name}</h4>
+              <p className="text-slate-500 text-xs mt-1">{achievement.description}</p>
             </div>
           </div>
         </div>
@@ -267,7 +262,7 @@ export default function MoveHubTab({ filter = { mode: 'all' } }) {
 
   return (
     <div className="h-full w-full flex">
-      <div className="w-[20%] h-full bg-slate-800/20 relative overflow-hidden">
+      <div className="w-[20%] h-full relative overflow-hidden">
         <div className="h-full overflow-y-auto">
           {filteredGames.map((game) =>
           <div
@@ -330,9 +325,9 @@ export default function MoveHubTab({ filter = { mode: 'all' } }) {
         }
       </div>
       
-      <div className="w-[1px] h-full bg-slate-600"></div>
+      <div className="w-[1px] h-full bg-slate-800"></div>
       
-      <div className="flex-1 h-full bg-slate-800/10">
+      <div className="flex-1 h-full">
         {selectedAchievement ?
         <>
             <div className="p-4 border-b border-slate-700">
