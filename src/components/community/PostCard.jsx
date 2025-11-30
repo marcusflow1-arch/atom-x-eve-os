@@ -41,7 +41,10 @@ export default function PostCard({ post, onVote, onSelect, isDetailView = false 
                 <div className="text-xs text-slate-400 mb-2 flex items-center gap-2 flex-wrap">
                     {post.type === 'game_review' && <span className="font-bold text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded-full">REVIEW</span>}
                     {post.type === 'game_discussion' && <span className="font-bold text-teal-400 bg-teal-500/10 px-2 py-1 rounded-full">DISCUSSION</span>}
+                    {post.type === 'achievement_discussion' && <span className="font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-full">ACHIEVEMENT</span>}
+                    {post.type === 'general_discussion' && <span className="font-bold text-slate-400 bg-slate-500/10 px-2 py-1 rounded-full">GENERAL</span>}
                     {post.game_title && <span className="font-bold text-blue-400">{post.game_title}</span>}
+                    {post.genre && <span className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">{post.genre}</span>}
                     {post.game_title && <span className="text-slate-600">•</span>}
                     <span>Posted by <span className="font-semibold text-slate-300">{post.created_by.split('@')[0]}</span></span>
                 </div>
