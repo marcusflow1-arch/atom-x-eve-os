@@ -125,13 +125,37 @@ export default function CommunityPage() {
 
     const handleGameChange = (gameTitle) => {
         setActiveGame(gameTitle);
-        setActiveSection('game_forums'); // Switch context to game forums
+        setActiveSection('game_forums'); 
         setSelectedPost(null);
     };
 
+    const getGameBackground = () => {
+        if (!activeGame) return null;
+        if (activeGame.includes('Cyberpunk')) return 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=1200&h=800&fit=crop';
+        if (activeGame.includes('Elder Scrolls')) return 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=1200&h=800&fit=crop';
+        if (activeGame.includes('Vanguard')) return 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1200&h=800&fit=crop';
+        if (activeGame.includes('Nexus')) return 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop';
+        return null;
+    };
+    
+    const activeBg = getGameBackground();
+
     return (
-        <div className="bg-slate-950 min-h-screen text-slate-200 page-container">
-            <div className="max-w-[1600px] mx-auto p-4 md:p-6">
+        <div className="bg-slate-950 min-h-screen text-slate-200 page-container relative overflow-hidden">
+            {activeBg && (
+                <div className="fixed inset-0 z-0">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        key={activeBg}
+                        className="absolute inset-0"
+                    >
+                        <img src={activeBg} alt="bg" className="w-full h-full object-cover opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-900/50" />
+                    </motion.div>
+                </div>
+            )}
+            <div className="max-w-[1600px] mx-auto p-4 md:p-6 relative z-10">
                 
                 {/* Header */}
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
