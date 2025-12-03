@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Settings, Palette, Volume2, Bell, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Trophy, Settings, Palette, Volume2, Bell, ChevronRight, ChevronLeft, Library as LibraryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Achievements from '../../../pages/Achievements';
+import Library from '../../../pages/Library';
 
 export default function HallOfRecordsView() {
   const [showSettings, setShowSettings] = useState(false);
@@ -15,9 +17,28 @@ export default function HallOfRecordsView() {
 
   return (
     <div className="h-full flex gap-6 relative">
-      {/* Main - Achievements */}
-      <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30">
-        <Achievements />
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30 flex flex-col">
+        <Tabs defaultValue="achievements" className="h-full flex flex-col">
+          <div className="px-6 pt-4 pb-2 flex-shrink-0">
+            <TabsList className="bg-slate-900/50 border border-slate-700 w-auto inline-flex">
+              <TabsTrigger value="achievements" className="gap-2 px-6">
+                <Trophy className="w-4 h-4" /> Achievements
+              </TabsTrigger>
+              <TabsTrigger value="library" className="gap-2 px-6">
+                <LibraryIcon className="w-4 h-4" /> Library
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="achievements" className="flex-1 overflow-hidden mt-0 relative data-[state=inactive]:hidden">
+            <Achievements />
+          </TabsContent>
+          
+          <TabsContent value="library" className="flex-1 overflow-hidden mt-0 relative data-[state=inactive]:hidden">
+            <Library />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Toggle Button */}

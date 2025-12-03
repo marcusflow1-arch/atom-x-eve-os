@@ -480,7 +480,7 @@ export default function Achievements() {
   }
 
   return (
-    <div className="min-h-screen text-white relative overflow-hidden" style={{ cursor: 'default' }}>
+    <div className="h-full text-white relative overflow-hidden" style={{ cursor: 'default' }}>
       <ThemeBackground themeId={selectedTheme} />
       <div className={`absolute top-4 z-50 transition-all duration-300 ${isTrackingPanelVisible ? 'right-[380px]' : 'right-4'}`}>
         <ThemeToggle selectedTheme={selectedTheme} onThemeSelect={setSelectedTheme} />

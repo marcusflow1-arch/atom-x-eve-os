@@ -2109,7 +2109,7 @@ export default function Library() {
     }
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden relative">
+        <div className="h-full flex flex-col overflow-hidden relative">
             <style>{`
                 .game-list-scrollable {
                     overflow-y: auto;
