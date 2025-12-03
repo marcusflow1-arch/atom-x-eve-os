@@ -534,10 +534,19 @@ export default function Store() {
           </p>
         </motion.header>
 
-        {/* NEW HERO SCROLL BOX */}
-        <HeroScrollBox />
+        <div className="flex flex-col xl:flex-row gap-8">
+          {/* Left Column - Hero (45%) */}
+          <div className="w-full xl:w-[45%] flex-shrink-0">
+            {/* NEW HERO SCROLL BOX */}
+            <HeroScrollBox />
+          </div>
 
-        {/* Search and Controls */}
+          {/* Divider */}
+          <div className="hidden xl:block w-px bg-white/10" />
+
+          {/* Right Column - Store Content */}
+          <div className="flex-1 min-w-0">
+            {/* Search and Controls */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1010,6 +1019,8 @@ export default function Store() {
             </>
           )}
         </motion.section>
+          </div>
+        </div>
       </div>
     </div>
   );
