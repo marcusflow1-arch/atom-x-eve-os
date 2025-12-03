@@ -493,7 +493,13 @@ export default function TradingPost() {
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   const [selectedTheme, setSelectedTheme] = useState('cosmic_library');
-  
+
+  // Filter States
+  const [showFilters, setShowFilters] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRarities, setSelectedRarities] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+
   // New states for game-first navigation
   const [viewMode, setViewMode] = useState('games'); // 'games' or 'items'
   const [selectedGame, setSelectedGame] = useState(null);
