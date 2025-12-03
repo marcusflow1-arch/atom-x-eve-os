@@ -50,7 +50,7 @@ const GameCard = ({ title, genre, itemCount, onClick }) => (
     </motion.div>
 );
 
-const ItemSlot = ({ item, index }) => {
+const ItemSlot = ({ item, index, onClick }) => {
     const uniqueId = item.id || item.skillId || `item-${index}`;
     
     return (
@@ -60,8 +60,9 @@ const ItemSlot = ({ item, index }) => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
+                    onClick={() => onClick(item)}
                     className={`
-                        aspect-square rounded-xl border-2 relative group cursor-grab overflow-hidden
+                        aspect-square rounded-xl border-2 relative group cursor-pointer overflow-hidden
                         ${rarityColors[item.rarity] || rarityColors['Common']}
                         ${snapshot.isDragging ? 'scale-110 z-50 shadow-[0_0_20px_rgba(0,0,0,0.5)]' : 'hover:border-opacity-100 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]'}
                         transition-all duration-200
