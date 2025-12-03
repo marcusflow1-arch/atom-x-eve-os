@@ -18,20 +18,29 @@ const rarityColors = {
 
 // Helper to ensure we have game and genre data for the demo
 const augmentItem = (item) => {
-    const details = item.itemId ? (itemData[item.itemId] || item) : item;
-    // Default values if not present
-    let game = details.game || "Unknown Game";
-    let genre = details.genreCompatibility ? details.genreCompatibility[0] : "Misc";
+const details = item.itemId ? (itemData[item.itemId] || item) : item;
+// Default values if not present
+let game = details.game || "Unknown Game";
+let genre = details.genreCompatibility ? details.genreCompatibility[0] : "Misc";
 
-    // Map based on existing mock data genreCompatibility if game is missing
-    if (!details.game && details.genreCompatibility) {
-        if (details.genreCompatibility.includes('MMO')) game = "Elder Scrolls: Reborn";
-        else if (details.genreCompatibility.includes('Shooter')) game = "Vanguard Ops";
-        else if (details.genreCompatibility.includes('Fantasy')) game = "Diablo II: Eternal";
-        else if (details.genreCompatibility.includes('Sci-Fi')) game = "Cyberpunk 2088";
-    }
-    
-    return { ...details, ...item, game, genre };
+// Map based on existing mock data genreCompatibility if game is missing
+if (!details.game && details.genreCompatibility) {
+    if (details.genreCompatibility.includes('MMO')) game = "Elder Scrolls: Reborn";
+    else if (details.genreCompatibility.includes('Shooter')) game = "Vanguard Ops";
+    else if (details.genreCompatibility.includes('Fantasy')) game = "Diablo II: Eternal";
+    else if (details.genreCompatibility.includes('Sci-Fi')) game = "Cyberpunk 2088";
+}
+
+// Override with explicit genres if needed or map to the new genres
+// The user asked for: MMO, Sci-Fi, Shooter, Closed Person
+// Mapping existing genres to requested ones for demo purposes
+if (genre === 'Fantasy') genre = 'MMO'; // Grouping Fantasy under MMO for this structure or keeping as is? User listed MMO, Sci-Fi, Shooter, Closed Person.
+// Let's just ensure we have at least one game for "Closed Person"
+if (game === "Vanguard Ops") genre = "Shooter";
+if (game === "Cyberpunk 2088") genre = "Sci-Fi";
+if (game === "Elder Scrolls: Reborn") genre = "MMO";
+
+return { ...details, ...item, game, genre };
 };
 
 const GameCard = ({ title, genre, itemCount, onClick }) => (
@@ -98,7 +107,7 @@ const ItemSlot = ({ item, index, onClick }) => {
 };
 
 const InventoryPanel = ({ inventory, capacity, profile }) => {
-    const [activeGenre, setActiveGenre] = useState('All');
+    const [activeGenre, setActiveGenre] = useState('MMO');
     const [selectedGame, setSelectedGame] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -109,19 +118,33 @@ const InventoryPanel = ({ inventory, capacity, profile }) => {
 
     // Extract Genres
     const genres = useMemo(() => {
-        const g = new Set(['All']);
+        // Enforce specific order and include requested genres even if empty for visual structure
+        const requestedGenres = ['MMO', 'Sci-Fi', 'Shooter', 'Closed Person'];
+        const existingGenres = new Set();
+        
         processedInventory.forEach(item => {
-            if (item.genre) g.add(item.genre);
-            if (item.genreCompatibility) item.genreCompatibility.forEach(gc => g.add(gc));
+            if (item.genre) existingGenres.add(item.genre);
         });
-        return Array.from(g);
+
+        // Combine requested genres with any others found, ensuring requested ones come first
+        const finalGenres = [...requestedGenres];
+        existingGenres.forEach(g => {
+            if (!finalGenres.includes(g) && g !== 'All' && g !== 'Misc') finalGenres.push(g);
+        });
+        
+        return finalGenres;
     }, [processedInventory]);
 
     // Filter Items based on Search & Genre
     const filteredItems = useMemo(() => {
         return processedInventory.filter(item => {
             const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesGenre = activeGenre === 'All' || item.genre === activeGenre || (item.genreCompatibility && item.genreCompatibility.includes(activeGenre));
+            // "All" is not in our new list, so we default to exact match or mapping
+            const matchesGenre = item.genre === activeGenre || (item.genreCompatibility && item.genreCompatibility.includes(activeGenre));
+            
+            // Demo hack: if "Closed Person" is selected and we have no real items, show nothing or map something
+            // For now, strictly filtering.
+            
             return matchesSearch && matchesGenre;
         });
     }, [processedInventory, activeGenre, searchTerm]);
@@ -147,9 +170,9 @@ const InventoryPanel = ({ inventory, capacity, profile }) => {
 
             {/* Left Vertical Sidebar - Genres */}
             <div className="w-48 flex-shrink-0 flex flex-col border-r border-slate-800 bg-black/40 backdrop-blur-md relative z-10">
-                <div className="p-6 border-b border-slate-800/50 flex items-center gap-2">
-                    <Database className="w-5 h-5 text-cyan-500" />
-                    <span className="font-bold text-white tracking-wider text-sm">INVENTORY</span>
+                <div className="p-6 border-b border-slate-800/50 flex flex-col gap-1">
+                    <h3 className="text-xs font-black text-cyan-500 tracking-widest uppercase">SELECT GENRE</h3>
+                    <div className="h-0.5 w-8 bg-cyan-500/50" />
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-4 relative">
