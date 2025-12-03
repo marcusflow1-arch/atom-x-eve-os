@@ -175,6 +175,10 @@ const tradeListings = [
   }
 ];
 
+// Helper Icon Components
+const SwordsIcon = ({ className }) => <Sword className={className} />;
+const TrophyIcon = ({ className }) => <Crown className={className} />;
+
 // --- Specialized Components ---
 
 const GalacticInventoryItem = ({ item, onClick }) => {
@@ -492,6 +496,37 @@ export default function TradingPost() {
   // New states for game-first navigation
   const [viewMode, setViewMode] = useState('games'); // 'games' or 'items'
   const [selectedGame, setSelectedGame] = useState(null);
+  
+  // Sub-Tab States
+  const [subTabGenre, setSubTabGenre] = useState(null);
+  const [subTabGame, setSubTabGame] = useState(null);
+
+  // Sub-Tab Mock Data
+  const GENRE_GAMES = useMemo(() => ({
+    "MMORPG": ["Skyrim Online", "World of Warcraft", "Elder Scrolls Online"],
+    "Sci-Fi": ["Star Wars: Galaxy", "Mass Effect", "Cyberpunk 2088"],
+    "Fantasy": ["Final Fantasy XIV", "The Witcher 3", "Baldur's Gate 3"],
+    "Shooter": ["Resident Evil", "Call of Duty Black Ops", "Apex Legends"],
+    "RPG": ["Fire Emblem", "Sacred Swords", "Persona 5"],
+    "Action": ["Street Fighter 6", "Devil May Cry 5", "Hades"],
+    "Adventure": ["Legend of K", "Tomb Raider", "Uncharted"]
+  }), []);
+
+  const getGameDetails = (gameName) => {
+    // Mock data generator for items and achievements
+    return {
+      items: [
+        { id: 1, name: "Starter Pack", type: "Bundle", rarity: "Common" },
+        { id: 2, name: "Veteran's Sword", type: "Weapon", rarity: "Rare" },
+        { id: 3, name: "Elite Armor", type: "Armor", rarity: "Epic" }
+      ],
+      achievements: [
+        { id: 1, title: "First Steps", description: "Complete the tutorial", unlocked: true },
+        { id: 2, title: "Champion", description: "Win 100 matches", unlocked: false },
+        { id: 3, title: "Collector", description: "Collect 50 items", unlocked: true }
+      ]
+    };
+  };
 
   // Helper to get unique games from listings
   const gamesList = useMemo(() => {
@@ -737,26 +772,119 @@ export default function TradingPost() {
                         ].map((genre) => (
                           <button 
                             key={genre}
-                            className="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-between group"
+                            onClick={() => { setSubTabGenre(genre); setSubTabGame(null); }}
+                            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${subTabGenre === genre ? 'bg-cyan-900/20 text-cyan-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                           >
                             {genre}
-                            <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-cyan-500" />
+                            {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-500" />}
                           </button>
                         ))}
                       </div>
                   </div>
                   
                   {/* Right Column (80%) */}
-                  <div className="w-[80%] h-full p-6 overflow-y-auto">
-                      <div className="flex items-center gap-2 mb-6">
-                        <Sparkles className="w-4 h-4 text-purple-500" />
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Main Content Area</h3>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
-                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
-                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
-                      </div>
+                  <div className="w-[80%] h-full p-6 overflow-y-auto bg-slate-900/20">
+                      {!subTabGenre ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                          <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
+                          <p className="text-lg font-medium">Select a Genre to View Games</p>
+                          <p className="text-sm opacity-60">Choose from the list on the left</p>
+                        </div>
+                      ) : !subTabGame ? (
+                        /* Game List for Genre */
+                        <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                          <div className="flex items-center gap-3 mb-8">
+                            <Badge variant="outline" className="text-cyan-400 border-cyan-500/30 px-3 py-1">{subTabGenre}</Badge>
+                            <h2 className="text-2xl font-bold text-white">Available Games</h2>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-6">
+                            {(GENRE_GAMES[subTabGenre] || [`Generic ${subTabGenre} Game 1`, `Generic ${subTabGenre} Game 2`, `Generic ${subTabGenre} Game 3`]).map((game) => (
+                              <motion.div 
+                                key={game}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setSubTabGame(game)}
+                                className="bg-slate-800/40 border border-white/5 rounded-xl p-4 cursor-pointer hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all group h-48 flex flex-col"
+                              >
+                                <div className="flex-1 flex items-center justify-center bg-black/20 rounded-lg mb-4 relative overflow-hidden">
+                                  <Gamepad2 className="w-12 h-12 text-slate-600 group-hover:text-cyan-400 transition-colors" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{game}</h3>
+                                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400" />
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Game Details (Items + Achievements) */
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full flex flex-col">
+                          <button 
+                            onClick={() => setSubTabGame(null)}
+                            className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors w-fit"
+                          >
+                            <ChevronLeft className="w-4 h-4" /> Back to {subTabGenre} Games
+                          </button>
+                          
+                          <div className="flex items-end gap-6 mb-8 border-b border-white/5 pb-6">
+                            <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 flex items-center justify-center shadow-xl">
+                               <Gamepad2 className="w-10 h-10 text-cyan-400" />
+                            </div>
+                            <div>
+                               <Badge className="mb-2 bg-cyan-500/10 text-cyan-400 border-cyan-500/20">{subTabGenre}</Badge>
+                               <h2 className="text-4xl font-black text-white tracking-tight">{subTabGame}</h2>
+                               <p className="text-slate-400 mt-1">Your Progress & Collection</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-8 flex-1 overflow-hidden">
+                             {/* Inventory Column */}
+                             <div className="bg-slate-950/30 rounded-xl border border-white/5 p-6 flex flex-col overflow-hidden">
+                                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                  <Package className="w-4 h-4 text-blue-400" /> Inventory
+                                </h3>
+                                <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                                   {getGameDetails(subTabGame).items.map(item => (
+                                      <div key={item.id} className="flex items-center gap-4 p-3 bg-slate-900/60 rounded-lg border border-white/5 hover:border-blue-500/30 transition-colors">
+                                         <div className={`w-10 h-10 rounded flex items-center justify-center border ${item.rarity === 'Epic' ? 'bg-purple-500/10 border-purple-500/30' : item.rarity === 'Rare' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-slate-800 border-slate-700'}`}>
+                                            <SwordsIcon type={item.type} className="w-5 h-5 opacity-70" />
+                                         </div>
+                                         <div className="flex-1">
+                                            <div className="font-bold text-sm text-white">{item.name}</div>
+                                            <div className="text-[10px] text-slate-500">{item.type} • {item.rarity}</div>
+                                         </div>
+                                         <Button size="sm" variant="ghost" className="h-7 text-xs hover:bg-white/10">Equip</Button>
+                                      </div>
+                                   ))}
+                                </div>
+                             </div>
+
+                             {/* Achievements Column */}
+                             <div className="bg-slate-950/30 rounded-xl border border-white/5 p-6 flex flex-col overflow-hidden">
+                                <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                  <TrophyIcon className="w-4 h-4 text-yellow-400" /> Achievements
+                                </h3>
+                                <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                                   {getGameDetails(subTabGame).achievements.map(ach => (
+                                      <div key={ach.id} className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${ach.unlocked ? 'bg-slate-900/60 border-yellow-500/20' : 'bg-slate-900/20 border-white/5 opacity-60'}`}>
+                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${ach.unlocked ? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500' : 'bg-slate-800 border-slate-700 text-slate-600'}`}>
+                                            <Crown className="w-5 h-5" />
+                                         </div>
+                                         <div className="flex-1">
+                                            <div className={`font-bold text-sm ${ach.unlocked ? 'text-white' : 'text-slate-400'}`}>{ach.title}</div>
+                                            <div className="text-[10px] text-slate-500">{ach.description}</div>
+                                         </div>
+                                         {ach.unlocked && <CheckCircle className="w-4 h-4 text-green-500" />}
+                                      </div>
+                                   ))}
+                                </div>
+                             </div>
+                          </div>
+                        </div>
+                      )}
                   </div>
                </div>
             </TabsContent>
