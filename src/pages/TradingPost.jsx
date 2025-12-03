@@ -490,6 +490,7 @@ export default function TradingPost() {
   const [listings, setListings] = useState(tradeListings);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   const [selectedTheme, setSelectedTheme] = useState('cosmic_library');
   
@@ -619,7 +620,7 @@ export default function TradingPost() {
                   value="subtab" 
                   className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
                 >
-                  Sub-Tab
+                  Inventory
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -959,12 +960,24 @@ export default function TradingPost() {
                                                       </div>
                                                   </div>
 
-                                                  <div className="grid grid-cols-2 gap-2">
-                                                      <Button className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs">
-                                                          <Tag className="w-3 h-3 mr-2" /> List for Sale
+                                                  <div className="grid grid-cols-3 gap-2">
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('trade'); setShowTradeModal(true); }}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <ArrowLeftRight className="w-3 h-3 mr-1" /> Trade
                                                       </Button>
-                                                      <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs">
-                                                          <Info className="w-3 h-3 mr-2" /> History
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('sale'); setShowTradeModal(true); }}
+                                                        className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <DollarSign className="w-3 h-3 mr-1" /> Sell
+                                                      </Button>
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('bid'); setShowTradeModal(true); }}
+                                                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <Gavel className="w-3 h-3 mr-1" /> Bid
                                                       </Button>
                                                   </div>
                                               </div>
@@ -992,6 +1005,7 @@ export default function TradingPost() {
           <InternalTradePostModal
             item={selectedItem}
             isOpen={showTradeModal}
+            initialType={modalInitialType}
             onClose={() => { setShowTradeModal(false); setSelectedItem(null); }}
             onPost={handleTradePost}
           />
@@ -1003,8 +1017,13 @@ export default function TradingPost() {
 }
 
 // Internal Modal Component (Copy from previous file, slightly updated styles)
-const InternalTradePostModal = ({ item, isOpen, onClose, onPost }) => {
-  const [tradeType, setTradeType] = useState('trade');
+const InternalTradePostModal = ({ item, isOpen, onClose, onPost, initialType = 'trade' }) => {
+  const [tradeType, setTradeType] = useState(initialType);
+  
+  useEffect(() => {
+    if (isOpen) setTradeType(initialType);
+  }, [isOpen, initialType]);
+
   const [description, setDescription] = useState('');
   const [seekingItems, setSeekingItems] = useState('');
   const [minBid, setMinBid] = useState('');
