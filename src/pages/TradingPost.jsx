@@ -717,15 +717,33 @@ export default function TradingPost() {
                </div>
             </TabsContent>
 
-            <TabsContent value="subtab" className="space-y-6">
-               <div className="flex flex-col items-center justify-center min-h-[400px] bg-slate-900/40 rounded-2xl border border-white/5 p-8 text-center">
-                  <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-                    <Sparkles className="w-8 h-8 text-slate-500" />
+            <TabsContent value="subtab" className="h-[calc(100vh-300px)]">
+               <div className="flex h-full w-full bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
+                  {/* Left Column (20%) */}
+                  <div className="w-[20%] h-full border-r border-white/10 p-6 bg-slate-950/30">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Grid className="w-4 h-4 text-cyan-500" />
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sidebar</h3>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-8 bg-slate-800/50 rounded w-full animate-pulse" />
+                        <div className="h-8 bg-slate-800/30 rounded w-3/4 animate-pulse" />
+                        <div className="h-8 bg-slate-800/30 rounded w-5/6 animate-pulse" />
+                      </div>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Sub-Tab Content</h3>
-                  <p className="text-slate-400 max-w-md">
-                    This is a placeholder for your new sub-tab content. You can add customized components or data here.
-                  </p>
+                  
+                  {/* Right Column (80%) */}
+                  <div className="w-[80%] h-full p-6 overflow-y-auto">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Sparkles className="w-4 h-4 text-purple-500" />
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Main Content Area</h3>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
+                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
+                        <div className="h-32 bg-slate-800/20 rounded-xl border border-white/5" />
+                      </div>
+                  </div>
                </div>
             </TabsContent>
           </Tabs>
