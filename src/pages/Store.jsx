@@ -534,137 +534,146 @@ export default function Store() {
           </p>
         </motion.header>
 
-        {/* NEW HERO SCROLL BOX */}
-        <HeroScrollBox />
-
-        {/* Search and Controls */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-col lg:flex-row gap-4 mb-8"
-        >
-          <AISearchBox onSearch={handleAISearch} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          
-          <div className="flex gap-2">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40 bg-slate-800/70 border-slate-600">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="featured">Featured</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="rating">Rating</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-
-            {cartCount > 0 && (
-              <Button className="bg-green-600 hover:bg-green-700 relative" asChild>
-                <Link to={createPageUrl('Cart')}>
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Cart ({cartCount})
-                </Link>
-              </Button>
-            )}
+        <div className="flex flex-col xl:flex-row gap-6 mb-16 items-start">
+          {/* LEFT: HERO (45%) */}
+          <div className="w-full xl:w-[45%] shrink-0">
+            {/* NEW HERO SCROLL BOX */}
+            <HeroScrollBox />
           </div>
-        </motion.div>
 
-        {/* Advanced Filters */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-16"
-        >
-          <Select value={filters.genre} onValueChange={(value) => setFilters({...filters, genre: value})}>
-            <SelectTrigger className="bg-slate-800/70 border-slate-600">
-              <SelectValue placeholder="Genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
-              <SelectItem value="rpg">RPG</SelectItem>
-              <SelectItem value="fps">FPS</SelectItem>
-              <SelectItem value="strategy">Strategy</SelectItem>
-              <SelectItem value="racing">Racing</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* DIVIDER */}
+          <div className="hidden xl:block w-px self-stretch bg-gradient-to-b from-transparent via-white/10 to-transparent" />
 
-          <Select value={filters.priceRange} onValueChange={(value) => setFilters({...filters, priceRange: value})}>
-            <SelectTrigger className="bg-slate-800/70 border-slate-600">
-              <SelectValue placeholder="Price Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Prices</SelectItem>
-              <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="under20">Under $20</SelectItem>
-              <SelectItem value="under50">Under $50</SelectItem>
-              <SelectItem value="premium">$50+</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* RIGHT: SEARCH & LISTS */}
+          <div className="flex-1 flex flex-col min-w-0 w-full">
+            {/* Search and Controls */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col lg:flex-row gap-4 mb-8"
+            >
+              <AISearchBox onSearch={handleAISearch} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+              
+              <div className="flex gap-2">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-40 bg-slate-800/70 border-slate-600">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="featured">Featured</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">Rating</SelectItem>
+                  </SelectContent>
+                </Select>
 
-          <Select value={filters.features} onValueChange={(value) => setFilters({...filters, features: value})}>
-            <SelectTrigger className="bg-slate-800/70 border-slate-600">
-              <SelectValue placeholder="Features" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Features</SelectItem>
-              <SelectItem value="multiplayer">Multiplayer</SelectItem>
-              <SelectItem value="coop">Co-op</SelectItem>
-              <SelectItem value="vr">VR Support</SelectItem>
-              <SelectItem value="crossplay">Crossplay</SelectItem>
-            </SelectContent>
-          </Select>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
 
-          <Select value={filters.equipment} onValueChange={(value) => setFilters({...filters, equipment: value})}>
-            <SelectTrigger className="bg-slate-800/70 border-slate-600">
-              <SelectValue placeholder="Equipment" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Equipment</SelectItem>
-              <SelectItem value="swords">Swords</SelectItem>
-              <SelectItem value="guns">Firearms</SelectItem>
-              <SelectItem value="magic">Magic Items</SelectItem>
-              <SelectItem value="vehicles">Vehicles</SelectItem>
-            </SelectContent>
-          </Select>
+                {cartCount > 0 && (
+                  <Button className="bg-green-600 hover:bg-green-700 relative" asChild>
+                    <Link to={createPageUrl('Cart')}>
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Cart ({cartCount})
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </motion.div>
 
-          <Select value={filters.achievementRarity} onValueChange={(value) => setFilters({...filters, achievementRarity: value})}>
-            <SelectTrigger className="bg-slate-800/70 border-slate-600">
-              <SelectValue placeholder="Achievement Rarity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Rarities</SelectItem>
-              <SelectItem value="common">Common+</SelectItem>
-              <SelectItem value="rare">Rare+</SelectItem>
-              <SelectItem value="epic">Epic+</SelectItem>
-              <SelectItem value="legendary">Legendary+</SelectItem>
-            </SelectContent>
-          </Select>
-        </motion.div>
+            {/* Advanced Filters */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+            >
+              <Select value={filters.genre} onValueChange={(value) => setFilters({...filters, genre: value})}>
+                <SelectTrigger className="bg-slate-800/70 border-slate-600">
+                  <SelectValue placeholder="Genre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genres</SelectItem>
+                  <SelectItem value="rpg">RPG</SelectItem>
+                  <SelectItem value="fps">FPS</SelectItem>
+                  <SelectItem value="strategy">Strategy</SelectItem>
+                  <SelectItem value="racing">Racing</SelectItem>
+                </SelectContent>
+              </Select>
 
-        {/* RESOURCEFUL SEARCH SECTION (DIVIDED BY LINES) */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="w-full h-[800px] border-y border-white/10 bg-gradient-to-b from-slate-900/50 to-black/50 backdrop-blur-sm mb-24 flex relative"
-        >
+              <Select value={filters.priceRange} onValueChange={(value) => setFilters({...filters, priceRange: value})}>
+                <SelectTrigger className="bg-slate-800/70 border-slate-600">
+                  <SelectValue placeholder="Price Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Prices</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="under20">Under $20</SelectItem>
+                  <SelectItem value="under50">Under $50</SelectItem>
+                  <SelectItem value="premium">$50+</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.features} onValueChange={(value) => setFilters({...filters, features: value})}>
+                <SelectTrigger className="bg-slate-800/70 border-slate-600">
+                  <SelectValue placeholder="Features" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Features</SelectItem>
+                  <SelectItem value="multiplayer">Multiplayer</SelectItem>
+                  <SelectItem value="coop">Co-op</SelectItem>
+                  <SelectItem value="vr">VR Support</SelectItem>
+                  <SelectItem value="crossplay">Crossplay</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.equipment} onValueChange={(value) => setFilters({...filters, equipment: value})}>
+                <SelectTrigger className="bg-slate-800/70 border-slate-600">
+                  <SelectValue placeholder="Equipment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Equipment</SelectItem>
+                  <SelectItem value="swords">Swords</SelectItem>
+                  <SelectItem value="guns">Firearms</SelectItem>
+                  <SelectItem value="magic">Magic Items</SelectItem>
+                  <SelectItem value="vehicles">Vehicles</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.achievementRarity} onValueChange={(value) => setFilters({...filters, achievementRarity: value})}>
+                <SelectTrigger className="bg-slate-800/70 border-slate-600">
+                  <SelectValue placeholder="Rarity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Rarities</SelectItem>
+                  <SelectItem value="common">Common+</SelectItem>
+                  <SelectItem value="rare">Rare+</SelectItem>
+                  <SelectItem value="epic">Epic+</SelectItem>
+                  <SelectItem value="legendary">Legendary+</SelectItem>
+                </SelectContent>
+              </Select>
+            </motion.div>
+
+            {/* RESOURCEFUL SEARCH SECTION (DIVIDED BY LINES) */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full h-[600px] border border-white/10 bg-gradient-to-b from-slate-900/50 to-black/50 backdrop-blur-sm mb-0 flex relative rounded-xl overflow-hidden"
+            >
           {/* SEARCH RESULTS LIST (Left Side) */}
           <div 
             className={`
@@ -902,8 +911,10 @@ export default function Store() {
                 <p className="text-sm opacity-50 font-mono">Select a data node from the list to analyze.</p>
               </div>
             )}
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Category Navigation */}
         <motion.div 
