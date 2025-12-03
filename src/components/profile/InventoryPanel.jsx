@@ -303,6 +303,7 @@ const InventoryPanel = ({ inventory, capacity, profile }) => {
                 </AnimatePresence>
             </div>
         </div>
+        </div>
     );
 };
 
