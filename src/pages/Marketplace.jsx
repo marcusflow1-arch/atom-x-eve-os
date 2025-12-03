@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User
+  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User, Fingerprint, AlertOctagon, Siren
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useAuth } from '../components/auth/AuthContext';
 import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
 
-// --- Mock Data (Preserved & Enhanced) ---
+// --- Mock Data (Preserved) ---
 const featuredItems = [
   {
     id: 'f1',
@@ -196,92 +196,17 @@ const allItems = [
   }
 ];
 
-const liveAuctions = [
-  {
-    id: 'a1',
-    name: 'Dragonscale Helm of Ancient Wisdom',
-    category: 'Helmet',
-    currentBid: 45000,
-    buyoutPrice: 75000,
-    timeLeft: '2h 15m',
-    bidders: 23,
-    views: 156,
-    image: 'https://images.unsplash.com/photo-1534944652934-245f95a7c93c?w=300&h=300&fit=crop',
-    featured: true,
-    rarity: 'Mythic',
-    enchantments: ['+10 Wisdom', 'Dragon Sight'],
-    activeBidding: true,
-    game: 'Elder Scrolls: Reborn',
-    level: 99,
-    seller: 'SkyrimLord',
-    gender: 'Male',
-    faction: 'Vanguard',
-    description: 'A legendary helm said to grant its wearer glimpses into forgotten knowledge and ancient power.',
-    requirements: { level: 99, faction: 'Vanguard', gender: 'Male' },
-    stats: { defense: 150, wisdom: 25, magic_resist: 30 },
-    rating: 4.8,
-    reviews: 23,
-    origin_event: 'Dragon Lords Expansion',
-    biddingHistory: [
-      { bidder: 'PlayerOne', amount: 45000, time: '2 min ago' },
-      { bidder: 'GamerTwo', amount: 43000, time: '5 min ago' },
-      { bidder: 'DragonHunter', amount: 41000, time: '8 min ago' }
-    ]
-  },
-  {
-    id: 'a2',
-    name: "The Butcher's Crimson Cleaver",
-    category: 'Weapon',
-    currentBid: 35000,
-    buyoutPrice: 55000,
-    timeLeft: '1h 43m',
-    bidders: 18,
-    views: 121,
-    image: 'https://images.unsplash.com/photo-1608935436184-339c336b85a1?w=300&h=300&fit=crop',
-    hot: true,
-    rarity: 'Legendary',
-    enchantments: ['Lifesteal', 'Sunder Armor'],
-    activeBidding: false,
-    game: 'Diablo II: Eternal',
-    level: 92,
-    seller: 'DiabloFan',
-    gender: 'Unisex',
-    faction: 'Vanguard',
-    description: 'A gruesome cleaver, still dripping with the blood of countless demons. Its edge yearns for more.',
-    requirements: { level: 92, faction: 'Vanguard', gender: 'Unisex' },
-    stats: { attack: 200, lifesteal: 15, crit_chance: 12 },
-    rating: 4.9,
-    reviews: 47,
-    origin_event: 'Hell Invasion Event',
-    biddingHistory: [
-      { bidder: 'OrcSlayer', amount: 35000, time: '10 min ago' },
-      { bidder: 'WarriorQueen', amount: 33000, time: '15 min ago' }
-    ]
-  }
-];
-
+// Rarity Styles for Black Market
 const rarityStyles = {
-  Mythic: { text: 'text-red-400', border: 'border-red-500/50', bg: 'bg-red-950/80', glow: 'shadow-[0_0_15px_rgba(220,38,38,0.5)]' },
-  Legendary: { text: 'text-orange-400', border: 'border-orange-500/50', bg: 'bg-orange-950/80', glow: 'shadow-[0_0_15px_rgba(234,88,12,0.5)]' },
-  Epic: { text: 'text-purple-400', border: 'border-purple-500/50', bg: 'bg-purple-950/80', glow: 'shadow-[0_0_15px_rgba(147,51,234,0.5)]' },
-  Rare: { text: 'text-blue-400', border: 'border-blue-500/50', bg: 'bg-blue-950/80', glow: 'shadow-[0_0_15px_rgba(37,99,235,0.5)]' },
-  Uncommon: { text: 'text-green-400', border: 'border-green-500/50', bg: 'bg-green-950/80', glow: 'shadow-[0_0_15px_rgba(22,163,74,0.5)]' },
-  Common: { text: 'text-slate-400', border: 'border-slate-500/50', bg: 'bg-slate-950/80', glow: 'shadow-none' }
+  Mythic: { text: 'text-red-500', border: 'border-red-500', bg: 'bg-red-950/90', glow: 'shadow-[0_0_30px_rgba(220,38,38,0.6)]' },
+  Legendary: { text: 'text-orange-500', border: 'border-orange-500', bg: 'bg-orange-950/90', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.5)]' },
+  Epic: { text: 'text-purple-500', border: 'border-purple-500', bg: 'bg-purple-950/90', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.4)]' },
+  Rare: { text: 'text-blue-500', border: 'border-blue-500', bg: 'bg-blue-950/90', glow: 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' },
+  Uncommon: { text: 'text-green-500', border: 'border-green-500', bg: 'bg-green-950/90', glow: 'shadow-[0_0_10px_rgba(34,197,94,0.2)]' },
+  Common: { text: 'text-slate-400', border: 'border-slate-600', bg: 'bg-slate-900/90', glow: 'shadow-none' }
 };
 
-// --- Core Hooks (Preserved) ---
-const useAIRecommendations = (user, recentlyViewed, searchHistory) => {
-  const [recommendations, setRecommendations] = useState([]);
-  useEffect(() => {
-    const generateRecommendations = () => {
-      const mockRecommendations = allItems.slice(0, 6); // Simplified logic
-      setRecommendations(mockRecommendations);
-    };
-    generateRecommendations();
-  }, [user, recentlyViewed, searchHistory]);
-  return recommendations;
-};
-
+// --- Hooks ---
 const useRecentlyViewed = () => {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   useEffect(() => {
@@ -313,198 +238,157 @@ const useWatchlist = () => {
       return updated;
     });
   }, []);
-  const removeFromWatchlist = useCallback((itemId) => {
-    setWatchlist(prev => {
-      const updated = prev.filter(i => i.id !== itemId);
-      localStorage.setItem('marketplace_watchlist', JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
-  const isWatched = useCallback((itemId) => watchlist.some(i => i.id === itemId), [watchlist]);
-  return { watchlist, addToWatchlist, removeFromWatchlist, isWatched };
+  return { watchlist, addToWatchlist };
 };
 
-// --- New Vibrant UI Components ---
+// --- Components ---
 
-const NeonCard = ({ children, className = "", glowColor = "blue" }) => {
-  return (
-    <div className={`relative group overflow-hidden rounded-xl bg-black border border-slate-800 hover:border-${glowColor}-500/50 transition-all duration-300 ${className}`}>
-      <div className={`absolute inset-0 bg-gradient-to-b from-${glowColor}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
-      <div className={`absolute -inset-1 bg-gradient-to-r from-${glowColor}-500/20 via-purple-500/20 to-${glowColor}-500/20 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
-      <div className="relative z-10 h-full">{children}</div>
-    </div>
-  );
-};
-
-const MarketFilterSidebar = ({ filters, setFilters }) => {
-  return (
-    <div className="w-72 flex-shrink-0 space-y-6 p-4 bg-black/40 backdrop-blur-md border-r border-white/5 h-full overflow-y-auto">
-      <div className="flex items-center gap-2 text-white font-bold text-xl mb-6">
-        <Filter className="w-5 h-5 text-cyan-400" />
-        FILTERS
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Category</label>
-          <Select value={filters.category} onValueChange={(v) => setFilters(f => ({ ...f, category: v }))}>
-            <SelectTrigger className="bg-slate-900 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {['All', 'Weapon', 'Armor', 'Cybernetics', 'Misc'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Rarity</label>
-          <div className="flex flex-wrap gap-2">
-            {['All', 'Mythic', 'Legendary', 'Epic', 'Rare'].map(r => (
-              <Badge
-                key={r}
-                onClick={() => setFilters(f => ({ ...f, rarity: r }))}
-                className={`cursor-pointer transition-all ${filters.rarity === r ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-              >
-                {r}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Price Range</label>
-          <Slider
-            min={0} max={100000} step={1000}
-            value={filters.price}
-            onValueChange={(v) => setFilters(f => ({ ...f, price: v }))}
-            className="py-4"
-          />
-          <div className="flex justify-between text-xs text-slate-400 font-mono">
-            <span>{filters.price[0].toLocaleString()}</span>
-            <span>{filters.price[1].toLocaleString()} AGP</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ItemGridCard = ({ item, onClick }) => {
+const BlackMarketCard = ({ item, onClick }) => {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   
   return (
-    <NeonCard glowColor={item.rarity === 'Mythic' ? 'red' : item.rarity === 'Legendary' ? 'orange' : 'blue'} className="cursor-pointer h-full flex flex-col">
-      <div className="relative aspect-square overflow-hidden bg-slate-900" onClick={() => onClick(item)}>
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
+      className={`group relative bg-black border-2 ${rarity.border} rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:${rarity.glow}`}
+      onClick={() => onClick(item)}
+    >
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] overflow-hidden">
         <img 
           src={item.image} 
           alt={item.name} 
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 filter grayscale group-hover:grayscale-0" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
         
-        <div className="absolute top-2 right-2">
-          <Badge className={`${rarity.bg} ${rarity.text} border ${rarity.border} backdrop-blur-md`}>
-            {item.rarity}
+        {/* Overlay Info */}
+        <div className="absolute top-3 left-3">
+          <Badge className="bg-black/80 text-white border border-white/20 font-mono text-[10px] backdrop-blur-md">
+            {item.category.toUpperCase()}
           </Badge>
         </div>
         
         {item.hot && (
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-red-600 text-white border-red-500 animate-pulse">
-              <Flame className="w-3 h-3 mr-1" /> HOT
-            </Badge>
+          <div className="absolute top-3 right-3">
+            <div className="flex items-center gap-1 bg-red-600/90 text-white text-[10px] font-bold px-2 py-1 rounded border border-red-500 shadow-lg shadow-red-500/50 animate-pulse">
+              <Flame className="w-3 h-3" /> HOT
+            </div>
           </div>
         )}
 
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-white font-bold truncate text-lg mb-1">{item.name}</h3>
-          <p className="text-xs text-slate-400 flex items-center gap-1">
+          <div className="flex justify-between items-end mb-1">
+            <Badge className={`text-[10px] px-1.5 py-0 rounded-sm uppercase tracking-widest font-black border-none bg-black/50 ${rarity.text}`}>
+              {item.rarity}
+            </Badge>
+          </div>
+          <h3 className="text-lg font-bold text-white leading-tight mb-1 group-hover:text-cyan-400 transition-colors line-clamp-2">
+            {item.name}
+          </h3>
+          <p className="text-xs text-slate-400 flex items-center gap-1 truncate">
             <Gamepad2 className="w-3 h-3" /> {item.game}
           </p>
         </div>
       </div>
 
-      <div className="p-4 bg-slate-950/50 flex-grow flex flex-col justify-between border-t border-white/5">
-        <div className="flex justify-between items-end mb-4">
-          <div className="text-xs text-slate-500 font-mono uppercase">Current Price</div>
-          <div className="text-xl font-bold text-cyan-400 font-mono tracking-tight">
-            {item.price?.toLocaleString()} <span className="text-xs text-cyan-700">AGP</span>
+      {/* Bottom Stats */}
+      <div className="p-3 bg-slate-950 border-t border-white/10 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[10px] text-slate-500 uppercase font-bold">Seller</span>
+          <span className="text-xs text-slate-300 font-mono truncate max-w-[80px]">{item.seller}</span>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-black text-white font-mono tracking-tight">
+            {item.price.toLocaleString()} <span className="text-xs text-cyan-500">AGP</span>
           </div>
         </div>
-        
-        <Button 
-          className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-cyan-500/50 transition-all group-hover:bg-cyan-600 group-hover:border-cyan-500"
-          onClick={(e) => { e.stopPropagation(); onClick(item); }}
-        >
-          View Details
-        </Button>
       </div>
-    </NeonCard>
-  );
-};
-
-const AuctionListRow = ({ auction, onClick }) => {
-  const rarity = rarityStyles[auction.rarity] || rarityStyles.Common;
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="group flex items-center gap-4 p-3 bg-slate-900/40 border border-slate-800 rounded-xl hover:bg-slate-800/60 hover:border-orange-500/30 transition-all cursor-pointer"
-      onClick={() => onClick(auction)}
-    >
-      <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border border-slate-700">
-        <img src={auction.image} alt={auction.name} className="w-full h-full object-cover" />
-        {auction.activeBidding && (
-          <div className="absolute bottom-0 left-0 right-0 bg-red-600/90 text-white text-[10px] font-bold text-center py-0.5">
-            LIVE BID
-          </div>
-        )}
-      </div>
-
-      <div className="flex-grow min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-white font-bold text-lg truncate group-hover:text-orange-400 transition-colors">{auction.name}</h3>
-          <Badge className={`text-[10px] px-1.5 py-0 ${rarity.bg} ${rarity.text} border ${rarity.border}`}>
-            {auction.rarity}
-          </Badge>
-        </div>
-        <p className="text-sm text-slate-400 mb-2 line-clamp-1">{auction.description}</p>
-        <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
-          <span className="flex items-center gap-1 text-orange-400"><Clock className="w-3 h-3" /> {auction.timeLeft}</span>
-          <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {auction.bidders} Bids</span>
-        </div>
-      </div>
-
-      <div className="text-right min-w-[140px]">
-        <div className="text-xs text-slate-500 uppercase mb-1">Highest Bid</div>
-        <div className="text-2xl font-bold text-white font-mono tracking-tight mb-2">
-          {auction.currentBid.toLocaleString()} <span className="text-sm text-slate-500">AGP</span>
-        </div>
-        <Button size="sm" className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold">
-          PLACE BID
+      
+      {/* Hover Action Overlay */}
+      <div className="absolute inset-0 bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-sm">
+        <Button className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-8 py-6 border border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+          INSPECT ITEM
         </Button>
       </div>
     </motion.div>
   );
 };
 
-// --- Main Page Component ---
+const FilterSidebar = ({ filters, setFilters }) => (
+  <div className="w-64 bg-black/40 border-r border-white/10 p-6 hidden lg:block h-full overflow-y-auto custom-scrollbar">
+    <div className="flex items-center gap-2 mb-8 text-white font-black tracking-widest uppercase text-lg">
+      <Filter className="w-5 h-5 text-cyan-500" />
+      Filters
+    </div>
+
+    <div className="space-y-8">
+      <div>
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Category</h4>
+        <div className="space-y-2">
+          {['All', 'Weapon', 'Armor', 'Cybernetics', 'Data', 'Misc'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilters(f => ({ ...f, category: cat }))}
+              className={`w-full text-left text-sm py-1.5 px-3 rounded transition-colors ${
+                filters.category === cat 
+                  ? 'bg-cyan-900/30 text-cyan-400 border-l-2 border-cyan-500' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Rarity</h4>
+        <div className="flex flex-wrap gap-2">
+          {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon'].map(rarity => (
+            <button
+              key={rarity}
+              onClick={() => setFilters(f => ({ ...f, rarity: filters.rarity === rarity ? 'All' : rarity }))}
+              className={`text-[10px] px-2 py-1 rounded border uppercase font-bold transition-all ${
+                filters.rarity === rarity 
+                  ? `${rarityStyles[rarity].bg} ${rarityStyles[rarity].text} ${rarityStyles[rarity].border}`
+                  : 'bg-black border-slate-800 text-slate-500 hover:border-slate-600'
+              }`}
+            >
+              {rarity}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Price Range</h4>
+        <Slider
+          defaultValue={[0, 100000]}
+          max={100000}
+          step={1000}
+          value={filters.price}
+          onValueChange={(val) => setFilters(f => ({ ...f, price: val }))}
+          className="mb-2"
+        />
+        <div className="flex justify-between text-xs font-mono text-cyan-500">
+          <span>{filters.price[0]}</span>
+          <span>{filters.price[1]} AGP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function MarketplacePage() {
   const { user } = useAuth();
+  const [selectedTheme, setSelectedTheme] = useState('digital_matrix');
   const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({ category: 'All', rarity: 'All', price: [0, 100000] });
   const [selectedItem, setSelectedItem] = useState(null);
-  const [filters, setFilters] = useState({ category: 'All', rarity: 'All', price: [0, 100000], sellerType: 'all' });
-  const [selectedTheme, setSelectedTheme] = useState('digital_matrix');
   
-  // Auction State
-  const [auctionSearchQuery, setAuctionSearchQuery] = useState('');
-  const [selectedAuctionItem, setSelectedAuctionItem] = useState(null);
-
   // Hooks
-  const { recentlyViewed, addToRecentlyViewed } = useRecentlyViewed();
-  const watchlist = useWatchlist();
+  const { addToRecentlyViewed } = useRecentlyViewed();
 
   const handleItemClick = (item) => {
     addToRecentlyViewed(item);
@@ -521,537 +405,291 @@ export default function MarketplacePage() {
     });
   }, [searchQuery, filters]);
 
-  // Auction Listings Generator
-  const getAuctionListings = (baseItem) => {
-    if (!baseItem) return [];
-    return [
-      { id: 'l1', seller: baseItem.seller, bid: baseItem.currentBid, time: baseItem.timeLeft, bidders: baseItem.bidders },
-      { id: 'l2', seller: 'Trader_X', bid: Math.floor(baseItem.currentBid * 0.92), time: '45m', bidders: 12 },
-      { id: 'l3', seller: 'VoidWalker', bid: Math.floor(baseItem.currentBid * 1.05), time: '3h 20m', bidders: 8 },
-      { id: 'l4', seller: 'NexusVendor', bid: Math.floor(baseItem.currentBid * 0.98), time: '12m', bidders: 31 },
-      { id: 'l5', seller: 'CyberSamurai', bid: Math.floor(baseItem.currentBid * 1.1), time: '5h', bidders: 5 },
-    ].sort((a, b) => b.bid - a.bid);
-  };
-
-  const filteredAuctions = useMemo(() => {
-    return liveAuctions.filter(item => 
-      item.name.toLowerCase().includes(auctionSearchQuery.toLowerCase()) ||
-      item.game.toLowerCase().includes(auctionSearchQuery.toLowerCase())
-    );
-  }, [auctionSearchQuery]);
-
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-transparent text-white font-sans selection:bg-cyan-500/30 selection:text-cyan-200 relative">
+      <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30 relative overflow-hidden">
         <ThemeBackground themeId={selectedTheme} />
         
-        {/* Header Section */}
-        <div className="relative z-10 border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0">
-          <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-                <Store className="w-6 h-6 text-white" />
+        {/* Overlay Texture for Grit */}
+        <div className="fixed inset-0 pointer-events-none z-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay" />
+        <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
+
+        {/* Header */}
+        <header className="relative z-20 border-b border-white/10 bg-black/60 backdrop-blur-md sticky top-0">
+          <div className="max-w-[1800px] mx-auto px-6 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3 group cursor-pointer">
+                <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center shadow-[0_0_25px_rgba(220,38,38,0.6)] group-hover:shadow-[0_0_40px_rgba(220,38,38,0.8)] transition-shadow duration-300 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-20" />
+                  <Skull className="w-7 h-7 text-white relative z-10" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black tracking-[0.2em] text-white leading-none italic">
+                    BLACK<span className="text-red-600">MARKET</span>
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest">Secure Connection Established</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-black tracking-widest text-white leading-none">BLACK MARKET</h1>
-                <p className="text-[10px] text-cyan-400 font-mono tracking-[0.2em] uppercase">Underground Network v9.0</p>
-              </div>
+              
+              {/* Vertical Divider */}
+              <div className="h-8 w-px bg-white/10 mx-2 hidden md:block" />
+              
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center gap-1">
+                {[
+                  { id: 'browse', label: 'Browse Goods', icon: Package },
+                  { id: 'auctions', label: 'Live Auctions', icon: Gavel },
+                  { id: 'smuggler', label: "Smuggler's Den", icon: Fingerprint }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
+                      activeTab === tab.id 
+                        ? 'bg-white/10 text-white border border-white/10 shadow-lg' 
+                        : 'text-slate-500 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <tab.icon className={`w-3 h-3 ${activeTab === tab.id ? 'text-red-500' : ''}`} />
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
             </div>
 
-
-
-            {/* User Stats */}
+            {/* Right Side Actions */}
             <div className="flex items-center gap-6">
+              {/* Theme Toggle */}
               <ThemeToggle selectedTheme={selectedTheme} onThemeSelect={setSelectedTheme} />
               
-              <div className="text-right hidden md:block">
-                <div className="text-xs text-slate-500 uppercase font-bold">Balance</div>
-                <div className="text-xl font-bold text-cyan-400 font-mono">24,500 <span className="text-xs">AGP</span></div>
+              {/* Balance Display */}
+              <div className="bg-slate-900/80 border border-white/10 rounded-lg px-4 py-2 flex items-center gap-3 shadow-inner">
+                <div className="text-right">
+                  <div className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Encrypted Funds</div>
+                  <div className="text-lg font-mono font-bold text-cyan-400">24,500 <span className="text-xs text-slate-500">AGP</span></div>
+                </div>
+                <Coins className="w-8 h-8 text-yellow-500 drop-shadow-md" />
               </div>
-              <div className="w-10 h-10 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center cursor-pointer hover:border-cyan-500 transition-colors">
-                <img src={user?.avatar_url || "https://github.com/shadcn.png"} className="w-full h-full rounded-full opacity-80 hover:opacity-100 transition-opacity" alt="User" />
+
+              {/* User Avatar */}
+              <div className="relative group">
+                <div className="w-10 h-10 rounded-full border-2 border-slate-700 overflow-hidden cursor-pointer group-hover:border-red-500 transition-colors">
+                  <img src={user?.avatar_url || "https://github.com/shadcn.png"} className="w-full h-full object-cover" alt="User" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
               </div>
             </div>
           </div>
+        </header>
 
-          {/* Navigation Tabs */}
-          <div className="max-w-[1600px] mx-auto px-6 flex gap-8 text-sm font-medium tracking-wide border-t border-white/5">
-            {[
-              { id: 'browse', label: 'Browse Goods', icon: Package },
-              { id: 'auctions', label: 'Live Auctions', icon: Gavel },
-              { id: 'smuggler', label: "Smuggler's Den", icon: Skull }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-4 border-b-2 transition-all ${
-                  activeTab === tab.id 
-                    ? 'border-cyan-500 text-white' 
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-cyan-400' : ''}`} />
-                {tab.label}
-              </button>
-            ))}
+        {/* Main Layout */}
+        <div className="relative z-10 flex h-[calc(100vh-80px)] max-w-[1800px] mx-auto">
+          
+          {/* Sidebar Filters (Only on Browse) */}
+          {activeTab === 'browse' && (
+            <FilterSidebar filters={filters} setFilters={setFilters} />
+          )}
+
+          {/* Content Area */}
+          <div className="flex-grow overflow-y-auto p-8 custom-scrollbar">
+            
+            {activeTab === 'browse' ? (
+              <div className="space-y-8 max-w-7xl mx-auto">
+                {/* Search Bar */}
+                <div className="relative max-w-2xl mx-auto mb-12">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity" />
+                  <div className="relative flex items-center bg-black border border-slate-700 rounded-xl p-2 shadow-2xl">
+                    <Search className="w-6 h-6 text-slate-500 ml-3" />
+                    <input 
+                      type="text" 
+                      placeholder="Search illegal goods, contraband, and rare artifacts..." 
+                      className="w-full bg-transparent border-none outline-none text-white px-4 py-3 font-mono placeholder:text-slate-600"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className="flex items-center gap-2 pr-2">
+                      <Badge className="bg-slate-900 text-slate-500 border border-slate-800 font-mono text-[10px]">CMD+K</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Featured Items Row */}
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                      <Siren className="w-6 h-6 text-red-500 animate-pulse" />
+                      High Value Targets
+                    </h2>
+                    <Button variant="link" className="text-red-400 text-xs hover:text-red-300">View All Hot Items</Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+                    {featuredItems.map(item => (
+                      <div key={item.id} className="relative bg-gradient-to-r from-slate-900 to-black border border-slate-800 rounded-2xl p-1 overflow-hidden group cursor-pointer" onClick={() => handleItemClick(item)}>
+                        <div className="absolute top-0 right-0 p-4 z-10">
+                          <Badge className="bg-red-600 text-white border-none font-bold animate-pulse shadow-lg shadow-red-900/50">FEATURED</Badge>
+                        </div>
+                        <div className="flex h-full">
+                          <div className="w-2/5 relative overflow-hidden rounded-l-xl">
+                            <img src={item.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={item.name} />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/90" />
+                          </div>
+                          <div className="w-3/5 p-6 flex flex-col justify-center relative z-10">
+                            <h3 className="text-2xl font-black text-white leading-none mb-2 group-hover:text-red-500 transition-colors italic">{item.name}</h3>
+                            <p className="text-sm text-slate-400 mb-4 line-clamp-2">{item.description}</p>
+                            <div className="flex items-center justify-between mt-auto">
+                              <div className="text-2xl font-mono font-bold text-cyan-400">{item.price.toLocaleString()} <span className="text-xs">AGP</span></div>
+                              <Button size="sm" className="bg-white/10 hover:bg-white/20 border border-white/10 text-white">Inspect</Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Main Grid */}
+                <section>
+                  <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+                    <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
+                      <Grid className="w-5 h-5 text-slate-500" />
+                      Market Listings
+                    </h2>
+                    <div className="flex items-center gap-4 text-sm text-slate-500 font-mono">
+                      <span>{filteredItems.length} Results Found</span>
+                      <div className="flex gap-2">
+                        <button className="hover:text-white transition-colors"><List className="w-4 h-4" /></button>
+                        <button className="text-white"><Grid className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-20">
+                    {filteredItems.map((item) => (
+                      <BlackMarketCard key={item.id} item={item} onClick={handleItemClick} />
+                    ))}
+                  </div>
+                </section>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center p-12 opacity-50">
+                <Lock className="w-24 h-24 text-slate-700 mb-6" />
+                <h2 className="text-3xl font-black text-slate-500 uppercase tracking-widest mb-2">Section Restricted</h2>
+                <p className="text-slate-600 max-w-md mx-auto">Access to Auctions and the Smuggler's Den requires authentication level 5 or higher. Return to Browse Goods.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-8 border-slate-700 text-slate-400 hover:text-white hover:border-white/50"
+                  onClick={() => setActiveTab('browse')}
+                >
+                  Return to Market
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="relative z-10 flex h-[calc(100vh-140px)] max-w-[1600px] mx-auto">
-          
-          {/* Main Content */}
-          <div className="flex-grow overflow-y-auto p-6 custom-scrollbar">
-            
-            {/* BROWSE TAB - ENHANCED UI */}
-            {activeTab === 'browse' && (
-              <div className="space-y-10 pb-12">
-                
-                {/* 1. FEATURED / HOT SECTION */}
-                <section className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800">
-                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1200&h=400&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay" />
-                   <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-                   
-                   <div className="relative p-8 flex flex-col md:flex-row items-end gap-8">
-                     <div className="flex-1 space-y-4">
-                       <Badge className="bg-red-500 text-white border-red-400 animate-pulse shadow-lg shadow-red-500/30">
-                         <Flame className="w-4 h-4 mr-1" /> BLACK MARKET HOT PICK
-                       </Badge>
-                       <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">
-                         The Butcher's <br/>
-                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Crimson Cleaver</span>
-                       </h2>
-                       <p className="text-slate-300 max-w-xl text-lg">
-                         A legendary weapon banned in 12 systems. Increases damage by 200% at the cost of user sanity.
-                         Limited stock available from the Syndicate.
-                       </p>
-                       <div className="flex gap-4 pt-4">
-                          <Button size="lg" className="bg-red-600 hover:bg-red-500 text-white font-bold px-8 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]">
-                            BUY NOW - 35,000 AGP
-                          </Button>
-                          <Button size="lg" variant="outline" className="border-slate-600 text-white hover:bg-white/10 rounded-full px-8">
-                            View Details
-                          </Button>
-                       </div>
-                     </div>
-                     
-                     <div className="w-full md:w-1/3 bg-black/50 backdrop-blur-md border border-white/10 rounded-xl p-4">
-                        <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
-                           <span className="text-slate-400 font-mono text-xs">TOP DEMAND</span>
-                           <span className="text-green-400 font-mono text-xs flex items-center gap-1"><ArrowUp className="w-3 h-3" /> +24% today</span>
-                        </div>
-                        <div className="space-y-3">
-                           {allItems.filter(i => i.hot && i.id !== 'i2').slice(0, 3).map((item, i) => (
-                              <div key={item.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => handleItemClick(item)}>
-                                 <div className="text-slate-600 font-black text-lg">0{i+1}</div>
-                                 <img src={item.image} className="w-10 h-10 rounded bg-slate-800 object-cover" />
-                                 <div className="flex-1">
-                                    <div className="text-sm font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{item.name}</div>
-                                    <div className="text-xs text-slate-500">{item.price.toLocaleString()} AGP</div>
-                                 </div>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-                   </div>
-                </section>
+        {/* Inspector Modal */}
+        <AnimatePresence>
+          {selectedItem && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={() => setSelectedItem(null)}>
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-black border border-slate-800 w-full max-w-5xl rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col md:flex-row h-[700px]"
+              >
+                <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 z-50 bg-black/50 p-2 rounded-full text-white hover:bg-white hover:text-black transition-all">
+                  <X className="w-6 h-6" />
+                </button>
 
-                {/* 2. CATEGORY NAV */}
-                <section>
-                   <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                     <Filter className="w-4 h-4" /> Filter by Category
-                   </h3>
-                   <div className="flex flex-wrap gap-3 mb-6">
-                      {['All', 'Weapon', 'Armor', 'Cybernetics', 'Data', 'Misc'].map(cat => (
-                        <button
-                          key={cat}
-                          onClick={() => setFilters(f => ({...f, category: cat}))}
-                          className={`px-6 py-3 rounded-xl border transition-all flex items-center gap-2 font-bold ${
-                            filters.category === cat 
-                            ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                            : 'bg-slate-900/50 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-white'
-                          }`}
-                        >
-                           {cat === 'Weapon' && <Sword className="w-4 h-4" />}
-                           {cat === 'Armor' && <Shield className="w-4 h-4" />}
-                           {cat === 'Cybernetics' && <Zap className="w-4 h-4" />}
-                           {cat === 'Data' && <Radio className="w-4 h-4" />}
-                           {cat}
-                        </button>
-                      ))}
-                   </div>
+                {/* Left: Visuals */}
+                <div className="w-full md:w-1/2 bg-slate-900 relative group">
+                  <img src={selectedItem.image} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" alt="" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                  <div className="absolute bottom-8 left-8 right-8">
+                    <div className={`text-xs font-black uppercase tracking-widest mb-2 ${rarityStyles[selectedItem.rarity]?.text || 'text-white'}`}>
+                      {selectedItem.rarity} Class Item
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-black text-white leading-none mb-4 italic shadow-black drop-shadow-lg">{selectedItem.name}</h2>
+                    <div className="flex gap-2">
+                      <Badge className="bg-white/10 backdrop-blur text-white border-white/20 rounded px-3 py-1">{selectedItem.category}</Badge>
+                      <Badge className="bg-white/10 backdrop-blur text-white border-white/20 rounded px-3 py-1">{selectedItem.game}</Badge>
+                    </div>
+                  </div>
+                </div>
 
-                   {/* Search Bar (Moved from Header) */}
-                   <div className="relative group max-w-md">
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition-opacity" />
-                      <div className="relative bg-slate-900 border border-slate-700 rounded-lg flex items-center px-4 h-12">
-                        <Search className="w-5 h-5 text-slate-400 mr-3" />
-                        <input 
-                          type="text" 
-                          placeholder="Search black market goods..." 
-                          className="bg-transparent border-none outline-none w-full text-white placeholder:text-slate-600 font-mono text-sm"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <div className="flex items-center gap-2 border-l border-slate-800 pl-3 ml-2">
-                          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-cyan-400" title="Voice Search">
-                            <Mic className="w-4 h-4" />
-                          </button>
-                          <span className="text-slate-600 text-xs font-mono hidden md:inline">CMD+K</span>
+                {/* Right: Data */}
+                <div className="w-full md:w-1/2 bg-black p-8 md:p-10 flex flex-col border-l border-slate-800">
+                  <div className="flex-grow space-y-8 overflow-y-auto custom-scrollbar pr-2">
+                    <div>
+                      <h3 className="text-slate-500 font-bold uppercase text-xs tracking-widest mb-3 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" /> Description
+                      </h3>
+                      <p className="text-slate-300 text-lg leading-relaxed font-light">{selectedItem.description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                        <div className="text-slate-500 text-xs uppercase font-bold mb-1">Seller Reputation</div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_lime]" />
+                          <span className="text-white font-mono font-bold">VERIFIED (98%)</span>
                         </div>
+                        <div className="text-sm text-slate-400 mt-1">{selectedItem.seller}</div>
+                      </div>
+                      <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                        <div className="text-slate-500 text-xs uppercase font-bold mb-1">Security Level</div>
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-red-500" />
+                          <span className="text-red-500 font-mono font-bold">ILLICIT GOODS</span>
+                        </div>
+                        <div className="text-sm text-slate-400 mt-1">Untraceable Transaction</div>
                       </div>
                     </div>
-                </section>
 
-                {/* 3. MAIN MARKET GRID */}
-                <section>
-                  <div className="flex items-center justify-between mb-6 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/5 sticky top-20 z-20">
-                    <div className="flex items-center gap-4">
-                      <div className="flex p-1 bg-slate-900 rounded-lg border border-slate-800">
-                         <button 
-                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${filters.sellerType === 'all' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-white'}`}
-                           onClick={() => setFilters(f => ({...f, sellerType: 'all'}))}
-                         >
-                           ALL
-                         </button>
-                         <button 
-                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${filters.sellerType === 'official' ? 'bg-yellow-500 text-black' : 'text-slate-500 hover:text-yellow-400'}`}
-                           onClick={() => setFilters(f => ({...f, sellerType: 'official'}))}
-                         >
-                           <Shield className="w-3 h-3" /> OFFICIAL
-                         </button>
-                         <button 
-                           className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${filters.sellerType === 'player' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-blue-400'}`}
-                           onClick={() => setFilters(f => ({...f, sellerType: 'player'}))}
-                         >
-                           <Users className="w-3 h-3" /> PLAYERS
-                         </button>
+                    {selectedItem.stats && (
+                      <div>
+                        <h3 className="text-slate-500 font-bold uppercase text-xs tracking-widest mb-3">Technical Specifications</h3>
+                        <div className="space-y-2">
+                          {Object.entries(selectedItem.stats).map(([key, val]) => (
+                            <div key={key} className="flex justify-between items-center p-3 bg-slate-900/30 rounded border border-slate-800 hover:border-slate-600 transition-colors">
+                              <span className="text-slate-400 capitalize text-sm font-medium">{key.replace('_', ' ')}</span>
+                              <span className="text-cyan-400 font-mono font-bold">+{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-8 mt-8 border-t border-slate-800 bg-black relative z-10">
+                    <div className="flex items-end justify-between mb-6">
+                      <div>
+                        <div className="text-slate-500 text-xs uppercase font-bold mb-1">Current Market Value</div>
+                        <div className="text-4xl font-black text-white font-mono tracking-tight">
+                          {selectedItem.price?.toLocaleString()} <span className="text-lg text-cyan-500">AGP</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-slate-500 text-xs uppercase font-bold mb-1">Stock</div>
+                        <div className="text-white font-mono">1 Unit Available</div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                       <span className="text-xs text-slate-500 font-mono uppercase hidden md:inline-block">Sort By:</span>
-                       <Select defaultValue="featured">
-                          <SelectTrigger className="w-[140px] h-9 bg-slate-900 border-slate-700 text-xs"><SelectValue placeholder="Sort" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="featured">Featured</SelectItem>
-                            <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                            <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                            <SelectItem value="newest">Newest Arrivals</SelectItem>
-                          </SelectContent>
-                       </Select>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button className="h-14 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest text-lg shadow-[0_0_30px_rgba(220,38,38,0.4)] transition-all hover:scale-[1.02]">
+                        PURCHASE NOW
+                      </Button>
+                      <Button variant="outline" className="h-14 border-slate-700 hover:bg-slate-900 text-slate-300 hover:text-white font-bold uppercase tracking-widest">
+                        MAKE AN OFFER
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {filteredItems.map(item => {
-                      const isOfficial = item.seller === 'Black Market' || item.id === 'i1' || item.id === 'i6'; 
-                      const sellerDisplay = isOfficial ? 'Black Market' : item.seller;
-                      
-                      if (filters.sellerType === 'official' && !isOfficial) return null;
-                      if (filters.sellerType === 'player' && isOfficial) return null;
-
-                      return (
-                        <NeonCard key={item.id} glowColor={item.rarity === 'Mythic' ? 'red' : item.rarity === 'Legendary' ? 'orange' : 'blue'} className="cursor-pointer h-full flex flex-col bg-slate-950/80 border-slate-800">
-                          <div className="relative aspect-[4/3] overflow-hidden bg-slate-900" onClick={() => handleItemClick(item)}>
-                            <img 
-                              src={item.image} 
-                              alt={item.name} 
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100" 
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                            
-                            {/* Top Badges */}
-                            <div className="absolute top-3 left-3 flex flex-col gap-2">
-                              {isOfficial && (
-                                <Badge className="bg-yellow-500 text-black font-bold border-none shadow-lg shadow-yellow-500/20 text-[10px]">
-                                  OFFICIAL
-                                </Badge>
-                              )}
-                              {!isOfficial && (
-                                <Badge className="bg-black/60 backdrop-blur text-slate-300 border border-white/10 text-[10px]">
-                                  PLAYER
-                                </Badge>
-                              )}
-                            </div>
-
-                            {item.hot && (
-                              <div className="absolute top-3 right-3">
-                                <div className="bg-red-600 p-1.5 rounded-full animate-pulse shadow-lg shadow-red-600/50">
-                                  <Flame className="w-3 h-3 text-white" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="p-4 flex-grow flex flex-col relative">
-                            {/* Rarity Line */}
-                            <div className={`absolute top-0 left-0 w-full h-[2px] ${rarityStyles[item.rarity]?.bg.replace('bg-', 'bg-') || 'bg-slate-700'}`} />
-                            
-                            <div className="mb-3">
-                              <div className="flex justify-between items-start mb-1">
-                                <h3 className="text-white font-bold leading-tight line-clamp-2 flex-1 mr-2 text-sm group-hover:text-cyan-400 transition-colors">{item.name}</h3>
-                              </div>
-                              <div className="text-xs text-slate-500 flex items-center gap-1 truncate">
-                                <Gamepad2 className="w-3 h-3" /> {item.game}
-                              </div>
-                            </div>
-
-                            <div className="mt-auto space-y-3">
-                               <div className="flex justify-between items-end p-2 bg-white/5 rounded-lg border border-white/5">
-                                  <div className="text-[10px] text-slate-400 uppercase font-bold">Price</div>
-                                  <div className="text-lg font-black text-white font-mono">
-                                    {item.price?.toLocaleString()} <span className="text-cyan-500 text-xs">AGP</span>
-                                  </div>
-                               </div>
-                               
-                               <div className="grid grid-cols-2 gap-2">
-                                 <Button size="sm" variant="outline" className="h-8 text-xs border-slate-700 hover:bg-slate-800 text-slate-300" onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}>
-                                   View
-                                 </Button>
-                                 <Button size="sm" className="h-8 text-xs bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg shadow-cyan-500/20">
-                                   Buy
-                                 </Button>
-                               </div>
-                            </div>
-                          </div>
-                        </NeonCard>
-                      );
-                    })}
-                  </div>
-                </section>
-              </div>
-            )}
-
-            {/* AUCTIONS TAB */}
-            {activeTab === 'auctions' && (
-              <div className="space-y-6">
-                {!selectedAuctionItem ? (
-                  // Auction Gallery View
-                  <>
-                    <div className="flex items-center justify-between bg-gradient-to-r from-orange-900/20 to-red-900/20 p-6 rounded-2xl border border-orange-500/20">
-                      <div>
-                        <h2 className="text-3xl font-black text-white mb-2">LIVE AUCTION HOUSE</h2>
-                        <p className="text-slate-400">Bid on rare items in real-time. Select an item to view all sellers.</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-right">
-                        <div className="text-sm text-slate-500 font-mono">ACTIVE AUCTIONS</div>
-                        <div className="text-4xl font-mono font-bold text-orange-500">142</div>
-                      </div>
-                    </div>
-
-                    {/* Auction Search */}
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <Input
-                        placeholder="Search auction items..."
-                        value={auctionSearchQuery}
-                        onChange={(e) => setAuctionSearchQuery(e.target.value)}
-                        className="pl-12 h-12 bg-slate-900/50 border-slate-700 text-white w-full rounded-xl"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="lg:col-span-3 space-y-4">
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                          <Radio className="w-4 h-4 text-red-500 animate-pulse" /> Live Items
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {filteredAuctions.map(auction => (
-                            <AuctionListRow 
-                              key={auction.id} 
-                              auction={auction} 
-                              onClick={() => setSelectedAuctionItem(auction)} 
-                            />
-                          ))}
-                        </div>
-                        {filteredAuctions.length === 0 && (
-                          <div className="text-center py-12 text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800">
-                            <Ghost className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p>No active auctions found matching "{auctionSearchQuery}"</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // Auction Detail View (List of Sellers)
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="space-y-6"
-                  >
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setSelectedAuctionItem(null)}
-                      className="text-slate-400 hover:text-white pl-0 hover:bg-transparent"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" /> Back to Auctions
-                    </Button>
-
-                    {/* Item Header */}
-                    <div className="flex gap-6 bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                      <div className="w-32 h-32 rounded-xl overflow-hidden border border-slate-700 flex-shrink-0">
-                        <img src={selectedAuctionItem.image} alt={selectedAuctionItem.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-3xl font-bold text-white">{selectedAuctionItem.name}</h2>
-                          <Badge className={`bg-slate-800 ${rarityStyles[selectedAuctionItem.rarity]?.text || 'text-white'}`}>
-                            {selectedAuctionItem.rarity}
-                          </Badge>
-                        </div>
-                        <p className="text-slate-400 mb-4 max-w-2xl">{selectedAuctionItem.description}</p>
-                        <div className="flex gap-4 text-sm text-slate-500 font-mono">
-                          <span className="flex items-center gap-1"><Gamepad2 className="w-4 h-4" /> {selectedAuctionItem.game}</span>
-                          <span className="flex items-center gap-1"><Shield className="w-4 h-4" /> {selectedAuctionItem.category}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Sellers List */}
-                    <div className="bg-slate-900/40 rounded-2xl border border-slate-800 overflow-hidden">
-                      <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                          <Users className="w-5 h-5 text-cyan-400" /> Active Listings
-                        </h3>
-                        <Badge variant="outline" className="border-cyan-500/30 text-cyan-400">
-                          {getAuctionListings(selectedAuctionItem).length} Sellers
-                        </Badge>
-                      </div>
-                      
-                      <div className="divide-y divide-slate-800/50">
-                        {getAuctionListings(selectedAuctionItem).map((listing, idx) => (
-                          <div key={listing.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
-                            <div className="flex items-center gap-4 w-1/3">
-                              <div className="text-slate-500 font-mono text-sm w-6">#{idx + 1}</div>
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700">
-                                  {listing.seller.substring(0, 2).toUpperCase()}
-                                </div>
-                                <div>
-                                  <div className="text-white font-bold">{listing.seller}</div>
-                                  <div className="text-xs text-slate-500">Reputation: 98%</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-8 text-sm font-mono w-1/3">
-                              <div>
-                                <div className="text-slate-500 text-xs uppercase mb-1">Time Left</div>
-                                <div className="text-orange-400 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" /> {listing.time}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-slate-500 text-xs uppercase mb-1">Bids</div>
-                                <div className="text-slate-300">{listing.bidders}</div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 w-1/3 justify-end">
-                              <div className="text-right">
-                                <div className="text-slate-500 text-xs uppercase mb-1">Current Bid</div>
-                                <div className="text-xl font-bold text-white">{listing.bid.toLocaleString()} AGP</div>
-                              </div>
-                              <Button className="bg-orange-600 hover:bg-orange-500 text-white font-bold px-6">
-                                BID
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            )}
-
-            {/* SMUGGLER TAB */}
-            {activeTab === 'smuggler' && (
-              <div className="flex flex-col items-center justify-center h-full text-center p-12">
-                <div className="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-800">
-                  <Lock className="w-10 h-10 text-slate-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-300 mb-2">Restricted Area</h2>
-                <p className="text-slate-500 max-w-md mx-auto mb-8">
-                  You need a higher reputation level to access the Smuggler's Den. Complete more trades to unlock high-tier illegal contracts.
-                </p>
-                <Button variant="outline" disabled className="opacity-50">Access Denied (Lvl 10 Required)</Button>
-              </div>
-            )}
-
-          </div>
-
-          {/* Sidebar Filters (Only on Browse) */}
-          {activeTab === 'browse' && (
-            <MarketFilterSidebar filters={filters} setFilters={setFilters} />
-          )}
-        </div>
-
-        {/* Item Modal (Simplified for new design) */}
-        <AnimatePresence>
-          {selectedItem && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedItem(null)}>
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={e => e.stopPropagation()}
-                className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative"
-              >
-                <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X /></button>
-                <div className="flex flex-col md:flex-row h-[600px]">
-                  <div className="w-full md:w-1/2 bg-black relative">
-                    <img src={selectedItem.image} className="w-full h-full object-cover opacity-80" alt="" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                    <div className="absolute bottom-6 left-6">
-                      <h2 className="text-3xl font-black text-white mb-2">{selectedItem.name}</h2>
-                      <div className="flex gap-2">
-                        <Badge className="bg-slate-800 border-slate-600">{selectedItem.category}</Badge>
-                        <Badge className="bg-slate-800 border-slate-600">{selectedItem.rarity}</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full md:w-1/2 p-8 flex flex-col">
-                    <div className="flex-grow">
-                      <h3 className="text-slate-500 font-bold uppercase text-sm mb-4">Item Details</h3>
-                      <p className="text-slate-300 leading-relaxed mb-6 text-lg">{selectedItem.description}</p>
-                      
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                          <div className="text-slate-500 text-xs uppercase">Seller</div>
-                          <div className="text-white font-mono">{selectedItem.seller}</div>
-                        </div>
-                        <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                          <div className="text-slate-500 text-xs uppercase">Origin</div>
-                          <div className="text-white font-mono">{selectedItem.game}</div>
-                        </div>
-                      </div>
-
-                      {selectedItem.stats && (
-                        <div className="space-y-2">
-                          <div className="text-slate-500 text-xs uppercase">Stats</div>
-                          {Object.entries(selectedItem.stats).map(([key, val]) => (
-                            <div key={key} className="flex justify-between text-sm border-b border-slate-800 pb-1">
-                              <span className="text-slate-400 capitalize">{key.replace('_', ' ')}</span>
-                              <span className="text-green-400 font-mono">+{val}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-auto pt-6 border-t border-slate-800">
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="text-slate-400 text-sm">Total Price</div>
-                        <div className="text-3xl font-bold text-cyan-400 font-mono">{selectedItem.price?.toLocaleString()} AGP</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Button className="bg-cyan-600 hover:bg-cyan-500 text-white py-6 text-lg font-bold">BUY NOW</Button>
-                        <Button variant="outline" className="py-6 text-lg border-slate-700 hover:bg-slate-800">OFFER TRADE</Button>
-                      </div>
-                    </div>
+                    <p className="text-center text-[10px] text-slate-600 mt-4 font-mono">
+                      WARNING: All sales are final. The Black Market is not responsible for Syndicate retaliation.
+                    </p>
                   </div>
                 </div>
               </motion.div>
