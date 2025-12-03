@@ -614,12 +614,7 @@ export default function TradingPost() {
                 >
                   Global Market
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="inventory" 
-                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all"
-                >
-                  My Inventory
-                </TabsTrigger>
+
                 <TabsTrigger 
                   value="subtab" 
                   className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
@@ -740,17 +735,7 @@ export default function TradingPost() {
               </div>
             </TabsContent>
 
-            <TabsContent value="inventory" className="space-y-6">
-               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {inventory.map(item => (
-                    <GalacticInventoryItem 
-                      key={item.id} 
-                      item={item} 
-                      onClick={(itm) => { setSelectedItem(itm); setShowTradeModal(true); }} 
-                    />
-                  ))}
-               </div>
-            </TabsContent>
+
 
             <TabsContent value="subtab" className="h-[calc(100vh-300px)]">
                <div className="flex h-full w-full bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
