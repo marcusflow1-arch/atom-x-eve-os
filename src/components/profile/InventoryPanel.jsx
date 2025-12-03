@@ -140,47 +140,65 @@ const InventoryPanel = ({ inventory, capacity, profile }) => {
     };
 
     return (
-        <div className="bg-slate-950/80 rounded-xl border border-slate-800 h-[700px] flex flex-col overflow-hidden shadow-2xl">
-            {/* Top Navigation Bar - Sleek Line */}
-            <div className="flex items-center px-6 py-4 border-b border-white/5 bg-black/40 backdrop-blur-md">
-                <div className="flex items-center gap-2 mr-8">
+        <div className="bg-slate-950/90 rounded-xl border border-slate-800 h-[700px] flex overflow-hidden shadow-2xl relative">
+            {/* Background Texture/Effect for MMO feel */}
+            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+            {/* Left Vertical Sidebar - Genres */}
+            <div className="w-48 flex-shrink-0 flex flex-col border-r border-slate-800 bg-black/40 backdrop-blur-md relative z-10">
+                <div className="p-6 border-b border-slate-800/50 flex items-center gap-2">
                     <Database className="w-5 h-5 text-cyan-500" />
-                    <span className="font-bold text-white tracking-wider text-sm">MY INVENTORY</span>
-                </div>
-                
-                <div className="flex-1 flex items-center gap-6 overflow-x-auto no-scrollbar">
-                    {genres.map(genre => (
-                        <button
-                            key={genre}
-                            onClick={() => { setActiveGenre(genre); setSelectedGame(null); }}
-                            className={`text-sm font-medium transition-all relative py-2 ${
-                                activeGenre === genre ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
-                            }`}
-                        >
-                            {genre}
-                            {activeGenre === genre && (
-                                <motion.div 
-                                    layoutId="activeGenreLine"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
-                                />
-                            )}
-                        </button>
-                    ))}
+                    <span className="font-bold text-white tracking-wider text-sm">INVENTORY</span>
                 </div>
 
-                <div className="w-64 relative ml-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
-                    <Input 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search items..."
-                        className="h-8 pl-8 bg-slate-900/50 border-slate-700 text-xs focus:border-cyan-500/50"
-                    />
+                <div className="flex-1 overflow-y-auto py-4 relative">
+                    {/* Vertical Line */}
+                    <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-900 to-transparent" />
+
+                    <div className="flex flex-col gap-1 px-2">
+                        {genres.map(genre => (
+                            <button
+                                key={genre}
+                                onClick={() => { setActiveGenre(genre); setSelectedGame(null); }}
+                                className={`
+                                    relative text-left px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all rounded-lg
+                                    ${activeGenre === genre 
+                                        ? 'text-cyan-400 bg-cyan-950/30' 
+                                        : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}
+                                `}
+                            >
+                                {genre}
+                                {activeGenre === genre && (
+                                    <motion.div 
+                                        layoutId="activeGenreVertical"
+                                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-l shadow-[0_0_10px_rgba(6,182,212,0.8)]"
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 overflow-hidden relative p-6">
+            {/* Right Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-900/50 to-black/50 relative z-10">
+                {/* Top Bar in Content Area for Search */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50">
+                    <div className="text-xs text-slate-500 font-mono">
+                        {selectedGame ? `${activeGenre} // ${selectedGame}` : `${activeGenre} // SELECT GAME`}
+                    </div>
+                    <div className="w-64 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
+                        <Input 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Filter items..."
+                            className="h-8 pl-8 bg-slate-900/50 border-slate-700 text-xs focus:border-cyan-500/50 rounded-md"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-hidden relative p-6">
                 <AnimatePresence mode="wait">
                     {!selectedGame ? (
                         /* Game Selection View */
