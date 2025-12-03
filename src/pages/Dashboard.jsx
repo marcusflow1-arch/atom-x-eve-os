@@ -49,7 +49,7 @@ import GuildInfoTab from '../components/clan/GuildInfoTab';
 
 // New imports for multi-mode dashboard
 import ModeToggle from '../components/dashboard/ModeToggle';
-import QuickCuts from '../components/dashboard/QuickCuts';
+
 import AINexusView from '../components/dashboard/views/AINexusView';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import EconomyDistrictView from '../components/dashboard/views/EconomyDistrictView';
@@ -1517,10 +1517,7 @@ export default function Dashboard() {
         </AnimatePresence>
       </div>
 
-      {/* Quick Cuts at Bottom - Always Visible */}
-      <div className="flex-shrink-0">
-        <QuickCuts onNavigate={handleQuickCutNavigation} />
-      </div>
+
 
       {/* Overlays */}
       <AnimatePresence>
