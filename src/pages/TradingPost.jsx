@@ -631,115 +631,221 @@ export default function TradingPost() {
               </TabsList>
             </div>
 
-            <TabsContent value="board" className="space-y-6 h-[calc(100vh-300px)]">
-              {/* Filter Bar */}
-              <GalacticCard className="p-4 flex flex-wrap gap-4 items-center justify-between mb-6">
-                <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg border border-white/5 px-3 py-2 flex-1 min-w-[200px]">
-                  <Search className="w-5 h-5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Search items..." 
-                    className="bg-transparent border-none outline-none text-white placeholder:text-slate-500 w-full text-sm"
-                  />
-                </div>
-                
-                <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                   <Select defaultValue="newest">
-                    <SelectTrigger className="w-[140px] bg-slate-800/50 border-white/10"><SelectValue placeholder="Sort" /></SelectTrigger>
-                    <SelectContent><SelectItem value="newest">Newest</SelectItem><SelectItem value="price">Price</SelectItem></SelectContent>
-                  </Select>
-                </div>
-              </GalacticCard>
-
-              {/* Split View Layout */}
-              <div className="grid grid-cols-12 gap-6 h-full">
-                {/* Left Side: Games / Items List */}
-                <div className="col-span-12 md:col-span-5 lg:col-span-4 h-full overflow-hidden flex flex-col">
-                  <div className="flex items-center justify-between mb-4 px-2">
-                    {viewMode === 'items' ? (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => { setViewMode('games'); setSelectedGame(null); setSelectedListingGroup(null); }}
-                        className="text-slate-400 hover:text-white -ml-2 hover:bg-white/10"
-                      >
-                        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Games
-                      </Button>
-                    ) : (
-                      <h3 className="text-slate-400 uppercase text-xs font-bold tracking-wider">Select Game</h3>
-                    )}
-                    <Badge variant="outline" className="text-xs bg-slate-800/50">
-                        {viewMode === 'games' ? `${gamesList.length} Games` : selectedGame}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto pr-2">
-                     {viewMode === 'games' ? (
-                       gamesList.map(game => (
-                         <GalacticGameSummary 
-                           key={game.name}
-                           gameName={game.name}
-                           itemCount={game.count}
-                           image={game.image}
-                           onSelect={(name) => { setSelectedGame(name); setViewMode('items'); }}
-                         />
-                       ))
-                     ) : (
-                       (() => {
-                         // Filter listings by selected game
-                         const gameListings = listings.filter(l => l.item.game === selectedGame);
-                         
-                         // Group listings by Item Name
-                         const groupedListings = gameListings.reduce((groups, listing) => {
-                           const key = listing.item.name;
-                           if (!groups[key]) {
-                             groups[key] = {
-                               item: listing.item,
-                               offers: []
-                             };
-                           }
-                           groups[key].offers.push(listing);
-                           return groups;
-                         }, {});
-
-                         return Object.values(groupedListings).map((group) => (
-                          <GalacticItemGroupSummary
-                            key={group.item.id}
-                            item={group.item}
-                            offers={group.offers}
-                            isSelected={selectedListingGroup?.item.name === group.item.name}
-                            onSelect={() => setSelectedListingGroup(group)}
-                          />
-                        ));
-                       })()
-                     )}
-                  </div>
-                </div>
-
-                {/* Vertical Divider Line */}
-                <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent h-full" />
-
-                {/* Right Side: Traders & Details */}
-                <div className="col-span-12 md:col-span-6 lg:col-span-7 h-full overflow-hidden">
-                  {selectedListingGroup ? (
-                    <TradeOffersPanel 
-                      item={selectedListingGroup.item} 
-                      offers={selectedListingGroup.offers} 
-                      onTrade={(offer, type) => console.log("Trade", offer, type)}
-                    />
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-10 border-2 border-dashed border-white/5 rounded-2xl bg-slate-900/20">
-                      <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-                        <ArrowLeftRight className="w-10 h-10 text-slate-600" />
+            <TabsContent value="board" className="h-[calc(100vh-240px)] flex gap-6 relative">
+                {/* Left Sidebar (Search & Filters) */}
+                <AnimatePresence mode="wait">
+                  {showFilters && (
+                    <motion.div 
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 280, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      className="flex-shrink-0 h-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden flex flex-col"
+                    >
+                      <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                         <h3 className="font-bold text-white flex items-center gap-2">
+                           <Filter className="w-4 h-4 text-cyan-400" /> Filters
+                         </h3>
+                         <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)} className="h-6 w-6 text-slate-400 hover:text-white">
+                           <X className="w-4 h-4" />
+                         </Button>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-300 mb-2">Select an Item to View Offers</h3>
-                      <p className="text-slate-500 max-w-xs">
-                        Choose an item from the list on the left to see all available traders, bids, and sale listings.
-                      </p>
-                    </div>
+                      
+                      <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+                        {/* Search Input */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Search</label>
+                          <div className="relative">
+                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                             <Input 
+                               placeholder="Search items..." 
+                               value={searchQuery}
+                               onChange={(e) => setSearchQuery(e.target.value)}
+                               className="bg-slate-800/50 border-white/10 pl-9 text-sm"
+                             />
+                          </div>
+                        </div>
+
+                        {/* Game Filter */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Game Origin</label>
+                          <div className="space-y-1">
+                            {gamesList.map(game => (
+                              <div key={game.name} className="flex items-center gap-2 p-2 hover:bg-white/5 rounded cursor-pointer group" onClick={() => setSelectedGame(selectedGame === game.name ? null : game.name)}>
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedGame === game.name ? 'bg-cyan-500 border-cyan-500' : 'border-slate-600 group-hover:border-cyan-500/50'}`}>
+                                   {selectedGame === game.name && <CheckCircle className="w-3 h-3 text-white" />}
+                                </div>
+                                <span className={`text-sm ${selectedGame === game.name ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{game.name}</span>
+                                <span className="ml-auto text-xs text-slate-600">{game.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Rarity Filter */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rarity</label>
+                          <div className="flex flex-wrap gap-2">
+                             {['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'].map(rarity => (
+                               <Badge 
+                                 key={rarity}
+                                 variant="outline"
+                                 className={`cursor-pointer transition-all ${selectedRarities.includes(rarity) 
+                                   ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' 
+                                   : 'bg-slate-800/50 border-white/10 text-slate-400 hover:border-white/30'
+                                 }`}
+                                 onClick={() => {
+                                   setSelectedRarities(prev => 
+                                     prev.includes(rarity) ? prev.filter(r => r !== rarity) : [...prev, rarity]
+                                   );
+                                 }}
+                               >
+                                 {rarity}
+                               </Badge>
+                             ))}
+                          </div>
+                        </div>
+                        
+                        {/* Price Range */}
+                         <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Price Range (AGP)</label>
+                           <div className="flex items-center gap-2">
+                             <Input placeholder="Min" className="bg-slate-800/50 border-white/10 text-xs h-8" />
+                             <span className="text-slate-500">-</span>
+                             <Input placeholder="Max" className="bg-slate-800/50 border-white/10 text-xs h-8" />
+                           </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-5 border-t border-white/10">
+                        <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold">
+                           Apply Filters
+                        </Button>
+                      </div>
+                    </motion.div>
                   )}
+                </AnimatePresence>
+
+                {/* Main Content (Right Side) */}
+                <div className="flex-1 flex flex-col min-w-0">
+                   {/* Toolbar */}
+                   <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        {!showFilters && (
+                          <Button variant="outline" size="sm" onClick={() => setShowFilters(true)} className="border-white/10 hover:bg-white/5 text-slate-300 gap-2">
+                            <Filter className="w-4 h-4" /> Filters
+                          </Button>
+                        )}
+                        <h2 className="text-xl font-bold text-white">Market Listings</h2>
+                        <Badge variant="outline" className="bg-slate-800 text-slate-400 border-white/10">
+                          {listings.filter(l => (!selectedGame || l.item.game === selectedGame) && (!searchQuery || l.item.name.toLowerCase().includes(searchQuery.toLowerCase()))).length} Results
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                         <span className="text-sm text-slate-400">Sort by:</span>
+                         <Select defaultValue="featured">
+                            <SelectTrigger className="w-[160px] bg-slate-800/50 border-white/10 h-9"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                               <SelectItem value="featured">Featured</SelectItem>
+                               <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                               <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                               <SelectItem value="newest">Newest Listed</SelectItem>
+                            </SelectContent>
+                         </Select>
+                      </div>
+                   </div>
+                   
+                   {/* Listings Grid */}
+                   <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                         {listings
+                           .filter(l => {
+                             const matchesGame = !selectedGame || l.item.game === selectedGame;
+                             const matchesSearch = !searchQuery || l.item.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.description.toLowerCase().includes(searchQuery.toLowerCase());
+                             const matchesRarity = selectedRarities.length === 0 || selectedRarities.includes(l.item.rarity);
+                             return matchesGame && matchesSearch && matchesRarity;
+                           })
+                           .map((listing) => (
+                             <GalacticCard key={listing.id} className="flex flex-col group h-full border-white/5 bg-slate-900/40">
+                                {/* Listing Image & Badges */}
+                                <div className="relative aspect-[4/3] overflow-hidden">
+                                   <img src={listing.item.image} alt={listing.item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+                                   <div className="absolute top-2 left-2">
+                                      <RarityBadge rarity={listing.item.rarity} />
+                                   </div>
+                                   <div className="absolute top-2 right-2">
+                                      <Badge className={`
+                                        ${listing.type === 'trade' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 
+                                          listing.type === 'bid' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 
+                                          'bg-green-500/20 text-green-300 border-green-500/30'} 
+                                        backdrop-blur-md border
+                                      `}>
+                                        {listing.type === 'bid' ? 'Auction' : listing.type === 'sale' ? 'For Sale' : 'Trade'}
+                                      </Badge>
+                                   </div>
+                                </div>
+                                
+                                {/* Listing Details */}
+                                <div className="p-4 flex-1 flex flex-col">
+                                   <div className="mb-1 flex justify-between items-start">
+                                      <h3 className="font-bold text-white text-lg line-clamp-1" title={listing.item.name}>{listing.item.name}</h3>
+                                   </div>
+                                   <p className="text-xs text-slate-400 mb-3 flex items-center gap-1">
+                                      <Gamepad2 className="w-3 h-3" /> {listing.item.game}
+                                   </p>
+                                   
+                                   <div className="flex-1">
+                                      <p className="text-sm text-slate-300 line-clamp-2 italic opacity-80 mb-3">"{listing.description}"</p>
+                                      
+                                      {listing.type === 'trade' && listing.seekingItems && (
+                                        <div className="bg-slate-800/50 rounded p-2 text-xs mb-3 border border-white/5">
+                                           <span className="text-blue-400 font-bold">Seeking:</span> {listing.seekingItems.join(', ')}
+                                        </div>
+                                      )}
+                                   </div>
+                                   
+                                   {/* Price / Action Area */}
+                                   <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                                      <div>
+                                         {(listing.type === 'sale' || listing.type === 'bid') ? (
+                                            <div>
+                                               <p className="text-[10px] text-slate-500 uppercase">{listing.type === 'bid' ? 'Current Bid' : 'Price'}</p>
+                                               <p className="text-lg font-mono font-bold text-green-400 flex items-center gap-1">
+                                                  {listing.price?.toLocaleString() || listing.currentBid?.toLocaleString()} <span className="text-[10px]">AGP</span>
+                                               </p>
+                                            </div>
+                                         ) : (
+                                            <div className="flex items-center gap-2">
+                                               <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden border border-white/10">
+                                                  <img src={listing.owner.avatar} className="w-full h-full object-cover" />
+                                               </div>
+                                               <div>
+                                                  <p className="text-[10px] text-slate-500">Trader</p>
+                                                  <p className="text-xs font-bold text-white">{listing.owner.name}</p>
+                                               </div>
+                                            </div>
+                                         )}
+                                      </div>
+                                      
+                                      <Button 
+                                        size="sm"
+                                        className={`
+                                          ${listing.type === 'bid' ? 'bg-purple-600 hover:bg-purple-700' : 
+                                            listing.type === 'sale' ? 'bg-green-600 hover:bg-green-700' : 
+                                            'bg-blue-600 hover:bg-blue-700'} 
+                                          text-white font-bold shadow-lg
+                                        `}
+                                      >
+                                          {listing.type === 'bid' ? 'Place Bid' : listing.type === 'sale' ? 'Buy Now' : 'Make Offer'}
+                                      </Button>
+                                   </div>
+                                </div>
+                             </GalacticCard>
+                           ))}
+                      </div>
+                   </div>
                 </div>
-              </div>
             </TabsContent>
 
 
