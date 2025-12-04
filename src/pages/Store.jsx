@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  ShoppingCart, Search, Filter, Star, Trophy, Play, Gamepad2, Coins, Crown, 
-  ChevronLeft, ChevronRight, Heart, Share2, Monitor, Zap
+  ShoppingCart, Search, Play, Gamepad2, Coins, ChevronLeft, ChevronRight, 
+  Info, Plus, Volume2, VolumeX, Bell, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,66 +12,97 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
 import { aiGames, otherSampleGames } from '../components/store/mockData';
-import HeroScrollBox from '../components/store/HeroScrollBox';
 
-// --- Luna-style Components ---
+// --- Liquid Glass & Apple-style Components ---
 
-const GameCard = ({ game, addToCart, className = "" }) => {
-  const [isHovered, setIsHovered] = useState(false);
+const GlassCard = ({ children, className = "", hoverEffect = true }) => (
+  <div className={`
+    relative overflow-hidden rounded-2xl
+    bg-white/5 backdrop-blur-xl border border-white/10
+    shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]
+    ${hoverEffect ? 'transition-all duration-500 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.6)] hover:-translate-y-1' : ''}
+    ${className}
+  `}>
+    {children}
+  </div>
+);
+
+const GameCard = ({ game, addToCart, index }) => {
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.div
-      className={`relative flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group ${className}`}
-      style={{ width: '280px', height: '160px' }}
+      layout
+      className="relative flex-shrink-0 rounded-xl cursor-pointer group"
+      style={{ width: '240px', height: '360px' }}
+      initial={{ opacity: 0, x: 50 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, margin: "0px -50px 0px 0px" }}
+      transition={{ duration: 0.5, delay: index * 0.05, ease: "easeOut" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
-      whileHover={{ scale: 1.05, zIndex: 10 }}
     >
-      <img
-        src={game.cover_image || game.image}
-        alt={game.title}
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
-      
-      {/* Default View */}
-      <div className="absolute bottom-0 left-0 p-4 w-full transition-opacity duration-300 group-hover:opacity-0">
-        <h3 className="text-white font-bold text-base truncate">{game.title}</h3>
-        <div className="flex items-center justify-between mt-1">
-             <span className="text-xs text-slate-300">{game.genre}</span>
-             {game.rating && (
-                 <div className="flex items-center gap-1 text-xs text-yellow-400">
-                     <Star className="w-3 h-3 fill-current" /> {game.rating}
-                 </div>
-             )}
-        </div>
-      </div>
+      {/* Liquid Glass Container */}
+      <div className={`
+        absolute inset-0 rounded-xl overflow-hidden transition-all duration-500 ease-out
+        ${isHovered ? 'scale-110 z-50 shadow-2xl shadow-black/80 ring-1 ring-white/20' : 'scale-100 z-0'}
+      `}>
+        <div className="relative w-full h-full bg-slate-900">
+          <img
+            src={game.cover_image || game.image}
+            alt={game.title}
+            className="w-full h-full object-cover transition-transform duration-700"
+          />
+          
+          {/* Gradient Overlay */}
+          <div className={`absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-90' : 'opacity-60'}`} />
 
-      {/* Hover View */}
-      <div className="absolute inset-0 flex flex-col justify-center items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 backdrop-blur-[2px]">
-        <h3 className="text-white font-bold text-lg text-center mb-2 leading-tight">{game.title}</h3>
-        <div className="flex gap-2">
-           <Button 
-             size="sm" 
-             className="bg-purple-600 hover:bg-purple-500 text-white rounded-full"
-             onClick={(e) => { e.stopPropagation(); addToCart(game); }}
-           >
-             <ShoppingCart className="w-4 h-4" />
-           </Button>
-           <Button 
-             size="sm" 
-             variant="outline" 
-             className="border-white/30 hover:bg-white/20 text-white rounded-full"
-             onClick={(e) => { e.stopPropagation(); navigate(createPageUrl(`GameDetail?id=${game.id}`)); }}
-           >
-             <Play className="w-4 h-4" />
-           </Button>
+          {/* Content */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col justify-end h-full">
+            <motion.div 
+              animate={{ y: isHovered ? -10 : 0 }} 
+              transition={{ duration: 0.3 }}
+            >
+              {game.aiEnhanced && (
+                <Badge variant="outline" className="mb-2 border-purple-500/50 text-purple-300 bg-purple-500/10 backdrop-blur-md text-[10px]">
+                  AI ENHANCED
+                </Badge>
+              )}
+              <h3 className="text-white font-bold text-lg leading-tight mb-1 drop-shadow-md">{game.title}</h3>
+              
+              {/* Stats Row */}
+              <div className="flex items-center justify-between text-xs text-gray-300 mb-3">
+                <span className="font-medium">{game.genre}</span>
+                <span className="text-green-400 font-mono font-bold">${game.price}</span>
+              </div>
+
+              {/* Action Buttons (Visible on Hover) */}
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: isHovered ? 1 : 0, height: isHovered ? 'auto' : 0 }}
+                className="flex gap-2 overflow-hidden"
+              >
+                <Button 
+                  size="sm" 
+                  className="flex-1 bg-white text-black hover:bg-gray-200 rounded-full font-semibold text-xs h-8"
+                  onClick={(e) => { e.stopPropagation(); navigate(createPageUrl(`GameDetail?id=${game.id}`)); }}
+                >
+                  <Play className="w-3 h-3 mr-1 fill-current" /> Play
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="secondary"
+                  className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/10 text-white h-8 w-8"
+                  onClick={(e) => { e.stopPropagation(); addToCart(game); }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
-        <span className="absolute bottom-3 right-4 font-mono text-green-400 font-bold">
-            ${game.price}
-        </span>
       </div>
     </motion.div>
   );
@@ -79,11 +110,21 @@ const GameCard = ({ game, addToCart, className = "" }) => {
 
 const GameRow = ({ title, games, addToCart }) => {
     const rowRef = useRef(null);
+    const [showLeftArrow, setShowLeftArrow] = useState(false);
+    const [showRightArrow, setShowRightArrow] = useState(true);
+
+    const handleScroll = () => {
+        if (rowRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = rowRef.current;
+            setShowLeftArrow(scrollLeft > 0);
+            setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+        }
+    };
 
     const scroll = (direction) => {
         if (rowRef.current) {
             const { current } = rowRef;
-            const scrollAmount = direction === 'left' ? -800 : 800;
+            const scrollAmount = direction === 'left' ? -window.innerWidth * 0.7 : window.innerWidth * 0.7;
             current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     };
@@ -91,65 +132,213 @@ const GameRow = ({ title, games, addToCart }) => {
     if (!games || games.length === 0) return null;
 
     return (
-        <div className="mb-10 relative group/row">
-            <div className="flex items-center justify-between mb-4 px-12">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    {title} <ChevronRight className="w-5 h-5 text-slate-500" />
+        <div className="mb-12 relative group/row z-10">
+            <div className="flex items-end justify-between mb-4 px-4 md:px-12">
+                <h2 className="text-xl md:text-2xl font-bold text-white hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-2 group">
+                    {title}
+                    <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-blue-400" />
                 </h2>
             </div>
 
-            <div className="relative px-12">
-                <button 
-                    onClick={() => scroll('left')}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/50 hover:bg-purple-600/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 backdrop-blur-sm border border-white/10"
-                >
-                    <ChevronLeft className="w-5 h-5" />
-                </button>
+            <div className="relative group">
+                <AnimatePresence>
+                    {showLeftArrow && (
+                        <motion.button 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => scroll('left')}
+                            className="absolute left-0 top-0 bottom-0 z-20 w-12 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center text-white hover:w-16 transition-all duration-300"
+                        >
+                            <ChevronLeft className="w-8 h-8" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
 
                 <div 
                     ref={rowRef}
-                    className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+                    onScroll={handleScroll}
+                    className="flex gap-4 overflow-x-auto scrollbar-hide px-4 md:px-12 py-8 -my-8 scroll-smooth"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                    {games.map((game) => (
-                        <GameCard key={game.id} game={game} addToCart={addToCart} />
+                    {games.map((game, idx) => (
+                        <GameCard key={game.id} game={game} addToCart={addToCart} index={idx} />
                     ))}
-                    {/* Spacer for right padding */}
                     <div className="w-8 flex-shrink-0" />
                 </div>
 
+                <AnimatePresence>
+                    {showRightArrow && (
+                        <motion.button 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => scroll('right')}
+                            className="absolute right-0 top-0 bottom-0 z-20 w-12 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center text-white hover:w-16 transition-all duration-300"
+                        >
+                            <ChevronRight className="w-8 h-8" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+};
+
+const NetflixHero = ({ featuredGame, addToCart }) => {
+    const navigate = useNavigate();
+    const [isMuted, setIsMuted] = useState(true);
+
+    if (!featuredGame) return null;
+
+    return (
+        <div className="relative w-full h-[85vh] mb-8">
+            {/* Background Media */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
+                <img 
+                    src={featuredGame.cover_image || featuredGame.image} 
+                    alt={featuredGame.title}
+                    className="w-full h-full object-cover object-top"
+                />
+            </div>
+
+            {/* Content Overlay */}
+            <div className="absolute inset-0 z-20 flex items-center px-4 md:px-12">
+                <div className="max-w-2xl pt-20">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <Badge className="mb-4 bg-white/20 backdrop-blur-md border-none text-white px-3 py-1 rounded-md font-bold tracking-wider">
+                            #{featuredGame.genre?.toUpperCase()} • TOP RATED
+                        </Badge>
+                        
+                        <h1 className="text-5xl md:text-7xl font-black text-white mb-4 leading-tight drop-shadow-2xl">
+                            {featuredGame.title}
+                        </h1>
+                        
+                        <p className="text-lg md:text-xl text-gray-200 mb-8 line-clamp-3 drop-shadow-md max-w-xl font-medium">
+                            {featuredGame.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-4">
+                            <Button 
+                                size="lg" 
+                                className="bg-white text-black hover:bg-gray-200 font-bold px-8 h-14 rounded-lg text-lg shadow-xl shadow-white/10 transition-transform hover:scale-105"
+                                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
+                            >
+                                <Play className="w-6 h-6 mr-2 fill-current" />
+                                Play Now
+                            </Button>
+                            <Button 
+                                size="lg" 
+                                className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-bold px-8 h-14 rounded-lg text-lg transition-transform hover:scale-105"
+                                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
+                            >
+                                <Info className="w-6 h-6 mr-2" />
+                                More Info
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Mute Toggle */}
+            <div className="absolute bottom-32 right-12 z-30">
                 <button 
-                    onClick={() => scroll('right')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/50 hover:bg-purple-600/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 backdrop-blur-sm border border-white/10"
+                    onClick={() => setIsMuted(!isMuted)}
+                    className="w-10 h-10 rounded-full border border-white/30 bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
                 >
-                    <ChevronRight className="w-5 h-5" />
+                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
             </div>
         </div>
     );
 };
 
-// --- Gamified Header Components (Mini) ---
-const MiniLevelBar = ({ level, xp, nextLevelXp }) => (
-    <div className="flex items-center gap-3 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
-        <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-[10px] font-bold border border-white/20">
-            {level}
-        </div>
-        <div className="w-24 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-                className="h-full bg-gradient-to-r from-purple-400 to-indigo-400" 
-                style={{ width: `${(xp / nextLevelXp) * 100}%` }} 
-            />
-        </div>
-    </div>
-);
+// --- Apple-style Navigation ---
+const FloatingNav = ({ scrollY }) => {
+    const [isScrolled, setIsScrolled] = useState(false);
+    const { cartCount } = useCart();
+    const { user } = useAuth();
+
+    useMemo(() => {
+        return scrollY.on("change", (latest) => {
+            setIsScrolled(latest > 50);
+        });
+    }, [scrollY]);
+
+    return (
+        <motion.header
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+                isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10 py-3' : 'bg-gradient-to-b from-black/80 to-transparent py-6'
+            }`}
+        >
+            <div className="max-w-[1920px] mx-auto px-6 md:px-12 flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                    <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2 group">
+                        <Gamepad2 className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-xl tracking-tight text-white">
+                            NEXUS<span className="text-blue-500">STORE</span>
+                        </span>
+                    </Link>
+                    
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
+                        <button className="text-white hover:text-blue-400 transition-colors">Home</button>
+                        <button className="hover:text-blue-400 transition-colors">Store</button>
+                        <button className="hover:text-blue-400 transition-colors">Library</button>
+                        <button className="hover:text-blue-400 transition-colors">Arcade</button>
+                    </nav>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="relative hidden md:block group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Search" 
+                            className="bg-white/10 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:bg-black/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 w-48 transition-all"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-4 text-gray-300">
+                        <button className="hover:text-white transition-colors relative">
+                            <Bell className="w-5 h-5" />
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <Link to={createPageUrl('Cart')} className="hover:text-white transition-colors relative">
+                            <ShoppingCart className="w-5 h-5" />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[1px] cursor-pointer">
+                            <div className="w-full h-full rounded-full bg-black overflow-hidden">
+                                <img 
+                                    src={user?.avatar_url || "https://github.com/shadcn.png"} 
+                                    alt="User" 
+                                    className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </motion.header>
+    );
+};
 
 export default function Store() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { cartCount, addToCart } = useCart();
-  const { user } = useAuth();
+  const { addToCart } = useCart();
+  const { scrollY } = useScroll();
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -175,21 +364,21 @@ export default function Store() {
     });
   }, [games, searchTerm]);
 
-  // Categorized Games
+  // Categories
   const categories = useMemo(() => {
-      const cats = {
-          'Featured & Trending': filteredGames.filter(g => g.rating >= 4.7).slice(0, 8),
-          'AI Enhanced': filteredGames.filter(g => g.aiEnhanced),
+      return {
+          'Trending Now': filteredGames.slice(0, 8),
+          'New Releases': filteredGames.filter(g => g.releaseDate === '2024'),
+          'AI Powered Adventures': filteredGames.filter(g => g.aiEnhanced),
           'Action & RPG': filteredGames.filter(g => ['Action', 'RPG', 'Adventure'].includes(g.genre)),
-          'Strategy & Sim': filteredGames.filter(g => ['Strategy', 'Simulation'].includes(g.genre)),
-          'New Releases': filteredGames.slice(0, 6), // Mock 'new'
+          'Strategy & Simulation': filteredGames.filter(g => ['Strategy', 'Simulation'].includes(g.genre)),
       };
-      return cats;
   }, [filteredGames]);
 
+  const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
+
   return (
-    <div className="min-h-screen bg-[#0f0f13] text-white overflow-x-hidden font-sans selection:bg-purple-500/30">
-      {/* Global Styles for hiding scrollbar */}
+    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
       <style>{`
           .scrollbar-hide::-webkit-scrollbar {
               display: none;
@@ -200,66 +389,14 @@ export default function Store() {
           }
       `}</style>
 
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-[#0f0f13]/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <Gamepad2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-bold text-lg tracking-tight">LUNA<span className="text-purple-400">STORE</span></span>
-            </Link>
-            
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
-                <button className="text-white hover:text-purple-400 transition-colors">Home</button>
-                <button className="hover:text-purple-400 transition-colors">Library</button>
-                <button className="hover:text-purple-400 transition-colors">Channels</button>
-                <button className="hover:text-purple-400 transition-colors">Playlists</button>
-            </nav>
-        </div>
+      <FloatingNav scrollY={scrollY} />
 
-        <div className="flex items-center gap-6">
-            <div className="relative hidden md:block w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input 
-                    type="text" 
-                    placeholder="Search games..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-800/50 border-none rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:ring-2 focus:ring-purple-500/50"
-                />
-            </div>
-
-            <MiniLevelBar level={7} xp={2450} nextLevelXp={3000} />
-            
-            <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-1 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
-                    <Coins className="w-3 h-3 text-yellow-400" />
-                    <span className="text-xs font-mono font-bold">12,500</span>
-                 </div>
-
-                <Link to={createPageUrl('Cart')}>
-                    <Button size="icon" variant="ghost" className="relative hover:bg-white/10 rounded-full">
-                        <ShoppingCart className="w-5 h-5 text-slate-300" />
-                        {cartCount > 0 && (
-                            <span className="absolute top-0 right-0 w-4 h-4 bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-[#0f0f13]">
-                                {cartCount}
-                            </span>
-                        )}
-                    </Button>
-                </Link>
-            </div>
-        </div>
-      </header>
-
-      <main className="pb-20">
+      <main className="relative pb-24">
           {/* Hero Section */}
-          <div className="px-6 pt-6 pb-8">
-               <HeroScrollBox />
-          </div>
+          <NetflixHero featuredGame={featuredGame} addToCart={addToCart} />
 
           {/* Game Rows */}
-          <div className="space-y-2">
+          <div className="relative z-10 -mt-32 space-y-2">
               {Object.entries(categories).map(([title, categoryGames]) => (
                   categoryGames.length > 0 && (
                       <GameRow 
@@ -272,34 +409,44 @@ export default function Store() {
               ))}
           </div>
 
-          {/* All Games Grid (Fallback/Complete List) */}
-          <div className="px-12 mt-12">
-              <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-                  <h2 className="text-2xl font-bold text-white">All Games</h2>
-                  <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="border-white/10 text-slate-300">
-                          <Filter className="w-4 h-4 mr-2" /> Filter
-                      </Button>
+          {/* Footer */}
+          <footer className="mt-20 px-12 py-12 border-t border-white/10 bg-black/50 text-center text-gray-500 text-sm">
+              <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-left">
+                  <div>
+                      <h4 className="text-white font-bold mb-4">Shop</h4>
+                      <ul className="space-y-2">
+                          <li><a href="#" className="hover:underline">New Releases</a></li>
+                          <li><a href="#" className="hover:underline">Best Sellers</a></li>
+                          <li><a href="#" className="hover:underline">On Sale</a></li>
+                      </ul>
+                  </div>
+                  <div>
+                      <h4 className="text-white font-bold mb-4">Account</h4>
+                      <ul className="space-y-2">
+                          <li><a href="#" className="hover:underline">My Profile</a></li>
+                          <li><a href="#" className="hover:underline">Order History</a></li>
+                          <li><a href="#" className="hover:underline">Wishlist</a></li>
+                      </ul>
+                  </div>
+                  <div>
+                      <h4 className="text-white font-bold mb-4">Support</h4>
+                      <ul className="space-y-2">
+                          <li><a href="#" className="hover:underline">Help Center</a></li>
+                          <li><a href="#" className="hover:underline">Contact Us</a></li>
+                          <li><a href="#" className="hover:underline">Returns</a></li>
+                      </ul>
+                  </div>
+                  <div>
+                      <h4 className="text-white font-bold mb-4">Legal</h4>
+                      <ul className="space-y-2">
+                          <li><a href="#" className="hover:underline">Terms of Service</a></li>
+                          <li><a href="#" className="hover:underline">Privacy Policy</a></li>
+                          <li><a href="#" className="hover:underline">Cookie Settings</a></li>
+                      </ul>
                   </div>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredGames.map(game => (
-                      <GameCard 
-                        key={game.id} 
-                        game={game} 
-                        addToCart={addToCart} 
-                        className="w-full h-auto aspect-video" 
-                      />
-                  ))}
-              </div>
-              
-              {filteredGames.length === 0 && (
-                 <div className="text-center py-20">
-                    <p className="text-slate-500">No games found matching your search.</p>
-                 </div>
-              )}
-          </div>
+              <p>&copy; 2025 Nexus Store. All rights reserved. Designed with liquid glass aesthetics.</p>
+          </footer>
       </main>
     </div>
   );
