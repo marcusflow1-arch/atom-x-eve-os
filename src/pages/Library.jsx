@@ -11,6 +11,7 @@ import { allMockGames } from '../components/store/mockData';
 import RecentlyAchievedOverlay from '../components/library/RecentlyAchievedOverlay';
 import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
 import GameAchievementsOverlay from '../components/library/GameAchievementsOverlay';
+import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
@@ -201,12 +202,18 @@ const GAME_THEMES = {
   }
 };
 
-const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelected }) => {
+const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelected, onPlay }) => {
     // The original collapsed view logic is now moved and modified directly into the Library component's map for the left sidebar.
     // This GameCard component will now primarily handle the 'expanded' view, or if the 'collapsed' view is still called from other places.
     // However, for the specific left sidebar list in Library, it's explicitly replaced by inline JSX.
     // To avoid breaking external uses of GameCard in collapsed mode if they exist, we keep the original collapsed logic here,
     // but the Library component will bypass it for its primary left sidebar.
+    
+    const handlePlayClick = (e) => {
+        e.stopPropagation();
+        if (onPlay) onPlay(game);
+    };
+
     if (viewMode === 'collapsed') {
         return (
             <div 
@@ -231,8 +238,8 @@ const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelect
                     <p className="text-xs text-slate-500 capitalize">{game.genre}</p>
                 </div>
 
-                <div className="flex flex-col gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-1.5 py-0.5 rounded text-[9px] h-5 transition-all hover:scale-105">
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                    <Button size="sm" onClick={handlePlayClick} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-1.5 py-0.5 rounded text-[9px] h-5 transition-all hover:scale-105">
                         <Play className="w-2 h-2 mr-0.5" />
                         Play
                     </Button>
@@ -265,7 +272,7 @@ const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelect
                 </div>
             </div>
             <div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2">
+                <Button onClick={handlePlayClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2">
                     <Play className="w-5 h-5" />
                     Play Now
                 </Button>
@@ -1256,7 +1263,7 @@ const AchievementLootBoxTab = ({ game }) => {
     );
 };
 
-const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAchievements, onShowGameDetails }) => {
+const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAchievements, onShowGameDetails, onPlay }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [overviewSubTab, setOverviewSubTab] = useState('general');
     const [communitySubTab, setCommunitySubTab] = useState('posts');
@@ -1280,7 +1287,7 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                     <div className="flex items-center gap-4">
                         <h2 className="text-3xl font-black text-white">{game.title}</h2>
                         
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105">
+                        <Button size="sm" onClick={() => onPlay(game)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105">
                             <Play className="w-4 h-4" />
                             Play
                         </Button>
@@ -1683,7 +1690,12 @@ export default function Library() {
     const [showAchievementsOverlay, setShowAchievementsOverlay] = useState(false);
     const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('midnight_library');
+    const [launchingGame, setLaunchingGame] = useState(null);
     const canvasRef = useRef(null);
+
+    const handleLaunchGame = (game) => {
+        setLaunchingGame(game);
+    };
 
     useEffect(() => {
         const fetchOwnedGames = async () => {
@@ -2331,6 +2343,7 @@ export default function Library() {
                                                 viewMode="collapsed"
                                                 onSelect={handleSelectGame}
                                                 isSelected={selectedGame?.id === game.id}
+                                                onPlay={handleLaunchGame}
                                             />
                                         ))}
                                     </div>
@@ -2348,6 +2361,7 @@ export default function Library() {
                                     onShowRecentlyAchieved={() => setShowRecentlyAchieved(true)}
                                     onShowAchievements={() => setShowAchievementsOverlay(true)}
                                     onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+                                    onPlay={handleLaunchGame}
                                 />
                             </div>
                         </div>
@@ -2361,6 +2375,7 @@ export default function Library() {
                                         isStreaming={game.id === streamingGameId}
                                         viewMode={viewMode}
                                         onSelect={handleSelectGame}
+                                        onPlay={handleLaunchGame}
                                     />
                                 ))}
                             </div>
@@ -2407,6 +2422,15 @@ export default function Library() {
                     onClose={() => setShowGameDetailsOverlay(false)}
                 />
             )}
+
+            <AnimatePresence>
+                {launchingGame && (
+                    <GameLauncherOverlay 
+                        game={launchingGame} 
+                        onClose={() => setLaunchingGame(null)} 
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
