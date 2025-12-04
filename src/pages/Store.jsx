@@ -233,8 +233,8 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
   return (
     <>
       <motion.header
-        className="sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-white/5 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]"
-        style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
+        className="sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-white/[0.03] backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
+        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
       >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Left: App Drawer Button */}
@@ -313,16 +313,16 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-72 bg-white/5 backdrop-blur-2xl border-r border-white/10 z-50 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(180%)' }}
+              className="fixed top-0 left-0 bottom-0 w-72 bg-white/[0.02] backdrop-blur-3xl border-r border-white/[0.06] z-50 p-6 shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
             >
-              <h2 className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-4">Apps</h2>
+              <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">Apps</h2>
               <div className="space-y-1">
                 {appPages.map((page) => (
                   <button
                     key={page.name}
                     onClick={() => { navigate(createPageUrl(page.name)); setDrawerOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all text-left border border-transparent hover:border-white/10"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/[0.06] transition-all text-left border border-transparent hover:border-white/[0.08]"
                   >
                     <span className="text-lg">{page.icon}</span>
                     <span className="font-medium">{page.name}</span>
