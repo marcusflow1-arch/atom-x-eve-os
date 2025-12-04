@@ -18,10 +18,17 @@ export default function Admin() {
   const [uploading, setUploading] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [previewVideo, setPreviewVideo] = useState(null);
+  const [populatingGames, setPopulatingGames] = useState(false);
+  const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
 
   const { data: heroBackgrounds = [], isLoading } = useQuery({
     queryKey: ['heroBackgrounds'],
     queryFn: () => base44.entities.HeroBackground.list('-created_date'),
+  });
+
+  const { data: existingGames = [], isLoading: gamesLoading, refetch: refetchGames } = useQuery({
+    queryKey: ['adminGames'],
+    queryFn: () => Game.list('-created_date'),
   });
 
   const createMutation = useMutation({
@@ -40,6 +47,19 @@ export default function Admin() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.HeroBackground.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['heroBackgrounds'] }),
+  });
+
+  const createGameMutation = useMutation({
+    mutationFn: (data) => Game.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminGames'] });
+      setNewGame({ title: '', description: '', genre: '', price: '', cover_image: '' });
+    },
+  });
+
+  const deleteGameMutation = useMutation({
+    mutationFn: (id) => Game.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminGames'] }),
   });
 
   const handleFileUpload = async (e) => {
@@ -80,7 +100,7 @@ export default function Admin() {
     }
   };
 
-  // Simple admin check
+  // Simple admin check - must be AFTER all hooks
   if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -91,27 +111,6 @@ export default function Admin() {
       </div>
     );
   }
-
-  const [populatingGames, setPopulatingGames] = useState(false);
-  const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
-
-  const { data: existingGames = [], isLoading: gamesLoading, refetch: refetchGames } = useQuery({
-    queryKey: ['adminGames'],
-    queryFn: () => Game.list('-created_date'),
-  });
-
-  const createGameMutation = useMutation({
-    mutationFn: (data) => Game.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminGames'] });
-      setNewGame({ title: '', description: '', genre: '', price: '', cover_image: '' });
-    },
-  });
-
-  const deleteGameMutation = useMutation({
-    mutationFn: (id) => Game.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminGames'] }),
-  });
 
   const populateGamesFromSearch = async () => {
     setPopulatingGames(true);
