@@ -212,39 +212,40 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .modern-nav-header {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             position: relative;
             z-index: 20;
           }
 
           .nav-container {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: space-between;
-            padding: 10px 24px;
+            padding: 12px 24px;
             position: relative;
             z-index: 10;
           }
 
           .nav-brand {
-            font-size: 1.6rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            background: linear-gradient(45deg, #e0e7ff, #a5b4fc, #6366f1);
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #6366f1 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
             cursor: pointer;
             transition: all 0.3s ease;
+            justify-self: center;
           }
 
           .nav-brand:hover {
             transform: scale(1.03);
-            text-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
           }
 
           .nav-menu {
