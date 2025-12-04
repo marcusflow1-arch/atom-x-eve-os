@@ -382,15 +382,48 @@ const FilterSidebar = ({ filters, setFilters }) => (
 );
 
 export default function MarketplacePage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
+  const location = useLocation();
   const [selectedTheme, setSelectedTheme] = useState('digital_matrix');
   const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ category: 'All', rarity: 'All', price: [0, 100000] });
   const [selectedItem, setSelectedItem] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Hooks
   const { addToRecentlyViewed } = useRecentlyViewed();
+
+  const allNavItems = [
+    { name: 'Dashboard', icon: Home, path: createPageUrl('Dashboard') },
+    { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
+    { name: 'Library', icon: Library, path: createPageUrl('Library') },
+    { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+    { name: 'Trading Cards', icon: Layers, path: createPageUrl('TradingCards') },
+    { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
+    { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
+    { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
+    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
+    { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
+    { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
+    { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
+    { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
+    { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
+    { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
+    { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
+    { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
+    { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
+  ];
+
+  const getDisplayName = () => {
+    if (!user) return null;
+    return user.username || user.full_name || user.email?.split('@')[0] || 'User';
+  };
+
+  const getUserInitial = () => {
+    const name = getDisplayName();
+    return name ? name.charAt(0).toUpperCase() : 'U';
+  };
 
   const handleItemClick = (item) => {
     addToRecentlyViewed(item);
