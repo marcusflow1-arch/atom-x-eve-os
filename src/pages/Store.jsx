@@ -233,11 +233,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
   return (
     <>
       <motion.header
-        className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-black/80 backdrop-blur-2xl border-b border-white/10' 
-            : 'bg-black/60 backdrop-blur-xl'
-        }`}
+        className="sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-white/5 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]"
         style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
       >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
@@ -254,7 +250,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
               </div>
             </button>
 
-            <span className="text-white font-bold text-lg hidden md:block">NEXUS STORE</span>
+            <span className="text-white font-bold text-lg hidden md:block tracking-wider">ATOM×EVE STORE</span>
           </div>
 
           {/* Center: Search */}
@@ -317,7 +313,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-72 bg-slate-900/95 backdrop-blur-2xl border-r border-white/10 z-50 p-6"
+              className="fixed top-0 left-0 bottom-0 w-72 bg-white/5 backdrop-blur-2xl border-r border-white/10 z-50 p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]"
               style={{ WebkitBackdropFilter: 'blur(40px) saturate(180%)' }}
             >
               <h2 className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-4">Apps</h2>
@@ -326,7 +322,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
                   <button
                     key={page.name}
                     onClick={() => { navigate(createPageUrl(page.name)); setDrawerOpen(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 backdrop-blur-md transition-all text-left border border-transparent hover:border-white/10"
                   >
                     <span className="text-lg">{page.icon}</span>
                     <span className="font-medium">{page.name}</span>
