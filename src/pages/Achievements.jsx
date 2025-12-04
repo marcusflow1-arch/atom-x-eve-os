@@ -16,6 +16,8 @@ import TrackingPanel from '../components/achievements/TrackingPanel';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import AchievementFilterBar from '../components/achievements/AchievementFilterBar';
 import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
+import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
+import { base44 } from '@/api/base44Client';
 
 const rarityStyles = {
   Common: { color: "text-slate-300", bg: "bg-slate-800/80", border: "border-slate-600" },
@@ -89,7 +91,7 @@ const AchievementListItem = ({ achievement, onSelect, isUnlocked, isSelected }) 
   );
 };
 
-const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, onClose }) => {
+const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, onClose, onShare, onChallenge }) => {
   if (!achievement) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -285,6 +287,8 @@ export default function Achievements() {
   const [error, setError] = useState(null);
   const [isTrackingPanelVisible, setIsTrackingPanelVisible] = useState(true);
   const [trackedAchievements, setTrackedAchievements] = useState([]);
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+  const [achievementToChallenge, setAchievementToChallenge] = useState(null);
 
   // DOM refs for positioning
   const gameBoxRef = useRef(null);
@@ -405,6 +409,41 @@ export default function Achievements() {
       // Optionally, show a toast notification to the user
     }
   }, [isAuthenticated, user, updateUserData, trackedAchievements]);
+
+  const handleShareAchievement = async (achievement) => {
+      if (!user) return;
+      try {
+          // Generate content using AI
+          const aiResponse = await base44.functions.invoke('communityAI', {
+              action: 'generate_achievement_post',
+              data: {
+                  achievement: achievement,
+                  game: achievement.game,
+                  user_name: user.username || user.full_name
+              }
+          });
+
+          await base44.entities.Post.create({
+              title: `I unlocked ${achievement.title}!`,
+              content: aiResponse.data.content,
+              type: 'achievement_share',
+              community: 'general',
+              game_title: achievement.game,
+              achievement_id: achievement.id,
+              achievement_data: achievement,
+              is_ai_generated: true,
+              score: 0
+          });
+          alert("Shared to community feed!");
+      } catch (error) {
+          console.error("Error sharing achievement:", error);
+      }
+  };
+
+  const handleChallenge = (achievement) => {
+      setAchievementToChallenge(achievement);
+      setChallengeModalOpen(true);
+  };
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -546,6 +585,8 @@ export default function Achievements() {
               onClose={() => setSelectedAchievement(null)}
               onTrack={handleTrackAchievement}
               isTracked={trackedAchievements.includes(selectedAchievement.id)}
+              onShare={handleShareAchievement}
+              onChallenge={handleChallenge}
             />
           )}
         </AnimatePresence>
@@ -674,6 +715,8 @@ export default function Achievements() {
                     onTrack={handleTrackAchievement}
                     isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
                     onClose={() => setSelectedAchievement(null)}
+                    onShare={handleShareAchievement}
+                    onChallenge={handleChallenge}
                   />
                 </div>
               </div>
@@ -703,6 +746,14 @@ export default function Achievements() {
           onUntrack={handleUntrackAchievement}
         />
       </div>
+
+      {achievementToChallenge && (
+        <ChallengeFriendModal 
+            achievement={achievementToChallenge}
+            isOpen={challengeModalOpen}
+            onClose={() => setChallengeModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import AIAssistantPanel from './AIAssistantPanel';
+import { Share2, Swords } from 'lucide-react';
 
 const rarityStyles = {
   Common: { color: "text-slate-300", bg: "bg-slate-800/80", border: "border-slate-600", glow: "shadow-slate-500/20" },
@@ -76,7 +77,7 @@ const getRewardData = (achievement) => {
   return rewards;
 };
 
-export default function AchievementDetailOverlay({ achievement, onClose, onTrack, isTracked }) {
+export default function AchievementDetailOverlay({ achievement, onClose, onTrack, isTracked, onShare, onChallenge }) {
   const [showCelebration, setShowCelebration] = useState(false);
   
   if (!achievement) return null;
@@ -290,6 +291,12 @@ export default function AchievementDetailOverlay({ achievement, onClose, onTrack
             <span className="font-semibold text-white">💡 Tip:</span> Unlocked items appear in your Arsenal and can be equipped or traded
           </div>
           <div className="flex gap-3">
+            <Button variant="outline" onClick={() => onShare(achievement)} className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10">
+                <Share2 className="w-4 h-4 mr-2" /> Share
+            </Button>
+            <Button variant="outline" onClick={() => onChallenge(achievement)} className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
+                <Swords className="w-4 h-4 mr-2" /> Challenge
+            </Button>
             {!isUnlocked && (
               <Button
                 onClick={() => onTrack(achievement)}

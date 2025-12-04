@@ -3,14 +3,16 @@ import { Post } from '@/entities/Post';
 import { Comment } from '@/entities/Comment';
 import CreatePostForm from '../components/community/CreatePostForm';
 import PostCard from '../components/community/PostCard';
+import FeedPost from '../components/community/FeedPost';
 import CommentSection from '../components/community/CommentSection';
 import ForumSidebar from '../components/community/ForumSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ArrowLeft, Search, Filter, Clock, Flame, Newspaper, LayoutList, Globe, Gamepad2, Trophy } from 'lucide-react';
+import { Plus, ArrowLeft, Search, Filter, Clock, Flame, Newspaper, LayoutList, Globe, Gamepad2, Trophy, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
+import { base44 } from '@/api/base44Client';
 
 export default function CommunityPage() {
     const [posts, setPosts] = useState([]);
@@ -27,8 +29,21 @@ export default function CommunityPage() {
     const [sortBy, setSortBy] = useState('newest'); // newest, popular
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('all');
+    const [trendingTopics, setTrendingTopics] = useState([]);
 
     const { isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        const fetchTrends = async () => {
+            try {
+                const res = await base44.functions.invoke('communityAI', { action: 'get_trending_topics' });
+                if (res.data?.trends) setTrendingTopics(res.data.trends);
+            } catch (e) {
+                console.error("Failed to fetch trends", e);
+            }
+        };
+        fetchTrends();
+    }, []);
 
     const fetchPosts = useCallback(async () => {
         setLoading(true);
@@ -41,16 +56,14 @@ export default function CommunityPage() {
             // Section Logic
             if (activeGame) {
                 filter.game_title = activeGame;
-                // We want all posts for this game (reviews, discussions, etc)
-                // So we don't strictly filter by 'type' if it's a game forum, 
-                // but we might want to exclude 'general_discussion' if it's generic.
-                // Actually, type 'game_review' and 'game_discussion' are what we want.
-                // Post.filter supports limited query ops usually, let's fetch broader and filter client side if needed
-                // or rely on type being specific.
             } else if (activeSection === 'general_discussion') {
                 filter.type = 'general_discussion';
             } else if (activeSection === 'achievement_discussion') {
                 filter.type = 'achievement_discussion';
+            } else if (activeSection === 'feed') {
+                // For feed, we might want almost everything or just achievements/challenges
+                // Let's assume feed shows everything for now, sorted by new
+                filter = {}; 
             }
 
             // Genre Filter (if implemented in backend or client side)
@@ -99,6 +112,22 @@ export default function CommunityPage() {
 
     const handleCreatePost = async (postData) => {
         if (!isAuthenticated) return;
+        
+        // AI Moderation Check
+        try {
+            const modRes = await base44.functions.invoke('communityAI', {
+                action: 'moderate_content',
+                data: { text: `${postData.title} ${postData.content}` }
+            });
+            
+            if (!modRes.data.is_safe) {
+                alert(`Post rejected: ${modRes.data.reason}`);
+                return;
+            }
+        } catch (e) {
+            console.error("Moderation check failed", e);
+        }
+
         await Post.create(postData);
         setShowCreateForm(false);
         fetchPosts();
@@ -253,6 +282,17 @@ export default function CommunityPage() {
 
                                     {/* Posts List */}
                                     <div className="space-y-4 min-h-[400px]">
+                                        {/* Trending Topics Bar */}
+                                        {trendingTopics.length > 0 && (
+                                            <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+                                                {trendingTopics.map((trend, i) => (
+                                                    <div key={i} className="flex items-center gap-1 px-3 py-1 bg-slate-800 rounded-full text-xs text-blue-300 whitespace-nowrap">
+                                                        <Activity className="w-3 h-3" /> {trend}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {loading ? (
                                             <div className="space-y-4">
                                                 {[1,2,3].map(i => (
@@ -260,14 +300,26 @@ export default function CommunityPage() {
                                                 ))}
                                             </div>
                                         ) : posts.length > 0 ? (
-                                            posts.map(post => (
-                                                <PostCard
-                                                    key={post.id}
-                                                    post={post}
-                                                    onVote={handleVote}
-                                                    onSelect={() => setSelectedPost(post)}
-                                                />
-                                            ))
+                                            posts.map(post => {
+                                                if (post.type === 'achievement_share' || post.type === 'challenge') {
+                                                    return (
+                                                        <FeedPost 
+                                                            key={post.id} 
+                                                            post={post} 
+                                                            onVote={handleVote} 
+                                                            onShare={() => {}}
+                                                        />
+                                                    );
+                                                }
+                                                return (
+                                                    <PostCard
+                                                        key={post.id}
+                                                        post={post}
+                                                        onVote={handleVote}
+                                                        onSelect={() => setSelectedPost(post)}
+                                                    />
+                                                );
+                                            })
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-900/20 rounded-xl border border-slate-800 border-dashed">
                                                 <Newspaper className="w-16 h-16 text-slate-700 mb-4" />
