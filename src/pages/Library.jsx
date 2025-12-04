@@ -2213,7 +2213,7 @@ export default function Library() {
                     </div>
                 </header>
 
-                <div className="mb-4">
+                <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button
                             onClick={() => setActiveTab('all')}
@@ -2233,6 +2233,26 @@ export default function Library() {
                         >
                             <Heart className="w-4 h-4 mr-2" />
                             Favorites
+                        </Button>
+                    </div>
+                    <div className="flex items-center bg-slate-800/50 rounded-lg p-1 border border-slate-700 gap-1">
+                        <Button
+                            variant={viewMode === 'collapsed' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className={`h-8 px-3 ${viewMode === 'collapsed' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+                            onClick={() => setViewMode('collapsed')}
+                            title="List View"
+                        >
+                            <List className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant={viewMode === 'expanded' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            className={`h-8 px-3 ${viewMode === 'expanded' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
+                            onClick={() => setViewMode('expanded')}
+                            title="Grid View"
+                        >
+                            <Grid className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
