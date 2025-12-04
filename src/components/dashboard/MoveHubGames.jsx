@@ -107,8 +107,9 @@ export const moveHubGamesData = [
 
 const generateSkillTree = (genre, gameTitle) => {
   // Helper to create node
-  const n = (id, label, x, y, icon, parentIds = [], status = 'locked', cost = 1) => ({
+  const n = (id, label, x, y, icon, parentIds = [], status = 'locked', cost = 1, demoUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1') => ({
     id, label, x, y, icon, parentIds, status, cost,
+    demoUrl,
     description: `Unlocks the ${label} ability for superior tactical advantage.`
   });
 
@@ -312,28 +313,72 @@ const NeuralSkillTree = ({ game, onClose }) => {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            className="absolute right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-xl border-l border-slate-700 z-30 p-6 shadow-2xl"
+            className="absolute right-0 top-0 bottom-0 w-[500px] bg-slate-900/95 backdrop-blur-xl border-l border-slate-700 z-30 flex flex-col shadow-2xl"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <selectedNode.icon className="w-6 h-6 text-blue-400" />
-                Node Analysis
-              </h3>
-              <button onClick={() => setSelectedNode(null)} className="text-slate-400 hover:text-white">
-                <ChevronLeft className="w-6 h-6 rotate-180" />
-              </button>
-            </div>
+            <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <selectedNode.icon className="w-6 h-6 text-blue-400" />
+                  Node Analysis
+                </h3>
+                <button onClick={() => setSelectedNode(null)} className="text-slate-400 hover:text-white">
+                  <ChevronLeft className="w-6 h-6 rotate-180" />
+                </button>
+              </div>
 
-            <div className="space-y-6">
-              <div className={`p-6 rounded-2xl border ${
-                selectedNode.status === 'unlocked' ? 'bg-blue-900/20 border-blue-500/50' :
-                selectedNode.status === 'unlockable' ? 'bg-yellow-900/20 border-yellow-500/50' :
-                'bg-slate-800/50 border-slate-700'
-              }`}>
-                <div className="w-16 h-16 rounded-xl bg-slate-800 mb-4 flex items-center justify-center mx-auto border border-white/10">
-                  <selectedNode.icon className="w-8 h-8 text-white" />
+              {/* AI Demonstration Viewport */}
+              <div className="mb-6 rounded-2xl overflow-hidden border border-blue-500/30 shadow-lg shadow-blue-900/20 relative group">
+                <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-blue-500/30 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-xs font-bold text-blue-100 tracking-wider">AI SIMULATION</span>
                 </div>
-                <h4 className="text-2xl font-black text-center text-white mb-2">{selectedNode.label}</h4>
+                <div className="aspect-video bg-slate-950 relative">
+                  {/* Grid Overlay */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.1)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20"></div>
+                  
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src={selectedNode.demoUrl || "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"} 
+                    title="Ability Demo" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                    className="relative z-0 opacity-80 group-hover:opacity-100 transition-opacity"
+                  ></iframe>
+                  
+                  {/* Scanlines */}
+                  <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/3o7qE1YN7aQfVUTtW8/giphy.gif')] opacity-5 pointer-events-none mix-blend-overlay"></div>
+                </div>
+                <div className="bg-slate-900/90 p-3 border-t border-slate-800 flex justify-between items-center">
+                  <span className="text-xs text-blue-400 font-mono">DEMO_SEQ_01</span>
+                  <Activity className="w-4 h-4 text-green-400" />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className={`p-6 rounded-2xl border ${
+                  selectedNode.status === 'unlocked' ? 'bg-blue-900/20 border-blue-500/50' :
+                  selectedNode.status === 'unlockable' ? 'bg-yellow-900/20 border-yellow-500/50' :
+                  'bg-slate-800/50 border-slate-700'
+                }`}>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10">
+                      <selectedNode.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h4 className="text-xl font-black text-white">{selectedNode.label}</h4>
+                        <div className="flex gap-2 mt-1">
+                            <Badge className={
+                                selectedNode.status === 'unlocked' ? 'bg-green-500' :
+                                selectedNode.status === 'unlockable' ? 'bg-yellow-500' : 'bg-slate-600'
+                            }>
+                                {selectedNode.status.toUpperCase()}
+                            </Badge>
+                            <Badge variant="outline" className="border-slate-600">TIER {selectedNode.cost}</Badge>
+                        </div>
+                    </div>
+                  </div>
                 <div className="flex justify-center gap-2 mb-4">
                   <Badge className={
                     selectedNode.status === 'unlocked' ? 'bg-green-500' :
