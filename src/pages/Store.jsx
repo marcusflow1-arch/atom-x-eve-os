@@ -697,12 +697,13 @@ export default function Store() {
   const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
+    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
+      {/* Store Navigation Bar */}
       <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
       <main className="relative">
