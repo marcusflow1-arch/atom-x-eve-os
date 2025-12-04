@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import {
-  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User, Fingerprint, AlertOctagon, Siren, Grid, List, Home, ShoppingBag, Library, Trophy, Layers, Hammer, MessageSquare, Rocket, Swords, ArrowLeftRight, Lightbulb, Settings, LogIn, LogOut
+  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User, Fingerprint, AlertOctagon, Siren, Grid, List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -382,48 +380,15 @@ const FilterSidebar = ({ filters, setFilters }) => (
 );
 
 export default function MarketplacePage() {
-  const { user, isAuthenticated, login, logout } = useAuth();
-  const location = useLocation();
+  const { user } = useAuth();
   const [selectedTheme, setSelectedTheme] = useState('digital_matrix');
   const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ category: 'All', rarity: 'All', price: [0, 100000] });
   const [selectedItem, setSelectedItem] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Hooks
   const { addToRecentlyViewed } = useRecentlyViewed();
-
-  const allNavItems = [
-    { name: 'Dashboard', icon: Home, path: createPageUrl('Dashboard') },
-    { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
-    { name: 'Library', icon: Library, path: createPageUrl('Library') },
-    { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
-    { name: 'Trading Cards', icon: Layers, path: createPageUrl('TradingCards') },
-    { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
-    { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
-    { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
-    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
-    { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
-    { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
-    { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
-    { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
-    { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
-    { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
-    { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
-    { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
-    { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
-  ];
-
-  const getDisplayName = () => {
-    if (!user) return null;
-    return user.username || user.full_name || user.email?.split('@')[0] || 'User';
-  };
-
-  const getUserInitial = () => {
-    const name = getDisplayName();
-    return name ? name.charAt(0).toUpperCase() : 'U';
-  };
 
   const handleItemClick = (item) => {
     addToRecentlyViewed(item);
@@ -448,117 +413,6 @@ export default function MarketplacePage() {
         {/* Overlay Texture for Grit */}
         <div className="fixed inset-0 pointer-events-none z-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay" />
         <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
-
-        {/* Navigation Drawer */}
-        <AnimatePresence>
-          {drawerOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-                onClick={() => setDrawerOpen(false)}
-              />
-              <motion.div
-                initial={{ x: -320, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -320, opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl border-r border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-                style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
-              >
-                {/* Drawer Header */}
-                <div className="p-6 border-b border-white/[0.06]">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-white font-bold text-xl tracking-wider">ATOM×EVE</span>
-                    <button 
-                      onClick={() => setDrawerOpen(false)}
-                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                    >
-                      <X className="w-4 h-4 text-white/60" />
-                    </button>
-                  </div>
-                  
-                  {/* User Info */}
-                  {isAuthenticated ? (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden ring-2 ring-white/20">
-                        {user?.avatar_url ? (
-                          <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          getUserInitial()
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium text-sm truncate">{getDisplayName()}</p>
-                        <p className="text-white/40 text-xs truncate">{user?.email}</p>
-                      </div>
-                      <button
-                        onClick={logout}
-                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center text-white/50 hover:text-white transition-all"
-                        title="Sign Out"
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={login}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-white font-medium transition-all border border-white/[0.08]"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      Sign In
-                    </button>
-                  )}
-                </div>
-
-                {/* Nav Items */}
-                <div className="flex-1 overflow-y-auto p-4">
-                  <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
-                  <div className="space-y-1">
-                    {allNavItems.map((item) => {
-                      const isActive = location.pathname === item.path;
-                      return (
-                        <Link
-                          key={item.name}
-                          to={item.path}
-                          onClick={() => setDrawerOpen(false)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                            isActive 
-                              ? 'bg-white/[0.1] text-white border border-white/[0.1]' 
-                              : 'text-white/60 hover:text-white hover:bg-white/[0.05] border border-transparent'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Drawer Footer */}
-                <div className="p-4 border-t border-white/[0.06]">
-                  <p className="text-white/20 text-xs text-center">© 2025 ATOM×EVE</p>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Floating Menu Button */}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="fixed top-4 left-4 z-40 w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <div className="flex flex-col gap-1">
-            <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-            <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-            <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-          </div>
-        </button>
 
         {/* Header */}
         <header className="relative z-20 border-b border-white/10 bg-black/60 backdrop-blur-md sticky top-0">

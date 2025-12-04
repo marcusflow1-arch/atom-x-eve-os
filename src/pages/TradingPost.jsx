@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import {
   Search, Filter, Mic, MicOff, X, Plus, Eye, Clock, Coins, Gavel, ArrowLeftRight,
   Package, Star, Zap, Shield, Sword, Users, Bot, TrendingUp, Calendar, MessageSquare,
   Grid, List, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Tag, Gamepad2, Diamond, Heart, Share2, AlertCircle,
-  CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info,
-  Home, ShoppingBag, Library, Trophy, Layers, Hammer, Swords, Lightbulb, Settings, LogIn, LogOut
+  CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -491,8 +488,7 @@ const GalacticGameSummary = ({ gameName, itemCount, image, onSelect }) => (
 // --- Main Page ---
 
 export default function TradingPost() {
-  const { user, isAuthenticated, login, logout } = useAuth();
-  const location = useLocation();
+  const { user } = useAuth();
   
   // States
   const [activeTab, setActiveTab] = useState('board');
@@ -503,7 +499,6 @@ export default function TradingPost() {
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   const [selectedTheme, setSelectedTheme] = useState('cosmic_library');
-  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // New states for game-first navigation
   const [viewMode, setViewMode] = useState('games'); // 'games' or 'items'
@@ -512,37 +507,6 @@ export default function TradingPost() {
   // Sub-Tab States
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
-
-  const allNavItems = [
-    { name: 'Dashboard', icon: Home, path: createPageUrl('Dashboard') },
-    { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
-    { name: 'Library', icon: Library, path: createPageUrl('Library') },
-    { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
-    { name: 'Trading Cards', icon: Layers, path: createPageUrl('TradingCards') },
-    { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
-    { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
-    { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
-    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
-    { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
-    { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
-    { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
-    { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
-    { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
-    { name: 'My Profile', icon: Shield, path: createPageUrl('Profile') },
-    { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
-    { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
-    { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
-  ];
-
-  const getDisplayName = () => {
-    if (!user) return null;
-    return user.username || user.full_name || user.email?.split('@')[0] || 'User';
-  };
-
-  const getUserInitial = () => {
-    const name = getDisplayName();
-    return name ? name.charAt(0).toUpperCase() : 'U';
-  };
 
   // Sub-Tab Mock Data
   const GENRE_GAMES = useMemo(() => ({
