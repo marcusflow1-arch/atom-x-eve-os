@@ -233,12 +233,12 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
   return (
     <>
       <motion.header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 ${
           isScrolled 
             ? 'bg-black/80 backdrop-blur-2xl border-b border-white/10' 
-            : 'bg-transparent'
+            : 'bg-black/60 backdrop-blur-xl'
         }`}
-        style={{ WebkitBackdropFilter: isScrolled ? 'blur(20px) saturate(180%)' : 'none' }}
+        style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
       >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Left: App Drawer Button */}
