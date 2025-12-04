@@ -115,51 +115,99 @@ export default function Admin() {
   const populateGamesFromSearch = async () => {
     setPopulatingGames(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate a list of 12 popular video games from 2024-2025 with the following details for each:
-        - title (exact game name)
-        - description (2-3 sentences about the game)
-        - genre (one of: Action RPG, FPS, Strategy, RPG, Shooter, Survival, Racing, Sports, Horror, Adventure)
-        - price (realistic USD price like 59.99 or 69.99)
-        - developer (real developer name)
-        - rating (4.0 to 5.0)
-        
-        Include games like: Monster Hunter Wilds, Elden Ring Nightreign, Black Myth Wukong, Helldivers 2, Civilization VII, GTA 6, Assassin's Creed Shadows, Metroid Prime 4, Avowed, etc.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            games: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  description: { type: 'string' },
-                  genre: { type: 'string' },
-                  price: { type: 'number' },
-                  developer: { type: 'string' },
-                  rating: { type: 'number' }
+      // Fetch multiple categories in parallel
+      const categories = [
+        {
+          name: 'Trending 2024-2025',
+          prompt: `List 15 trending/popular video games from 2024-2025. Include: Monster Hunter Wilds, Elden Ring Nightreign, Black Myth Wukong, Helldivers 2, Palworld, Baldur's Gate 3, Final Fantasy VII Rebirth, Dragon's Dogma 2, Stellar Blade, Like a Dragon: Infinite Wealth, Tekken 8, Granblue Fantasy Relink, Prince of Persia Lost Crown, Skull and Bones, Suicide Squad Kill the Justice League.`
+        },
+        {
+          name: 'Upcoming 2025',
+          prompt: `List 15 upcoming video games releasing in 2025. Include: GTA 6, Civilization VII, Assassin's Creed Shadows, Metroid Prime 4, Avowed, Death Stranding 2, Ghost of Yotei, Kingdom Come Deliverance 2, Fable, Perfect Dark, Doom The Dark Ages, Borderlands 4, Mafia The Old Country, Judas, Hollow Knight Silksong.`
+        },
+        {
+          name: 'Classic Best Sellers',
+          prompt: `List 15 classic best-selling video games of all time. Include: Minecraft, GTA V, Tetris, Wii Sports, PUBG, Mario Kart 8, Red Dead Redemption 2, The Witcher 3, Skyrim, Elden Ring, God of War Ragnarok, Cyberpunk 2077, Hogwarts Legacy, Spider-Man 2, Zelda Tears of the Kingdom.`
+        }
+      ];
+
+      const gameImages = {
+        'action rpg': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=800&fit=crop',
+        'rpg': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=800&fit=crop',
+        'fps': 'https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=800&fit=crop',
+        'shooter': 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop',
+        'strategy': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=800&fit=crop',
+        'survival': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=800&fit=crop',
+        'racing': 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=600&h=800&fit=crop',
+        'sports': 'https://images.unsplash.com/photo-1493711662062-fa541f7f28c4?w=600&h=800&fit=crop',
+        'horror': 'https://images.unsplash.com/photo-1509248961725-aec71c700e09?w=600&h=800&fit=crop',
+        'adventure': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'action adventure': 'https://images.unsplash.com/photo-1535378437327-b71494669e91?w=600&h=800&fit=crop',
+        'sandbox': 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600&h=800&fit=crop',
+        'fighting': 'https://images.unsplash.com/photo-1552820728-8b83bb6b2b0f?w=600&h=800&fit=crop',
+        'simulation': 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&h=800&fit=crop',
+        'default': 'https://images.unsplash.com/photo-1493711662062-fa541f7f28c4?w=600&h=800&fit=crop'
+      };
+
+      for (const category of categories) {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `${category.prompt}
+          
+          For each game provide:
+          - title (exact official game name)
+          - description (2-3 engaging sentences about gameplay and story)
+          - genre (one of: Action RPG, FPS, Strategy, RPG, Shooter, Survival, Racing, Sports, Horror, Adventure, Action Adventure, Sandbox, Fighting, Simulation)
+          - price (realistic USD: AAA games 59.99-69.99, indie 19.99-39.99, older games 29.99-49.99)
+          - developer (real studio name)
+          - rating (realistic 4.0-4.9 based on actual reception)
+          - releaseYear (actual or expected year)`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              games: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    description: { type: 'string' },
+                    genre: { type: 'string' },
+                    price: { type: 'number' },
+                    developer: { type: 'string' },
+                    rating: { type: 'number' },
+                    releaseYear: { type: 'string' }
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
 
-      if (result.games) {
-        for (const game of result.games) {
-          await Game.create({
-            title: game.title,
-            description: game.description,
-            genre: game.genre.toLowerCase(),
-            price: game.price,
-            status: 'available',
-            cover_image: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 200000000000)}?w=600&h=800&fit=crop`
-          });
+        if (result.games) {
+          for (const game of result.games) {
+            const genreLower = (game.genre || 'default').toLowerCase();
+            const coverImage = gameImages[genreLower] || gameImages['default'];
+            
+            // Check if game already exists
+            const existing = existingGames.find(g => g.title?.toLowerCase() === game.title?.toLowerCase());
+            if (!existing) {
+              await Game.create({
+                title: game.title,
+                description: game.description,
+                genre: genreLower,
+                price: game.price || 59.99,
+                status: 'available',
+                cover_image: coverImage,
+                original_year: parseInt(game.releaseYear) || 2024
+              });
+            }
+          }
         }
-        refetchGames();
       }
+      
+      refetchGames();
+      alert(`Successfully populated games from ${categories.length} categories!`);
     } catch (error) {
       console.error('Failed to populate games:', error);
       alert('Failed to populate games. Please try again.');
