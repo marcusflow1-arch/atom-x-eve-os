@@ -5,6 +5,7 @@ import {
   Lock, Check, ChevronLeft, Star, Hexagon, Search, Filter,
   Cpu, Database, Wifi, Battery
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'; // Added this import
 
 // --- Enhanced Mock Data ---
 export const moveHubGamesData = [
@@ -379,63 +380,55 @@ const NeuralSkillTree = ({ game, onClose }) => {
                         </div>
                     </div>
                   </div>
-                <div className="flex justify-center gap-2 mb-4">
-                  <Badge className={
-                    selectedNode.status === 'unlocked' ? 'bg-green-500' :
-                    selectedNode.status === 'unlockable' ? 'bg-yellow-500' : 'bg-slate-600'
-                  }>
-                    {selectedNode.status.toUpperCase()}
-                  </Badge>
-                  <Badge variant="outline" className="border-slate-600">TIER {selectedNode.cost}</Badge>
+                  <p className="text-slate-300 text-center leading-relaxed">
+                    {selectedNode.description}
+                  </p>
                 </div>
-                <p className="text-slate-300 text-center leading-relaxed">
-                  {selectedNode.description}
-                </p>
-              </div>
 
-              <div className="space-y-4">
-                <h5 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Requirements</h5>
-                <div className="bg-slate-800/50 rounded-lg p-4 flex items-center justify-between">
-                  <span className="text-slate-300">Skill Points Required</span>
-                  <span className={`font-bold ${game.skillPoints >= selectedNode.cost ? 'text-green-400' : 'text-red-400'}`}>
-                    {selectedNode.cost} SP
-                  </span>
+                <div className="space-y-4">
+                  <h5 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Requirements</h5>
+                  <div className="bg-slate-800/50 rounded-lg p-4 flex items-center justify-between">
+                    <span className="text-slate-300">Skill Points Required</span>
+                    <span className={`font-bold ${game.skillPoints >= selectedNode.cost ? 'text-green-400' : 'text-red-400'}`}>
+                      {selectedNode.cost} SP
+                    </span>
+                  </div>
+                  <div className="bg-slate-800/50 rounded-lg p-4 flex items-center justify-between">
+                    <span className="text-slate-300">Prerequisite Nodes</span>
+                    <span className={`font-bold ${
+                      selectedNode.parentIds.every(pid => treeData.nodes.find(n => n.id === pid)?.status === 'unlocked')
+                        ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {selectedNode.parentIds.length === 0 ? 'None' : 
+                        selectedNode.parentIds.length === 1 ? '1 Node' : `${selectedNode.parentIds.length} Nodes`
+                      }
+                    </span>
+                  </div>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-4 flex items-center justify-between">
-                  <span className="text-slate-300">Prerequisite Nodes</span>
-                  <span className={`font-bold ${
-                    selectedNode.parentIds.every(pid => treeData.nodes.find(n => n.id === pid)?.status === 'unlocked')
-                      ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {selectedNode.parentIds.length === 0 ? 'None' : 
-                      selectedNode.parentIds.length === 1 ? '1 Node' : `${selectedNode.parentIds.length} Nodes`
-                    }
-                  </span>
-                </div>
-              </div>
 
-              <div className="pt-6">
-                {selectedNode.status === 'unlockable' ? (
-                  <button
-                    onClick={() => handleUnlock(selectedNode)}
-                    disabled={game.skillPoints < selectedNode.cost}
-                    className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-                      game.skillPoints >= selectedNode.cost
-                        ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/20'
-                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {game.skillPoints >= selectedNode.cost ? 'UNLOCK NODE' : 'INSUFFICIENT POINTS'}
-                  </button>
-                ) : selectedNode.status === 'unlocked' ? (
-                  <div className="w-full py-4 rounded-xl bg-green-500/20 border border-green-500/50 text-green-400 font-bold text-center flex items-center justify-center gap-2">
-                    <Check className="w-5 h-5" /> NODE ACTIVE
-                  </div>
-                ) : (
-                  <div className="w-full py-4 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-500 font-bold text-center flex items-center justify-center gap-2">
-                    <Lock className="w-5 h-5" /> LOCKED
-                  </div>
-                )}
+                <div className="pt-6">
+                  {selectedNode.status === 'unlockable' ? (
+                    <button
+                      onClick={() => handleUnlock(selectedNode)}
+                      disabled={game.skillPoints < selectedNode.cost}
+                      className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+                        game.skillPoints >= selectedNode.cost
+                          ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-lg shadow-yellow-500/20'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {game.skillPoints >= selectedNode.cost ? 'UNLOCK NODE' : 'INSUFFICIENT POINTS'}
+                    </button>
+                  ) : selectedNode.status === 'unlocked' ? (
+                    <div className="w-full py-4 rounded-xl bg-green-500/20 border border-green-500/50 text-green-400 font-bold text-center flex items-center justify-center gap-2">
+                      <Check className="w-5 h-5" /> NODE ACTIVE
+                    </div>
+                  ) : (
+                    <div className="w-full py-4 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-500 font-bold text-center flex items-center justify-center gap-2">
+                      <Lock className="w-5 h-5" /> LOCKED
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
