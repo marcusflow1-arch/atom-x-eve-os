@@ -409,6 +409,12 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
 
+  useEffect(() => {
+    const handleOpenDrawer = () => setDrawerOpen(true);
+    document.addEventListener('openStoreDrawer', handleOpenDrawer);
+    return () => document.removeEventListener('openStoreDrawer', handleOpenDrawer);
+  }, []);
+
   const appPages = [
     { name: 'Dashboard', icon: '🏠' },
     { name: 'Store', icon: '🛒' },
