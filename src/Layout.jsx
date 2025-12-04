@@ -467,8 +467,6 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
-
-
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
         <div className="page-container">
