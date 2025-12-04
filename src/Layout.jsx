@@ -369,59 +369,54 @@ function LayoutContent({ children, currentPageName }) {
           }
       `}</style>
 
-      {/* Modern Top Navigation - Apple Liquid Glass Style */}
-      <header className="modern-nav-header flex-shrink-0 z-20">
-          <div className="nav-container">
-            {/* Left: Nav Menu */}
-            <nav className="nav-menu justify-self-start">
-                {Object.entries(navGroups).map(([groupName, group]) => {
-                  if (group.isLink) {
-                    const isActive = location.pathname === group.path;
-                    return (
-                      <Link
-                        key={groupName}
-                        to={group.path}
-                        className={`nav-item ${isActive ? 'active' : ''}`}
-                      >
-                        <group.icon size={16} className="nav-icon" />
-                        <span className="nav-label">{groupName}</span>
-                      </Link>
-                    )
-                  }
-                  return (
-                    <NavDropdown
-                      key={groupName}
-                      groupName={groupName}
-                      icon={group.icon}
-                      items={group.items}
-                      currentPath={location.pathname}
-                    />
-                  )
-                })}
-            </nav>
-
-            {/* Center: Brand Name */}
-            <Link to={createPageUrl('Dashboard')} className="nav-brand">
-                ATOM×EVE
-            </Link>
-
-            {/* Right: User Actions */}
-            <div className="nav-actions flex items-center gap-3 justify-self-end">
+      {/* Global Navigation Drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl border-r border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              {/* Drawer Header */}
+              <div className="p-6 border-b border-white/[0.06]">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-white font-bold text-xl tracking-wider">ATOM×EVE</span>
+                  <button 
+                    onClick={() => setDrawerOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                  >
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+                </div>
+                
+                {/* User Info */}
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden ring-2 ring-white/20">
-                        {user?.avatar_url ? (
-                          <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                          getUserInitial()
-                        )}
-                      </div>
-                      <span className="text-sm text-white/80 font-medium">{getDisplayName()}</span>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden ring-2 ring-white/20">
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        getUserInitial()
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium text-sm truncate">{getDisplayName()}</p>
+                      <p className="text-white/40 text-xs truncate">{user?.email}</p>
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white transition-all border border-white/10"
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center text-white/50 hover:text-white transition-all"
                       title="Sign Out"
                     >
                       <LogOut className="w-4 h-4" />
@@ -430,15 +425,60 @@ function LayoutContent({ children, currentPageName }) {
                 ) : (
                   <button
                     onClick={handleSignIn}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white font-medium transition-all border border-white/10"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-white font-medium transition-all border border-white/[0.08]"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign In
                   </button>
                 )}
-            </div>
-          </div>
-      </header>
+              </div>
+
+              {/* Nav Items */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
+                <div className="space-y-1">
+                  {allNavItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setDrawerOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          isActive 
+                            ? 'bg-white/[0.1] text-white border border-white/[0.1]' 
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.05] border border-transparent'
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Drawer Footer */}
+              <div className="p-4 border-t border-white/[0.06]">
+                <p className="text-white/20 text-xs text-center">© 2025 ATOM×EVE</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Menu Button (Top Left on all pages) */}
+      <button
+        onClick={() => setDrawerOpen(true)}
+        className="fixed top-4 left-4 z-40 w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+      >
+        <div className="flex flex-col gap-1">
+          <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+          <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+          <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+        </div>
+      </button>
 
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
