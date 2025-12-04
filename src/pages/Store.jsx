@@ -288,11 +288,28 @@ const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
     );
 };
 
-// --- Apple-style Navigation ---
+// --- Apple Liquid Glass Navigation ---
 const FloatingNav = ({ scrollY }) => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const { cartCount } = useCart();
     const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const appPages = [
+        { name: 'Dashboard', icon: '🏠' },
+        { name: 'Store', icon: '🛒' },
+        { name: 'Library', icon: '📚' },
+        { name: 'Achievements', icon: '🏆' },
+        { name: 'TradingCards', icon: '🃏' },
+        { name: 'Challenges', icon: '⚔️' },
+        { name: 'Community', icon: '👥' },
+        { name: 'Clan', icon: '🏰' },
+        { name: 'TradingPost', icon: '🔄' },
+        { name: 'Marketplace', icon: '💰' },
+        { name: 'Profile', icon: '👤' },
+        { name: 'Admin', icon: '⚙️' },
+    ];
 
     useMemo(() => {
         return scrollY.on("change", (latest) => {
@@ -301,64 +318,117 @@ const FloatingNav = ({ scrollY }) => {
     }, [scrollY]);
 
     return (
-        <motion.header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10 py-3' : 'bg-gradient-to-b from-black/80 to-transparent py-6'
-            }`}
-        >
-            <div className="max-w-[1920px] mx-auto px-6 md:px-12 flex items-center justify-between">
-                <div className="flex items-center gap-8">
-                    <Link to={createPageUrl('Dashboard')} className="flex items-center gap-2 group">
-                        <Gamepad2 className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" />
-                        <span className="font-bold text-xl tracking-tight text-white">
-                            NEXUS<span className="text-blue-500">STORE</span>
-                        </span>
-                    </Link>
-                    
-                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
-                        <button className="text-white hover:text-blue-400 transition-colors">Home</button>
-                        <button className="hover:text-blue-400 transition-colors">Store</button>
-                        <button className="hover:text-blue-400 transition-colors">Library</button>
-                        <button className="hover:text-blue-400 transition-colors">Arcade</button>
-                    </nav>
-                </div>
+        <>
+            <motion.header
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+                    isScrolled 
+                        ? 'bg-white/10 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/10' 
+                        : 'bg-white/5 backdrop-blur-xl'
+                }`}
+                style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
+            >
+                <div className="max-w-[1920px] mx-auto px-6 md:px-12 h-14 flex items-center justify-between">
+                    {/* Left: App Drawer */}
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => setDrawerOpen(!drawerOpen)}
+                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all"
+                        >
+                            <div className="flex flex-col gap-1">
+                                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                            </div>
+                        </button>
 
-                <div className="flex items-center gap-6">
-                    <div className="relative hidden md:block group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                        <nav className="hidden md:flex items-center gap-1">
+                            {['Store', 'Library', 'Community'].map((item) => (
+                                <Link
+                                    key={item}
+                                    to={createPageUrl(item)}
+                                    className="px-4 py-1.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                                >
+                                    {item}
+                                </Link>
+                            ))}
+                        </nav>
+                    </div>
+
+                    {/* Center: Search */}
+                    <div className="relative hidden md:block">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                         <input 
                             type="text" 
                             placeholder="Search" 
-                            className="bg-white/10 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:bg-black/50 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 w-48 transition-all"
+                            className="bg-white/10 border-none rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 w-64 transition-all"
                         />
                     </div>
 
-                    <div className="flex items-center gap-4 text-gray-300">
-                        <button className="hover:text-white transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                        <Link to={createPageUrl('Cart')} className="hover:text-white transition-colors relative">
-                            <ShoppingCart className="w-5 h-5" />
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-3">
+                        <Link 
+                            to={createPageUrl('Cart')} 
+                            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
+                        >
+                            <ShoppingCart className="w-4 h-4 text-white/80" />
                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                                     {cartCount}
                                 </span>
                             )}
                         </Link>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[1px] cursor-pointer">
-                            <div className="w-full h-full rounded-full bg-black overflow-hidden">
-                                <img 
-                                    src={user?.avatar_url || "https://github.com/shadcn.png"} 
-                                    alt="User" 
-                                    className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
-                                />
-                            </div>
+                        <button className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative">
+                            <Bell className="w-4 h-4 text-white/80" />
+                            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/20 cursor-pointer hover:ring-white/40 transition-all">
+                            <img 
+                                src={user?.avatar_url || "https://github.com/shadcn.png"} 
+                                alt="User" 
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                     </div>
                 </div>
-            </div>
-        </motion.header>
+            </motion.header>
+
+            {/* App Drawer */}
+            <AnimatePresence>
+                {drawerOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                            onClick={() => setDrawerOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ x: -300, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -300, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 left-0 bottom-0 w-72 bg-white/10 backdrop-blur-2xl backdrop-saturate-150 border-r border-white/10 z-50 p-6"
+                            style={{ WebkitBackdropFilter: 'blur(40px) saturate(180%)' }}
+                        >
+                            <h2 className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-4">Apps</h2>
+                            <div className="space-y-1">
+                                {appPages.map((page) => (
+                                    <button
+                                        key={page.name}
+                                        onClick={() => { navigate(createPageUrl(page.name)); setDrawerOpen(false); }}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all text-left"
+                                    >
+                                        <span className="text-lg">{page.icon}</span>
+                                        <span className="font-medium">{page.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </>
     );
 };
 
