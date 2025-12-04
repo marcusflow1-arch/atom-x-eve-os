@@ -1264,7 +1264,7 @@ const AchievementLootBoxTab = ({ game }) => {
     );
 };
 
-const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAchievements, onShowGameDetails, onPlay }) => {
+const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAchievements, onShowGameDetails, onPlay, onStream }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [overviewSubTab, setOverviewSubTab] = useState('general');
     const [communitySubTab, setCommunitySubTab] = useState('posts');
@@ -1291,6 +1291,11 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                         <Button size="sm" onClick={() => onPlay(game)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105">
                             <Play className="w-4 h-4" />
                             Play
+                        </Button>
+
+                        <Button size="sm" onClick={() => onStream && onStream(game)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105 border border-purple-400/30">
+                            <Wifi className="w-4 h-4" />
+                            Stream
                         </Button>
                         
                         <Button size="sm" variant="outline" className="border-green-500/50 bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105">
@@ -1692,7 +1697,24 @@ export default function Library() {
     const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState('midnight_library');
     const [launchingGame, setLaunchingGame] = useState(null);
+    const [streamingSession, setStreamingSession] = useState(null);
     const canvasRef = useRef(null);
+
+    const handleStreamGame = async (game) => {
+        try {
+            const res = await base44.functions.invoke('initiateRemotePlay', { game_id: game.id });
+            if (res.data && res.data.success) {
+                setStreamingSession({ game, session: res.data.session });
+            } else {
+                console.error("Failed to start stream", res);
+                // Fallback for UI demo
+                setStreamingSession({ game, session: { status: 'initializing' } });
+            }
+        } catch (e) {
+            console.error(e);
+            setStreamingSession({ game, session: { status: 'initializing' } });
+        }
+    };
 
     const handleLaunchGame = (game) => {
         setLaunchingGame(game);
@@ -2363,6 +2385,7 @@ export default function Library() {
                                     onShowAchievements={() => setShowAchievementsOverlay(true)}
                                     onShowGameDetails={() => setShowGameDetailsOverlay(true)}
                                     onPlay={handleLaunchGame}
+                                    onStream={handleStreamGame}
                                 />
                             </div>
                         </div>
