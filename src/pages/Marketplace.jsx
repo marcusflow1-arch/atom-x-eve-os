@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import {
-  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User, Fingerprint, AlertOctagon, Siren, Grid, List
+  Gavel, Search, Filter, X, Zap, Shield, Sword, Bot, Mic, Send, Coins, Clock, ChevronDown, Tag, Gamepad2, Diamond, Store, TrendingUp, Flame, ArrowUp, ArrowLeft, Eye, Users, Star, Plus, Heart, Sparkles, Ghost, Skull, AlertTriangle, Lock, Unlock, Radio, Package, User, Fingerprint, AlertOctagon, Siren, Grid, List, Home, ShoppingBag, Library, Trophy, Layers, Hammer, MessageSquare, Rocket, Swords, ArrowLeftRight, Lightbulb, Settings, LogIn, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
