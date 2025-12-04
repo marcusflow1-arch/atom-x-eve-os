@@ -33,6 +33,7 @@ import Events from './pages/Events';
 import TradingCards from './pages/TradingCards';
 import Challenges from './pages/Challenges';
 import Admin from './pages/Admin';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "TradingCards": TradingCards,
     "Challenges": Challenges,
     "Admin": Admin,
+    "Home": Home,
 }
 
 export const pagesConfig = {
