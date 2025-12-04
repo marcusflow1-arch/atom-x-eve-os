@@ -11,7 +11,7 @@ import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
-import { aiGames, otherSampleGames } from '../components/store/mockData';
+import { aiGames, otherSampleGames, trendingGames, newReleases, classicBestSellers } from '../components/store/mockData';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -473,11 +473,12 @@ export default function Store() {
   // Categories
   const categories = useMemo(() => {
       return {
-          'Trending Now': filteredGames.slice(0, 8),
-          'New Releases': filteredGames.filter(g => g.releaseDate === '2024'),
-          'AI Powered Adventures': filteredGames.filter(g => g.aiEnhanced),
-          'Action & RPG': filteredGames.filter(g => ['Action', 'RPG', 'Adventure'].includes(g.genre)),
-          'Strategy & Simulation': filteredGames.filter(g => ['Strategy', 'Simulation'].includes(g.genre)),
+          'Trending Now': trendingGames,
+          'New Releases 2025': newReleases,
+          'Classic Best Sellers': classicBestSellers,
+          'AI Powered Adventures': aiGames,
+          'Action & RPG': filteredGames.filter(g => ['Action RPG', 'RPG', 'Action', 'Action Adventure'].includes(g.genre)),
+          'Strategy & Simulation': filteredGames.filter(g => ['Strategy', 'Simulation', '4X'].includes(g.genre)),
       };
   }, [filteredGames]);
 
