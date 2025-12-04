@@ -8,6 +8,7 @@ import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import PWAManifest from './components/desktop/PWAManifest';
@@ -75,6 +76,7 @@ function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navGroups = {
     'Home': {
@@ -119,6 +121,27 @@ function LayoutContent({ children, currentPageName }) {
       ],
     },
   };
+
+  const allNavItems = [
+    { name: 'Dashboard', icon: Home, path: createPageUrl('Dashboard') },
+    { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
+    { name: 'Library', icon: Library, path: createPageUrl('Library') },
+    { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+    { name: 'Trading Cards', icon: Layers, path: createPageUrl('TradingCards') },
+    { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
+    { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
+    { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
+    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
+    { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
+    { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
+    { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
+    { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
+    { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
+    { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
+    { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
+    { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
+    { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
+  ];
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -256,41 +279,35 @@ function LayoutContent({ children, currentPageName }) {
 
           .nav-item {
             position: relative;
-            padding: 8px 16px;
-            border-radius: 10px;
+            padding: 6px 14px;
+            border-radius: 9999px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
+            gap: 6px;
+            font-weight: 500;
+            font-size: 0.85rem;
             text-decoration: none;
-            color: #cbd5e1;
+            color: rgba(255, 255, 255, 0.7);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid transparent;
-            background: rgba(45, 55, 72, 0.3);
-            backdrop-filter: blur(5px);
+            background: transparent;
             white-space: nowrap;
           }
 
           .nav-item:hover {
-            transform: translateY(-2px);
-            color: #f1f5f9;
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.4);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.1);
           }
 
           .nav-item.active {
             color: #ffffff;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
-            border-color: rgba(59, 130, 246, 0.6);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
           }
 
           .nav-item.active:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
           }
 
           .nav-icon {
