@@ -15,6 +15,7 @@ import AchievementSearch from '../components/achievements/AchievementSearch';
 import TrackingPanel from '../components/achievements/TrackingPanel';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import AchievementFilterBar from '../components/achievements/AchievementFilterBar';
+import AchievementPathway from '../components/achievements/AchievementPathway';
 import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import { base44 } from '@/api/base44Client';
@@ -624,7 +625,10 @@ export default function Achievements() {
               </div>
 
               {/* Achievement Tracking Toggle for main view */}
-              <div className="flex justify-end mb-6">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex gap-2">
+                  {/* Only show pathway button when no specific game is selected to keep UI clean, or can be added as a tab */}
+                </div>
                 <Button
                     variant="ghost"
                     size="sm"
@@ -635,6 +639,11 @@ export default function Achievements() {
                     <ChevronRight className={`w-4 h-4 mr-2 transition-transform ${!isTrackingPanelVisible ? 'rotate-180' : ''}`} />
                     Achievement Tracking
                 </Button>
+              </div>
+
+              {/* Achievements Pathway Section */}
+              <div className="mb-12">
+                 <AchievementPathway />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

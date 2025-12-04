@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb
+  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket
 } from 'lucide-react';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
@@ -96,6 +96,7 @@ function LayoutContent({ children, currentPageName }) {
       items: [
         { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
         { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
+        { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
       ],
     },
     'AI & Tools': {

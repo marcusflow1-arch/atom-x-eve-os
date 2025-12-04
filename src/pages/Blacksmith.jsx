@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
-  Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown
+  Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
+import { createPageUrl } from '@/utils';
+import { Link } from 'react-router-dom';
+import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import { Item } from '@/entities/Item';
 import { ItemSet } from '@/entities/ItemSet';
 import { Enchantment } from '@/entities/Enchantment';
@@ -266,6 +268,16 @@ const ItemDetailsPanel = ({ item, onClose, onEnchant, onCombine, onSalvage }) =>
           <Hammer className="w-4 h-4 mr-2" />
           Salvage
         </Button>
+
+        <Link to={createPageUrl('TradingPost')} className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full border-green-600 text-green-400 hover:bg-green-900/20 mt-2"
+          >
+            <ArrowLeftRight className="w-4 h-4 mr-2" />
+            Sell on Marketplace
+          </Button>
+        </Link>
       </div>
     </motion.div>
   );
@@ -273,7 +285,7 @@ const ItemDetailsPanel = ({ item, onClose, onEnchant, onCombine, onSalvage }) =>
 
 export default function BlacksmithPage() {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState('all'); // 'all', 'by-game', 'by-genre'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'by-game', 'by-genre', 'collab'
   const [selectedGame, setSelectedGame] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -505,6 +517,15 @@ export default function BlacksmithPage() {
                 <Layers className="w-4 h-4" />
                 By Genre
               </button>
+              <button
+                onClick={() => setViewMode('collab')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                  viewMode === 'collab' ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Collaborations
+              </button>
             </div>
           </div>
 
@@ -612,6 +633,9 @@ export default function BlacksmithPage() {
 
         {/* Main Inventory Grid */}
         <div className="blacksmith-main bg-slate-800/30 rounded-xl p-6 overflow-y-auto" style={{ gridArea: 'main' }}>
+          {viewMode === 'collab' ? (
+            <CraftingCollaborations />
+          ) : (
           <AnimatePresence mode="wait">
             {Object.entries(organizedItems).map(([groupName, items]) => (
               <motion.div
@@ -641,6 +665,7 @@ export default function BlacksmithPage() {
               </motion.div>
             ))}
           </AnimatePresence>
+          )}
         </div>
 
         {/* Item Details Panel */}

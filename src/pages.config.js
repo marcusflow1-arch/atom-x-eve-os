@@ -28,6 +28,7 @@ import PlayerProfile from './pages/PlayerProfile';
 import GameProfile from './pages/GameProfile';
 import Orders from './pages/Orders';
 import Ideals from './pages/Ideals';
+import GameDevHub from './pages/GameDevHub';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "GameProfile": GameProfile,
     "Orders": Orders,
     "Ideals": Ideals,
+    "GameDevHub": GameDevHub,
 }
 
 export const pagesConfig = {
