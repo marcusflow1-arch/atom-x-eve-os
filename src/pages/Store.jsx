@@ -12,6 +12,8 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
 import { aiGames, otherSampleGames } from '../components/store/mockData';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 // --- Liquid Glass & Apple-style Components ---
 
@@ -185,9 +187,24 @@ const GameRow = ({ title, games, addToCart }) => {
     );
 };
 
-const NetflixHero = ({ featuredGame, addToCart }) => {
+const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
     const navigate = useNavigate();
     const [isMuted, setIsMuted] = useState(true);
+    const [currentBgIndex, setCurrentBgIndex] = useState(() => 
+        heroBackgrounds.length > 0 ? Math.floor(Math.random() * heroBackgrounds.length) : -1
+    );
+
+    const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
+    const currentBackground = activeBackgrounds[currentBgIndex >= 0 ? currentBgIndex % activeBackgrounds.length : 0];
+
+    // Cycle through backgrounds
+    useEffect(() => {
+        if (activeBackgrounds.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentBgIndex(prev => (prev + 1) % activeBackgrounds.length);
+        }, 15000); // 15 seconds per background
+        return () => clearInterval(interval);
+    }, [activeBackgrounds.length]);
 
     if (!featuredGame) return null;
 
@@ -197,11 +214,23 @@ const NetflixHero = ({ featuredGame, addToCart }) => {
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent z-10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
-                <img 
-                    src={featuredGame.cover_image || featuredGame.image} 
-                    alt={featuredGame.title}
-                    className="w-full h-full object-cover object-top"
-                />
+                {currentBackground?.video_url ? (
+                    <video
+                        key={currentBackground.id}
+                        src={currentBackground.video_url}
+                        autoPlay
+                        muted={isMuted}
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover object-center"
+                    />
+                ) : (
+                    <img 
+                        src={featuredGame.cover_image || featuredGame.image} 
+                        alt={featuredGame.title}
+                        className="w-full h-full object-cover object-top"
+                    />
+                )}
             </div>
 
             {/* Content Overlay */}
@@ -340,6 +369,13 @@ export default function Store() {
   const { addToCart } = useCart();
   const { scrollY } = useScroll();
 
+  // Fetch hero backgrounds
+  const { data: heroBackgrounds = [] } = useQuery({
+    queryKey: ['heroBackgrounds'],
+    queryFn: () => base44.entities.HeroBackground.list(),
+    initialData: [],
+  });
+
   useEffect(() => {
     const fetchGames = async () => {
       try {
@@ -393,7 +429,7 @@ export default function Store() {
 
       <main className="relative pb-24">
           {/* Hero Section */}
-          <NetflixHero featuredGame={featuredGame} addToCart={addToCart} />
+          <NetflixHero featuredGame={featuredGame} addToCart={addToCart} heroBackgrounds={heroBackgrounds} />
 
           {/* Game Rows */}
           <div className="relative z-10 -mt-32 space-y-2">

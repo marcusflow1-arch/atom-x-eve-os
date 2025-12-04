@@ -32,6 +32,7 @@ import GameDevHub from './pages/GameDevHub';
 import Events from './pages/Events';
 import TradingCards from './pages/TradingCards';
 import Challenges from './pages/Challenges';
+import Admin from './pages/Admin';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +71,7 @@ export const PAGES = {
     "Events": Events,
     "TradingCards": TradingCards,
     "Challenges": Challenges,
+    "Admin": Admin,
 }
 
 export const pagesConfig = {
