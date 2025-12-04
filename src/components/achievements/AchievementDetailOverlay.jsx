@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import AIAssistantPanel from './AIAssistantPanel';
 
 const rarityStyles = {
   Common: { color: "text-slate-300", bg: "bg-slate-800/80", border: "border-slate-600", glow: "shadow-slate-500/20" },
@@ -260,6 +261,11 @@ export default function AchievementDetailOverlay({ achievement, onClose, onTrack
               </div>
             </CardContent>
           </Card>
+          
+          {/* AI Assistant Integration */}
+          <div className="mt-6">
+            <AIAssistantPanel achievement={achievement} game={achievement.game} />
+          </div>
         </div>
 
         {/* Progress Section (if not unlocked) */}
