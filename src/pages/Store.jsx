@@ -11,7 +11,7 @@ import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
-import { aiGames, otherSampleGames, trendingGames, newReleases, classicBestSellers } from '../components/store/mockData';
+import { aiGames, otherSampleGames, trendingGames, newReleases, classicBestSellers } from '@/components/store/mockData';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -29,8 +29,7 @@ const GlassCard = ({ children, className = "", hoverEffect = true }) => (
   </div>
 );
 
-const GameCard = ({ game, addToCart, index }) => {
-  const navigate = useNavigate();
+const GameCard = ({ game, addToCart, index, onNavigate }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -44,7 +43,7 @@ const GameCard = ({ game, addToCart, index }) => {
       transition={{ duration: 0.5, delay: index * 0.05, ease: "easeOut" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+      onClick={() => onNavigate(game.id)}
     >
       {/* Liquid Glass Container */}
       <div className={`
@@ -89,7 +88,7 @@ const GameCard = ({ game, addToCart, index }) => {
                 <Button 
                   size="sm" 
                   className="flex-1 bg-white text-black hover:bg-gray-200 rounded-full font-semibold text-xs h-8"
-                  onClick={(e) => { e.stopPropagation(); navigate(createPageUrl(`GameDetail?id=${game.id}`)); }}
+                  onClick={(e) => { e.stopPropagation(); onNavigate(game.id); }}
                 >
                   <Play className="w-3 h-3 mr-1 fill-current" /> Play
                 </Button>
@@ -110,7 +109,7 @@ const GameCard = ({ game, addToCart, index }) => {
   );
 };
 
-const GameRow = ({ title, games, addToCart }) => {
+const GameRow = ({ title, games, addToCart, onNavigate }) => {
     const rowRef = useRef(null);
     const [showLeftArrow, setShowLeftArrow] = useState(false);
     const [showRightArrow, setShowRightArrow] = useState(true);
@@ -164,7 +163,7 @@ const GameRow = ({ title, games, addToCart }) => {
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {games.map((game, idx) => (
-                        <GameCard key={game.id} game={game} addToCart={addToCart} index={idx} />
+                        <GameCard key={game.id} game={game} addToCart={addToCart} index={idx} onNavigate={onNavigate} />
                     ))}
                     <div className="w-8 flex-shrink-0" />
                 </div>
@@ -290,11 +289,11 @@ const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
 
 // --- Apple Liquid Glass Navigation ---
 const FloatingNav = ({ scrollY }) => {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const navigate = useNavigate();
     const { cartCount } = useCart();
     const { user } = useAuth();
-    const navigate = useNavigate();
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const appPages = [
         { name: 'Dashboard', icon: '🏠' },
@@ -311,7 +310,7 @@ const FloatingNav = ({ scrollY }) => {
         { name: 'Admin', icon: '⚙️' },
     ];
 
-    useMemo(() => {
+    useEffect(() => {
         return scrollY.on("change", (latest) => {
             setIsScrolled(latest > 50);
         });
@@ -433,11 +432,16 @@ const FloatingNav = ({ scrollY }) => {
 };
 
 export default function Store() {
+  const navigate = useNavigate();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { addToCart } = useCart();
   const { scrollY } = useScroll();
+  
+  const handleGameNavigate = (gameId) => {
+    navigate(createPageUrl(`GameDetail?id=${gameId}`));
+  };
 
   // Fetch hero backgrounds
   const { data: heroBackgrounds = [] } = useQuery({
@@ -510,7 +514,8 @@ export default function Store() {
                         key={title} 
                         title={title} 
                         games={categoryGames} 
-                        addToCart={addToCart} 
+                        addToCart={addToCart}
+                        onNavigate={handleGameNavigate}
                       />
                   )
               ))}
