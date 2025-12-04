@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Layers, Star, Shield, Zap, Crown, Hexagon, ArrowRightLeft } from 'lucide-react';
+import { Search, Filter, Layers, Star, Shield, Zap, Crown, Hexagon, ArrowLeftRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +56,7 @@ const CardComponent = ({ card, isOwned }) => {
             }`}>{card.rarity}</span>
             {isOwned && (
                 <Button size="icon" variant="ghost" className="h-6 w-6 text-white hover:bg-white/20">
-                    <ArrowRightLeft className="w-3 h-3" />
+                    <ArrowLeftRight className="w-3 h-3" />
                 </Button>
             )}
         </div>
@@ -128,7 +128,7 @@ export default function TradingCards() {
 
           <TabsContent value="marketplace">
              <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
-                <ArrowRightLeft className="w-16 h-16 text-slate-700 mb-4" />
+                <ArrowLeftRight className="w-16 h-16 text-slate-700 mb-4" />
                 <h3 className="text-2xl font-bold text-slate-400">Card Marketplace</h3>
                 <p className="text-slate-500 max-w-md mt-2">Trade your duplicates with other players to complete your collection. Coming soon!</p>
              </div>
