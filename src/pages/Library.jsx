@@ -6,7 +6,7 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Mic, MicOff, Grid, List, Heart, Clock, Trophy, Eye, Bot, Sparkles, Users, MessageSquare, Hash, Send, Volume2, Package, Video, HelpCircle, Gift, MapPin, Palette } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Mic, MicOff, Grid, List, Heart, Clock, Trophy, Eye, Bot, Sparkles, Users, MessageSquare, Hash, Send, Volume2, Package, Video, HelpCircle, Gift, MapPin, Palette, Wifi } from 'lucide-react';
 import { allMockGames } from '../components/store/mockData';
 import RecentlyAchievedOverlay from '../components/library/RecentlyAchievedOverlay';
 import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
