@@ -253,7 +253,7 @@ const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
                             {featuredGame.description}
                         </p>
 
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-4 mb-8">
                             <Button 
                                 size="lg" 
                                 className="bg-white text-black hover:bg-gray-200 font-bold px-8 h-14 rounded-lg text-lg shadow-xl shadow-white/10 transition-transform hover:scale-105"
@@ -271,7 +271,41 @@ const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
                                 More Info
                             </Button>
                         </div>
-                    </motion.div>
+                    </motion.view>
+                </div>
+            </div>
+
+            {/* Amazon-Style Category Navigation */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/95 to-transparent pt-12 pb-6">
+                <div className="px-4 md:px-12">
+                    <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-2">
+                        {[
+                            { label: 'All Games', icon: Gamepad2, color: 'from-blue-500 to-cyan-500' },
+                            { label: 'Action RPG', icon: Sword, color: 'from-red-500 to-orange-500' },
+                            { label: 'Sci-Fi', icon: Rocket, color: 'from-purple-500 to-pink-500' },
+                            { label: 'AI Enhanced', icon: Brain, color: 'from-emerald-500 to-teal-500' },
+                            { label: 'Competitive', icon: Trophy, color: 'from-yellow-500 to-amber-500' },
+                            { label: 'Shooters', icon: Crosshair, color: 'from-rose-500 to-red-500' },
+                            { label: 'Racing', icon: Car, color: 'from-sky-500 to-blue-500' },
+                            { label: 'Horror', icon: Ghost, color: 'from-slate-500 to-zinc-500' },
+                            { label: 'Adventure', icon: Map, color: 'from-lime-500 to-green-500' },
+                            { label: 'New Releases', icon: Sparkles, color: 'from-fuchsia-500 to-purple-500' },
+                            { label: 'Trending', icon: Flame, color: 'from-orange-500 to-red-500' },
+                        ].map((cat, idx) => (
+                            <motion.button
+                                key={cat.label}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05, duration: 0.3 }}
+                                className="group flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105"
+                            >
+                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
+                                    <cat.icon className="w-6 h-6 text-white" />
+                                </div>
+                                <span className="text-xs font-semibold text-white/80 group-hover:text-white whitespace-nowrap">{cat.label}</span>
+                            </motion.button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
