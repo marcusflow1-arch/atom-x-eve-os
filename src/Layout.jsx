@@ -352,14 +352,11 @@ function LayoutContent({ children, currentPageName }) {
           }
       `}</style>
 
-      {/* Modern Top Navigation */}
+      {/* Modern Top Navigation - Apple Liquid Glass Style */}
       <header className="modern-nav-header flex-shrink-0 z-20">
           <div className="nav-container">
-            <Link to={createPageUrl('Dashboard')} className="nav-brand">
-                ATOM×EVE OS
-            </Link>
-
-            <nav className="nav-menu">
+            {/* Left: Nav Menu */}
+            <nav className="nav-menu justify-self-start">
                 {Object.entries(navGroups).map(([groupName, group]) => {
                   if (group.isLink) {
                     const isActive = location.pathname === group.path;
@@ -386,31 +383,37 @@ function LayoutContent({ children, currentPageName }) {
                 })}
             </nav>
 
-            <div className="nav-actions flex items-center gap-4">
+            {/* Center: Brand Name */}
+            <Link to={createPageUrl('Dashboard')} className="nav-brand">
+                ATOM×EVE
+            </Link>
+
+            {/* Right: User Actions */}
+            <div className="nav-actions flex items-center gap-3 justify-self-end">
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded-lg">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden ring-2 ring-white/20">
                         {user?.avatar_url ? (
                           <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
                           getUserInitial()
                         )}
                       </div>
-                      <span className="text-sm text-slate-300">{getDisplayName()}</span>
+                      <span className="text-sm text-white/80 font-medium">{getDisplayName()}</span>
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="p-2 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors"
+                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white transition-all border border-white/10"
                       title="Sign Out"
                     >
-                      <LogOut className="w-5 h-5" />
+                      <LogOut className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={handleSignIn}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white font-medium transition-all border border-white/10"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign In
