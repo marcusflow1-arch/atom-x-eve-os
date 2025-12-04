@@ -136,7 +136,7 @@ const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
   if (!featuredGame) return null;
 
   return (
-    <div className="relative w-full h-[50vh] min-h-[400px]">
+    <div className="relative w-full h-[50vh] min-h-[400px] mt-0">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
