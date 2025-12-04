@@ -12,6 +12,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
+import CraftingChallenges from '../components/crafting/CraftingChallenges';
 import { Item } from '@/entities/Item';
 import { ItemSet } from '@/entities/ItemSet';
 import { Enchantment } from '@/entities/Enchantment';
@@ -633,6 +634,9 @@ export default function BlacksmithPage() {
 
         {/* Main Inventory Grid */}
         <div className="blacksmith-main bg-slate-800/30 rounded-xl p-6 overflow-y-auto" style={{ gridArea: 'main' }}>
+          <div className="mb-6">
+             <CraftingChallenges />
+          </div>
           {viewMode === 'collab' ? (
             <CraftingCollaborations />
           ) : (

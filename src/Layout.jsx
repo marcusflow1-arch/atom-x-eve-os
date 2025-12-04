@@ -89,6 +89,7 @@ function LayoutContent({ children, currentPageName }) {
         { name: 'Library', icon: Library, path: createPageUrl('Library') },
         { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
         { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
+        { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
       ],
     },
     'Community': {

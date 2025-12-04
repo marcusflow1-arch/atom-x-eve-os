@@ -29,6 +29,7 @@ import GameProfile from './pages/GameProfile';
 import Orders from './pages/Orders';
 import Ideals from './pages/Ideals';
 import GameDevHub from './pages/GameDevHub';
+import Events from './pages/Events';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +65,7 @@ export const PAGES = {
     "Orders": Orders,
     "Ideals": Ideals,
     "GameDevHub": GameDevHub,
+    "Events": Events,
 }
 
 export const pagesConfig = {

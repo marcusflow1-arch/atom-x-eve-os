@@ -268,6 +268,22 @@ export default function Profile() {
                                         </div>
                                         <div className="text-2xl md:text-3xl font-bold text-white">{categoryCounts.companion}</div>
                                     </div>
+                                    
+                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col col-span-2 md:col-span-4 mt-2">
+                                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
+                                            <Crown className="w-3 h-3 text-pink-500" /> Social Influence
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-2xl md:text-3xl font-bold text-white">{avatar?.social_influence || 0}</div>
+                                            <div className="flex gap-1">
+                                                {(avatar?.reputation_badges || ['Trendsetter', 'Crafter']).map((badge, i) => (
+                                                    <Badge key={i} variant="outline" className="bg-pink-500/10 text-pink-400 border-pink-500/30">
+                                                        {badge}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

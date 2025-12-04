@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/auth/AuthContext';
 import { Link } from 'react-router-dom';
@@ -9,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Play, Search, TrendingUp, Users, Eye, Star, ChevronRight, 
-  Gamepad2, Radio, Clock, Filter, Trophy 
+  Gamepad2, Radio, Clock, Filter, Trophy, Settings 
 } from 'lucide-react'; // Added Trophy icon
+import StreamerTools from '../components/streaming/StreamerTools';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function StreamingHub() {
@@ -568,6 +568,9 @@ export default function StreamingHub() {
               <Play className="w-4 h-4 mr-2" />
               Go Live
             </Button>
+            
+            {/* Streamer Tools Widget */}
+            <StreamerTools />
 
             {/* Top Streamers */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">

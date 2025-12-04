@@ -243,6 +243,9 @@ const GalacticInventoryItem = ({ item, onClick }) => {
              <span className="text-[8px] text-slate-400 uppercase">Game Origin</span>
              <span className="text-[10px] text-white font-medium truncate max-w-[80px]">{item.game}</span>
           </div>
+          <Badge className="bg-blue-900/30 text-blue-300 text-[9px] border-0">
+             <Globe className="w-2 h-2 mr-1" /> Global
+          </Badge>
           <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] bg-white/10 hover:bg-white/20 text-white border border-white/10">
             TRADE
           </Button>
@@ -284,6 +287,9 @@ const GalacticItemGroupSummary = ({ item, offers, onSelect, isSelected }) => {
           <div className="flex items-center gap-2 mb-2">
             <RarityBadge rarity={item.rarity} />
             <span className="text-[10px] text-slate-500 uppercase tracking-wider">{item.type}</span>
+            <Badge variant="outline" className="text-[9px] border-white/10 text-slate-400 ml-auto">
+               <Globe className="w-3 h-3 mr-1 inline" /> Cross-Platform
+            </Badge>
           </div>
           
           <div className="flex items-center justify-between text-xs">
