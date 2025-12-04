@@ -271,7 +271,7 @@ const NetflixHero = ({ featuredGame, addToCart, heroBackgrounds = [] }) => {
                                 More Info
                             </Button>
                         </div>
-                    </motion.view>
+                    </motion.div>
                 </div>
             </div>
 
