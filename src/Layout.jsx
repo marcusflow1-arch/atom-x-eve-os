@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket
+  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers
 } from 'lucide-react';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
@@ -88,6 +88,7 @@ function LayoutContent({ children, currentPageName }) {
         { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
         { name: 'Library', icon: Library, path: createPageUrl('Library') },
         { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+        { name: 'Cards', icon: Layers, path: createPageUrl('TradingCards') },
         { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
         { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
       ],
@@ -98,6 +99,7 @@ function LayoutContent({ children, currentPageName }) {
         { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
         { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
         { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
+        { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
       ],
     },
     'AI & Tools': {
