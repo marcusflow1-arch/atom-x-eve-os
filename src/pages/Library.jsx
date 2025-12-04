@@ -12,6 +12,7 @@ import RecentlyAchievedOverlay from '../components/library/RecentlyAchievedOverl
 import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
 import GameAchievementsOverlay from '../components/library/GameAchievementsOverlay';
 import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
+import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
@@ -2428,6 +2429,13 @@ export default function Library() {
                     <GameLauncherOverlay 
                         game={launchingGame} 
                         onClose={() => setLaunchingGame(null)} 
+                    />
+                )}
+                {streamingSession && (
+                    <RemotePlayOverlay 
+                        game={streamingSession.game}
+                        session={streamingSession.session}
+                        onClose={() => setStreamingSession(null)}
                     />
                 )}
             </AnimatePresence>
