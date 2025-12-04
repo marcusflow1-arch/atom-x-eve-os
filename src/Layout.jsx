@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home
+  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb
 } from 'lucide-react';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
@@ -110,6 +110,7 @@ function LayoutContent({ children, currentPageName }) {
       icon: User,
       items: [
         { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
+        { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
         { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
       ],
     },

@@ -27,6 +27,7 @@ import AbilityAchievements from './pages/AbilityAchievements';
 import PlayerProfile from './pages/PlayerProfile';
 import GameProfile from './pages/GameProfile';
 import Orders from './pages/Orders';
+import Ideals from './pages/Ideals';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "PlayerProfile": PlayerProfile,
     "GameProfile": GameProfile,
     "Orders": Orders,
+    "Ideals": Ideals,
 }
 
 export const pagesConfig = {
