@@ -115,51 +115,137 @@ export default function Admin() {
   const populateGamesFromSearch = async () => {
     setPopulatingGames(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate a list of 12 popular video games from 2024-2025 with the following details for each:
-        - title (exact game name)
-        - description (2-3 sentences about the game)
-        - genre (one of: Action RPG, FPS, Strategy, RPG, Shooter, Survival, Racing, Sports, Horror, Adventure)
-        - price (realistic USD price like 59.99 or 69.99)
-        - developer (real developer name)
-        - rating (4.0 to 5.0)
-        
-        Include games like: Monster Hunter Wilds, Elden Ring Nightreign, Black Myth Wukong, Helldivers 2, Civilization VII, GTA 6, Assassin's Creed Shadows, Metroid Prime 4, Avowed, etc.`,
-        add_context_from_internet: true,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            games: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  description: { type: 'string' },
-                  genre: { type: 'string' },
-                  price: { type: 'number' },
-                  developer: { type: 'string' },
-                  rating: { type: 'number' }
+      // Fetch multiple categories in parallel
+      const categories = [
+        {
+          prompt: `List 15 TRENDING and BEST-SELLING video games from 2024-2025. Include: Monster Hunter Wilds, Elden Ring Nightreign, Black Myth Wukong, Helldivers 2, Palworld, Stellar Blade, Dragon's Dogma 2, Final Fantasy VII Rebirth, Tekken 8, Like a Dragon Infinite Wealth, Persona 3 Reload, Prince of Persia Lost Crown, Suicide Squad, Granblue Fantasy Relink.`,
+          category: 'trending'
+        },
+        {
+          prompt: `List 15 NEW RELEASE video games coming in late 2024 and 2025. Include: GTA 6, Civilization VII, Assassin's Creed Shadows, Metroid Prime 4, Kingdom Come Deliverance 2, Avowed, Fable, Death Stranding 2, Ghost of Yotei, Monster Hunter Wilds, Indiana Jones, Mafia The Old Country, Doom The Dark Ages, Wolverine, Intergalactic.`,
+          category: 'new_releases'
+        },
+        {
+          prompt: `List 15 CLASSIC BEST-SELLER video games that are still popular. Include: Minecraft, Baldur's Gate 3, Hogwarts Legacy, Cyberpunk 2077, Elden Ring, Red Dead Redemption 2, The Witcher 3, GTA V, God of War Ragnarok, Horizon Forbidden West, Spider-Man 2, Starfield, Diablo 4, Resident Evil 4 Remake, Zelda Tears of the Kingdom.`,
+          category: 'classics'
+        }
+      ];
+
+      const gameImages = {
+        // Trending 2024-2025
+        'monster hunter wilds': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=800&fit=crop',
+        'elden ring nightreign': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=800&fit=crop',
+        'black myth wukong': 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600&h=800&fit=crop',
+        'helldivers 2': 'https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=800&fit=crop',
+        'palworld': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=800&fit=crop',
+        'stellar blade': 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=600&h=800&fit=crop',
+        'dragons dogma 2': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'final fantasy vii rebirth': 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop',
+        'tekken 8': 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=600&h=800&fit=crop',
+        'like a dragon infinite wealth': 'https://images.unsplash.com/photo-1493711662062-fa541f7f728e?w=600&h=800&fit=crop',
+        // New Releases 2025
+        'gta 6': 'https://images.unsplash.com/photo-1535378437327-b71494669e91?w=600&h=800&fit=crop',
+        'grand theft auto vi': 'https://images.unsplash.com/photo-1535378437327-b71494669e91?w=600&h=800&fit=crop',
+        'civilization vii': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=800&fit=crop',
+        'assassins creed shadows': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'metroid prime 4': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&h=800&fit=crop',
+        'kingdom come deliverance 2': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'avowed': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=800&fit=crop',
+        'fable': 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=600&h=800&fit=crop',
+        'death stranding 2': 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=600&h=800&fit=crop',
+        'ghost of yotei': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'doom the dark ages': 'https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=800&fit=crop',
+        // Classics
+        'minecraft': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=800&fit=crop',
+        'baldurs gate 3': 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600&h=800&fit=crop',
+        'hogwarts legacy': 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=600&h=800&fit=crop',
+        'cyberpunk 2077': 'https://images.unsplash.com/photo-1535378437327-b71494669e91?w=600&h=800&fit=crop',
+        'elden ring': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=800&fit=crop',
+        'red dead redemption 2': 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=600&h=800&fit=crop',
+        'the witcher 3': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
+        'god of war ragnarok': 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop',
+        'spider-man 2': 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=600&h=800&fit=crop',
+        'starfield': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=800&fit=crop',
+        'diablo 4': 'https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=800&fit=crop',
+        'resident evil 4': 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&h=800&fit=crop',
+      };
+
+      const defaultImages = [
+        'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=600&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1493711662062-fa541f7f728e?w=600&h=800&fit=crop',
+      ];
+
+      const getImageForGame = (title) => {
+        const key = title.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        for (const [gameName, imageUrl] of Object.entries(gameImages)) {
+          if (key.includes(gameName) || gameName.includes(key.split(' ')[0])) {
+            return imageUrl;
+          }
+        }
+        return defaultImages[Math.floor(Math.random() * defaultImages.length)];
+      };
+
+      for (const cat of categories) {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `${cat.prompt}
+          
+          For each game provide:
+          - title (exact official game name)
+          - description (2-3 engaging sentences)
+          - genre (Action RPG, FPS, Strategy, RPG, Shooter, Survival, Racing, Sports, Horror, Adventure, Action Adventure, Sandbox)
+          - price (USD: 29.99, 39.99, 49.99, 59.99, or 69.99)
+          - developer (real studio name)
+          - rating (4.0 to 5.0)
+          - releaseYear (year as string)`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              games: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    description: { type: 'string' },
+                    genre: { type: 'string' },
+                    price: { type: 'number' },
+                    developer: { type: 'string' },
+                    rating: { type: 'number' },
+                    releaseYear: { type: 'string' }
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
 
-      if (result.games) {
-        for (const game of result.games) {
-          await Game.create({
-            title: game.title,
-            description: game.description,
-            genre: game.genre.toLowerCase(),
-            price: game.price,
-            status: 'available',
-            cover_image: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 200000000000)}?w=600&h=800&fit=crop`
-          });
+        if (result.games) {
+          for (const game of result.games) {
+            // Check if game already exists
+            const exists = existingGames.some(g => 
+              g.title.toLowerCase() === game.title.toLowerCase()
+            );
+            if (!exists) {
+              await Game.create({
+                title: game.title,
+                description: game.description,
+                genre: game.genre?.toLowerCase() || 'action',
+                price: game.price || 59.99,
+                status: 'available',
+                original_year: parseInt(game.releaseYear) || 2024,
+                cover_image: getImageForGame(game.title)
+              });
+            }
+          }
         }
-        refetchGames();
       }
+      
+      refetchGames();
+      alert('Successfully populated games catalog!');
     } catch (error) {
       console.error('Failed to populate games:', error);
       alert('Failed to populate games. Please try again.');
