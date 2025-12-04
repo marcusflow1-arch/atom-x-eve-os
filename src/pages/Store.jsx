@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, Search, Play, Gamepad2, ChevronLeft, ChevronRight, 
   Info, Plus, Volume2, VolumeX, Bell, Star, Filter, Grid, List,
-  Sparkles, Flame, Clock, Trophy, Tag, X, SlidersHorizontal
+  Sparkles, Flame, Clock, Trophy, Tag, X, SlidersHorizontal, Mic, MicOff, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -201,13 +201,213 @@ const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
   );
 };
 
+// --- AI Voice Search Component ---
+const AIVoiceSearch = ({ onSearchResult, onClose }) => {
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const current = event.resultIndex;
+        const result = event.results[current];
+        setTranscript(result[0].transcript);
+        
+        if (result.isFinal) {
+          handleUserMessage(result[0].transcript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startListening = () => {
+    if (recognitionRef.current) {
+      setTranscript('');
+      setIsListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const handleUserMessage = async (message) => {
+    if (!message.trim()) return;
+    
+    const newHistory = [...conversationHistory, { role: 'user', content: message }];
+    setConversationHistory(newHistory);
+    setIsProcessing(true);
+    setTranscript('');
+
+    try {
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are Sophie, a friendly AI gaming assistant for the ATOM×EVE game store. Help users find games based on their descriptions.
+
+Previous conversation:
+${newHistory.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+User's latest request: "${message}"
+
+Based on the user's description, suggest relevant game genres, themes, or specific game titles they might enjoy. Be conversational and helpful. If they describe a game vaguely, ask clarifying questions. When you identify what they're looking for, provide a search term they can use.
+
+Format your response as JSON:
+{
+  "message": "Your conversational response to the user",
+  "searchSuggestion": "optional search term if you've identified what they want",
+  "genres": ["optional", "relevant", "genres"]
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            searchSuggestion: { type: "string" },
+            genres: { type: "array", items: { type: "string" } }
+          },
+          required: ["message"]
+        }
+      });
+
+      setAiResponse(response.message);
+      setConversationHistory([...newHistory, { role: 'assistant', content: response.message }]);
+
+      if (response.searchSuggestion) {
+        onSearchResult(response.searchSuggestion);
+      }
+    } catch (error) {
+      console.error('AI processing error:', error);
+      setAiResponse("I'm having trouble processing that. Could you try describing the game again?");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+    >
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm">Sophie</h3>
+              <p className="text-white/40 text-xs">AI Game Assistant</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-white/40 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Conversation Area */}
+        <div className="max-h-48 overflow-y-auto mb-4 space-y-3">
+          {conversationHistory.length === 0 && !isListening && (
+            <p className="text-white/50 text-sm text-center py-4">
+              Hi! I'm Sophie. Tell me what kind of game you're looking for, and I'll help you find it!
+            </p>
+          )}
+          
+          {conversationHistory.map((msg, idx) => (
+            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+                msg.role === 'user' 
+                  ? 'bg-blue-500/20 text-blue-200' 
+                  : 'bg-white/10 text-white/90'
+              }`}>
+                {msg.content}
+              </div>
+            </div>
+          ))}
+
+          {isProcessing && (
+            <div className="flex justify-start">
+              <div className="bg-white/10 px-3 py-2 rounded-xl flex items-center gap-2">
+                <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                <span className="text-white/60 text-sm">Sophie is thinking...</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Live Transcript */}
+        {(isListening || transcript) && (
+          <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/10">
+            <p className="text-white/70 text-sm">
+              {transcript || <span className="text-white/40 animate-pulse">Listening...</span>}
+            </p>
+          </div>
+        )}
+
+        {/* Voice Control */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={isListening ? stopListening : startListening}
+            disabled={isProcessing}
+            className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+              isListening 
+                ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                : 'bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+            } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isListening ? (
+              <MicOff className="w-6 h-6 text-white" />
+            ) : (
+              <Mic className="w-6 h-6 text-white" />
+            )}
+          </button>
+        </div>
+
+        <p className="text-white/30 text-xs text-center mt-3">
+          {isListening ? 'Tap to stop' : 'Tap to speak'}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
 // --- Floating Nav with App Drawer ---
-const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
+const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavigate }) => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
   const { user } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
 
   const appPages = [
     { name: 'Dashboard', icon: '🏠' },
@@ -261,16 +461,42 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm }) => {
               placeholder="Search games, genres, developers..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/10 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/20 transition-all"
+              className="w-full bg-white/10 border border-white/10 rounded-full py-2 pl-10 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/20 transition-all"
             />
-            {searchTerm && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button 
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                onClick={() => setVoiceSearchOpen(!voiceSearchOpen)}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                  voiceSearchOpen 
+                    ? 'bg-purple-500 text-white' 
+                    : 'bg-white/10 text-white/60 hover:text-white hover:bg-white/20'
+                }`}
+                title="AI Voice Search"
               >
-                <X className="w-4 h-4" />
+                <Mic className="w-3.5 h-3.5" />
               </button>
-            )}
+            </div>
+
+            {/* AI Voice Search Panel */}
+            <AnimatePresence>
+              {voiceSearchOpen && (
+                <AIVoiceSearch 
+                  onSearchResult={(term) => {
+                    setSearchTerm(term);
+                    setVoiceSearchOpen(false);
+                  }}
+                  onClose={() => setVoiceSearchOpen(false)}
+                />
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right: Actions */}
@@ -700,7 +926,7 @@ export default function Store() {
       `}</style>
 
       {/* Store Navigation Bar */}
-      <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} />
 
       <main className="relative">
         {/* Hero Section */}
