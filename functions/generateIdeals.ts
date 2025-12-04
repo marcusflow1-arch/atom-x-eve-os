@@ -43,8 +43,8 @@ export default Deno.serve(async (req) => {
             Return a JSON object with a key "ideas" containing an array of objects, each with "title" and "description".
         `;
 
-        // 2. Parallel Generation from 3 "Engines"
-        const [geminiRes, chatgptRes, claudeRes] = await Promise.all([
+        // 2. Parallel Generation from 3 "Engines" using allSettled for robustness
+        const results = await Promise.allSettled([
             base44.integrations.Core.InvokeLLM({
                 prompt: promptTemplate("Gemini 3 Persona", "Data integration, multimodal interactions, ecosystem connectivity, and real-time adaptability."),
                 response_json_schema: { type: "object", properties: { ideas: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" } } } } } }
@@ -59,9 +59,16 @@ export default Deno.serve(async (req) => {
             })
         ]);
 
-        const geminiIdeas = geminiRes.ideas || [];
-        const chatgptIdeas = chatgptRes.ideas || [];
-        const claudeIdeas = claudeRes.ideas || [];
+        const getIdeas = (result) => (result.status === 'fulfilled' && result.value?.ideas) ? result.value.ideas : [];
+
+        const geminiIdeas = getIdeas(results[0]);
+        const chatgptIdeas = getIdeas(results[1]);
+        const claudeIdeas = getIdeas(results[2]);
+
+        // Fallback if all fail (unlikely, but robust)
+        if (geminiIdeas.length === 0 && chatgptIdeas.length === 0 && claudeIdeas.length === 0) {
+             return Response.json({ error: "Neural engines failed to synchronize. Please try again." }, { status: 503 });
+        }
 
         // 3. Synthesis Phase
         const synthesisPrompt = `

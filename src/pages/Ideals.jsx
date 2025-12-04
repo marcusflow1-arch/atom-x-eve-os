@@ -9,20 +9,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export default function Ideals() {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     const [step, setStep] = useState('idle'); // idle, processing, complete
 
     const generateIdeals = async () => {
         setLoading(true);
         setStep('processing');
         setData(null);
+        setError(null);
         try {
             const res = await base44.functions.invoke('generateIdeals', {});
-            if (res.data) {
+            if (res.data && !res.data.error) {
                 setData(res.data);
                 setStep('complete');
+            } else {
+                throw new Error(res.data?.error || "Failed to generate ideals");
             }
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Communication with neural engines disrupted.");
+            setStep('idle');
         } finally {
             setLoading(false);
         }
@@ -52,7 +58,7 @@ export default function Ideals() {
                 </div>
 
                 {/* Control Center */}
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-4">
                     <Button 
                         size="lg" 
                         onClick={generateIdeals} 
@@ -67,10 +73,19 @@ export default function Ideals() {
                         ) : (
                             <>
                                 <Zap className="w-6 h-6 mr-3 fill-current" />
-                                Initiate Ideals Generation
+                                {data ? "Regenerate Ideals" : "Initiate Ideals Generation"}
                             </>
                         )}
                     </Button>
+                    {error && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-red-400 bg-red-900/20 px-4 py-2 rounded-lg border border-red-500/30 text-sm font-medium"
+                        >
+                            Error: {error}
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* Results Area */}
