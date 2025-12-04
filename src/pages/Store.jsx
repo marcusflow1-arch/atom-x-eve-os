@@ -919,6 +919,19 @@ export default function Store() {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
+      {/* Floating Menu Button - Fixed at top */}
+      <button
+        onClick={() => document.dispatchEvent(new CustomEvent('openStoreDrawer'))}
+        className="fixed top-3 left-3 z-[100] w-10 h-10 rounded-xl bg-white/[0.08] backdrop-blur-2xl hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/[0.12] shadow-lg cursor-pointer"
+        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+      >
+        <div className="flex flex-col gap-1">
+          <span className="w-4 h-0.5 bg-white/90 rounded-full"></span>
+          <span className="w-4 h-0.5 bg-white/90 rounded-full"></span>
+          <span className="w-4 h-0.5 bg-white/90 rounded-full"></span>
+        </div>
+      </button>
+
       {/* Store Navigation Bar */}
       <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} />
 
