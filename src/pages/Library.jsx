@@ -718,6 +718,272 @@ const CommunityChatTab = ({ game }) => {
     );
 };
 
+// Mock Discussion Topics
+const MOCK_TOPICS = [
+    {
+        id: 1,
+        title: "Best starting build for beginners?",
+        author: "NoobSlayer99",
+        avatar: "https://i.pravatar.cc/150?u=noob",
+        category: "general",
+        replies: 12,
+        views: 342,
+        lastActive: "2h ago",
+        isPinned: true
+    },
+    {
+        id: 2,
+        title: "Hidden chest locations in Sector 7",
+        author: "ExplorerX",
+        avatar: "https://i.pravatar.cc/150?u=explor",
+        category: "guide",
+        replies: 45,
+        views: 1205,
+        lastActive: "5h ago",
+        isPinned: false
+    },
+    {
+        id: 3,
+        title: "Feedback: Combat feels a bit clunky after update",
+        author: "CritMaster",
+        avatar: "https://i.pravatar.cc/150?u=crit",
+        category: "feedback",
+        replies: 89,
+        views: 2300,
+        lastActive: "1d ago",
+        isPinned: false
+    },
+    {
+        id: 4,
+        title: "LFG: Raid boss tonight at 8 PM EST",
+        author: "RaidLeader",
+        avatar: "https://i.pravatar.cc/150?u=raid",
+        category: "group",
+        replies: 6,
+        views: 120,
+        lastActive: "30m ago",
+        isPinned: false
+    },
+    {
+        id: 5,
+        title: "Bug: Falling through map in login screen",
+        author: "GlitchFinder",
+        avatar: "https://i.pravatar.cc/150?u=glitch",
+        category: "bugs",
+        replies: 2,
+        views: 56,
+        lastActive: "10m ago",
+        isPinned: false
+    }
+];
+
+const GameDiscussionTab = ({ game }) => {
+    const { user } = useAuth();
+    const [activeCategory, setActiveCategory] = useState('all');
+    const [topics, setTopics] = useState(MOCK_TOPICS);
+    const [isCreating, setIsCreating] = useState(false);
+    const [newTopic, setNewTopic] = useState({ title: '', category: 'general', content: '' });
+
+    const categories = [
+        { id: 'all', label: 'All Topics', icon: List },
+        { id: 'general', label: 'General Discussion', icon: MessageSquare },
+        { id: 'guide', label: 'Helpful Guides', icon: FileText },
+        { id: 'feedback', label: 'User Feedback', icon: Lightbulb },
+        { id: 'group', label: 'Groups & LFG', icon: Users },
+        { id: 'bugs', label: 'Bugs & Support', icon: Bug },
+    ];
+
+    const handleCreateTopic = () => {
+        if (!newTopic.title.trim() || !newTopic.content.trim()) return;
+        
+        const topic = {
+            id: topics.length + 1,
+            title: newTopic.title,
+            content: newTopic.content, // In a real app, this would be stored
+            author: user?.username || user?.full_name || 'Guest',
+            avatar: user?.avatar_url || `https://i.pravatar.cc/150?u=${Date.now()}`,
+            category: newTopic.category,
+            replies: 0,
+            views: 0,
+            lastActive: 'Just now',
+            isPinned: false
+        };
+
+        setTopics([topic, ...topics]);
+        setIsCreating(false);
+        setNewTopic({ title: '', category: 'general', content: '' });
+    };
+
+    const filteredTopics = activeCategory === 'all' 
+        ? topics 
+        : topics.filter(t => t.category === activeCategory);
+
+    return (
+        <div className="flex h-full gap-6">
+            {/* Left Sidebar - Categories */}
+            <div className="w-64 flex-shrink-0 flex flex-col gap-2 border-r border-slate-700/50 pr-6">
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-white mb-1">Forums</h3>
+                    <p className="text-xs text-slate-400">Browse discussions by category</p>
+                </div>
+                
+                {categories.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                            activeCategory === cat.id
+                                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/50'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
+                        }`}
+                    >
+                        <cat.icon className="w-4 h-4" />
+                        {cat.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Right Content - Topic List */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+                {!isCreating ? (
+                    <>
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white">
+                                    {categories.find(c => c.id === activeCategory)?.label}
+                                </h3>
+                                <p className="text-slate-400 text-sm">
+                                    {filteredTopics.length} active discussions
+                                </p>
+                            </div>
+                            <Button 
+                                onClick={() => setIsCreating(true)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                New Topic
+                            </Button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                            {filteredTopics.map(topic => (
+                                <div 
+                                    key={topic.id}
+                                    className="group bg-slate-800/40 hover:bg-slate-800/60 border border-slate-700/50 hover:border-slate-600 rounded-xl p-4 transition-all cursor-pointer"
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <img 
+                                            src={topic.avatar} 
+                                            alt={topic.author}
+                                            className="w-10 h-10 rounded-full border border-slate-600"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h4 className="text-base font-bold text-white group-hover:text-blue-400 transition-colors truncate">
+                                                    {topic.title}
+                                                </h4>
+                                                {topic.isPinned && (
+                                                    <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 text-[10px] border-blue-500/30">
+                                                        Pinned
+                                                    </Badge>
+                                                )}
+                                                <Badge variant="outline" className="text-[10px] capitalize border-slate-600 text-slate-400">
+                                                    {categories.find(c => c.id === topic.category)?.label || topic.category}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-xs text-slate-400">
+                                                <span className="flex items-center gap-1">
+                                                    <span className="font-medium text-slate-300">{topic.author}</span>
+                                                </span>
+                                                <span>•</span>
+                                                <span>{topic.lastActive}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-slate-500 text-sm px-2">
+                                            <div className="text-center">
+                                                <div className="font-bold text-slate-300">{topic.replies}</div>
+                                                <div className="text-[10px]">Replies</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="font-bold text-slate-300">{topic.views}</div>
+                                                <div className="text-[10px]">Views</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white">Create New Topic</h3>
+                            <Button 
+                                variant="ghost" 
+                                onClick={() => setIsCreating(false)}
+                                className="text-slate-400 hover:text-white"
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+
+                        <div className="space-y-4 max-w-2xl">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Topic Title</label>
+                                <Input 
+                                    value={newTopic.title}
+                                    onChange={(e) => setNewTopic({...newTopic, title: e.target.value})}
+                                    placeholder="What's on your mind?"
+                                    className="bg-slate-900/50 border-slate-700 text-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {categories.filter(c => c.id !== 'all').map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setNewTopic({...newTopic, category: cat.id})}
+                                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                                                newTopic.category === cat.id
+                                                    ? 'bg-blue-600 text-white border-blue-500'
+                                                    : 'bg-slate-900/50 text-slate-400 border-slate-700 hover:border-slate-600'
+                                            }`}
+                                        >
+                                            <cat.icon className="w-3 h-3" />
+                                            {cat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Content</label>
+                                <textarea 
+                                    value={newTopic.content}
+                                    onChange={(e) => setNewTopic({...newTopic, content: e.target.value})}
+                                    placeholder="Write your post here..."
+                                    className="w-full h-40 bg-slate-900/50 border border-slate-700 rounded-lg p-3 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                />
+                            </div>
+
+                            <div className="pt-2">
+                                <Button 
+                                    onClick={handleCreateTopic}
+                                    className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                                >
+                                    Post Topic
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const CommunityPostsTab = ({ game }) => {
     const [posts, setPosts] = useState(MOCK_POSTS);
 
