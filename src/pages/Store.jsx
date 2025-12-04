@@ -433,23 +433,11 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   return (
     <>
       <motion.header
-        className="sticky top-0 left-0 right-0 z-40 transition-all duration-300 bg-white/[0.03] backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-      >
+                className="sticky top-0 left-0 right-0 z-40 transition-all duration-300"
+              >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
-          {/* Left: App Drawer Button */}
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setDrawerOpen(!drawerOpen)}
-              className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all flex-shrink-0"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-              </div>
-            </button>
-
+          {/* Left: Store Title */}
+          <div className="flex items-center gap-3 pl-14">
             <span className="text-white font-bold text-lg hidden md:block tracking-wider">ATOM×EVE STORE</span>
           </div>
 
