@@ -3,7 +3,8 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, Search, Play, Gamepad2, Coins, ChevronLeft, ChevronRight, 
-  Info, Plus, Volume2, VolumeX, Bell, User
+  Info, Plus, Volume2, VolumeX, Bell, User, Sword, Rocket, Brain, Trophy,
+  Crosshair, Car, Ghost, Map, Sparkles, Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
