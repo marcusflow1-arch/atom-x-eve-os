@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Shield, Sword, Brain, Crosshair, Activity, Ghost, 
   Lock, Check, ChevronLeft, Star, Hexagon, Search, Filter,
-  Cpu, Database, Wifi, Battery
+  Cpu, Database, Wifi, Battery, Flame, Clock, Bot
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge'; // Added this import
 
