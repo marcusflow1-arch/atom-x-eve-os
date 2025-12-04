@@ -588,6 +588,7 @@ export default function Store() {
   const [searchTerm, setSearchTerm] = useState('');
   const { addToCart } = useCart();
   const { scrollY } = useScroll();
+  const containerRef = useRef(null);
   
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
