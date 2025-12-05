@@ -985,113 +985,339 @@ export default function TradingPost() {
               </TabsList>
             </div>
 
-            <TabsContent value="board" className="space-y-6 h-[calc(100vh-300px)]">
-              {/* Filter Bar */}
-              <GalacticCard className="p-4 flex flex-wrap gap-4 items-center justify-between mb-6">
-                <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg border border-white/5 px-3 py-2 flex-1 min-w-[200px]">
-                  <Search className="w-5 h-5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Search items..." 
-                    className="bg-transparent border-none outline-none text-white placeholder:text-slate-500 w-full text-sm"
-                  />
-                </div>
+            <TabsContent value="board" className="h-[calc(100vh-280px)]">
+              {/* PS5-Style Global Market */}
+              <div className="h-full flex flex-col">
                 
-                <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                   <Select defaultValue="newest">
-                    <SelectTrigger className="w-[140px] bg-slate-800/50 border-white/10"><SelectValue placeholder="Sort" /></SelectTrigger>
-                    <SelectContent><SelectItem value="newest">Newest</SelectItem><SelectItem value="price">Price</SelectItem></SelectContent>
-                  </Select>
-                </div>
-              </GalacticCard>
-
-              {/* Split View Layout */}
-              <div className="grid grid-cols-12 gap-6 h-full">
-                {/* Left Side: Games / Items List */}
-                <div className="col-span-12 md:col-span-5 lg:col-span-4 h-full overflow-hidden flex flex-col">
-                  <div className="flex items-center justify-between mb-4 px-2">
-                    {viewMode === 'items' ? (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                {/* Top Navigation Bar - PS5 Style */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    {viewMode === 'items' && (
+                      <motion.button
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
                         onClick={() => { setViewMode('games'); setSelectedGame(null); setSelectedListingGroup(null); }}
-                        className="text-slate-400 hover:text-white -ml-2 hover:bg-white/10"
+                        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                       >
-                        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Games
-                      </Button>
-                    ) : (
-                      <h3 className="text-slate-400 uppercase text-xs font-bold tracking-wider">Select Game</h3>
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                          <ChevronLeft className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium">Back</span>
+                      </motion.button>
                     )}
-                    <Badge variant="outline" className="text-xs bg-slate-800/50">
-                        {viewMode === 'games' ? `${gamesList.length} Games` : selectedGame}
-                    </Badge>
+                    <h2 className="text-2xl font-bold text-white">
+                      {viewMode === 'games' ? 'Games' : selectedGame}
+                    </h2>
                   </div>
                   
-                  <div className="flex-1 overflow-y-auto pr-2">
-                     {viewMode === 'games' ? (
-                       gamesList.map(game => (
-                         <GalacticGameSummary 
-                           key={game.name}
-                           gameName={game.name}
-                           itemCount={game.count}
-                           image={game.image}
-                           onSelect={(name) => { setSelectedGame(name); setViewMode('items'); }}
-                         />
-                       ))
-                     ) : (
-                       (() => {
-                         // Filter listings by selected game
-                         const gameListings = listings.filter(l => l.item.game === selectedGame);
-                         
-                         // Group listings by Item Name
-                         const groupedListings = gameListings.reduce((groups, listing) => {
-                           const key = listing.item.name;
-                           if (!groups[key]) {
-                             groups[key] = {
-                               item: listing.item,
-                               offers: []
-                             };
-                           }
-                           groups[key].offers.push(listing);
-                           return groups;
-                         }, {});
-
-                         return Object.values(groupedListings).map((group) => (
-                          <GalacticItemGroupSummary
-                            key={group.item.id}
-                            item={group.item}
-                            offers={group.offers}
-                            isSelected={selectedListingGroup?.item.name === group.item.name}
-                            onSelect={() => setSelectedListingGroup(group)}
-                          />
-                        ));
-                       })()
-                     )}
+                  {/* Search Pill */}
+                  <div 
+                    className="flex items-center gap-3 px-4 py-2 rounded-full"
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <Search className="w-4 h-4 text-white/50" />
+                    <input 
+                      type="text" 
+                      placeholder="Search..." 
+                      className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
+                    />
                   </div>
                 </div>
 
-                {/* Vertical Divider Line */}
-                <div className="hidden md:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent h-full" />
+                {/* Main Content Area */}
+                <div className="flex-1 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    {viewMode === 'games' ? (
+                      /* PS5-Style Game Grid */
+                      <motion.div
+                        key="games"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="h-full"
+                      >
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto h-full pb-4 pr-2">
+                          {gamesList.map((game, idx) => (
+                            <motion.div
+                              key={game.name}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: idx * 0.05 }}
+                              onClick={() => { setSelectedGame(game.name); setViewMode('items'); }}
+                              className="group cursor-pointer"
+                            >
+                              <div 
+                                className="relative aspect-[4/5] rounded-2xl overflow-hidden transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+                                style={{
+                                  background: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                }}
+                              >
+                                {/* Game Cover */}
+                                <img 
+                                  src={game.image} 
+                                  alt={game.name}
+                                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                
+                                {/* Gradient Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+                                
+                                {/* Content */}
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                  <h3 className="text-white font-bold text-lg mb-1 group-hover:text-blue-300 transition-colors">
+                                    {game.name}
+                                  </h3>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white/60 text-sm">{game.count} listings</span>
+                                    <div className="w-1 h-1 rounded-full bg-white/30" />
+                                    <span className="text-green-400 text-sm font-medium">Active</span>
+                                  </div>
+                                </div>
 
-                {/* Right Side: Traders & Details */}
-                <div className="col-span-12 md:col-span-6 lg:col-span-7 h-full overflow-hidden">
-                  {selectedListingGroup ? (
-                    <TradeOffersPanel 
-                      item={selectedListingGroup.item} 
-                      offers={selectedListingGroup.offers} 
-                      onTrade={(offer, type) => console.log("Trade", offer, type)}
-                    />
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-10 border-2 border-dashed border-white/5 rounded-2xl bg-slate-900/20">
-                      <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-                        <ArrowLeftRight className="w-10 h-10 text-slate-600" />
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-300 mb-2">Select an Item to View Offers</h3>
-                      <p className="text-slate-500 max-w-xs">
-                        Choose an item from the list on the left to see all available traders, bids, and sale listings.
-                      </p>
-                    </div>
-                  )}
+                                {/* Hover Glow */}
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent" />
+                                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : !selectedListingGroup ? (
+                      /* PS5-Style Item List */
+                      <motion.div
+                        key="items"
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        className="h-full overflow-y-auto pr-2"
+                      >
+                        <div className="space-y-3">
+                          {(() => {
+                            const gameListings = listings.filter(l => l.item.game === selectedGame);
+                            const groupedListings = gameListings.reduce((groups, listing) => {
+                              const key = listing.item.name;
+                              if (!groups[key]) {
+                                groups[key] = { item: listing.item, offers: [] };
+                              }
+                              groups[key].offers.push(listing);
+                              return groups;
+                            }, {});
+
+                            return Object.values(groupedListings).map((group, idx) => {
+                              const lowestPrice = group.offers
+                                .filter(o => o.type === 'sale' || o.type === 'bid')
+                                .map(o => o.price || o.currentBid || Infinity)
+                                .sort((a, b) => a - b)[0];
+
+                              return (
+                                <motion.div
+                                  key={group.item.id}
+                                  initial={{ opacity: 0, x: 20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  onClick={() => setSelectedListingGroup(group)}
+                                  className="group cursor-pointer"
+                                >
+                                  <div 
+                                    className="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 group-hover:scale-[1.01]"
+                                    style={{
+                                      background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                                      border: '1px solid rgba(255,255,255,0.08)',
+                                    }}
+                                  >
+                                    {/* Item Image */}
+                                    <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-black/30">
+                                      <img src={group.item.image} alt={group.item.name} className="w-full h-full object-cover" />
+                                    </div>
+
+                                    {/* Item Info */}
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="text-white font-bold text-lg mb-1 group-hover:text-blue-300 transition-colors truncate">
+                                        {group.item.name}
+                                      </h3>
+                                      <div className="flex items-center gap-3">
+                                        <RarityBadge rarity={group.item.rarity} />
+                                        <span className="text-white/40 text-sm">{group.item.type}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Stats */}
+                                    <div className="text-right">
+                                      <div className="text-2xl font-bold text-white mb-1">
+                                        {lowestPrice && lowestPrice !== Infinity 
+                                          ? <span className="text-green-400">{lowestPrice.toLocaleString()}<span className="text-sm text-white/40 ml-1">AGP</span></span>
+                                          : <span className="text-blue-400 text-lg">Trade</span>
+                                        }
+                                      </div>
+                                      <div className="text-white/40 text-sm">{group.offers.length} offers</div>
+                                    </div>
+
+                                    {/* Arrow */}
+                                    <ChevronRight className="w-6 h-6 text-white/20 group-hover:text-white/60 transition-colors" />
+                                  </div>
+                                </motion.div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      /* PS5-Style Offers Detail View */
+                      <motion.div
+                        key="offers"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="h-full flex gap-6"
+                      >
+                        {/* Left: Item Preview */}
+                        <div className="w-[320px] flex-shrink-0">
+                          <div 
+                            className="rounded-2xl overflow-hidden h-full"
+                            style={{
+                              background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                            }}
+                          >
+                            {/* Item Image */}
+                            <div className="aspect-square relative overflow-hidden">
+                              <img 
+                                src={selectedListingGroup.item.image} 
+                                alt={selectedListingGroup.item.name}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                              <div className="absolute bottom-4 left-4 right-4">
+                                <RarityBadge rarity={selectedListingGroup.item.rarity} />
+                              </div>
+                            </div>
+
+                            {/* Item Details */}
+                            <div className="p-5">
+                              <h2 className="text-xl font-bold text-white mb-2">{selectedListingGroup.item.name}</h2>
+                              <p className="text-white/50 text-sm mb-4">{selectedListingGroup.item.description}</p>
+                              
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-white/40">Type</span>
+                                  <span className="text-white">{selectedListingGroup.item.type}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-white/40">Game</span>
+                                  <span className="text-white">{selectedListingGroup.item.game}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-white/40">Total Offers</span>
+                                  <span className="text-blue-400 font-bold">{selectedListingGroup.offers.length}</span>
+                                </div>
+                              </div>
+
+                              {/* Action Button */}
+                              <button
+                                onClick={() => setSelectedListingGroup(null)}
+                                className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center justify-center gap-2"
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                                Back to Items
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Offers List */}
+                        <div className="flex-1 flex flex-col min-w-0">
+                          <h3 className="text-white font-bold text-lg mb-4">Available Offers</h3>
+                          
+                          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                            {selectedListingGroup.offers.map((offer, idx) => (
+                              <motion.div
+                                key={offer.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="group"
+                              >
+                                <div 
+                                  className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
+                                  style={{
+                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                  }}
+                                >
+                                  <div className="flex items-center gap-4">
+                                    {/* Seller Avatar */}
+                                    <img 
+                                      src={offer.owner.avatar} 
+                                      alt={offer.owner.name}
+                                      className="w-12 h-12 rounded-full border-2 border-white/20"
+                                    />
+
+                                    {/* Seller Info */}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-white font-bold">{offer.owner.name}</span>
+                                        <div className="flex items-center gap-1">
+                                          <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                          <span className="text-white/60 text-xs">4.9</span>
+                                        </div>
+                                      </div>
+                                      <p className="text-white/40 text-sm truncate">{offer.description}</p>
+                                    </div>
+
+                                    {/* Offer Type & Price */}
+                                    <div className="text-right">
+                                      <div className={`text-xs font-bold uppercase mb-1 ${
+                                        offer.type === 'sale' ? 'text-green-400' :
+                                        offer.type === 'bid' ? 'text-purple-400' :
+                                        'text-blue-400'
+                                      }`}>
+                                        {offer.type === 'sale' ? 'BUY NOW' : offer.type === 'bid' ? 'AUCTION' : 'TRADE'}
+                                      </div>
+                                      {(offer.price || offer.currentBid) && (
+                                        <div className="text-xl font-bold text-white">
+                                          {(offer.price || offer.currentBid).toLocaleString()}
+                                          <span className="text-xs text-white/40 ml-1">AGP</span>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-col gap-2">
+                                      {offer.type === 'sale' && (
+                                        <button className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors">
+                                          Buy
+                                        </button>
+                                      )}
+                                      {offer.type === 'bid' && (
+                                        <button className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold transition-colors">
+                                          Bid
+                                        </button>
+                                      )}
+                                      {offer.type === 'trade' && (
+                                        <button className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold transition-colors">
+                                          Offer
+                                        </button>
+                                      )}
+                                      <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors">
+                                        <MessageSquare className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </TabsContent>
