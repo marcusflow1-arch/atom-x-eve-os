@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Search, ChevronRight, Plus, Layers, Sparkles, Skull, Flame, Swords, Wand2, Ghost } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 const CARD_GENRES = [
   { id: 'all', name: 'All Cards', icon: Layers },
@@ -12,20 +11,28 @@ const CARD_GENRES = [
   { id: 'combat', name: 'Combat', icon: Swords },
   { id: 'magic', name: 'Magic', icon: Wand2 },
   { id: 'spirit', name: 'Spirit', icon: Ghost },
+  { id: 'sci_fi', name: 'Sci-Fi', icon: Layers },
+  { id: 'fantasy', name: 'Fantasy', icon: Wand2 },
+  { id: 'fighting_game', name: 'Fighting Game', icon: Swords },
+  { id: 'shooter', name: 'Shooter', icon: Search },
 ];
 
 const MOCK_CARDS = [
-  { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", genre: "dark_arts", mint: 1, total: 10, game: "Elder Scrolls: Reborn" },
-  { id: 14, name: "Sasuke Uchiha", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/4233b6dde_ChatGPTImageDec5202508_41_29AM.png", series: "Eternal Mangekyou", genre: "anime", mint: 1, total: 5, subtitle: "ETERNAL MANGEKYOU SHARINGAN", game: "Cyberpunk 2088" },
-  { id: 15, name: "Naruto Uzumaki", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/bf84bbf7a_ChatGPTImageDec5202508_37_06AM.png", series: "Nine-Tails", genre: "anime", mint: 1, total: 5, subtitle: "NINE-TAILS CLOAK", game: "Cyberpunk 2088" },
-  { id: 16, name: "Flame Atronach", rarity: "Rare", image: "https://images.unsplash.com/photo-1579731671988-cf49ce83d6a6?w=400&h=400&fit=crop", series: "Summoner", genre: "elemental", mint: 1, total: 50, game: "Elder Scrolls: Reborn" },
-  { id: 17, name: "Dwemer Centurion", rarity: "Epic", image: "https://images.unsplash.com/photo-1628172922754-0402e3b7b20e?w=400&h=400&fit=crop", series: "Ancient Constructs", genre: "combat", mint: 1, total: 20, game: "Elder Scrolls: Reborn" },
-  { id: 100, name: "", rarity: "Mythic", image: null, series: "", genre: "anime", mint: null, total: null, isEmpty: true, game: "Cyberpunk 2088" },
-  { id: 101, name: "", rarity: "Mythic", image: null, series: "", genre: "anime", mint: null, total: null, isEmpty: true, game: "Cyberpunk 2088" },
-  { id: 102, name: "", rarity: "Legendary", image: null, series: "", genre: "dark_arts", mint: null, total: null, isEmpty: true, game: "Elder Scrolls: Reborn" },
+  { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", genre: "dark_arts", mint: 1, total: 10 },
+  { id: 14, name: "Sasuke Uchiha", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/4233b6dde_ChatGPTImageDec5202508_41_29AM.png", series: "Eternal Mangekyou", genre: "anime", mint: 1, total: 5, subtitle: "ETERNAL MANGEKYOU SHARINGAN" },
+  { id: 15, name: "Naruto Uzumaki", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/bf84bbf7a_ChatGPTImageDec5202508_37_06AM.png", series: "Nine-Tails", genre: "anime", mint: 1, total: 5, subtitle: "NINE-TAILS CLOAK" },
+  { id: 16, name: "Flame Atronach", rarity: "Rare", image: "https://images.unsplash.com/photo-1579731671988-cf49ce83d6a6?w=400&h=400&fit=crop", series: "Summoner", genre: "elemental", mint: 1, total: 50 },
+  { id: 17, name: "Dwemer Centurion", rarity: "Epic", image: "https://images.unsplash.com/photo-1628172922754-0402e3b7b20e?w=400&h=400&fit=crop", series: "Ancient Constructs", genre: "combat", mint: 1, total: 20 },
+  { id: 18, name: "Cyber Samurai", rarity: "Legendary", image: "https://images.unsplash.com/photo-1618335930266-9804b373f08f?w=400&h=400&fit=crop", series: "Neo-Tokyo Legends", genre: "sci_fi", mint: 1, total: 15 },
+  { id: 19, name: "Forest Guardian", rarity: "Rare", image: "https://images.unsplash.com/photo-1588666329762-d4b97d1e8b7c?w=400&h=400&fit=crop", series: "Eldoria", genre: "fantasy", mint: 1, total: 40 },
+  { id: 20, name: "Street Brawler", rarity: "Uncommon", image: "https://images.unsplash.com/photo-1542831371-d39b0a1f8e2e?w=400&h=400&fit=crop", series: "Underground Arena", genre: "fighting_game", mint: 1, total: 100 },
+  { id: 21, name: "Galactic Marine", rarity: "Epic", image: "https://images.unsplash.com/photo-1563729780029-df25338f4d9b?w=400&h=400&fit=crop", series: "Cosmic Warfare", genre: "shooter", mint: 1, total: 25 },
+  { id: 100, name: "", rarity: "Mythic", image: null, series: "", genre: "anime", mint: null, total: null, isEmpty: true },
+  { id: 101, name: "", rarity: "Mythic", image: null, series: "", genre: "anime", mint: null, total: null, isEmpty: true },
+  { id: 102, name: "", rarity: "Legendary", image: null, series: "", genre: "dark_arts", mint: null, total: null, isEmpty: true },
 ];
 
-const CardComponent = ({ card, isOwned }) => {
+const CardComponent = ({ card }) => {
   const rarityColors = {
     Legendary: "border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]",
     Epic: "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]",
@@ -188,7 +195,7 @@ const GenreRow = ({ genre, cards, icon: Icon }) => {
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
         {cards.map(card => (
           <div key={card.id} className="flex-shrink-0 w-[200px]">
-            <CardComponent card={card} isOwned={true} />
+            <CardComponent card={card} />
           </div>
         ))}
       </div>
@@ -196,35 +203,40 @@ const GenreRow = ({ genre, cards, icon: Icon }) => {
   );
 };
 
-export default function GameTradingCards({ selectedGame }) {
+export default function GameTradingCards() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
 
-  const filteredCardsByGame = useMemo(() => {
-    if (!selectedGame) return [];
-    return MOCK_CARDS.filter(card => card.game === selectedGame.title);
-  }, [selectedGame]);
-
-  const getCardsByGenre = (genreId) => {
-    if (genreId === 'all') return filteredCardsByGame;
-    return filteredCardsByGame.filter(card => card.genre === genreId);
-  };
+  const filteredCards = useMemo(() => {
+    let cards = MOCK_CARDS;
+    if (selectedGenre !== 'all') {
+      cards = cards.filter(card => card.genre === selectedGenre);
+    }
+    if (searchTerm) {
+      cards = cards.filter(card => card.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    return cards;
+  }, [searchTerm, selectedGenre]);
 
   const groupedCards = CARD_GENRES.filter(g => g.id !== 'all').reduce((acc, genre) => {
-    acc[genre.id] = filteredCardsByGame.filter(card => card.genre === genre.id);
+    acc[genre.id] = MOCK_CARDS.filter(card => card.genre === genre.id);
     return acc;
   }, {});
 
   return (
     <div className="h-full flex flex-col pt-4">
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+
+      <h2 className="text-3xl font-black mb-6 px-10">Trading Cards</h2>
+
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide px-10">
         {CARD_GENRES.map(genre => (
           <button
             key={genre.id}
             onClick={() => setSelectedGenre(genre.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
               selectedGenre === genre.id
-                ? 'bg-blue-500/30 text-white border border-blue-400/50'
+                ? 'bg-purple-500/30 text-white border border-purple-400/50'
                 : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white'
             }`}
           >
@@ -234,7 +246,7 @@ export default function GameTradingCards({ selectedGame }) {
         ))}
       </div>
 
-      <div className="flex items-center gap-2 px-4 py-2 rounded-full w-full mb-6"
+      <div className="flex items-center gap-2 px-4 py-2 rounded-full mb-6 mx-10"
         style={{
           background: 'rgba(255,255,255,0.05)',
           border: '1px solid rgba(255,255,255,0.1)',
@@ -250,7 +262,7 @@ export default function GameTradingCards({ selectedGame }) {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2">
+      <div className="flex-1 overflow-y-auto pr-2 px-10">
         {selectedGenre === 'all' ? (
           <>
             {CARD_GENRES.filter(g => g.id !== 'all').map(genre => (
@@ -264,16 +276,12 @@ export default function GameTradingCards({ selectedGame }) {
           </>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {getCardsByGenre(selectedGenre).filter(card => 
-              card.name.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map(card => (
-              <CardComponent key={card.id} card={card} isOwned={true} />
+            {filteredCards.map(card => (
+              <CardComponent key={card.id} card={card} />
             ))}
           </div>
         )}
-        {getCardsByGenre(selectedGenre).filter(card => 
-          card.name.toLowerCase().includes(searchTerm.toLowerCase())
-        ).length === 0 && (
+        {filteredCards.length === 0 && (
           <div className="text-center py-10 text-white/50">
             No cards found for this genre or search term.
           </div>

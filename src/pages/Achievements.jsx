@@ -594,9 +594,24 @@ export default function Achievements() {
         </AnimatePresence>
 
         <div className="p-8">
-          {!selectedGame ?
-          <>
-              <h2 className="px-10 text-3xl font-black">Achievements</h2>
+          <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-4">
+              <TabsList 
+                className="p-1 rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
+                <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-purple-500/30">Trading Cards</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="achievements">
+              {!selectedGame ?
+              <>
+                  <h2 className="px-10 text-3xl font-black">Achievements</h2>
               
               {/* Genre Filter */}
               <div className="flex items-center gap-4 mb-4">
@@ -624,7 +639,7 @@ export default function Achievements() {
               </div>
             </> :
 
-          <div className="h-[calc(100vh-64px)] flex flex-col"> {/* Adjusted height for sticky header/footer if present */}
+              <div className="h-[calc(100vh-64px)] flex flex-col"> {/* Adjusted height for sticky header/footer if present */}
               <Button variant="ghost" onClick={() => {
               setSelectedGame(null);
               setSearchTerm('');
@@ -704,14 +719,15 @@ export default function Achievements() {
 
                     </div>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="tradingCards" className="h-full">
-                  <GameTradingCards selectedGame={selectedGame} />
-                </TabsContent>
-              </Tabs>
-            </div>
-          }
+                </div>
+              </div>
+              }
+            </TabsContent>
+
+            <TabsContent value="tradingCards">
+              <GameTradingCards />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
