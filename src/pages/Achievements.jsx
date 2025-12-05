@@ -286,14 +286,12 @@ export default function Achievements() {
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isTrackingPanelVisible, setIsTrackingPanelVisible] = useState(true);
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
 
   // DOM refs for positioning
   const gameBoxRef = useRef(null);
-  const trackingPanelRef = useRef(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -481,14 +479,7 @@ export default function Achievements() {
     });
   }, [selectedGame, localAchievements, searchTerm, rarityFilter, statusFilter, categoryFilter, user]);
 
-  const trackedAchievementDetails = useMemo(() => {
-    if (!trackedAchievements.length) return [];
-    
-    const allAchievements = Object.values(localAchievements).flat();
-    return trackedAchievements
-      .map(id => allAchievements.find(ach => ach?.id === id))
-      .filter(Boolean);
-  }, [trackedAchievements, localAchievements]);
+
 
   if (isLoading) {
     return (
@@ -586,7 +577,7 @@ export default function Achievements() {
         }
       `}</style>
 
-      <div className={`relative z-10 transition-all duration-300 ${isTrackingPanelVisible ? 'pr-[360px]' : ''}`}>
+      <div className="relative z-10"
         <AnimatePresence>
           {selectedAchievement && !selectedGame && ( // Only show overlay if no game is selected (global achievement view)
             <AchievementDetailOverlay 
@@ -632,22 +623,7 @@ export default function Achievements() {
                 <AchievementSearch onSearch={setSearchTerm} />
               </div>
 
-              {/* Achievement Tracking Toggle for main view */}
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex gap-2">
-                  {/* Only show pathway button when no specific game is selected to keep UI clean, or can be added as a tab */}
-                </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:text-blue-300"
-                    onClick={() => setIsTrackingPanelVisible(!isTrackingPanelVisible)}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <ChevronRight className={`w-4 h-4 mr-2 transition-transform ${!isTrackingPanelVisible ? 'rotate-180' : ''}`} />
-                    Achievement Tracking
-                </Button>
-              </div>
+
 
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -680,7 +656,7 @@ export default function Achievements() {
                 </p>
               </div>
 
-              {/* Achievement Filter Bar with Integrated Tracking Toggle */}
+              {/* Achievement Filter Bar */}
               <AchievementFilterBar 
                 searchTerm={searchTerm}
                 rarityFilter={rarityFilter}
@@ -690,8 +666,6 @@ export default function Achievements() {
                 onRarityChange={setRarityFilter}
                 onStatusChange={setStatusFilter}
                 onCategoryChange={setCategoryFilter}
-                isTrackingPanelVisible={isTrackingPanelVisible}
-                onToggleTrackingPanel={() => setIsTrackingPanelVisible(!isTrackingPanelVisible)}
               />
 
               {/* Split Panel Layout */}
@@ -738,27 +712,7 @@ export default function Achievements() {
         </div>
       </div>
 
-      {/* Vertical divider line */}
-      <div 
-        className="absolute top-0 right-0 h-full w-px bg-blue-500/30" 
-        style={{ 
-          transform: `translateX(${isTrackingPanelVisible ? '-360px' : '0px'})`, 
-          transition: 'transform 300ms ease-in-out',
-          boxShadow: isTrackingPanelVisible ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
-        }} 
-      />
 
-      {/* Achievement Tracking Panel */}
-      <div ref={trackingPanelRef}>
-        <TrackingPanel 
-          isVisible={isTrackingPanelVisible}
-          onToggle={() => setIsTrackingPanelVisible(!isTrackingPanelVisible)}
-          trackedAchievements={trackedAchievementDetails}
-          allAchievements={Object.values(localAchievements).flat()}
-          onSelectAchievement={setSelectedAchievement}
-          onUntrack={handleUntrackAchievement}
-        />
-      </div>
 
       {achievementToChallenge && (
         <ChallengeFriendModal 
