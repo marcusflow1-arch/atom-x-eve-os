@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge'; // Added Badge import
-import { 
+import {
   Award, Trophy, Star, Package, BrainCircuit, Heart, Search, Filter, Zap, Shield, Sword, ChevronRight, Mic, Bot,
   LayoutGrid, List, Check, X, ArrowLeft, Share2, Plus, Gamepad2, Users, Crown, Play, Sparkles, Target, Book // Added new icons
 } from 'lucide-react';
@@ -31,35 +31,35 @@ const rarityStyles = {
   Limitless: { color: "text-fuchsia-400", bg: "bg-fuchsia-900/80", border: "border-fuchsia-500/80" }
 };
 
-const GameCard = ({ game, onClick, isSelected }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    whileHover={{ scale: 1.03, y: -5 }}
-    onClick={() => onClick(game)}
-    className={`group relative rounded-xl overflow-hidden cursor-pointer bg-slate-800 border transition-all duration-300 ${
-      isSelected ? 'border-blue-500/80 shadow-lg shadow-blue-500/20' : 'border-slate-700/50'
-    }`}
-    style={{ cursor: 'pointer' }}
-  >
+const GameCard = ({ game, onClick, isSelected }) =>
+<motion.div
+  initial={{ opacity: 0, scale: 0.9 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  whileHover={{ scale: 1.03, y: -5 }}
+  onClick={() => onClick(game)}
+  className={`group relative rounded-xl overflow-hidden cursor-pointer bg-slate-800 border transition-all duration-300 ${
+  isSelected ? 'border-blue-500/80 shadow-lg shadow-blue-500/20' : 'border-slate-700/50'}`
+  }
+  style={{ cursor: 'pointer' }}>
+
     <img src={game.cover_image} alt={game.title} className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" />
     <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
     <div className="absolute bottom-0 p-4">
       <h3 className="font-bold text-lg text-white">{game.title}</h3>
       <p className="text-sm text-slate-400">{game.genre}</p>
     </div>
-    {isSelected && (
-      <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
+    {isSelected &&
+  <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
         Selected
       </div>
-    )}
-  </motion.div>
-);
+  }
+  </motion.div>;
+
 
 const AchievementListItem = ({ achievement, onSelect, isUnlocked, isSelected }) => {
   const rarity = rarityStyles[achievement.rarity] || rarityStyles.Common;
-  
+
   return (
     <motion.div
       layout
@@ -69,12 +69,12 @@ const AchievementListItem = ({ achievement, onSelect, isUnlocked, isSelected }) 
       whileHover={{ x: 5 }}
       onClick={() => onSelect(achievement)}
       className={`relative p-4 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${
-        isSelected 
-          ? `bg-slate-700/80 ${rarity.border} border-l-4` 
-          : `bg-slate-800/40 hover:bg-slate-700/60 border-l-slate-600`
-      } ${isUnlocked ? '' : 'opacity-60 grayscale'}`}
-      style={{ cursor: 'pointer' }}
-    >
+      isSelected ?
+      `bg-slate-700/80 ${rarity.border} border-l-4` :
+      `bg-slate-800/40 hover:bg-slate-700/60 border-l-slate-600`} ${
+      isUnlocked ? '' : 'opacity-60 grayscale'}`}
+      style={{ cursor: 'pointer' }}>
+
       <div className="flex items-center gap-4">
         <div className="text-3xl">{achievement.icon}</div>
         <div className="flex-1 min-w-0">
@@ -89,8 +89,8 @@ const AchievementListItem = ({ achievement, onSelect, isUnlocked, isSelected }) 
         </div>
         {isUnlocked && <Check className="w-5 h-5 text-green-400 flex-shrink-0" />}
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, onClose, onShare, onChallenge }) => {
@@ -102,22 +102,22 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
           <p className="text-lg font-semibold">Select an achievement</p>
           <p className="text-sm mt-2">Click an achievement from the list to view details</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   const rarity = rarityStyles[achievement.rarity] || rarityStyles.Common;
-  
+
   // Mock video URL - in production this would come from the achievement data
   const videoUrl = achievement.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1&playlist=dQw4w9WgXcQ';
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
-      className="h-full overflow-y-auto space-y-6 p-6 bg-slate-800/30 rounded-xl"
-    >
+      className="h-full overflow-y-auto space-y-6 p-6 bg-slate-800/30 rounded-xl">
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
@@ -137,11 +137,11 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
             </div>
           </div>
         </div>
-        {isUnlocked && (
-          <Badge className="bg-green-600 text-white px-3 py-1">
+        {isUnlocked &&
+        <Badge className="bg-green-600 text-white px-3 py-1">
             <Check className="w-4 h-4 mr-1" /> Unlocked
           </Badge>
-        )}
+        }
       </div>
 
       {/* Description */}
@@ -165,14 +165,14 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="w-full h-full"
-          ></iframe>
+            className="w-full h-full">
+          </iframe>
         </div>
       </div>
 
       {/* Reward Details */}
-      {achievement.reward && (
-        <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
+      {achievement.reward &&
+      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
           <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-yellow-400" />
             Unlocked Rewards
@@ -186,22 +186,22 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
                   <p className="text-sm text-slate-400 mt-1">
                     {achievement.reward.description || 'Special reward for unlocking this achievement'}
                   </p>
-                  {achievement.reward.stats && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {Object.entries(achievement.reward.stats).map(([key, value]) => (
-                        <div key={key} className="flex items-center gap-2 text-sm" key={key}>
+                  {achievement.reward.stats &&
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                      {Object.entries(achievement.reward.stats).map(([key, value]) =>
+                  <div key={key} className="flex items-center gap-2 text-sm" key={key}>
                           <ChevronRight className="w-3 h-3 text-green-400" />
                           <span className="text-slate-300">{key}: <span className="text-white font-semibold">+{value}</span></span>
                         </div>
-                      ))}
-                    </div>
                   )}
+                    </div>
+                }
                 </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+      }
 
       {/* How to Unlock */}
       <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
@@ -246,26 +246,26 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
       </div>
 
       {/* Progress Tracking */}
-      {!isUnlocked && (
-        <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
+      {!isUnlocked &&
+      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold">Track Progress</h3>
             <Button
-              onClick={() => onTrack(achievement)}
-              variant={isTracked ? "outline" : "default"}
-              size="sm"
-              className={isTracked ? "border-blue-500 text-blue-400" : "bg-blue-600 hover:bg-blue-700"}
-            >
+            onClick={() => onTrack(achievement)}
+            variant={isTracked ? "outline" : "default"}
+            size="sm"
+            className={isTracked ? "border-blue-500 text-blue-400" : "bg-blue-600 hover:bg-blue-700"}>
+
               {isTracked ? '✓ Tracking' : 'Track Achievement'}
             </Button>
           </div>
           <p className="text-slate-400 text-sm">
-            {isTracked 
-              ? 'This achievement is being tracked. View progress in the tracking panel.'
-              : 'Track this achievement to monitor your progress toward unlocking it.'}
+            {isTracked ?
+          'This achievement is being tracked. View progress in the tracking panel.' :
+          'Track this achievement to monitor your progress toward unlocking it.'}
           </p>
         </div>
-      )}
+      }
 
       {/* Game Info */}
       <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
@@ -275,8 +275,8 @@ const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, o
           <span className="text-slate-300">{achievement.game}</span>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 export default function Achievements() {
@@ -308,7 +308,7 @@ export default function Achievements() {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Fetch games with error handling
         let games = [];
@@ -318,7 +318,7 @@ export default function Achievements() {
           console.error('Error fetching games from DB:', err);
           games = [];
         }
-        
+
         // Fetch achievements with error handling
         let achievements = [];
         try {
@@ -327,34 +327,34 @@ export default function Achievements() {
           console.error('Error fetching achievements from DB:', err);
           achievements = [];
         }
-        
+
         const ownedGameIds = new Set(user?.purchased_items || []);
         let userGames;
 
         if (isAuthenticated && ownedGameIds.size > 0) {
-            const dbOwnedGames = games.filter(g => ownedGameIds.has(g.id));
-            const mockOwnedGames = Object.values(allMockGames).filter(g => ownedGameIds.has(g.id));
-            const combined = [...dbOwnedGames, ...mockOwnedGames];
-            userGames = Array.from(new Map(combined.map(g => [g.id, g])).values());
+          const dbOwnedGames = games.filter((g) => ownedGameIds.has(g.id));
+          const mockOwnedGames = Object.values(allMockGames).filter((g) => ownedGameIds.has(g.id));
+          const combined = [...dbOwnedGames, ...mockOwnedGames];
+          userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
         } else {
-            // If achievements failed to load, we can't filter by "games with achievements".
-            // In this case, show all available mock games.
-            if (achievements.length === 0) {
-                userGames = Object.values(allMockGames);
-            } else {
-                const gamesWithAchievements = new Set(achievements.map(a => a.game));
-                const dbGames = games.filter(g => gamesWithAchievements.has(g.title));
-                const mockGames = Object.values(allMockGames).filter(g => gamesWithAchievements.has(g.title));
-                const combined = [...dbGames, ...mockGames];
-                userGames = Array.from(new Map(combined.map(g => [g.id, g])).values());
-            }
+          // If achievements failed to load, we can't filter by "games with achievements".
+          // In this case, show all available mock games.
+          if (achievements.length === 0) {
+            userGames = Object.values(allMockGames);
+          } else {
+            const gamesWithAchievements = new Set(achievements.map((a) => a.game));
+            const dbGames = games.filter((g) => gamesWithAchievements.has(g.title));
+            const mockGames = Object.values(allMockGames).filter((g) => gamesWithAchievements.has(g.title));
+            const combined = [...dbGames, ...mockGames];
+            userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
+          }
         }
-        
+
         setAllGames(userGames);
-        
+
         // Organize achievements by game locally
         const achievementsByGame = {};
-        achievements.forEach(ach => {
+        achievements.forEach((ach) => {
           if (!achievementsByGame[ach.game]) {
             achievementsByGame[ach.game] = [];
           }
@@ -375,21 +375,21 @@ export default function Achievements() {
         setIsLoading(false);
       }
     };
-    
+
     // Add a small delay to ensure contexts are initialized
     const timeoutId = setTimeout(fetchData, 100);
     return () => clearTimeout(timeoutId);
   }, [user, isAuthenticated]);
-  
+
   const handleTrackAchievement = useCallback(async (achievement) => {
     if (!isAuthenticated || !user) return;
-    
+
     try {
       const isCurrentlyTracked = trackedAchievements.includes(achievement.id);
-      const newTracked = isCurrentlyTracked 
-        ? trackedAchievements.filter(id => id !== achievement.id)
-        : [...trackedAchievements, achievement.id];
-      
+      const newTracked = isCurrentlyTracked ?
+      trackedAchievements.filter((id) => id !== achievement.id) :
+      [...trackedAchievements, achievement.id];
+
       setTrackedAchievements(newTracked);
       await updateUserData({ tracked_achievements: newTracked });
     } catch (err) {
@@ -400,9 +400,9 @@ export default function Achievements() {
 
   const handleUntrackAchievement = useCallback(async (achievementId) => {
     if (!isAuthenticated || !user) return;
-    
+
     try {
-      const newTracked = trackedAchievements.filter(id => id !== achievementId);
+      const newTracked = trackedAchievements.filter((id) => id !== achievementId);
       setTrackedAchievements(newTracked);
       await updateUserData({ tracked_achievements: newTracked });
     } catch (err) {
@@ -412,38 +412,38 @@ export default function Achievements() {
   }, [isAuthenticated, user, updateUserData, trackedAchievements]);
 
   const handleShareAchievement = async (achievement) => {
-      if (!user) return;
-      try {
-          // Generate content using AI
-          const aiResponse = await base44.functions.invoke('communityAI', {
-              action: 'generate_achievement_post',
-              data: {
-                  achievement: achievement,
-                  game: achievement.game,
-                  user_name: user.username || user.full_name
-              }
-          });
+    if (!user) return;
+    try {
+      // Generate content using AI
+      const aiResponse = await base44.functions.invoke('communityAI', {
+        action: 'generate_achievement_post',
+        data: {
+          achievement: achievement,
+          game: achievement.game,
+          user_name: user.username || user.full_name
+        }
+      });
 
-          await base44.entities.Post.create({
-              title: `I unlocked ${achievement.title}!`,
-              content: aiResponse.data.content,
-              type: 'achievement_share',
-              community: 'general',
-              game_title: achievement.game,
-              achievement_id: achievement.id,
-              achievement_data: achievement,
-              is_ai_generated: true,
-              score: 0
-          });
-          alert("Shared to community feed!");
-      } catch (error) {
-          console.error("Error sharing achievement:", error);
-      }
+      await base44.entities.Post.create({
+        title: `I unlocked ${achievement.title}!`,
+        content: aiResponse.data.content,
+        type: 'achievement_share',
+        community: 'general',
+        game_title: achievement.game,
+        achievement_id: achievement.id,
+        achievement_data: achievement,
+        is_ai_generated: true,
+        score: 0
+      });
+      alert("Shared to community feed!");
+    } catch (error) {
+      console.error("Error sharing achievement:", error);
+    }
   };
 
   const handleChallenge = (achievement) => {
-      setAchievementToChallenge(achievement);
-      setChallengeModalOpen(true);
+    setAchievementToChallenge(achievement);
+    setChallengeModalOpen(true);
   };
 
   const handleGameSelect = (game) => {
@@ -454,29 +454,29 @@ export default function Achievements() {
 
   const filteredGames = useMemo(() => {
     if (isLoading || !allGames) return [];
-    return allGames.filter(game => {
-        const genreMatch = !activeGenre || game.genre?.toLowerCase().includes(activeGenre.toLowerCase());
-        const searchMatch = searchTerm === '' || game.title.toLowerCase().includes(searchTerm.toLowerCase());
-        return genreMatch && searchMatch;
+    return allGames.filter((game) => {
+      const genreMatch = !activeGenre || game.genre?.toLowerCase().includes(activeGenre.toLowerCase());
+      const searchMatch = searchTerm === '' || game.title.toLowerCase().includes(searchTerm.toLowerCase());
+      return genreMatch && searchMatch;
     });
   }, [allGames, activeGenre, searchTerm, isLoading]);
-  
+
   const gameAchievements = useMemo(() => {
     if (!selectedGame || !localAchievements[selectedGame.title]) return [];
-    
+
     const achievementsForGame = localAchievements[selectedGame.title] || [];
-    
-    return achievementsForGame.filter(ach => {
+
+    return achievementsForGame.filter((ach) => {
       if (!ach) return false;
-      
+
       const searchMatch = searchTerm === '' || ach.title?.toLowerCase().includes(searchTerm.toLowerCase());
       const rarityMatch = rarityFilter === 'all' || ach.rarity === rarityFilter;
       const unlocked = user?.unlocked_achievements?.includes(ach.id);
-      const statusMatch = statusFilter === 'all' || 
-                         (statusFilter === 'unlocked' && unlocked) || 
-                         (statusFilter === 'locked' && !unlocked);
+      const statusMatch = statusFilter === 'all' ||
+      statusFilter === 'unlocked' && unlocked ||
+      statusFilter === 'locked' && !unlocked;
       const categoryMatch = categoryFilter === 'all' || ach.category === categoryFilter;
-      
+
       return searchMatch && rarityMatch && statusMatch && categoryMatch;
     });
   }, [selectedGame, localAchievements, searchTerm, rarityFilter, statusFilter, categoryFilter, user]);
@@ -490,8 +490,8 @@ export default function Achievements() {
           <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p>Loading Achievement Hub...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (error) {
@@ -501,25 +501,25 @@ export default function Achievements() {
           <Trophy className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Error Loading Achievements</h2>
           <p className="text-slate-400 mb-4">{error}</p>
-          <Button 
-            onClick={() => window.location.reload()} 
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-red-600 hover:bg-red-700 text-white">
+
             Retry
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
-    <div 
-      className="h-full text-white relative overflow-hidden" 
-      style={{ 
+    <div
+      className="h-full text-white relative overflow-hidden"
+      style={{
         cursor: 'default',
         background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)'
-      }}
-    >
+      }}>
+
       {/* Ambient Glow Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
@@ -581,22 +581,22 @@ export default function Achievements() {
 
       <div className="relative z-10">
         <AnimatePresence>
-          {selectedAchievement && !selectedGame && ( // Only show overlay if no game is selected (global achievement view)
-            <AchievementDetailOverlay 
-              achievement={selectedAchievement} 
-              onClose={() => setSelectedAchievement(null)}
-              onTrack={handleTrackAchievement}
-              isTracked={trackedAchievements.includes(selectedAchievement.id)}
-              onShare={handleShareAchievement}
-              onChallenge={handleChallenge}
-            />
-          )}
+          {selectedAchievement && !selectedGame && // Only show overlay if no game is selected (global achievement view)
+          <AchievementDetailOverlay
+            achievement={selectedAchievement}
+            onClose={() => setSelectedAchievement(null)}
+            onTrack={handleTrackAchievement}
+            isTracked={trackedAchievements.includes(selectedAchievement.id)}
+            onShare={handleShareAchievement}
+            onChallenge={handleChallenge} />
+
+          }
         </AnimatePresence>
 
         <div className="p-8">
-          {!selectedGame ? (
-            <>
-              <h2 className="text-3xl font-black mb-4">Achievements</h2>
+          {!selectedGame ?
+          <>
+              <h2 className="px-10 text-3xl font-black">Achievements</h2>
               
               {/* Genre Filter */}
               <div className="flex items-center gap-4 mb-4">
@@ -612,37 +612,37 @@ export default function Achievements() {
 
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filteredGames.map(game => (
-                  <div key={game.id} ref={game === selectedGame ? gameBoxRef : null}>
-                    <GameCard 
-                      game={game} 
-                      onClick={handleGameSelect} 
-                      isSelected={game === selectedGame}
-                    />
+                {filteredGames.map((game) =>
+              <div key={game.id} ref={game === selectedGame ? gameBoxRef : null}>
+                    <GameCard
+                  game={game}
+                  onClick={handleGameSelect}
+                  isSelected={game === selectedGame} />
+
                   </div>
-                ))}
+              )}
               </div>
-            </>
-          ) : (
-            <div className="h-[calc(100vh-64px)] flex flex-col"> {/* Adjusted height for sticky header/footer if present */}
+            </> :
+
+          <div className="h-[calc(100vh-64px)] flex flex-col"> {/* Adjusted height for sticky header/footer if present */}
               <Button variant="ghost" onClick={() => {
-                  setSelectedGame(null);
-                  setSearchTerm('');
-                  setSelectedAchievement(null); // Clear selected achievement when going back to game list
-              }} className="mb-4 self-start" style={{ cursor: 'pointer' }}>
+              setSelectedGame(null);
+              setSearchTerm('');
+              setSelectedAchievement(null); // Clear selected achievement when going back to game list
+            }} className="mb-4 self-start" style={{ cursor: 'pointer' }}>
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Game Library
               </Button>
               
               <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
                 <div className="flex justify-between items-center flex-wrap gap-4">
                   <h1 className="text-5xl font-black">{selectedGame.title}</h1>
-                  <TabsList 
-                    className="p-1 rounded-full"
-                    style={{
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
+                  <TabsList
+                  className="p-1 rounded-full"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+
                     <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
                     <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Trading Cards</TabsTrigger>
                   </TabsList>
@@ -654,38 +654,38 @@ export default function Achievements() {
                   </p>
 
                   {/* Achievement Filter Bar */}
-                  <AchievementFilterBar 
-                    searchTerm={searchTerm}
-                    rarityFilter={rarityFilter}
-                    statusFilter={statusFilter}
-                    categoryFilter={categoryFilter}
-                    onSearch={setSearchTerm}
-                    onRarityChange={setRarityFilter}
-                    onStatusChange={setStatusFilter}
-                    onCategoryChange={setCategoryFilter}
-                  />
+                  <AchievementFilterBar
+                  searchTerm={searchTerm}
+                  rarityFilter={rarityFilter}
+                  statusFilter={statusFilter}
+                  categoryFilter={categoryFilter}
+                  onSearch={setSearchTerm}
+                  onRarityChange={setRarityFilter}
+                  onStatusChange={setStatusFilter}
+                  onCategoryChange={setCategoryFilter} />
+
 
                   {/* Split Panel Layout */}
                   <div className="flex-1 flex gap-6 overflow-hidden mt-6">
                     {/* Left Panel - Achievement List */}
                     <div className="w-[400px] flex-shrink-0 overflow-y-auto space-y-2 pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                      {gameAchievements.length > 0 ? (
-                        gameAchievements.map(ach => (
-                          <AchievementListItem
-                            key={ach.id}
-                            achievement={ach}
-                            onSelect={setSelectedAchievement}
-                            isUnlocked={user?.unlocked_achievements?.includes(ach.id)}
-                            isSelected={selectedAchievement?.id === ach.id}
-                          />
-                        ))
-                      ) : (
-                        <div className="text-center py-20 text-slate-500">
+                      {gameAchievements.length > 0 ?
+                    gameAchievements.map((ach) =>
+                    <AchievementListItem
+                      key={ach.id}
+                      achievement={ach}
+                      onSelect={setSelectedAchievement}
+                      isUnlocked={user?.unlocked_achievements?.includes(ach.id)}
+                      isSelected={selectedAchievement?.id === ach.id} />
+
+                    ) :
+
+                    <div className="text-center py-20 text-slate-500">
                           <Trophy className="w-16 h-16 mx-auto mb-4 opacity-50" />
                           <h3 className="text-xl font-semibold mb-2">No achievements match your filters</h3>
                           <p>Try adjusting your search or filter criteria</p>
                         </div>
-                      )}
+                    }
                     </div>
 
                     {/* Vertical Divider */}
@@ -694,14 +694,14 @@ export default function Achievements() {
                     {/* Right Panel - Achievement Details */}
                     <div className="flex-1 overflow-hidden">
                       <AchievementDetailPanel
-                        achievement={selectedAchievement}
-                        isUnlocked={selectedAchievement && user?.unlocked_achievements?.includes(selectedAchievement.id)}
-                        onTrack={handleTrackAchievement}
-                        isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
-                        onClose={() => setSelectedAchievement(null)}
-                        onShare={handleShareAchievement}
-                        onChallenge={handleChallenge}
-                      />
+                      achievement={selectedAchievement}
+                      isUnlocked={selectedAchievement && user?.unlocked_achievements?.includes(selectedAchievement.id)}
+                      onTrack={handleTrackAchievement}
+                      isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
+                      onClose={() => setSelectedAchievement(null)}
+                      onShare={handleShareAchievement}
+                      onChallenge={handleChallenge} />
+
                     </div>
                   </div>
                 </TabsContent>
@@ -711,19 +711,19 @@ export default function Achievements() {
                 </TabsContent>
               </Tabs>
             </div>
-          )}
+          }
         </div>
       </div>
 
 
 
-      {achievementToChallenge && (
-        <ChallengeFriendModal 
-            achievement={achievementToChallenge}
-            isOpen={challengeModalOpen}
-            onClose={() => setChallengeModalOpen(false)}
-        />
-      )}
-    </div>
-  );
+      {achievementToChallenge &&
+      <ChallengeFriendModal
+        achievement={achievementToChallenge}
+        isOpen={challengeModalOpen}
+        onClose={() => setChallengeModalOpen(false)} />
+
+      }
+    </div>);
+
 }
