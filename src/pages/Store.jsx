@@ -22,11 +22,14 @@ import { base44 } from '@/api/base44Client';
 
 const GlassPanel = ({ children, className = "" }) => (
   <div className={`
-    bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl
-    shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]
+    bg-gradient-to-br from-slate-200/10 via-white/5 to-slate-200/5 
+    backdrop-blur-2xl border border-white/20 rounded-2xl
+    shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]
+    hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.25)]
+    transition-all duration-300
     ${className}
   `}
-  style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)' }}
+  style={{ WebkitBackdropFilter: 'blur(24px) saturate(180%)' }}
   >
     {children}
   </div>
@@ -139,7 +142,7 @@ const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
     <div className="relative w-full h-[50vh] min-h-[400px] mt-0">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10" />
         {currentBackground?.video_url ? (
           <video
             key={currentBackground.id}
@@ -917,7 +920,7 @@ export default function Store() {
   const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-x-hidden font-sans selection:bg-cyan-500/30">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
