@@ -577,7 +577,7 @@ export default function Achievements() {
         }
       `}</style>
 
-      <div className="relative z-10"
+      <div className="relative z-10">
         <AnimatePresence>
           {selectedAchievement && !selectedGame && ( // Only show overlay if no game is selected (global achievement view)
             <AchievementDetailOverlay 
