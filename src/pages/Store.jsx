@@ -499,19 +499,19 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Unified Header: Menu + Brand + Search */}
           {/* Menu Button */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
-          >
-            <div className="flex flex-col gap-[3px]">
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-            </div>
-          </button>
-
-          {/* Brand */}
-          <span className="text-white font-semibold text-sm hidden md:block tracking-wide whitespace-nowrap">ATOM×EVE</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
+            >
+              <div className="flex flex-col gap-[3px]">
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+              </div>
+            </button>
+            <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">AtomXEveStore</span>
+          </div>
 
           {/* Search Input */}
           <div className="flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative">
