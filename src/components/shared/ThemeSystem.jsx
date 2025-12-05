@@ -124,6 +124,12 @@ export const LIBRARY_THEMES = {
     css: 'bg-gradient-to-br from-slate-800 via-gray-900 to-zinc-900',
     animation: 'moon_dust'
   },
+  moon_essence: {
+    id: 'moon_essence',
+    name: 'Moon Essence',
+    css: 'bg-gradient-to-br from-slate-600 via-gray-700 to-slate-800',
+    animation: 'moon_glow'
+  },
   abstract_chaos: {
     id: 'abstract_chaos',
     name: 'Abstract Chaos',
@@ -267,7 +273,7 @@ export const ThemeBackground = ({ themeId }) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const time = Date.now() * 0.001;
 
-        if (['stars', 'particles', 'magic', 'fireflies', 'snow', 'embers', 'crystals', 'petals', 'leaves', 'moon_dust', 'chaos', 'deep_stars', 'wisps'].includes(animationType)) {
+        if (['stars', 'particles', 'magic', 'fireflies', 'snow', 'embers', 'crystals', 'petals', 'leaves', 'moon_dust', 'chaos', 'deep_stars', 'wisps', 'moon_glow'].includes(animationType)) {
             particles.forEach(p => {
                 ctx.beginPath();
                 if (animationType === 'petals' || animationType === 'leaves') {
@@ -318,6 +324,8 @@ export const ThemeBackground = ({ themeId }) => {
                     if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * canvas.width; }
                 } else if (animationType === 'embers' || animationType === 'wisps') {
                     if (p.y < 0) { p.y = canvas.height; p.x = canvas.width / 2 + (Math.random() - 0.5) * 100; }
+                } else if (animationType === 'moon_glow') {
+                    if (p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; }
                 } else if (animationType === 'petals' || animationType === 'leaves') {
                     p.x += Math.sin(p.y * 0.01) * 0.3;
                     p.angle += p.rotationSpeed;

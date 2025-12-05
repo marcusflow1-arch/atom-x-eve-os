@@ -192,7 +192,7 @@ function LayoutContent({ children, currentPageName }) {
     <div className="h-screen w-screen bg-slate-900 text-slate-300 font-sans flex flex-col overflow-hidden relative">
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
-        <ThemeBackground themeId="electric_blue" />
+        <ThemeBackground themeId="moon_essence" />
       </div>
 
       <PWAManifest />
