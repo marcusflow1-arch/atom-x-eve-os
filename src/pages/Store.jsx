@@ -72,27 +72,24 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
       >
         {/* Full Card Image */}
         <div className="relative aspect-[3/4] overflow-hidden bg-slate-950">
-          {/* Blurred Backdrop */}
-          <div className="absolute inset-0">
-             <img
-                src={game.cover_image || game.image}
-                alt=""
-                className="w-full h-full object-cover opacity-50 blur-md scale-110"
-             />
-          </div>
-          
+          {/* Blurred Background */}
+          <img
+            src={game.cover_image || game.image}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-50 blur-md scale-110"
+          />
           {/* Main Image */}
           <img
             src={game.cover_image || game.image}
             alt={game.title}
-            className="relative w-full h-full object-contain object-center z-10 transition-transform duration-700 group-hover:scale-105"
+            className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
           />
 
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80 z-20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80" />
 
           {/* Content Overlay */}
-          <div className="absolute inset-0 p-4 flex flex-col justify-between z-30">
+          <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
             <div className="flex justify-between items-start">
               <div className="flex flex-col gap-2">
                 {game.aiEnhanced && (
@@ -139,17 +136,21 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
     className="flex-shrink-0 w-[200px] cursor-pointer"
   >
     <div className="relative aspect-[3/4] overflow-hidden bg-slate-950">
-      <div className="absolute inset-0">
-         <img src={game.cover_image || game.image} className="w-full h-full object-cover opacity-50 blur-md scale-110" alt="" />
-      </div>
+      {/* Blurred Background */}
+      <img 
+        src={game.cover_image || game.image} 
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover opacity-50 blur-md scale-110"
+      />
+      {/* Main Image */}
       <img 
         src={game.cover_image || game.image} 
         alt={game.title}
-        className="relative w-full h-full object-contain object-center z-10 transition-transform duration-700 group-hover:scale-105"
+        className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-90 z-20" />
 
-      <div className="absolute top-2 left-2 z-30">
+      <div className="absolute top-2 left-2 z-10">
          {game.aiEnhanced && (
             <Badge className="bg-purple-500/90 text-white text-[9px] border-none px-1.5 py-0.5 shadow-lg">
               <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI
@@ -822,9 +823,10 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
       onClick={() => onNavigate(game.id)}
       className="flex gap-4 p-0"
     >
-      <div className="w-48 h-full flex-shrink-0 relative">
-        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/80" />
+      <div className="w-48 h-full flex-shrink-0 relative bg-slate-950 overflow-hidden">
+        <img src={game.cover_image || game.image} alt="" className="w-full h-full object-cover absolute inset-0 opacity-50 blur-sm scale-110" />
+        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-contain relative z-10 p-2" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/80 z-20" />
       </div>
 
       <div className="flex-1 flex flex-col py-4 pr-6 relative z-10">
@@ -1085,25 +1087,25 @@ export default function Store() {
                           >
                             <LiquidCard 
                               onClick={() => handleGameNavigate(game.id)}
-                              className="h-full aspect-[16/9]"
+                              className="h-full aspect-[16/9] bg-slate-950 overflow-hidden"
                             >
-                              <div className="absolute inset-0 bg-slate-950">
-                                 <img 
-                                    src={game.cover_image || game.image} 
-                                    alt="" 
-                                    className="w-full h-full object-cover opacity-40 blur-xl scale-110"
-                                 />
-                              </div>
+                              {/* Blurred Background */}
+                              <img 
+                                src={game.cover_image || game.image} 
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover opacity-40 blur-lg scale-110"
+                              />
+                              {/* Main Image */}
                               <img 
                                 src={game.cover_image || game.image} 
                                 alt={game.title}
-                                className="relative w-full h-full object-contain object-center z-10 transition-transform duration-700 group-hover:scale-105"
+                                className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90 z-20" />
                               <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent z-20" />
 
                               {/* Play Button Overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-30">
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                                 <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
                                   <Play className="w-7 h-7 text-white fill-white ml-1" />
                                 </div>
