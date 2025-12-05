@@ -15,7 +15,7 @@ import AchievementSearch from '../components/achievements/AchievementSearch';
 import TrackingPanel from '../components/achievements/TrackingPanel';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import AchievementFilterBar from '../components/achievements/AchievementFilterBar';
-import AchievementPathway from '../components/achievements/AchievementPathway';
+
 import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import { base44 } from '@/api/base44Client';
@@ -641,10 +641,6 @@ export default function Achievements() {
                 </Button>
               </div>
 
-              {/* Achievements Pathway Section */}
-              <div className="mb-12">
-                 <AchievementPathway />
-              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {filteredGames.map(game => (
