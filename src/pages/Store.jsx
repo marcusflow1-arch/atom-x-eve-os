@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, Search, Play, Gamepad2, ChevronLeft, ChevronRight, 
@@ -20,104 +20,150 @@ import { base44 } from '@/api/base44Client';
 
 // --- Liquid Glass Components ---
 
-const GlassPanel = ({ children, className = "" }) => (
-  <div className={`
-    bg-gradient-to-br from-slate-200/10 via-white/5 to-slate-200/5 
-    backdrop-blur-2xl border border-white/20 rounded-2xl
-    shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]
-    hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.25)]
-    transition-all duration-300
-    ${className}
-  `}
-  style={{ WebkitBackdropFilter: 'blur(24px) saturate(180%)' }}
-  >
-    {children}
-  </div>
-);
+const LiquidCard = ({ children, className = "", onClick }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, width } = currentTarget.getBoundingClientRect();
+    x.set((clientX - left) / width);
+  }
+
+  // Map mouse X position to wave position (sweeping across)
+  const waveX = useTransform(mouseX, [0, 1], ["-100%", "200%"]);
+
+  return (
+    <motion.div 
+      className={`relative overflow-hidden rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => x.set(0.5)}
+      onClick={onClick}
+      whileHover={{ scale: 1.02, borderColor: "rgba(255,255,255,0.3)" }}
+    >
+      {/* Liquid Wave Animation */}
+      <motion.div
+        className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+        style={{ 
+          left: waveX,
+          width: "80%",
+          height: "100%"
+        }}
+      />
+      {children}
+    </motion.div>
+  );
+};
+
+const GlassPanel = LiquidCard; // Backward compatibility alias if needed
 
 const GameGridCard = ({ game, addToCart, onNavigate }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <motion.div
-      layout
-      className="group cursor-pointer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.3 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <LiquidCard 
       onClick={() => onNavigate(game.id)}
+      className="h-full flex flex-col"
     >
-      <GlassPanel className="overflow-hidden h-full flex flex-col">
-        {/* Image Container */}
+      <div 
+        className="flex-1 relative flex flex-col"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Full Card Image */}
         <div className="relative aspect-[3/4] overflow-hidden">
           <img
             src={game.cover_image || game.image}
             alt={game.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-          
-          {/* Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-          
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {game.aiEnhanced && (
-              <Badge className="bg-purple-500/80 backdrop-blur-md text-white text-[10px] border-none">
-                <Sparkles className="w-3 h-3 mr-1" /> AI
-              </Badge>
-            )}
-            {game.rating >= 4.8 && (
-              <Badge className="bg-yellow-500/80 backdrop-blur-md text-black text-[10px] border-none font-bold">
-                <Trophy className="w-3 h-3 mr-1" /> TOP
-              </Badge>
-            )}
-          </div>
 
-          {/* Quick Actions */}
-          <motion.div 
-            className="absolute top-3 right-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-          >
-            <Button 
-              size="icon"
-              className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 border border-white/20"
-              onClick={(e) => { e.stopPropagation(); addToCart(game); }}
-            >
-              <Plus className="w-4 h-4 text-white" />
-            </Button>
-          </motion.div>
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80" />
 
-          {/* Price Tag */}
-          <div className="absolute bottom-3 right-3">
-            <span className="bg-green-500/90 backdrop-blur-md text-white text-sm font-bold px-3 py-1 rounded-full">
-              ${game.price}
-            </span>
-          </div>
-        </div>
+          {/* Content Overlay */}
+          <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col gap-2">
+                {game.aiEnhanced && (
+                  <Badge className="bg-purple-500/80 backdrop-blur-md text-white text-[10px] border-none w-fit">
+                    <Sparkles className="w-3 h-3 mr-1" /> AI
+                  </Badge>
+                )}
+                {game.rating >= 4.8 && (
+                  <Badge className="bg-yellow-500/80 backdrop-blur-md text-black text-[10px] border-none font-bold w-fit">
+                    <Trophy className="w-3 h-3 mr-1" /> TOP
+                  </Badge>
+                )}
+              </div>
 
-        {/* Info */}
-        <div className="p-4 flex-1 flex flex-col">
-          <h3 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors">
-            {game.title}
-          </h3>
-          <p className="text-white/50 text-xs mb-2">{game.genre}</p>
-          
-          {/* Rating */}
-          <div className="flex items-center gap-1 mt-auto">
-            <Star className="w-3 h-3 text-yellow-400 fill-current" />
-            <span className="text-yellow-400 text-xs font-medium">{game.rating || '4.5'}</span>
-            <span className="text-white/30 text-xs">• {game.developer || 'Studio'}</span>
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.8 }}
+                onClick={(e) => { e.stopPropagation(); addToCart(game); }}
+                className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 border border-white/30 flex items-center justify-center transition-all"
+              >
+                <Plus className="w-4 h-4 text-white" />
+              </motion.button>
+            </div>
+
+            <div>
+              <h3 className="text-white font-bold text-lg leading-tight mb-1 drop-shadow-lg group-hover:text-blue-300 transition-colors">
+                {game.title}
+              </h3>
+              <div className="flex items-center justify-between">
+                <p className="text-white/70 text-xs">{game.genre}</p>
+                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </GlassPanel>
-    </motion.div>
+      </div>
+    </LiquidCard>
   );
 };
+
+const StoreRowCard = ({ game, onNavigate, addToCart }) => (
+  <LiquidCard
+    onClick={() => onNavigate(game.id)}
+    className="flex-shrink-0 w-[200px] cursor-pointer"
+  >
+    <div className="relative aspect-[3/4] overflow-hidden">
+      <img 
+        src={game.cover_image || game.image} 
+        alt={game.title}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-90" />
+
+      <div className="absolute top-2 left-2 z-10">
+         {game.aiEnhanced && (
+            <Badge className="bg-purple-500/90 text-white text-[9px] border-none px-1.5 py-0.5 shadow-lg">
+              <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI
+            </Badge>
+          )}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+        <h3 className="text-white font-bold text-md leading-tight mb-1 truncate drop-shadow-md">{game.title}</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+            <span className="text-white/90 text-xs">{game.rating || '4.5'}</span>
+          </div>
+          <span className="text-green-400 text-xs font-bold">${game.price}</span>
+        </div>
+      </div>
+
+      {/* Hover Play Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px]">
+         <button className="w-12 h-12 rounded-full bg-white/20 border border-white/40 flex items-center justify-center backdrop-blur-md transform scale-75 group-hover:scale-100 transition-transform">
+            <Play className="w-5 h-5 text-white fill-white ml-1" />
+         </button>
+      </div>
+    </div>
+  </LiquidCard>
+);
 
 // --- Hero Section ---
 const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
@@ -758,48 +804,55 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
     className="group cursor-pointer"
-    onClick={() => onNavigate(game.id)}
   >
-    <GlassPanel className="p-4 flex gap-4 hover:bg-white/10 transition-all">
-      <div className="w-32 h-44 flex-shrink-0 rounded-lg overflow-hidden">
-        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover" />
+    <LiquidCard 
+      onClick={() => onNavigate(game.id)}
+      className="flex gap-4 p-0"
+    >
+      <div className="w-48 h-full flex-shrink-0 relative">
+        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover absolute inset-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/80" />
       </div>
-      <div className="flex-1 flex flex-col">
+
+      <div className="flex-1 flex flex-col py-4 pr-6 relative z-10">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-white font-bold text-lg group-hover:text-blue-400 transition-colors">
+            <h3 className="text-white font-bold text-2xl group-hover:text-blue-300 transition-colors drop-shadow-md">
               {game.title}
             </h3>
-            <p className="text-white/50 text-sm">{game.developer || 'Game Studio'}</p>
+            <p className="text-blue-200/70 text-sm">{game.developer || 'Game Studio'}</p>
           </div>
-          <span className="text-green-400 font-bold text-xl">${game.price}</span>
+          <span className="text-green-400 font-bold text-2xl">${game.price}</span>
         </div>
-        <p className="text-white/60 text-sm mt-2 line-clamp-2">{game.description}</p>
-        <div className="flex items-center gap-4 mt-auto pt-3">
-          <Badge variant="outline" className="text-white/60 border-white/20">{game.genre}</Badge>
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-yellow-400 text-sm">{game.rating || '4.5'}</span>
+
+        <p className="text-white/70 text-sm mt-3 line-clamp-2 max-w-2xl">{game.description}</p>
+
+        <div className="flex items-center gap-4 mt-auto pt-4">
+          <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-md">{game.genre}</Badge>
+          <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded-full">
+            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+            <span className="text-yellow-400 text-xs font-bold">{game.rating || '4.5'}</span>
           </div>
           {game.aiEnhanced && (
-            <Badge className="bg-purple-500/20 text-purple-400 border-none">
+            <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/30">
               <Sparkles className="w-3 h-3 mr-1" /> AI Enhanced
             </Badge>
           )}
         </div>
       </div>
-      <div className="flex flex-col gap-2">
+
+      <div className="flex flex-col justify-center gap-3 pr-6 py-4 relative z-10">
         <Button 
-          className="bg-blue-500 hover:bg-blue-600 text-white"
+          className="bg-white text-black hover:bg-blue-50 font-bold"
           onClick={(e) => { e.stopPropagation(); addToCart(game); }}
         >
-          <Plus className="w-4 h-4 mr-1" /> Add
+          <Plus className="w-4 h-4 mr-1" /> Add to Cart
         </Button>
         <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-          <Info className="w-4 h-4 mr-1" /> Details
+          Details
         </Button>
       </div>
-    </GlassPanel>
+    </LiquidCard>
   </motion.div>
 );
 
@@ -1015,30 +1068,32 @@ export default function Store() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="flex-shrink-0 w-[340px] group cursor-pointer"
-                            onClick={() => handleGameNavigate(game.id)}
+                            className="flex-shrink-0 w-[340px]"
                           >
-                            <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900">
+                            <LiquidCard 
+                              onClick={() => handleGameNavigate(game.id)}
+                              className="h-full aspect-[16/9]"
+                            >
                               <img 
                                 src={game.cover_image || game.image} 
                                 alt={game.title}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
-                              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90" />
+                              <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent" />
 
                               {/* Play Button Overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform">
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+                                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
                                   <Play className="w-7 h-7 text-white fill-white ml-1" />
                                 </div>
                               </div>
 
                               {/* Content */}
-                              <div className="absolute bottom-0 left-0 right-0 p-5">
+                              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
                                 <div className="flex items-center gap-2 mb-2">
                                   {game.aiEnhanced && (
-                                    <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5">
+                                    <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5 shadow-lg">
                                       <Sparkles className="w-3 h-3 mr-1" /> AI
                                     </Badge>
                                   )}
@@ -1046,7 +1101,7 @@ export default function Store() {
                                     {game.genre}
                                   </Badge>
                                 </div>
-                                <h3 className="text-white font-bold text-lg mb-1 group-hover:text-purple-300 transition-colors">{game.title}</h3>
+                                <h3 className="text-white font-bold text-xl mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">{game.title}</h3>
                                 <div className="flex items-center gap-3 text-sm">
                                   <div className="flex items-center gap-1">
                                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
@@ -1060,11 +1115,11 @@ export default function Store() {
                               {/* Quick Add */}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); addToCart(game); }}
-                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20"
+                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20 z-20"
                               >
                                 <Plus className="w-5 h-5 text-white" />
                               </button>
-                            </div>
+                            </LiquidCard>
                           </motion.div>
                         ))}
                       </div>
@@ -1099,54 +1154,12 @@ export default function Store() {
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: idx * 0.05 }}
-                              className="flex-shrink-0 w-[180px] group/card cursor-pointer"
-                              onClick={() => handleGameNavigate(game.id)}
                             >
-                              <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-slate-900 mb-2 ring-0 group-hover/card:ring-2 ring-white/30 transition-all duration-300 transform group-hover/card:scale-105 group-hover/card:z-10">
-                                <img 
-                                  src={game.cover_image || game.image} 
-                                  alt={game.title}
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
-
-                                {/* Hover Info */}
-                                <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-full group-hover/card:translate-y-0 transition-transform duration-300">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-1">
-                                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                                      <span className="text-white text-xs">{game.rating || '4.5'}</span>
-                                    </div>
-                                    <span className="text-green-400 text-sm font-bold">${game.price}</span>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); handleGameNavigate(game.id); }}
-                                      className="flex-1 h-8 rounded-md bg-white text-black text-xs font-semibold flex items-center justify-center gap-1 hover:bg-white/90 transition-colors"
-                                    >
-                                      <Play className="w-3 h-3 fill-current" /> Play
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); addToCart(game); }}
-                                      className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                                    >
-                                      <Plus className="w-4 h-4 text-white" />
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Badges */}
-                                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                  {game.aiEnhanced && (
-                                    <Badge className="bg-purple-500/90 text-white text-[9px] border-none px-1.5 py-0.5">
-                                      <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-
-                              <h3 className="text-white/80 text-sm font-medium truncate group-hover/card:text-white transition-colors px-1">{game.title}</h3>
-                              <p className="text-white/40 text-xs truncate px-1">{game.developer || 'Studio'}</p>
+                              <StoreRowCard 
+                                game={game} 
+                                onNavigate={handleGameNavigate} 
+                                addToCart={addToCart} 
+                              />
                             </motion.div>
                           ))}
                         </div>
