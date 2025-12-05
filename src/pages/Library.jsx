@@ -219,11 +219,11 @@ const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelect
         return (
             <div 
                 onClick={() => onSelect(game)}
-                className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 border-b border-slate-700/30 hover:bg-slate-800/50 ${
-                    isSelected ? 'bg-blue-900/30 border-l-4 border-l-blue-500' : ''
+                className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 border-b border-white/40 hover:bg-white/60 backdrop-blur-sm ${
+                    isSelected ? 'bg-blue-100/60 border-l-4 border-l-blue-500 shadow-sm' : ''
                 }`}
             >
-                <div className="w-12 h-12 flex-shrink-0 rounded overflow-hidden relative">
+                <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden relative shadow-sm border border-white/50">
                     <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
                     {isStreaming && (
                         <div className="absolute top-0.5 right-0.5 flex items-center gap-1 bg-red-600 text-white px-1 rounded text-xs font-bold">
@@ -233,7 +233,7 @@ const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelect
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                    <h3 className={`font-bold text-sm truncate ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                    <h3 className={`font-bold text-sm truncate ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
                         {game.title}
                     </h3>
                     <p className="text-xs text-slate-500 capitalize">{game.genre}</p>
@@ -254,14 +254,14 @@ const GameCard = ({ game, isStreaming, viewMode = 'expanded', onSelect, isSelect
     }
 
     return (
-        <div onClick={() => onSelect(game)} className="block group relative overflow-hidden rounded-xl bg-slate-800/50 border border-slate-700/50 transition-all duration-300 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-600/20 cursor-pointer">
+        <div onClick={() => onSelect(game)} className="block group relative overflow-hidden rounded-xl bg-white/40 backdrop-blur-xl border border-white/60 transition-all duration-300 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-200/40 cursor-pointer">
             <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 p-4 w-full">
-                <h3 className="text-lg font-bold text-white mb-1">{game.title}</h3>
-                <p className="text-sm text-slate-400 capitalize mb-2">{game.genre}</p>
+                <h3 className="text-lg font-bold text-white mb-1 drop-shadow-md">{game.title}</h3>
+                <p className="text-sm text-white/90 capitalize mb-2 drop-shadow-sm">{game.genre}</p>
                 
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-white/80">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>12.5h played</span>
@@ -590,13 +590,13 @@ const CommunityChatTab = ({ game }) => {
 
     return (
         <div className="flex gap-4 h-full">
-            <div className="w-64 flex-shrink-0 bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-slate-700/50 bg-slate-800/50">
-                    <h3 className="font-bold text-white flex items-center gap-2">
-                        <Hash className="w-5 h-5 text-blue-400" />
+            <div className="w-64 flex-shrink-0 bg-white/40 backdrop-blur-xl rounded-lg border border-white/60 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-white/40 bg-white/30">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Hash className="w-5 h-5 text-blue-600" />
                         Channels
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">Select a channel to join</p>
+                    <p className="text-xs text-slate-500 mt-1">Select a channel to join</p>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -606,37 +606,37 @@ const CommunityChatTab = ({ game }) => {
                             onClick={() => setSelectedChannel(channel)}
                             className={`w-full text-left p-3 rounded-lg transition-all ${
                                 selectedChannel.id === channel.id
-                                    ? 'bg-blue-600/30 border border-blue-500/50'
-                                    : 'hover:bg-slate-700/30 border border-transparent'
+                                    ? 'bg-blue-100/60 border border-blue-300'
+                                    : 'hover:bg-white/40 border border-transparent'
                             }`}
                         >
                             <div className="flex items-center justify-between mb-1">
                                 <span className={`font-semibold text-sm ${
-                                    selectedChannel.id === channel.id ? 'text-white' : 'text-slate-300'
+                                    selectedChannel.id === channel.id ? 'text-slate-900' : 'text-slate-700'
                                 }`}>
                                     # {channel.name}
                                 </span>
-                                <Badge className="text-xs bg-slate-700 text-slate-300">
+                                <Badge className="text-xs bg-slate-200 text-slate-700">
                                     {channel.users}
                                 </Badge>
                             </div>
-                            <p className="text-xs text-slate-400 line-clamp-1">{channel.description}</p>
+                            <p className="text-xs text-slate-500 line-clamp-1">{channel.description}</p>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div className="flex-1 flex flex-col bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden">
-                <div className="p-4 border-b border-slate-700/50 bg-slate-800/50">
+            <div className="flex-1 flex flex-col bg-white/40 backdrop-blur-xl rounded-lg border border-white/60 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-white/40 bg-white/30">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="font-bold text-white flex items-center gap-2">
-                                <Hash className="w-5 h-5 text-blue-400" />
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <Hash className="w-5 h-5 text-blue-600" />
                                 {selectedChannel.name}
                             </h3>
-                            <p className="text-xs text-slate-400 mt-0.5">{selectedChannel.description}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{selectedChannel.description}</p>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
                             <Users className="w-4 h-4" />
                             <span>{selectedChannel.users} online</span>
                         </div>
@@ -649,20 +649,20 @@ const CommunityChatTab = ({ game }) => {
                             <img 
                                 src={msg.avatar} 
                                 alt={msg.user}
-                                className="w-10 h-10 rounded-full flex-shrink-0"
+                                className="w-10 h-10 rounded-full flex-shrink-0 shadow-sm"
                             />
                             <div className="flex-1">
                                 <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="font-bold text-white text-sm">{msg.user}</span>
+                                    <span className="font-bold text-slate-900 text-sm">{msg.user}</span>
                                     <span className="text-xs text-slate-500">{msg.timestamp}</span>
                                 </div>
-                                <p className="text-slate-300 text-sm">{msg.message}</p>
+                                <p className="text-slate-700 text-sm">{msg.message}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="p-4 border-t border-slate-700/50 bg-slate-800/50">
+                <div className="p-4 border-t border-white/40 bg-white/30">
                     <div className="flex gap-2 items-end">
                         <div className="flex-1">
                             <Input
@@ -670,7 +670,7 @@ const CommunityChatTab = ({ game }) => {
                                 onChange={(e) => setMessageInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                                 placeholder={`Message #${selectedChannel.name}...`}
-                                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+                                className="bg-white/60 border-white/50 text-slate-800 placeholder:text-slate-400 focus:ring-blue-400 shadow-inner"
                             />
                         </div>
 
@@ -678,7 +678,7 @@ const CommunityChatTab = ({ game }) => {
                             onClick={startVoiceToText}
                             variant="outline"
                             size="icon"
-                            className={`${isListening ? 'border-red-500 bg-red-500/20 text-red-400 animate-pulse' : 'border-slate-600 text-slate-400 hover:text-white'}`}
+                            className={`${isListening ? 'border-red-400 bg-red-100 text-red-600 animate-pulse' : 'border-slate-300 text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
                             title="Voice to Text"
                         >
                             {isListening ? <MicOff className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -688,7 +688,7 @@ const CommunityChatTab = ({ game }) => {
                             onClick={togglePushToTalk}
                             variant="outline"
                             size="icon"
-                            className={`${isPushToTalk ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-slate-600 text-slate-400 hover:text-white'}`}
+                            className={`${isPushToTalk ? 'border-green-400 bg-green-100 text-green-600' : 'border-slate-300 text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
                             title="Push to Talk"
                         >
                             <Mic className="w-5 h-5" />
@@ -1286,7 +1286,7 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
             <div className="flex-shrink-0 mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-3xl font-black text-white">{game.title}</h2>
+                        <h2 className="text-3xl font-black text-slate-800 drop-shadow-sm">{game.title}</h2>
                         
                         <Button size="sm" onClick={() => onPlay(game)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105">
                             <Play className="w-4 h-4" />
@@ -1305,17 +1305,17 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <button onClick={onShowAchievements} className="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 text-yellow-400 p-2 rounded-lg transition-all hover:scale-110">
+                        <button onClick={onShowAchievements} className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 text-yellow-600 p-2 rounded-lg transition-all hover:scale-110 shadow-sm">
                             <Trophy className="w-6 h-6" />
                         </button>
-                        <button onClick={onShowGameDetails} className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 p-2 rounded-lg transition-all hover:scale-110">
+                        <button onClick={onShowGameDetails} className="bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-600 p-2 rounded-lg transition-all hover:scale-110 shadow-sm">
                             <Eye className="w-6 h-6" />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-sm text-slate-300 mb-4">
-                    <Badge className="bg-green-500/20 text-green-300 border-green-500/50">
+                <div className="flex items-center gap-3 text-sm text-slate-600 mb-4 font-medium">
+                    <Badge className="bg-green-100 text-green-700 border-green-300">
                         Installed
                     </Badge>
                     <span className="capitalize">{game.genre}</span>
@@ -1326,13 +1326,13 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 border-b border-slate-700/50 pb-2">
+                <div className="flex items-center gap-2 border-b border-white/40 pb-2">
                     <button
                         onClick={() => setActiveTab('overview')}
                         className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-all ${
                             activeTab === 'overview' 
-                                ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500' 
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                ? 'bg-white/60 text-blue-600 border-b-2 border-blue-500 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
                         }`}
                     >
                         Game Overview
@@ -1341,8 +1341,8 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                         onClick={() => setActiveTab('community')}
                         className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-all ${
                             activeTab === 'community' 
-                                ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500' 
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                ? 'bg-white/60 text-blue-600 border-b-2 border-blue-500 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
                         }`}
                     >
                         Community
@@ -1351,8 +1351,8 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                         onClick={() => setActiveTab('discussion')}
                         className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-all ${
                             activeTab === 'discussion' 
-                                ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500' 
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                ? 'bg-white/60 text-blue-600 border-b-2 border-blue-500 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
                         }`}
                     >
                         Discussion
@@ -1361,8 +1361,8 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                         onClick={() => setActiveTab('achieved')}
                         className={`px-4 py-2 rounded-t-lg font-semibold text-sm transition-all ${
                             activeTab === 'achieved' 
-                                ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500' 
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                ? 'bg-white/60 text-blue-600 border-b-2 border-blue-500 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
                         }`}
                     >
                         Achievements
@@ -1416,37 +1416,37 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-bold text-white mb-3">About This Game</h3>
-                                    <p className="text-slate-300 leading-relaxed">
+                                    <h3 className="text-xl font-bold text-slate-800 mb-3">About This Game</h3>
+                                    <p className="text-slate-600 leading-relaxed font-medium">
                                         {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
                                     </p>
                                 </div>
 
-                                <div className="bg-slate-800/50 rounded-xl p-4">
-                                    <h4 className="font-semibold text-white mb-3">Your Stats</h4>
+                                <div className="bg-white/40 backdrop-blur-lg rounded-xl p-4 border border-white/50 shadow-sm">
+                                    <h4 className="font-semibold text-slate-800 mb-3">Your Stats</h4>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">Total Playtime:</span>
-                                            <span className="text-white font-semibold">12.5 hours</span>
+                                            <span className="text-slate-500">Total Playtime:</span>
+                                            <span className="text-slate-800 font-bold">12.5 hours</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">Achievements:</span>
-                                            <span className="text-white font-semibold">8 / 15</span>
+                                            <span className="text-slate-500">Achievements:</span>
+                                            <span className="text-slate-800 font-bold">8 / 15</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">Last Played:</span>
-                                            <span className="text-white font-semibold">2 hours ago</span>
+                                            <span className="text-slate-500">Last Played:</span>
+                                            <span className="text-slate-800 font-bold">2 hours ago</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-400">Install Date:</span>
-                                            <span className="text-white font-semibold">December 15, 2024</span>
+                                            <span className="text-slate-500">Install Date:</span>
+                                            <span className="text-slate-800 font-bold">December 15, 2024</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-lg font-semibold text-white mb-3">Game Trailer</h4>
-                                    <div className="relative h-64 rounded-xl overflow-hidden bg-slate-800/50">
+                                    <h4 className="text-lg font-semibold text-slate-800 mb-3">Game Trailer</h4>
+                                    <div className="relative h-64 rounded-xl overflow-hidden bg-slate-200 shadow-inner">
                                         <video 
                                             className="w-full h-full object-cover"
                                             controls
@@ -1478,20 +1478,20 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                             <div className="space-y-4">
                                 <div className="space-y-4">
                                     {/* Latest Update */}
-                                    <div className="bg-slate-800/50 rounded-xl p-5 border border-green-500/30">
+                                    <div className="bg-white/40 backdrop-blur-md rounded-xl p-5 border border-green-200 shadow-sm">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h4 className="text-lg font-bold text-white mb-1">Version 2.5.0 - Major Update</h4>
-                                                <p className="text-xs text-slate-400">December 18, 2024 at 3:45 PM</p>
+                                                <h4 className="text-lg font-bold text-slate-800 mb-1">Version 2.5.0 - Major Update</h4>
+                                                <p className="text-xs text-slate-500">December 18, 2024 at 3:45 PM</p>
                                             </div>
-                                            <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                                            <Badge className="bg-green-100 text-green-600 border-green-300">
                                                 Latest
                                             </Badge>
                                         </div>
-                                        <p className="text-slate-300 text-sm mb-3">
+                                        <p className="text-slate-600 text-sm mb-3">
                                             Major gameplay overhaul including new combat system, improved AI, and performance optimizations. Added support for ray tracing and DLSS 3.0.
                                         </p>
-                                        <div className="text-xs text-slate-400">
+                                        <div className="text-xs text-slate-500 font-medium">
                                             • New Combat Mechanics<br />
                                             • Ray Tracing Support<br />
                                             • 50+ Bug Fixes<br />
@@ -1500,17 +1500,17 @@ const GameDetailsPanel = ({ game, isStreaming, onShowRecentlyAchieved, onShowAch
                                     </div>
 
                                     {/* DLC */}
-                                    <div className="bg-slate-800/50 rounded-xl p-5 border border-purple-500/30">
+                                    <div className="bg-white/40 backdrop-blur-md rounded-xl p-5 border border-purple-200 shadow-sm">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h4 className="text-lg font-bold text-white mb-1">Expansion: Shadow Realms</h4>
-                                                <p className="text-xs text-slate-400">December 1, 2024</p>
+                                                <h4 className="text-lg font-bold text-slate-800 mb-1">Expansion: Shadow Realms</h4>
+                                                <p className="text-xs text-slate-500">December 1, 2024</p>
                                             </div>
-                                            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
+                                            <Badge className="bg-purple-100 text-purple-600 border-purple-300">
                                                 DLC
                                             </Badge>
                                         </div>
-                                        <p className="text-slate-300 text-sm mb-3">
+                                        <p className="text-slate-600 text-sm mb-3">
                                             Explore the mysterious Shadow Realms with 20+ hours of new content, new storyline, weapons, and boss encounters.
                                         </p>
                                         <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
@@ -2164,22 +2164,10 @@ export default function Library() {
                 }
             `}</style>
 
-            {/* Animated Background Layer */}
-            <div className={`absolute inset-0 ${currentTheme?.css || ''}`}> {/* Base gradient */}
-                {/* If game theme exists, this covers the base gradient */}
-                {gameTheme && selectedGame ? (
-                    <img 
-                        src={gameTheme.background}
-                        alt={selectedGame.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                ) : null}
-                {/* Overlay for the game theme background, if present */}
-                {gameTheme && selectedGame ? (
-                    <div className={`absolute inset-0 bg-gradient-to-r ${gameTheme.overlayColor}`} />
-                ) : null}
-                {/* Canvas for animations, always on top with opacity */}
-                <canvas ref={canvasRef} className="absolute inset-0 opacity-20" />
+            {/* Liquid Glass Background Layer */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/50 to-white">
+                {/* Canvas for animations, subtle */}
+                <canvas ref={canvasRef} className="absolute inset-0 opacity-10 mix-blend-multiply" />
             </div>
 
             {/* Header Section - Fixed */}
@@ -2187,64 +2175,14 @@ export default function Library() {
                 <header className="mb-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white flex items-center gap-4">
-                                <LibraryIcon className="w-10 h-10 text-blue-400" />
+                            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-800 flex items-center gap-4 drop-shadow-sm">
+                                <LibraryIcon className="w-10 h-10 text-blue-600" />
                                 My Library
                             </h1>
-                            <p className="text-slate-400 mt-2">All your purchased games, ready to play.</p>
+                            <p className="text-slate-500 mt-2 font-medium">All your purchased games, ready to play.</p>
                         </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 bg-white/5 hover:bg-white/10 border border-white/10">
-                                    <Palette className="w-5 h-5 text-white" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent 
-                                className="bg-slate-900/95 backdrop-blur-xl border-slate-700"
-                                style={{ width: '650px', maxHeight: '550px' }}
-                                align="end"
-                            >
-                                <div className="p-6">
-                                    <div className="mb-4">
-                                        <h4 className="text-white font-bold text-lg mb-1">Library Themes</h4>
-                                        <p className="text-slate-400 text-sm">Customize your library background</p>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-4 gap-4 max-h-[420px] overflow-y-auto pr-2">
-                                        {Object.values(LIBRARY_THEMES).map(theme => {
-                                            const isSelected = selectedTheme === theme.id;
-                                            return (
-                                                <motion.button
-                                                    key={theme.id}
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                    onClick={() => setSelectedTheme(theme.id)}
-                                                    className={`relative p-3 rounded-xl border-2 transition-all ${
-                                                        isSelected 
-                                                            ? 'border-blue-500 bg-blue-500/20 shadow-lg shadow-blue-500/30' 
-                                                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800/70'
-                                                    }`}
-                                                >
-                                                    <div className={`w-full aspect-video rounded-lg mb-2 ${theme.css} relative overflow-hidden`}>
-                                                        {isSelected && (
-                                                            <div className="absolute top-1.5 right-1.5 bg-blue-500 text-white rounded-full p-1">
-                                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-xs font-semibold text-center text-white">
-                                                        {theme.name}
-                                                    </p>
-                                                </motion.button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* Theme button removed */}
                     </div>
                 </header>
 
@@ -2301,22 +2239,22 @@ export default function Library() {
                             {/* Left Sidebar - Search + Game List */}
                             <div className="w-[14%] flex flex-col gap-4">
                                 {/* Compact Search Box */}
-                                <div className="flex-shrink-0 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-3">
-                                    <label className="text-[10px] text-slate-400 mb-1.5 block font-semibold">Search for your games</label>
+                                <div className="flex-shrink-0 bg-white/40 backdrop-blur-xl border border-white/60 shadow-lg shadow-blue-100/20 rounded-2xl p-3">
+                                    <label className="text-[10px] text-slate-500 mb-1.5 block font-semibold">Search for your games</label>
                                     <div className="relative mb-2">
                                         <Input
                                             type="text"
                                             placeholder="Search..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="bg-slate-900/50 border-slate-700 pl-2 pr-12 py-1.5 text-xs text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-lg"
+                                            className="bg-white/60 border-white/50 pl-2 pr-12 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-400 focus:border-transparent rounded-lg shadow-inner"
                                         />
                                         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                                             <Button
                                                 onClick={startVoiceSearch}
                                                 variant="ghost"
                                                 size="icon"
-                                                className={`h-5 w-5 ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-white'}`}
+                                                className={`h-5 w-5 ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-blue-500'}`}
                                             >
                                                 {isListening ? <MicOff className="w-2.5 h-2.5" /> : <Mic className="w-2.5 h-2.5" />}
                                             </Button>
@@ -2324,14 +2262,14 @@ export default function Library() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                                    <div className="flex items-center justify-between pt-2 border-t border-white/40">
                                         <div className="flex items-center gap-1">
-                                            <span className="text-[9px] text-slate-400">View:</span>
+                                            <span className="text-[9px] text-slate-500">View:</span>
                                             <Button
                                                 onClick={() => setViewMode('collapsed')}
                                                 variant={viewMode === 'collapsed' ? 'default' : 'ghost'}
                                                 size="sm"
-                                                className="text-[9px] h-5 px-1.5"
+                                                className={`text-[9px] h-5 px-1.5 ${viewMode === 'collapsed' ? 'bg-blue-500 text-white' : 'text-slate-500 hover:bg-white/50'}`}
                                             >
                                                 <List className="w-2.5 h-2.5 mr-0.5" />
                                                 List
@@ -2340,22 +2278,22 @@ export default function Library() {
                                                 onClick={() => setViewMode('expanded')}
                                                 variant={viewMode === 'expanded' ? 'default' : 'ghost'}
                                                 size="sm"
-                                                className="text-[9px] h-5 px-1.5"
+                                                className={`text-[9px] h-5 px-1.5 ${viewMode === 'expanded' ? 'bg-blue-500 text-white' : 'text-slate-500 hover:bg-white/50'}`}
                                             >
                                                 <Grid className="w-2.5 h-2.5 mr-0.5" />
                                                 Grid
                                             </Button>
                                         </div>
-                                        <div className="text-[9px] text-slate-400">
+                                        <div className="text-[9px] text-slate-500">
                                             {filteredGames.length} game{filteredGames.length !== 1 ? 's' : ''}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Game List */}
-                                <div className="flex-1 bg-slate-800/30 rounded-xl border border-slate-700/50 overflow-hidden flex flex-col">
-                                    <div className="p-3 border-b border-slate-700/50">
-                                        <h3 className="font-semibold text-white text-xs">Your Games</h3>
+                                <div className="flex-1 bg-white/30 backdrop-blur-lg rounded-xl border border-white/50 overflow-hidden flex flex-col shadow-lg shadow-blue-100/10">
+                                    <div className="p-3 border-b border-white/40 bg-white/20">
+                                        <h3 className="font-semibold text-slate-700 text-xs">Your Games</h3>
                                     </div>
                                     <div className="flex-1 game-list-scrollable">
                                         {filteredGames.map(game => (
