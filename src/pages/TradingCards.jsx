@@ -14,7 +14,7 @@ const MOCK_CARDS = [
   { id: 3, name: "Void Walker", rarity: "Rare", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=600&fit=crop", series: "Genesis", mint: 892, total: 1000 },
   { id: 4, name: "Solar Knight", rarity: "Uncommon", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=600&fit=crop", series: "Fantasy", mint: 2341, total: 5000 },
   { id: 5, name: "Pixel Warrior", rarity: "Common", image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=600&fit=crop", series: "Retro", mint: 5678, total: null },
-  { id: 6, name: "Blood Jury", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", mint: 1, total: 10 },
+  { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", mint: 1, total: 10 },
 ];
 
 const CardComponent = ({ card, isOwned }) => {
@@ -26,10 +26,15 @@ const CardComponent = ({ card, isOwned }) => {
     Common: "border-slate-600"
   };
 
+  const isRotating = card.name === "Blood Drain";
+
   return (
     <motion.div
-      whileHover={{ scale: 1.05, rotateY: 10 }}
+      animate={isRotating ? { rotateY: 360 } : {}}
+      transition={isRotating ? { duration: 8, repeat: Infinity, ease: "linear" } : {}}
+      whileHover={isRotating ? { scale: 1.1 } : { scale: 1.05, rotateY: 10 }}
       className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden border-2 ${rarityColors[card.rarity]} bg-slate-900 cursor-pointer group`}
+      style={{ transformStyle: 'preserve-3d' }}
     >
       <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
