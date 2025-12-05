@@ -500,27 +500,32 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
               >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Unified Header: Menu + Brand + Search */}
-          <div className="flex-1 max-w-3xl flex items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full p-1 pr-2 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative z-50">
-            {/* Menu Button */}
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
-            >
-              <div className="flex flex-col gap-[3px]">
-                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-              </div>
-            </button>
+          {/* Menu Button */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
+          >
+            <div className="flex flex-col gap-[3px]">
+              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+            </div>
+          </button>
 
-            {/* Brand */}
-            <span className="text-white font-semibold text-sm hidden md:block tracking-wide whitespace-nowrap mr-1">ATOM×EVE</span>
+          {/* Brand */}
+          <span className="text-white font-semibold text-sm hidden md:block tracking-wide whitespace-nowrap">ATOM×EVE</span>
 
-            {/* Divider */}
-            <div className="h-5 w-px bg-white/20 hidden md:block mx-1"></div>
-
-            {/* Search Input */}
-            <div className="relative flex-1">
+          {/* Search Input */}
+          <div className="flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative">
+            <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
+            <input 
+              type="text" 
+              placeholder="Search games, genres..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent border-none text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
+            />
+            <div className="flex items-center gap-1">
               <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input 
                 type="text" 
