@@ -114,51 +114,47 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
   );
 };
 
-// Luna-style Sidebar Game Item
+// Luna Sidebar Item - Minimal, clean design
 const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) => (
   <motion.div
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
     onClick={() => onSelect(game)}
-    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
+    className={`group relative flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all ${
       isSelected 
-        ? 'bg-white/10' 
-        : 'hover:bg-white/5'
+        ? 'bg-white/8' 
+        : 'hover:bg-white/4'
     }`}
-    style={isSelected ? {
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: '0 4px 20px rgba(100,150,200,0.1)',
-    } : {}}
   >
     {/* Game Thumbnail */}
-    <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black/30">
+    <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0 bg-black">
       <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
       {isStreaming && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-500/80">
-          <Radio className="w-4 h-4 text-white animate-pulse" />
+        <div className="absolute inset-0 flex items-center justify-center bg-red-500/90">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
         </div>
       )}
     </div>
     
     {/* Game Info */}
     <div className="flex-1 min-w-0">
-      <h3 className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+      <h3 className={`font-medium text-sm truncate ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
         {game.title}
       </h3>
-      <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+      <p className="text-white/30 text-xs capitalize">{game.genre}</p>
     </div>
 
     {/* Quick Play Button */}
     <button
       onClick={(e) => { e.stopPropagation(); onPlay(game); }}
-      className="w-8 h-8 rounded-full bg-blue-500/20 hover:bg-blue-500/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
     >
-      <Play className="w-3.5 h-3.5 text-blue-400 fill-blue-400 ml-0.5" />
+      <Play className="w-3 h-3 text-black fill-black ml-0.5" />
     </button>
 
     {/* Selected Indicator */}
     {isSelected && (
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-cyan-400 rounded-r-full" />
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r" />
     )}
   </motion.div>
 );
@@ -186,40 +182,42 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 
   return (
     <div className="h-full flex flex-col">
-      {/* Hero Section */}
-      <div className="relative h-64 rounded-2xl overflow-hidden mb-6 flex-shrink-0">
+      {/* Hero Section - Luna style */}
+      <div className="relative h-80 rounded-xl overflow-hidden mb-8 flex-shrink-0 bg-black">
         <img 
           src={game.banner || game.cover_image || game.cover} 
           alt={game.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
         
         {/* Live Badge */}
         {isStreaming && (
-          <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1.5 rounded-full text-sm font-bold">
-            <Radio className="w-4 h-4 animate-pulse" />
-            STREAMING LIVE
-          </div>
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded text-xs font-bold uppercase"
+          >
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            Live
+          </motion.div>
         )}
         
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="flex items-end justify-between">
             <div>
-              <Badge className="mb-3 bg-white/10 text-white border-white/20 backdrop-blur-md">
-                {game.genre}
-              </Badge>
-              <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">{game.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-white/70">
-                <div className="flex items-center gap-1">
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-2">{game.genre}</p>
+              <h1 className="text-5xl font-bold text-white mb-3">{game.title}</h1>
+              <div className="flex items-center gap-6 text-sm text-white/50">
+                <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  <span>12.5 hours played</span>
+                  <span>12.5 hours</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4" />
-                  <span>8/15 achievements</span>
+                <div className="flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4" />
+                  <span>8 of 15</span>
                 </div>
               </div>
             </div>
@@ -228,27 +226,20 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onPlay(game)}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold hover:bg-white/90 transition-colors"
+                className="flex items-center gap-2 px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-all shadow-lg"
               >
-                <Play className="w-5 h-5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 Play
               </button>
               <button
                 onClick={() => onStream(game)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-purple-500/20 text-purple-300 font-semibold hover:bg-purple-500/30 transition-colors border border-purple-500/30"
+                className="px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/15 transition-all backdrop-blur-md"
               >
-                <Wifi className="w-5 h-5" />
                 Stream
               </button>
               <button
-                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/20 text-green-300 font-semibold hover:bg-green-500/30 transition-colors border border-green-500/30"
-              >
-                <Bot className="w-5 h-5" />
-                AI Play
-              </button>
-              <button
                 onClick={onShowGameDetails}
-                className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/10"
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition-all"
               >
                 <Eye className="w-5 h-5 text-white" />
               </button>
@@ -258,24 +249,31 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-2 mb-6 flex-shrink-0">
+      <div className="flex items-center gap-6 mb-6 flex-shrink-0 border-b border-white/5 pb-4">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
+            className={`px-4 py-2 font-medium text-sm transition-all relative ${
               activeTab === tab.id
-                ? 'bg-white/10 text-white border border-white/15'
-                : 'text-white/50 hover:text-white hover:bg-white/5'
+                ? 'text-white'
+                : 'text-white/30 hover:text-white/60'
             }`}
           >
             {tab.label}
+            {activeTab === tab.id && (
+              <motion.div 
+                layoutId="panelTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            )}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(100,150,200,0.3) transparent' }}>
+      <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* About */}
@@ -307,7 +305,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 
             {/* Game Trailer */}
             <LunaCard className="p-5" hover={false}>
-              <h3 className="text-white font-bold text-lg mb-4">Game Trailer</h3>
+              <h3 className="text-white font-semibold text-base mb-4">Game Trailer</h3>
               <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
                 <video 
                   className="w-full h-full object-cover"
@@ -317,7 +315,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                   <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                 </video>
               </div>
-            </LiquidGlassCard>
+            </LunaCard>
           </div>
         )}
 
