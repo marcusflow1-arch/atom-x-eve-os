@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import {
-  Search, ChevronRight, ChevronDown, Star, Package, X, Grid, List,
-  Ghost, Shield, Zap, Gem, Footprints, Truck, DollarSign, Plus, ShoppingCart
+  Search, ChevronRight, ChevronDown, Star, TrendingUp, Clock,
+  Sparkles, DollarSign, Eye, Heart, ShoppingCart,
+  Gamepad2, Package, Zap, Shield, X, Grid, List,
+  Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,9 +22,14 @@ const MARKETPLACE_ITEMS = [
   { id: 'g2', name: 'Plasma Cannon MK-X - Military Grade Heavy Weapon with Burst Fire Mode', price: 65000, originalPrice: 72000, rarity: 'Epic', game: 'Galactic Warfare', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=400&fit=crop', seller: { name: 'GunRunner', rating: 4.6, sales: 1200 }, views: 3421, description: 'Military-grade plasma weapon with burst fire capability. Includes thermal scope attachment.', stats: { Attack: 95, FireRate: 80 }, reviews: 267, prime: true, sponsored: true },
   { id: 'g3', name: 'Cyber Katana - Mono-Molecular Edge Blade with Electric Discharge', price: 42000, rarity: 'Epic', game: 'Cyberpunk 2088', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'BladeSmith', rating: 4.8, sales: 980 }, views: 2987, description: 'Mono-molecular edge cuts through any armor. Electric discharge on critical hits.', stats: { Attack: 85, Speed: 95 }, reviews: 198, prime: true },
   { id: 'g4', name: 'Void Emperor Complete Armor Set - Full Protection with Shadow Immunity', price: 125000, originalPrice: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Armor', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidMaster', rating: 4.9, sales: 3200 }, views: 8921, description: 'Complete 5-piece armor set forged in the void dimension. Grants immunity to shadow damage.', stats: { Defense: 150, MagicRes: 80 }, reviews: 567, prime: true, sponsored: true },
+  { id: 'g5', name: 'Stealth Cloak of Shadows - Near Invisibility in Dark Environments', price: 35000, rarity: 'Epic', game: 'Assassin Protocol', category: 'Gear', subcategory: 'Armor', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=400&fit=crop', seller: { name: 'ShadowDealer', rating: 4.7, sales: 780 }, views: 1876, description: 'Renders wearer 95% invisible in shadows. Silent movement bonus included.', stats: { Defense: 40, Stealth: 100 }, reviews: 134, prime: false },
   { id: 'a1', name: 'Time Warp Mastery - Ultimate Time Manipulation Ability Unlock', price: 95000, rarity: 'Mythic', game: 'Mage Wars Online', category: 'Abilities', subcategory: 'Magic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'ArcaneTrader', rating: 5.0, sales: 890 }, views: 6789, description: 'Manipulate time in a 50m radius for 10 seconds. Slow enemies, speed up allies.', stats: { Power: 100, Cooldown: 300 }, reviews: 456, prime: true },
   { id: 'a2', name: 'Neural Hack Protocol - Instant System Override Netrunner Ability', price: 55000, rarity: 'Legendary', game: 'Cyberpunk 2088', category: 'Abilities', subcategory: 'Tech', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'Netrunner', rating: 4.8, sales: 670 }, views: 3456, description: 'Instantly hack any electronic system within 100m range. Bypass all firewalls.', stats: { Power: 85, Range: 100 }, reviews: 234, prime: true },
+  { id: 'a3', name: 'Dragon Soul Fusion - Transform into Dragon Form for 60 Seconds', price: 72000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Abilities', subcategory: 'Transformation', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'DragonBorn', rating: 4.9, sales: 1100 }, views: 5123, description: 'Transform into a full dragon for 60 seconds. Flight, fire breath, and massive stat boost.', stats: { Power: 95, Duration: 60 }, reviews: 378, prime: true, sponsored: true },
+  { id: 'con1', name: 'Elixir of Immortality x5 Bundle - Death Prevention Potions', price: 8500, originalPrice: 10000, rarity: 'Epic', game: 'Elder Scrolls: Reborn', category: 'Consumables', subcategory: 'Potions', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'AlchemyKing', rating: 4.7, sales: 4500 }, views: 4567, description: 'Prevents death once per use. 24h cooldown between uses. Bundle of 5 potions.', stats: { Uses: 5 }, reviews: 312, prime: true },
+  { id: 'mat1', name: 'Void Essence x100 - Legendary Crafting Material Bundle', price: 35000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Materials', subcategory: 'Crafting', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'RareMats', rating: 5.0, sales: 2800 }, views: 3421, description: 'Required for crafting void-tier equipment. High purity essence bundle.', stats: { Quantity: 100 }, reviews: 234, prime: true },
   { id: 'mt1', name: 'Cyber Dragon Mount - Mechanical Flying Dragon with Plasma Breath', price: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', category: 'Mounts', subcategory: 'Flying', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'MountKing', rating: 5.0, sales: 450 }, views: 12453, description: 'Mechanical dragon with plasma breath attack. 200% movement speed in air.', stats: { Speed: 200, Flight: true }, reviews: 678, prime: true, sponsored: true },
+  { id: 'mt2', name: 'Hoverbike Racer X1 - Fastest Ground Vehicle in Night City', price: 45000, rarity: 'Epic', game: 'Cyberpunk 2088', category: 'Mounts', subcategory: 'Vehicle', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'SpeedDealer', rating: 4.8, sales: 1200 }, views: 5678, description: 'Fastest ground vehicle with nitro boost capability. Customizable LED lighting.', stats: { Speed: 350, Boost: true }, reviews: 345, prime: true },
 ];
 
 const CATEGORIES = [
@@ -30,6 +37,7 @@ const CATEGORIES = [
   { id: 'Companions', name: 'Companions', icon: Ghost },
   { id: 'Gear', name: 'Gear & Equipment', icon: Shield },
   { id: 'Abilities', name: 'Abilities & Skills', icon: Zap },
+  { id: 'Consumables', name: 'Consumables', icon: Package },
   { id: 'Materials', name: 'Crafting Materials', icon: Gem },
   { id: 'Mounts', name: 'Mounts & Vehicles', icon: Footprints },
 ];
@@ -45,7 +53,7 @@ const rarityStyles = {
   Mythic: { text: 'text-red-400', bg: 'bg-red-500/20' }
 };
 
-// Liquid Glass Card with wave animation
+// Liquid Glass Card
 const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
   const x = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
@@ -53,14 +61,7 @@ const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
 
   return (
     <motion.div
-      className={`relative overflow-hidden rounded-xl transition-all duration-300 ${hover ? 'hover:border-white/20 hover:shadow-[0_0_30px_rgba(100,150,255,0.1)] cursor-pointer' : ''} ${className}`}
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-      }}
+      className={`relative overflow-hidden rounded-xl bg-slate-900/60 backdrop-blur-xl border border-white/10 transition-all duration-300 ${hover ? 'hover:border-white/20 hover:bg-slate-800/60 cursor-pointer' : ''} ${className}`}
       onMouseMove={({ currentTarget, clientX }) => {
         const { left, width } = currentTarget.getBoundingClientRect();
         x.set((clientX - left) / width);
@@ -70,7 +71,7 @@ const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
     >
       {hover && (
         <motion.div
-          className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/8 to-transparent -skew-x-12"
+          className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12"
           style={{ left: waveX, width: "60%", height: "100%" }}
         />
       )}
@@ -86,65 +87,66 @@ const ListItemCard = ({ item, onClick }) => {
   const discountPercent = hasDiscount ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
 
   return (
-    <LiquidCard onClick={() => onClick(item)} className="mb-3">
-      <div className="flex gap-4 p-4">
-        <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-950">
-          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+    <div 
+      onClick={() => onClick(item)} 
+      className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border-b border-white/5"
+    >
+      <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
+        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
+          {item.name}
+        </h3>
+
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+            ))}
+          </div>
+          <span className="text-blue-400 text-sm">{item.reviews?.toLocaleString()}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-white/50 text-sm">{item.seller.sales?.toLocaleString()}+ bought</span>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
-            {item.name}
-          </h3>
-
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-              ))}
+        <div className="mb-2">
+          {hasDiscount && (
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">-{discountPercent}%</span>
+              <span className="text-red-400 text-xs">Limited time deal</span>
             </div>
-            <span className="text-blue-400 text-sm">{item.reviews?.toLocaleString()}</span>
-            <span className="text-white/30">|</span>
-            <span className="text-white/50 text-sm">{item.seller.sales?.toLocaleString()}+ bought</span>
-          </div>
-
-          <div className="mb-2">
+          )}
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
+            <span className="text-white/50 text-sm">AGP</span>
             {hasDiscount && (
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">-{discountPercent}%</span>
-                <span className="text-red-400 text-xs">Limited time deal</span>
-              </div>
+              <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
             )}
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
-              <span className="text-white/50 text-sm">AGP</span>
-              {hasDiscount && (
-                <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
-              )}
-            </div>
           </div>
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`${rarity.text} text-xs font-medium`}>{item.rarity}</span>
-            <span className="text-white/40 text-xs">•</span>
-            <span className="text-white/50 text-xs">{item.game}</span>
-            <span className="text-white/40 text-xs">•</span>
-            <span className="text-white/50 text-xs">{item.category}</span>
-          </div>
-
-          <p className="text-white/60 text-sm line-clamp-2">{item.description}</p>
         </div>
 
-        <div className="hidden xl:block w-[140px] flex-shrink-0 text-right">
-          <p className="text-white/40 text-xs mb-1">Sold by</p>
-          <p className="text-blue-400 text-sm font-medium mb-1">{item.seller.name}</p>
-          <div className="flex items-center justify-end gap-1">
-            <Star className="w-3 h-3 text-orange-400 fill-current" />
-            <span className="text-white text-xs">{item.seller.rating}</span>
-          </div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`${rarity.text} text-xs font-medium`}>{item.rarity}</span>
+          <span className="text-white/40 text-xs">•</span>
+          <span className="text-white/50 text-xs">{item.game}</span>
+          <span className="text-white/40 text-xs">•</span>
+          <span className="text-white/50 text-xs">{item.category}</span>
+        </div>
+
+        <p className="text-white/60 text-sm line-clamp-2">{item.description}</p>
+      </div>
+
+      <div className="hidden xl:block w-[140px] flex-shrink-0 text-right">
+        <p className="text-white/40 text-xs mb-1">Sold by</p>
+        <p className="text-blue-400 text-sm font-medium mb-1">{item.seller.name}</p>
+        <div className="flex items-center justify-end gap-1">
+          <Star className="w-3 h-3 text-orange-400 fill-current" />
+          <span className="text-white text-xs">{item.seller.rating}</span>
         </div>
       </div>
-    </LiquidCard>
+    </div>
   );
 };
 
@@ -153,7 +155,7 @@ const ProductRow = ({ title, items, onItemClick }) => (
   <div className="mb-8">
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-white font-bold text-lg">{title}</h2>
-      <button className="text-blue-400 text-sm hover:text-orange-400 flex items-center gap-1 transition-colors">
+      <button className="text-blue-400 text-sm hover:text-orange-400 flex items-center gap-1">
         See more <ChevronRight className="w-4 h-4" />
       </button>
     </div>
@@ -162,27 +164,29 @@ const ProductRow = ({ title, items, onItemClick }) => (
         const rarity = rarityStyles[item.rarity];
         const hasDiscount = item.originalPrice && item.originalPrice > item.price;
         return (
-          <LiquidCard key={item.id} onClick={() => onItemClick(item)} className="w-[180px] flex-shrink-0">
-            <div className="aspect-square rounded-lg overflow-hidden bg-slate-950">
+          <div 
+            key={item.id} 
+            onClick={() => onItemClick(item)} 
+            className="w-[180px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 mb-2">
               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
             </div>
-            <div className="p-3">
-              <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
-              <div className="flex items-center gap-1 mb-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-                ))}
-                <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-white font-bold">{item.price.toLocaleString()}</span>
-                <span className="text-white/40 text-xs">AGP</span>
-              </div>
-              {hasDiscount && (
-                <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
-              )}
+            <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
+            <div className="flex items-center gap-1 mb-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+              ))}
+              <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
             </div>
-          </LiquidCard>
+            <div className="flex items-baseline gap-1">
+              <span className="text-white font-bold">{item.price.toLocaleString()}</span>
+              <span className="text-white/40 text-xs">AGP</span>
+            </div>
+            {hasDiscount && (
+              <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
+            )}
+          </div>
         );
       })}
     </div>
@@ -215,7 +219,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
 
   return (
     <div 
-      className="w-[220px] flex-shrink-0 p-4 rounded-2xl h-fit"
+      className="w-[220px] flex-shrink-0 p-4 rounded-3xl h-fit"
       style={{
         background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
         backdropFilter: 'blur(40px) saturate(180%)',
@@ -295,9 +299,20 @@ const FilterSidebar = ({ filters, setFilters }) => {
               step={5000}
               className="mb-2"
             />
-            <div className="flex items-center justify-between text-xs text-white/40">
-              <span>{priceRange[0].toLocaleString()}</span>
-              <span>{priceRange[1].toLocaleString()}</span>
+            <div className="flex items-center gap-2 text-xs">
+              <input
+                type="number"
+                value={priceRange[0]}
+                onChange={(e) => setFilters(prev => ({ ...prev, priceRange: [+e.target.value, prev.priceRange[1]] }))}
+                className="w-full bg-slate-800 border border-white/20 rounded px-2 py-1 text-white text-center"
+              />
+              <span className="text-white/30">-</span>
+              <input
+                type="number"
+                value={priceRange[1]}
+                onChange={(e) => setFilters(prev => ({ ...prev, priceRange: [prev.priceRange[0], +e.target.value] }))}
+                className="w-full bg-slate-800 border border-white/20 rounded px-2 py-1 text-white text-center"
+              />
             </div>
           </div>
         </div>
@@ -322,14 +337,16 @@ const FilterSidebar = ({ filters, setFilters }) => {
       </FilterSection>
 
       <FilterSection title="Deals & Discounts">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <Checkbox
-            checked={deals}
-            onCheckedChange={() => setFilters(prev => ({ ...prev, deals: !prev.deals }))}
-            className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
-          />
-          <span className="text-white/70 text-sm">All Discounts</span>
-        </label>
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={deals}
+              onCheckedChange={() => setFilters(prev => ({ ...prev, deals: !prev.deals }))}
+              className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
+            />
+            <span className="text-white/70 text-sm">All Discounts</span>
+          </label>
+        </div>
       </FilterSection>
 
       <FilterSection title="Delivery">
@@ -435,7 +452,7 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
 
             <div className="flex gap-3">
               <Button className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full">
-                <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
+                Add to Cart
               </Button>
               <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full">
                 Buy Now
@@ -523,17 +540,17 @@ export default function MarketplaceContent() {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/50'}`}>
+                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
                   <List className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/50'}`}>
+                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`}>
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-white/30"
+                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
               >
                 <option value="featured">Sort by: Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -543,7 +560,7 @@ export default function MarketplaceContent() {
             </div>
           </div>
 
-          {/* Results Grid/List */}
+          {/* Results */}
           <div className="mb-8">
             <h2 className="text-white font-bold mb-4">Results</h2>
             <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
@@ -559,19 +576,21 @@ export default function MarketplaceContent() {
                 {filteredItems.map(item => {
                   const rarity = rarityStyles[item.rarity];
                   return (
-                    <LiquidCard key={item.id} onClick={() => setSelectedItem(item)}>
-                      <div className="aspect-square bg-slate-950 rounded-lg overflow-hidden">
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedItem(item)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <div className="aspect-square bg-slate-800 rounded-lg overflow-hidden mb-2">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       </div>
-                      <div className="p-3">
-                        <h3 className="text-blue-400 text-sm line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
-                        <div className="flex items-center mb-1">
-                          {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
-                          <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
-                        </div>
-                        <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
+                      <h3 className="text-blue-400 text-sm line-clamp-2 mb-1">{item.name}</h3>
+                      <div className="flex items-center mb-1">
+                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
+                        <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
                       </div>
-                    </LiquidCard>
+                      <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
+                    </div>
                   );
                 })}
               </div>
