@@ -526,15 +526,6 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
               className="flex-1 bg-transparent border-none text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
             />
             <div className="flex items-center gap-1">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-              <input 
-                type="text" 
-                placeholder="Search games, genres..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-none py-1 pl-7 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
-              />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
