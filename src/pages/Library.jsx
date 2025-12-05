@@ -513,8 +513,8 @@ export default function Library() {
 
     if (searchTerm) {
       games = games.filter(game =>
-        game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game.genre.toLowerCase().includes(searchTerm.toLowerCase())
+        game?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game?.genre?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
