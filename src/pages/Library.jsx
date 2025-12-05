@@ -744,20 +744,20 @@ const CommunityPostsTab = ({ game }) => {
 
             <div className="space-y-4">
                 {posts.map(post => (
-                    <div key={post.id} className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 hover:border-slate-600 transition-colors">
+                    <div key={post.id} className="bg-white/40 backdrop-blur-lg rounded-xl p-6 border border-white/60 shadow-sm hover:border-blue-300 transition-colors">
                         <div className="flex items-start gap-4 mb-4">
                             <img 
                                 src={post.avatar} 
                                 alt={post.user}
-                                className="w-12 h-12 rounded-full"
+                                className="w-12 h-12 rounded-full shadow-sm"
                             />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-bold text-white">{post.user}</span>
+                                    <span className="font-bold text-slate-900">{post.user}</span>
                                     <span className="text-xs text-slate-500">{post.timestamp}</span>
                                 </div>
-                                <h4 className="text-lg font-semibold text-white mb-2">{post.title}</h4>
-                                <p className="text-slate-300 text-sm">{post.content}</p>
+                                <h4 className="text-lg font-semibold text-slate-800 mb-2">{post.title}</h4>
+                                <p className="text-slate-600 text-sm">{post.content}</p>
                             </div>
                         </div>
 
@@ -839,10 +839,10 @@ const RecentlyAchievedTab = ({ game }) => {
     return (
         <div className="flex gap-4 h-full">
             {/* Left Side - Achievement List (20%) */}
-            <div className="w-[20%] flex-shrink-0 bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-slate-700/50 bg-slate-800/50">
-                    <h3 className="font-bold text-white text-sm">Achievements</h3>
-                    <p className="text-xs text-slate-400 mt-1">{MOCK_RECENTLY_ACHIEVED.length} recently unlocked</p>
+            <div className="w-[20%] flex-shrink-0 bg-white/40 backdrop-blur-xl rounded-lg border border-white/60 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-white/40 bg-white/30">
+                    <h3 className="font-bold text-slate-800 text-sm">Achievements</h3>
+                    <p className="text-xs text-slate-500 mt-1">{MOCK_RECENTLY_ACHIEVED.length} recently unlocked</p>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto game-list-scrollable">
@@ -854,16 +854,16 @@ const RecentlyAchievedTab = ({ game }) => {
                             <button
                                 key={achievement.id}
                                 onClick={() => handleAchievementClick(achievement)}
-                                className={`w-full text-left p-4 border-b border-slate-700/30 transition-all ${
+                                className={`w-full text-left p-4 border-b border-white/40 transition-all ${
                                     isSelected
-                                        ? 'bg-blue-900/30 border-l-4 border-l-blue-500'
-                                        : 'hover:bg-slate-800/50'
+                                        ? 'bg-blue-100/60 border-l-4 border-l-blue-500 shadow-inner'
+                                        : 'hover:bg-white/40'
                                 }`}
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="text-3xl flex-shrink-0">{achievement.icon}</div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className={`font-bold text-sm mb-1 ${isSelected ? 'text-white' : 'text-slate-300'} truncate`}>
+                                        <h4 className={`font-bold text-sm mb-1 ${isSelected ? 'text-slate-900' : 'text-slate-600'} truncate`}>
                                             {achievement.achievement}
                                         </h4>
                                         <Badge className={`${rarity.bg} ${rarity.color} border ${rarity.border} text-xs mb-1`}>
@@ -888,16 +888,16 @@ const RecentlyAchievedTab = ({ game }) => {
                 {selectedAchievement && selectedPlayerUnlock ? (
                     <div className="space-y-4">
                         {/* Achievement Header */}
-                        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                        <div className="bg-white/40 backdrop-blur-xl rounded-xl p-6 border border-white/60 shadow-sm">
                             <div className="flex items-start gap-4 mb-4">
                                 <div className="text-6xl">{selectedAchievement.icon}</div>
                                 <div className="flex-1">
-                                    <h2 className="text-2xl font-bold text-white mb-2">{selectedAchievement.achievement}</h2>
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{selectedAchievement.achievement}</h2>
                                     <div className="flex items-center gap-3">
                                         <Badge className={`${RARITY_STYLES[selectedAchievement.rarity]?.bg} ${RARITY_STYLES[selectedAchievement.rarity]?.color} border-2 ${RARITY_STYLES[selectedAchievement.rarity]?.border}`}>
                                             {selectedAchievement.rarity}
                                         </Badge>
-                                        <span className="text-sm text-slate-400">{selectedAchievement.game}</span>
+                                        <span className="text-sm text-slate-500">{selectedAchievement.game}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1156,14 +1156,14 @@ const AchievementLootBoxTab = ({ game }) => {
                     <motion.div
                         key={box.id}
                         whileHover={{ scale: 1.02 }}
-                        className={`relative bg-slate-800/50 rounded-xl p-6 border-2 ${
-                            box.unopened ? 'border-yellow-500/50' : 'border-slate-700/50'
+                        className={`relative bg-white/40 backdrop-blur-xl rounded-xl p-6 border-2 shadow-lg ${
+                            box.unopened ? 'border-yellow-400/70 bg-white/60' : 'border-white/60'
                         } ${box.unopened ? box.glow : ''} cursor-pointer`}
                         onClick={() => handleOpenBox(box)}
                     >
                         {box.unopened && (
                             <div className="absolute top-3 right-3">
-                                <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/50 animate-pulse">
+                                <Badge className="bg-yellow-100 text-yellow-600 border-yellow-300 animate-pulse">
                                     NEW
                                 </Badge>
                             </div>
