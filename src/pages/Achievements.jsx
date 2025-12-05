@@ -595,14 +595,8 @@ export default function Achievements() {
 
         <div className="p-8">
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <TabsList 
-                className="p-1 rounded-full"
-                style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
+            <div className="flex justify-center items-center flex-wrap gap-4">
+              <TabsList className="p-1 rounded-full bg-transparent border-0">
                 <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
                 <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-purple-500/30">Trading Cards</TabsTrigger>
               </TabsList>
