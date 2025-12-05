@@ -119,12 +119,12 @@ const mockMaterials = [
 ];
 
 const rarityStyles = {
-  Common: { color: 'text-slate-600', glow: 'shadow-slate-500/40', border: 'border-slate-300' },
-  Uncommon: { color: 'text-emerald-600', glow: 'shadow-emerald-500/40', border: 'border-emerald-300' },
-  Rare: { color: 'text-blue-600', glow: 'shadow-blue-500/40', border: 'border-blue-300' },
-  Epic: { color: 'text-purple-600', glow: 'shadow-purple-500/40', border: 'border-purple-300' },
-  Legendary: { color: 'text-orange-600', glow: 'shadow-orange-500/40', border: 'border-orange-300' },
-  Mythic: { color: 'text-rose-600', glow: 'shadow-rose-500/40', border: 'border-rose-300' }
+  Common: { color: 'text-slate-300', glow: 'shadow-slate-500/20', border: 'border-slate-600' },
+  Uncommon: { color: 'text-emerald-400', glow: 'shadow-emerald-500/20', border: 'border-emerald-500/50' },
+  Rare: { color: 'text-blue-400', glow: 'shadow-blue-500/20', border: 'border-blue-500/50' },
+  Epic: { color: 'text-purple-400', glow: 'shadow-purple-500/20', border: 'border-purple-500/50' },
+  Legendary: { color: 'text-orange-400', glow: 'shadow-orange-500/20', border: 'border-orange-500/50' },
+  Mythic: { color: 'text-rose-400', glow: 'shadow-rose-500/20', border: 'border-rose-500/50' }
 };
 
 // --- Console UI Components ---
@@ -140,9 +140,9 @@ const ConsoleItemCard = ({ item, onClick, isSelected }) => {
       whileTap={{ scale: 0.98 }}
       className={`
         relative flex-shrink-0 w-48 h-64 rounded-3xl overflow-hidden cursor-pointer
-        transition-all duration-500 ease-out bg-white/40 backdrop-blur-2xl border border-white/60
-        shadow-[0_8px_32px_rgba(31,38,135,0.15)]
-        ${isSelected ? `ring-4 ring-white/80 scale-105 z-10 ${style.glow}` : 'hover:scale-102 hover:shadow-xl hover:bg-white/50'}
+        transition-all duration-500 ease-out bg-slate-800/40 backdrop-blur-2xl border border-white/10
+        shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+        ${isSelected ? `ring-2 ring-white/50 scale-105 z-10 ${style.glow}` : 'hover:scale-102 hover:shadow-xl hover:bg-slate-700/40'}
       `}
     >
       {/* Background Image with Glass Overlay */}
@@ -151,21 +151,21 @@ const ConsoleItemCard = ({ item, onClick, isSelected }) => {
           <img 
             src={item.preview_image_url} 
             alt={item.name} 
-            className="w-full h-full object-cover transition-transform duration-700 mix-blend-overlay opacity-90"
+            className="w-full h-full object-cover transition-transform duration-700 opacity-80"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
         </div>
       </div>
 
       {/* Card Content */}
       <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-1">
-        <Badge className={`w-fit bg-white/60 backdrop-blur-md border ${style.border} ${style.color} text-[10px] px-2 py-0.5 shadow-sm`}>
+        <Badge className={`w-fit bg-slate-900/60 backdrop-blur-md border ${style.border} ${style.color} text-[10px] px-2 py-0.5 shadow-sm`}>
           {item.rarity}
         </Badge>
-        <h3 className="text-slate-800 font-black text-lg leading-tight">
+        <h3 className="text-white font-bold text-lg leading-tight">
           {item.name}
         </h3>
-        <p className="text-slate-500 text-xs truncate font-medium">{item.type}</p>
+        <p className="text-slate-400 text-xs truncate font-medium">{item.type}</p>
       </div>
 
       {/* Selection Glint */}
@@ -192,75 +192,75 @@ const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
       {/* Header Area */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Badge className={`text-sm px-3 py-1 ${style.border} bg-white/60 backdrop-blur-md ${style.color} shadow-sm`}>
+          <Badge className={`text-sm px-3 py-1 ${style.border} bg-slate-800/60 backdrop-blur-md ${style.color} shadow-sm`}>
             {item.rarity} {item.type}
           </Badge>
-          <Badge variant="outline" className="text-sm text-slate-500 border-slate-300 bg-white/30">
+          <Badge variant="outline" className="text-sm text-slate-400 border-slate-600 bg-slate-800/30">
             Lv. {item.level_requirement}
           </Badge>
         </div>
-        <h1 className="text-5xl font-black text-slate-800 mb-4 tracking-tight drop-shadow-sm">{item.name}</h1>
-        <p className="text-xl text-slate-600 max-w-2xl font-medium leading-relaxed border-l-4 border-blue-400/50 pl-4 bg-white/20 py-2 rounded-r-xl">
+        <h1 className="text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">{item.name}</h1>
+        <p className="text-xl text-slate-300 max-w-2xl font-medium leading-relaxed border-l-4 border-blue-500/50 pl-4 bg-slate-800/20 py-2 rounded-r-xl">
           "{item.description}"
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-6 mb-8 max-w-3xl">
-        <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/60 shadow-lg">
-          <h3 className="text-slate-500 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
+        <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-lg">
+          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
             <Layers className="w-4 h-4" /> Base Stats
           </h3>
           <div className="space-y-3">
             {Object.entries(item.base_stats).map(([stat, value]) => (
               <div key={stat} className="flex justify-between items-center">
-                <span className="text-slate-600 capitalize font-medium">{stat}</span>
-                <div className="h-px flex-grow mx-4 bg-slate-300/50" />
-                <span className="text-slate-800 font-mono font-bold text-lg">{value}</span>
+                <span className="text-slate-300 capitalize font-medium">{stat}</span>
+                <div className="h-px flex-grow mx-4 bg-white/10" />
+                <span className="text-white font-mono font-bold text-lg">{value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/60 shadow-lg">
-          <h3 className="text-slate-500 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
+        <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-lg">
+          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
             <Sparkles className="w-4 h-4" /> Enhancements
           </h3>
           {item.modifiers.length > 0 ? (
             <div className="space-y-3">
               {item.modifiers.map((mod, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-2 rounded-xl bg-white/30">
-                  <Zap className="w-5 h-5 text-amber-500 mt-0.5" />
+                <div key={idx} className="flex items-start gap-3 p-2 rounded-xl bg-slate-700/30">
+                  <Zap className="w-5 h-5 text-amber-400 mt-0.5" />
                   <div>
-                    <div className="text-slate-800 font-bold">{mod.name}</div>
-                    <div className="text-slate-600 text-sm">{mod.effect}</div>
+                    <div className="text-white font-bold">{mod.name}</div>
+                    <div className="text-slate-300 text-sm">{mod.effect}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-slate-400 italic flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-slate-300" /> No active enchantments
+            <div className="text-slate-500 italic flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-slate-700" /> No active enchantments
             </div>
           )}
           
-          <div className="mt-4 pt-4 border-t border-slate-200/50 flex justify-between text-sm">
-            <span className="text-slate-500">Slots Available</span>
-            <span className="text-slate-800 font-bold">{item.modifiers.length} / {item.enchantment_slots}</span>
+          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
+            <span className="text-slate-400">Slots Available</span>
+            <span className="text-white font-bold">{item.modifiers.length} / {item.enchantment_slots}</span>
           </div>
         </div>
       </div>
 
       {/* Set Bonus */}
       {associatedSet && (
-        <div className="mb-8 max-w-3xl bg-gradient-to-r from-amber-100/60 to-transparent border-l-4 border-amber-400 p-6 rounded-r-xl shadow-sm backdrop-blur-md">
-          <h3 className="text-amber-600 font-black text-lg flex items-center gap-2 mb-2">
+        <div className="mb-8 max-w-3xl bg-gradient-to-r from-amber-900/20 to-transparent border-l-4 border-amber-600 p-6 rounded-r-xl shadow-sm backdrop-blur-md">
+          <h3 className="text-amber-400 font-black text-lg flex items-center gap-2 mb-2">
             <Crown className="w-5 h-5" /> {associatedSet.name}
           </h3>
           <div className="space-y-1">
             {associatedSet.bonuses.map((bonus, idx) => (
-              <div key={idx} className="text-slate-600 text-sm flex gap-2 font-medium">
-                <span className="text-amber-600 font-bold">({bonus.pieces_required})</span>
+              <div key={idx} className="text-slate-300 text-sm flex gap-2 font-medium">
+                <span className="text-amber-500 font-bold">({bonus.pieces_required})</span>
                 <span>{bonus.bonus_description}</span>
               </div>
             ))}
@@ -328,7 +328,7 @@ export default function BlacksmithPage() {
   const bgImage = selectedItem?.preview_image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80';
 
   return (
-    <div className="h-screen w-full bg-[#f0f4f8] text-slate-800 overflow-hidden relative font-sans selection:bg-blue-200">
+    <div className="h-screen w-full bg-[#0f172a] text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
       {/* Star-Wave Animation Style */}
       <style>{`
         @keyframes star-wave-glow {
@@ -356,13 +356,13 @@ export default function BlacksmithPage() {
         }
       `}</style>
 
-      {/* Lighter Ethereal Space Background */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-multiply" />
+      {/* Darker Ethereal Space Background */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
         
-        {/* Light Nebula Effect */}
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-200/20 via-purple-200/10 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-200/20 via-blue-100/10 to-transparent blur-3xl" />
+        {/* Dark Nebula Effect */}
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
 
       {/* Main Content Layout */}
@@ -371,19 +371,19 @@ export default function BlacksmithPage() {
         {/* Top Navigation Bar */}
         <header className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-8">
-            <h1 className="text-3xl font-black tracking-tighter text-slate-800 flex items-center gap-3 drop-shadow-sm">
-              <Hammer className="w-8 h-8 fill-slate-800" />
+            <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
+              <Hammer className="w-8 h-8 fill-white" />
               BLACK FORGE
             </h1>
-            <nav className="flex gap-1 bg-white/40 rounded-full p-1 backdrop-blur-xl border border-white/50 shadow-sm">
+            <nav className="flex gap-1 bg-slate-800/50 rounded-full p-1 backdrop-blur-xl border border-white/10 shadow-lg">
               {['forge', 'materials', 'collab'].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   className={`px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-all ${
                     viewMode === mode 
-                      ? 'bg-white text-slate-900 shadow-md' 
-                      : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {mode === 'collab' ? 'Collaborations' : mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -395,14 +395,14 @@ export default function BlacksmithPage() {
           {/* User Resources */}
           <div className="flex gap-6 items-center">
             {mockMaterials.slice(0, 2).map(mat => (
-              <div key={mat.id} className="flex items-center gap-3 bg-white/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/60 shadow-sm">
+              <div key={mat.id} className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity].color.replace('text-', 'bg-')}`} />
-                <span className="text-slate-600 text-sm font-medium">{mat.name}</span>
-                <span className="text-slate-900 font-bold font-mono">{mat.quantity}</span>
+                <span className="text-slate-300 text-sm font-medium">{mat.name}</span>
+                <span className="text-white font-bold font-mono">{mat.quantity}</span>
               </div>
             ))}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white flex items-center justify-center shadow-lg shadow-blue-200/50">
-              <img src={user?.avatar_url} className="w-full h-full rounded-full" alt="User" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white/50 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <img src={user?.avatar_url} className="w-full h-full rounded-full opacity-90" alt="User" />
             </div>
           </div>
         </header>
@@ -435,25 +435,25 @@ export default function BlacksmithPage() {
                     <motion.div
                       key={item.id}
                       onClick={() => setSelectedItem(item)}
-                      whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.6)' }}
+                      whileHover={{ x: 10, backgroundColor: 'rgba(30,41,59,0.8)' }}
                       className={`
                         p-4 rounded-2xl cursor-pointer border transition-all flex items-center gap-4 backdrop-blur-md
                         ${selectedItem?.id === item.id 
-                          ? 'bg-white text-slate-900 border-blue-200 shadow-lg shadow-blue-100/50' 
-                          : 'bg-white/30 text-slate-600 border-white/40 hover:border-white/80'
+                          ? 'bg-slate-700 text-white border-blue-500/50 shadow-lg shadow-blue-500/20' 
+                          : 'bg-slate-800/40 text-slate-300 border-white/10 hover:border-white/20'
                         }
                       `}
                     >
-                      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-white/10">
                         <img src={item.preview_image_url} className="w-full h-full object-cover" alt="" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold truncate">{item.name}</h4>
-                        <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-300' : 'text-slate-500'}`}>
                           {item.rarity} • Lv.{item.level_requirement}
                         </p>
                       </div>
-                      {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-500" />}
+                      {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-400" />}
                     </motion.div>
                   ))}
                 </div>
@@ -488,13 +488,13 @@ export default function BlacksmithPage() {
         </div>
 
         {/* Footer Hints */}
-        <div className="mt-8 pt-6 border-t border-slate-200/60 flex justify-between items-center text-sm font-medium text-slate-400">
+        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-sm font-medium text-slate-500">
           <div className="flex gap-6">
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 border border-slate-300 shadow-sm">B</span> Back</span>
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 border border-slate-300 shadow-sm">≡</span> Options</span>
+            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">B</span> Back</span>
+            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">≡</span> Options</span>
           </div>
           <div>
-            Credits: <span className="text-slate-700 font-bold">24,500</span>
+            Credits: <span className="text-white font-bold">24,500</span>
           </div>
         </div>
       </div>
