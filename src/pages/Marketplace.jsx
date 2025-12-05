@@ -241,7 +241,16 @@ const FilterSidebar = ({ filters, setFilters }) => {
   };
 
   return (
-    <div className="w-[220px] flex-shrink-0 pr-4">
+    <div 
+      className="w-[220px] flex-shrink-0 p-4 rounded-3xl h-fit"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+      }}
+    >
       {/* Department */}
       <FilterSection title="Department">
         <div className="space-y-1">
@@ -543,7 +552,12 @@ export default function Marketplace() {
   const popularItems = [...MARKETPLACE_ITEMS].sort((a, b) => b.views - a.views);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">
+        <div 
+          className="min-h-screen text-white"
+          style={{
+            background: 'linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(30,41,59,1) 50%, rgba(15,23,42,1) 100%)',
+          }}
+        >
       <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
       {/* Header */}
