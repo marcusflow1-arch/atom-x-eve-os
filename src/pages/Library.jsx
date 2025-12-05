@@ -393,7 +393,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                     </div>
                     <ChevronRight className="w-5 h-5 text-white/30" />
                   </div>
-                </LiquidGlassCard>
+                </LunaCard>
               ))}
             </div>
           </div>
