@@ -4,88 +4,213 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Mic, MicOff, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, Hash, Send, Volume2, Package, Video, HelpCircle, Gift, MapPin, Wifi, ChevronRight, Star, Zap, Trophy } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal } from 'lucide-react';
 import { allMockGames } from '../components/store/mockData';
 import RecentlyAchievedOverlay from '../components/library/RecentlyAchievedOverlay';
 import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
 import GameAchievementsOverlay from '../components/library/GameAchievementsOverlay';
 import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
-// Luna Card Component with darker, cleaner aesthetic
-const LunaCard = ({ children, className = "", hover = true, onClick }) => (
-  <div 
-    onClick={onClick}
-    className={`relative rounded-xl overflow-hidden transition-all duration-300 ${hover ? 'hover:scale-[1.02] cursor-pointer' : ''} ${className}`}
-    style={{
-      background: 'rgba(0,0,0,0.4)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      boxShadow: hover ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 12px rgba(0,0,0,0.3)',
-    }}
-  >
-    {children}
-  </div>
-);
+// Liquid Glass Card with wave animation
+const LiquidGlassCard = ({ children, className = "", hover = true, onClick }) => {
+  const x = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  const waveX = useTransform(mouseX, [0, 1], ["-100%", "200%"]);
 
-// Luna-style Game Card - Cleaner, darker aesthetic
-const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
+  return (
+    <motion.div 
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-2xl transition-all duration-300 ${hover ? 'cursor-pointer hover:shadow-[0_0_50px_rgba(100,150,255,0.15)]' : ''} ${className}`}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+      }}
+      onMouseMove={({ currentTarget, clientX }) => {
+        const { left, width } = currentTarget.getBoundingClientRect();
+        x.set((clientX - left) / width);
+      }}
+      onMouseLeave={() => x.set(0.5)}
+      whileHover={hover ? { scale: 1.02, y: -4 } : {}}
+    >
+      {hover && (
+        <motion.div
+          className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/8 to-transparent -skew-x-12"
+          style={{ left: waveX, width: "60%", height: "100%" }}
+        />
+      )}
+      {children}
+    </motion.div>
+  );
+};
+
+// Luna Hero Game Card
+const LunaHeroCard = ({ game, onPlay, onSelect }) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      className="relative h-[400px] rounded-3xl overflow-hidden cursor-pointer"
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={() => onSelect(game)}
+      whileHover={{ scale: 1.01 }}
+      style={{
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 100px rgba(100,150,255,0.1)',
+      }}
+    >
+      {/* Background Image */}
+      <motion.img 
+        src={game.banner || game.cover_image || game.cover} 
+        alt={game.title}
+        className="absolute inset-0 w-full h-full object-cover"
+        animate={{ scale: isHovered ? 1.05 : 1 }}
+        transition={{ duration: 0.6 }}
+      />
+      
+      {/* Gradient Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" />
+      
+      {/* Animated Border Glow */}
+      <motion.div 
+        className="absolute inset-0 rounded-3xl pointer-events-none"
+        animate={{ 
+          boxShadow: isHovered 
+            ? 'inset 0 0 0 2px rgba(100,180,255,0.5), 0 0 30px rgba(100,180,255,0.2)' 
+            : 'inset 0 0 0 1px rgba(255,255,255,0.1)'
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-8">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Badge className="mb-4 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">
+            {game.genre}
+          </Badge>
+          <h2 className="text-5xl font-bold text-white mb-3 drop-shadow-lg">{game.title}</h2>
+          <p className="text-white/60 text-sm mb-6 max-w-lg line-clamp-2">
+            {game.description || 'An epic gaming experience awaits you.'}
+          </p>
+          
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => { e.stopPropagation(); onPlay(game); }}
+              className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-black font-bold text-lg hover:bg-white/90 transition-all shadow-xl"
+            >
+              <Play className="w-6 h-6 fill-current" />
+              Play Now
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-white/10 text-white backdrop-blur-xl border border-white/20 font-medium hover:bg-white/20 transition-all"
+            >
+              <Eye className="w-5 h-5" />
+              Details
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+      
+      {/* Stats */}
+      <div className="absolute top-6 right-6 flex items-center gap-4">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
+          <Clock className="w-4 h-4 text-blue-400" />
+          <span className="text-white text-sm font-medium">12.5h played</span>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10">
+          <Trophy className="w-4 h-4 text-yellow-400" />
+          <span className="text-white text-sm font-medium">8/15</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Luna Game Card with liquid glass effect
+const LunaGameCard = ({ game, isStreaming, onSelect, onPlay, index }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      whileHover={{ y: -10, scale: 1.02 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={() => onSelect(game)}
       className="relative cursor-pointer group"
     >
       <div 
-        className="relative aspect-[2/3] rounded-xl overflow-hidden bg-black"
+        className="relative aspect-[3/4] rounded-2xl overflow-hidden"
         style={{
           boxShadow: isHovered 
-            ? '0 24px 48px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)' 
-            : '0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
-          transition: 'box-shadow 0.3s ease',
+            ? '0 25px 50px rgba(0,0,0,0.6), 0 0 40px rgba(100,150,255,0.2), inset 0 0 0 1px rgba(255,255,255,0.2)' 
+            : '0 10px 30px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.08)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* Game Cover */}
-        <img 
+        {/* Cover Image */}
+        <motion.img 
           src={game.cover_image || game.cover} 
           alt={game.title}
-          className="w-full h-full object-cover transition-all duration-500"
-          style={{
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-          }}
+          className="absolute inset-0 w-full h-full object-cover"
+          animate={{ scale: isHovered ? 1.1 : 1 }}
+          transition={{ duration: 0.6 }}
         />
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+        {/* Glass Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90" />
+        
+        {/* Liquid Shine Effect */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        />
         
         {/* Live Badge */}
         {isStreaming && (
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-2 right-2 flex items-center gap-1 bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+            className="absolute top-3 right-3 flex items-center gap-1.5 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg"
           >
-            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-            Live
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            LIVE
           </motion.div>
         )}
         
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <h3 className="text-white font-semibold text-sm mb-0.5 line-clamp-1">
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <h3 className="text-white font-bold text-base mb-1 group-hover:text-blue-200 transition-colors drop-shadow-lg line-clamp-1">
             {game.title}
           </h3>
-          <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+          <p className="text-white/50 text-xs capitalize mb-3">{game.genre}</p>
+          
+          {/* Mini Stats */}
+          <div className="flex items-center gap-3 text-[10px] text-white/40">
+            <div className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>12.5h</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Trophy className="w-3 h-3" />
+              <span>8/15</span>
+            </div>
+          </div>
         </div>
 
         {/* Hover Play Button */}
@@ -95,71 +220,94 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/60"
+              className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
             >
               <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0, rotate: 180 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 onClick={(e) => { e.stopPropagation(); onPlay(game); }}
-                className="w-14 h-14 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-xl"
+                className="w-16 h-16 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-2xl"
               >
-                <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+                <Play className="w-6 h-6 text-black fill-black ml-1" />
               </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {/* Bottom Glow Line */}
+        <motion.div 
+          className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: isHovered ? 1 : 0, opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
       </div>
     </motion.div>
   );
 };
 
-// Luna Sidebar Item - Minimal, clean design
+// Luna Sidebar Item
 const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) => (
   <motion.div
-    initial={{ opacity: 0, x: -10 }}
+    initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     onClick={() => onSelect(game)}
-    className={`group relative flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all ${
+    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
       isSelected 
-        ? 'bg-white/8' 
-        : 'hover:bg-white/4'
+        ? 'bg-white/10 shadow-lg' 
+        : 'hover:bg-white/5'
     }`}
+    style={isSelected ? {
+      border: '1px solid rgba(255,255,255,0.15)',
+      boxShadow: '0 4px 20px rgba(100,150,200,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+    } : {}}
+    whileHover={{ x: 4 }}
   >
     {/* Game Thumbnail */}
-    <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0 bg-black">
+    <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black/50">
       <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
       {isStreaming && (
         <div className="absolute inset-0 flex items-center justify-center bg-red-500/90">
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+          <Radio className="w-4 h-4 text-white animate-pulse" />
         </div>
       )}
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+        <Play className="w-5 h-5 text-white fill-white" />
+      </div>
     </div>
     
     {/* Game Info */}
     <div className="flex-1 min-w-0">
-      <h3 className={`font-medium text-sm truncate ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
+      <h3 className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
         {game.title}
       </h3>
       <p className="text-white/30 text-xs capitalize">{game.genre}</p>
     </div>
 
     {/* Quick Play Button */}
-    <button
+    <motion.button
       onClick={(e) => { e.stopPropagation(); onPlay(game); }}
-      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:text-black"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
     >
-      <Play className="w-3 h-3 text-black fill-black ml-0.5" />
-    </button>
+      <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+    </motion.button>
 
     {/* Selected Indicator */}
     {isSelected && (
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r" />
+      <motion.div 
+        layoutId="sidebarIndicator"
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-400 to-cyan-400 rounded-r-full"
+      />
     )}
   </motion.div>
 );
 
-// Luna-style Game Detail Panel
+// Luna Game Detail Panel
 const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements, onShowGameDetails }) => {
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -167,237 +315,276 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <Gamepad2 className="w-16 h-16 text-white/20 mx-auto mb-4" />
-          <p className="text-white/40 text-lg">Select a game to view details</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          >
+            <Gamepad2 className="w-20 h-20 text-white/10 mx-auto mb-4" />
+          </motion.div>
+          <p className="text-white/30 text-lg">Select a game to view details</p>
         </div>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'community', label: 'Community' },
-    { id: 'achievements', label: 'Achievements' },
+    { id: 'overview', label: 'Overview', icon: Eye },
+    { id: 'community', label: 'Community', icon: Users },
+    { id: 'achievements', label: 'Achievements', icon: Trophy },
   ];
 
   return (
     <div className="h-full flex flex-col">
-      {/* Hero Section - Luna style */}
-      <div className="relative h-80 rounded-xl overflow-hidden mb-8 flex-shrink-0 bg-black">
-        <img 
+      {/* Hero Section */}
+      <div className="relative h-72 rounded-2xl overflow-hidden mb-6 flex-shrink-0">
+        <motion.img 
           src={game.banner || game.cover_image || game.cover} 
           alt={game.title}
-          className="w-full h-full object-cover opacity-60"
+          className="w-full h-full object-cover"
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.6 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" />
+        
+        {/* Glass Border */}
+        <div className="absolute inset-0 rounded-2xl" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)' }} />
         
         {/* Live Badge */}
         {isStreaming && (
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded text-xs font-bold uppercase"
+            className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
           >
             <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            Live
+            LIVE NOW
           </motion.div>
         )}
         
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-8">
+        <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-2">{game.genre}</p>
-              <h1 className="text-5xl font-bold text-white mb-3">{game.title}</h1>
-              <div className="flex items-center gap-6 text-sm text-white/50">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  <span>12.5 hours</span>
+              <Badge className="mb-3 bg-white/10 text-white border-white/20 backdrop-blur-md">
+                {game.genre}
+              </Badge>
+              <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">{game.title}</h1>
+              <div className="flex items-center gap-6 text-sm text-white/60">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <span>12.5 hours played</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Trophy className="w-4 h-4" />
-                  <span>8 of 15</span>
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-400" />
+                  <span>8/15 achievements</span>
                 </div>
               </div>
             </div>
             
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
                 onClick={() => onPlay(game)}
-                className="flex items-center gap-2 px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-white/90 transition-all shadow-lg"
+                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-white text-black font-bold hover:bg-white/90 transition-all shadow-xl"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-5 h-5 fill-current" />
                 Play
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => onStream(game)}
-                className="px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/15 transition-all backdrop-blur-md"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-purple-500/20 text-purple-300 font-semibold hover:bg-purple-500/30 transition-all border border-purple-500/30"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
+                <Radio className="w-5 h-5" />
                 Stream
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={onShowGameDetails}
-                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center transition-all"
+                className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/10"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Eye className="w-5 h-5 text-white" />
-              </button>
+                <MoreHorizontal className="w-5 h-5 text-white" />
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-6 mb-6 flex-shrink-0 border-b border-white/5 pb-4">
+      <div className="flex items-center gap-2 mb-6 flex-shrink-0">
         {tabs.map(tab => (
-          <button
+          <motion.button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 font-medium text-sm transition-all relative ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
               activeTab === tab.id
-                ? 'text-white'
-                : 'text-white/30 hover:text-white/60'
+                ? 'bg-white/10 text-white border border-white/15 shadow-lg'
+                : 'text-white/40 hover:text-white hover:bg-white/5'
             }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
+            <tab.icon className="w-4 h-4" />
             {tab.label}
-            {activeTab === tab.id && (
-              <motion.div 
-                layoutId="panelTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            )}
-          </button>
+          </motion.button>
         ))}
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* About */}
-            <LunaCard className="p-5" hover={false}>
-              <h3 className="text-white font-semibold text-base mb-3">About This Game</h3>
-              <p className="text-white/50 text-sm leading-relaxed">
-                {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
-              </p>
-            </LunaCard>
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div 
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* About */}
+              <LiquidGlassCard className="p-5" hover={false}>
+                <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-blue-400" />
+                  About This Game
+                </h3>
+                <p className="text-white/60 leading-relaxed">
+                  {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
+                </p>
+              </LiquidGlassCard>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-4">
-              <LunaCard className="p-4 text-center" hover={false}>
-                <Clock className="w-5 h-5 text-blue-400 mx-auto mb-2" />
-                <p className="text-xl font-bold text-white">12.5h</p>
-                <p className="text-white/30 text-xs">Playtime</p>
-              </LunaCard>
-              <LunaCard className="p-4 text-center" hover={false}>
-                <Star className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
-                <p className="text-xl font-bold text-white">8/15</p>
-                <p className="text-white/30 text-xs">Achievements</p>
-              </LunaCard>
-              <LunaCard className="p-4 text-center" hover={false}>
-                <Zap className="w-5 h-5 text-green-400 mx-auto mb-2" />
-                <p className="text-xl font-bold text-white">2h ago</p>
-                <p className="text-white/30 text-xs">Last Played</p>
-              </LunaCard>
-            </div>
-
-            {/* Game Trailer */}
-            <LunaCard className="p-5" hover={false}>
-              <h3 className="text-white font-semibold text-base mb-4">Game Trailer</h3>
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
-                <video 
-                  className="w-full h-full object-cover"
-                  controls
-                  poster={game.banner || game.cover_image}
-                >
-                  <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-                </video>
-              </div>
-            </LunaCard>
-          </div>
-        )}
-
-        {activeTab === 'community' && (
-          <div className="space-y-4">
-            <LunaCard className="p-5" hover={false}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold text-lg">Community Discussion</h3>
-                <Button size="sm" className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  New Post
-                </Button>
-              </div>
-              
-              {/* Discussion Topics */}
-              <div className="space-y-3">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4">
                 {[
-                  { title: 'Best build for endgame content?', replies: 45, user: 'DragonSlayer' },
-                  { title: 'Hidden easter eggs in Chapter 5', replies: 23, user: 'MysticMage' },
-                  { title: 'Looking for raid group tonight', replies: 12, user: 'ShadowNinja' },
-                ].map((topic, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <h4 className="text-white font-medium mb-1">{topic.title}</h4>
-                    <div className="flex items-center gap-4 text-xs text-white/40">
-                      <span>by {topic.user}</span>
-                      <span>{topic.replies} replies</span>
-                    </div>
-                  </div>
+                  { icon: Clock, value: '12.5h', label: 'Playtime', color: 'text-blue-400' },
+                  { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
+                  { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
+                ].map((stat, i) => (
+                  <LiquidGlassCard key={i} className="p-4 text-center" hover={false}>
+                    <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
+                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                    <p className="text-white/40 text-xs">{stat.label}</p>
+                  </LiquidGlassCard>
                 ))}
               </div>
-            </LunaCard>
-          </div>
-        )}
 
-        {activeTab === 'achievements' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-semibold text-base">Achievement Guides</h3>
-              <button 
-                onClick={onShowAchievements}
-                className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1"
-              >
-                View All <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-            
-            {/* Achievement List */}
-            <div className="space-y-3">
-              {[
-                { name: 'Dragon Slayer Supreme', icon: '🐉', rarity: 'Legendary', progress: 100 },
-                { name: 'Master Thief', icon: '💰', rarity: 'Epic', progress: 75 },
-                { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
-                { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
-              ].map((achievement, i) => (
-                <LunaCard key={i} className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl">{achievement.icon}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-white font-medium">{achievement.name}</h4>
-                        <Badge className={`text-xs ${
-                          achievement.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
-                          achievement.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                          'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                        }`}>
-                          {achievement.rarity}
-                        </Badge>
+              {/* Game Trailer */}
+              <LiquidGlassCard className="p-5" hover={false}>
+                <h3 className="text-white font-bold text-lg mb-4">Game Trailer</h3>
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+                  <video 
+                    className="w-full h-full object-cover"
+                    controls
+                    poster={game.banner || game.cover_image}
+                  >
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </LiquidGlassCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'community' && (
+            <motion.div 
+              key="community"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              <LiquidGlassCard className="p-5" hover={false}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold text-lg">Community Discussion</h3>
+                  <Button size="sm" className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    New Post
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {[
+                    { title: 'Best build for endgame content?', replies: 45, user: 'DragonSlayer' },
+                    { title: 'Hidden easter eggs in Chapter 5', replies: 23, user: 'MysticMage' },
+                    { title: 'Looking for raid group tonight', replies: 12, user: 'ShadowNinja' },
+                  ].map((topic, i) => (
+                    <motion.div 
+                      key={i} 
+                      className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5 hover:border-white/10"
+                      whileHover={{ x: 4 }}
+                    >
+                      <h4 className="text-white font-medium mb-1">{topic.title}</h4>
+                      <div className="flex items-center gap-4 text-xs text-white/40">
+                        <span>by {topic.user}</span>
+                        <span>{topic.replies} replies</span>
                       </div>
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
-                          style={{ width: `${achievement.progress}%` }}
-                        />
+                    </motion.div>
+                  ))}
+                </div>
+              </LiquidGlassCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'achievements' && (
+            <motion.div 
+              key="achievements"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-white font-bold text-lg">Achievement Progress</h3>
+                <button 
+                  onClick={onShowAchievements}
+                  className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1"
+                >
+                  View All <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  { name: 'Dragon Slayer Supreme', icon: '🐉', rarity: 'Legendary', progress: 100 },
+                  { name: 'Master Thief', icon: '💰', rarity: 'Epic', progress: 75 },
+                  { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
+                  { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
+                ].map((achievement, i) => (
+                  <LiquidGlassCard key={i} className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="text-3xl">{achievement.icon}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-white font-medium">{achievement.name}</h4>
+                          <Badge className={`text-xs ${
+                            achievement.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                            achievement.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                            'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                          }`}>
+                            {achievement.rarity}
+                          </Badge>
+                        </div>
+                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div 
+                            className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${achievement.progress}%` }}
+                            transition={{ duration: 1, delay: i * 0.1 }}
+                          />
+                        </div>
                       </div>
+                      <ChevronRight className="w-5 h-5 text-white/30" />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-white/30" />
-                  </div>
-                </LunaCard>
-              ))}
-            </div>
-          </div>
-        )}
+                  </LiquidGlassCard>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -410,8 +597,7 @@ export default function Library() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState('list');
-  const [isListening, setIsListening] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [selectedGame, setSelectedGame] = useState(null);
   const [showRecentlyAchieved, setShowRecentlyAchieved] = useState(false);
@@ -429,7 +615,6 @@ export default function Library() {
         setStreamingSession({ game, session: { status: 'initializing' } });
       }
     } catch (e) {
-      console.error(e);
       setStreamingSession({ game, session: { status: 'initializing' } });
     }
   };
@@ -446,78 +631,34 @@ export default function Library() {
       if (isAuthenticated) {
         const allGamesFromDb = await base44.entities.Game.list();
         const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
-        
         const ownedIds = user?.purchased_items || [];
         userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
-
-        if (testGameAlpha) {
-          userGames.unshift(testGameAlpha);
-        }
+        if (testGameAlpha) userGames.unshift(testGameAlpha);
       } else {
-        if (testGameAlpha) {
-          userGames.push(testGameAlpha);
-        }
+        if (testGameAlpha) userGames.push(testGameAlpha);
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
       setFavoriteGames(userGames.slice(0, 3));
-      if (userGames.length > 0) {
-        setSelectedGame(userGames[0]);
-      }
+      if (userGames.length > 0) setSelectedGame(userGames[0]);
       setLoading(false);
     };
 
     fetchOwnedGames();
-
-    const handleStorageChange = () => {
-      setStreamingGameId(localStorage.getItem('streaming_game_id'));
-    };
-
+    const handleStorageChange = () => setStreamingGameId(localStorage.getItem('streaming_game_id'));
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [user, isAuthenticated]);
 
-  const startVoiceSearch = () => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = () => setIsListening(false);
-      
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchTerm(transcript);
-      };
-
-      recognition.start();
-    }
-  };
-
   const getFilteredGames = () => {
-    let games = [];
-    switch (activeTab) {
-      case 'installed':
-        games = ownedGames.slice(0, Math.ceil(ownedGames.length / 2));
-        break;
-      case 'favorites':
-        games = favoriteGames;
-        break;
-      default:
-        games = ownedGames;
-    }
-
+    let games = activeTab === 'installed' ? ownedGames.slice(0, Math.ceil(ownedGames.length / 2)) 
+              : activeTab === 'favorites' ? favoriteGames : ownedGames;
     if (searchTerm) {
       games = games.filter(game =>
         game?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         game?.genre?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     return games;
   };
 
@@ -552,92 +693,143 @@ export default function Library() {
 
   return (
     <div 
-      className="h-screen flex flex-col overflow-hidden text-white"
-      style={{ 
-        background: '#0a0a0a',
-      }}
+      className="min-h-screen text-white"
+      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
     >
-      {/* Header */}
-      <div className="relative z-10 flex-shrink-0 px-8 pt-8 pb-6"
-        style={{
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%)',
-        }}
-      >
+      {/* Ambient Glow Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+      </div>
+
+      <div className="relative z-10 px-8 py-8">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-1">Library</h1>
-            <p className="text-white/30 text-sm">{filteredGames.length} games</p>
+            <motion.h1 
+              className="text-4xl font-black text-white mb-1"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              My Library
+            </motion.h1>
+            <p className="text-white/40 text-sm">{filteredGames.length} games in your collection</p>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'grid' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'list' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
-              }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+              />
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-8 relative">
+        <div className="flex items-center gap-6 mb-8">
           {['all', 'installed', 'favorites'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`text-sm font-medium transition-colors capitalize pb-3 relative ${
-                activeTab === tab ? 'text-white' : 'text-white/30 hover:text-white/60'
+              className={`text-sm font-medium transition-colors capitalize pb-2 relative ${
+                activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'
               }`}
             >
-              {tab === 'favorites' && <Heart className="w-3.5 h-3.5 inline mr-1.5" />}
+              {tab === 'favorites' && <Heart className="w-4 h-4 inline mr-2" />}
               {tab}
               {activeTab === tab && (
                 <motion.div 
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
+                  layoutId="activeLibraryTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 flex-1 overflow-hidden px-8 pb-8">
-        {viewMode === 'list' ? (
-          <div className="flex gap-6 h-full">
-            {/* Left Sidebar - Game List */}
-            <div className="w-72 flex-shrink-0 flex flex-col gap-4">
-              {/* Search */}
-              <div className="relative mb-4">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-all"
+        {viewMode === 'grid' ? (
+          <>
+            {/* Hero Section - Featured Game */}
+            {filteredGames.length > 0 && (
+              <div className="mb-10">
+                <LunaHeroCard 
+                  game={selectedGame || filteredGames[0]} 
+                  onPlay={handleLaunchGame}
+                  onSelect={setSelectedGame}
                 />
               </div>
+            )}
 
-              {/* Game List */}
-              <LunaCard className="flex-1 overflow-hidden" hover={false}>
-                <div className="px-4 py-3 border-b border-white/5">
-                  <p className="text-white/30 text-xs font-medium uppercase tracking-wider">Your Games</p>
+            {/* Games Grid by Genre */}
+            {(() => {
+              const gamesByGenre = filteredGames.reduce((acc, game) => {
+                const genre = game?.genre || 'Other';
+                const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+                if (!acc[genreKey]) acc[genreKey] = [];
+                acc[genreKey].push(game);
+                return acc;
+              }, {});
+
+              return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
+                <div key={genre} className="mb-12">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-bold text-white">{genre}</h2>
+                    <span className="text-white/30 text-sm">({genreGames.length})</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                    {genreGames.map((game, idx) => (
+                      <LunaGameCard
+                        key={game.id}
+                        game={game}
+                        index={idx}
+                        isStreaming={game.id === streamingGameId}
+                        onSelect={setSelectedGame}
+                        onPlay={handleLaunchGame}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="overflow-y-auto h-full p-2" style={{ maxHeight: 'calc(100% - 48px)', scrollbarWidth: 'none' }}>
+              ));
+            })()}
+          </>
+        ) : (
+          /* List View */
+          <div className="flex gap-6">
+            {/* Left Sidebar - Game List */}
+            <div className="w-80 flex-shrink-0">
+              <LiquidGlassCard className="p-4" hover={false}>
+                <div className="mb-4">
+                  <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
+                </div>
+                <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
                   {filteredGames.map(game => (
                     <LunaSidebarItem
                       key={game.id}
@@ -649,11 +841,11 @@ export default function Library() {
                     />
                   ))}
                 </div>
-              </LunaCard>
+              </LiquidGlassCard>
             </div>
 
             {/* Game Detail Panel */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-h-[calc(100vh-200px)]">
               <LunaGamePanel
                 game={selectedGame}
                 isStreaming={selectedGame?.id === streamingGameId}
@@ -663,54 +855,6 @@ export default function Library() {
                 onShowGameDetails={() => setShowGameDetailsOverlay(true)}
               />
             </div>
-          </div>
-        ) : (
-          /* Grid View */
-          <div className="h-full overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-            {/* Search Bar for Grid */}
-            <div className="mb-8">
-              <div className="relative max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <input
-                  type="text"
-                  placeholder="Search your games..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Games Grid by Genre */}
-            {(() => {
-              const gamesByGenre = filteredGames.reduce((acc, game) => {
-                const genre = game.genre || 'Other';
-                const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
-                if (!acc[genreKey]) acc[genreKey] = [];
-                acc[genreKey].push(game);
-                return acc;
-              }, {});
-
-              return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
-                <div key={genre} className="mb-12">
-                  <div className="flex items-center gap-3 mb-6">
-                    <h2 className="text-xl font-semibold text-white">{genre}</h2>
-                    <span className="text-white/20 text-sm">({genreGames.length})</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
-                    {genreGames.map(game => (
-                      <LunaGameCard
-                        key={game.id}
-                        game={game}
-                        isStreaming={game.id === streamingGameId}
-                        onSelect={setSelectedGame}
-                        onPlay={handleLaunchGame}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ));
-            })()}
           </div>
         )}
       </div>
