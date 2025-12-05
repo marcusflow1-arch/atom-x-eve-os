@@ -1,15 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
+    // Variables lifted to outer scope for error handling
+    let jobId = null;
+    let base44 = null;
+
     try {
-        const base44 = createClientFromRequest(req);
+        base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
         if (!user || user.role !== 'admin') {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { jobId } = await req.json();
+        // Read body once
+        const body = await req.json();
+        jobId = body.jobId;
 
         if (!jobId) {
             return Response.json({ error: 'Missing jobId' }, { status: 400 });
@@ -17,18 +23,21 @@ Deno.serve(async (req) => {
 
         // Helper to log to DB
         const log = async (message, level = 'info', metadata = null) => {
-            await base44.entities.AgentLog.create({
-                job_id: jobId,
-                message,
-                level,
-                metadata
-            });
+            try {
+                await base44.entities.AgentLog.create({
+                    job_id: jobId,
+                    message: String(message),
+                    level,
+                    metadata
+                });
+            } catch (e) {
+                console.error("Logging failed:", e);
+            }
         };
 
         // Helper to download and upload image
         const persistImage = async (url, title) => {
             if (!url) return null;
-            // If it's already one of our files (hosted on supabase/base44), skip
             if (url.includes('supabase.co') || url.includes('base44')) {
                 return url;
             }
@@ -55,12 +64,32 @@ Deno.serve(async (req) => {
             }
         };
 
+        const VALID_GENRES = [
+            "shooting", "fighting", "sci-fi", "mmo", "mmorpg", "adventure", 
+            "action", "fantasy", "rpg", "strategy", "simulation", "sports", 
+            "racing", "horror", "puzzle", "platformer", "survival", "open_world", "sandbox"
+        ];
+
+        const normalizeGenre = (genre) => {
+            if (!genre) return "action";
+            const lower = genre.toLowerCase();
+            if (VALID_GENRES.includes(lower)) return lower;
+            // Simple mapping
+            if (lower.includes('rpg') || lower.includes('role')) return 'rpg';
+            if (lower.includes('shoot') || lower.includes('fps')) return 'shooting';
+            if (lower.includes('fight')) return 'fighting';
+            if (lower.includes('adventure')) return 'adventure';
+            return "other";
+        };
+
+        // DEFAULT FALLBACK IMAGE (Placeholder)
+        const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=800&fit=crop";
+
         await log("Initializing Game Discovery & Maintenance Agent...", "info");
 
         // --- Phase 1: Process Existing Games ---
         await log("Phase 1: Checking existing games for external images...", "info");
         
-        // In a real app with thousands of games, we'd paginate. For now, fetching top 100 recently added.
         const existingGames = await base44.entities.Game.list('-created_date', 100);
         let updatedCount = 0;
 
@@ -83,7 +112,7 @@ Deno.serve(async (req) => {
         await log("Phase 2: Searching for new trending games...", "info");
         
         const searchResponse = await base44.integrations.Core.InvokeLLM({
-            prompt: `Search for the top 15 trending, new, or upcoming video games (late 2024/2025) across Steam, PS5, Xbox, and Switch.
+            prompt: `Search for the top 10 trending, new, or upcoming video games (late 2024/2025) across Steam, PS5, Xbox, and Switch.
             Return a JSON object with a list of game titles.`,
             add_context_from_internet: true,
             response_json_schema: {
@@ -100,7 +129,7 @@ Deno.serve(async (req) => {
         let newGamesCount = 0;
 
         for (const gameTitle of foundGames) {
-            // Check if exists (simple title check)
+            // Check if exists
             const existing = existingGames.find(g => g.title.toLowerCase() === gameTitle.toLowerCase());
             
             if (existing) {
@@ -115,12 +144,11 @@ Deno.serve(async (req) => {
                 Find:
                 1. Official cover art URL (high quality).
                 2. Description.
-                3. Genre.
+                3. Genre (Action, RPG, Strategy, Simulation, Sports, Racing, Horror, Puzzle, Platformer, Survival).
                 4. Developer.
                 5. Price (USD).
                 6. Release Year.
                 7. Rating (0-5).
-                8. Platform compatibility (e.g. PC, PS5).
                 
                 Return JSON.`,
                 add_context_from_internet: true,
@@ -134,31 +162,39 @@ Deno.serve(async (req) => {
                         price: { type: "number" },
                         releaseYear: { type: "number" },
                         rating: { type: "number" },
-                        cover_image: { type: "string" },
-                        platforms: { type: "string" }
+                        cover_image: { type: "string" }
                     }
                 }
             });
 
             // Persist the image immediately
-            const localImageUrl = await persistImage(details.cover_image, details.title || gameTitle);
+            let localImageUrl = await persistImage(details.cover_image, details.title || gameTitle);
+            
+            // Use fallback if no image found or persist failed to return a valid URL
+            if (!localImageUrl) {
+                 await log(`No image found for ${gameTitle}, using fallback.`, "warning");
+                 localImageUrl = FALLBACK_IMAGE;
+            }
 
-            const newGame = await base44.entities.Game.create({
-                title: details.title || gameTitle,
-                description: details.description || "No description available.",
-                genre: details.genre || "Action",
-                price: details.price || 59.99,
-                developer: details.developer || "Unknown",
-                original_year: details.releaseYear || 2025,
-                rating: details.rating || 0,
-                cover_image: localImageUrl,
-                status: "available",
-                // storing platform info in description for now as Game entity doesn't have platform field explicitly in schema shown previously, 
-                // but we can add it or just append to description
-            });
+            const normalizedGenre = normalizeGenre(details.genre);
 
-            newGamesCount++;
-            await log(`Imported "${newGame.title}" to catalog.`, "success");
+            try {
+                const newGame = await base44.entities.Game.create({
+                    title: details.title || gameTitle,
+                    description: details.description || "No description available.",
+                    genre: normalizedGenre,
+                    price: details.price || 59.99,
+                    developer: details.developer || "Unknown",
+                    original_year: details.releaseYear || 2025,
+                    rating: details.rating || 0,
+                    cover_image: localImageUrl,
+                    status: "available",
+                });
+                newGamesCount++;
+                await log(`Imported "${newGame.title}" to catalog.`, "success");
+            } catch (err) {
+                await log(`Failed to create game entity for ${gameTitle}: ${err.message}`, "error");
+            }
         }
 
         await base44.entities.AgentJob.update(jobId, {
@@ -171,18 +207,20 @@ Deno.serve(async (req) => {
         return Response.json({ success: true });
 
     } catch (error) {
-        try {
-             const base44 = createClientFromRequest(req);
-             const { jobId } = await req.clone().json();
-             if (jobId) {
-                 await base44.entities.AgentLog.create({
-                    job_id: jobId,
-                    message: `Critical Error: ${error.message}`,
-                    level: "error"
-                });
-                await base44.entities.AgentJob.update(jobId, { status: "failed" });
-             }
-        } catch (e) { /* ignore */ }
+        console.error("Global Agent Error:", error);
+        // Safe error logging
+        if (base44 && jobId) {
+            try {
+                await base44.entities.AgentLog.create({
+                   job_id: jobId,
+                   message: `Critical Error: ${error.message}`,
+                   level: "error"
+               });
+               await base44.entities.AgentJob.update(jobId, { status: "failed" });
+            } catch (e) {
+                console.error("Failed to log critical error:", e);
+            }
+        }
 
         return Response.json({ error: error.message }, { status: 500 });
     }
