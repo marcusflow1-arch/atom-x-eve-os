@@ -510,7 +510,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
               </div>
             </button>
-            <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">AtomXEveStore</span>
+            <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
           </div>
 
           {/* Search Input */}
