@@ -9,13 +9,14 @@ import { useAuth } from '../components/auth/AuthContext';
 
 // Mock Data for UI visualization (would normally fetch from UserCard/TradingCard entities)
 const MOCK_CARDS = [
-  { id: 1, name: "Cyber Dragon", rarity: "Legendary", image: "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=600&fit=crop", series: "Genesis", mint: 42, total: 100 },
-  { id: 2, name: "Neon Samurai", rarity: "Epic", image: "https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=600&fit=crop", series: "Cyberpunk", mint: 156, total: 500 },
-  { id: 3, name: "Void Walker", rarity: "Rare", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=600&fit=crop", series: "Genesis", mint: 892, total: 1000 },
-  { id: 4, name: "Solar Knight", rarity: "Uncommon", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=600&fit=crop", series: "Fantasy", mint: 2341, total: 5000 },
-  { id: 5, name: "Pixel Warrior", rarity: "Common", image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=600&fit=crop", series: "Retro", mint: 5678, total: null },
   { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", mint: 1, total: 10 },
   { id: 7, name: "Ability Legends", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/b626ca15e_0a97216f-9425-4a6c-ac8d-ed0198714d56.png", series: "Omni", mint: 1, total: 5 },
+  { id: 8, name: "Force Lightning", rarity: "Legendary", image: "https://images.unsplash.com/photo-1501139083538-0139583c61df?w=400&h=600&fit=crop", series: "Force", mint: 12, total: 50 },
+  { id: 9, name: "Flash Step", rarity: "Epic", image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop", series: "Speed", mint: 45, total: 200 },
+  { id: 10, name: "Bankai", rarity: "Mythic", image: "https://images.unsplash.com/photo-1588515724527-074a7a56616c?w=400&h=600&fit=crop", series: "Soul", mint: 5, total: 10 },
+  { id: 11, name: "Samus Morph Ball", rarity: "Rare", image: "https://images.unsplash.com/photo-1614730341194-75c6074065db?w=400&h=600&fit=crop", series: "Tech", mint: 102, total: 500 },
+  { id: 12, name: "Force Push", rarity: "Epic", image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=600&fit=crop", series: "Force", mint: 88, total: 150 },
+  { id: 13, name: "Instant Transmission", rarity: "Legendary", image: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=600&fit=crop", series: "Space", mint: 23, total: 75 },
 ];
 
 const CardComponent = ({ card, isOwned }) => {
@@ -28,7 +29,17 @@ const CardComponent = ({ card, isOwned }) => {
     Mythic: "border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
   };
 
-  const isSpecialCard = card.name === "Blood Drain" || card.name === "Ability Legends";
+  const specialCards = [
+    "Blood Drain",
+    "Ability Legends",
+    "Force Lightning",
+    "Flash Step",
+    "Bankai",
+    "Samus Morph Ball",
+    "Force Push",
+    "Instant Transmission"
+  ];
+  const isSpecialCard = specialCards.includes(card.name);
 
   // Tilt Logic
   const x = useMotionValue(0);
