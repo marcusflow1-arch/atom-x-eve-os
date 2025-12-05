@@ -19,14 +19,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useAuth } from '../components/auth/AuthContext';
 import CreateTradeModal from '../components/trading/CreateTradeModal'; 
-import { ThemeBackground, ThemeToggle } from '../components/shared/ThemeSystem';
+
 
 const GalacticCard = ({ children, className = "", hoverEffect = true }) => (
-  <div className={`
-    relative bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden
-    ${hoverEffect ? 'hover:bg-slate-800/50 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all duration-300' : ''}
-    ${className}
-  `}>
+  <div 
+    className={`
+      relative rounded-2xl overflow-hidden
+      ${hoverEffect ? 'hover:shadow-[0_0_30px_rgba(150,180,220,0.15)] transition-all duration-300' : ''}
+      ${className}
+    `}
+    style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+      backdropFilter: 'blur(40px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+    }}
+  >
     {children}
   </div>
 );
@@ -674,7 +683,7 @@ export default function TradingPost() {
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
-  const [selectedTheme, setSelectedTheme] = useState('cosmic_library');
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // New states for game-first navigation
@@ -783,8 +792,18 @@ export default function TradingPost() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen text-white relative">
-        <ThemeBackground themeId={selectedTheme} />
+      <div 
+        className="min-h-screen text-white relative"
+        style={{
+          background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)',
+        }}
+      >
+        {/* Ambient Glow Effects */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+        </div>
 
         {/* Navigation Drawer */}
         <AnimatePresence>
@@ -916,9 +935,16 @@ export default function TradingPost() {
             </div>
             
             <div className="flex gap-3">
-              <ThemeToggle selectedTheme={selectedTheme} onThemeSelect={setSelectedTheme} />
-              
-              <div className="bg-slate-900/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl flex items-center gap-3">
+              <div 
+                className="px-4 py-2 rounded-2xl flex items-center gap-3"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
+              >
                 <div className="text-right">
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
                   <p className="text-xl font-bold text-white font-mono">24,500 AGP</p>
@@ -933,7 +959,16 @@ export default function TradingPost() {
           {/* Navigation Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex justify-center mb-8">
-              <TabsList className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1 rounded-full">
+              <TabsList 
+                className="p-1 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
+              >
                 <TabsTrigger 
                   value="board" 
                   className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
