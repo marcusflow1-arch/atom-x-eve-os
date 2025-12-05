@@ -95,126 +95,85 @@ const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
   );
 };
 
-// --- Amazon-Style List Item Card ---
+// --- Simplified List Item Card ---
 const ListItemCard = ({ item, onClick }) => {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
   const discountPercent = hasDiscount ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
 
   return (
-    <LiquidCard onClick={() => onClick(item)} className="p-4">
-      <div className="flex gap-4">
-        {/* Image */}
-        <div className="relative w-[180px] h-[180px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
-          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-          {item.sponsored && (
-            <div className="absolute top-2 left-2">
-              <span className="text-[10px] text-white/50 bg-black/50 px-1.5 py-0.5 rounded">Sponsored</span>
-            </div>
-          )}
-          {item.prime && (
-            <div className="absolute bottom-2 left-2">
-              <Badge className="bg-blue-600 text-white text-[10px] border-none px-1.5">
-                <Truck className="w-3 h-3 mr-1" /> Prime
-              </Badge>
-            </div>
-          )}
+    <div 
+      onClick={() => onClick(item)} 
+      className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border-b border-white/5"
+    >
+      {/* Image */}
+      <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
+        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {/* Title */}
+        <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
+          {item.name}
+        </h3>
+
+        {/* Rating */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+            ))}
+          </div>
+          <span className="text-blue-400 text-sm">{item.reviews?.toLocaleString()}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-white/50 text-sm">{item.seller.sales?.toLocaleString()}+ bought</span>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Title */}
-          <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors cursor-pointer">
-            {item.name}
-          </h3>
-
-          {/* Rating */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`w-3.5 h-3.5 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-              ))}
+        {/* Price Section */}
+        <div className="mb-2">
+          {hasDiscount && (
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">-{discountPercent}%</span>
+              <span className="text-red-400 text-xs">Limited time deal</span>
             </div>
-            <span className="text-blue-400 text-sm hover:text-orange-400 cursor-pointer">{item.reviews?.toLocaleString()}</span>
-            <span className="text-white/30">|</span>
-            <span className="text-white/50 text-sm">{item.seller.sales?.toLocaleString()}+ bought</span>
-          </div>
-
-          {/* Price Section */}
-          <div className="mb-2">
+          )}
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
+            <span className="text-white/50 text-sm">AGP</span>
             {hasDiscount && (
-              <div className="flex items-center gap-2 mb-0.5">
-                <Badge className="bg-red-600 text-white text-xs border-none px-1.5">-{discountPercent}%</Badge>
-                <span className="text-red-400 text-xs">Limited time deal</span>
-              </div>
+              <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
             )}
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
-              <span className="text-white/50 text-sm">AGP</span>
-              {hasDiscount && (
-                <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Delivery Info */}
-          {item.prime && (
-            <p className="text-white/50 text-xs mb-2">
-              <span className="text-green-400">FREE delivery</span> by Tomorrow
-            </p>
-          )}
-
-          {/* Rarity & Game */}
-          <div className="flex items-center gap-2 mb-3">
-            <Badge className={`${rarity.bg} ${rarity.text} text-xs border-none`}>{item.rarity}</Badge>
-            <span className="text-white/40 text-xs">•</span>
-            <span className="text-white/50 text-xs">{item.game}</span>
-            <span className="text-white/40 text-xs">•</span>
-            <span className="text-white/50 text-xs">{item.category}</span>
-          </div>
-
-          {/* Description */}
-          <p className="text-white/60 text-sm line-clamp-2 mb-3">{item.description}</p>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium h-8 px-4 rounded-full text-xs"
-              onClick={(e) => { e.stopPropagation(); }}
-            >
-              Add to cart
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-white/20 text-white hover:bg-white/10 h-8 px-4 rounded-full text-xs"
-              onClick={(e) => { e.stopPropagation(); }}
-            >
-              <Heart className="w-3.5 h-3.5" />
-            </Button>
           </div>
         </div>
 
-        {/* Right Side - Seller Info */}
-        <div className="hidden xl:block w-[160px] flex-shrink-0 border-l border-white/10 pl-4">
-          <p className="text-white/40 text-xs mb-1">Sold by</p>
-          <p className="text-blue-400 text-sm font-medium mb-2 hover:text-orange-400 cursor-pointer">{item.seller.name}</p>
-          <div className="flex items-center gap-1 mb-3">
-            <Star className="w-3 h-3 text-orange-400 fill-current" />
-            <span className="text-white text-xs">{item.seller.rating}</span>
-            <span className="text-white/40 text-xs">({item.seller.sales})</span>
-          </div>
-          <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium h-8 rounded-full text-xs">
-            Buy Now
-          </Button>
+        {/* Rarity & Game */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className={`${rarity.text} text-xs font-medium`}>{item.rarity}</span>
+          <span className="text-white/40 text-xs">•</span>
+          <span className="text-white/50 text-xs">{item.game}</span>
+          <span className="text-white/40 text-xs">•</span>
+          <span className="text-white/50 text-xs">{item.category}</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-white/60 text-sm line-clamp-2">{item.description}</p>
+      </div>
+
+      {/* Right Side - Seller Info */}
+      <div className="hidden xl:block w-[140px] flex-shrink-0 text-right">
+        <p className="text-white/40 text-xs mb-1">Sold by</p>
+        <p className="text-blue-400 text-sm font-medium mb-1">{item.seller.name}</p>
+        <div className="flex items-center justify-end gap-1">
+          <Star className="w-3 h-3 text-orange-400 fill-current" />
+          <span className="text-white text-xs">{item.seller.rating}</span>
         </div>
       </div>
-    </LiquidCard>
+    </div>
   );
 };
 
-// --- Horizontal Scroll Product Row (Like Amazon "Customers also viewed") ---
+// --- Horizontal Scroll Product Row ---
 const ProductRow = ({ title, items, onItemClick }) => (
   <div className="mb-8">
     <div className="flex items-center justify-between mb-4">
@@ -228,30 +187,29 @@ const ProductRow = ({ title, items, onItemClick }) => (
         const rarity = rarityStyles[item.rarity];
         const hasDiscount = item.originalPrice && item.originalPrice > item.price;
         return (
-          <LiquidCard key={item.id} onClick={() => onItemClick(item)} className="w-[200px] flex-shrink-0">
-            <div className="relative aspect-square bg-slate-800">
+          <div 
+            key={item.id} 
+            onClick={() => onItemClick(item)} 
+            className="w-[180px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 mb-2">
               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-              {item.prime && (
-                <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white text-[9px] border-none px-1">Prime</Badge>
-              )}
             </div>
-            <div className="p-3">
-              <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-2 hover:text-orange-400">{item.name}</h3>
-              <div className="flex items-center gap-1 mb-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-                ))}
-                <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-white font-bold">{item.price.toLocaleString()}</span>
-                <span className="text-white/40 text-xs">AGP</span>
-              </div>
-              {hasDiscount && (
-                <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
-              )}
+            <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
+            <div className="flex items-center gap-1 mb-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+              ))}
+              <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
             </div>
-          </LiquidCard>
+            <div className="flex items-baseline gap-1">
+              <span className="text-white font-bold">{item.price.toLocaleString()}</span>
+              <span className="text-white/40 text-xs">AGP</span>
+            </div>
+            {hasDiscount && (
+              <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
+            )}
+          </div>
         );
       })}
     </div>
@@ -729,21 +687,24 @@ export default function Marketplace() {
               <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
               
               {viewMode === 'list' ? (
-                <div className="space-y-4">
-                  {filteredItems.map(item => (
-                    <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {filteredItems.map(item => {
-                    const rarity = rarityStyles[item.rarity];
-                    return (
-                      <LiquidCard key={item.id} onClick={() => setSelectedItem(item)}>
-                        <div className="aspect-square bg-slate-800">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="p-3">
+                  <div className="space-y-1">
+                    {filteredItems.map(item => (
+                      <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filteredItems.map(item => {
+                      const rarity = rarityStyles[item.rarity];
+                      return (
+                        <div 
+                          key={item.id} 
+                          onClick={() => setSelectedItem(item)}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          <div className="aspect-square bg-slate-800 rounded-lg overflow-hidden mb-2">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
                           <h3 className="text-blue-400 text-sm line-clamp-2 mb-1">{item.name}</h3>
                           <div className="flex items-center mb-1">
                             {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
@@ -751,11 +712,10 @@ export default function Marketplace() {
                           </div>
                           <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
                         </div>
-                      </LiquidCard>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
 
               {filteredItems.length === 0 && (
                 <div className="text-center py-16">
