@@ -15,8 +15,7 @@ import AchievementSearch from '../components/achievements/AchievementSearch';
 import TrackingPanel from '../components/achievements/TrackingPanel';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import AchievementFilterBar from '../components/achievements/AchievementFilterBar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import GameTradingCards from '../components/achievements/GameTradingCards';
+
 
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import { base44 } from '@/api/base44Client';
@@ -300,7 +299,6 @@ export default function Achievements() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeGenre, setActiveGenre] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [activeSubTab, setActiveSubTab] = useState('achievements');
 
 
   // Fetch initial data safely with error handling
@@ -596,7 +594,24 @@ export default function Achievements() {
         <div className="p-8">
           {!selectedGame ? (
             <>
-              <h2 className="text-3xl font-black mb-4">Achievements</h2>
+              {/* Hero Message */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 text-center"
+              >
+                <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Build Your Legend
+                </h1>
+                <p className="text-xl text-slate-300 mb-2">
+                  Every achievement unlocks <span className="text-yellow-400 font-bold">real abilities</span>, <span className="text-orange-400 font-bold">equipment</span>, and <span className="text-purple-400 font-bold">companions</span>
+                </p>
+                <p className="text-lg text-slate-400">
+                  Your progress across all games builds your <span className="text-blue-400 font-semibold">persistent RPG character</span>
+                </p>
+              </motion.div>
+
+              <h2 className="text-3xl font-black mb-4">Select a Game to View Achievements</h2>
               
               {/* Genre Filter */}
               <div className="flex items-center gap-4 mb-4">
@@ -633,83 +648,65 @@ export default function Achievements() {
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Game Library
               </Button>
               
-              <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-                <div className="flex justify-between items-center flex-wrap gap-4">
-                  <h1 className="text-5xl font-black">{selectedGame.title}</h1>
-                  <TabsList 
-                    className="p-1 rounded-full"
-                    style={{
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
-                    <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
-                    <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Trading Cards</TabsTrigger>
-                  </TabsList>
+              {/* Selected Game Display */}
+              <div ref={gameBoxRef} className="mb-6">
+                <h1 className="text-5xl font-black mb-2">{selectedGame.title} Achievements</h1>
+                <p className="text-slate-400 mb-4">
+                  {gameAchievements.length} achievement{gameAchievements.length !== 1 ? 's' : ''} available
+                </p>
+              </div>
+
+              {/* Achievement Filter Bar */}
+              <AchievementFilterBar 
+                searchTerm={searchTerm}
+                rarityFilter={rarityFilter}
+                statusFilter={statusFilter}
+                categoryFilter={categoryFilter}
+                onSearch={setSearchTerm}
+                onRarityChange={setRarityFilter}
+                onStatusChange={setStatusFilter}
+                onCategoryChange={setCategoryFilter}
+              />
+
+              {/* Split Panel Layout */}
+              <div className="flex-1 flex gap-6 overflow-hidden mt-6"> {/* Added mt-6 for spacing */}
+                {/* Left Panel - Achievement List */}
+                <div className="w-[400px] flex-shrink-0 overflow-y-auto space-y-2 pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}> {/* Adjusted max-height based on UI */}
+                  {gameAchievements.length > 0 ? (
+                    gameAchievements.map(ach => (
+                      <AchievementListItem
+                        key={ach.id}
+                        achievement={ach}
+                        onSelect={setSelectedAchievement}
+                        isUnlocked={user?.unlocked_achievements?.includes(ach.id)}
+                        isSelected={selectedAchievement?.id === ach.id}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-20 text-slate-500">
+                      <Trophy className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-xl font-semibold mb-2">No achievements match your filters</h3>
+                      <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                  )}
                 </div>
 
-                <TabsContent value="achievements" className="space-y-6">
-                  <p className="text-slate-400 mb-4">
-                    {gameAchievements.length} achievement{gameAchievements.length !== 1 ? 's' : ''} available
-                  </p>
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-transparent via-blue-500/50 to-transparent flex-shrink-0"></div>
 
-                  {/* Achievement Filter Bar */}
-                  <AchievementFilterBar 
-                    searchTerm={searchTerm}
-                    rarityFilter={rarityFilter}
-                    statusFilter={statusFilter}
-                    categoryFilter={categoryFilter}
-                    onSearch={setSearchTerm}
-                    onRarityChange={setRarityFilter}
-                    onStatusChange={setStatusFilter}
-                    onCategoryChange={setCategoryFilter}
+                {/* Right Panel - Achievement Details */}
+                <div className="flex-1 overflow-hidden">
+                  <AchievementDetailPanel
+                    achievement={selectedAchievement}
+                    isUnlocked={selectedAchievement && user?.unlocked_achievements?.includes(selectedAchievement.id)}
+                    onTrack={handleTrackAchievement}
+                    isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
+                    onClose={() => setSelectedAchievement(null)}
+                    onShare={handleShareAchievement}
+                    onChallenge={handleChallenge}
                   />
-
-                  {/* Split Panel Layout */}
-                  <div className="flex-1 flex gap-6 overflow-hidden mt-6">
-                    {/* Left Panel - Achievement List */}
-                    <div className="w-[400px] flex-shrink-0 overflow-y-auto space-y-2 pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                      {gameAchievements.length > 0 ? (
-                        gameAchievements.map(ach => (
-                          <AchievementListItem
-                            key={ach.id}
-                            achievement={ach}
-                            onSelect={setSelectedAchievement}
-                            isUnlocked={user?.unlocked_achievements?.includes(ach.id)}
-                            isSelected={selectedAchievement?.id === ach.id}
-                          />
-                        ))
-                      ) : (
-                        <div className="text-center py-20 text-slate-500">
-                          <Trophy className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                          <h3 className="text-xl font-semibold mb-2">No achievements match your filters</h3>
-                          <p>Try adjusting your search or filter criteria</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Vertical Divider */}
-                    <div className="w-px bg-gradient-to-b from-transparent via-blue-500/50 to-transparent flex-shrink-0"></div>
-
-                    {/* Right Panel - Achievement Details */}
-                    <div className="flex-1 overflow-hidden">
-                      <AchievementDetailPanel
-                        achievement={selectedAchievement}
-                        isUnlocked={selectedAchievement && user?.unlocked_achievements?.includes(selectedAchievement.id)}
-                        onTrack={handleTrackAchievement}
-                        isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
-                        onClose={() => setSelectedAchievement(null)}
-                        onShare={handleShareAchievement}
-                        onChallenge={handleChallenge}
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="tradingCards" className="h-full">
-                  <GameTradingCards selectedGame={selectedGame} />
-                </TabsContent>
-              </Tabs>
+                </div>
+              </div>
             </div>
           )}
         </div>
