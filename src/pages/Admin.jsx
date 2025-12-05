@@ -20,6 +20,7 @@ export default function Admin() {
   const [previewVideo, setPreviewVideo] = useState(null);
   const [populatingGames, setPopulatingGames] = useState(false);
   const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
+  const [fixingImages, setFixingImages] = useState(false);
 
   const { data: heroBackgrounds = [], isLoading } = useQuery({
     queryKey: ['heroBackgrounds'],
@@ -111,6 +112,40 @@ export default function Admin() {
       </div>
     );
   }
+
+  const handleFixImages = async () => {
+    setFixingImages(true);
+    try {
+      let remaining = 1;
+      let totalFixed = 0;
+
+      // Loop until no games remain to be fixed
+      while (remaining > 0) {
+        const response = await base44.functions.invoke('fixGameImages');
+        const data = response.data; // Axios response.data
+        
+        remaining = data.remaining || 0;
+        totalFixed += data.results?.length || 0;
+        
+        // Optional: Toast or log progress
+        console.log(`Fixed batch. Remaining: ${remaining}`);
+        
+        if (data.results?.length === 0 && remaining > 0) {
+             // Break loop if we aren't making progress to avoid infinite loop
+             console.warn("Stuck fixing images, stopping.");
+             break;
+        }
+      }
+      
+      refetchGames();
+      alert(`Finished fixing images! Processed ${totalFixed} games.`);
+    } catch (error) {
+      console.error('Failed to fix images:', error);
+      alert('Failed to fix images. Please try again.');
+    } finally {
+      setFixingImages(false);
+    }
+  };
 
   const populateGamesFromSearch = async () => {
     setPopulatingGames(true);
@@ -430,8 +465,19 @@ export default function Admin() {
                     {existingGames.length} Games
                   </Badge>
                   <Button 
+                    onClick={handleFixImages}
+                    disabled={fixingImages || populatingGames}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {fixingImages ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing Images...</>
+                    ) : (
+                      <><RefreshCw className="w-4 h-4 mr-2" /> Re-run (Fix Images)</>
+                    )}
+                  </Button>
+                  <Button 
                     onClick={populateGamesFromSearch}
-                    disabled={populatingGames}
+                    disabled={populatingGames || fixingImages}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     {populatingGames ? (
