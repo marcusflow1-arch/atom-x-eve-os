@@ -17,6 +17,8 @@ import { createPageUrl } from '@/utils';
 import { aiGames, otherSampleGames, trendingGames, newReleases, classicBestSellers } from '@/components/store/mockData';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import MarketplaceContent from '../components/store/MarketplaceContent';
+import TradingPostContent from '../components/store/TradingPostContent';
 
 // --- Liquid Glass Components ---
 
@@ -511,14 +513,31 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
               </div>
             </button>
             <div className="flex items-center gap-4">
-              <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
+              <button 
+                onClick={() => setStoreMode('store')}
+                className={`text-sm tracking-wide whitespace-nowrap transition-colors ${
+                  storeMode === 'store' ? 'text-white font-semibold' : 'text-white/60 hover:text-white font-medium'
+                }`}
+              >
+                Atom X Eve Store
+              </button>
               <div className="h-4 w-px bg-white/20"></div>
               <div className="flex items-center gap-2">
-                <button className="text-white/60 hover:text-white text-xs font-medium transition-colors">
+                <button 
+                  onClick={() => setStoreMode('marketplace')}
+                  className={`text-xs font-medium transition-colors ${
+                    storeMode === 'marketplace' ? 'text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
                   Marketplace
                 </button>
                 <span className="text-white/20">•</span>
-                <button className="text-white/60 hover:text-white text-xs font-medium transition-colors">
+                <button 
+                  onClick={() => setStoreMode('trading')}
+                  className={`text-xs font-medium transition-colors ${
+                    storeMode === 'trading' ? 'text-white' : 'text-white/60 hover:text-white'
+                  }`}
+                >
                   Trading Post
                 </button>
               </div>
@@ -1022,11 +1041,20 @@ export default function Store() {
       <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} />
 
       <main className="relative">
-        {/* Hero Section */}
-        <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
+        {/* Conditional Content Based on Store Mode */}
+        <AnimatePresence mode="wait">
+          {storeMode === 'store' ? (
+            <motion.div
+              key="store"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* Hero Section */}
+              <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
 
-        {/* Main Content: Amazon-style Layout */}
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
+              {/* Main Content: Amazon-style Layout */}
+              <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
           <div className="flex gap-6">
             {/* Left Sidebar - Filters */}
             <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -1217,6 +1245,30 @@ export default function Store() {
             </div>
           </div>
         </div>
+              </div>
+            </motion.div>
+          ) : storeMode === 'marketplace' ? (
+            <motion.div
+              key="marketplace"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
+            >
+              <MarketplaceContent />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="trading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
+            >
+              <TradingPostContent />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <footer className="mt-20 px-6 md:px-12 py-12 border-t border-white/10 bg-black/50 text-center text-gray-500 text-sm">
