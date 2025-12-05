@@ -495,9 +495,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
 
   return (
     <>
-      <motion.header
-                className="sticky top-0 left-0 right-0 z-40 transition-all duration-300"
-              >
+      <motion.header className="sticky top-0 left-0 right-0 z-40 transition-all duration-300">
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Unified Header: Menu + Brand + Search */}
           {/* Menu Button */}
