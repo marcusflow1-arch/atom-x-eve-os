@@ -510,7 +510,19 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
               </div>
             </button>
-            <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
+            <div className="flex items-center gap-4">
+              <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
+              <div className="h-4 w-px bg-white/20"></div>
+              <div className="flex items-center gap-2">
+                <button className="text-white/60 hover:text-white text-xs font-medium transition-colors">
+                  Marketplace
+                </button>
+                <span className="text-white/20">•</span>
+                <button className="text-white/60 hover:text-white text-xs font-medium transition-colors">
+                  Trading Post
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Search Input */}
@@ -879,6 +891,9 @@ export default function Store() {
   const { addToCart } = useCart();
   const { scrollY } = useScroll();
   const containerRef = useRef(null);
+  
+  // Store Mode State
+  const [storeMode, setStoreMode] = useState('store'); // 'store', 'marketplace', 'trading'
   
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
