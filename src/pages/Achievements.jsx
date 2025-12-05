@@ -718,16 +718,21 @@ export default function Achievements() {
                       onChallenge={handleChallenge} />
 
                     </div>
-                  </div>
-                </div>
-              </div>
-              }
-            </TabsContent>
+                    </div>
+                    </TabsContent>
 
-            <TabsContent value="tradingCards">
-              <GameTradingCards />
-            </TabsContent>
-          </Tabs>
+                    <TabsContent value="tradingCards">
+                    <GameTradingCards />
+                    </TabsContent>
+                    </Tabs>
+                    </div>
+                    }
+                    </TabsContent>
+
+                    <TabsContent value="tradingCards">
+                    <GameTradingCards />
+                    </TabsContent>
+                    </Tabs>
         </div>
       </div>
 
