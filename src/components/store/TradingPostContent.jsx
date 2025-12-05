@@ -263,8 +263,7 @@ export default function TradingPostContent() {
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   
-  const [viewMode, setViewMode] = useState('games');
-  const [selectedGame, setSelectedGame] = useState(null);
+
   
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
