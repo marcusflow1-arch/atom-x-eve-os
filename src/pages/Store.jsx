@@ -466,7 +466,7 @@ Format your response as JSON:
 };
 
 // --- Floating Nav with App Drawer ---
-const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavigate }) => {
+const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavigate, storeMode, setStoreMode }) => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
   const { user } = useAuth();
@@ -1038,7 +1038,15 @@ export default function Store() {
       `}</style>
 
       {/* Store Navigation Bar */}
-      <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} />
+      <FloatingNav 
+        scrollY={scrollY} 
+        searchTerm={searchTerm} 
+        setSearchTerm={setSearchTerm} 
+        allGames={games} 
+        onGameNavigate={handleGameNavigate}
+        storeMode={storeMode}
+        setStoreMode={setStoreMode}
+      />
 
       <main className="relative">
         {/* Conditional Content Based on Store Mode */}
