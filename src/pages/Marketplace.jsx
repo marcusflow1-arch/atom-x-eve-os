@@ -7,7 +7,7 @@ import {
   Sparkles, Crown, Flame, DollarSign, Eye, Heart, ShoppingCart, Play,
   Gamepad2, Package, Zap, Shield, Sword, X, SlidersHorizontal, Grid, List,
   Home, ShoppingBag, Library, Trophy, Layers, Hammer, Users, Bot, ArrowLeftRight,
-  Gavel, Lightbulb, Settings, LogIn, LogOut, MessageSquare, Swords, Rocket
+  Gavel, Lightbulb, Settings, LogIn, LogOut, MessageSquare, Swords, Rocket, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
