@@ -10,13 +10,8 @@ import { useAuth } from '../components/auth/AuthContext';
 // Mock Data for UI visualization (would normally fetch from UserCard/TradingCard entities)
 const MOCK_CARDS = [
   { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", mint: 1, total: 10 },
-  { id: 7, name: "Ability Legends", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/b626ca15e_0a97216f-9425-4a6c-ac8d-ed0198714d56.png", series: "Omni", mint: 1, total: 5 },
-  { id: 8, name: "Force Lightning", rarity: "Legendary", image: "https://images.unsplash.com/photo-1501139083538-0139583c61df?w=400&h=600&fit=crop", series: "Force", mint: 12, total: 50 },
-  { id: 9, name: "Flash Step", rarity: "Epic", image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop", series: "Speed", mint: 45, total: 200 },
-  { id: 10, name: "Bankai", rarity: "Mythic", image: "https://images.unsplash.com/photo-1588515724527-074a7a56616c?w=400&h=600&fit=crop", series: "Soul", mint: 5, total: 10 },
-  { id: 11, name: "Samus Morph Ball", rarity: "Rare", image: "https://images.unsplash.com/photo-1614730341194-75c6074065db?w=400&h=600&fit=crop", series: "Tech", mint: 102, total: 500 },
-  { id: 12, name: "Force Push", rarity: "Epic", image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=600&fit=crop", series: "Force", mint: 88, total: 150 },
-  { id: 13, name: "Instant Transmission", rarity: "Legendary", image: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=600&fit=crop", series: "Space", mint: 23, total: 75 },
+  { id: 14, name: "Sasuke Uchiha", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/4233b6dde_ChatGPTImageDec5202508_41_29AM.png", series: "Eternal Mangekyou", mint: 1, total: 5, subtitle: "ETERNAL MANGEKYOU SHARINGAN" },
+  { id: 15, name: "Naruto Uzumaki", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/bf84bbf7a_ChatGPTImageDec5202508_37_06AM.png", series: "Nine-Tails", mint: 1, total: 5, subtitle: "NINE-TAILS CLOAK" },
 ];
 
 const CardComponent = ({ card, isOwned }) => {
@@ -31,13 +26,8 @@ const CardComponent = ({ card, isOwned }) => {
 
   const specialCards = [
     "Blood Drain",
-    "Ability Legends",
-    "Force Lightning",
-    "Flash Step",
-    "Bankai",
-    "Samus Morph Ball",
-    "Force Push",
-    "Instant Transmission"
+    "Sasuke Uchiha",
+    "Naruto Uzumaki"
   ];
   const isSpecialCard = specialCards.includes(card.name);
 
@@ -118,16 +108,43 @@ const CardComponent = ({ card, isOwned }) => {
         </>
       )}
       
-      {/* Light Reflection for Special Cards */}
+      {/* Mythical Stardust Reflection for Special Cards */}
       {isSpecialCard && (
          <motion.div 
             style={{
-                opacity: useTransform(rotateX, (val) => Math.abs(val) / 50 + 0.2),
-                background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 25%, transparent 30%)",
-                transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
+                opacity: useTransform(rotateX, (val) => Math.abs(val) / 50 + 0.3),
+                background: "linear-gradient(105deg, transparent 15%, rgba(147,197,253,0.6) 20%, rgba(253,224,71,0.7) 25%, rgba(251,191,36,0.5) 30%, transparent 35%)",
+                transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-120%)", "translateX(120%)"]),
             }}
-            className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+            className="absolute inset-0 z-10 pointer-events-none mix-blend-screen"
          />
+      )}
+      
+      {/* Golden Particles Overlay */}
+      {isSpecialCard && (
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-yellow-300 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1.5, 0],
+                y: [0, -20, -40],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.2,
+                ease: "easeOut"
+              }}
+            />
+          ))}
+        </div>
       )}
     </motion.div>
   );
@@ -139,7 +156,15 @@ export default function TradingCards() {
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 pb-24">
+    <div 
+      className="min-h-screen text-white p-6 pb-24"
+      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+    >
+      {/* Ambient Glow Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
+      </div>
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
