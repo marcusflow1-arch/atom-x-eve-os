@@ -44,35 +44,35 @@ export default function AchievementSearch({ onSearch }) {
 
   return (
     <div className="relative">
-      <Button
+      <button
         onClick={startListening}
-        size="lg"
-        className={`rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'}`}
+        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+          isListening 
+            ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}
       >
-        {isListening ? <MicOff className="w-5 h-5 mr-2" /> : <Mic className="w-5 h-5 mr-2" />}
-        {isListening ? 'Listening...' : 'Voice Search'}
-      </Button>
+        {isListening ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
+      </button>
       
       {searchTerm && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full mt-2 left-0 bg-slate-800 border border-slate-700 rounded-lg p-3 shadow-xl z-10"
+          className="absolute top-full mt-2 left-0 bg-slate-800 border border-slate-700 rounded-lg p-3 shadow-xl z-10 whitespace-nowrap"
         >
           <div className="flex items-center gap-2">
-            <span className="text-white/70 text-sm">Searching for:</span>
+            <span className="text-white/70 text-sm">Searching:</span>
             <span className="text-blue-400 font-medium">{searchTerm}</span>
-            <Button
+            <button
               onClick={() => {
                 setSearchTerm('');
                 handleSearch('');
               }}
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6 text-slate-400 hover:text-white"
+              className="w-6 h-6 rounded-full hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all"
             >
               <X className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </motion.div>
       )}
