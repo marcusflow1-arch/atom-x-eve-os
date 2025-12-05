@@ -4,10 +4,7 @@ import { Gamepad2, Play, Video, TrendingUp, Package, ImageIcon, Monitor, Archive
 import { Button } from '@/components/ui/button';
 import ActivityHub from '../ActivityHub';
 import EntertainmentTab from '../EntertainmentTab';
-import CommandCenter from '../CommandCenter';
-import TheVault from '../TheVault';
 import SocialHub from '../SocialHub';
-import HallOfRecordsView from './HallOfRecordsView';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
 
@@ -31,14 +28,11 @@ export default function UserInterfaceView({
   setShowClips,
   setShowAINewsOverlay 
 }) {
-  const [activeFeature, setActiveFeature] = useState('command_center');
+  const [activeFeature, setActiveFeature] = useState('entertainment');
 
   const features = [
-    { id: 'command_center', name: 'Command Center', icon: Monitor, color: 'bg-blue-600' },
     { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
-    { id: 'vault', name: 'The Vault', icon: Archive, color: 'bg-cyan-600' },
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
-    { id: 'hall_of_fame', name: 'Game Index', icon: TrendingUp, color: 'bg-yellow-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
     { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
   ];
@@ -82,15 +76,8 @@ export default function UserInterfaceView({
             transition={{ duration: 0.3 }}
             className="h-full overflow-y-auto"
           >
-            {activeFeature === 'command_center' && <CommandCenter />}
             {activeFeature === 'entertainment' && <EntertainmentTab />}
-            {activeFeature === 'vault' && <TheVault />}
             {activeFeature === 'social' && <SocialHub />}
-            {activeFeature === 'hall_of_fame' && (
-              <div className="p-6">
-                <HallOfRecordsView />
-              </div>
-            )}
             {activeFeature === 'streaming' && <StreamingHub />}
             {activeFeature === 'stream_team' && <StreamTeam />}
           </motion.div>
