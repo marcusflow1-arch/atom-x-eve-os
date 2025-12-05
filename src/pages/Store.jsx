@@ -18,6 +18,22 @@ import { aiGames, otherSampleGames, trendingGames, newReleases, classicBestSelle
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
+// --- Marketplace Data ---
+const MARKETPLACE_ITEMS = [
+  { id: 'c1', name: 'Phoenix Familiar - Legendary Fire Companion', price: 45000, originalPrice: 52000, rarity: 'Legendary', game: 'Mage Wars Online', category: 'Companions', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'PetMaster', rating: 4.9, sales: 1250 }, reviews: 234 },
+  { id: 'c2', name: 'Shadow Wolf Pack - Triple Beast Companion Set', price: 28000, rarity: 'Epic', game: 'Elder Scrolls: Reborn', category: 'Companions', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'WildTamer', rating: 4.7, sales: 890 }, reviews: 156 },
+  { id: 'c3', name: 'Quantum AI Drone MK-X - Advanced Combat Assistant', price: 52000, rarity: 'Mythic', game: 'Cyberpunk 2088', category: 'Companions', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'TechDealer', rating: 5.0, sales: 2100 }, reviews: 312 },
+  { id: 'g1', name: 'Void Reaper Scythe - Soul Harvesting Weapon', price: 78000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Gear', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidForge', rating: 4.9, sales: 1890 }, reviews: 445 },
+  { id: 'g2', name: 'Plasma Cannon MK-X - Military Grade Heavy Weapon', price: 65000, originalPrice: 72000, rarity: 'Epic', game: 'Galactic Warfare', category: 'Gear', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=400&fit=crop', seller: { name: 'GunRunner', rating: 4.6, sales: 1200 }, reviews: 267 },
+  { id: 'a1', name: 'Time Warp Mastery - Ultimate Time Manipulation', price: 95000, rarity: 'Mythic', game: 'Mage Wars Online', category: 'Abilities', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'ArcaneTrader', rating: 5.0, sales: 890 }, reviews: 456 },
+];
+
+const TRADE_ITEMS = [
+  { id: 'inv_1', name: 'Dragonscale Armor Set', type: 'Armor', game: 'Elder Scrolls: Reborn', genre: 'Fantasy', rarity: 'Legendary', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop' },
+  { id: 'inv_2', name: 'Cyber Neural Interface', type: 'Cybernetics', game: 'Cyberpunk 2088', genre: 'Sci-Fi', rarity: 'Epic', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=300&fit=crop' },
+  { id: 'inv_3', name: 'Phoenix Fire Spell', type: 'Ability', game: 'Mage Wars Online', genre: 'MMORPG', rarity: 'Mythic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=300&fit=crop' },
+];
+
 // --- Liquid Glass Components ---
 
 const LiquidCard = ({ children, className = "", onClick }) => {
@@ -464,7 +480,7 @@ Format your response as JSON:
 };
 
 // --- Floating Nav with App Drawer ---
-const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavigate }) => {
+const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavigate, activePage, onPageChange }) => {
   const navigate = useNavigate();
   const { cartCount } = useCart();
   const { user } = useAuth();
@@ -510,7 +526,42 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
               </div>
             </button>
-            <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
+            <div className="flex items-center gap-3">
+              <span className="text-white font-semibold text-sm tracking-wide whitespace-nowrap">Atom X Eve Store</span>
+              <div className="h-4 w-px bg-white/20"></div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onPageChange('store')}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    activePage === 'store' 
+                      ? 'bg-white/20 text-white' 
+                      : 'text-white/50 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Store
+                </button>
+                <button
+                  onClick={() => onPageChange('marketplace')}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    activePage === 'marketplace' 
+                      ? 'bg-white/20 text-white' 
+                      : 'text-white/50 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Marketplace
+                </button>
+                <button
+                  onClick={() => onPageChange('trading')}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    activePage === 'trading' 
+                      ? 'bg-white/20 text-white' 
+                      : 'text-white/50 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  Trading Post
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Search Input */}
@@ -879,6 +930,7 @@ export default function Store() {
   const { addToCart } = useCart();
   const { scrollY } = useScroll();
   const containerRef = useRef(null);
+  const [activePage, setActivePage] = useState('store'); // store, marketplace, trading
   
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -986,6 +1038,158 @@ export default function Store() {
 
   const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
 
+  // Marketplace Page Component
+  const MarketplacePage = () => {
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [itemSearchTerm, setItemSearchTerm] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+
+    const filteredItems = MARKETPLACE_ITEMS.filter(item => {
+      const searchMatch = !itemSearchTerm || item.name.toLowerCase().includes(itemSearchTerm.toLowerCase());
+      const catMatch = categoryFilter === 'all' || item.category === categoryFilter;
+      return searchMatch && catMatch;
+    });
+
+    const itemsByCategory = filteredItems.reduce((acc, item) => {
+      if (!acc[item.category]) acc[item.category] = [];
+      acc[item.category].push(item);
+      return acc;
+    }, {});
+
+    return (
+      <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 mt-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Marketplace</h1>
+          <p className="text-white/60">Trade items, gear, and abilities with players</p>
+        </div>
+
+        {/* Search Bar */}
+        <LiquidCard className="mb-6 p-4">
+          <div className="flex items-center gap-3">
+            <Search className="w-5 h-5 text-white/40" />
+            <input
+              type="text"
+              placeholder="Search marketplace items..."
+              value={itemSearchTerm}
+              onChange={(e) => setItemSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent border-none text-white placeholder:text-white/40 focus:outline-none"
+            />
+          </div>
+        </LiquidCard>
+
+        {/* Category Filters */}
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+          {['all', 'Companions', 'Gear', 'Abilities'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                categoryFilter === cat 
+                  ? 'bg-blue-500/30 text-white border border-blue-400/50' 
+                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+              }`}
+            >
+              {cat === 'all' ? 'All Items' : cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Category Rows */}
+        {Object.entries(itemsByCategory).map(([category, items]) => (
+          <div key={category} className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white text-xl font-bold">{category}</h2>
+              <button className="text-white/50 hover:text-white text-sm flex items-center gap-1">
+                See All <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {items.map(item => (
+                <LiquidCard key={item.id} className="flex-shrink-0 w-[220px] cursor-pointer">
+                  <div className="aspect-square bg-slate-950 overflow-hidden">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                      <span className="text-white/70 text-xs">{item.seller.rating}</span>
+                      <span className="text-white/30 text-xs">({item.reviews})</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2">{item.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-400 font-bold">{item.price.toLocaleString()} AGP</span>
+                      {item.originalPrice && (
+                        <span className="text-white/30 text-xs line-through">{item.originalPrice.toLocaleString()}</span>
+                      )}
+                    </div>
+                  </div>
+                </LiquidCard>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Trading Post Page Component
+  const TradingPostPage = () => {
+    const [selectedItem, setSelectedItem] = useState(null);
+
+    const itemsByGame = TRADE_ITEMS.reduce((acc, item) => {
+      if (!acc[item.game]) acc[item.game] = [];
+      acc[item.game].push(item);
+      return acc;
+    }, {});
+
+    return (
+      <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 mt-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Trading Post</h1>
+          <p className="text-white/60">Exchange items with other players</p>
+        </div>
+
+        {/* Trading Inventory by Game */}
+        {Object.entries(itemsByGame).map(([game, items]) => (
+          <div key={game} className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white text-xl font-bold">{game}</h2>
+              <button className="text-white/50 hover:text-white text-sm flex items-center gap-1">
+                View All <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {items.map(item => (
+                <LiquidCard key={item.id} className="flex-shrink-0 w-[200px] cursor-pointer">
+                  <div className="aspect-square bg-slate-950 overflow-hidden relative">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <div className="absolute top-2 right-2">
+                      <Badge className={`
+                        ${item.rarity === 'Mythic' ? 'bg-red-500/30 text-red-300 border-red-500/50' :
+                          item.rarity === 'Legendary' ? 'bg-orange-500/30 text-orange-300 border-orange-500/50' :
+                          'bg-purple-500/30 text-purple-300 border-purple-500/50'}
+                        text-[10px] border
+                      `}>
+                        {item.rarity}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">{item.name}</h3>
+                    <p className="text-white/40 text-xs mb-2">{item.type}</p>
+                    <Button className="w-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 h-8 text-xs">
+                      Create Trade Offer
+                    </Button>
+                  </div>
+                </LiquidCard>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div 
       ref={containerRef} 
@@ -1004,11 +1208,13 @@ export default function Store() {
       `}</style>
 
       {/* Store Navigation Bar */}
-      <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} />
+      <FloatingNav scrollY={scrollY} searchTerm={searchTerm} setSearchTerm={setSearchTerm} allGames={games} onGameNavigate={handleGameNavigate} activePage={activePage} onPageChange={setActivePage} />
 
       <main className="relative">
-        {/* Hero Section */}
-        <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
+        {activePage === 'store' ? (
+          <>
+            {/* Hero Section */}
+            <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
 
         {/* Main Content: Amazon-style Layout */}
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
@@ -1203,10 +1409,16 @@ export default function Store() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-20 px-6 md:px-12 py-12 border-t border-white/10 bg-black/50 text-center text-gray-500 text-sm">
-          <p>&copy; 2025 Nexus Store. All rights reserved.</p>
-        </footer>
+            {/* Footer */}
+            <footer className="mt-20 px-6 md:px-12 py-12 border-t border-white/10 bg-black/50 text-center text-gray-500 text-sm">
+              <p>&copy; 2025 Nexus Store. All rights reserved.</p>
+            </footer>
+          </>
+        ) : activePage === 'marketplace' ? (
+          <MarketplacePage />
+        ) : (
+          <TradingPostPage />
+        )}
       </main>
     </div>
   );
