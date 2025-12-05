@@ -407,11 +407,11 @@ export default function TradingPostContent() {
             {/* Top Navigation Bar */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                {viewMode === 'items' && (
+                {selectedListingGroup && (
                   <motion.button
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    onClick={() => { setViewMode('games'); setSelectedGame(null); setSelectedListingGroup(null); }}
+                    onClick={() => setSelectedListingGroup(null)}
                     className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
@@ -421,7 +421,7 @@ export default function TradingPostContent() {
                   </motion.button>
                 )}
                 <h2 className="text-2xl font-bold text-white">
-                  {viewMode === 'games' ? 'Games' : selectedGame}
+                  {selectedListingGroup ? selectedListingGroup.item.name : 'Global Market'}
                 </h2>
               </div>
               
@@ -446,60 +446,139 @@ export default function TradingPostContent() {
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
               <AnimatePresence mode="wait">
-                {viewMode === 'games' ? (
+                {!selectedListingGroup ? (
                   <motion.div
-                    key="games"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="h-full"
+                    key="categories"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="h-full overflow-y-auto space-y-8 pb-4 pr-2"
                   >
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto h-full pb-4 pr-2">
-                      {gamesList.map((game, idx) => (
-                        <motion.div
-                          key={game.name}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.05 }}
-                          onClick={() => { setSelectedGame(game.name); setViewMode('items'); }}
-                          className="group cursor-pointer"
-                        >
-                          <div 
-                            className="relative aspect-[4/5] rounded-2xl overflow-hidden transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-                            style={{
-                              background: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                            }}
+                    {/* Category Rows */}
+                    {(() => {
+                      const categories = [
+                        { name: 'Action', icon: Rocket },
+                        { name: 'Trending', icon: TrendingUp },
+                        { name: 'Popular', icon: Flame },
+                        { name: 'RPG', icon: Shield },
+                        { name: 'Shooter', icon: Zap }
+                      ];
+
+                      const groupedByGame = listings.reduce((acc, listing) => {
+                        const game = listing.item.game;
+                        if (!acc[game]) acc[game] = [];
+                        acc[game].push(listing);
+                        return acc;
+                      }, {});
+
+                      return categories.map((category, catIdx) => {
+                        const categoryGames = Object.entries(groupedByGame).slice(catIdx * 2, catIdx * 2 + 5);
+                        
+                        return (
+                          <motion.div
+                            key={category.name}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: catIdx * 0.1 }}
                           >
-                            <img 
-                              src={game.image} 
-                              alt={game.name}
-                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
-                            
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                              <h3 className="text-white font-bold text-lg mb-1 group-hover:text-blue-300 transition-colors">
-                                {game.name}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                <span className="text-white/60 text-sm">{game.count} listings</span>
-                                <div className="w-1 h-1 rounded-full bg-white/30" />
-                                <span className="text-green-400 text-sm font-medium">Active</span>
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                                  <category.icon className="w-4 h-4 text-blue-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white">{category.name}</h3>
                               </div>
+                              <button className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                                See All <ChevronRight className="w-4 h-4" />
+                              </button>
                             </div>
 
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                              <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent" />
-                              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
+                            {/* Horizontal Scrollable Row */}
+                            <div className="relative group/row">
+                              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth" id={`row-${catIdx}`}>
+                                {categoryGames.map(([gameName, gameListings]) => {
+                                  const groupedListings = gameListings.reduce((groups, listing) => {
+                                    const key = listing.item.name;
+                                    if (!groups[key]) {
+                                      groups[key] = { item: listing.item, offers: [] };
+                                    }
+                                    groups[key].offers.push(listing);
+                                    return groups;
+                                  }, {});
+
+                                  return Object.values(groupedListings).slice(0, 3).map((group) => {
+                                    const lowestPrice = group.offers
+                                      .filter(o => o.type === 'sale' || o.type === 'bid')
+                                      .map(o => o.price || o.currentBid || Infinity)
+                                      .sort((a, b) => a - b)[0];
+
+                                    return (
+                                      <motion.div
+                                        key={group.item.id}
+                                        whileHover={{ scale: 1.05 }}
+                                        onClick={() => setSelectedListingGroup(group)}
+                                        className="flex-shrink-0 w-48 cursor-pointer group"
+                                      >
+                                        <div 
+                                          className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3"
+                                          style={{
+                                            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                          }}
+                                        >
+                                          <img 
+                                            src={group.item.image} 
+                                            alt={group.item.name}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                          />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                                          
+                                          <div className="absolute top-2 left-2">
+                                            <RarityBadge rarity={group.item.rarity} />
+                                          </div>
+
+                                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                                            <div className="text-white/80 text-xs mb-1">{group.item.type}</div>
+                                            {lowestPrice && lowestPrice !== Infinity ? (
+                                              <div className="text-green-400 font-bold text-lg">
+                                                {lowestPrice.toLocaleString()}<span className="text-xs text-white/40 ml-1">AGP</span>
+                                              </div>
+                                            ) : (
+                                              <div className="text-blue-400 font-bold text-sm">Trade Only</div>
+                                            )}
+                                          </div>
+                                        </div>
+                                        
+                                        <h4 className="text-white font-semibold text-sm mb-1 truncate group-hover:text-blue-300 transition-colors">
+                                          {group.item.name}
+                                        </h4>
+                                        <p className="text-white/40 text-xs">{group.offers.length} offers</p>
+                                      </motion.div>
+                                    );
+                                  });
+                                })}
+                              </div>
+
+                              {/* Scroll Arrows */}
+                              <button 
+                                onClick={() => document.getElementById(`row-${catIdx}`).scrollBy({ left: -400, behavior: 'smooth' })}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-black/80 z-10"
+                              >
+                                <ChevronLeft className="w-5 h-5 text-white" />
+                              </button>
+                              <button 
+                                onClick={() => document.getElementById(`row-${catIdx}`).scrollBy({ left: 400, behavior: 'smooth' })}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-black/80 z-10"
+                              >
+                                <ChevronRight className="w-5 h-5 text-white" />
+                              </button>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                          </motion.div>
+                        );
+                      });
+                    })()}
                   </motion.div>
-                ) : !selectedListingGroup ? (
+                ) : (
                   <motion.div
                     key="items"
                     initial={{ opacity: 0, x: 50 }}
