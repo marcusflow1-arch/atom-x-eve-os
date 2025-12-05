@@ -496,22 +496,32 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   return (
     <>
       <motion.header className="sticky top-0 left-0 right-0 z-40 transition-all duration-300">
-        <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
-          {/* Unified Header: Menu + Brand + Search */}
-          {/* Menu Button */}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
-          >
-            <div className="flex flex-col gap-[3px]">
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-              <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
-            </div>
-          </button>
+        <div 
+          className="max-w-[1920px] mx-auto mx-4 md:mx-6 mt-3 h-14 flex items-center justify-between gap-4 px-4 rounded-2xl border border-white/20"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(200,210,230,0.08) 50%, rgba(150,180,220,0.1) 100%)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)'
+          }}
+        >
+          {/* Left: Menu + Brand */}
+          <div className="flex items-center gap-3">
+            {/* Menu Button */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
+            >
+              <div className="flex flex-col gap-[3px]">
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+                <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
+              </div>
+            </button>
 
-          {/* Brand */}
-          <span className="text-white font-semibold text-sm hidden md:block tracking-wide whitespace-nowrap">ATOM×EVE</span>
+            {/* Brand */}
+            <span className="text-white font-bold text-lg hidden md:block tracking-wider whitespace-nowrap">ATOM X EVE Store</span>
+          </div>
 
           {/* Search Input */}
           <div className="flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative">
