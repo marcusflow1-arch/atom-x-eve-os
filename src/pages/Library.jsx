@@ -15,24 +15,24 @@ import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Liquid Glass Card Component
-const LiquidGlassCard = ({ children, className = "", hover = true, onClick }) => (
+// Luna Card Component with darker, cleaner aesthetic
+const LunaCard = ({ children, className = "", hover = true, onClick }) => (
   <div 
     onClick={onClick}
-    className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${hover ? 'hover:shadow-[0_0_40px_rgba(150,180,220,0.2)] cursor-pointer' : ''} ${className}`}
+    className={`relative rounded-xl overflow-hidden transition-all duration-300 ${hover ? 'hover:scale-[1.02] cursor-pointer' : ''} ${className}`}
     style={{
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
-      backdropFilter: 'blur(40px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+      background: 'rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      boxShadow: hover ? '0 4px 24px rgba(0,0,0,0.5)' : '0 2px 12px rgba(0,0,0,0.3)',
     }}
   >
     {children}
   </div>
 );
 
-// Luna-style Game Card for Grid View
+// Luna-style Game Card - Cleaner, darker aesthetic
 const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -40,56 +40,52 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.03, y: -5 }}
+      whileHover={{ y: -8 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={() => onSelect(game)}
       className="relative cursor-pointer group"
     >
       <div 
-        className="relative aspect-[3/4] rounded-2xl overflow-hidden"
+        className="relative aspect-[2/3] rounded-xl overflow-hidden bg-black"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: isHovered ? '0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(100,150,200,0.15)' : '0 10px 40px rgba(0,0,0,0.3)',
+          boxShadow: isHovered 
+            ? '0 24px 48px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)' 
+            : '0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
+          transition: 'box-shadow 0.3s ease',
         }}
       >
         {/* Game Cover */}
         <img 
           src={game.cover_image || game.cover} 
           alt={game.title}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-cover transition-all duration-500"
+          style={{
+            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          }}
         />
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
         
         {/* Live Badge */}
         {isStreaming && (
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            <Radio className="w-3 h-3 animate-pulse" />
-            LIVE
-          </div>
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-2 right-2 flex items-center gap-1 bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+          >
+            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+            Live
+          </motion.div>
         )}
         
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-white font-bold text-lg mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <h3 className="text-white font-semibold text-sm mb-0.5 line-clamp-1">
             {game.title}
           </h3>
-          <p className="text-white/60 text-sm capitalize mb-3">{game.genre}</p>
-          
-          {/* Quick Stats */}
-          <div className="flex items-center gap-3 text-xs text-white/50">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>12.5h</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Star className="w-3 h-3" />
-              <span>8/15</span>
-            </div>
-          </div>
+          <p className="text-white/40 text-xs capitalize">{game.genre}</p>
         </div>
 
         {/* Hover Play Button */}
@@ -99,22 +95,20 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+              className="absolute inset-0 flex items-center justify-center bg-black/60"
             >
               <motion.button
-                initial={{ scale: 0.8 }}
+                initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
                 onClick={(e) => { e.stopPropagation(); onPlay(game); }}
-                className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center hover:bg-white/30 transition-colors"
+                className="w-14 h-14 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-xl"
               >
-                <Play className="w-7 h-7 text-white fill-white ml-1" />
+                <Play className="w-5 h-5 text-black fill-black ml-0.5" />
               </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Bottom Glow on Hover */}
-        <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-cyan-400 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
       </div>
     </motion.div>
   );
@@ -285,34 +279,34 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* About */}
-            <LiquidGlassCard className="p-5" hover={false}>
-              <h3 className="text-white font-bold text-lg mb-3">About This Game</h3>
-              <p className="text-white/60 leading-relaxed">
+            <LunaCard className="p-5" hover={false}>
+              <h3 className="text-white font-semibold text-base mb-3">About This Game</h3>
+              <p className="text-white/50 text-sm leading-relaxed">
                 {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
               </p>
-            </LiquidGlassCard>
+            </LunaCard>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-4">
-              <LiquidGlassCard className="p-4 text-center" hover={false}>
-                <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-white">12.5h</p>
-                <p className="text-white/40 text-xs">Playtime</p>
-              </LiquidGlassCard>
-              <LiquidGlassCard className="p-4 text-center" hover={false}>
-                <Star className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-white">8/15</p>
-                <p className="text-white/40 text-xs">Achievements</p>
-              </LiquidGlassCard>
-              <LiquidGlassCard className="p-4 text-center" hover={false}>
-                <Zap className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-white">2h ago</p>
-                <p className="text-white/40 text-xs">Last Played</p>
-              </LiquidGlassCard>
+              <LunaCard className="p-4 text-center" hover={false}>
+                <Clock className="w-5 h-5 text-blue-400 mx-auto mb-2" />
+                <p className="text-xl font-bold text-white">12.5h</p>
+                <p className="text-white/30 text-xs">Playtime</p>
+              </LunaCard>
+              <LunaCard className="p-4 text-center" hover={false}>
+                <Star className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
+                <p className="text-xl font-bold text-white">8/15</p>
+                <p className="text-white/30 text-xs">Achievements</p>
+              </LunaCard>
+              <LunaCard className="p-4 text-center" hover={false}>
+                <Zap className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                <p className="text-xl font-bold text-white">2h ago</p>
+                <p className="text-white/30 text-xs">Last Played</p>
+              </LunaCard>
             </div>
 
             {/* Game Trailer */}
-            <LiquidGlassCard className="p-5" hover={false}>
+            <LunaCard className="p-5" hover={false}>
               <h3 className="text-white font-bold text-lg mb-4">Game Trailer</h3>
               <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
                 <video 
@@ -329,7 +323,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 
         {activeTab === 'community' && (
           <div className="space-y-4">
-            <LiquidGlassCard className="p-5" hover={false}>
+            <LunaCard className="p-5" hover={false}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold text-lg">Community Discussion</h3>
                 <Button size="sm" className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30">
@@ -354,14 +348,14 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                   </div>
                 ))}
               </div>
-            </LiquidGlassCard>
+            </LunaCard>
           </div>
         )}
 
         {activeTab === 'achievements' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-bold text-lg">Achievement Guides</h3>
+              <h3 className="text-white font-semibold text-base">Achievement Guides</h3>
               <button 
                 onClick={onShowAchievements}
                 className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1"
@@ -378,7 +372,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                 { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
                 { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
               ].map((achievement, i) => (
-                <LiquidGlassCard key={i} className="p-4">
+                <LunaCard key={i} className="p-4">
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">{achievement.icon}</div>
                     <div className="flex-1">
@@ -561,77 +555,60 @@ export default function Library() {
   return (
     <div 
       className="h-screen flex flex-col overflow-hidden text-white"
-      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+      style={{ 
+        background: '#0a0a0a',
+      }}
     >
-      {/* Ambient Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
-      </div>
-
       {/* Header */}
-      <div className="relative z-10 flex-shrink-0 px-6 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(147,197,253,0.2) 100%)',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <LibraryIcon className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-white">My Library</h1>
-              <p className="text-white/40 text-sm">{filteredGames.length} games</p>
-            </div>
+      <div className="relative z-10 flex-shrink-0 px-8 pt-8 pb-6"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-1">Library</h1>
+            <p className="text-white/30 text-sm">{filteredGames.length} games</p>
           </div>
 
           {/* View Toggle */}
-          <div 
-            className="flex items-center gap-1 p-1 rounded-xl"
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-              }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'grid' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
               }`}
             >
               <Grid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === 'list' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
+              }`}
+            >
+              <List className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8 relative">
           {['all', 'installed', 'favorites'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`text-sm font-medium transition-colors capitalize flex items-center gap-2 ${
-                activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'
+              className={`text-sm font-medium transition-colors capitalize pb-3 relative ${
+                activeTab === tab ? 'text-white' : 'text-white/30 hover:text-white/60'
               }`}
             >
-              {tab === 'favorites' && <Heart className="w-4 h-4" />}
+              {tab === 'favorites' && <Heart className="w-3.5 h-3.5 inline mr-1.5" />}
               {tab}
               {activeTab === tab && (
                 <motion.div 
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400 rounded-full"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
             </button>
@@ -640,37 +617,29 @@ export default function Library() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 overflow-hidden px-6 pb-6">
+      <div className="relative z-10 flex-1 overflow-hidden px-8 pb-8">
         {viewMode === 'list' ? (
           <div className="flex gap-6 h-full">
             {/* Left Sidebar - Game List */}
             <div className="w-72 flex-shrink-0 flex flex-col gap-4">
               {/* Search */}
-              <LiquidGlassCard className="p-3" hover={false}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <Input
-                    type="text"
-                    placeholder="Search games..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-white/5 border-white/10 pl-10 pr-10 text-white placeholder:text-white/30 focus:border-blue-500/50"
-                  />
-                  <button
-                    onClick={startVoiceSearch}
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isListening ? 'text-red-400 animate-pulse' : 'text-white/40 hover:text-white'}`}
-                  >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
-                </div>
-              </LiquidGlassCard>
+              <div className="relative mb-4">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 transition-all"
+                />
+              </div>
 
               {/* Game List */}
-              <LiquidGlassCard className="flex-1 overflow-hidden" hover={false}>
-                <div className="p-3 border-b border-white/10">
-                  <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
+              <LunaCard className="flex-1 overflow-hidden" hover={false}>
+                <div className="px-4 py-3 border-b border-white/5">
+                  <p className="text-white/30 text-xs font-medium uppercase tracking-wider">Your Games</p>
                 </div>
-                <div className="overflow-y-auto h-full p-2" style={{ maxHeight: 'calc(100% - 48px)', scrollbarWidth: 'thin', scrollbarColor: 'rgba(100,150,200,0.3) transparent' }}>
+                <div className="overflow-y-auto h-full p-2" style={{ maxHeight: 'calc(100% - 48px)', scrollbarWidth: 'none' }}>
                   {filteredGames.map(game => (
                     <LunaSidebarItem
                       key={game.id}
@@ -682,7 +651,7 @@ export default function Library() {
                     />
                   ))}
                 </div>
-              </LiquidGlassCard>
+              </LunaCard>
             </div>
 
             {/* Game Detail Panel */}
@@ -699,21 +668,19 @@ export default function Library() {
           </div>
         ) : (
           /* Grid View */
-          <div className="h-full overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(100,150,200,0.3) transparent' }}>
+          <div className="h-full overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
             {/* Search Bar for Grid */}
-            <div className="mb-6">
-              <LiquidGlassCard className="p-3 max-w-md" hover={false}>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <Input
-                    type="text"
-                    placeholder="Search games..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-white/5 border-white/10 pl-10 text-white placeholder:text-white/30 focus:border-blue-500/50"
-                  />
-                </div>
-              </LiquidGlassCard>
+            <div className="mb-8">
+              <div className="relative max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Search your games..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
+                />
+              </div>
             </div>
 
             {/* Games Grid by Genre */}
@@ -727,12 +694,12 @@ export default function Library() {
               }, {});
 
               return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
-                <div key={genre} className="mb-10">
-                  <div className="flex items-center gap-3 mb-5">
-                    <h2 className="text-xl font-bold text-white">{genre}</h2>
-                    <span className="text-white/30 text-sm">({genreGames.length})</span>
+                <div key={genre} className="mb-12">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-semibold text-white">{genre}</h2>
+                    <span className="text-white/20 text-sm">({genreGames.length})</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
                     {genreGames.map(game => (
                       <LunaGameCard
                         key={game.id}
