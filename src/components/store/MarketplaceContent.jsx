@@ -1,19 +1,28 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Search, Star, ChevronRight, ChevronDown, X, Grid, List, Package, Ghost, Shield, Zap, Gem, Footprints, Truck, DollarSign, Plus } from 'lucide-react';
+import {
+  Search, ChevronRight, ChevronDown, Star, Package, X, Grid, List,
+  Ghost, Shield, Zap, Gem, Footprints, Truck, DollarSign, Plus, ShoppingCart
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
-// Reuse marketplace items data
+// Enhanced Mock Data
 const MARKETPLACE_ITEMS = [
   { id: 'c1', name: 'Phoenix Familiar - Legendary Fire Companion with Auto-Revive Ability', price: 45000, originalPrice: 52000, rarity: 'Legendary', game: 'Mage Wars Online', category: 'Companions', subcategory: 'Mythical', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'PetMaster', rating: 4.9, sales: 1250 }, views: 3421, description: 'A blazing phoenix companion that automatically revives you once per battle. Includes flame aura effect.', stats: { Power: 85, Loyalty: 95 }, reviews: 234, prime: true, sponsored: true },
   { id: 'c2', name: 'Shadow Wolf Pack - Triple Beast Companion Set with Stealth Bonus', price: 28000, rarity: 'Epic', game: 'Elder Scrolls: Reborn', category: 'Companions', subcategory: 'Beast', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'WildTamer', rating: 4.7, sales: 890 }, views: 2156, description: 'Three shadow wolves that hunt alongside you with +25% stealth bonus when active.', stats: { Power: 70, Loyalty: 80 }, reviews: 156, prime: true },
   { id: 'c3', name: 'Quantum AI Drone MK-X - Advanced Combat Assistant with Neural Link', price: 52000, rarity: 'Mythic', game: 'Cyberpunk 2088', category: 'Companions', subcategory: 'Mechanical', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'TechDealer', rating: 5.0, sales: 2100 }, views: 4521, description: 'Military-grade AI companion with combat assistance, hacking support, and tactical analysis.', stats: { Power: 90, Intelligence: 100 }, reviews: 312, prime: true, sponsored: true },
-  { id: 'g1', name: 'Void Reaper Scythe - Soul Harvesting Legendary Weapon', price: 78000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidForge', rating: 4.9, sales: 1890 }, views: 5678, description: 'Harvests souls with each killing blow. 15% life steal on hit.', stats: { Attack: 120, CritChance: 25 }, reviews: 445, prime: true },
-  { id: 'a1', name: 'Time Warp Mastery - Ultimate Time Manipulation Ability', price: 95000, rarity: 'Mythic', game: 'Mage Wars Online', category: 'Abilities', subcategory: 'Magic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'ArcaneTrader', rating: 5.0, sales: 890 }, views: 6789, description: 'Manipulate time in a 50m radius for 10 seconds.', stats: { Power: 100, Cooldown: 300 }, reviews: 456, prime: true },
+  { id: 'c4', name: 'Elemental Sprite - Magic Buffer Companion with Mana Regeneration', price: 15000, originalPrice: 18000, rarity: 'Rare', game: 'Mage Wars Online', category: 'Companions', subcategory: 'Elemental', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'SpriteTrader', rating: 4.5, sales: 567 }, views: 1234, description: 'A helpful sprite that buffs magic abilities by 15% and provides passive mana regeneration.', stats: { Power: 45, Support: 75 }, reviews: 89, prime: false },
+  { id: 'g1', name: 'Void Reaper Scythe - Soul Harvesting Legendary Weapon with Life Steal', price: 78000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidForge', rating: 4.9, sales: 1890 }, views: 5678, description: 'Harvests souls with each killing blow. 15% life steal on hit. Glows with void energy.', stats: { Attack: 120, CritChance: 25 }, reviews: 445, prime: true },
+  { id: 'g2', name: 'Plasma Cannon MK-X - Military Grade Heavy Weapon with Burst Fire Mode', price: 65000, originalPrice: 72000, rarity: 'Epic', game: 'Galactic Warfare', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=400&fit=crop', seller: { name: 'GunRunner', rating: 4.6, sales: 1200 }, views: 3421, description: 'Military-grade plasma weapon with burst fire capability. Includes thermal scope attachment.', stats: { Attack: 95, FireRate: 80 }, reviews: 267, prime: true, sponsored: true },
+  { id: 'g3', name: 'Cyber Katana - Mono-Molecular Edge Blade with Electric Discharge', price: 42000, rarity: 'Epic', game: 'Cyberpunk 2088', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'BladeSmith', rating: 4.8, sales: 980 }, views: 2987, description: 'Mono-molecular edge cuts through any armor. Electric discharge on critical hits.', stats: { Attack: 85, Speed: 95 }, reviews: 198, prime: true },
+  { id: 'g4', name: 'Void Emperor Complete Armor Set - Full Protection with Shadow Immunity', price: 125000, originalPrice: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Armor', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidMaster', rating: 4.9, sales: 3200 }, views: 8921, description: 'Complete 5-piece armor set forged in the void dimension. Grants immunity to shadow damage.', stats: { Defense: 150, MagicRes: 80 }, reviews: 567, prime: true, sponsored: true },
+  { id: 'a1', name: 'Time Warp Mastery - Ultimate Time Manipulation Ability Unlock', price: 95000, rarity: 'Mythic', game: 'Mage Wars Online', category: 'Abilities', subcategory: 'Magic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'ArcaneTrader', rating: 5.0, sales: 890 }, views: 6789, description: 'Manipulate time in a 50m radius for 10 seconds. Slow enemies, speed up allies.', stats: { Power: 100, Cooldown: 300 }, reviews: 456, prime: true },
+  { id: 'a2', name: 'Neural Hack Protocol - Instant System Override Netrunner Ability', price: 55000, rarity: 'Legendary', game: 'Cyberpunk 2088', category: 'Abilities', subcategory: 'Tech', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'Netrunner', rating: 4.8, sales: 670 }, views: 3456, description: 'Instantly hack any electronic system within 100m range. Bypass all firewalls.', stats: { Power: 85, Range: 100 }, reviews: 234, prime: true },
+  { id: 'mt1', name: 'Cyber Dragon Mount - Mechanical Flying Dragon with Plasma Breath', price: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', category: 'Mounts', subcategory: 'Flying', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'MountKing', rating: 5.0, sales: 450 }, views: 12453, description: 'Mechanical dragon with plasma breath attack. 200% movement speed in air.', stats: { Speed: 200, Flight: true }, reviews: 678, prime: true, sponsored: true },
 ];
 
 const CATEGORIES = [
@@ -25,6 +34,8 @@ const CATEGORIES = [
   { id: 'Mounts', name: 'Mounts & Vehicles', icon: Footprints },
 ];
 
+const GAMES = ['All Games', 'Elder Scrolls: Reborn', 'Cyberpunk 2088', 'Mage Wars Online', 'Galactic Warfare', 'Assassin Protocol'];
+
 const rarityStyles = {
   Common: { text: 'text-slate-400', bg: 'bg-slate-500/20' },
   Uncommon: { text: 'text-green-400', bg: 'bg-green-500/20' },
@@ -34,15 +45,22 @@ const rarityStyles = {
   Mythic: { text: 'text-red-400', bg: 'bg-red-500/20' }
 };
 
-// Liquid Card with wave animation
-const LiquidCard = ({ children, className = "", onClick }) => {
+// Liquid Glass Card with wave animation
+const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
   const x = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
   const waveX = useTransform(mouseX, [0, 1], ["-100%", "200%"]);
 
   return (
     <motion.div
-      className={`relative overflow-hidden rounded-xl bg-slate-900/60 backdrop-blur-xl border border-white/10 transition-all duration-300 hover:border-white/20 hover:bg-slate-800/60 cursor-pointer ${className}`}
+      className={`relative overflow-hidden rounded-xl transition-all duration-300 ${hover ? 'hover:border-white/20 hover:shadow-[0_0_30px_rgba(100,150,255,0.1)] cursor-pointer' : ''} ${className}`}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+      }}
       onMouseMove={({ currentTarget, clientX }) => {
         const { left, width } = currentTarget.getBoundingClientRect();
         x.set((clientX - left) / width);
@@ -50,62 +68,32 @@ const LiquidCard = ({ children, className = "", onClick }) => {
       onMouseLeave={() => x.set(0.5)}
       onClick={onClick}
     >
-      <motion.div
-        className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12"
-        style={{ left: waveX, width: "60%", height: "100%" }}
-      />
+      {hover && (
+        <motion.div
+          className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/8 to-transparent -skew-x-12"
+          style={{ left: waveX, width: "60%", height: "100%" }}
+        />
+      )}
       {children}
     </motion.div>
   );
 };
 
-// Horizontal scroll product row
-const ProductRow = ({ title, items, onItemClick }) => (
-  <div className="mb-8">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-white font-bold text-lg">{title}</h2>
-      <button className="text-blue-400 text-sm hover:text-blue-300 flex items-center gap-1">
-        See more <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
-    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-      {items.slice(0, 6).map((item) => (
-        <LiquidCard key={item.id} onClick={() => onItemClick(item)} className="w-[180px] flex-shrink-0">
-          <div className="aspect-square rounded-lg overflow-hidden bg-slate-950 mb-2">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-          </div>
-          <div className="p-3">
-            <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-blue-300">{item.name}</h3>
-            <div className="flex items-center gap-1 mb-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-              ))}
-              <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
-            </div>
-            <span className="text-white font-bold">{item.price.toLocaleString()}</span>
-            <span className="text-white/40 text-xs ml-1">AGP</span>
-          </div>
-        </LiquidCard>
-      ))}
-    </div>
-  </div>
-);
-
-// List item card
+// List Item Card
 const ListItemCard = ({ item, onClick }) => {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
   const discountPercent = hasDiscount ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
 
   return (
-    <LiquidCard onClick={() => onClick(item)} className="p-4 mb-3">
-      <div className="flex gap-4">
-        <div className="w-[140px] h-[140px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-950">
+    <LiquidCard onClick={() => onClick(item)} className="mb-3">
+      <div className="flex gap-4 p-4">
+        <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-950">
           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="text-blue-400 hover:text-blue-300 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
+          <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
             {item.name}
           </h3>
 
@@ -130,24 +118,88 @@ const ListItemCard = ({ item, onClick }) => {
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
               <span className="text-white/50 text-sm">AGP</span>
+              {hasDiscount && (
+                <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-2 mb-2">
             <span className={`${rarity.text} text-xs font-medium`}>{item.rarity}</span>
             <span className="text-white/40 text-xs">•</span>
+            <span className="text-white/50 text-xs">{item.game}</span>
+            <span className="text-white/40 text-xs">•</span>
             <span className="text-white/50 text-xs">{item.category}</span>
           </div>
 
           <p className="text-white/60 text-sm line-clamp-2">{item.description}</p>
+        </div>
+
+        <div className="hidden xl:block w-[140px] flex-shrink-0 text-right">
+          <p className="text-white/40 text-xs mb-1">Sold by</p>
+          <p className="text-blue-400 text-sm font-medium mb-1">{item.seller.name}</p>
+          <div className="flex items-center justify-end gap-1">
+            <Star className="w-3 h-3 text-orange-400 fill-current" />
+            <span className="text-white text-xs">{item.seller.rating}</span>
+          </div>
         </div>
       </div>
     </LiquidCard>
   );
 };
 
-// Filter sidebar
+// Product Row
+const ProductRow = ({ title, items, onItemClick }) => (
+  <div className="mb-8">
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-white font-bold text-lg">{title}</h2>
+      <button className="text-blue-400 text-sm hover:text-orange-400 flex items-center gap-1 transition-colors">
+        See more <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+      {items.slice(0, 6).map((item) => {
+        const rarity = rarityStyles[item.rarity];
+        const hasDiscount = item.originalPrice && item.originalPrice > item.price;
+        return (
+          <LiquidCard key={item.id} onClick={() => onItemClick(item)} className="w-[180px] flex-shrink-0">
+            <div className="aspect-square rounded-lg overflow-hidden bg-slate-950">
+              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="p-3">
+              <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
+              <div className="flex items-center gap-1 mb-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+                ))}
+                <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-white font-bold">{item.price.toLocaleString()}</span>
+                <span className="text-white/40 text-xs">AGP</span>
+              </div>
+              {hasDiscount && (
+                <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
+              )}
+            </div>
+          </LiquidCard>
+        );
+      })}
+    </div>
+  </div>
+);
+
+// Filter Sidebar
 const FilterSidebar = ({ filters, setFilters }) => {
+  const { category, game, priceRange, rarities, rating, prime, deals } = filters;
+
+  const toggleRarity = (r) => {
+    setFilters(prev => ({
+      ...prev,
+      rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
+    }));
+  };
+
   const FilterSection = ({ title, children, defaultOpen = true }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
@@ -179,10 +231,10 @@ const FilterSidebar = ({ filters, setFilters }) => {
               key={cat.id}
               onClick={() => setFilters(prev => ({ ...prev, category: cat.id }))}
               className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                filters.category === cat.id ? 'text-blue-400 font-medium' : 'text-white/70 hover:text-white'
+                category === cat.id ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
               }`}
             >
-              {filters.category === cat.id && <ChevronRight className="w-3 h-3" />}
+              {category === cat.id && <ChevronRight className="w-3 h-3" />}
               {cat.name}
             </button>
           ))}
@@ -195,7 +247,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
             <button
               key={r}
               onClick={() => setFilters(prev => ({ ...prev, rating: prev.rating === r ? null : r }))}
-              className={`flex items-center gap-2 w-full text-left ${filters.rating === r ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+              className={`flex items-center gap-2 w-full text-left ${rating === r ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
             >
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
@@ -208,25 +260,95 @@ const FilterSidebar = ({ filters, setFilters }) => {
         </div>
       </FilterSection>
 
-      <FilterSection title="Price">
-        <Slider
-          value={filters.priceRange}
-          onValueChange={(val) => setFilters(prev => ({ ...prev, priceRange: val }))}
-          max={200000}
-          min={0}
-          step={5000}
-          className="mb-3"
-        />
-        <div className="flex items-center justify-between text-xs text-white/50">
-          <span>{filters.priceRange[0].toLocaleString()}</span>
-          <span>{filters.priceRange[1].toLocaleString()}</span>
+      <FilterSection title="Game">
+        <div className="space-y-1.5">
+          {GAMES.map(g => (
+            <label key={g} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={game === g}
+                onCheckedChange={() => setFilters(prev => ({ ...prev, game: prev.game === g ? 'All Games' : g }))}
+                className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
+              />
+              <span className="text-white/70 text-sm hover:text-white">{g}</span>
+            </label>
+          ))}
         </div>
+      </FilterSection>
+
+      <FilterSection title="Price">
+        <div className="space-y-2">
+          {[[0, 10000], [10000, 50000], [50000, 100000], [100000, 200000]].map(([min, max], i) => (
+            <button
+              key={i}
+              onClick={() => setFilters(prev => ({ ...prev, priceRange: [min, max] }))}
+              className={`text-sm w-full text-left ${priceRange[0] === min && priceRange[1] === max ? 'text-orange-400' : 'text-white/70 hover:text-white'}`}
+            >
+              {min === 0 ? 'Under' : ''} {min > 0 ? `${(min/1000)}k` : ''} {min > 0 ? 'to' : ''} {(max/1000)}k AGP
+            </button>
+          ))}
+          <div className="pt-2">
+            <Slider
+              value={priceRange}
+              onValueChange={(val) => setFilters(prev => ({ ...prev, priceRange: val }))}
+              max={200000}
+              min={0}
+              step={5000}
+              className="mb-2"
+            />
+            <div className="flex items-center justify-between text-xs text-white/40">
+              <span>{priceRange[0].toLocaleString()}</span>
+              <span>{priceRange[1].toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Rarity">
+        <div className="space-y-1.5">
+          {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
+            const style = rarityStyles[r];
+            return (
+              <label key={r} className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={rarities.includes(r)}
+                  onCheckedChange={() => toggleRarity(r)}
+                  className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
+                />
+                <span className={`text-sm ${style.text}`}>{r}</span>
+              </label>
+            );
+          })}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Deals & Discounts">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={deals}
+            onCheckedChange={() => setFilters(prev => ({ ...prev, deals: !prev.deals }))}
+            className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
+          />
+          <span className="text-white/70 text-sm">All Discounts</span>
+        </label>
+      </FilterSection>
+
+      <FilterSection title="Delivery">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={prime}
+            onCheckedChange={() => setFilters(prev => ({ ...prev, prime: !prev.prime }))}
+            className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+          />
+          <span className="text-blue-400 text-sm flex items-center gap-1">
+            <Truck className="w-3.5 h-3.5" /> Prime Eligible
+          </span>
+        </label>
       </FilterSection>
     </div>
   );
 };
 
-// Item detail modal
+// Item Detail Modal
 const ItemDetailModal = ({ item, isOpen, onClose }) => {
   if (!item) return null;
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
@@ -247,6 +369,10 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
 
             <h1 className="text-xl font-bold text-white mb-2 pr-8">{item.name}</h1>
             
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-blue-400 text-sm">Visit the {item.seller.name} Store</span>
+            </div>
+
             <div className="flex items-center gap-2 mb-4">
               <span className="text-orange-400 font-medium">{item.seller.rating}</span>
               <div className="flex items-center">
@@ -255,13 +381,51 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
                 ))}
               </div>
               <span className="text-blue-400 text-sm">{item.reviews} ratings</span>
+              <span className="text-white/30">|</span>
+              <span className="text-white/50 text-sm">{item.seller.sales}+ bought in past month</span>
             </div>
 
             <div className="border-t border-b border-white/10 py-4 mb-4">
+              {hasDiscount && (
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge className="bg-red-600 text-white text-sm border-none">-{Math.round((1 - item.price / item.originalPrice) * 100)}%</Badge>
+                  <span className="text-red-400 text-sm">Limited time deal</span>
+                </div>
+              )}
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-white">{item.price.toLocaleString()}</span>
                 <span className="text-white/50">AGP</span>
+                {hasDiscount && (
+                  <span className="text-white/40 text-sm line-through ml-2">List: {item.originalPrice?.toLocaleString()} AGP</span>
+                )}
               </div>
+              {item.prime && (
+                <p className="text-sm mt-2">
+                  <span className="text-blue-400 flex items-center gap-1"><Truck className="w-4 h-4" /> Prime</span>
+                  <span className="text-green-400">FREE delivery Tomorrow</span>
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex gap-4 text-sm">
+                <span className="text-white/50 w-24">Rarity</span>
+                <Badge className={`${rarity.bg} ${rarity.text} border-none`}>{item.rarity}</Badge>
+              </div>
+              <div className="flex gap-4 text-sm">
+                <span className="text-white/50 w-24">Category</span>
+                <span className="text-white">{item.category}</span>
+              </div>
+              <div className="flex gap-4 text-sm">
+                <span className="text-white/50 w-24">Game</span>
+                <span className="text-white">{item.game}</span>
+              </div>
+              {item.stats && Object.entries(item.stats).map(([key, value]) => (
+                <div key={key} className="flex gap-4 text-sm">
+                  <span className="text-white/50 w-24">{key}</span>
+                  <span className="text-white">{value}</span>
+                </div>
+              ))}
             </div>
 
             <div className="mb-6">
@@ -270,10 +434,10 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
             </div>
 
             <div className="flex gap-3">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold h-11 rounded-full">
-                <Plus className="w-4 h-4 mr-2" /> Add to Cart
+              <Button className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full">
+                <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
               </Button>
-              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-11 rounded-full">
+              <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full">
                 Buy Now
               </Button>
             </div>
@@ -285,70 +449,105 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
 };
 
 export default function MarketplaceContent() {
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('list');
+
   const [filters, setFilters] = useState({
     category: 'all',
+    game: 'All Games',
     priceRange: [0, 200000],
     rarities: [],
     rating: null,
+    prime: false,
+    deals: false,
   });
 
   const filteredItems = useMemo(() => {
     return MARKETPLACE_ITEMS.filter(item => {
+      const searchMatch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const categoryMatch = filters.category === 'all' || item.category === filters.category;
+      const gameMatch = filters.game === 'All Games' || item.game === filters.game;
       const priceMatch = item.price >= filters.priceRange[0] && item.price <= filters.priceRange[1];
+      const rarityMatch = filters.rarities.length === 0 || filters.rarities.includes(item.rarity);
       const ratingMatch = !filters.rating || item.seller.rating >= filters.rating;
-      return categoryMatch && priceMatch && ratingMatch;
+      const primeMatch = !filters.prime || item.prime;
+      const dealsMatch = !filters.deals || (item.originalPrice && item.originalPrice > item.price);
+      return searchMatch && categoryMatch && gameMatch && priceMatch && rarityMatch && ratingMatch && primeMatch && dealsMatch;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
+      if (sortBy === 'reviews') return (b.reviews || 0) - (a.reviews || 0);
       return (b.views || 0) - (a.views || 0);
     });
-  }, [filters, sortBy]);
+  }, [searchTerm, filters, sortBy]);
 
   const sponsoredItems = MARKETPLACE_ITEMS.filter(i => i.sponsored);
+  const popularItems = [...MARKETPLACE_ITEMS].sort((a, b) => b.views - a.views);
 
   return (
-    <div className="min-h-screen">
+    <div className="pt-6">
+      {/* Secondary Category Nav */}
+      <div className="flex items-center gap-6 mb-8 pb-4 border-b border-white/10 overflow-x-auto scrollbar-hide">
+        {CATEGORIES.slice(1).map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => setFilters(prev => ({ ...prev, category: cat.id }))}
+            className={`flex items-center gap-2 text-sm whitespace-nowrap transition-colors ${filters.category === cat.id ? 'text-orange-400 font-medium' : 'text-white/60 hover:text-white'}`}
+          >
+            <cat.icon className="w-4 h-4" />
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Sponsored Row */}
       <ProductRow title="Sponsored • Top rated in Gaming Items" items={sponsoredItems} onItemClick={setSelectedItem} />
 
       <div className="flex gap-6">
+        {/* Sidebar */}
         <aside className="hidden lg:block">
           <FilterSidebar filters={filters} setFilters={setFilters} />
         </aside>
 
+        {/* Results */}
         <div className="flex-1 min-w-0">
+          {/* Results Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-white/50 text-sm">
                 {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
+                {searchTerm && <span> for "<span className="text-orange-400">{searchTerm}</span>"</span>}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
+                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/50'}`}>
                   <List className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`}>
+                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/50'}`}>
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-white/30"
               >
                 <option value="featured">Sort by: Featured</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
+                <option value="reviews">Avg. Customer Review</option>
               </select>
             </div>
           </div>
 
+          {/* Results Grid/List */}
           <div className="mb-8">
             <h2 className="text-white font-bold mb-4">Results</h2>
+            <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
+            
             {viewMode === 'list' ? (
               <div className="space-y-1">
                 {filteredItems.map(item => (
@@ -357,20 +556,37 @@ export default function MarketplaceContent() {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredItems.map(item => (
-                  <LiquidCard key={item.id} onClick={() => setSelectedItem(item)}>
-                    <div className="aspect-square bg-slate-950 rounded-lg overflow-hidden mb-2">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-blue-400 text-sm line-clamp-2 mb-1">{item.name}</h3>
-                      <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
-                    </div>
-                  </LiquidCard>
-                ))}
+                {filteredItems.map(item => {
+                  const rarity = rarityStyles[item.rarity];
+                  return (
+                    <LiquidCard key={item.id} onClick={() => setSelectedItem(item)}>
+                      <div className="aspect-square bg-slate-950 rounded-lg overflow-hidden">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="p-3">
+                        <h3 className="text-blue-400 text-sm line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
+                        <div className="flex items-center mb-1">
+                          {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
+                          <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+                        </div>
+                        <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
+                      </div>
+                    </LiquidCard>
+                  );
+                })}
+              </div>
+            )}
+
+            {filteredItems.length === 0 && (
+              <div className="text-center py-16">
+                <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                <p className="text-white/50">No items found matching your criteria</p>
               </div>
             )}
           </div>
+
+          {/* Customers frequently viewed */}
+          <ProductRow title="Customers frequently viewed" items={popularItems} onItemClick={setSelectedItem} />
         </div>
       </div>
 
