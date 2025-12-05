@@ -566,10 +566,10 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pl-2 border-l border-white/10 ml-1">
             <Link 
               to={createPageUrl('Cart')} 
-              className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
             >
               <ShoppingCart className="w-4 h-4 text-white/80" />
               {cartCount > 0 && (
@@ -578,7 +578,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 </span>
               )}
             </Link>
-            <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/20 cursor-pointer hover:ring-white/40 transition-all">
+            <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-white/20 cursor-pointer hover:ring-white/40 transition-all">
               <img 
                 src={user?.avatar_url || "https://github.com/shadcn.png"} 
                 alt="User" 
@@ -587,6 +587,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             </div>
           </div>
         </div>
+      </div>
       </motion.header>
 
       {/* App Drawer */}
