@@ -559,11 +559,10 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                   />
                 )}
               </AnimatePresence>
-              </div>
-              </div>
+          </div>
 
-              {/* Right: Actions */}
-              <div className="flex items-center gap-2">
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
             <Link 
               to={createPageUrl('Cart')} 
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
@@ -584,7 +583,6 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             </div>
           </div>
         </div>
-      </div>
       </motion.header>
 
       {/* App Drawer */}
