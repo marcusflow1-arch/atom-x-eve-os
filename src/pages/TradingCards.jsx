@@ -33,40 +33,47 @@ const CardComponent = ({ card, isOwned }) => {
       animate={isRotating ? { rotateY: 360 } : {}}
       transition={isRotating ? { duration: 8, repeat: Infinity, ease: "linear" } : {}}
       whileHover={isRotating ? { scale: 1.1 } : { scale: 1.05, rotateY: 10 }}
-      className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden border-2 ${rarityColors[card.rarity]} bg-slate-900 cursor-pointer group`}
+      className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer group ${
+        isRotating ? '' : `border-2 ${rarityColors[card.rarity]} bg-slate-900`
+      }`}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
       
-      {/* Top Badges */}
-      <div className="absolute top-2 left-2 right-2 flex justify-between">
-        <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border border-white/10 text-[10px]">
-            {card.series}
-        </Badge>
-        {card.total && (
-            <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono">
-                #{card.mint}/{card.total}
+      {!isRotating && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+          
+          {/* Top Badges */}
+          <div className="absolute top-2 left-2 right-2 flex justify-between">
+            <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border border-white/10 text-[10px]">
+                {card.series}
             </Badge>
-        )}
-      </div>
-
-      {/* Bottom Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <h3 className="text-white font-bold text-lg leading-tight mb-1">{card.name}</h3>
-        <div className="flex items-center justify-between">
-            <span className={`text-xs font-bold uppercase ${
-                card.rarity === 'Legendary' ? 'text-orange-400' :
-                card.rarity === 'Epic' ? 'text-purple-400' :
-                card.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-400'
-            }`}>{card.rarity}</span>
-            {isOwned && (
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-white hover:bg-white/20">
-                    <ArrowLeftRight className="w-3 h-3" />
-                </Button>
+            {card.total && (
+                <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono">
+                    #{card.mint}/{card.total}
+                </Badge>
             )}
-        </div>
-      </div>
+          </div>
+
+          {/* Bottom Info */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <h3 className="text-white font-bold text-lg leading-tight mb-1">{card.name}</h3>
+            <div className="flex items-center justify-between">
+                <span className={`text-xs font-bold uppercase ${
+                    card.rarity === 'Legendary' ? 'text-orange-400' :
+                    card.rarity === 'Epic' ? 'text-purple-400' :
+                    card.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-400'
+                }`}>{card.rarity}</span>
+                {isOwned && (
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-white hover:bg-white/20">
+                        <ArrowLeftRight className="w-3 h-3" />
+                    </Button>
+                )}
+            </div>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 };
