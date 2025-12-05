@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Search, Filter, Layers, Star, Shield, Zap, Crown, Hexagon, ArrowLeftRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ const MOCK_CARDS = [
   { id: 4, name: "Solar Knight", rarity: "Uncommon", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=600&fit=crop", series: "Fantasy", mint: 2341, total: 5000 },
   { id: 5, name: "Pixel Warrior", rarity: "Common", image: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=400&h=600&fit=crop", series: "Retro", mint: 5678, total: null },
   { id: 6, name: "Blood Drain", rarity: "Legendary", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/02ea67ae3_ChatGPTImageDec4202508_27_56PM.png", series: "Dark Arts", mint: 1, total: 10 },
+  { id: 7, name: "Ability Legends", rarity: "Mythic", image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/b626ca15e_0a97216f-9425-4a6c-ac8d-ed0198714d56.png", series: "Omni", mint: 1, total: 5 },
 ];
 
 const CardComponent = ({ card, isOwned }) => {
@@ -23,24 +24,55 @@ const CardComponent = ({ card, isOwned }) => {
     Epic: "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]",
     Rare: "border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]",
     Uncommon: "border-green-500",
-    Common: "border-slate-600"
+    Common: "border-slate-600",
+    Mythic: "border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
   };
 
-  const isRotating = card.name === "Blood Drain";
+  const isSpecialCard = card.name === "Blood Drain" || card.name === "Ability Legends";
+
+  // Tilt Logic
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [25, -25]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-25, 25]);
+
+  function handleMouseMove(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXPos = event.clientX - rect.left;
+    const mouseYPos = event.clientY - rect.top;
+    const xPct = mouseXPos / width - 0.5;
+    const yPct = mouseYPos / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
 
   return (
     <motion.div
-      animate={isRotating ? { rotateY: 360 } : {}}
-      transition={isRotating ? { duration: 8, repeat: Infinity, ease: "linear" } : {}}
-      whileHover={isRotating ? { scale: 1.1 } : { scale: 1.05, rotateY: 10 }}
+      onMouseMove={isSpecialCard ? handleMouseMove : undefined}
+      onMouseLeave={isSpecialCard ? handleMouseLeave : undefined}
+      style={{ 
+        rotateX: isSpecialCard ? rotateX : 0, 
+        rotateY: isSpecialCard ? rotateY : 0,
+        transformStyle: "preserve-3d",
+      }}
+      whileHover={{ scale: 1.05, ...(isSpecialCard ? {} : { rotateY: 10 }) }}
       className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer group ${
-        isRotating ? '' : `border-2 ${rarityColors[card.rarity]} bg-slate-900`
+        isSpecialCard ? 'shadow-2xl' : `border-2 ${rarityColors[card.rarity] || rarityColors.Common} bg-slate-900`
       }`}
-      style={{ transformStyle: 'preserve-3d' }}
     >
-      <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+      <img src={card.image} alt={card.name} className="w-full h-full object-cover" style={{ transform: "translateZ(0)" }} />
       
-      {!isRotating && (
+      {!isSpecialCard && (
         <>
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
           
@@ -73,6 +105,18 @@ const CardComponent = ({ card, isOwned }) => {
             </div>
           </div>
         </>
+      )}
+      
+      {/* Light Reflection for Special Cards */}
+      {isSpecialCard && (
+         <motion.div 
+            style={{
+                opacity: useTransform(rotateX, (val) => Math.abs(val) / 50 + 0.2),
+                background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 25%, transparent 30%)",
+                transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
+            }}
+            className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+         />
       )}
     </motion.div>
   );
