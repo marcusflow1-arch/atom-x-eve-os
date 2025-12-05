@@ -119,12 +119,12 @@ const mockMaterials = [
 ];
 
 const rarityStyles = {
-  Common: { color: 'text-slate-400', glow: 'shadow-slate-500/20', border: 'border-slate-600' },
-  Uncommon: { color: 'text-green-400', glow: 'shadow-green-500/20', border: 'border-green-500' },
-  Rare: { color: 'text-blue-400', glow: 'shadow-blue-500/20', border: 'border-blue-500' },
-  Epic: { color: 'text-purple-400', glow: 'shadow-purple-500/20', border: 'border-purple-500' },
-  Legendary: { color: 'text-orange-400', glow: 'shadow-orange-500/20', border: 'border-orange-500' },
-  Mythic: { color: 'text-red-400', glow: 'shadow-red-500/20', border: 'border-red-500' }
+  Common: { color: 'text-slate-600', glow: 'shadow-slate-500/40', border: 'border-slate-300' },
+  Uncommon: { color: 'text-emerald-600', glow: 'shadow-emerald-500/40', border: 'border-emerald-300' },
+  Rare: { color: 'text-blue-600', glow: 'shadow-blue-500/40', border: 'border-blue-300' },
+  Epic: { color: 'text-purple-600', glow: 'shadow-purple-500/40', border: 'border-purple-300' },
+  Legendary: { color: 'text-orange-600', glow: 'shadow-orange-500/40', border: 'border-orange-300' },
+  Mythic: { color: 'text-rose-600', glow: 'shadow-rose-500/40', border: 'border-rose-300' }
 };
 
 // --- Console UI Components ---
@@ -139,35 +139,38 @@ const ConsoleItemCard = ({ item, onClick, isSelected }) => {
       whileHover={{ scale: 1.05, zIndex: 10 }}
       whileTap={{ scale: 0.98 }}
       className={`
-        relative flex-shrink-0 w-48 h-64 rounded-2xl overflow-hidden cursor-pointer
-        transition-all duration-300 ease-out
-        ${isSelected ? `ring-4 ring-white ring-offset-4 ring-offset-black scale-105 z-10 ${style.glow}` : 'opacity-80 hover:opacity-100'}
+        relative flex-shrink-0 w-48 h-64 rounded-3xl overflow-hidden cursor-pointer
+        transition-all duration-500 ease-out bg-white/40 backdrop-blur-2xl border border-white/60
+        shadow-[0_8px_32px_rgba(31,38,135,0.15)]
+        ${isSelected ? `ring-4 ring-white/80 scale-105 z-10 ${style.glow}` : 'hover:scale-102 hover:shadow-xl hover:bg-white/50'}
       `}
     >
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img 
-          src={item.preview_image_url} 
-          alt={item.name} 
-          className="w-full h-full object-cover transition-transform duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      {/* Background Image with Glass Overlay */}
+      <div className="absolute inset-0 p-2">
+        <div className="w-full h-full rounded-2xl overflow-hidden relative">
+          <img 
+            src={item.preview_image_url} 
+            alt={item.name} 
+            className="w-full h-full object-cover transition-transform duration-700 mix-blend-overlay opacity-90"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
+        </div>
       </div>
 
       {/* Card Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-1">
-        <Badge className={`w-fit bg-black/50 backdrop-blur-md border ${style.border} ${style.color} text-[10px] px-2 py-0.5`}>
+      <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-1">
+        <Badge className={`w-fit bg-white/60 backdrop-blur-md border ${style.border} ${style.color} text-[10px] px-2 py-0.5 shadow-sm`}>
           {item.rarity}
         </Badge>
-        <h3 className="text-white font-bold text-lg leading-tight shadow-black drop-shadow-md">
+        <h3 className="text-slate-800 font-black text-lg leading-tight">
           {item.name}
         </h3>
-        <p className="text-slate-300 text-xs truncate">{item.type}</p>
+        <p className="text-slate-500 text-xs truncate font-medium">{item.type}</p>
       </div>
 
-      {/* Selection Indicator (Corner triangle) */}
+      {/* Selection Glint */}
       {isSelected && (
-        <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-r-[40px] border-t-transparent border-r-white opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 to-transparent pointer-events-none" />
       )}
     </motion.div>
   );
@@ -189,71 +192,75 @@ const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
       {/* Header Area */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Badge className={`text-sm px-3 py-1 ${style.border} bg-black/40 backdrop-blur-md ${style.color}`}>
+          <Badge className={`text-sm px-3 py-1 ${style.border} bg-white/60 backdrop-blur-md ${style.color} shadow-sm`}>
             {item.rarity} {item.type}
           </Badge>
-          <Badge variant="outline" className="text-sm text-slate-400 border-slate-600">
+          <Badge variant="outline" className="text-sm text-slate-500 border-slate-300 bg-white/30">
             Lv. {item.level_requirement}
           </Badge>
         </div>
-        <h1 className="text-5xl font-black text-white mb-4 tracking-tight">{item.name}</h1>
-        <p className="text-xl text-slate-300 max-w-2xl font-light leading-relaxed border-l-4 border-slate-600 pl-4">
+        <h1 className="text-5xl font-black text-slate-800 mb-4 tracking-tight drop-shadow-sm">{item.name}</h1>
+        <p className="text-xl text-slate-600 max-w-2xl font-medium leading-relaxed border-l-4 border-blue-400/50 pl-4 bg-white/20 py-2 rounded-r-xl">
           "{item.description}"
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-6 mb-8 max-w-3xl">
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4">Base Stats</h3>
+        <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/60 shadow-lg">
+          <h3 className="text-slate-500 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
+            <Layers className="w-4 h-4" /> Base Stats
+          </h3>
           <div className="space-y-3">
             {Object.entries(item.base_stats).map(([stat, value]) => (
               <div key={stat} className="flex justify-between items-center">
-                <span className="text-slate-300 capitalize">{stat}</span>
-                <div className="h-px flex-grow mx-4 bg-white/10" />
-                <span className="text-white font-mono font-bold text-lg">{value}</span>
+                <span className="text-slate-600 capitalize font-medium">{stat}</span>
+                <div className="h-px flex-grow mx-4 bg-slate-300/50" />
+                <span className="text-slate-800 font-mono font-bold text-lg">{value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4">Enhancements</h3>
+        <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/60 shadow-lg">
+          <h3 className="text-slate-500 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
+            <Sparkles className="w-4 h-4" /> Enhancements
+          </h3>
           {item.modifiers.length > 0 ? (
             <div className="space-y-3">
               {item.modifiers.map((mod, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <Zap className="w-5 h-5 text-yellow-400 mt-0.5" />
+                <div key={idx} className="flex items-start gap-3 p-2 rounded-xl bg-white/30">
+                  <Zap className="w-5 h-5 text-amber-500 mt-0.5" />
                   <div>
-                    <div className="text-white font-medium">{mod.name}</div>
-                    <div className="text-slate-400 text-sm">{mod.effect}</div>
+                    <div className="text-slate-800 font-bold">{mod.name}</div>
+                    <div className="text-slate-600 text-sm">{mod.effect}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-slate-500 italic flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-slate-600" /> No active enchantments
+            <div className="text-slate-400 italic flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-slate-300" /> No active enchantments
             </div>
           )}
           
-          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
-            <span className="text-slate-400">Slots Available</span>
-            <span className="text-white font-bold">{item.modifiers.length} / {item.enchantment_slots}</span>
+          <div className="mt-4 pt-4 border-t border-slate-200/50 flex justify-between text-sm">
+            <span className="text-slate-500">Slots Available</span>
+            <span className="text-slate-800 font-bold">{item.modifiers.length} / {item.enchantment_slots}</span>
           </div>
         </div>
       </div>
 
       {/* Set Bonus */}
       {associatedSet && (
-        <div className="mb-8 max-w-3xl bg-gradient-to-r from-yellow-900/20 to-transparent border-l-4 border-yellow-600 p-6 rounded-r-xl">
-          <h3 className="text-yellow-500 font-bold text-lg flex items-center gap-2 mb-2">
+        <div className="mb-8 max-w-3xl bg-gradient-to-r from-amber-100/60 to-transparent border-l-4 border-amber-400 p-6 rounded-r-xl shadow-sm backdrop-blur-md">
+          <h3 className="text-amber-600 font-black text-lg flex items-center gap-2 mb-2">
             <Crown className="w-5 h-5" /> {associatedSet.name}
           </h3>
           <div className="space-y-1">
             {associatedSet.bonuses.map((bonus, idx) => (
-              <div key={idx} className="text-slate-300 text-sm flex gap-2">
-                <span className="text-yellow-600 font-bold">({bonus.pieces_required})</span>
+              <div key={idx} className="text-slate-600 text-sm flex gap-2 font-medium">
+                <span className="text-amber-600 font-bold">({bonus.pieces_required})</span>
                 <span>{bonus.bonus_description}</span>
               </div>
             ))}
@@ -261,35 +268,40 @@ const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
         </div>
       )}
 
-      {/* Action Buttons (Console Style) */}
+      {/* Action Buttons (Star Wave Effect) */}
       <div className="mt-auto flex gap-4">
         <Button 
           size="lg" 
-          className="h-14 px-8 text-lg font-bold bg-white text-black hover:bg-slate-200 rounded-xl transition-transform hover:scale-105 active:scale-95"
+          className="btn-star-wave h-16 px-8 text-lg font-bold bg-blue-600 text-white hover:bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/30 border border-white/20 overflow-hidden"
           onClick={() => onEnchant(item)}
         >
-          <span className="w-6 h-6 rounded-full border-2 border-black mr-3 flex items-center justify-center text-xs font-black">A</span>
-          Enchant
+          <span className="relative z-10 flex items-center">
+            <span className="w-6 h-6 rounded-full border-2 border-white/50 mr-3 flex items-center justify-center text-xs font-black bg-white/10">A</span>
+            Enchant
+          </span>
         </Button>
         
         <Button 
           size="lg" 
-          variant="secondary"
-          className="h-14 px-8 text-lg font-bold bg-white/10 text-white hover:bg-white/20 rounded-xl border border-white/10"
+          className="btn-star-wave h-16 px-8 text-lg font-bold bg-white text-slate-900 hover:bg-slate-50 rounded-2xl shadow-lg shadow-slate-200/50 border border-white overflow-hidden"
           onClick={() => onCombine(item)}
         >
-          <span className="w-6 h-6 rounded-full border-2 border-white mr-3 flex items-center justify-center text-xs font-black">X</span>
-          Reforge
+          <span className="relative z-10 flex items-center">
+            <span className="w-6 h-6 rounded-full border-2 border-slate-300 mr-3 flex items-center justify-center text-xs font-black bg-slate-100">X</span>
+            Reforge
+          </span>
         </Button>
 
         <Button 
           size="lg" 
           variant="destructive"
-          className="h-14 px-8 text-lg font-bold bg-red-500/20 text-red-200 hover:bg-red-500/30 rounded-xl border border-red-500/30 ml-auto"
+          className="btn-star-wave h-16 px-8 text-lg font-bold bg-rose-500 text-white hover:bg-rose-400 rounded-2xl shadow-lg shadow-rose-500/30 border border-white/20 ml-auto overflow-hidden"
           onClick={() => onSalvage(item)}
         >
-          <span className="w-6 h-6 rounded-full border-2 border-red-200 mr-3 flex items-center justify-center text-xs font-black">Y</span>
-          Salvage
+          <span className="relative z-10 flex items-center">
+            <span className="w-6 h-6 rounded-full border-2 border-white/50 mr-3 flex items-center justify-center text-xs font-black bg-white/10">Y</span>
+            Salvage
+          </span>
         </Button>
       </div>
     </motion.div>
@@ -316,26 +328,41 @@ export default function BlacksmithPage() {
   const bgImage = selectedItem?.preview_image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80';
 
   return (
-    <div className="h-screen w-full bg-black text-white overflow-hidden relative font-sans selection:bg-white/30">
-      {/* Dynamic Background Layer */}
-      <div className="absolute inset-0 z-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedItem?.id || 'default'}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0"
-          >
-            <img src={bgImage} className="w-full h-full object-cover opacity-40 blur-sm" alt="background" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
-          </motion.div>
-        </AnimatePresence>
+    <div className="h-screen w-full bg-[#f0f4f8] text-slate-800 overflow-hidden relative font-sans selection:bg-blue-200">
+      {/* Star-Wave Animation Style */}
+      <style>{`
+        @keyframes star-wave-glow {
+          0% { left: -100%; opacity: 0; }
+          50% { opacity: 0.5; }
+          100% { left: 200%; opacity: 0; }
+        }
+        .btn-star-wave {
+          position: relative;
+          overflow: hidden;
+        }
+        .btn-star-wave::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+          transform: skewX(-20deg);
+          transition: none;
+        }
+        .btn-star-wave:active::after {
+          animation: star-wave-glow 0.6s ease-out forwards;
+        }
+      `}</style>
+
+      {/* Lighter Ethereal Space Background */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-multiply" />
         
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+        {/* Light Nebula Effect */}
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-200/20 via-purple-200/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-200/20 via-blue-100/10 to-transparent blur-3xl" />
       </div>
 
       {/* Main Content Layout */}
@@ -344,19 +371,19 @@ export default function BlacksmithPage() {
         {/* Top Navigation Bar */}
         <header className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-8">
-            <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3">
-              <Hammer className="w-8 h-8 fill-white" />
+            <h1 className="text-3xl font-black tracking-tighter text-slate-800 flex items-center gap-3 drop-shadow-sm">
+              <Hammer className="w-8 h-8 fill-slate-800" />
               BLACK FORGE
             </h1>
-            <nav className="flex gap-1 bg-white/10 rounded-full p-1 backdrop-blur-md">
+            <nav className="flex gap-1 bg-white/40 rounded-full p-1 backdrop-blur-xl border border-white/50 shadow-sm">
               {['forge', 'materials', 'collab'].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   className={`px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-all ${
                     viewMode === mode 
-                      ? 'bg-white text-black shadow-lg' 
-                      : 'text-white/60 hover:text-white hover:bg-white/10'
+                      ? 'bg-white text-slate-900 shadow-md' 
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-white/30'
                   }`}
                 >
                   {mode === 'collab' ? 'Collaborations' : mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -368,14 +395,14 @@ export default function BlacksmithPage() {
           {/* User Resources */}
           <div className="flex gap-6 items-center">
             {mockMaterials.slice(0, 2).map(mat => (
-              <div key={mat.id} className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10">
+              <div key={mat.id} className="flex items-center gap-3 bg-white/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/60 shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity].color.replace('text-', 'bg-')}`} />
-                <span className="text-slate-300 text-sm font-medium">{mat.name}</span>
-                <span className="text-white font-bold font-mono">{mat.quantity}</span>
+                <span className="text-slate-600 text-sm font-medium">{mat.name}</span>
+                <span className="text-slate-900 font-bold font-mono">{mat.quantity}</span>
               </div>
             ))}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <img src={user?.avatar_url} className="w-full h-full rounded-full opacity-90" alt="User" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white flex items-center justify-center shadow-lg shadow-blue-200/50">
+              <img src={user?.avatar_url} className="w-full h-full rounded-full" alt="User" />
             </div>
           </div>
         </header>
@@ -394,7 +421,7 @@ export default function BlacksmithPage() {
                       key={cat}
                       onClick={() => setCategoryFilter(cat)}
                       className={`text-sm font-bold uppercase whitespace-nowrap transition-colors ${
-                        categoryFilter === cat ? 'text-white border-b-2 border-white pb-1' : 'text-white/40 hover:text-white'
+                        categoryFilter === cat ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
                       {cat}
@@ -402,29 +429,31 @@ export default function BlacksmithPage() {
                   ))}
                 </div>
 
-                {/* Vertical Scrollable Grid (Console Menu Style) */}
+                {/* Vertical Scrollable Grid (Apple Glass List) */}
                 <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar">
                   {displayedItems.map((item) => (
                     <motion.div
                       key={item.id}
                       onClick={() => setSelectedItem(item)}
-                      whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                      whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.6)' }}
                       className={`
-                        p-4 rounded-xl cursor-pointer border transition-all flex items-center gap-4
+                        p-4 rounded-2xl cursor-pointer border transition-all flex items-center gap-4 backdrop-blur-md
                         ${selectedItem?.id === item.id 
-                          ? 'bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
-                          : 'bg-black/40 text-white border-white/10 hover:border-white/30'
+                          ? 'bg-white text-slate-900 border-blue-200 shadow-lg shadow-blue-100/50' 
+                          : 'bg-white/30 text-slate-600 border-white/40 hover:border-white/80'
                         }
                       `}
                     >
-                      <img src={item.preview_image_url} className="w-12 h-12 rounded-md object-cover bg-black" alt="" />
+                      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
+                        <img src={item.preview_image_url} className="w-full h-full object-cover" alt="" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold truncate">{item.name}</h4>
-                        <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-black/60' : 'text-white/40'}`}>
+                        <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-500' : 'text-slate-400'}`}>
                           {item.rarity} • Lv.{item.level_requirement}
                         </p>
                       </div>
-                      {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5" />}
+                      {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-500" />}
                     </motion.div>
                   ))}
                 </div>
@@ -448,10 +477,10 @@ export default function BlacksmithPage() {
               <CraftingCollaborations />
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/30">
+            <div className="w-full h-full flex items-center justify-center text-slate-400">
               <div className="text-center">
                 <Package className="w-24 h-24 mx-auto mb-4 opacity-20" />
-                <h2 className="text-2xl font-bold">Materials Storage</h2>
+                <h2 className="text-2xl font-bold text-slate-600">Materials Storage</h2>
                 <p>Manage your crafting resources here.</p>
               </div>
             </div>
@@ -459,13 +488,13 @@ export default function BlacksmithPage() {
         </div>
 
         {/* Footer Hints */}
-        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-sm font-medium text-white/50">
+        <div className="mt-8 pt-6 border-t border-slate-200/60 flex justify-between items-center text-sm font-medium text-slate-400">
           <div className="flex gap-6">
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20">B</span> Back</span>
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20">≡</span> Options</span>
+            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 border border-slate-300 shadow-sm">B</span> Back</span>
+            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 border border-slate-300 shadow-sm">≡</span> Options</span>
           </div>
           <div>
-            Credits: <span className="text-white">24,500</span>
+            Credits: <span className="text-slate-700 font-bold">24,500</span>
           </div>
         </div>
       </div>
