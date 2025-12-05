@@ -37,17 +37,18 @@ Deno.serve(async (req) => {
 
         for (const game of chunk) {
             try {
-                // Use LLM to find image
+                // Use LLM to find image with better targeting
                 const llmResponse = await base44.integrations.Core.InvokeLLM({
-                    prompt: `Find a direct URL for the official cover art, box art, or main poster for the video game "${game.title}". 
+                    prompt: `Find a high-quality DIRECT IMAGE URL for the official cover art/box art of the game "${game.title}".
+
+                    SEARCH STRATEGY:
+                    - Prioritize searching these domains for stable images: steamstatic.com, upload.wikimedia.org, static.wikia.nocookie.net, igdb.com, playstation.com, xbox.com, media.rawg.io.
+                    - The URL MUST be a direct link to the image file (ending in .jpg, .jpeg, .png, .webp).
+                    - It MUST be the vertical/portrait box art.
+                    - Avoid "encrypted-tbn0" or "base64" or "googleusercontent" links if possible as they expire.
                     
-                    CRITICAL INSTRUCTIONS:
-                    - The URL must be a direct link to an image file (ending in .jpg, .png, .webp, etc) if possible.
-                    - Search for "official cover art ${game.title}".
-                    - Prefer vertical/portrait orientation (like a movie poster or box art).
-                    - Do not use generic placeholder images.
-                    - Do not use Unsplash images.
-                    
+                    If you absolutely cannot find a real official image, fallback to generating a URL that you are 100% sure works.
+
                     Return the result as a JSON object with the "imageUrl".`,
                     add_context_from_internet: true,
                     response_json_schema: {

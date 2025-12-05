@@ -119,19 +119,24 @@ export default function Admin() {
       let remaining = 1;
       let totalFixed = 0;
 
-      // Loop until no games remain to be fixed
-      while (remaining > 0) {
+      // Loop until no games remain to be fixed (limit to 5 batches to prevent browser timeout)
+      let batchCount = 0;
+      const MAX_BATCHES = 5;
+      
+      while (remaining > 0 && batchCount < MAX_BATCHES) {
         const response = await base44.functions.invoke('fixGameImages');
-        const data = response.data; // Axios response.data
+        const data = response.data; 
         
         remaining = data.remaining || 0;
         totalFixed += data.results?.length || 0;
+        batchCount++;
+
+        // Force a refetch to show progress
+        refetchGames();
         
-        // Optional: Toast or log progress
-        console.log(`Fixed batch. Remaining: ${remaining}`);
+        console.log(`Fixed batch ${batchCount}. Remaining: ${remaining}`);
         
         if (data.results?.length === 0 && remaining > 0) {
-             // Break loop if we aren't making progress to avoid infinite loop
              console.warn("Stuck fixing images, stopping.");
              break;
         }
