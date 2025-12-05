@@ -2391,18 +2391,39 @@ export default function Library() {
                         </div>
                     ) : (
                         <div className="h-full overflow-y-auto game-list-scrollable">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                {filteredGames.map(game => (
-                                    <GameCard 
-                                        key={game.id} 
-                                        game={game} 
-                                        isStreaming={game.id === streamingGameId}
-                                        viewMode={viewMode}
-                                        onSelect={handleSelectGame}
-                                        onPlay={handleLaunchGame}
-                                    />
-                                ))}
-                            </div>
+                            {/* Group games by genre */}
+                            {(() => {
+                                const gamesByGenre = filteredGames.reduce((acc, game) => {
+                                    const genre = game.genre || 'Other';
+                                    const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+                                    if (!acc[genreKey]) acc[genreKey] = [];
+                                    acc[genreKey].push(game);
+                                    return acc;
+                                }, {});
+
+                                return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
+                                    <div key={genre} className="mb-8">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h2 className="text-white/90 text-xl font-bold flex items-center gap-2">
+                                                {genre}
+                                                <span className="text-white/40 text-sm font-normal">({genreGames.length})</span>
+                                            </h2>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                            {genreGames.map(game => (
+                                                <GameCard 
+                                                    key={game.id} 
+                                                    game={game} 
+                                                    isStreaming={game.id === streamingGameId}
+                                                    viewMode={viewMode}
+                                                    onSelect={handleSelectGame}
+                                                    onPlay={handleLaunchGame}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     )
                 ) : (
