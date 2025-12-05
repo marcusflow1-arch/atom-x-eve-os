@@ -261,6 +261,10 @@ export const ThemeBackground = ({ themeId }) => {
             } else if (type === 'wisps') {
                 p.vy = -(Math.random() * 0.5 + 0.2);
                 p.vx = Math.sin(Math.random() * Math.PI * 2) * 0.5;
+            } else if (type === 'moon_glow') {
+                p.color = Math.random() > 0.5 ? 'rgba(220, 255, 255, 0.4)' : 'rgba(180, 230, 255, 0.3)';
+                p.vy = -(Math.random() * 0.2 + 0.1);
+                p.radius = Math.random() * 2 + 0.5;
             }
 
             particles.push(p);
