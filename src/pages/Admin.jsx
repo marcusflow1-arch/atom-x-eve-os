@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -21,6 +21,47 @@ export default function Admin() {
   const [populatingGames, setPopulatingGames] = useState(false);
   const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
   const [fixingImages, setFixingImages] = useState(false);
+  const [activeJobId, setActiveJobId] = useState(null);
+  
+  // Poll for logs if a job is active
+  const { data: agentLogs = [] } = useQuery({
+    queryKey: ['agentLogs', activeJobId],
+    queryFn: () => base44.entities.AgentLog.filter({ job_id: activeJobId }, 'created_date', 100),
+    enabled: !!activeJobId,
+    refetchInterval: 1000, // Live polling
+  });
+
+  // Poll job status
+  const { data: activeJob } = useQuery({
+    queryKey: ['agentJob', activeJobId],
+    queryFn: async () => {
+        const jobs = await base44.entities.AgentJob.filter({ id: activeJobId });
+        return jobs[0];
+    },
+    enabled: !!activeJobId,
+    refetchInterval: 2000,
+  });
+
+  // Check if job finished
+  useEffect(() => {
+      if (activeJob && (activeJob.status === 'completed' || activeJob.status === 'failed')) {
+          // Stop polling after a short delay to ensure we got all logs
+          setTimeout(() => {
+             refetchGames();
+             // Don't set activeJobId to null immediately so user can see the final logs
+          }, 2000);
+      }
+  }, [activeJob]);
+
+  const startAgentMutation = useMutation({
+      mutationFn: async () => {
+          const job = await base44.entities.AgentJob.create({ status: 'running', type: 'game_discovery' });
+          setActiveJobId(job.id);
+          // Trigger backend function
+          base44.functions.invoke('gameDiscoveryAgent', { jobId: job.id }); // Fire and forget-ish (or it awaits)
+          return job;
+      }
+  });
 
   const { data: heroBackgrounds = [], isLoading } = useQuery({
     queryKey: ['heroBackgrounds'],
@@ -466,6 +507,19 @@ export default function Admin() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    onClick={() => startAgentMutation.mutate()}
+                    disabled={startAgentMutation.isPending || (activeJob && activeJob.status === 'running')}
+                    className={`
+                        ${(activeJob && activeJob.status === 'running') 
+                            ? 'bg-purple-600/50 animate-pulse' 
+                            : 'bg-purple-600 hover:bg-purple-700'} 
+                        border border-purple-400/20
+                    `}
+                  >
+                    <Bot className="w-4 h-4 mr-2" />
+                    {(activeJob && activeJob.status === 'running') ? 'Agent Running...' : 'Launch Discovery Agent'}
+                  </Button>
                   <Badge variant="outline" className="text-slate-400">
                     {existingGames.length} Games
                   </Badge>
@@ -493,6 +547,61 @@ export default function Admin() {
                   </Button>
                 </div>
               </div>
+
+              {/* Agent Terminal Panel */}
+              <AnimatePresence>
+                {activeJobId && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-6 rounded-xl overflow-hidden border border-slate-700 bg-black font-mono text-sm shadow-2xl"
+                    >
+                        <div className="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-green-400">
+                                <Terminal className="w-4 h-4" />
+                                <span className="font-bold">Agent Terminal_v1.0</span>
+                                {activeJob?.status === 'running' && (
+                                    <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse ml-2"/>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className={`text-xs px-2 py-0.5 rounded ${
+                                    activeJob?.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                                    activeJob?.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                                    'bg-blue-500/20 text-blue-400'
+                                }`}>
+                                    STATUS: {activeJob?.status?.toUpperCase() || 'INITIALIZING'}
+                                </span>
+                                <button onClick={() => setActiveJobId(null)} className="text-slate-500 hover:text-white">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="p-4 h-64 overflow-y-auto custom-scrollbar flex flex-col-reverse gap-1">
+                            {agentLogs.length === 0 && (
+                                <div className="text-slate-500 italic">Waiting for agent logs...</div>
+                            )}
+                            {agentLogs.map((log) => (
+                                <div key={log.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <span className="text-slate-600 text-xs pt-1">
+                                        [{new Date(log.created_date).toLocaleTimeString()}]
+                                    </span>
+                                    <span className={`flex-1 break-words ${
+                                        log.level === 'error' ? 'text-red-400' : 
+                                        log.level === 'success' ? 'text-green-400' : 
+                                        log.level === 'warning' ? 'text-yellow-400' : 
+                                        'text-slate-300'
+                                    }`}>
+                                        <span className="mr-2">{'>'}</span>
+                                        {log.message}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Add New Game Form */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
