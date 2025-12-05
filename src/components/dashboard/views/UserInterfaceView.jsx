@@ -38,50 +38,40 @@ export default function UserInterfaceView({
   ];
 
   return (
-    <div className="flex flex-col h-full w-full">
-      {/* Top Navigation Bar */}
-      <div className="w-full bg-slate-800/30 rounded-t-xl border border-slate-700/50 p-3 flex-shrink-0">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {features.map((feature) => (
-            <motion.button
-              key={feature.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveFeature(feature.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all flex-shrink-0 ${
-                activeFeature === feature.id
-                  ? 'bg-blue-600 shadow-lg shadow-blue-500/30'
-                  : 'bg-slate-700/30 hover:bg-slate-700/50'
-              }`}
-            >
-              <div className={`w-6 h-6 ${feature.color} rounded flex items-center justify-center`}>
-                <feature.icon className="w-3 h-3 text-white" />
-              </div>
-              <span className={`text-sm font-semibold whitespace-nowrap ${activeFeature === feature.id ? 'text-white' : 'text-slate-300'}`}>
-                {feature.name}
-              </span>
-            </motion.button>
-          ))}
-        </div>
+    <div className="h-full flex flex-col">
+      {/* Section Selector */}
+      <div className="flex gap-2 mb-4 bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
+        {features.map((feature) => (
+          <button
+            key={feature.id}
+            onClick={() => setActiveFeature(feature.id)}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+              activeFeature === feature.id
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-300 hover:bg-slate-700/50'
+            }`}
+          >
+            <feature.icon className={`w-5 h-5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
+            <span>{feature.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 bg-slate-800/20 rounded-b-xl border border-slate-700/50 border-t-0 overflow-hidden w-full">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeFeature}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="h-full overflow-y-auto"
-          >
-            {activeFeature === 'entertainment' && <EntertainmentTab />}
-            {activeFeature === 'social' && <SocialHub />}
-            {activeFeature === 'streaming' && <StreamingHub />}
-            {activeFeature === 'stream_team' && <StreamTeam />}
-          </motion.div>
-        </AnimatePresence>
+      <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30">
+        <motion.div
+          key={activeFeature}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="h-full overflow-y-auto"
+        >
+          {activeFeature === 'entertainment' && <EntertainmentTab />}
+          {activeFeature === 'social' && <SocialHub />}
+          {activeFeature === 'streaming' && <StreamingHub />}
+          {activeFeature === 'stream_team' && <StreamTeam />}
+        </motion.div>
       </div>
     </div>
   );
