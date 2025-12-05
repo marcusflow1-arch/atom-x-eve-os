@@ -317,6 +317,9 @@ const GalacticItemGroupSummary = ({ item, offers, onSelect, isSelected }) => {
 const TradeOffersPanel = ({ item, offers, onTrade }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('lowest_price');
+  const [selectedOffer, setSelectedOffer] = useState(null);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [bidAmount, setBidAmount] = useState('');
 
   const filteredOffers = offers.filter(offer => 
     offer.owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -334,6 +337,20 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
     }
     return 0;
   });
+
+  const handleOfferClick = (offer) => {
+    setSelectedOffer(offer);
+    setBidAmount(offer.currentBid ? (offer.currentBid + 500).toString() : '');
+    setShowActionModal(true);
+  };
+
+  const handleAction = (actionType) => {
+    if (selectedOffer) {
+      onTrade(selectedOffer, actionType);
+      setShowActionModal(false);
+      setSelectedOffer(null);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -383,7 +400,11 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
       {/* Offers List */}
       <div className="flex-1 overflow-y-auto pr-2 space-y-3">
         {filteredOffers.map((offer) => (
-          <div key={offer.id} className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all hover:bg-slate-800/50 group">
+          <div 
+            key={offer.id} 
+            onClick={() => handleOfferClick(offer)}
+            className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all hover:bg-slate-800/50 group cursor-pointer"
+          >
             {/* Offer Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -399,6 +420,11 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
                 {(offer.type === 'sale' || offer.type === 'bid') && (
                   <span className="text-lg font-bold text-green-400">
                     {offer.price?.toLocaleString() || offer.currentBid?.toLocaleString()} AGP
+                  </span>
+                )}
+                {offer.type === 'bid' && offer.buyoutPrice && (
+                  <span className="text-sm text-slate-400">
+                    Buyout: <span className="text-yellow-400">{offer.buyoutPrice.toLocaleString()} AGP</span>
                   </span>
                 )}
                 {offer.type === 'trade' && (
@@ -429,18 +455,9 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
               </div>
               <img src={offer.owner.avatar} alt={offer.owner.name} className="w-10 h-10 rounded-full border border-white/10" />
               
-              <Button 
-                size="sm"
-                className={`
-                  ${offer.type === 'bid' ? 'bg-purple-600 hover:bg-purple-700' : 
-                    offer.type === 'sale' ? 'bg-green-600 hover:bg-green-700' : 
-                    'bg-blue-600 hover:bg-blue-700'} 
-                  text-white shadow-lg ml-2
-                `}
-                onClick={() => onTrade(offer, offer.type === 'bid' ? 'bid' : offer.type === 'sale' ? 'buy' : 'offer')}
-              >
-                  {offer.type === 'bid' ? 'Bid' : offer.type === 'sale' ? 'Buy' : 'Trade'}
-              </Button>
+              <div className="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">
+                Click for options →
+              </div>
             </div>
           </div>
         ))}
@@ -452,6 +469,161 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
           </div>
         )}
       </div>
+
+      {/* Action Modal */}
+      <Dialog open={showActionModal} onOpenChange={setShowActionModal}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 max-w-lg text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-3">
+              {selectedOffer && (
+                <>
+                  <img src={selectedOffer.owner.avatar} alt={selectedOffer.owner.name} className="w-10 h-10 rounded-full border border-white/20" />
+                  <div>
+                    <span>Trade with {selectedOffer.owner.name}</span>
+                    <div className="flex items-center gap-1 text-xs text-slate-400 font-normal mt-0.5">
+                      <Star className="w-3 h-3 text-yellow-500 fill-current" /> 4.9 Rating • 128 Completed Trades
+                    </div>
+                  </div>
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedOffer && (
+            <div className="space-y-4 py-4">
+              {/* Item Preview */}
+              <div className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl border border-white/5">
+                <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-white">{item.name}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <RarityBadge rarity={item.rarity} />
+                    <span className="text-xs text-slate-400">{item.game}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Listing Info */}
+              <div className="p-4 bg-slate-800/30 rounded-xl border border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-400">Listing Type:</span>
+                  <Badge className={`
+                    ${selectedOffer.type === 'trade' ? 'bg-blue-500/20 text-blue-400' : 
+                      selectedOffer.type === 'bid' ? 'bg-purple-500/20 text-purple-400' : 
+                      'bg-green-500/20 text-green-400'}
+                  `}>
+                    {selectedOffer.type === 'trade' ? 'Item Trade' : selectedOffer.type === 'bid' ? 'Auction' : 'Direct Sale'}
+                  </Badge>
+                </div>
+                {(selectedOffer.type === 'sale' || selectedOffer.type === 'bid') && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-400">
+                      {selectedOffer.type === 'bid' ? 'Current Bid:' : 'Price:'}
+                    </span>
+                    <span className="text-lg font-bold text-green-400">
+                      {(selectedOffer.price || selectedOffer.currentBid)?.toLocaleString()} AGP
+                    </span>
+                  </div>
+                )}
+                {selectedOffer.type === 'bid' && selectedOffer.buyoutPrice && (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm text-slate-400">Buyout Price:</span>
+                    <span className="text-lg font-bold text-yellow-400">{selectedOffer.buyoutPrice.toLocaleString()} AGP</span>
+                  </div>
+                )}
+                {selectedOffer.type === 'trade' && selectedOffer.seekingItems && (
+                  <div className="mt-2">
+                    <span className="text-sm text-slate-400">Looking for:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedOffer.seekingItems.map((seekItem, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs border-blue-500/30 text-blue-300">{seekItem}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <p className="text-sm text-slate-400 text-center">Choose an action:</p>
+                
+                {/* Always show Offer Trade option */}
+                <Button 
+                  onClick={() => handleAction('offer_trade')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+                >
+                  <ArrowLeftRight className="w-5 h-5 mr-2" />
+                  Offer a Trade (Your Items)
+                </Button>
+
+                {/* Show Bid option for auctions */}
+                {selectedOffer.type === 'bid' && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input 
+                        type="number" 
+                        placeholder="Enter bid amount" 
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        className="flex-1 bg-slate-800 border-slate-700"
+                      />
+                      <Button 
+                        onClick={() => handleAction('place_bid')}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-6"
+                        disabled={!bidAmount || parseInt(bidAmount) <= (selectedOffer.currentBid || 0)}
+                      >
+                        <Gavel className="w-4 h-4 mr-2" />
+                        Place Bid
+                      </Button>
+                    </div>
+                    <p className="text-xs text-slate-500 text-center">
+                      Minimum bid: {((selectedOffer.currentBid || 0) + 100).toLocaleString()} AGP
+                    </p>
+                  </div>
+                )}
+
+                {/* Show Buyout option for auctions with buyout price */}
+                {selectedOffer.type === 'bid' && selectedOffer.buyoutPrice && (
+                  <Button 
+                    onClick={() => handleAction('buyout')}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold h-12"
+                  >
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Instant Buyout ({selectedOffer.buyoutPrice.toLocaleString()} AGP)
+                  </Button>
+                )}
+
+                {/* Show Buy Now option for direct sales */}
+                {selectedOffer.type === 'sale' && (
+                  <Button 
+                    onClick={() => handleAction('buy_now')}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white h-12"
+                  >
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Buy Now ({selectedOffer.price?.toLocaleString()} AGP)
+                  </Button>
+                )}
+
+                {/* Message Trader option */}
+                <Button 
+                  onClick={() => handleAction('message')}
+                  variant="outline"
+                  className="w-full border-slate-600 text-slate-300 hover:bg-slate-800 h-10"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Message Trader
+                </Button>
+              </div>
+
+              <div className="flex gap-3 pt-2 border-t border-slate-700">
+                <Button variant="outline" onClick={() => setShowActionModal(false)} className="flex-1 border-slate-700">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
