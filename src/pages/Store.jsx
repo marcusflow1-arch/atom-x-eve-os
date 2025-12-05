@@ -550,19 +550,20 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             {/* AI Voice Search Panel */}
             <AnimatePresence>
               {voiceSearchOpen && (
-                <AIVoiceSearch 
-                  onSearchResult={(term) => {
-                    setSearchTerm(term);
-                    setVoiceSearchOpen(false);
-                  }}
-                  onClose={() => setVoiceSearchOpen(false)}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+                  <AIVoiceSearch 
+                    onSearchResult={(term) => {
+                      setSearchTerm(term);
+                      setVoiceSearchOpen(false);
+                    }}
+                    onClose={() => setVoiceSearchOpen(false)}
+                  />
+                )}
+              </AnimatePresence>
+              </div>
+              </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/10 ml-1">
+              {/* Right: Actions */}
+              <div className="flex items-center gap-2">
             <Link 
               to={createPageUrl('Cart')} 
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
