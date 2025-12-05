@@ -1055,196 +1055,190 @@ export default function Store() {
 
               {/* Main Content: Amazon-style Layout */}
               <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
-          <div className="flex gap-6">
-            {/* Left Sidebar - Filters */}
-            <aside className="hidden lg:block w-64 flex-shrink-0">
-              <FilterSidebar 
-                genres={genres}
-                selectedGenres={selectedGenres}
-                setSelectedGenres={setSelectedGenres}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                selectedRating={selectedRating}
-                setSelectedRating={setSelectedRating}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-              />
-            </aside>
+                <div className="flex gap-6">
+                  {/* Left Sidebar - Filters */}
+                  <aside className="hidden lg:block w-64 flex-shrink-0">
+                    <FilterSidebar 
+                      genres={genres}
+                      selectedGenres={selectedGenres}
+                      setSelectedGenres={setSelectedGenres}
+                      priceRange={priceRange}
+                      setPriceRange={setPriceRange}
+                      selectedRating={selectedRating}
+                      setSelectedRating={setSelectedRating}
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                    />
+                  </aside>
 
-            {/* Right Content - Results (Luna + Netflix Style) */}
-            <div className="flex-1 min-w-0">
-              {/* Active Filters - Pill Style */}
-              {(selectedGenres.length > 0 || selectedRating || searchTerm) && (
-                <div className="flex flex-wrap items-center gap-2 mb-6">
-                  <span className="text-white/40 text-xs uppercase tracking-wider font-medium">Filters:</span>
-                  {searchTerm && (
-                    <Badge className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
-                      "{searchTerm}"
-                      <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSearchTerm('')} />
-                    </Badge>
-                  )}
-                  {selectedGenres.map(g => (
-                    <Badge key={g} className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
-                      {g}
-                      <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSelectedGenres(prev => prev.filter(x => x !== g))} />
-                    </Badge>
-                  ))}
-                  {selectedRating && (
-                    <Badge className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
-                      <Star className="w-3 h-3 text-yellow-400 fill-current" /> {selectedRating}+
-                      <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSelectedRating(null)} />
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Games Content */}
-              {loading ? (
-                <div className="flex items-center justify-center py-32">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-                    <span className="text-white/40 text-sm">Loading games...</span>
-                  </div>
-                </div>
-              ) : filteredGames.length === 0 ? (
-                <div className="text-center py-32">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/[0.03] flex items-center justify-center">
-                    <Gamepad2 className="w-10 h-10 text-white/20" />
-                  </div>
-                  <h3 className="text-white text-xl font-semibold mb-2">No games found</h3>
-                  <p className="text-white/40 text-sm">Try adjusting your filters or search term</p>
-                </div>
-              ) : (
-                <div className="space-y-10">
-                  {/* Featured Row - Large Cards (Netflix Hero Style) */}
-                  {selectedCategory === 'all' && !searchTerm && (
-                    <div className="mb-8">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-white text-xl font-bold flex items-center gap-2">
-                          <Flame className="w-5 h-5 text-orange-500" />
-                          Featured & Recommended
-                        </h2>
-                        <button className="text-white/50 hover:text-white text-sm flex items-center gap-1 transition-colors">
-                          Explore All <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                        {filteredGames.slice(0, 5).map((game, idx) => (
-                          <motion.div
-                            key={game.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="flex-shrink-0 w-[340px]"
-                          >
-                            <LiquidCard 
-                              onClick={() => handleGameNavigate(game.id)}
-                              className="h-full aspect-[16/9] bg-slate-950 overflow-hidden"
-                            >
-                              {/* Blurred Background */}
-                              <img 
-                                src={game.cover_image || game.image} 
-                                alt=""
-                                className="absolute inset-0 w-full h-full object-cover opacity-40 blur-lg scale-110"
-                              />
-                              {/* Main Image */}
-                              <img 
-                                src={game.cover_image || game.image} 
-                                alt={game.title}
-                                className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90 z-20" />
-                              <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent z-20" />
-
-                              {/* Play Button Overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
-                                  <Play className="w-7 h-7 text-white fill-white ml-1" />
-                                </div>
-                              </div>
-
-                              {/* Content */}
-                              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                                <div className="flex items-center gap-2 mb-2">
-                                  {game.aiEnhanced && (
-                                    <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5 shadow-lg">
-                                      <Sparkles className="w-3 h-3 mr-1" /> AI
-                                    </Badge>
-                                  )}
-                                  <Badge className="bg-white/20 backdrop-blur-md text-white text-[10px] border-none px-2 py-0.5">
-                                    {game.genre}
-                                  </Badge>
-                                </div>
-                                <h3 className="text-white font-bold text-xl mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">{game.title}</h3>
-                                <div className="flex items-center gap-3 text-sm">
-                                  <div className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                    <span className="text-white/90">{game.rating || '4.5'}</span>
-                                  </div>
-                                  <span className="text-white/40">•</span>
-                                  <span className="text-green-400 font-bold">${game.price}</span>
-                                </div>
-                              </div>
-
-                              {/* Quick Add */}
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); addToCart(game); }}
-                                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20 z-20"
-                              >
-                                <Plus className="w-5 h-5 text-white" />
-                              </button>
-                            </LiquidCard>
-                          </motion.div>
+                  {/* Right Content - Results (Luna + Netflix Style) */}
+                  <div className="flex-1 min-w-0">
+                    {/* Active Filters - Pill Style */}
+                    {(selectedGenres.length > 0 || selectedRating || searchTerm) && (
+                      <div className="flex flex-wrap items-center gap-2 mb-6">
+                        <span className="text-white/40 text-xs uppercase tracking-wider font-medium">Filters:</span>
+                        {searchTerm && (
+                          <Badge className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
+                            "{searchTerm}"
+                            <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSearchTerm('')} />
+                          </Badge>
+                        )}
+                        {selectedGenres.map(g => (
+                          <Badge key={g} className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
+                            {g}
+                            <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSelectedGenres(prev => prev.filter(x => x !== g))} />
+                          </Badge>
                         ))}
+                        {selectedRating && (
+                          <Badge className="bg-white/[0.08] backdrop-blur-md text-white/90 border-none rounded-full px-3 py-1 flex items-center gap-2 hover:bg-white/[0.12] transition-all cursor-pointer">
+                            <Star className="w-3 h-3 text-yellow-400 fill-current" /> {selectedRating}+
+                            <X className="w-3 h-3 opacity-60 hover:opacity-100" onClick={() => setSelectedRating(null)} />
+                          </Badge>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Category Rows (Netflix Style) */}
-                  {(() => {
-                    const gamesByGenre = filteredGames.reduce((acc, game) => {
-                      const genre = game.genre || 'Other';
-                      if (!acc[genre]) acc[genre] = [];
-                      acc[genre].push(game);
-                      return acc;
-                    }, {});
-
-                    return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
-                      <div key={genre} className="group/row">
-                        <div className="flex items-center justify-between mb-3">
-                          <h2 className="text-white/90 text-lg font-semibold flex items-center gap-2 group-hover/row:text-white transition-colors">
-                            {genre}
-                            <span className="text-white/30 text-sm font-normal">({genreGames.length})</span>
-                          </h2>
-                          <button className="text-white/40 hover:text-white text-xs flex items-center gap-1 transition-colors opacity-0 group-hover/row:opacity-100">
-                            See All <ChevronRight className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                          {genreGames.map((game, idx) => (
-                            <motion.div
-                              key={game.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                            >
-                              <StoreRowCard 
-                                game={game} 
-                                onNavigate={handleGameNavigate} 
-                                addToCart={addToCart} 
-                              />
-                            </motion.div>
-                          ))}
+                    {/* Games Content */}
+                    {loading ? (
+                      <div className="flex items-center justify-center py-32">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                          <span className="text-white/40 text-sm">Loading games...</span>
                         </div>
                       </div>
-                    ));
-                  })()}
+                    ) : filteredGames.length === 0 ? (
+                      <div className="text-center py-32">
+                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/[0.03] flex items-center justify-center">
+                          <Gamepad2 className="w-10 h-10 text-white/20" />
+                        </div>
+                        <h3 className="text-white text-xl font-semibold mb-2">No games found</h3>
+                        <p className="text-white/40 text-sm">Try adjusting your filters or search term</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-10">
+                        {/* Featured Row - Large Cards (Netflix Hero Style) */}
+                        {selectedCategory === 'all' && !searchTerm && (
+                          <div className="mb-8">
+                            <div className="flex items-center justify-between mb-4">
+                              <h2 className="text-white text-xl font-bold flex items-center gap-2">
+                                <Flame className="w-5 h-5 text-orange-500" />
+                                Featured & Recommended
+                              </h2>
+                              <button className="text-white/50 hover:text-white text-sm flex items-center gap-1 transition-colors">
+                                Explore All <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+                              {filteredGames.slice(0, 5).map((game, idx) => (
+                                <motion.div
+                                  key={game.id}
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                  className="flex-shrink-0 w-[340px]"
+                                >
+                                  <LiquidCard 
+                                    onClick={() => handleGameNavigate(game.id)}
+                                    className="h-full aspect-[16/9] bg-slate-950 overflow-hidden"
+                                  >
+                                    <img 
+                                      src={game.cover_image || game.image} 
+                                      alt=""
+                                      className="absolute inset-0 w-full h-full object-cover opacity-40 blur-lg scale-110"
+                                    />
+                                    <img 
+                                      src={game.cover_image || game.image} 
+                                      alt={game.title}
+                                      className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90 z-20" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent z-20" />
+
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+                                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
+                                        <Play className="w-7 h-7 text-white fill-white ml-1" />
+                                      </div>
+                                    </div>
+
+                                    <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        {game.aiEnhanced && (
+                                          <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5 shadow-lg">
+                                            <Sparkles className="w-3 h-3 mr-1" /> AI
+                                          </Badge>
+                                        )}
+                                        <Badge className="bg-white/20 backdrop-blur-md text-white text-[10px] border-none px-2 py-0.5">
+                                          {game.genre}
+                                        </Badge>
+                                      </div>
+                                      <h3 className="text-white font-bold text-xl mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">{game.title}</h3>
+                                      <div className="flex items-center gap-3 text-sm">
+                                        <div className="flex items-center gap-1">
+                                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                          <span className="text-white/90">{game.rating || '4.5'}</span>
+                                        </div>
+                                        <span className="text-white/40">•</span>
+                                        <span className="text-green-400 font-bold">${game.price}</span>
+                                      </div>
+                                    </div>
+
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); addToCart(game); }}
+                                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20 z-20"
+                                    >
+                                      <Plus className="w-5 h-5 text-white" />
+                                    </button>
+                                  </LiquidCard>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Category Rows (Netflix Style) */}
+                        {(() => {
+                          const gamesByGenre = filteredGames.reduce((acc, game) => {
+                            const genre = game.genre || 'Other';
+                            if (!acc[genre]) acc[genre] = [];
+                            acc[genre].push(game);
+                            return acc;
+                          }, {});
+
+                          return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
+                            <div key={genre} className="group/row">
+                              <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-white/90 text-lg font-semibold flex items-center gap-2 group-hover/row:text-white transition-colors">
+                                  {genre}
+                                  <span className="text-white/30 text-sm font-normal">({genreGames.length})</span>
+                                </h2>
+                                <button className="text-white/40 hover:text-white text-xs flex items-center gap-1 transition-colors opacity-0 group-hover/row:opacity-100">
+                                  See All <ChevronRight className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
+                                {genreGames.map((game, idx) => (
+                                  <motion.div
+                                    key={game.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                  >
+                                    <StoreRowCard 
+                                      game={game} 
+                                      onNavigate={handleGameNavigate} 
+                                      addToCart={addToCart} 
+                                    />
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
               </div>
             </motion.div>
           ) : storeMode === 'marketplace' ? (
