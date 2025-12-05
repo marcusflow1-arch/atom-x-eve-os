@@ -499,12 +499,11 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 className="sticky top-0 left-0 right-0 z-40 transition-all duration-300"
               >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
-          {/* Unified Header: Menu + Brand + Search */}
-          <div className="flex-1 max-w-3xl flex items-center gap-3 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full p-1 pr-2 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative z-50">
-            {/* Menu Button */}
+          {/* Left: Menu Button + Store Title in same container */}
+          <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl rounded-xl px-2 py-1 border border-white/[0.06]">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-all"
+              className="w-8 h-8 rounded-lg bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center transition-all"
             >
               <div className="flex flex-col gap-[3px]">
                 <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
@@ -512,24 +511,20 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 <span className="w-3.5 h-[2px] bg-white/80 rounded-full"></span>
               </div>
             </button>
+            <span className="text-white font-semibold text-sm hidden md:block tracking-wide pr-2">ATOM×EVE STORE</span>
+          </div>
 
-            {/* Brand */}
-            <span className="text-white font-semibold text-sm hidden md:block tracking-wide whitespace-nowrap mr-1">ATOM×EVE</span>
-
-            {/* Divider */}
-            <div className="h-5 w-px bg-white/20 hidden md:block mx-1"></div>
-
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-              <input 
-                type="text" 
-                placeholder="Search games, genres..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-none py-1 pl-7 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
-              />
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {/* Center: Search */}
+          <div className="relative flex-1 max-w-xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <input 
+              type="text" 
+              placeholder="Search games, genres, developers..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/10 border border-white/10 rounded-full py-2 pl-10 pr-12 text-sm text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/20 transition-all"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
@@ -566,10 +561,10 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/10 ml-1">
+          <div className="flex items-center gap-2">
             <Link 
               to={createPageUrl('Cart')} 
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
+              className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
             >
               <ShoppingCart className="w-4 h-4 text-white/80" />
               {cartCount > 0 && (
@@ -578,7 +573,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 </span>
               )}
             </Link>
-            <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-white/20 cursor-pointer hover:ring-white/40 transition-all">
+            <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/20 cursor-pointer hover:ring-white/40 transition-all">
               <img 
                 src={user?.avatar_url || "https://github.com/shadcn.png"} 
                 alt="User" 
@@ -587,7 +582,6 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             </div>
           </div>
         </div>
-      </div>
       </motion.header>
 
       {/* App Drawer */}
