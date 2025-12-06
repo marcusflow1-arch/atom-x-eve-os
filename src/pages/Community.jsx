@@ -239,29 +239,67 @@ export default function CommunityPage() {
                                 </LiquidGlassCard>
                             </div>
 
-                            {/* Center Column: Trending Discussions (50%) */}
+                            {/* Center Column: Trending Topics (50%) */}
                             <div className="col-span-6 flex flex-col gap-6">
                                 <div className="flex items-center justify-center px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING DISCUSSIONS & TOPICS</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING UPDATES</h2>
                                 </div>
-                                <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-4">
-                                    {posts.slice(0, 4).map((post, idx) => (
-                                        <LiquidGlassCard 
-                                            key={post.id} 
-                                            className="flex flex-col justify-between p-6" 
-                                            hover={true}
-                                            onClick={() => { setActiveTab('discussions'); setSelectedPost(post); }}
-                                        >
+                                <div className="flex-1 flex flex-col gap-4">
+                                    {/* Trending Abilities & Equipment */}
+                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                                <Sparkles className="w-5 h-5 text-white" />
+                                            </div>
                                             <div>
-                                                <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">{post.title}</h3>
-                                                <p className="text-white/60 text-sm line-clamp-3">{post.content}</p>
+                                                <h3 className="text-white font-bold text-base">New Abilities & Equipment</h3>
+                                                <p className="text-cyan-300 text-xs">Latest unlockables</p>
                                             </div>
-                                            <div className="flex items-center justify-between mt-4">
-                                                <span className="text-cyan-300 text-xs font-semibold">{post.type?.replace('_', ' ').toUpperCase()}</span>
-                                                <span className="text-white/40 text-xs">{post.score || 0} votes</span>
+                                        </div>
+                                        <p className="text-white/60 text-sm">Discover the newest legendary weapons, armor sets, and special abilities added this week. Enhance your gameplay with cutting-edge gear.</p>
+                                    </LiquidGlassCard>
+
+                                    {/* Trending AI Features */}
+                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                                                <Bot className="w-5 h-5 text-white" />
                                             </div>
-                                        </LiquidGlassCard>
-                                    ))}
+                                            <div>
+                                                <h3 className="text-white font-bold text-base">AI Platform Updates</h3>
+                                                <p className="text-cyan-300 text-xs">Powered by innovation</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-white/60 text-sm">Experience our latest AI-driven features: smart matchmaking, personalized recommendations, and adaptive difficulty systems.</p>
+                                    </LiquidGlassCard>
+
+                                    {/* Upcoming Games */}
+                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                                                <Gamepad2 className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-bold text-base">Coming Soon</h3>
+                                                <p className="text-cyan-300 text-xs">New releases</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-white/60 text-sm">Get ready for upcoming AAA titles and exclusive indie releases. Pre-order now to secure early access and special bonuses.</p>
+                                    </LiquidGlassCard>
+
+                                    {/* Dev Updates */}
+                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                                                <Radio className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-bold text-base">Live Dev Stream</h3>
+                                                <p className="text-cyan-300 text-xs">Behind the scenes</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-white/60 text-sm">Join our live stream every Friday at 3PM PST. Watch us code, answer questions, and share exclusive insights into development.</p>
+                                    </LiquidGlassCard>
                                 </div>
                             </div>
 
