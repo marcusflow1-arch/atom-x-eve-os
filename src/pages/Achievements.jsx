@@ -605,7 +605,6 @@ export default function Achievements() {
             <TabsContent value="achievements">
               {!selectedGame ?
               <>
-                  <h2 className="px-10 text-3xl font-black">Achievements</h2>
               
               {/* Genre Filter */}
               <div className="flex items-center gap-4 mb-4">
