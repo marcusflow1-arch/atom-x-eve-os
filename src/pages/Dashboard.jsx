@@ -370,7 +370,7 @@ export default function Dashboard() {
           {/* Weapons Section */}
           <div className="mb-4">
             <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Weapons</h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
@@ -402,9 +402,18 @@ export default function Dashboard() {
           </div>
 
           {/* Aspect Section */}
-          <div>
+          <div className="mb-4">
             <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Aspect</h4>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+            </div>
+          </div>
+
+          {/* Artifacts Section */}
+          <div>
+            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Artifacts</h4>
+            <div className="grid grid-cols-3 gap-2">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
