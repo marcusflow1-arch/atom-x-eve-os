@@ -17,15 +17,13 @@ const OctagonSkillTree = () => {
       />
       {label && (
          <span 
-           className="absolute text-slate-400 text-[8px] font-bold tracking-widest whitespace-nowrap"
+           className="absolute text-slate-200 text-[16px] font-bold tracking-widest whitespace-nowrap z-20 pointer-events-none drop-shadow-md"
            style={{ 
-             top: rotation === 0 ? '-15px' : 'auto',
-             bottom: rotation === 180 ? '-15px' : 'auto',
-             left: rotation === 270 ? '-50px' : '50%',
-             right: rotation === 90 ? '-50px' : 'auto',
-             transform: `translateX(${rotation === 0 || rotation === 180 ? '-50%' : '0'})`,
-             width: '100px',
-             textAlign: 'center'
+             top: '50%',
+             left: '50%',
+             transform: 'translate(-50%, -50%)',
+             textAlign: 'center',
+             width: 'auto'
            }}
          >
            {label}
