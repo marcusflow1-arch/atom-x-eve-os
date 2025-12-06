@@ -414,7 +414,20 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
+        </div>
+
+        {/* Experience Bar at Bottom - Always visible */}
+        <div className="absolute bottom-0 left-0 right-0 h-3 bg-black/40 backdrop-blur-sm border-t border-white/10 z-40">
+        <div className="relative h-full flex">
+          {/* Progress Fill (example: 65% of first section) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500" style={{ width: '16.25%' }} />
+
+          {/* Divider Lines */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="absolute top-0 bottom-0 w-px bg-white/30" style={{ left: `${i * 25}%` }} />
+          ))}
+        </div>
+        </div>
+        </div>
+        );
+        }
