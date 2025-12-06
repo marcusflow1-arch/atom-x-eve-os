@@ -35,38 +35,83 @@ Deno.serve(async (req) => {
         
         console.log(`Found ${gamesToFix.length} games to fix. Processing batch of ${chunk.length}...`);
 
+        // Get IGDB credentials
+        const clientId = Deno.env.get("IGDB_CLIENT_ID");
+        const clientSecret = Deno.env.get("IGDB_CLIENT_SECRET");
+        
+        // Get IGDB token
+        let igdbToken = null;
+        try {
+            const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`
+            });
+            const tokenData = await tokenRes.json();
+            igdbToken = tokenData.access_token;
+        } catch (e) {
+            console.error("Failed to get IGDB token:", e);
+        }
+
         for (const game of chunk) {
             try {
-                // Use LLM to find image with better targeting
-                const llmResponse = await base44.integrations.Core.InvokeLLM({
-                    prompt: `Find a high-quality DIRECT IMAGE URL for the official cover art/box art of the game "${game.title}".
-
-                    SEARCH STRATEGY:
-                    - Prioritize searching these domains for stable images: steamstatic.com, upload.wikimedia.org, static.wikia.nocookie.net, igdb.com, playstation.com, xbox.com, media.rawg.io.
-                    - The URL MUST be a direct link to the image file (ending in .jpg, .jpeg, .png, .webp).
-                    - It MUST be the vertical/portrait box art.
-                    - Avoid "encrypted-tbn0" or "base64" or "googleusercontent" links if possible as they expire.
-                    
-                    If you absolutely cannot find a real official image, fallback to generating a URL that you are 100% sure works.
-
-                    Return the result as a JSON object with the "imageUrl".`,
-                    add_context_from_internet: true,
-                    response_json_schema: {
-                        type: "object",
-                        properties: {
-                            imageUrl: { type: "string" }
-                        },
-                        required: ["imageUrl"]
+                let imageUrl = null;
+                
+                // Strategy 1: Try IGDB first (most reliable for game cover art)
+                if (igdbToken) {
+                    try {
+                        const igdbQuery = `search "${game.title}"; fields name, cover.url; limit 1;`;
+                        const igdbRes = await fetch('https://api.igdb.com/v4/games', {
+                            method: 'POST',
+                            headers: {
+                                'Client-ID': clientId,
+                                'Authorization': `Bearer ${igdbToken}`,
+                                'Content-Type': 'text/plain'
+                            },
+                            body: igdbQuery
+                        });
+                        const igdbData = await igdbRes.json();
+                        
+                        if (igdbData.length > 0 && igdbData[0].cover?.url) {
+                            imageUrl = `https:${igdbData[0].cover.url.replace('t_thumb', 't_cover_big')}`;
+                            console.log(`Found IGDB image for ${game.title}`);
+                        }
+                    } catch (e) {
+                        console.log(`IGDB lookup failed for ${game.title}:`, e.message);
                     }
-                });
-
-                if (llmResponse.imageUrl && !llmResponse.imageUrl.includes('unsplash.com')) {
-                    await base44.entities.Game.update(game.id, {
-                        cover_image: llmResponse.imageUrl
+                }
+                
+                // Strategy 2: If IGDB fails, use grounded search
+                if (!imageUrl) {
+                    const llmResponse = await base44.integrations.Core.InvokeLLM({
+                        prompt: `Find the official box art/cover image for the game "${game.title}".
+                        
+                        CRITICAL REQUIREMENTS:
+                        - Must be a DIRECT image URL (ends in .jpg, .png, .webp)
+                        - Must be vertical/portrait orientation (cover art)
+                        - Prioritize: images.igdb.com, cdn.cloudflare.steamstatic.com, assets.nintendo.com, image.api.playstation.com
+                        - Avoid: encrypted-tbn0, googleusercontent, unsplash, base64
+                        
+                        Return ONLY a working, direct image URL.`,
+                        add_context_from_internet: true,
+                        response_json_schema: {
+                            type: "object",
+                            properties: {
+                                imageUrl: { type: "string" }
+                            }
+                        }
                     });
-                    results.push({ id: game.id, title: game.title, status: 'fixed', url: llmResponse.imageUrl });
+                    imageUrl = llmResponse.imageUrl;
+                }
+
+                // Update game with found image
+                if (imageUrl && !imageUrl.includes('unsplash.com')) {
+                    await base44.entities.Game.update(game.id, {
+                        cover_image: imageUrl
+                    });
+                    results.push({ id: game.id, title: game.title, status: 'fixed', url: imageUrl });
                 } else {
-                    results.push({ id: game.id, title: game.title, status: 'failed_invalid_url', url: llmResponse.imageUrl });
+                    results.push({ id: game.id, title: game.title, status: 'failed_invalid_url', url: imageUrl });
                 }
             } catch (e) {
                 console.error(`Failed to fix ${game.title}:`, e);
