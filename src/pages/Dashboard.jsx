@@ -344,6 +344,77 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Preset D - Loadout Panel (Right Side) - Only in AI mode */}
+      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-64 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold text-sm tracking-wide">PRESET D</h3>
+            <div className="flex gap-1">
+              {['A', 'B', 'C', 'D'].map((preset) => (
+                <button
+                  key={preset}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                    preset === 'D'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white/10 text-white/50 hover:bg-white/20'
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Equipment Slots */}
+          <div className="space-y-3">
+            {/* Weapon */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 flex items-center justify-center">
+                <Sword className="w-6 h-6 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Weapon</p>
+                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              </div>
+            </div>
+
+            {/* Armor */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center">
+                <Shield className="w-6 h-6 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Armor</p>
+                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              </div>
+            </div>
+
+            {/* Gloves */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
+                <Target className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Gloves</p>
+                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              </div>
+            </div>
+
+            {/* Rings */}
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Rings</p>
+                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
