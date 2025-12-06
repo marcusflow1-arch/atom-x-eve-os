@@ -422,38 +422,68 @@ export default function Dashboard() {
         </div>
 
         {/* Skill Hotbar - Bottom Right Corner - Only in AI mode */}
-        <div className={`absolute right-6 bottom-16 w-54 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3">
-          {/* Primary Skills */}
-          <div className="mb-2">
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Primary Skills</h4>
-            <div className="flex items-center justify-center gap-2">
-              {['Tab', 'Q', '-'].map((key, idx) => (
-                <div key={idx} className="relative w-12 h-12">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white/40 text-[9px] font-bold">{key}</span>
-                  </div>
-                </div>
-              ))}
+        <div className={`absolute right-6 bottom-16 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          {/* Primary Skills - Diagonal Pattern */}
+          <div className="relative h-32 w-32 mb-4">
+            {/* Tab - Base (bottom) */}
+            <div className="absolute bottom-0 left-8 w-12 h-12">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">Tab</span>
+              </div>
+            </div>
+
+            {/* Q - Middle (upper-left) */}
+            <div className="absolute bottom-10 left-2 w-12 h-12">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">Q</span>
+              </div>
+            </div>
+
+            {/* - - Top (upper-right) */}
+            <div className="absolute bottom-20 left-8 w-12 h-12">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">-</span>
+              </div>
             </div>
           </div>
 
-          {/* Secondary Skills */}
-          <div>
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Secondary Skills</h4>
-            <div className="flex items-center justify-center gap-2">
-              {['1', '2', '3', '4'].map((key, idx) => (
-                <div key={idx} className="relative w-10 h-10">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-white/40 text-[9px] font-bold">{key}</span>
-                  </div>
-                </div>
-              ))}
+          {/* Secondary Skills - Diagonal Pattern */}
+          <div className="relative h-40 w-40">
+            {/* 1 - Base (bottom) */}
+            <div className="absolute bottom-0 left-10 w-11 h-11">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">1</span>
+              </div>
+            </div>
+
+            {/* 2 - Second (upper-left) */}
+            <div className="absolute bottom-9 left-4 w-11 h-11">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">2</span>
+              </div>
+            </div>
+
+            {/* 3 - Third (upper-right from 2) */}
+            <div className="absolute bottom-18 left-10 w-11 h-11">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">3</span>
+              </div>
+            </div>
+
+            {/* 4 - Fourth (upper-left from 3) */}
+            <div className="absolute bottom-27 left-4 w-11 h-11">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/60 text-[9px] font-bold">4</span>
+              </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Experience Bar at Bottom - Always visible */}
