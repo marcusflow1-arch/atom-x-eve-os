@@ -161,7 +161,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden relative bg-[#0f1115]">
+    <div className="h-screen w-full overflow-hidden relative bg-gradient-to-br from-slate-400 via-gray-300 to-slate-500">
       {/* Blank Background */}
 
       {/* Game Detail Drawer - Slides from Right */}
