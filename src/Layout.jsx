@@ -472,7 +472,7 @@ function LayoutContent({ children, currentPageName }) {
         <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
           <button
             onClick={() => setDrawerOpen(true)}
-            className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/[0.1] shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+            className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
           >
             <div className="flex flex-col gap-1">
