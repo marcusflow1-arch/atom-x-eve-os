@@ -98,6 +98,25 @@ export default function Dashboard() {
     <div className="h-screen w-full overflow-hidden relative bg-[#0f1115]">
       {/* Blank Background */}
 
+      {/* Settings Wallpaper - Only visible when Settings is active */}
+      <AnimatePresence>
+        {ORBITAL_ITEMS[activeIndex]?.id === 'settings' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: 'url(https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/b5077c819_global-network-connection-world-map-point-line-composition_41981-3243.png)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        )}
+      </AnimatePresence>
+
 
 
       {/* Mode Toggle at Top with Arrows */}
