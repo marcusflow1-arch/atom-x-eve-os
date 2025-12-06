@@ -406,32 +406,32 @@ export default function CommunityPage() {
                         </LiquidGlassCard>
                     </div>
 
-                    {/* Right Column: Trending & Stats (25%) */}
-                    <div className="col-span-3 flex flex-col gap-6">
+                    {/* Right Column: Topics (17.5%) */}
+                    <div className="col-span-2 flex flex-col gap-6">
                         <div className="flex items-center justify-between px-2">
-                            <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING NOW</h2>
+                            <h2 className="text-sm font-bold text-white/80 tracking-wide">TOPICS</h2>
                         </div>
-                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
-                            {trendingTopics.length > 0 ? (
-                                trendingTopics.slice(0, 8).map((trend, i) => (
-                                    <div 
-                                        key={i}
-                                        className="flex items-start gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
-                                    >
-                                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                            {i + 1}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-white text-sm font-semibold truncate">{trend}</p>
-                                            <p className="text-white/40 text-xs">Trending topic</p>
-                                        </div>
+                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto" hover={false}>
+                            {[
+                                { icon: Swords, label: 'PvP Discussion', color: 'from-red-500 to-orange-500' },
+                                { icon: Shield, label: 'PvE Strategies', color: 'from-blue-500 to-cyan-500' },
+                                { icon: Trophy, label: 'Achievements', color: 'from-yellow-500 to-amber-500' },
+                                { icon: Target, label: 'Raids & Dungeons', color: 'from-purple-500 to-pink-500' },
+                                { icon: Users, label: 'Clans & Guilds', color: 'from-green-500 to-emerald-500' },
+                                { icon: Gamepad2, label: 'Game Updates', color: 'from-indigo-500 to-blue-500' },
+                                { icon: TrendingUp, label: 'Meta Discussion', color: 'from-cyan-500 to-teal-500' },
+                                { icon: MessageSquare, label: 'General Chat', color: 'from-slate-500 to-gray-500' }
+                            ].map((topic, idx) => (
+                                <button
+                                    key={idx}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left group"
+                                >
+                                    <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${topic.color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                                        <topic.icon className="w-3 h-3 text-white" />
                                     </div>
-                                ))
-                            ) : (
-                                <div className="flex-1 flex items-center justify-center text-white/30 text-sm">
-                                    Loading trends...
-                                </div>
-                            )}
+                                    <span className="font-medium text-xs text-white/70 group-hover:text-white truncate">{topic.label}</span>
+                                </button>
+                            ))}
                         </LiquidGlassCard>
                     </div>
                         </>
