@@ -225,13 +225,17 @@ export default function Dashboard() {
                     </div>
 
                     {/* Pinned Games Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
-                        { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
-                        { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
-                        { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' },
-                      ].map((game, index) => (
+                    <div className="grid grid-cols-7 gap-3">
+                      {Array.from({ length: 70 }, (_, i) => {
+                        const games = [
+                          { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
+                          { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
+                          { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
+                          { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' },
+                        ];
+                        const game = games[i % games.length];
+                        return { ...game, index: i };
+                      }).map((game, index) => (
                         <motion.div
                           key={index}
                           initial={{ opacity: 0, y: 20 }}
