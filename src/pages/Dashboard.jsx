@@ -375,7 +375,7 @@ export default function Dashboard() {
           {/* Weapons Section */}
           <div className="space-y-2">
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
               ))}
@@ -397,7 +397,7 @@ export default function Dashboard() {
           {/* Aspect Section */}
           <div className="space-y-2">
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
               ))}
@@ -407,7 +407,7 @@ export default function Dashboard() {
           {/* Artifacts Section */}
           <div className="space-y-2">
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
               ))}
