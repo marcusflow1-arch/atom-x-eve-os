@@ -346,8 +346,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Preset D - Loadout Panel (Moved to Top) - Only in AI mode */}
-      <div className={`absolute top-24 left-1/2 -translate-x-1/2 w-[500px] z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Preset D - Loadout Panel - Only in AI mode */}
+      <div className={`absolute bottom-4 left-6 w-[500px] z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3 flex gap-4 items-start">
           {/* Header Column */}
           <div className="flex flex-col gap-2 min-w-[80px]">
