@@ -854,12 +854,14 @@ export default function Admin() {
                         </div>
                       </motion.div>
                     ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </section>
-          </TabsContent>
-        </Tabs>
+                    </AnimatePresence>
+                    </div>
+                    </>
+                    );
+                    })()}
+                    </section>
+                    </TabsContent>
+                    </Tabs>
       </div>
     </div>
   );
