@@ -189,16 +189,107 @@ Focus on AAA titles, indie hits, and games people are actually playing now.`,
             await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        await log(base44, jobId, `🎉 Agent completed! Added ${results.length} new games`, 'success');
+        // Step 4: Fix missing images for existing games
+        await log(base44, jobId, '🖼️  Checking for games with missing images...', 'info');
+        
+        const allGames = await base44.asServiceRole.entities.Game.list();
+        const gamesNeedingImages = allGames.filter(g => 
+            !g.cover_image || g.cover_image.includes('unsplash.com')
+        );
+        
+        await log(base44, jobId, `📊 Found ${gamesNeedingImages.length} games needing images`, gamesNeedingImages.length > 0 ? 'warning' : 'info');
+
+        const imagesFixes = [];
+        for (let i = 0; i < Math.min(gamesNeedingImages.length, 10); i++) {
+            const game = gamesNeedingImages[i];
+            await log(base44, jobId, `🔍 Fixing image for: ${game.title}...`, 'info');
+
+            try {
+                let imageUrl = null;
+
+                // Strategy 1: IGDB
+                try {
+                    const igdbQuery = `search "${game.title}"; fields name, cover.url; limit 1;`;
+                    const igdbResults = await searchIGDB(clientId, igdbToken, igdbQuery);
+                    
+                    if (igdbResults.length > 0 && igdbResults[0].cover?.url) {
+                        imageUrl = `https:${igdbResults[0].cover.url.replace('t_thumb', 't_cover_big')}`;
+                        await log(base44, jobId, `✅ Found via IGDB: ${game.title}`, 'success');
+                    }
+                } catch (e) {
+                    await log(base44, jobId, `⚠️  IGDB failed for ${game.title}`, 'warning');
+                }
+
+                // Strategy 2: Multi-source web search
+                if (!imageUrl) {
+                    const searchResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+                        prompt: `Find the official cover art/box art image for the game "${game.title}".
+
+SEARCH MULTIPLE SOURCES:
+1. Official game website
+2. Wikipedia gaming page
+3. Steam store page
+4. PlayStation/Xbox/Nintendo stores
+5. Gaming news sites (IGN, GameSpot)
+
+REQUIREMENTS:
+- Must be DIRECT image URL (ends in .jpg, .png, .webp)
+- Must be vertical/portrait cover art
+- Priority domains: images.igdb.com, cdn.cloudflare.steamstatic.com, upload.wikimedia.org, assets.nintendo.com
+- Avoid: encrypted-tbn0, googleusercontent, unsplash
+
+Return the best quality cover art URL you can find.`,
+                        add_context_from_internet: true,
+                        response_json_schema: {
+                            type: 'object',
+                            properties: {
+                                image_url: { type: 'string' },
+                                source: { type: 'string' }
+                            }
+                        }
+                    });
+
+                    if (searchResult.image_url && !searchResult.image_url.includes('unsplash')) {
+                        imageUrl = searchResult.image_url;
+                        await log(base44, jobId, `✅ Found via ${searchResult.source || 'web search'}: ${game.title}`, 'success');
+                    }
+                }
+
+                // Update game if image found
+                if (imageUrl) {
+                    await base44.asServiceRole.entities.Game.update(game.id, {
+                        cover_image: imageUrl
+                    });
+                    imagesFixes.push({ game: game.title, status: 'fixed' });
+                } else {
+                    await log(base44, jobId, `❌ Could not find image for ${game.title}`, 'error');
+                    imagesFixes.push({ game: game.title, status: 'failed' });
+                }
+
+            } catch (error) {
+                await log(base44, jobId, `❌ Error fixing ${game.title}: ${error.message}`, 'error');
+                imagesFixes.push({ game: game.title, status: 'error' });
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        await log(base44, jobId, `🎉 Agent completed! Added ${results.length} new games, fixed ${imagesFixes.filter(f => f.status === 'fixed').length} images`, 'success');
         await base44.asServiceRole.entities.AgentJob.update(jobId, { 
             status: 'completed',
-            result: { games_added: results.length }
+            result: { 
+                games_added: results.length,
+                images_fixed: imagesFixes.filter(f => f.status === 'fixed').length,
+                images_failed: imagesFixes.filter(f => f.status !== 'fixed').length
+            }
         });
 
         return Response.json({ 
             success: true, 
             games_added: results.length,
-            results 
+            images_fixed: imagesFixes.filter(f => f.status === 'fixed').length,
+            results,
+            imagesFixes
         });
 
     } catch (error) {
