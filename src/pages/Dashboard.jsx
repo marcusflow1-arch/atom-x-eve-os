@@ -48,7 +48,7 @@ export default function Dashboard() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [currentMode, setCurrentMode] = useState('ai');
   const [modeIndex, setModeIndex] = useState(0);
-  const [skillTreeDrawerOpen, setSkillTreeDrawerOpen] = useState(false);
+  const [activeDrawer, setActiveDrawer] = useState(null);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -175,16 +175,16 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Skill Tree Slide-Out Menu */}
+      {/* Universal Slide-Out Drawer */}
       <AnimatePresence>
-        {skillTreeDrawerOpen && (
+        {activeDrawer && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-              onClick={() => setSkillTreeDrawerOpen(false)}
+              onClick={() => setActiveDrawer(null)}
             />
             <motion.div
               initial={{ x: '-100%', opacity: 0 }}
@@ -201,9 +201,9 @@ export default function Dashboard() {
             >
               {/* Header */}
               <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
-                <h2 className="text-white font-bold text-xl tracking-wider">SKILL TREE</h2>
+                <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
                 <button 
-                  onClick={() => setSkillTreeDrawerOpen(false)}
+                  onClick={() => setActiveDrawer(null)}
                   className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
                 >
                   <X className="w-4 h-4 text-white/60" />
@@ -212,7 +212,7 @@ export default function Dashboard() {
 
               {/* Content Area */}
               <div className="flex-1 overflow-y-auto p-6">
-                <p className="text-white/40 text-sm">Skill Tree content will appear here</p>
+                <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
               </div>
             </motion.div>
           </>
@@ -345,13 +345,7 @@ export default function Dashboard() {
                 opacity,
               }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              onClick={() => {
-                if (item.id === 'skill-tree') {
-                  setSkillTreeDrawerOpen(true);
-                } else {
-                  handleItemClick(item);
-                }
-              }}
+              onClick={() => setActiveDrawer(item)}
             >
               <motion.div
                 className={`w-20 h-20 rounded-2xl backdrop-blur-2xl border transition-all ${
