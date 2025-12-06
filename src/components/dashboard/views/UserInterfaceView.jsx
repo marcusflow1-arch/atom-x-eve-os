@@ -40,20 +40,23 @@ export default function UserInterfaceView({
   return (
     <div className="h-full flex flex-col">
       {/* Section Selector */}
-      <div className="flex gap-2 mb-4 bg-slate-900/50 p-2 rounded-xl border border-slate-700/50">
-        {features.map((feature) => (
-          <button
+      <div className="flex gap-2 mb-4 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50 w-fit">
+        {features.map((feature, index) => (
+          <motion.button
             key={feature.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
             onClick={() => setActiveFeature(feature.id)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
               activeFeature === feature.id
                 ? 'bg-blue-600 text-white'
                 : 'text-slate-300 hover:bg-slate-700/50'
             }`}
           >
-            <feature.icon className={`w-5 h-5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
+            <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
             <span>{feature.name}</span>
-          </button>
+          </motion.button>
         ))}
       </div>
 
