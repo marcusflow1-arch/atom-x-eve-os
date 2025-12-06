@@ -124,59 +124,59 @@ const LimitedEditionCard = ({ card, onClick }) => {
   
   return (
     <motion.div
-      whileHover={{ scale: 1.05, y: -10 }}
+      whileHover={{ scale: 1.03, y: -8 }}
       onClick={() => onClick(card)}
-      className="relative w-80 h-[480px] rounded-2xl overflow-hidden cursor-pointer shadow-2xl"
+      className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl"
       style={{
-        background: 'rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+        background: 'rgba(148, 163, 184, 0.06)',
+        backdropFilter: 'blur(50px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+        border: '1px solid rgba(148, 163, 184, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
       }}
     >
       {/* Liquid Glass Shine Effect */}
       <motion.div
-        className="absolute inset-0 opacity-20 pointer-events-none"
+        className="absolute inset-0 opacity-15 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
+          background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
         }}
         animate={{
           x: ['-100%', '200%'],
         }}
         transition={{
-          duration: 4,
+          duration: 5,
           repeat: Infinity,
-          repeatDelay: 3,
+          repeatDelay: 4,
         }}
       />
       
       {/* Card Image */}
-      <img src={card.image} alt={card.name} className="w-full h-72 object-cover" />
+      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
       
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
       
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div className="flex items-center justify-between mb-2">
-          <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-md text-xs font-bold">
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <Badge className="bg-slate-700/80 text-white border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5">
             {card.rarity}
           </Badge>
-          <Badge className="bg-blue-500/20 text-blue-200 border-blue-400/30 backdrop-blur-md text-xs">
+          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
             {card.type}
           </Badge>
         </div>
         
-        <h3 className="text-2xl font-black text-white mb-2 drop-shadow-lg">{card.name}</h3>
-        <p className="text-sm text-white/90 line-clamp-2 drop-shadow">{card.description}</p>
+        <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
+        <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
         
         {/* Rarity Indicator */}
-        <div className="flex items-center gap-1 mt-3">
+        <div className="flex items-center gap-0.5 mt-2">
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i} 
-              className={`w-3 h-3 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
+              className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
             />
           ))}
         </div>
@@ -184,12 +184,12 @@ const LimitedEditionCard = ({ card, onClick }) => {
       
       {/* Liquid Glass Border */}
       <motion.div
-        className="absolute inset-0 rounded-2xl pointer-events-none border border-white/30"
+        className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
         animate={{
-          opacity: [0.3, 0.6, 0.3],
+          opacity: [0.25, 0.5, 0.25],
         }}
         transition={{
-          duration: 2,
+          duration: 3,
           repeat: Infinity,
         }}
       />
@@ -205,66 +205,66 @@ const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onCl
   
   return (
     <motion.div
-      whileHover={{ scale: 1.1 }}
+      whileHover={{ scale: 1.05 }}
       onClick={() => onClick(level)}
-      className={`relative flex-shrink-0 w-24 h-32 cursor-pointer transition-all ${
-        isCurrentLevel ? 'scale-110' : ''
+      className={`relative flex-shrink-0 w-16 h-20 cursor-pointer transition-all ${
+        isCurrentLevel ? 'scale-105' : ''
       }`}
     >
       {/* Premium Track */}
       {premiumReward && (
         <div 
-          className="absolute top-0 left-0 right-0 h-14 rounded-t-lg flex items-center justify-center"
+          className="absolute top-0 left-0 right-0 h-8 rounded-t-md flex items-center justify-center"
           style={{
             background: isUnlocked && isPremiumOwned 
-              ? 'rgba(250, 204, 21, 0.15)' 
-              : 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px) saturate(180%)',
+              ? 'rgba(250, 204, 21, 0.12)' 
+              : 'rgba(148, 163, 184, 0.05)',
+            backdropFilter: 'blur(30px) saturate(180%)',
             border: isUnlocked && isPremiumOwned 
-              ? '1px solid rgba(250, 204, 21, 0.4)' 
-              : '1px solid rgba(255, 255, 255, 0.15)',
+              ? '1px solid rgba(250, 204, 21, 0.3)' 
+              : '1px solid rgba(148, 163, 184, 0.1)',
           }}
         >
           {isUnlocked && isPremiumOwned ? (
-            <Check className="w-6 h-6 text-yellow-500" />
+            <Check className="w-3.5 h-3.5 text-yellow-600" />
           ) : (
-            <Crown className="w-6 h-6 text-white/40" />
+            <Crown className="w-3.5 h-3.5 text-slate-400/40" />
           )}
         </div>
       )}
       
       {/* Free Track */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 h-14 rounded-b-lg flex items-center justify-center ${premiumReward ? 'top-16' : 'top-0 rounded-t-lg'}`}
+        className={`absolute bottom-0 left-0 right-0 h-8 rounded-b-md flex items-center justify-center ${premiumReward ? 'top-9' : 'top-0 rounded-t-md'}`}
         style={{
           background: isUnlocked 
-            ? 'rgba(59, 130, 246, 0.15)' 
-            : 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px) saturate(180%)',
+            ? 'rgba(96, 165, 250, 0.12)' 
+            : 'rgba(148, 163, 184, 0.05)',
+          backdropFilter: 'blur(30px) saturate(180%)',
           border: isUnlocked 
-            ? '1px solid rgba(59, 130, 246, 0.4)' 
-            : '1px solid rgba(255, 255, 255, 0.15)',
+            ? '1px solid rgba(96, 165, 250, 0.3)' 
+            : '1px solid rgba(148, 163, 184, 0.1)',
         }}
       >
         {isUnlocked ? (
-          <Check className="w-6 h-6 text-blue-400" />
+          <Check className="w-3.5 h-3.5 text-blue-500" />
         ) : (
-          <Lock className="w-6 h-6 text-white/40" />
+          <Lock className="w-3.5 h-3.5 text-slate-400/40" />
         )}
       </div>
       
       {/* Level Number */}
       <div 
-        className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 px-2 py-1 rounded text-xs font-bold"
+        className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[10px] font-semibold"
         style={{
           background: isCurrentLevel 
-            ? 'rgba(59, 130, 246, 0.3)' 
-            : 'rgba(255, 255, 255, 0.1)',
+            ? 'rgba(96, 165, 250, 0.2)' 
+            : 'rgba(148, 163, 184, 0.08)',
           backdropFilter: 'blur(20px) saturate(180%)',
           border: isCurrentLevel 
-            ? '1px solid rgba(59, 130, 246, 0.5)' 
-            : '1px solid rgba(255, 255, 255, 0.2)',
-          color: isCurrentLevel ? '#60a5fa' : 'rgba(255, 255, 255, 0.7)',
+            ? '1px solid rgba(96, 165, 250, 0.4)' 
+            : '1px solid rgba(148, 163, 184, 0.15)',
+          color: isCurrentLevel ? '#60a5fa' : '#64748b',
         }}
       >
         {levelNumber}
@@ -273,12 +273,12 @@ const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onCl
       {/* Current Level Indicator */}
       {isCurrentLevel && (
         <motion.div
-          className="absolute -inset-1 rounded-lg pointer-events-none"
+          className="absolute -inset-0.5 rounded-md pointer-events-none"
           style={{
-            border: '2px solid rgba(59, 130, 246, 0.6)',
+            border: '1.5px solid rgba(96, 165, 250, 0.5)',
           }}
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
+          animate={{ opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity }}
         />
       )}
     </motion.div>
@@ -299,22 +299,22 @@ const TrackSelector = ({ activeTrack, onTrackChange }) => {
         <button
           key={track.id}
           onClick={() => onTrackChange(track.id)}
-          className="flex-1 flex items-center gap-3 px-6 py-4 rounded-xl transition-all"
+          className="flex-1 flex items-center gap-2.5 px-5 py-3 rounded-lg transition-all"
           style={{
             background: activeTrack === track.id 
-              ? 'rgba(59, 130, 246, 0.2)' 
-              : 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(40px) saturate(180%)',
+              ? 'rgba(96, 165, 250, 0.15)' 
+              : 'rgba(148, 163, 184, 0.05)',
+            backdropFilter: 'blur(50px) saturate(200%)',
             border: activeTrack === track.id 
-              ? '1px solid rgba(59, 130, 246, 0.4)' 
-              : '1px solid rgba(255, 255, 255, 0.15)',
-            color: activeTrack === track.id ? '#3b82f6' : 'rgba(100, 116, 139, 0.9)',
+              ? '1px solid rgba(96, 165, 250, 0.3)' 
+              : '1px solid rgba(148, 163, 184, 0.12)',
+            color: activeTrack === track.id ? '#3b82f6' : '#64748b',
           }}
         >
-          <track.icon className="w-6 h-6" />
+          <track.icon className="w-5 h-5" />
           <div className="text-left">
-            <div className="font-bold">{track.name}</div>
-            <div className="text-xs opacity-70">{track.description}</div>
+            <div className="font-semibold text-sm">{track.name}</div>
+            <div className="text-xs opacity-60">{track.description}</div>
           </div>
         </button>
       ))}
@@ -452,15 +452,15 @@ export default function SeasonalPass() {
   
   return (
     <div 
-      className="min-h-screen text-white relative overflow-hidden"
+      className="min-h-screen relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #e8eef5 0%, #d4dde8 25%, #c5d0df 50%, #d4dde8 75%, #e8eef5 100%)'
+        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%, #f1f5f9 100%)'
       }}
     >
       {/* Ambient Effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/10 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
       </div>
       
       <div className="relative z-10 p-8">
@@ -476,29 +476,31 @@ export default function SeasonalPass() {
             
             <div className="flex items-center gap-4">
               <div 
-                className="text-right px-6 py-3 rounded-xl"
+                className="text-right px-5 py-2.5 rounded-lg"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: 'rgba(148, 163, 184, 0.08)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
+                  border: '1px solid rgba(148, 163, 184, 0.15)',
                 }}
               >
-                <div className="text-sm text-slate-600">Season XP</div>
-                <div className="text-2xl font-bold text-slate-800">125,430 / 150,000</div>
+                <div className="text-xs text-slate-600 font-medium">Season XP</div>
+                <div className="text-xl font-bold text-slate-800">125,430 / 150,000</div>
               </div>
               <Button 
                 onClick={() => setIsPremiumOwned(!isPremiumOwned)}
                 style={{
                   background: isPremiumOwned 
-                    ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(251, 146, 60, 0.3))'
-                    : 'rgba(59, 130, 246, 0.2)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
+                    ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(251, 146, 60, 0.18))'
+                    : 'rgba(96, 165, 250, 0.15)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
                   border: isPremiumOwned 
-                    ? '1px solid rgba(234, 179, 8, 0.4)' 
-                    : '1px solid rgba(59, 130, 246, 0.4)',
-                  color: isPremiumOwned ? '#eab308' : '#3b82f6',
+                    ? '1px solid rgba(234, 179, 8, 0.35)' 
+                    : '1px solid rgba(96, 165, 250, 0.3)',
+                  color: isPremiumOwned ? '#ca8a04' : '#3b82f6',
+                  fontSize: '14px',
+                  fontWeight: '600',
                 }}
-                className="hover:opacity-90"
+                className="hover:opacity-90 h-10"
               >
                 <Crown className="w-4 h-4 mr-2" />
                 {isPremiumOwned ? 'Premium Active' : 'Unlock Premium'}
@@ -508,17 +510,17 @@ export default function SeasonalPass() {
           
           {/* XP Progress Bar */}
           <div 
-            className="w-full h-3 rounded-full overflow-hidden"
+            className="w-full h-2.5 rounded-full overflow-hidden"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'rgba(148, 163, 184, 0.1)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(148, 163, 184, 0.15)',
             }}
           >
             <motion.div
               className="h-full"
               style={{
-                background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.6), rgba(147, 197, 253, 0.6))',
+                background: 'linear-gradient(90deg, rgba(96, 165, 250, 0.5), rgba(147, 197, 253, 0.5))',
               }}
               initial={{ width: 0 }}
               animate={{ width: '83%' }}
@@ -555,53 +557,57 @@ export default function SeasonalPass() {
         
         {/* Flagship Seasonal Companion Spotlight */}
         <div 
-          className="mb-12 p-8 rounded-3xl relative overflow-hidden"
+          className="mb-12 p-6 rounded-2xl relative overflow-hidden"
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(60px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+            background: 'rgba(148, 163, 184, 0.08)',
+            backdropFilter: 'blur(60px) saturate(200%)',
+            border: '1px solid rgba(148, 163, 184, 0.15)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-slate-500/5 animate-pulse" />
-          <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/3 to-slate-500/3 animate-pulse" />
+          <div className="relative z-10 grid md:grid-cols-2 gap-6 items-center">
             <div>
               <Badge 
-                className="mb-4 text-white"
+                className="mb-3 text-white text-xs"
                 style={{
-                  background: 'rgba(59, 130, 246, 0.3)',
+                  background: 'rgba(96, 165, 250, 0.2)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  border: '1px solid rgba(96, 165, 250, 0.3)',
                 }}
               >
                 Season 1 Exclusive
               </Badge>
-              <h2 className="text-4xl font-black mb-4 text-slate-800">Celestial Guardian</h2>
-              <p className="text-lg text-slate-700 mb-6">
+              <h2 className="text-3xl font-black mb-3 text-slate-800">Celestial Guardian</h2>
+              <p className="text-base text-slate-700 mb-5">
                 The flagship companion of Season 1. An ancient protector that provides shields, 
                 tactical support, and devastating ultimate abilities for your team.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 <Button 
                   style={{
-                    background: 'rgba(59, 130, 246, 0.2)',
-                    backdropFilter: 'blur(40px) saturate(180%)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                    background: 'rgba(96, 165, 250, 0.15)',
+                    backdropFilter: 'blur(50px) saturate(200%)',
+                    border: '1px solid rgba(96, 165, 250, 0.3)',
                     color: '#3b82f6',
+                    fontSize: '14px',
+                    fontWeight: '600',
                   }}
-                  className="hover:opacity-90"
+                  className="hover:opacity-90 h-10"
                 >
-                  <Play className="w-4 h-4 mr-2" />
+                  <Play className="w-3.5 h-3.5 mr-1.5" />
                   Watch Trailer
                 </Button>
                 <Button 
                   style={{
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    backdropFilter: 'blur(40px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    background: 'rgba(148, 163, 184, 0.1)',
+                    backdropFilter: 'blur(50px)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
                     color: '#64748b',
+                    fontSize: '14px',
+                    fontWeight: '600',
                   }}
-                  className="hover:opacity-90"
+                  className="hover:opacity-90 h-10"
                 >
                   Learn More
                 </Button>
@@ -657,12 +663,12 @@ export default function SeasonalPass() {
           {/* Progress Track */}
           <div 
             ref={progressRef}
-            className="relative flex gap-4 overflow-x-auto pb-8 pt-2 px-4 rounded-2xl scrollbar-hide"
+            className="relative flex gap-2.5 overflow-x-auto pb-8 pt-2 px-4 rounded-xl scrollbar-hide"
             style={{ 
               scrollBehavior: 'smooth',
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(148, 163, 184, 0.06)',
+              backdropFilter: 'blur(50px) saturate(200%)',
+              border: '1px solid rgba(148, 163, 184, 0.12)',
             }}
           >
             {seasonLevels.map((level) => (
@@ -688,18 +694,18 @@ export default function SeasonalPass() {
           ].map((stat, i) => (
             <div 
               key={i} 
-              className="p-6 rounded-xl"
+              className="p-5 rounded-lg"
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(148, 163, 184, 0.08)',
+                backdropFilter: 'blur(50px) saturate(200%)',
+                border: '1px solid rgba(148, 163, 184, 0.15)',
               }}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <stat.icon className="w-5 h-5 text-blue-500" />
-                <span className="text-sm text-slate-600">{stat.label}</span>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <stat.icon className="w-4.5 h-4.5 text-blue-500" />
+                <span className="text-sm text-slate-600 font-medium">{stat.label}</span>
               </div>
-              <div className="text-2xl font-bold text-slate-800">{stat.value}</div>
+              <div className="text-xl font-bold text-slate-800">{stat.value}</div>
             </div>
           ))}
         </div>
