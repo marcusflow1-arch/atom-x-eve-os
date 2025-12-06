@@ -644,21 +644,21 @@ export default function Dashboard() {
 
           {/* Weapons Section */}
           <div className="space-y-2">
-            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
+            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
               ))}
             </div>
           </div>
 
           {/* Equipment Section */}
           <div className="space-y-2">
-            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Equipment</div>
+            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Equipment</div>
             <div className="grid grid-cols-3 gap-3">
               {['Armor', 'Gloves', 'Boots', 'Legs', 'Ring', 'Cape'].map((item) => (
-                <div key={item} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer flex items-center justify-center group">
-                  <span className="text-white/20 text-[8px] group-hover:text-white/40 transition-colors">{item}</span>
+                <div key={item} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer flex items-center justify-center group">
+                  <span className="text-white/60 text-[8px] group-hover:text-white/80 transition-colors">{item}</span>
                 </div>
               ))}
             </div>
@@ -666,20 +666,20 @@ export default function Dashboard() {
 
           {/* Aspect Section */}
           <div className="space-y-2">
-            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
+            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
               ))}
             </div>
           </div>
 
           {/* Artifacts Section */}
           <div className="space-y-2">
-            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
+            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
               ))}
             </div>
           </div>
