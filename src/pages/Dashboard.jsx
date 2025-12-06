@@ -155,6 +155,25 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
+      {/* AI Home Wallpaper - Only visible when AI Home is active */}
+      <AnimatePresence>
+        {ORBITAL_ITEMS[activeIndex]?.id === 'home' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: 'url(https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/db2ccfac8_translucent-liquid-glass-filling-entire-screen-wallpaper-transparent-white-background-iridescent-abstract-many-colored-full-302912310.png)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        )}
+      </AnimatePresence>
+
 
 
       {/* Mode Toggle at Top with Arrows */}
