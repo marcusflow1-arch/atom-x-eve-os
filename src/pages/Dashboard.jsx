@@ -618,7 +618,7 @@ export default function Dashboard() {
 
       {/* Preset D - Right Side Panel - Only in AI mode */}
       <div className={`absolute right-8 top-[40%] -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="flex flex-col gap-6 p-6 bg-black/50 backdrop-blur-md rounded-2xl border border-slate-700">
+        <div className="flex flex-col gap-6 p-6">
 
           {/* Header */}
           <div className="flex items-center justify-between">
