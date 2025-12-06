@@ -368,22 +368,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-            <div className="flex gap-1">
-              {['A', 'B', 'C', 'D'].map((preset) => (
-                <button
-                  key={preset}
-                  className={`w-6 h-6 rounded-lg text-[10px] font-bold transition-all ${
-                    preset === 'D'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/10 text-white/50 hover:bg-white/20'
-                  }`}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Row 1: Weapons & Equipment */}
           <div className="flex-1 grid grid-cols-8 gap-1.5">
             {/* Weapons */}
