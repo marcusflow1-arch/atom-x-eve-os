@@ -481,6 +481,11 @@ function LayoutContent({ children, currentPageName }) {
               <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
             </div>
           </button>
+          <div className="flex items-center gap-3 bg-white/[0.05] backdrop-blur-2xl rounded-xl px-4 py-2 border border-white/[0.1]">
+            <span className="text-white font-semibold text-sm">Adam - Marcus</span>
+            <div className="w-px h-4 bg-white/20"></div>
+            <span className="text-cyan-400 font-bold text-xs">Level 1</span>
+          </div>
           {location.pathname.toLowerCase().includes('/achievements') && (
             <h2 className="text-2xl font-black text-white">Achievements</h2>
           )}
