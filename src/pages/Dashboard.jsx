@@ -346,11 +346,11 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Preset D - Loadout Panel (Right Side) - Only in AI mode */}
-      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-54 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
+      {/* Preset D - Loadout Panel (Moved to Top) - Only in AI mode */}
+      <div className={`absolute top-24 left-1/2 -translate-x-1/2 w-[500px] z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3 flex gap-4 items-start">
+          {/* Header Column */}
+          <div className="flex flex-col gap-2 min-w-[80px]">
             <h3 className="text-white font-bold text-xs tracking-wide">PRESET D</h3>
             <div className="flex gap-1">
               {['A', 'B', 'C', 'D'].map((preset) => (
@@ -368,59 +368,60 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Weapons Section */}
-          <div className="mb-3">
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Weapons</h4>
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+            <div className="flex gap-1">
+              {['A', 'B', 'C', 'D'].map((preset) => (
+                <button
+                  key={preset}
+                  className={`w-6 h-6 rounded-lg text-[10px] font-bold transition-all ${
+                    preset === 'D'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white/10 text-white/50 hover:bg-white/20'
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Equipment Section */}
-          <div className="mb-3">
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Equipment</h4>
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Armor</span>
-              </div>
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Gloves</span>
-              </div>
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Boots</span>
-              </div>
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Ring</span>
-              </div>
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Ring</span>
-              </div>
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[7px] font-medium">Cape</span>
+          {/* Row 1: Weapons & Equipment */}
+          <div className="flex-1 grid grid-cols-8 gap-1.5">
+            {/* Weapons */}
+            <div className="col-span-2 space-y-1.5">
+              <div className="text-white/70 text-[8px] font-bold uppercase tracking-wider">Weapons</div>
+              <div className="grid grid-cols-2 gap-1.5">
+                 <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+                 <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               </div>
             </div>
-          </div>
 
-          {/* Aspect Section */}
-          <div className="mb-3">
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Aspect</h4>
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-            </div>
-          </div>
-
-          {/* Artifacts Section */}
-          <div>
-            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Artifacts</h4>
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+            {/* Equipment */}
+            <div className="col-span-6 space-y-1.5">
+              <div className="text-white/70 text-[8px] font-bold uppercase tracking-wider">Equipment</div>
+              <div className="grid grid-cols-6 gap-1.5">
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">H</span>
+                </div>
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">G</span>
+                </div>
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">B</span>
+                </div>
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">R</span>
+                </div>
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">R</span>
+                </div>
+                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                  <span className="text-white/30 text-[7px] font-medium">C</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        </div>
+      </div>
 
         {/* Octagon Skill Tree - Bottom Right Corner - Only in AI mode */}
         <div className={`absolute right-6 bottom-16 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

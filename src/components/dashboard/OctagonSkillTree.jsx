@@ -1,153 +1,160 @@
 import React from 'react';
 
 const OctagonSkillTree = () => {
-  const HexSlot = ({ rotation, size = 'md' }) => {
-    const sizeClasses = {
-      sm: 'w-8 h-8',
-      md: 'w-14 h-14',
-      lg: 'w-20 h-20'
-    };
-    
-    return (
-      <div className={`${sizeClasses[size]} relative`}>
-        <div 
-          className="absolute inset-0 bg-slate-900/30 border-2 border-slate-600/40 hover:border-cyan-400/60 hover:bg-slate-800/40 transition-all cursor-pointer backdrop-blur-sm"
-          style={{ 
-            clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)',
-            transform: `rotate(${rotation}deg)`
-          }}
-        />
-      </div>
-    );
-  };
+  // Shapes are meticulously crafted to interlock perfectly with minimal gaps
+  
+  // 1. The "Kite" shape - Used for the 4 main cardinal slots (Skill Slot 1-4)
+  // Looks like a pentagon/diamond pointing towards center
+  const KiteSlot = ({ rotation, label }) => (
+    <div className="w-24 h-24 relative">
+      <div 
+        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        style={{ 
+          clipPath: 'polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%)', // Hexagonal-ish kite
+          transform: `rotate(${rotation}deg) scale(0.95)` // Scale down slightly for spacing
+        }}
+      />
+      {label && (
+         <span 
+           className="absolute text-slate-400 text-[9px] font-bold tracking-widest whitespace-nowrap"
+           style={{ 
+             top: rotation === 0 ? '-15px' : 'auto',
+             bottom: rotation === 180 ? '-15px' : 'auto',
+             left: rotation === 270 ? '-50px' : '50%',
+             right: rotation === 90 ? '-50px' : 'auto',
+             transform: `translateX(${rotation === 0 || rotation === 180 ? '-50%' : '0'})`,
+             width: '100px',
+             textAlign: 'center'
+           }}
+         >
+           {label}
+         </span>
+      )}
+    </div>
+  );
 
-  const TriangleSlot = ({ rotation, size = 'md' }) => {
-    const sizeClasses = {
-      sm: 'w-10 h-10',
-      md: 'w-16 h-16',
-      lg: 'w-20 h-20'
-    };
-    
-    return (
-      <div className={`${sizeClasses[size]} relative`}>
-        <div 
-          className="absolute inset-0 bg-slate-900/30 border-2 border-slate-600/40 hover:border-cyan-400/60 hover:bg-slate-800/40 transition-all cursor-pointer backdrop-blur-sm"
-          style={{ 
-            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-            transform: `rotate(${rotation}deg)`
-          }}
-        />
-      </div>
-    );
-  };
+  // 2. The "Shard" shape - Used for the 8 fillers between kites
+  const ShardSlot = ({ rotation }) => (
+    <div className="w-16 h-24 relative">
+      <div 
+        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        style={{ 
+          clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)', // Sharp triangle
+          transform: `rotate(${rotation}deg) scale(0.9)`
+        }}
+      />
+    </div>
+  );
 
-  const DiamondSlot = ({ size = 'md' }) => {
-    const sizeClasses = {
-      sm: 'w-8 h-8',
-      md: 'w-12 h-12',
-      lg: 'w-16 h-16'
-    };
-    
-    return (
-      <div className={`${sizeClasses[size]} relative`}>
-        <div className="absolute inset-0 bg-slate-900/30 border-2 border-slate-600/40 hover:border-cyan-400/60 hover:bg-slate-800/40 transition-all cursor-pointer backdrop-blur-sm rotate-45" />
-      </div>
-    );
-  };
+  // 3. The "Tip" shape - Used for the 4 outer corners
+  const TipSlot = ({ rotation }) => (
+    <div className="w-20 h-20 relative">
+      <div 
+        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        style={{ 
+          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', // Diamond
+          transform: `rotate(${rotation}deg) scale(0.9)`
+        }}
+      />
+    </div>
+  );
+
+  // 4. The "Core" shape - 4 small triangles in the center
+  const CoreSlot = ({ rotation }) => (
+    <div className="w-8 h-8 relative">
+      <div 
+        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        style={{ 
+          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+          transform: `rotate(${rotation}deg) scale(0.8)`
+        }}
+      />
+    </div>
+  );
 
   return (
-    <div className="relative w-80 h-80">
-      {/* Center - 4 small triangles forming inner cross */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <TriangleSlot rotation={0} size="sm" />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 translate-x-5">
-        <TriangleSlot rotation={90} size="sm" />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 translate-y-5">
-        <TriangleSlot rotation={180} size="sm" />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -translate-x-5">
-        <TriangleSlot rotation={270} size="sm" />
-      </div>
+    <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+      {/* Container for the whole assembly to keep it centered */}
+      <div className="relative w-full h-full">
+        
+        {/* CENTER CORE - 4 Small inward triangles */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16">
+           <div className="absolute top-0 left-1/2 -translate-x-1/2"><CoreSlot rotation={180} /></div>
+           <div className="absolute bottom-0 left-1/2 -translate-x-1/2"><CoreSlot rotation={0} /></div>
+           <div className="absolute left-0 top-1/2 -translate-y-1/2"><CoreSlot rotation={90} /></div>
+           <div className="absolute right-0 top-1/2 -translate-y-1/2"><CoreSlot rotation={270} /></div>
+        </div>
 
-      {/* Main 4 Hexagons - Cardinal directions with labels */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2">
-        <HexSlot rotation={0} size="lg" />
-        <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-slate-300 text-[10px] font-bold tracking-wider whitespace-nowrap">SKILL SLOT 1</span>
-      </div>
-      <div className="absolute top-1/2 right-12 -translate-y-1/2">
-        <HexSlot rotation={90} size="lg" />
-        <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-20 text-slate-300 text-[10px] font-bold tracking-wider whitespace-nowrap">SKILL SLOT 2</span>
-      </div>
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
-        <HexSlot rotation={0} size="lg" />
-        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-slate-300 text-[10px] font-bold tracking-wider whitespace-nowrap">SKILL SLOT 3</span>
-      </div>
-      <div className="absolute top-1/2 left-12 -translate-y-1/2">
-        <HexSlot rotation={90} size="lg" />
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-20 text-slate-300 text-[10px] font-bold tracking-wider whitespace-nowrap">SKILL SLOT 4</span>
-      </div>
+        {/* INNER RING - 4 Large Kites (Skill Slots) */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none">
+          {/* Top */}
+          <div className="absolute top-[18%] left-1/2 -translate-x-1/2 pointer-events-auto">
+            <KiteSlot rotation={0} label="SKILL SLOT 1" />
+          </div>
+          {/* Bottom */}
+          <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 pointer-events-auto">
+            <KiteSlot rotation={180} label="SKILL SLOT 3" />
+          </div>
+          {/* Right */}
+          <div className="absolute right-[18%] top-1/2 -translate-y-1/2 pointer-events-auto">
+            <KiteSlot rotation={90} label="SKILL SLOT 2" />
+          </div>
+          {/* Left */}
+          <div className="absolute left-[18%] top-1/2 -translate-y-1/2 pointer-events-auto">
+            <KiteSlot rotation={270} label="SKILL SLOT 4" />
+          </div>
+        </div>
 
-      {/* 8 Medium Triangles between the main hexagons */}
-      {/* Top-Left pair */}
-      <div className="absolute top-24 left-24">
-        <TriangleSlot rotation={45} size="md" />
-      </div>
-      <div className="absolute top-20 left-28">
-        <TriangleSlot rotation={135} size="md" />
-      </div>
-      
-      {/* Top-Right pair */}
-      <div className="absolute top-24 right-24">
-        <TriangleSlot rotation={315} size="md" />
-      </div>
-      <div className="absolute top-20 right-28">
-        <TriangleSlot rotation={225} size="md" />
-      </div>
-      
-      {/* Bottom-Left pair */}
-      <div className="absolute bottom-24 left-24">
-        <TriangleSlot rotation={135} size="md" />
-      </div>
-      <div className="absolute bottom-20 left-28">
-        <TriangleSlot rotation={45} size="md" />
-      </div>
-      
-      {/* Bottom-Right pair */}
-      <div className="absolute bottom-24 right-24">
-        <TriangleSlot rotation={225} size="md" />
-      </div>
-      <div className="absolute bottom-20 right-28">
-        <TriangleSlot rotation={315} size="md" />
-      </div>
+        {/* MIDDLE RING - 8 Shards filling gaps */}
+        <div className="absolute inset-0 pointer-events-none">
+           {/* Top Right Quad */}
+           <div className="absolute top-[28%] right-[28%] pointer-events-auto">
+             <ShardSlot rotation={45} />
+           </div>
+           {/* Top Left Quad */}
+           <div className="absolute top-[28%] left-[28%] pointer-events-auto">
+             <ShardSlot rotation={-45} />
+           </div>
+           {/* Bottom Right Quad */}
+           <div className="absolute bottom-[28%] right-[28%] pointer-events-auto">
+             <ShardSlot rotation={135} />
+           </div>
+           {/* Bottom Left Quad */}
+           <div className="absolute bottom-[28%] left-[28%] pointer-events-auto">
+             <ShardSlot rotation={-135} />
+           </div>
 
-      {/* 4 Large Corner Triangles */}
-      <div className="absolute top-2 left-2">
-        <TriangleSlot rotation={45} size="lg" />
-      </div>
-      <div className="absolute top-2 right-2">
-        <TriangleSlot rotation={315} size="lg" />
-      </div>
-      <div className="absolute bottom-2 left-2">
-        <TriangleSlot rotation={135} size="lg" />
-      </div>
-      <div className="absolute bottom-2 right-2">
-        <TriangleSlot rotation={225} size="lg" />
-      </div>
+           {/* Additional filler shards closer to center diagonals */}
+           <div className="absolute top-[38%] right-[38%] pointer-events-auto">
+             <div className="w-8 h-8 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45" />
+           </div>
+           <div className="absolute top-[38%] left-[38%] pointer-events-auto">
+             <div className="w-8 h-8 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45" />
+           </div>
+           <div className="absolute bottom-[38%] right-[38%] pointer-events-auto">
+             <div className="w-8 h-8 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45" />
+           </div>
+           <div className="absolute bottom-[38%] left-[38%] pointer-events-auto">
+             <div className="w-8 h-8 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45" />
+           </div>
+        </div>
 
-      {/* 4 Corner Diamonds - very small */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2">
-        <DiamondSlot size="sm" />
-      </div>
-      <div className="absolute top-1/2 right-6 -translate-y-1/2">
-        <DiamondSlot size="sm" />
-      </div>
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-        <DiamondSlot size="sm" />
-      </div>
-      <div className="absolute top-1/2 left-6 -translate-y-1/2">
-        <DiamondSlot size="sm" />
+        {/* OUTER RING - 4 Tips at corners */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 pointer-events-auto">
+            <TipSlot rotation={0} />
+          </div>
+          <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2 pointer-events-auto">
+            <TipSlot rotation={0} />
+          </div>
+          <div className="absolute left-[5%] top-1/2 -translate-y-1/2 pointer-events-auto">
+            <TipSlot rotation={0} />
+          </div>
+          <div className="absolute right-[5%] top-1/2 -translate-y-1/2 pointer-events-auto">
+            <TipSlot rotation={0} />
+          </div>
+        </div>
+
       </div>
     </div>
   );
