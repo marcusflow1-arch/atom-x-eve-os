@@ -315,23 +315,33 @@ export default function CommunityPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Recommended Games (25%) */}
+                            {/* Right Column: ATOM×EVE News (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
                                 <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">RECOMMENDED GAMES</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">ATOM×EVE NEWS</h2>
                                 </div>
                                 <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
-                                    {['Cyberpunk 2088', 'Astroforge', 'Neon Rivals', 'Shadow Protocol', 'Star Conquest', 'Digital Frontiers'].map((game, i) => (
+                                    {[
+                                        { title: 'Platform Milestone: 1M Users!', time: '2 hours ago', type: 'Celebration' },
+                                        { title: 'New Partnership with Epic Games', time: '5 hours ago', type: 'Partnership' },
+                                        { title: 'AI Update 3.5 Released', time: '1 day ago', type: 'Release' },
+                                        { title: 'Community Event This Weekend', time: '1 day ago', type: 'Event' },
+                                        { title: 'Developer AMA Tomorrow 3PM PST', time: '2 days ago', type: 'Live Stream' },
+                                        { title: 'Q4 Roadmap Announced', time: '3 days ago', type: 'Announcement' }
+                                    ].map((news, i) => (
                                         <div 
                                             key={i}
-                                            className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                                            className="flex items-start gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                                         >
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                                <Gamepad2 className="w-5 h-5 text-white" />
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                                                <Star className="w-4 h-4 text-white" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-white text-sm font-semibold truncate">{game}</p>
-                                                <p className="text-white/40 text-xs">Recommended</p>
+                                                <p className="text-white text-sm font-semibold line-clamp-2">{news.title}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge className="text-[10px] bg-cyan-500/20 text-cyan-400 border-cyan-500/30 px-2 py-0">{news.type}</Badge>
+                                                    <span className="text-white/30 text-xs">{news.time}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
