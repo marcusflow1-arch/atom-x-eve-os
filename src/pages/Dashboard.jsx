@@ -395,7 +395,7 @@ export default function Dashboard() {
 
 
       {/* Mode Toggle at Top with Arrows */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4">
         {/* Left Arrow */}
         <motion.button
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
