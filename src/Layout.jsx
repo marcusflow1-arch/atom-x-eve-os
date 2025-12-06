@@ -385,11 +385,11 @@ function LayoutContent({ children, currentPageName }) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl border-r border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl"
               style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
             >
               {/* Drawer Header */}
-              <div className="p-6 border-b border-white/[0.06]">
+              <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-white font-bold text-xl tracking-wider">ATOM×EVE</span>
                   <button 
@@ -402,7 +402,7 @@ function LayoutContent({ children, currentPageName }) {
                 
                 {/* User Info */}
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04]">
                     <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden ring-2 ring-white/20">
                       {user?.avatar_url ? (
                         <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -425,8 +425,8 @@ function LayoutContent({ children, currentPageName }) {
                 ) : (
                   <button
                     onClick={handleSignIn}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-white font-medium transition-all border border-white/[0.08]"
-                  >
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-white font-medium transition-all"
+                    >
                     <LogIn className="w-4 h-4" />
                     Sign In
                   </button>
@@ -446,8 +446,8 @@ function LayoutContent({ children, currentPageName }) {
                         onClick={() => setDrawerOpen(false)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
                           isActive 
-                            ? 'bg-white/[0.1] text-white border border-white/[0.1]' 
-                            : 'text-white/60 hover:text-white hover:bg-white/[0.05] border border-transparent'
+                            ? 'bg-white/[0.1] text-white' 
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
                         }`}
                       >
                         <item.icon className="w-5 h-5" />
@@ -459,7 +459,7 @@ function LayoutContent({ children, currentPageName }) {
               </div>
 
               {/* Drawer Footer */}
-              <div className="p-4 border-t border-white/[0.06]">
+              <div className="p-4">
                 <p className="text-white/20 text-xs text-center">© 2025 ATOM×EVE</p>
               </div>
             </motion.div>
