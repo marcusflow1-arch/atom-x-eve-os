@@ -320,7 +320,7 @@ export default function Dashboard() {
               }}
             >
               {/* Header */}
-              <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
+              <div className="p-6 flex items-center justify-between">
                 <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
                 <button 
                   onClick={() => setActiveDrawer(null)}
