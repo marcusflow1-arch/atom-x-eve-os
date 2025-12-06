@@ -82,6 +82,24 @@ export default function UIGenerator() {
         }
     };
 
+    const handleDownload = async (url) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `ui-design-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (e) {
+            console.error("Download failed, opening in new tab", e);
+            window.open(url, '_blank');
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto space-y-8">
             <div className="text-center space-y-4 mb-8">
