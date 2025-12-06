@@ -408,7 +408,7 @@ export default function Dashboard() {
       </div>
 
         {/* Octagon Skill Tree - Bottom Right Corner - Only in AI mode */}
-        <div className={`absolute right-6 bottom-16 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`absolute right-6 bottom-4 z-30 transition-opacity duration-500 origin-bottom-right scale-50 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <OctagonSkillTree />
         </div>
 
