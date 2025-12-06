@@ -359,317 +359,187 @@ export default function StreamingHub() {
 
   // Main streaming hub view
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1 space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">Streaming Hub</h1>
-                <p className="text-slate-400">Watch live streams and discover new content</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-[#0B1120] to-black text-white">
+      {/* Twitch-Style Top Navigation */}
+      <div className="bg-[#18181b] border-b border-slate-800/50 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <Radio className="w-7 h-7 text-purple-500" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">STREAM HUB</span>
+            </div>
+            <div className="hidden md:flex items-center gap-1">
+              <button className="px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700/50 rounded transition-colors">
+                Browse
+              </button>
+              <button className="px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors">
+                Following
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-[#0e0e10] border-slate-700 text-sm h-9 rounded-md focus:border-purple-500"
+              />
+            </div>
+            <Button className="bg-purple-600 hover:bg-purple-700 h-9 px-6">
+              <Play className="w-4 h-4 mr-2" />
+              Go Live
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex">
+        {/* Left Sidebar - Followed Channels */}
+        <div className="w-60 bg-[#18181b]/80 backdrop-blur-sm border-r border-slate-800/50 h-[calc(100vh-60px)] overflow-y-auto flex-shrink-0">
+          <div className="p-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">
+              Followed Channels
+            </h3>
+            <div className="space-y-1">
+              {topStreamers.slice(0, 3).map((streamer) => (
+                <div key={streamer.id} className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/30 cursor-pointer transition-colors">
+                  <div className="relative">
+                    <img src={streamer.avatar} alt={streamer.username} className="w-8 h-8 rounded-full" />
+                    {streamer.isLive && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-600 rounded-full border-2 border-[#18181b]"></div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm truncate">{streamer.username}</p>
+                    {streamer.isLive && (
+                      <p className="text-slate-400 text-xs truncate">{streamer.game}</p>
+                    )}
+                  </div>
+                  {streamer.isLive && (
+                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-2 mt-6">
+              Recommended
+            </h3>
+            <div className="space-y-1">
+              {upcomingStreamers.slice(0, 3).map((streamer) => (
+                <div key={streamer.id} className="flex items-center gap-3 p-2 rounded hover:bg-slate-700/30 cursor-pointer transition-colors">
+                  <img src={streamer.avatar} alt={streamer.username} className="w-8 h-8 rounded-full" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-slate-300 text-sm truncate">{streamer.username}</p>
+                    <p className="text-slate-500 text-xs">{streamer.followers.toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto h-[calc(100vh-60px)]">
+          <div className="p-6 space-y-8">
+            {/* Header Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Live Channels</h2>
+              <p className="text-slate-400 text-sm">Channels we think you'll like</p>
             </div>
 
-            {/* Featured Stream */}
-            {featuredStream && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Star className="w-5 h-5 text-yellow-400" />
-                  <h2 className="text-2xl font-bold text-white">Featured Stream</h2>
-                </div>
-                <Link to={createPageUrl('StreamDetail') + `?id=${featuredStream.id}`}>
+            {/* Live Streams Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {streams.map(stream => (
+                <Link key={stream.id} to={createPageUrl('StreamDetail') + `?id=${stream.id}`}>
                   <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="relative rounded-xl overflow-hidden border-2 border-purple-500/50 hover:border-purple-500 transition-all cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    className="group cursor-pointer"
                   >
-                    <div className="relative aspect-[21/9]">
+                    <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-800 mb-2">
                       <img
-                        src={featuredStream.preview_image_url}
-                        alt={featuredStream.title}
-                        className="w-full h-full object-cover"
+                        src={stream.preview_image_url}
+                        alt={stream.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      
-                      {/* Live Badge */}
-                      <div className="absolute top-4 left-4">
-                        <Badge className="bg-red-600 text-white flex items-center gap-2 px-3 py-1 text-sm">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                        <Badge className="bg-red-600 text-white text-xs px-1.5 py-0.5 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                           LIVE
                         </Badge>
-                      </div>
-
-                      {/* Viewer Count */}
-                      <div className="absolute top-4 right-4">
-                        <Badge variant="secondary" className="bg-black/70 text-white flex items-center gap-2">
-                          <Eye className="w-4 h-4" />
-                          {featuredStream.viewer_count.toLocaleString()} watching
+                        <Badge className="bg-black/80 text-white text-xs px-1.5 py-0.5">
+                          {stream.viewer_count.toLocaleString()}
                         </Badge>
                       </div>
-
-                      {/* Stream Info */}
-                      <div className="absolute bottom-0 left-0 right-0 p-6">
-                        <div className="flex items-end justify-between">
-                          <div className="flex-1">
-                            <Badge className="bg-purple-600 text-white mb-3">
-                              {featuredStream.game_name}
-                            </Badge>
-                            <h3 className="text-2xl font-bold text-white mb-2">
-                              {featuredStream.title}
-                            </h3>
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={featuredStream.streamer.avatar_url}
-                                  alt={featuredStream.streamer.username}
-                                  className="w-10 h-10 rounded-full border-2 border-white"
-                                />
-                                <div>
-                                  <p className="text-white font-semibold">
-                                    {featuredStream.streamer.username}
-                                  </p>
-                                  <p className="text-slate-300 text-sm">
-                                    {featuredStream.streamer.followers.toLocaleString()} followers
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
-                            <Play className="w-5 h-5 mr-2" />
-                            Watch Now
-                          </Button>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <img
+                        src={stream.streamer.avatar_url}
+                        alt={stream.streamer.username}
+                        className="w-10 h-10 rounded-full flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white text-sm font-semibold mb-0.5 line-clamp-1 group-hover:text-purple-400 transition-colors">
+                          {stream.streamer.username}
+                        </h3>
+                        <p className="text-slate-400 text-xs mb-1 line-clamp-2">
+                          {stream.title}
+                        </p>
+                        <p className="text-slate-500 text-xs">
+                          {stream.game_name}
+                        </p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {stream.tags.slice(0, 2).map(tag => (
+                            <span key={tag} className="bg-slate-700/50 text-slate-300 text-[10px] px-1.5 py-0.5 rounded">
+                              {tag}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
                   </motion.div>
                 </Link>
-              </div>
-            )}
+              ))}
+            </div>
 
-            {/* Featured Games */}
+            {/* Categories Section */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                <h2 className="text-2xl font-bold text-white">Featured Games</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <h2 className="text-xl font-bold text-white mb-4">Categories</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                 {featuredGames.map(game => (
                   <motion.div
                     key={game.id}
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.03 }}
                     onClick={() => setSelectedGame(game)}
-                    className="relative rounded-lg overflow-hidden border border-slate-700 hover:border-purple-500 transition-all cursor-pointer group"
+                    className="group cursor-pointer"
                   >
-                    <div className="relative aspect-[3/4]">
+                    <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-slate-800 mb-2">
                       <img
                         src={game.cover_image}
                         alt={game.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                      
-                      {/* Stats */}
-                      <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-                        <Badge className="bg-red-600 text-white flex items-center gap-1">
-                          <Radio className="w-3 h-3" />
-                          {game.streamer_count}
-                        </Badge>
-                        <Badge variant="secondary" className="bg-black/70 text-white flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {game.viewer_count.toLocaleString()}
-                        </Badge>
-                      </div>
-
-                      {/* Game Info */}
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="text-white font-bold mb-1">{game.name}</h3>
-                        <Badge variant="outline" className="text-xs">{game.genre}</Badge>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* All Games */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Gamepad2 className="w-5 h-5 text-blue-400" />
-                  <h2 className="text-2xl font-bold text-white">Browse Games</h2>
-                </div>
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    placeholder="Search games..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-slate-800 border-slate-700"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {filteredGames.map(game => (
-                  <motion.div
-                    key={game.id}
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => setSelectedGame(game)}
-                    className="relative rounded-lg overflow-hidden border border-slate-700 hover:border-blue-500 transition-all cursor-pointer group"
-                  >
-                    <div className="relative aspect-[3/4]">
-                      <img
-                        src={game.cover_image}
-                        alt={game.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-                      
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
                       {game.streamer_count > 0 && (
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-red-600 text-white text-xs flex items-center gap-1">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                            {game.streamer_count}
+                        <div className="absolute top-2 left-2">
+                          <Badge className="bg-red-600 text-white text-xs px-1.5 py-0.5">
+                            {game.streamer_count} Live
                           </Badge>
                         </div>
                       )}
-
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">
-                          {game.name}
-                        </h3>
-                        {game.viewer_count > 0 && (
-                          <p className="text-slate-300 text-xs">
-                            {game.viewer_count.toLocaleString()} viewers
-                          </p>
-                        )}
-                      </div>
                     </div>
+                    <h3 className="text-white text-sm font-semibold mb-0.5 line-clamp-1 group-hover:text-purple-400 transition-colors">
+                      {game.name}
+                    </h3>
+                    {game.viewer_count > 0 && (
+                      <p className="text-slate-500 text-xs">
+                        {game.viewer_count.toLocaleString()} viewers
+                      </p>
+                    )}
                   </motion.div>
-                ))}
-              </div>
-
-              {filteredGames.length === 0 && (
-                <div className="text-center py-16">
-                  <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 text-lg">No games found</p>
-                  <p className="text-slate-500 text-sm mt-2">Try a different search term</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="w-80 flex-shrink-0 space-y-6">
-            {/* Go Live Button */}
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
-              <Play className="w-4 h-4 mr-2" />
-              Go Live
-            </Button>
-            
-            {/* Streamer Tools Widget */}
-            <StreamerTools />
-
-            {/* Top Streamers */}
-            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-400" />
-                Top Streamers
-              </h3>
-              <div className="space-y-3">
-                {topStreamers.map((streamer, index) => (
-                  <div key={streamer.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer">
-                    <div className="text-slate-400 font-bold text-sm w-6">#{index + 1}</div>
-                    <div className="relative">
-                      <img src={streamer.avatar} alt={streamer.username} className="w-10 h-10 rounded-full" />
-                      {streamer.isLive && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-slate-800"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold text-sm truncate">{streamer.username}</p>
-                      <p className="text-slate-400 text-xs">{streamer.followers.toLocaleString()} followers</p>
-                    </div>
-                    {streamer.isLive && (
-                      <Badge className="bg-red-600 text-white text-xs">
-                        {streamer.viewers.toLocaleString()}
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Streamer Spotlight */}
-            <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl border border-purple-500/50 p-4">
-              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-purple-400" />
-                Streamer Spotlight
-              </h3>
-              <div className="text-center">
-                <div className="relative inline-block mb-3">
-                  <img 
-                    src={spotlightStreamer.avatar} 
-                    alt={spotlightStreamer.username} 
-                    className="w-20 h-20 rounded-full border-4 border-purple-500"
-                  />
-                  {spotlightStreamer.isLive && (
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-red-600 rounded-full border-2 border-slate-800 flex items-center justify-center">
-                      <Radio className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </div>
-                <h4 className="text-white font-bold text-lg mb-1">{spotlightStreamer.username}</h4>
-                <p className="text-purple-300 text-sm mb-2">{spotlightStreamer.followers.toLocaleString()} followers</p>
-                <p className="text-slate-300 text-sm mb-4">{spotlightStreamer.bio}</p>
-                {spotlightStreamer.isLive && (
-                  <div className="mb-4">
-                    <Badge className="bg-red-600 text-white">
-                      LIVE • {spotlightStreamer.viewers} viewers
-                    </Badge>
-                    <p className="text-slate-400 text-xs mt-1">Playing: {spotlightStreamer.game}</p>
-                  </div>
-                )}
-                <Button asChild className="w-full bg-purple-600 hover:bg-purple-700">
-                  {/* Assuming a UserProfile page exists */}
-                  <Link to={createPageUrl('UserProfile') + `?username=${spotlightStreamer.username}`}>
-                    View Channel
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* New Upcoming Streamers */}
-            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                New & Upcoming
-              </h3>
-              <div className="space-y-3">
-                {upcomingStreamers.map((streamer) => (
-                  <div key={streamer.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer">
-                    <div className="relative">
-                      <img src={streamer.avatar} alt={streamer.username} className="w-10 h-10 rounded-full" />
-                      {streamer.isLive && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-slate-800"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold text-sm truncate">{streamer.username}</p>
-                      <p className="text-slate-400 text-xs">{streamer.followers.toLocaleString()} followers</p>
-                    </div>
-                    {streamer.isLive ? (
-                      <Badge className="bg-red-600 text-white text-xs">
-                        LIVE
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
-                        Offline
-                      </Badge>
-                    )}
-                  </div>
                 ))}
               </div>
             </div>
