@@ -618,11 +618,11 @@ export default function Dashboard() {
 
       {/* Preset D - Right Side Panel - Only in AI mode */}
       <div className={`absolute right-8 top-[40%] -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-6 p-6 bg-black/50 backdrop-blur-md rounded-2xl border border-slate-700">
 
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h3 className="text-white/90 font-bold text-xs tracking-widest uppercase">Preset D</h3>
+            <h3 className="text-white font-black text-xs tracking-widest uppercase">Preset D</h3>
             <div className="flex gap-1">
               {['A', 'B', 'C', 'D'].map((preset) => (
                 <button
@@ -630,7 +630,7 @@ export default function Dashboard() {
                   className={`w-7 h-7 rounded-md text-[10px] font-bold transition-all flex items-center justify-center ${
                     preset === 'D'
                       ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]'
-                      : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'
+                      : 'bg-black/50 text-white/60 hover:bg-black/60 hover:text-white border border-slate-700'
                   }`}
                 >
                   {preset}
@@ -641,7 +641,7 @@ export default function Dashboard() {
 
           {/* Weapons Section */}
           <div className="space-y-2">
-            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
+            <div className="text-white font-black text-[9px] uppercase tracking-widest">Weapons</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
@@ -651,7 +651,7 @@ export default function Dashboard() {
 
           {/* Equipment Section */}
           <div className="space-y-2">
-            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Equipment</div>
+            <div className="text-white font-black text-[9px] uppercase tracking-widest">Equipment</div>
             <div className="grid grid-cols-3 gap-3">
               {['Armor', 'Gloves', 'Boots', 'Legs', 'Ring', 'Cape'].map((item) => (
                 <div key={item} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer flex items-center justify-center group">
@@ -663,7 +663,7 @@ export default function Dashboard() {
 
           {/* Aspect Section */}
           <div className="space-y-2">
-            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
+            <div className="text-white font-black text-[9px] uppercase tracking-widest">Aspect</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
@@ -673,7 +673,7 @@ export default function Dashboard() {
 
           {/* Artifacts Section */}
           <div className="space-y-2">
-            <div className="text-white/90 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
+            <div className="text-white font-black text-[9px] uppercase tracking-widest">Artifacts</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square rounded-xl bg-black/50 border border-slate-700 hover:border-slate-500 hover:bg-black/60 transition-all cursor-pointer" />
