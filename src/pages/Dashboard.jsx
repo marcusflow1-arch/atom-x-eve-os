@@ -187,12 +187,16 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(null)}
             />
             <motion.div
-              initial={{ x: '-100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '-100%', opacity: 0 }}
+              initial={activeDrawer.id === 'home' ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              animate={activeDrawer.id === 'home' ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={activeDrawer.id === 'home' ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed left-0 bg-white/[0.03] backdrop-blur-3xl border-r border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ 
+              className={`fixed bg-white/[0.03] backdrop-blur-3xl border border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-3xl ${
+                activeDrawer.id === 'home' ? 'inset-8' : 'left-0 border-r rounded-none'
+              }`}
+              style={activeDrawer.id === 'home' ? { 
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+              } : { 
                 top: '80px',
                 bottom: '48px',
                 width: '56vw',
