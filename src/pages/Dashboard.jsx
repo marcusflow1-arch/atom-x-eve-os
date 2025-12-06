@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, BookOpen, Zap, Sword, Gamepad2, Settings, Target, Layers,
-  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords
+  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, X
 } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
