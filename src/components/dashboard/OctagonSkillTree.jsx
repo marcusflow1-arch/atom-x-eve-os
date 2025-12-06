@@ -9,7 +9,7 @@ const OctagonSkillTree = () => {
   const KiteSlot = ({ rotation, label }) => (
     <div className="w-20 h-20 relative">
       <div 
-        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
           clipPath: 'polygon(50% 0%, 100% 30%, 100% 70%, 50% 90%, 0% 70%, 0% 30%)', // Hexagonal-ish kite - shortened tip
           transform: `rotate(${rotation}deg) scale(0.90)` 
@@ -36,7 +36,7 @@ const OctagonSkillTree = () => {
   const ShardSlot = ({ rotation }) => (
     <div className="w-14 h-20 relative">
       <div 
-        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
           clipPath: 'polygon(0% 0%, 100% 0%, 50% 85%)', // Shortened triangle tip
           transform: `rotate(${rotation}deg) scale(0.85)`
@@ -49,7 +49,7 @@ const OctagonSkillTree = () => {
   const TipSlot = ({ rotation }) => (
     <div className="w-16 h-16 relative">
       <div 
-        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
           clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', // Diamond
           transform: `rotate(${rotation}deg) scale(0.85)`
@@ -62,7 +62,7 @@ const OctagonSkillTree = () => {
   const CoreSlot = ({ rotation }) => (
     <div className="w-6 h-6 relative">
       <div 
-        className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
           clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
           transform: `rotate(${rotation}deg) scale(0.75)`
@@ -125,16 +125,16 @@ const OctagonSkillTree = () => {
 
            {/* Additional filler shards closer to center diagonals */}
            <div className="absolute top-[36%] right-[36%] pointer-events-auto">
-             <div className="w-6 h-6 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
+             <div className="w-6 h-6 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
            </div>
            <div className="absolute top-[36%] left-[36%] pointer-events-auto">
-             <div className="w-6 h-6 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
+             <div className="w-6 h-6 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
            </div>
            <div className="absolute bottom-[36%] right-[36%] pointer-events-auto">
-             <div className="w-6 h-6 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
+             <div className="w-6 h-6 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
            </div>
            <div className="absolute bottom-[36%] left-[36%] pointer-events-auto">
-             <div className="w-6 h-6 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
+             <div className="w-6 h-6 bg-slate-900/50 border border-slate-500/30 hover:border-cyan-400/80 rotate-45 transition-all" />
            </div>
         </div>
 

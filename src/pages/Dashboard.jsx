@@ -168,7 +168,9 @@ export default function Dashboard() {
               backgroundImage: 'url(https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/db2ccfac8_translucent-liquid-glass-filling-entire-screen-wallpaper-transparent-white-background-iridescent-abstract-many-colored-full-302912310.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'crisp-edges',
+              filter: 'contrast(1.1) brightness(1.05)'
             }}
           />
         )}
@@ -409,7 +411,7 @@ export default function Dashboard() {
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.06] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.09] transition-all cursor-pointer" />
               ))}
             </div>
           </div>
@@ -419,7 +421,7 @@ export default function Dashboard() {
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Equipment</div>
             <div className="grid grid-cols-3 gap-3">
               {['Armor', 'Gloves', 'Boots', 'Legs', 'Ring', 'Cape'].map((item) => (
-                <div key={item} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer flex items-center justify-center group">
+                <div key={item} className="aspect-square rounded-xl bg-white/[0.06] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.09] transition-all cursor-pointer flex items-center justify-center group">
                   <span className="text-white/20 text-[8px] group-hover:text-white/40 transition-colors">{item}</span>
                 </div>
               ))}
@@ -431,7 +433,7 @@ export default function Dashboard() {
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.06] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.09] transition-all cursor-pointer" />
               ))}
             </div>
           </div>
@@ -441,7 +443,7 @@ export default function Dashboard() {
             <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
             <div className="grid grid-cols-3 gap-3">
               {[1, 2].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.06] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.09] transition-all cursor-pointer" />
               ))}
             </div>
           </div>
