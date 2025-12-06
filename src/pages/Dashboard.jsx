@@ -346,7 +346,7 @@ export default function Dashboard() {
       </div>
 
       {/* Preset D - Loadout Panel (Right Side) - Only in AI mode */}
-      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-64 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -367,54 +367,50 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Equipment Slots */}
-          <div className="space-y-3">
-            {/* Weapon */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 flex items-center justify-center">
-                <Sword className="w-6 h-6 text-red-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white text-xs font-semibold">Weapon</p>
-                <p className="text-white/50 text-[10px]">Not Equipped</p>
-              </div>
+          {/* Weapons Section */}
+          <div className="mb-4">
+            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Weapons</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
+          </div>
 
-            {/* Armor */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-blue-400" />
+          {/* Equipment Section */}
+          <div className="mb-4">
+            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Equipment</h4>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Armor</span>
               </div>
-              <div className="flex-1">
-                <p className="text-white text-xs font-semibold">Armor</p>
-                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Gloves</span>
               </div>
-            </div>
-
-            {/* Gloves */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
-                <Target className="w-6 h-6 text-purple-400" />
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Boots</span>
               </div>
-              <div className="flex-1">
-                <p className="text-white text-xs font-semibold">Gloves</p>
-                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Ring</span>
               </div>
-            </div>
-
-            {/* Rings */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-amber-400" />
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Ring</span>
               </div>
-              <div className="flex-1">
-                <p className="text-white text-xs font-semibold">Rings</p>
-                <p className="text-white/50 text-[10px]">Not Equipped</p>
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
+                <span className="text-white/30 text-[8px] font-medium">Cape</span>
               </div>
             </div>
           </div>
+
+          {/* Aspect Section */}
+          <div>
+            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Aspect</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+              <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
+            </div>
+          </div>
         </div>
-        </div>
+      </div>
 
         {/* Experience Bar at Bottom - Always visible */}
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-black/40 backdrop-blur-sm border-t border-white/10 z-40">
