@@ -314,8 +314,8 @@ export default function CommunityPage() {
                         </LiquidGlassCard>
                     </div>
 
-                    {/* Center Column: Posts Feed (50%) */}
-                    <div className="col-span-6 flex flex-col gap-6">
+                    {/* Center Column: Posts Feed (60%) */}
+                    <div className="col-span-8 flex flex-col gap-6">
                         <div className="flex items-center justify-between px-2">
                             <h2 className="text-sm font-bold text-white/80 tracking-wide">
                                 {activeSection === 'general_discussion' ? 'GENERAL DISCUSSIONS' : 'POSTS FEED'}
