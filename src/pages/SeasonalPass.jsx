@@ -1,0 +1,612 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Trophy, Lock, Check, Star, Zap, Sword, Shield, Users, 
+  User, Globe, ChevronLeft, ChevronRight, Sparkles, Crown,
+  Play, X, RotateCw, Clock, TrendingUp
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '../components/auth/AuthContext';
+
+// Rarity System
+const rarityColors = {
+  Common: { bg: 'bg-slate-700', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' },
+  Rare: { bg: 'bg-blue-900', border: 'border-blue-500', text: 'text-blue-300', glow: 'shadow-blue-500/50' },
+  Epic: { bg: 'bg-purple-900', border: 'border-purple-500', text: 'text-purple-300', glow: 'shadow-purple-500/50' },
+  Legendary: { bg: 'bg-yellow-900', border: 'border-yellow-500', text: 'text-yellow-300', glow: 'shadow-yellow-500/50' },
+  Mythical: { bg: 'bg-red-900', border: 'border-red-500', text: 'text-red-300', glow: 'shadow-red-500/50' },
+  Godlike: { bg: 'bg-gradient-to-br from-purple-600 via-pink-600 to-yellow-600', border: 'border-pink-400', text: 'text-white', glow: 'shadow-pink-500/80' }
+};
+
+// Mock data for Limited Edition Cards
+const limitedEditionCards = [
+  {
+    id: 1,
+    name: 'Void Reaper',
+    type: 'Ability',
+    rarity: 'Godlike',
+    description: 'Summon a dimensional rift that pulls enemies into the void',
+    image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'online'
+  },
+  {
+    id: 2,
+    name: 'Celestial Guardian',
+    type: 'Companion',
+    rarity: 'Mythical',
+    description: 'Ancient spirit that shields allies and provides tactical support',
+    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'pve'
+  },
+  {
+    id: 3,
+    name: 'Plasma Katana',
+    type: 'Equipment',
+    rarity: 'Legendary',
+    description: 'Energy-infused blade that cuts through armor',
+    image: 'https://images.unsplash.com/photo-1589254065878-42c9da997008?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'solo'
+  },
+  {
+    id: 4,
+    name: 'Quantum Dash',
+    type: 'Ability',
+    rarity: 'Epic',
+    description: 'Phase through obstacles and enemies',
+    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'online'
+  },
+  {
+    id: 5,
+    name: 'Mech Wolf',
+    type: 'Companion',
+    rarity: 'Legendary',
+    description: 'Tactical combat drone with pack hunter AI',
+    image: 'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'solo'
+  },
+  {
+    id: 6,
+    name: 'Storm Caller',
+    type: 'Ability',
+    rarity: 'Mythical',
+    description: 'Control weather patterns to devastate battlefields',
+    image: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=600&fit=crop',
+    season: 'Season 1',
+    track: 'pve'
+  }
+];
+
+// Mock Season Pass Levels (1-100)
+const generateSeasonLevels = () => {
+  const levels = [];
+  const rewardTypes = ['Ability', 'Equipment', 'Companion', 'Currency', 'XP Boost'];
+  const rarities = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythical', 'Godlike'];
+  
+  for (let i = 1; i <= 100; i++) {
+    const isPremium = i % 5 === 0;
+    const rarity = i % 25 === 0 ? 'Godlike' : 
+                   i % 20 === 0 ? 'Mythical' :
+                   i % 10 === 0 ? 'Legendary' :
+                   i % 5 === 0 ? 'Epic' : 
+                   i % 3 === 0 ? 'Rare' : 'Common';
+    
+    levels.push({
+      level: i,
+      xpRequired: i * 1000,
+      freeReward: {
+        name: `Level ${i} Reward`,
+        type: rewardTypes[Math.floor(Math.random() * rewardTypes.length)],
+        rarity: rarity,
+        icon: '🎁'
+      },
+      premiumReward: isPremium ? {
+        name: `Premium ${i} Reward`,
+        type: rewardTypes[Math.floor(Math.random() * rewardTypes.length)],
+        rarity: rarity === 'Common' ? 'Epic' : rarity,
+        icon: '💎'
+      } : null
+    });
+  }
+  
+  return levels;
+};
+
+// Limited Edition Card Component
+const LimitedEditionCard = ({ card, onClick }) => {
+  const rarity = rarityColors[card.rarity];
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05, rotateY: 5 }}
+      onClick={() => onClick(card)}
+      className={`relative w-80 h-[480px] rounded-2xl overflow-hidden cursor-pointer border-4 ${rarity.border} ${rarity.glow} shadow-2xl`}
+      style={{
+        background: 'linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(20,20,40,0.9) 100%)',
+      }}
+    >
+      {/* Holographic Shine Effect */}
+      <motion.div
+        className="absolute inset-0 opacity-30 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+        }}
+        animate={{
+          x: ['-100%', '200%'],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          repeatDelay: 2,
+        }}
+      />
+      
+      {/* Card Image */}
+      <img src={card.image} alt={card.name} className="w-full h-72 object-cover" />
+      
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+      
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="flex items-center justify-between mb-2">
+          <Badge className={`${rarity.bg} ${rarity.text} border-0 text-xs font-bold`}>
+            {card.rarity}
+          </Badge>
+          <Badge variant="outline" className="text-xs text-white border-white/30">
+            {card.type}
+          </Badge>
+        </div>
+        
+        <h3 className="text-2xl font-black text-white mb-2">{card.name}</h3>
+        <p className="text-sm text-white/70 line-clamp-2">{card.description}</p>
+        
+        {/* Rarity Indicator */}
+        <div className="flex items-center gap-1 mt-3">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i} 
+              className={`w-3 h-3 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Animated Border Glow */}
+      <motion.div
+        className={`absolute inset-0 rounded-2xl pointer-events-none border-2 ${rarity.border}`}
+        animate={{
+          opacity: [0.5, 1, 0.5],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+        }}
+      />
+    </motion.div>
+  );
+};
+
+// Season Pass Level Node
+const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onClick }) => {
+  const { freeReward, premiumReward, level: levelNumber } = level;
+  const isCurrentLevel = levelNumber === currentLevel;
+  const rarity = rarityColors[freeReward.rarity];
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.1 }}
+      onClick={() => onClick(level)}
+      className={`relative flex-shrink-0 w-24 h-32 cursor-pointer transition-all ${
+        isCurrentLevel ? 'scale-110' : ''
+      }`}
+    >
+      {/* Premium Track */}
+      {premiumReward && (
+        <div className={`absolute top-0 left-0 right-0 h-14 rounded-t-lg border-2 ${
+          isUnlocked && isPremiumOwned ? 'border-yellow-500 bg-yellow-900/50' : 'border-slate-600 bg-slate-800/50'
+        } flex items-center justify-center`}>
+          {isUnlocked && isPremiumOwned ? (
+            <Check className="w-6 h-6 text-yellow-400" />
+          ) : (
+            <Crown className="w-6 h-6 text-slate-500" />
+          )}
+        </div>
+      )}
+      
+      {/* Free Track */}
+      <div className={`absolute bottom-0 left-0 right-0 h-14 rounded-b-lg border-2 ${
+        isUnlocked ? `${rarity.border} ${rarity.bg}` : 'border-slate-600 bg-slate-800/50'
+      } flex items-center justify-center ${premiumReward ? 'top-16' : 'top-0 rounded-t-lg'}`}>
+        {isUnlocked ? (
+          <Check className={`w-6 h-6 ${rarity.text}`} />
+        ) : (
+          <Lock className="w-6 h-6 text-slate-500" />
+        )}
+      </div>
+      
+      {/* Level Number */}
+      <div className={`absolute bottom-[-24px] left-1/2 -translate-x-1/2 px-2 py-1 rounded ${
+        isCurrentLevel ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
+      } text-xs font-bold`}>
+        {levelNumber}
+      </div>
+      
+      {/* Current Level Indicator */}
+      {isCurrentLevel && (
+        <motion.div
+          className="absolute -inset-1 border-2 border-blue-500 rounded-lg pointer-events-none"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      )}
+    </motion.div>
+  );
+};
+
+// Track Selector
+const TrackSelector = ({ activeTrack, onTrackChange }) => {
+  const tracks = [
+    { id: 'solo', name: 'Solo', icon: User, color: 'text-cyan-400', description: 'Single-player progression' },
+    { id: 'online', name: 'Online/PVP', icon: Sword, color: 'text-red-400', description: 'Competitive multiplayer' },
+    { id: 'pve', name: 'PVE/World Events', icon: Globe, color: 'text-green-400', description: 'Raids & boss fights' }
+  ];
+  
+  return (
+    <div className="flex gap-4 mb-6">
+      {tracks.map((track) => (
+        <button
+          key={track.id}
+          onClick={() => onTrackChange(track.id)}
+          className={`flex-1 flex items-center gap-3 px-6 py-4 rounded-xl border-2 transition-all ${
+            activeTrack === track.id
+              ? 'bg-blue-600 border-blue-400 text-white'
+              : 'bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50'
+          }`}
+        >
+          <track.icon className={`w-6 h-6 ${activeTrack === track.id ? 'text-white' : track.color}`} />
+          <div className="text-left">
+            <div className="font-bold">{track.name}</div>
+            <div className="text-xs opacity-70">{track.description}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Preview Modal
+const PreviewModal = ({ item, onClose }) => {
+  if (!item) return null;
+  
+  const rarity = rarityColors[item.rarity || 'Common'];
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-8"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.8, y: 50 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.8, y: 50 }}
+        onClick={(e) => e.stopPropagation()}
+        className={`relative max-w-4xl w-full bg-slate-900 rounded-3xl border-4 ${rarity.border} ${rarity.glow} shadow-2xl overflow-hidden`}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="w-6 h-6 text-white" />
+        </button>
+        
+        <div className="grid md:grid-cols-2 gap-6 p-8">
+          {/* Left: Image */}
+          <div className="relative">
+            <img 
+              src={item.image} 
+              alt={item.name} 
+              className="w-full h-96 object-cover rounded-2xl"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl" />
+          </div>
+          
+          {/* Right: Details */}
+          <div className="flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <Badge className={`${rarity.bg} ${rarity.text} text-sm px-4 py-1`}>
+                  {item.rarity}
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  {item.type}
+                </Badge>
+              </div>
+              
+              <h2 className="text-4xl font-black text-white mb-4">{item.name}</h2>
+              <p className="text-lg text-white/70 mb-6">{item.description}</p>
+              
+              {/* Stats */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <span className="text-slate-400">Power Level</span>
+                  <span className="text-white font-bold">9,500</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <span className="text-slate-400">Cooldown</span>
+                  <span className="text-white font-bold">45s</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <span className="text-slate-400">Track</span>
+                  <span className="text-white font-bold capitalize">{item.track}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                <Play className="w-4 h-4 mr-2" />
+                Preview Animation
+              </Button>
+              <Button variant="outline" className="w-12">
+                <RotateCw className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default function SeasonalPass() {
+  const { user } = useAuth();
+  const [activeTrack, setActiveTrack] = useState('solo');
+  const [currentLevel, setCurrentLevel] = useState(15);
+  const [isPremiumOwned, setIsPremiumOwned] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [seasonLevels] = useState(generateSeasonLevels());
+  
+  const carouselRef = useRef(null);
+  const progressRef = useRef(null);
+  
+  // Auto-scroll carousel
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    
+    let scrollInterval = setInterval(() => {
+      if (carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth) {
+        carousel.scrollLeft = 0;
+      } else {
+        carousel.scrollLeft += 1;
+      }
+    }, 30);
+    
+    return () => clearInterval(scrollInterval);
+  }, []);
+  
+  // Center current level on mount
+  useEffect(() => {
+    const progress = progressRef.current;
+    if (!progress) return;
+    
+    const nodeWidth = 128; // Width including margin
+    const scrollPosition = (currentLevel - 1) * nodeWidth - (progress.clientWidth / 2) + (nodeWidth / 2);
+    progress.scrollLeft = scrollPosition;
+  }, [currentLevel]);
+  
+  const filteredCards = limitedEditionCards.filter(card => card.track === activeTrack);
+  
+  return (
+    <div 
+      className="min-h-screen text-white relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0a0e1a 0%, #1a1f35 25%, #0f1525 50%, #1a1f35 75%, #0a0e1a 100%)'
+      }}
+    >
+      {/* Ambient Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />
+      </div>
+      
+      <div className="relative z-10 p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Season 1: Awakening
+              </h1>
+              <p className="text-slate-400">Level {currentLevel} / 100 • 45 days remaining</p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-sm text-slate-400">Season XP</div>
+                <div className="text-2xl font-bold text-white">125,430 / 150,000</div>
+              </div>
+              <Button 
+                onClick={() => setIsPremiumOwned(!isPremiumOwned)}
+                className={`${isPremiumOwned ? 'bg-gradient-to-r from-yellow-600 to-orange-600' : 'bg-blue-600'} hover:opacity-90`}
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                {isPremiumOwned ? 'Premium Active' : 'Unlock Premium'}
+              </Button>
+            </div>
+          </div>
+          
+          {/* XP Progress Bar */}
+          <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+              initial={{ width: 0 }}
+              animate={{ width: '83%' }}
+              transition={{ duration: 1 }}
+            />
+          </div>
+        </div>
+        
+        {/* Track Selector */}
+        <TrackSelector activeTrack={activeTrack} onTrackChange={setActiveTrack} />
+        
+        {/* Limited Edition Cards Carousel */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+              Limited Edition Season Rewards
+            </h2>
+            <div className="text-sm text-slate-400">
+              Scroll to explore • Click to preview
+            </div>
+          </div>
+          
+          <div 
+            ref={carouselRef}
+            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {filteredCards.map((card) => (
+              <LimitedEditionCard key={card.id} card={card} onClick={setSelectedItem} />
+            ))}
+          </div>
+        </div>
+        
+        {/* Flagship Seasonal Companion Spotlight */}
+        <div className="mb-12 p-8 rounded-3xl border-2 border-purple-500/50 bg-gradient-to-r from-purple-900/20 to-pink-900/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 animate-pulse" />
+          <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <Badge className="mb-4 bg-purple-600 text-white">Season 1 Exclusive</Badge>
+              <h2 className="text-4xl font-black mb-4">Celestial Guardian</h2>
+              <p className="text-lg text-slate-300 mb-6">
+                The flagship companion of Season 1. An ancient protector that provides shields, 
+                tactical support, and devastating ultimate abilities for your team.
+              </p>
+              <div className="flex gap-3">
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Play className="w-4 h-4 mr-2" />
+                  Watch Trailer
+                </Button>
+                <Button variant="outline">
+                  Learn More
+                </Button>
+              </div>
+            </div>
+            <div className="relative h-80">
+              <img 
+                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=400&fit=crop" 
+                alt="Celestial Guardian" 
+                className="w-full h-full object-cover rounded-2xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Season Pass Progress Track */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-yellow-400" />
+            Season Pass Progression
+          </h2>
+          
+          {/* Scroll Controls */}
+          <div className="flex items-center gap-4 mb-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                if (progressRef.current) {
+                  progressRef.current.scrollLeft -= 400;
+                }
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 text-center text-sm text-slate-400">
+              Scroll or drag to explore all 100 levels
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                if (progressRef.current) {
+                  progressRef.current.scrollLeft += 400;
+                }
+              }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Progress Track */}
+          <div 
+            ref={progressRef}
+            className="relative flex gap-4 overflow-x-auto pb-8 pt-2 px-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 scrollbar-hide"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {seasonLevels.map((level) => (
+              <SeasonLevelNode
+                key={level.level}
+                level={level}
+                isUnlocked={level.level <= currentLevel}
+                isPremiumOwned={isPremiumOwned}
+                currentLevel={currentLevel}
+                onClick={(lvl) => console.log('Clicked level:', lvl)}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* Season Stats */}
+        <div className="grid md:grid-cols-4 gap-4">
+          {[
+            { icon: TrendingUp, label: 'Season Rank', value: '#1,247', color: 'text-blue-400' },
+            { icon: Clock, label: 'Time Played', value: '127h', color: 'text-green-400' },
+            { icon: Trophy, label: 'Rewards Claimed', value: '45/100', color: 'text-yellow-400' },
+            { icon: Users, label: 'Squad Wins', value: '89', color: 'text-purple-400' }
+          ].map((stat, i) => (
+            <div key={i} className="p-6 bg-slate-800/30 rounded-xl border border-slate-700/50">
+              <div className="flex items-center gap-3 mb-2">
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                <span className="text-sm text-slate-400">{stat.label}</span>
+              </div>
+              <div className="text-2xl font-bold text-white">{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <PreviewModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+        )}
+      </AnimatePresence>
+      
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+}

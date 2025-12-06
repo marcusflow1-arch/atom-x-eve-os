@@ -32,6 +32,7 @@ import GameDevHub from './pages/GameDevHub';
 import Events from './pages/Events';
 import Challenges from './pages/Challenges';
 import Admin from './pages/Admin';
+import SeasonalPass from './pages/SeasonalPass';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +71,7 @@ export const PAGES = {
     "Events": Events,
     "Challenges": Challenges,
     "Admin": Admin,
+    "SeasonalPass": SeasonalPass,
 }
 
 export const pagesConfig = {
