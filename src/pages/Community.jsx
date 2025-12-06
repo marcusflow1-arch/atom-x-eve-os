@@ -26,6 +26,7 @@ export default function CommunityPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('all');
     const [trendingTopics, setTrendingTopics] = useState([]);
+    const [activeTab, setActiveTab] = useState('home'); // 'home' or 'discussions'
 
     const { isAuthenticated } = useAuth();
 
@@ -167,15 +168,14 @@ export default function CommunityPage() {
                     {/* Center: Navigation */}
                     <div className="flex items-center gap-8">
                         {[
-                            { label: 'DISCUSSIONS', value: 'general_discussion' },
-                            { label: 'GAMES', value: 'game_forums' },
-                            { label: 'TRENDING', value: 'trending' }
-                        ].map((item, i) => (
+                            { label: 'HOME', value: 'home' },
+                            { label: 'DISCUSSIONS', value: 'discussions' }
+                        ].map((item) => (
                             <button 
                                 key={item.value} 
-                                onClick={() => handleSectionChange(item.value)}
+                                onClick={() => setActiveTab(item.value)}
                                 className={`text-sm font-bold tracking-wider transition-all ${
-                                    activeSection === item.value 
+                                    activeTab === item.value 
                                         ? 'text-cyan-300 border-b-2 border-cyan-300 pb-1' 
                                         : 'text-white/60 hover:text-white'
                                 }`}
@@ -211,8 +211,83 @@ export default function CommunityPage() {
                 {/* Main Content Grid */}
                 <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
                     
-                    {/* Left Column: Categories (25%) */}
-                    <div className="col-span-3 flex flex-col gap-6">
+                    {activeTab === 'home' ? (
+                        <>
+                            {/* HOME TAB */}
+                            {/* Left Column: Recently Discussed (25%) */}
+                            <div className="col-span-3 flex flex-col gap-6">
+                                <div className="flex items-center justify-between px-2">
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">RECENTLY DISCUSSED</h2>
+                                </div>
+                                <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
+                                    {posts.slice(0, 6).map((post) => (
+                                        <button
+                                            key={post.id}
+                                            onClick={() => { setActiveTab('discussions'); setSelectedPost(post); }}
+                                            className="flex flex-col gap-1 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+                                        >
+                                            <p className="text-white text-sm font-semibold truncate">{post.title}</p>
+                                            <p className="text-white/40 text-xs truncate">{post.content}</p>
+                                            <p className="text-white/30 text-xs mt-1">{new Date(post.created_date).toLocaleDateString()}</p>
+                                        </button>
+                                    ))}
+                                </LiquidGlassCard>
+                            </div>
+
+                            {/* Center Column: Trending Discussions (50%) */}
+                            <div className="col-span-6 flex flex-col gap-6">
+                                <div className="flex items-center justify-center px-2">
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING DISCUSSIONS & TOPICS</h2>
+                                </div>
+                                <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-4">
+                                    {posts.slice(0, 4).map((post, idx) => (
+                                        <LiquidGlassCard 
+                                            key={post.id} 
+                                            className="flex flex-col justify-between p-6" 
+                                            hover={true}
+                                            onClick={() => { setActiveTab('discussions'); setSelectedPost(post); }}
+                                        >
+                                            <div>
+                                                <h3 className="text-white font-bold text-lg mb-2 line-clamp-2">{post.title}</h3>
+                                                <p className="text-white/60 text-sm line-clamp-3">{post.content}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between mt-4">
+                                                <span className="text-cyan-300 text-xs font-semibold">{post.type?.replace('_', ' ').toUpperCase()}</span>
+                                                <span className="text-white/40 text-xs">{post.score || 0} votes</span>
+                                            </div>
+                                        </LiquidGlassCard>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right Column: Recommended Games (25%) */}
+                            <div className="col-span-3 flex flex-col gap-6">
+                                <div className="flex items-center justify-between px-2">
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">RECOMMENDED GAMES</h2>
+                                </div>
+                                <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
+                                    {['Cyberpunk 2088', 'Astroforge', 'Neon Rivals', 'Shadow Protocol', 'Star Conquest', 'Digital Frontiers'].map((game, i) => (
+                                        <div 
+                                            key={i}
+                                            className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                                                <Gamepad2 className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-white text-sm font-semibold truncate">{game}</p>
+                                                <p className="text-white/40 text-xs">Recommended</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </LiquidGlassCard>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* DISCUSSIONS TAB */}
+                            {/* Left Column: Categories (25%) */}
+                            <div className="col-span-3 flex flex-col gap-6">
                         <div className="flex items-center justify-between px-2">
                             <h2 className="text-sm font-bold text-white/80 tracking-wide">CATEGORIES</h2>
                         </div>
@@ -359,6 +434,8 @@ export default function CommunityPage() {
                             )}
                         </LiquidGlassCard>
                     </div>
+                        </>
+                    )}
 
                 </div>
             </div>
