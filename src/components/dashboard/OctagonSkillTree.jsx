@@ -11,8 +11,8 @@ const OctagonSkillTree = () => {
       <div 
         className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
-          clipPath: 'polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%)', // Hexagonal-ish kite
-          transform: `rotate(${rotation}deg) scale(0.90)` // Scale down for spacing
+          clipPath: 'polygon(50% 0%, 100% 30%, 100% 70%, 50% 90%, 0% 70%, 0% 30%)', // Hexagonal-ish kite - shortened tip
+          transform: `rotate(${rotation}deg) scale(0.90)` 
         }}
       />
       {label && (
@@ -40,7 +40,7 @@ const OctagonSkillTree = () => {
       <div 
         className="absolute inset-0 bg-slate-900/30 border border-slate-500/30 hover:border-cyan-400/80 hover:bg-cyan-900/20 transition-all cursor-pointer backdrop-blur-sm"
         style={{ 
-          clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)', // Sharp triangle
+          clipPath: 'polygon(0% 0%, 100% 0%, 50% 85%)', // Shortened triangle tip
           transform: `rotate(${rotation}deg) scale(0.85)`
         }}
       />
