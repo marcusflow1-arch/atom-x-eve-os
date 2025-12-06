@@ -314,6 +314,15 @@ export default function BlacksmithPage() {
   const [viewMode, setViewMode] = useState('forge'); // 'forge', 'materials', 'collab'
   const [categoryFilter, setCategoryFilter] = useState('all');
   
+  // Forge Mastery State
+  const [forgeMastery, setForgeMastery] = useState({
+    level: 18,
+    currentXP: 2450,
+    xpRequired: 5000,
+    tier: 'Novice', // Novice, Adept, Expert, Master
+    tierProgress: 18, // 0-50, 50-100, 100-150, 150-200
+  });
+  
   const handleEnchant = (item) => console.log('Enchanting:', item.name);
   const handleCombine = (item) => console.log('Combining:', item.name);
   const handleSalvage = (item) => console.log('Salvaging:', item.name);
