@@ -27,6 +27,11 @@ export default function CommunityPage() {
     const [selectedGenre, setSelectedGenre] = useState('all');
     const [trendingTopics, setTrendingTopics] = useState([]);
     const [activeTab, setActiveTab] = useState('home'); // 'home' or 'discussions'
+    const [allGames, setAllGames] = useState([
+        'Cyberpunk 2088', 'Astroforge', 'Neon Rivals', 'Shadow Protocol', 
+        'Star Conquest', 'Digital Frontiers', 'Elden Ring', 'Minecraft',
+        'Baldurs Gate 3', 'Diablo 4', 'Call of Duty', 'Fortnite'
+    ]);
 
     const { isAuthenticated } = useAuth();
 
