@@ -319,6 +319,14 @@ export default function BlacksmithPage() {
   const [forgeLevel, setForgeLevel] = useState(18);
   const maxXP = 5000;
   
+  // Calculate rank based on level
+  const getRank = (level) => {
+    if (level <= 50) return 'Novice';
+    if (level <= 100) return 'Adept';
+    if (level <= 150) return 'Expert';
+    return 'Master';
+  };
+  
   const handleEnchant = (item) => console.log('Enchanting:', item.name);
   const handleCombine = (item) => console.log('Combining:', item.name);
   const handleSalvage = (item) => console.log('Salvaging:', item.name);
