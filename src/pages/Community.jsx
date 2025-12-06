@@ -173,7 +173,7 @@ export default function CommunityPage() {
                     {/* Center: Navigation */}
                     <div className="flex items-center gap-8">
                         {[
-                            { label: 'HOME', value: 'home' },
+                            { label: 'AI HOME', value: 'home' },
                             { label: 'DISCUSSIONS', value: 'discussions' }
                         ].map((item) => (
                             <button 
