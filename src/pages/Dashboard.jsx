@@ -16,14 +16,78 @@ import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
-  { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500 to-pink-500', route: 'Achievements' },
-  { id: 'battle', label: 'Battle Mode', icon: Swords, color: 'from-red-500 to-orange-500', route: 'Challenges' },
-  { id: 'console', label: 'Console', icon: Gamepad2, color: 'from-blue-500 to-cyan-500', route: 'AIConsole' },
-  { id: 'story', label: 'AI Story', icon: BookOpen, color: 'from-indigo-500 to-purple-500', route: 'Storyline' },
-  { id: 'home', label: 'AI Home', icon: Home, color: 'from-green-500 to-emerald-500', route: 'Dashboard' },
-  { id: 'loadout', label: 'Loadout', icon: Shield, color: 'from-amber-500 to-yellow-500', route: 'Profile' },
-  { id: 'games', label: 'Games', icon: Gamepad2, color: 'from-cyan-500 to-blue-500', route: 'Library' },
-  { id: 'settings', label: 'Settings', icon: Settings, color: 'from-slate-500 to-gray-500', route: 'Profile' },
+  { 
+    id: 'skill-tree', 
+    label: 'Skill Tree', 
+    icon: Layers, 
+    color: 'from-purple-500 to-pink-500', 
+    route: 'Achievements',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
+    description: 'View & Unlock Abilities'
+  },
+  { 
+    id: 'battle', 
+    label: 'Battle Mode', 
+    icon: Swords, 
+    color: 'from-red-500 to-orange-500', 
+    route: 'Challenges',
+    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+    description: 'Enter Combat Arena'
+  },
+  { 
+    id: 'console', 
+    label: 'Console', 
+    icon: Gamepad2, 
+    color: 'from-blue-500 to-cyan-500', 
+    route: 'AIConsole',
+    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
+    description: 'Launch Game Hub'
+  },
+  { 
+    id: 'story', 
+    label: 'AI Story', 
+    icon: BookOpen, 
+    color: 'from-indigo-500 to-purple-500', 
+    route: 'Storyline',
+    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
+    description: 'Continue Your Journey'
+  },
+  { 
+    id: 'home', 
+    label: 'AI Home', 
+    icon: Home, 
+    color: 'from-green-500 to-emerald-500', 
+    route: 'Dashboard',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
+    description: 'Personal Space'
+  },
+  { 
+    id: 'loadout', 
+    label: 'Loadout', 
+    icon: Shield, 
+    color: 'from-amber-500 to-yellow-500', 
+    route: 'Profile',
+    image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400',
+    description: 'Customize Equipment'
+  },
+  { 
+    id: 'games', 
+    label: 'Games', 
+    icon: Gamepad2, 
+    color: 'from-cyan-500 to-blue-500', 
+    route: 'Library',
+    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
+    description: 'Your Game Library'
+  },
+  { 
+    id: 'settings', 
+    label: 'Settings', 
+    icon: Settings, 
+    color: 'from-slate-500 to-gray-500', 
+    route: 'Profile',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+    description: 'System Configuration'
+  },
 ];
 
 // Secondary Dock Items
@@ -86,13 +150,13 @@ export default function Dashboard() {
 
   const getItemPosition = (index) => {
     const angle = ((index - activeIndex) * angleStep) * (Math.PI / 180);
-    const radius = 280;
+    const radius = 350;
     const x = Math.sin(angle) * radius;
-    const y = Math.cos(angle) * radius; // Positive y to place active item at bottom (under "Online")
-    const scale = index === activeIndex ? 1.2 : 0.9;
-    const opacity = index === activeIndex ? 1 : 0.6;
+    const y = Math.cos(angle) * radius;
+    const scale = index === activeIndex ? 1 : 0.75;
+    const opacity = index === activeIndex ? 1 : 0.5;
     const zIndex = index === activeIndex ? 20 : 10;
-    
+
     return { x, y, scale, opacity, zIndex };
   };
 
@@ -507,9 +571,9 @@ export default function Dashboard() {
       </div>
 
       {/* Orbit Ring Visual - Only in AI mode */}
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/5 pointer-events-none transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] rounded-full border border-white/5 pointer-events-none transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0'}`} />
 
-      {/* Rotating Orbital Boxes - Only in AI mode */}
+      {/* Rotating Orbital Cards - Only in AI mode */}
       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {ORBITAL_ITEMS.map((item, index) => {
           const { x, y, scale, opacity, zIndex } = getItemPosition(index);
@@ -521,8 +585,8 @@ export default function Dashboard() {
               key={item.id}
               className="absolute top-1/2 left-1/2 cursor-pointer"
               style={{
-                x: x - 40,
-                y: y - 40,
+                x: x - 140,
+                y: y - 105,
                 zIndex,
               }}
               animate={{
@@ -533,29 +597,49 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(item)}
             >
               <motion.div
-                className={`w-20 h-20 rounded-2xl backdrop-blur-2xl border transition-all ${
+                className={`w-[280px] h-[210px] rounded-3xl backdrop-blur-2xl overflow-hidden transition-all ${
                   isActive 
-                    ? 'bg-white/20 border-white/40 shadow-[0_0_40px_rgba(255,255,255,0.3)]' 
-                    : 'bg-white/5 border-white/10'
+                    ? 'bg-white/10 border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)]' 
+                    : 'bg-white/5 border border-white/10'
                 }`}
-                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.15)' }}
+                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.12)' }}
               >
-                <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                  <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-1 ${isActive ? 'shadow-lg' : ''}`}>
-                    <Icon className="w-4 h-4 text-white" />
+                {/* Card Image */}
+                <div className="relative h-32 overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.label}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+
+                  {/* Icon Badge */}
+                  <div className={`absolute top-3 right-3 w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-white font-semibold text-[10px] text-center">{item.label}</span>
+
+                  {/* Status Indicator */}
+                  <div className="absolute top-3 left-3">
+                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-white/40'}`} />
+                  </div>
+                </div>
+
+                {/* Card Content */}
+                <div className="p-4">
+                  <h3 className="text-white font-bold text-base mb-1 tracking-wide">{item.label}</h3>
+                  <p className="text-white/60 text-xs leading-relaxed">{item.description}</p>
                 </div>
 
                 {/* Active Highlight Ring */}
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-2xl border-2 border-white/50"
+                    className="absolute inset-0 rounded-3xl border-2 border-white/60"
                     animate={{
                       boxShadow: [
-                        '0 0 20px rgba(255,255,255,0.5)',
-                        '0 0 40px rgba(255,255,255,0.8)',
-                        '0 0 20px rgba(255,255,255,0.5)',
+                        '0 0 30px rgba(255,255,255,0.5)',
+                        '0 0 50px rgba(255,255,255,0.8)',
+                        '0 0 30px rgba(255,255,255,0.5)',
                       ],
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
