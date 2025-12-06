@@ -8,6 +8,10 @@ import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
+import AINexusView from '../components/dashboard/views/AINexusView';
+import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
+import EconomyDistrictView from '../components/dashboard/views/EconomyDistrictView';
+import HallOfRecordsView from '../components/dashboard/views/HallOfRecordsView';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -29,11 +33,20 @@ const DOCK_ITEMS = [
   { id: 'marketplace', label: 'Market', icon: Target, route: 'Marketplace' },
 ];
 
+const MODES = [
+  { id: 'ai', label: 'AI NEXUS' },
+  { id: 'user', label: 'USER INTERFACE' },
+  { id: 'economy', label: 'ECONOMY DISTRICT' },
+  { id: 'records', label: 'HALL OF RECORDS' }
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [rotation, setRotation] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [currentMode, setCurrentMode] = useState('ai');
+  const [modeIndex, setModeIndex] = useState(0);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -54,6 +67,18 @@ export default function Dashboard() {
     if (item.route) {
       navigate(createPageUrl(item.route));
     }
+  };
+
+  const handleModeLeft = () => {
+    const newIndex = (modeIndex - 1 + MODES.length) % MODES.length;
+    setModeIndex(newIndex);
+    setCurrentMode(MODES[newIndex].id);
+  };
+
+  const handleModeRight = () => {
+    const newIndex = (modeIndex + 1) % MODES.length;
+    setModeIndex(newIndex);
+    setCurrentMode(MODES[newIndex].id);
   };
 
   const getItemPosition = (index) => {
@@ -100,28 +125,65 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Mode Toggle at Top */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30">
-        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl rounded-full px-4 py-2 border border-white/10">
-          {[
-            { mode: 'ai', label: 'AI NEXUS' },
-            { mode: 'user', label: 'USER INTERFACE' },
-            { mode: 'economy', label: 'ECONOMY DISTRICT' },
-            { mode: 'records', label: 'HALL OF RECORDS' }
-          ].map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => {/* TODO: Add mode switching logic */}}
-              className="px-3 py-1.5 rounded-full text-xs font-bold tracking-wider transition-all hover:bg-white/10 text-white"
+      {/* Mode Toggle at Top with Arrows */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4">
+        {/* Left Arrow */}
+        <motion.button
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          onClick={handleModeLeft}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </motion.button>
+
+        {/* Mode Display */}
+        <div className="bg-white/5 backdrop-blur-xl rounded-full px-6 py-3 border border-white/10 min-w-[200px]">
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={currentMode}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-sm font-black text-white tracking-wider text-center"
             >
-              {label}
-            </button>
-          ))}
+              {MODES[modeIndex].label}
+            </motion.h1>
+          </AnimatePresence>
         </div>
+
+        {/* Right Arrow */}
+        <motion.button
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          onClick={handleModeRight}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </motion.button>
       </div>
 
-      {/* Center AI Avatar */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+      {/* Conditional Content Based on Mode */}
+      <AnimatePresence mode="wait">
+        {currentMode !== 'ai' ? (
+          <motion.div
+            key={currentMode}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-20 p-8"
+          >
+            {currentMode === 'user' && <UserInterfaceView />}
+            {currentMode === 'economy' && <EconomyDistrictView />}
+            {currentMode === 'records' && <HallOfRecordsView />}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Center AI Avatar - Only visible in AI mode */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <motion.div
           className="relative w-96 h-96 rounded-full overflow-hidden"
           animate={{
@@ -163,11 +225,11 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Orbit Ring Visual */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/5 pointer-events-none" />
+      {/* Orbit Ring Visual - Only in AI mode */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/5 pointer-events-none transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0'}`} />
 
-      {/* Rotating Orbital Boxes */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
+      {/* Rotating Orbital Boxes - Only in AI mode */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {ORBITAL_ITEMS.map((item, index) => {
           const { x, y, scale, opacity, zIndex } = getItemPosition(index);
           const Icon = item.icon;
@@ -224,8 +286,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Dot Indicators & Navigation Arrows (Combined) */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-6 z-30">
+      {/* Dot Indicators & Navigation Arrows (Combined) - Only in AI mode */}
+      <div className={`absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-6 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {/* Left Arrow */}
         <motion.button
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
@@ -264,8 +326,8 @@ export default function Dashboard() {
         </motion.button>
       </div>
 
-      {/* Secondary Dock Menu */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-30">
+      {/* Secondary Dock Menu - Only in AI mode */}
+      <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {DOCK_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
