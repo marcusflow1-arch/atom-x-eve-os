@@ -199,7 +199,7 @@ export default function Dashboard() {
               } : { 
                 top: '80px',
                 bottom: '48px',
-                width: '56vw',
+                width: '28vw',
                 WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
               }}
             >
