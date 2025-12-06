@@ -503,7 +503,7 @@ export default function BlacksmithPage() {
         {/* Experience Bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-slate-400 font-medium">Experience Bar - Level {forgeLevel}</span>
+            <span className="text-xs text-slate-400 font-medium">Experience Bar - Level {forgeLevel} ({getRank(forgeLevel)})</span>
             <span className="text-xs text-slate-500 font-mono">{forgeXP} / {maxXP}</span>
           </div>
           <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden border border-white/10">
