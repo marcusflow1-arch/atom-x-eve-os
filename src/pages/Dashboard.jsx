@@ -95,12 +95,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Liquid Glass Background Effects */}
+    <div className="h-screen w-full overflow-hidden relative bg-[#0f1115]">
+      {/* Grayish Glittery Glass Background */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-[#13151a] to-gray-900/80 pointer-events-none" />
+
+      {/* Ambient Light Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-400/5 rounded-full blur-[150px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-slate-400/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-slate-500/5 rounded-full blur-[150px]" />
       </div>
 
       {/* Holographic Particles */}
@@ -346,20 +349,21 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Preset D - Loadout Panel - Only in AI mode */}
-      <div className={`absolute bottom-4 left-6 w-[500px] z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3 flex gap-4 items-start">
-          {/* Header Column */}
-          <div className="flex flex-col gap-2 min-w-[80px]">
-            <h3 className="text-white font-bold text-xs tracking-wide">PRESET D</h3>
+      {/* Preset D - Right Side Panel - Only in AI mode */}
+      <div className={`absolute right-8 top-1/2 -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-[#15171b]/90 backdrop-blur-2xl rounded-3xl border border-white/5 p-6 flex flex-col gap-6 shadow-2xl">
+
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-white/90 font-bold text-xs tracking-widest uppercase">Preset D</h3>
             <div className="flex gap-1">
               {['A', 'B', 'C', 'D'].map((preset) => (
                 <button
                   key={preset}
-                  className={`w-6 h-6 rounded-lg text-[10px] font-bold transition-all ${
+                  className={`w-7 h-7 rounded-md text-[10px] font-bold transition-all flex items-center justify-center ${
                     preset === 'D'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white/10 text-white/50 hover:bg-white/20'
+                      ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]'
+                      : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {preset}
@@ -368,42 +372,48 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Row 1: Weapons & Equipment */}
-          <div className="flex-1 grid grid-cols-8 gap-1.5">
-            {/* Weapons */}
-            <div className="col-span-2 space-y-1.5">
-              <div className="text-white/70 text-[8px] font-bold uppercase tracking-wider">Weapons</div>
-              <div className="grid grid-cols-2 gap-1.5">
-                 <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-                 <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
-              </div>
-            </div>
-
-            {/* Equipment */}
-            <div className="col-span-6 space-y-1.5">
-              <div className="text-white/70 text-[8px] font-bold uppercase tracking-wider">Equipment</div>
-              <div className="grid grid-cols-6 gap-1.5">
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">H</span>
-                </div>
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">G</span>
-                </div>
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">B</span>
-                </div>
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">R</span>
-                </div>
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">R</span>
-                </div>
-                <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                  <span className="text-white/30 text-[7px] font-medium">C</span>
-                </div>
-              </div>
+          {/* Weapons Section */}
+          <div className="space-y-2">
+            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Weapons</div>
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+              ))}
             </div>
           </div>
+
+          {/* Equipment Section */}
+          <div className="space-y-2">
+            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Equipment</div>
+            <div className="grid grid-cols-3 gap-3">
+              {['Armor', 'Gloves', 'Boots', 'Legs', 'Ring', 'Cape'].map((item) => (
+                <div key={item} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer flex items-center justify-center group">
+                  <span className="text-white/20 text-[8px] group-hover:text-white/40 transition-colors">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Aspect Section */}
+          <div className="space-y-2">
+            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Aspect</div>
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+              ))}
+            </div>
+          </div>
+
+          {/* Artifacts Section */}
+          <div className="space-y-2">
+            <div className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Artifacts</div>
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="aspect-square rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer" />
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
