@@ -291,29 +291,24 @@ export default function CommunityPage() {
                     ) : (
                         <>
                             {/* DISCUSSIONS TAB */}
-                            {/* Left Column: Categories (25%) */}
-                            <div className="col-span-3 flex flex-col gap-6">
+                            {/* Left Column: Games List (20%) */}
+                            <div className="col-span-2 flex flex-col gap-6">
                         <div className="flex items-center justify-between px-2">
-                            <h2 className="text-sm font-bold text-white/80 tracking-wide">CATEGORIES</h2>
+                            <h2 className="text-sm font-bold text-white/80 tracking-wide">GAMES</h2>
                         </div>
-                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
-                            {[
-                                { icon: MessageSquare, label: 'General', value: 'general_discussion' },
-                                { icon: Gamepad2, label: 'Game Discussions', value: 'game_forums' },
-                                { icon: TrendingUp, label: 'Achievements', value: 'achievement_discussion' },
-                                { icon: Users, label: 'Clans & Teams', value: 'clans' }
-                            ].map((cat) => (
+                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto" hover={false}>
+                            {allGames.map((game, idx) => (
                                 <button
-                                    key={cat.value}
-                                    onClick={() => handleSectionChange(cat.value)}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
-                                        activeSection === cat.value
+                                    key={idx}
+                                    onClick={() => setActiveGame(game)}
+                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left ${
+                                        activeGame === game
                                             ? 'bg-blue-500/20 border border-blue-400/30 text-white'
                                             : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
                                     }`}
                                 >
-                                    <cat.icon className="w-5 h-5" />
-                                    <span className="font-semibold text-sm">{cat.label}</span>
+                                    <Gamepad2 className="w-4 h-4" />
+                                    <span className="font-medium text-xs truncate">{game}</span>
                                 </button>
                             ))}
                         </LiquidGlassCard>
