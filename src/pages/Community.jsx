@@ -219,23 +219,35 @@ export default function CommunityPage() {
                     {activeTab === 'home' ? (
                         <>
                             {/* HOME TAB */}
-                            {/* Left Column: Recently Discussed (25%) */}
+                            {/* Left Column: What We're Building (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
                                 <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">RECENTLY DISCUSSED</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">WHAT WE'RE BUILDING</h2>
                                 </div>
                                 <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
-                                    {posts.slice(0, 6).map((post) => (
-                                        <button
-                                            key={post.id}
-                                            onClick={() => { setActiveTab('discussions'); setSelectedPost(post); }}
-                                            className="flex flex-col gap-1 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+                                    {[
+                                        { title: 'Cross-Platform Play', desc: 'Unified gaming across all devices', status: 'In Development' },
+                                        { title: 'AI Companion System', desc: 'Your personal gaming assistant', status: 'Beta Testing' },
+                                        { title: 'Blockchain Rewards', desc: 'Earn crypto for achievements', status: 'Coming Soon' },
+                                        { title: 'VR Integration', desc: 'Immersive virtual reality support', status: 'In Development' },
+                                        { title: 'Social Guilds 2.0', desc: 'Enhanced clan management', status: 'Planning' },
+                                        { title: 'Tournament System', desc: 'Compete for prizes globally', status: 'Beta Testing' }
+                                    ].map((project, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex flex-col gap-1 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
                                         >
-                                            <p className="text-white text-sm font-semibold truncate">{post.title}</p>
-                                            <p className="text-white/40 text-xs truncate">{post.content}</p>
-                                            <p className="text-white/30 text-xs mt-1">{new Date(post.created_date).toLocaleDateString()}</p>
-                                        </button>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-white text-sm font-semibold">{project.title}</p>
+                                                <Badge className="text-xs bg-blue-500/20 text-blue-400 border-blue-500/30">{project.status}</Badge>
+                                            </div>
+                                            <p className="text-white/40 text-xs">{project.desc}</p>
+                                        </div>
                                     ))}
+                                    <button className="mt-3 w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-white text-sm font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all">
+                                        <MessageSquare className="w-4 h-4 inline mr-2" />
+                                        Send Us Suggestions
+                                    </button>
                                 </LiquidGlassCard>
                             </div>
 
