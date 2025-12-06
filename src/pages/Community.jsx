@@ -165,8 +165,8 @@ export default function CommunityPage() {
                             <MessageSquare className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold tracking-wide text-white">COMMUNITY</h1>
-                            <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">Forums</span>
+                            <h1 className="text-xl font-bold tracking-wide text-white">{activeTab === 'home' ? 'ATOM×EVE' : 'COMMUNITY'}</h1>
+                            <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">{activeTab === 'home' ? 'UPDATE' : 'Forums'}</span>
                         </div>
                     </div>
 
