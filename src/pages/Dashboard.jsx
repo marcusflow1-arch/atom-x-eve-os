@@ -346,16 +346,16 @@ export default function Dashboard() {
       </div>
 
       {/* Preset D - Loadout Panel (Right Side) - Only in AI mode */}
-      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4">
+      <div className={`absolute right-6 top-1/2 -translate-y-1/2 w-54 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-bold text-sm tracking-wide">PRESET D</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white font-bold text-xs tracking-wide">PRESET D</h3>
             <div className="flex gap-1">
               {['A', 'B', 'C', 'D'].map((preset) => (
                 <button
                   key={preset}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                  className={`w-6 h-6 rounded-lg text-[10px] font-bold transition-all ${
                     preset === 'D'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white/10 text-white/50 hover:bg-white/20'
@@ -368,43 +368,43 @@ export default function Dashboard() {
           </div>
 
           {/* Weapons Section */}
-          <div className="mb-4">
-            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Weapons</h4>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mb-3">
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Weapons</h4>
+            <div className="grid grid-cols-3 gap-1.5">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
           </div>
 
           {/* Equipment Section */}
-          <div className="mb-4">
-            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Equipment</h4>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mb-3">
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Equipment</h4>
+            <div className="grid grid-cols-3 gap-1.5">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Armor</span>
+                <span className="text-white/30 text-[7px] font-medium">Armor</span>
               </div>
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Gloves</span>
+                <span className="text-white/30 text-[7px] font-medium">Gloves</span>
               </div>
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Boots</span>
+                <span className="text-white/30 text-[7px] font-medium">Boots</span>
               </div>
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Ring</span>
+                <span className="text-white/30 text-[7px] font-medium">Ring</span>
               </div>
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Ring</span>
+                <span className="text-white/30 text-[7px] font-medium">Ring</span>
               </div>
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer flex items-center justify-center">
-                <span className="text-white/30 text-[8px] font-medium">Cape</span>
+                <span className="text-white/30 text-[7px] font-medium">Cape</span>
               </div>
             </div>
           </div>
 
           {/* Aspect Section */}
-          <div className="mb-4">
-            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Aspect</h4>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mb-3">
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Aspect</h4>
+            <div className="grid grid-cols-3 gap-1.5">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
@@ -412,14 +412,49 @@ export default function Dashboard() {
 
           {/* Artifacts Section */}
           <div>
-            <h4 className="text-white/70 text-xs font-bold mb-2 uppercase tracking-wider">Artifacts</h4>
-            <div className="grid grid-cols-3 gap-2">
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Artifacts</h4>
+            <div className="grid grid-cols-3 gap-1.5">
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
               <div className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer" />
             </div>
           </div>
         </div>
-      </div>
+        </div>
+
+        {/* Skill Hotbar - Bottom Right Corner - Only in AI mode */}
+        <div className={`absolute right-6 bottom-16 w-54 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-3">
+          {/* Primary Skills */}
+          <div className="mb-2">
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Primary Skills</h4>
+            <div className="flex items-center justify-center gap-2">
+              {['Tab', 'Q', '-'].map((key, idx) => (
+                <div key={idx} className="relative w-12 h-12">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white/40 text-[9px] font-bold">{key}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Secondary Skills */}
+          <div>
+            <h4 className="text-white/70 text-[10px] font-bold mb-1.5 uppercase tracking-wider">Secondary Skills</h4>
+            <div className="flex items-center justify-center gap-2">
+              {['1', '2', '3', '4'].map((key, idx) => (
+                <div key={idx} className="relative w-10 h-10">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white/40 text-[9px] font-bold">{key}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        </div>
 
         {/* Experience Bar at Bottom - Always visible */}
         <div className="absolute bottom-0 left-0 right-0 h-3 bg-black/40 backdrop-blur-sm border-t border-white/10 z-40">
