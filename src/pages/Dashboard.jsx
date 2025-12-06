@@ -95,16 +95,33 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden relative bg-[#0f1115]">
-      {/* Grayish Glittery Glass Background */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 via-[#13151a] to-gray-900/80 pointer-events-none" />
+    <div className="h-screen w-full overflow-hidden relative bg-gray-900">
+      {/* Liquid Glass Gray Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-slate-900 to-gray-950" />
 
-      {/* Ambient Light Effects */}
+      {/* Fluid Shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-slate-400/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-slate-500/5 rounded-full blur-[150px]" />
+          <motion.div 
+              className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gray-500/20 blur-[120px] mix-blend-overlay"
+              animate={{ x: [0, 30, 0], y: [0, 50, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+              className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-slate-400/20 blur-[100px] mix-blend-overlay"
+              animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.05, 1] }}
+              transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          />
+           <motion.div 
+              className="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-gray-400/20 blur-[100px] mix-blend-overlay"
+              animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          />
       </div>
+
+      {/* Glass Effect Overlay */}
+      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-[100px]" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] pointer-events-none mix-blend-soft-light" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/20 pointer-events-none" />
 
       {/* Holographic Particles */}
       <div className="absolute inset-0 pointer-events-none">
