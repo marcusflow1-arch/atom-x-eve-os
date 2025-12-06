@@ -350,7 +350,7 @@ export default function Dashboard() {
       </div>
 
       {/* Preset D - Right Side Panel - Only in AI mode */}
-      <div className={`absolute right-8 top-1/2 -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute right-8 top-[40%] -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="bg-[#15171b]/90 backdrop-blur-2xl rounded-3xl border border-white/5 p-6 flex flex-col gap-6 shadow-2xl">
 
           {/* Header */}
