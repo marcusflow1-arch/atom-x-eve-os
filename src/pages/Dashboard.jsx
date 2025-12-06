@@ -10,6 +10,8 @@ import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
 import AINexusView from '../components/dashboard/views/AINexusView';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
+import EconomyDistrictView from '../components/dashboard/views/EconomyDistrictView';
+import HallOfRecordsView from '../components/dashboard/views/HallOfRecordsView';
 import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 
 // Orbital Menu Items
@@ -98,7 +100,9 @@ const DOCK_ITEMS = [
 
 const MODES = [
   { id: 'ai', label: 'AI NEXUS' },
-  { id: 'user', label: 'USER INTERFACE' }
+  { id: 'user', label: 'USER INTERFACE' },
+  { id: 'economy', label: 'ECONOMY DISTRICT' },
+  { id: 'records', label: 'HALL OF RECORDS' }
 ];
 
 export default function Dashboard() {
@@ -441,6 +445,8 @@ export default function Dashboard() {
             className="absolute inset-0 z-20 pt-24 px-8 pb-8"
           >
             {currentMode === 'user' && <UserInterfaceView />}
+            {currentMode === 'economy' && <EconomyDistrictView />}
+            {currentMode === 'records' && <HallOfRecordsView />}
           </motion.div>
         ) : null}
       </AnimatePresence>
