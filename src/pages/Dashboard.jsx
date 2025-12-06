@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [currentMode, setCurrentMode] = useState('ai');
   const [modeIndex, setModeIndex] = useState(0);
+  const [skillTreeDrawerOpen, setSkillTreeDrawerOpen] = useState(false);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -171,6 +172,50 @@ export default function Dashboard() {
               backgroundRepeat: 'no-repeat'
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Skill Tree Slide-Out Menu */}
+      <AnimatePresence>
+        {skillTreeDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              onClick={() => setSkillTreeDrawerOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '-100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '-100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed left-0 bg-white/[0.03] backdrop-blur-3xl border-r border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ 
+                top: '80px',
+                bottom: '48px',
+                width: '56vw',
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+              }}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
+                <h2 className="text-white font-bold text-xl tracking-wider">SKILL TREE</h2>
+                <button 
+                  onClick={() => setSkillTreeDrawerOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <p className="text-white/40 text-sm">Skill Tree content will appear here</p>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -300,7 +345,13 @@ export default function Dashboard() {
                 opacity,
               }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              onClick={() => handleItemClick(item)}
+              onClick={() => {
+                if (item.id === 'skill-tree') {
+                  setSkillTreeDrawerOpen(true);
+                } else {
+                  handleItemClick(item);
+                }
+              }}
             >
               <motion.div
                 className={`w-20 h-20 rounded-2xl backdrop-blur-2xl border transition-all ${
