@@ -33,6 +33,7 @@ import Events from './pages/Events';
 import Challenges from './pages/Challenges';
 import Admin from './pages/Admin';
 import SeasonalPass from './pages/SeasonalPass';
+import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "Challenges": Challenges,
     "Admin": Admin,
     "SeasonalPass": SeasonalPass,
+    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {
