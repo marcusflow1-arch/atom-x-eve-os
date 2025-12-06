@@ -444,7 +444,6 @@ export default function Dashboard() {
           >
             {currentMode === 'user' && <UserInterfaceView />}
             {currentMode === 'economy' && <EconomyDistrictView />}
-            {currentMode === 'records' && <HallOfRecordsView />}
           </motion.div>
         ) : null}
       </AnimatePresence>
