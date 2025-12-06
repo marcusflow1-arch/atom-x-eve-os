@@ -22,6 +22,7 @@ export default function Admin() {
   const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
   const [fixingImages, setFixingImages] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
+  const [fetchingIGDB, setFetchingIGDB] = useState(false);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -346,6 +347,64 @@ export default function Admin() {
     });
   };
 
+  const handleFetchFromIGDB = async () => {
+    setFetchingIGDB(true);
+    try {
+      // Fetch trending/popular games from IGDB
+      const result = await base44.functions.invoke('fetchIGDBGames', { 
+        limit: 20 
+      });
+      
+      if (result.data?.games) {
+        let created = 0;
+        let updated = 0;
+        
+        for (const igdbGame of result.data.games) {
+          // Check if game exists by title
+          const existingGame = existingGames.find(g => 
+            g.title.toLowerCase() === igdbGame.title.toLowerCase()
+          );
+          
+          if (existingGame) {
+            // Update existing game with IGDB data
+            await Game.update(existingGame.id, {
+              description: igdbGame.description || existingGame.description,
+              cover_image: igdbGame.cover_image || existingGame.cover_image,
+              screenshots: igdbGame.screenshots?.length > 0 ? igdbGame.screenshots : existingGame.screenshots,
+              genre: igdbGame.genre || existingGame.genre,
+              developer: igdbGame.developer || existingGame.developer
+            });
+            updated++;
+          } else {
+            // Create new game from IGDB data
+            await Game.create({
+              title: igdbGame.title,
+              description: igdbGame.description,
+              cover_image: igdbGame.cover_image,
+              screenshots: igdbGame.screenshots || [],
+              genre: igdbGame.genre?.toLowerCase() || 'action',
+              price: 59.99, // Default price since IGDB doesn't have prices
+              status: 'available',
+              developer: igdbGame.developer,
+              original_year: igdbGame.release_date ? new Date(igdbGame.release_date).getFullYear() : 2024
+            });
+            created++;
+          }
+        }
+        
+        refetchGames();
+        alert(`IGDB Import Complete!\nCreated: ${created} games\nUpdated: ${updated} games`);
+      } else {
+        alert('No games returned from IGDB');
+      }
+    } catch (error) {
+      console.error('Failed to fetch from IGDB:', error);
+      alert(`Failed to fetch from IGDB: ${error.message}`);
+    } finally {
+      setFetchingIGDB(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-6xl mx-auto">
@@ -506,7 +565,10 @@ export default function Admin() {
                     Manage games displayed in the store
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-slate-400">
+                    {existingGames.length} Games
+                  </Badge>
                   <Button
                     onClick={() => startAgentMutation.mutate()}
                     disabled={startAgentMutation.isPending || (activeJob && activeJob.status === 'running')}
@@ -520,12 +582,20 @@ export default function Admin() {
                     <Bot className="w-4 h-4 mr-2" />
                     {(activeJob && activeJob.status === 'running') ? 'Agent Running...' : 'Launch Discovery Agent'}
                   </Button>
-                  <Badge variant="outline" className="text-slate-400">
-                    {existingGames.length} Games
-                  </Badge>
+                  <Button 
+                    onClick={handleFetchFromIGDB}
+                    disabled={fetchingIGDB || populatingGames || fixingImages}
+                    className="bg-indigo-600 hover:bg-indigo-700 border border-indigo-400/20"
+                  >
+                    {fetchingIGDB ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fetching from IGDB...</>
+                    ) : (
+                      <><Gamepad2 className="w-4 h-4 mr-2" /> Import from IGDB</>
+                    )}
+                  </Button>
                   <Button 
                     onClick={handleFixImages}
-                    disabled={fixingImages || populatingGames}
+                    disabled={fixingImages || populatingGames || fetchingIGDB}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     {fixingImages ? (
@@ -536,7 +606,7 @@ export default function Admin() {
                   </Button>
                   <Button 
                     onClick={populateGamesFromSearch}
-                    disabled={populatingGames || fixingImages}
+                    disabled={populatingGames || fixingImages || fetchingIGDB}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     {populatingGames ? (
