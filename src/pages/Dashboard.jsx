@@ -102,7 +102,7 @@ export default function Dashboard() {
 
       {/* Mode Toggle at Top */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30">
-        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-xl rounded-full px-6 py-3 border border-white/10">
+        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl rounded-full px-4 py-2 border border-white/10">
           {[
             { mode: 'ai', label: 'AI NEXUS' },
             { mode: 'user', label: 'USER INTERFACE' },
@@ -112,7 +112,7 @@ export default function Dashboard() {
             <button
               key={mode}
               onClick={() => {/* TODO: Add mode switching logic */}}
-              className="px-4 py-2 rounded-full text-sm font-bold tracking-wider transition-all hover:bg-white/10 text-white"
+              className="px-3 py-1.5 rounded-full text-xs font-bold tracking-wider transition-all hover:bg-white/10 text-white"
             >
               {label}
             </button>
@@ -178,8 +178,8 @@ export default function Dashboard() {
               key={item.id}
               className="absolute top-1/2 left-1/2 cursor-pointer"
               style={{
-                x: x - 80,
-                y: y - 80,
+                x: x - 40,
+                y: y - 40,
                 zIndex,
               }}
               animate={{
@@ -190,24 +190,24 @@ export default function Dashboard() {
               onClick={() => handleItemClick(item)}
             >
               <motion.div
-                className={`w-40 h-40 rounded-3xl backdrop-blur-2xl border transition-all ${
+                className={`w-20 h-20 rounded-2xl backdrop-blur-2xl border transition-all ${
                   isActive 
                     ? 'bg-white/20 border-white/40 shadow-[0_0_40px_rgba(255,255,255,0.3)]' 
                     : 'bg-white/5 border-white/10'
                 }`}
                 whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.15)' }}
               >
-                <div className="w-full h-full flex flex-col items-center justify-center p-4">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 ${isActive ? 'shadow-lg' : ''}`}>
-                    <Icon className="w-8 h-8 text-white" />
+                <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                  <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-1 ${isActive ? 'shadow-lg' : ''}`}>
+                    <Icon className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-white font-bold text-sm text-center">{item.label}</span>
+                  <span className="text-white font-semibold text-[10px] text-center">{item.label}</span>
                 </div>
 
                 {/* Active Highlight Ring */}
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-3xl border-2 border-white/50"
+                    className="absolute inset-0 rounded-2xl border-2 border-white/50"
                     animate={{
                       boxShadow: [
                         '0 0 20px rgba(255,255,255,0.5)',
