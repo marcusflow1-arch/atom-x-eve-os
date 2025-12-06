@@ -173,7 +173,7 @@ export default function Dashboard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-20 p-8"
+            className="absolute inset-0 z-20 pt-24 px-8 pb-8"
           >
             {currentMode === 'user' && <UserInterfaceView />}
             {currentMode === 'economy' && <EconomyDistrictView />}
