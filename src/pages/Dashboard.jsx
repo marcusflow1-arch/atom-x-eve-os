@@ -240,8 +240,8 @@ export default function Dashboard() {
                           key={index}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all"
+                          transition={{ delay: Math.min(index * 0.02, 1) }}
+                          className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all"
                         >
                           {/* Game Image */}
                           <img src={game.image} alt={game.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -250,26 +250,16 @@ export default function Dashboard() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                           
                           {/* Status Badge */}
-                          <div className="absolute top-2 right-2">
-                            <div className={`px-2 py-1 rounded-full text-[10px] font-bold backdrop-blur-md border ${
-                              game.status === 'Playing' 
-                                ? 'bg-green-500/20 border-green-400/50 text-green-300' 
-                                : 'bg-blue-500/20 border-blue-400/50 text-blue-300'
-                            }`}>
-                              {game.status}
-                            </div>
+                          <div className="absolute top-1 right-1">
+                            <div className={`w-2 h-2 rounded-full ${
+                              game.status === 'Playing' ? 'bg-green-400' : 'bg-blue-400'
+                            }`} />
                           </div>
 
-                          {/* Game Info */}
-                          <div className="absolute bottom-0 left-0 right-0 p-3">
-                            <p className="text-white/60 text-[10px] uppercase tracking-wider mb-1">{game.genre}</p>
-                            <h4 className="text-white font-bold text-sm mb-2 group-hover:text-cyan-400 transition-colors">{game.title}</h4>
-                            
-                            {/* Play Button */}
-                            <button className="w-full bg-white/10 hover:bg-cyan-500/30 border border-white/20 hover:border-cyan-400/50 rounded-lg py-2 text-white/80 hover:text-white text-xs font-semibold transition-all flex items-center justify-center gap-2">
-                              <Gamepad2 className="w-3 h-3" />
-                              Launch
-                            </button>
+                          {/* Game Info - Only on hover */}
+                          <div className="absolute inset-0 flex flex-col justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <p className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">{game.genre}</p>
+                            <h4 className="text-white font-bold text-[10px] mb-1 truncate">{game.title}</h4>
                           </div>
                         </motion.div>
                       ))}
