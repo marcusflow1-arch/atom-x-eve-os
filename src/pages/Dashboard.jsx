@@ -216,7 +216,77 @@ export default function Dashboard() {
 
               {/* Content Area */}
               <div className="flex-1 overflow-y-auto p-6">
-                <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
+                {activeDrawer.id === 'games' ? (
+                  <div className="space-y-6">
+                    {/* Pinned Games Header */}
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Pinned Games</h3>
+                      <span className="text-white/40 text-xs">Quick Access</span>
+                    </div>
+
+                    {/* Pinned Games Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
+                        { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
+                        { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
+                        { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' },
+                      ].map((game, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all"
+                        >
+                          {/* Game Image */}
+                          <img src={game.image} alt={game.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                          
+                          {/* Status Badge */}
+                          <div className="absolute top-2 right-2">
+                            <div className={`px-2 py-1 rounded-full text-[10px] font-bold backdrop-blur-md border ${
+                              game.status === 'Playing' 
+                                ? 'bg-green-500/20 border-green-400/50 text-green-300' 
+                                : 'bg-blue-500/20 border-blue-400/50 text-blue-300'
+                            }`}>
+                              {game.status}
+                            </div>
+                          </div>
+
+                          {/* Game Info */}
+                          <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <p className="text-white/60 text-[10px] uppercase tracking-wider mb-1">{game.genre}</p>
+                            <h4 className="text-white font-bold text-sm mb-2 group-hover:text-cyan-400 transition-colors">{game.title}</h4>
+                            
+                            {/* Play Button */}
+                            <button className="w-full bg-white/10 hover:bg-cyan-500/30 border border-white/20 hover:border-cyan-400/50 rounded-lg py-2 text-white/80 hover:text-white text-xs font-semibold transition-all flex items-center justify-center gap-2">
+                              <Gamepad2 className="w-3 h-3" />
+                              Launch
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Add More Games */}
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                        <Gamepad2 className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm font-semibold">Pin More Games</span>
+                    </motion.button>
+                  </div>
+                ) : (
+                  <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
+                )}
               </div>
             </motion.div>
           </>
