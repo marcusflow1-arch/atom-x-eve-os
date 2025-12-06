@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [currentMode, setCurrentMode] = useState('ai');
   const [modeIndex, setModeIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
+  const [selectedGame, setSelectedGame] = useState(null);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -175,6 +176,121 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
+      {/* Game Detail Drawer - Slides from Right */}
+      <AnimatePresence>
+        {selectedGame && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setSelectedGame(null)}
+            />
+            <motion.div
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ 
+                top: '80px',
+                bottom: '48px',
+                width: '35vw',
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+              }}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
+                <h2 className="text-white font-bold text-xl tracking-wider uppercase">Game Details</h2>
+                <button 
+                  onClick={() => setSelectedGame(null)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Game Cover */}
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                  <img src={selectedGame.image} alt={selectedGame.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <h3 className="text-2xl font-bold text-white mb-1">{selectedGame.title}</h3>
+                    <p className="text-white/60 text-sm">{selectedGame.genre}</p>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${selectedGame.status === 'Playing' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
+                  <span className="text-white font-semibold">{selectedGame.status}</span>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-lg py-3 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                    <Gamepad2 className="w-4 h-4" />
+                    Launch Game
+                  </button>
+                  <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg py-3 text-white font-semibold transition-all">
+                    View Library
+                  </button>
+                </div>
+
+                {/* Game Stats */}
+                <div className="space-y-3">
+                  <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Statistics</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Playtime</p>
+                      <p className="text-white font-bold text-lg">24.5h</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Achievements</p>
+                      <p className="text-white font-bold text-lg">12/50</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Last Played</p>
+                      <p className="text-white font-bold text-sm">2 hours ago</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Progress</p>
+                      <p className="text-white font-bold text-lg">68%</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Achievements */}
+                <div className="space-y-3">
+                  <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Recent Achievements</h4>
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                          <Trophy className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm font-semibold">Achievement Title</p>
+                          <p className="text-white/40 text-xs">Unlocked today</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pin/Unpin Button */}
+                <button className="w-full bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg py-3 text-white font-semibold transition-all">
+                  Unpin from Dashboard
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Universal Slide-Out Drawer */}
       <AnimatePresence>
         {activeDrawer && (
@@ -241,6 +357,7 @@ export default function Dashboard() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: Math.min(index * 0.02, 1) }}
+                          onClick={() => setSelectedGame(game)}
                           className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all"
                         >
                           {/* Game Image */}
