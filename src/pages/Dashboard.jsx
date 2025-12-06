@@ -433,8 +433,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Q - Left */}
-            <div className="absolute bottom-12 left-0 w-12 h-12">
+            {/* Q - Left (moved further left) */}
+            <div className="absolute bottom-12 -left-2 w-12 h-12">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">Q</span>
@@ -468,8 +468,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 3 - Top */}
-            <div className="absolute bottom-22 left-1/2 -translate-x-1/2 w-11 h-11">
+            {/* 3 - Top (lowered to align with 2 and 4) */}
+            <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-11 h-11">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">3</span>
