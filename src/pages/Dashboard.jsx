@@ -287,7 +287,7 @@ export default function Dashboard() {
       </div>
 
       {/* Dot Indicators & Navigation Arrows (Combined) - Only in AI mode */}
-      <div className={`absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-6 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-5 z-30 transition-opacity duration-500 scale-90 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {/* Left Arrow */}
         <motion.button
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
