@@ -47,7 +47,7 @@ const limitedEditionCards = [
     type: 'Equipment',
     rarity: 'Legendary',
     description: 'Energy-infused blade that cuts through armor',
-    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/d3883d587_123-1239359_lightsaber-katana-sword.png',
+    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/87b4c67dd_123-1239359_lightsaber-katana-sword.png',
     season: 'Season 1',
     track: 'solo'
   },
@@ -67,7 +67,7 @@ const limitedEditionCards = [
     type: 'Companion',
     rarity: 'Legendary',
     description: 'Tactical combat drone with pack hunter AI',
-    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/3f8abd658_bc6044b0f6806867e2f92d967579b4.png',
+    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/8c415b4eb_bc6044b0f6806867e2f92d967579b4.png',
     season: 'Season 1',
     track: 'solo'
   },
