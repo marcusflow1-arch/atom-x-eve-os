@@ -496,8 +496,100 @@ export default function BlacksmithPage() {
           )}
         </div>
 
+        {/* Forge Mastery Section */}
+        <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+          <h2 className="text-xl font-black text-white/80 uppercase tracking-wider flex items-center gap-2">
+            <Hammer className="w-5 h-5 text-orange-400" />
+            Forge Mastery
+          </h2>
+
+          {/* Main XP Progress Bar */}
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-5 border border-white/10 shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-bold text-white">
+                  Forge Mastery – Lvl {forgeMastery.level}
+                </span>
+                <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30">
+                  {forgeMastery.tier}
+                </Badge>
+              </div>
+              <span className="text-slate-400 font-mono text-sm">
+                {forgeMastery.currentXP.toLocaleString()} / {forgeMastery.xpRequired.toLocaleString()} XP
+              </span>
+            </div>
+            
+            {/* XP Bar */}
+            <div className="relative h-8 bg-slate-900/50 rounded-full overflow-hidden border border-slate-700/50">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${(forgeMastery.currentXP / forgeMastery.xpRequired) * 100}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg shadow-blue-500/50"
+                style={{
+                  boxShadow: '0 0 20px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+            </div>
+          </div>
+
+          {/* Mastery Tier Progress */}
+          <div className="bg-slate-800/30 backdrop-blur-xl rounded-xl p-4 border border-white/5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {forgeMastery.tier === 'Novice' && <Hammer className="w-4 h-4 text-slate-400" />}
+                {forgeMastery.tier === 'Adept' && <Sparkles className="w-4 h-4 text-blue-400" />}
+                {forgeMastery.tier === 'Expert' && <Zap className="w-4 h-4 text-purple-400" />}
+                {forgeMastery.tier === 'Master' && <Crown className="w-4 h-4 text-orange-400" />}
+                <span className="text-sm font-bold text-slate-300">
+                  {forgeMastery.tier} Rank
+                </span>
+              </div>
+              <span className="text-xs text-slate-500 font-mono">
+                {forgeMastery.tierProgress} / {forgeMastery.tier === 'Novice' ? '50' : forgeMastery.tier === 'Adept' ? '100' : forgeMastery.tier === 'Expert' ? '150' : '200'}
+              </span>
+            </div>
+            
+            {/* Tier Bar */}
+            <div className="h-2 bg-slate-900/50 rounded-full overflow-hidden border border-slate-700/30">
+              <div 
+                className="h-full bg-gradient-to-r from-slate-600 to-slate-400 transition-all duration-500"
+                style={{ 
+                  width: `${(forgeMastery.tierProgress / (forgeMastery.tier === 'Novice' ? 50 : forgeMastery.tier === 'Adept' ? 100 : forgeMastery.tier === 'Expert' ? 150 : 200)) * 100}%` 
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Reward Panel */}
+          <div className="bg-slate-800/40 backdrop-blur-xl rounded-xl p-4 border border-white/5">
+            <h3 className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3 flex items-center gap-2">
+              <Star className="w-3 h-3" /> Current Level Rewards
+            </h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="flex items-start gap-2 bg-slate-900/30 rounded-lg p-2 border border-white/5">
+                <Zap className="w-3 h-3 text-blue-400 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-300">+{forgeMastery.level * 2}% faster forge time</span>
+              </div>
+              <div className="flex items-start gap-2 bg-slate-900/30 rounded-lg p-2 border border-white/5">
+                <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-300">+{forgeMastery.level}% enhancement success</span>
+              </div>
+              <div className="flex items-start gap-2 bg-slate-900/30 rounded-lg p-2 border border-white/5">
+                <Gem className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-300">Unlock Tier {Math.floor(forgeMastery.level / 10)} materials</span>
+              </div>
+              <div className="flex items-start gap-2 bg-slate-900/30 rounded-lg p-2 border border-white/5">
+                <Crown className="w-3 h-3 text-orange-400 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-300">{Math.floor(forgeMastery.level / 5)} specialty blueprints</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Hints */}
-        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-sm font-medium text-slate-500">
+        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center text-sm font-medium text-slate-500">
           <div className="flex gap-6">
             <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">B</span> Back</span>
             <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">≡</span> Options</span>
