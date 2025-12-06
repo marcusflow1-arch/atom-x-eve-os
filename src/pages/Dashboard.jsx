@@ -95,33 +95,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden relative bg-gray-900">
-      {/* Liquid Glass Gray Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-slate-900 to-gray-950" />
-
-      {/* Fluid Shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div 
-              className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gray-500/20 blur-[120px] mix-blend-overlay"
-              animate={{ x: [0, 30, 0], y: [0, 50, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div 
-              className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-slate-400/20 blur-[100px] mix-blend-overlay"
-              animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.05, 1] }}
-              transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-          />
-           <motion.div 
-              className="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-gray-400/20 blur-[100px] mix-blend-overlay"
-              animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          />
-      </div>
-
-      {/* Glass Effect Overlay */}
-      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-[100px]" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] pointer-events-none mix-blend-soft-light" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/20 pointer-events-none" />
+    <div className="h-screen w-full overflow-hidden relative bg-[#0f1115]">
+      {/* Blank Background */}
 
       {/* Holographic Particles */}
       <div className="absolute inset-0 pointer-events-none">
@@ -319,22 +294,7 @@ export default function Dashboard() {
           <ChevronLeft className="w-6 h-6" />
         </motion.button>
 
-        {/* Dots */}
-        <div className="flex gap-3">
-          {ORBITAL_ITEMS.map((_, index) => (
-            <motion.button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === activeIndex
-                  ? 'bg-white w-8'
-                  : 'bg-white/30 hover:bg-white/50'
-              }`}
-              onClick={() => handleDotClick(index)}
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.9 }}
-            />
-          ))}
-        </div>
+        {/* Dots Removed */}
 
         {/* Right Arrow */}
         <motion.button
@@ -368,7 +328,7 @@ export default function Dashboard() {
 
       {/* Preset D - Right Side Panel - Only in AI mode */}
       <div className={`absolute right-8 top-[40%] -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="bg-[#15171b]/90 backdrop-blur-2xl rounded-3xl border border-white/5 p-6 flex flex-col gap-6 shadow-2xl">
+        <div className="flex flex-col gap-6 p-6">
 
           {/* Header */}
           <div className="flex items-center justify-between">
