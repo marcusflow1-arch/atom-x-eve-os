@@ -23,6 +23,8 @@ export default function Admin() {
   const [fixingImages, setFixingImages] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
   const [fetchingIGDB, setFetchingIGDB] = useState(false);
+  const [showMissingImages, setShowMissingImages] = useState(false);
+  const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -56,10 +58,10 @@ export default function Admin() {
 
   const startAgentMutation = useMutation({
       mutationFn: async () => {
-          const job = await base44.entities.AgentJob.create({ status: 'running', type: 'game_discovery' });
+          const job = await base44.entities.AgentJob.create({ status: 'running', type: 'comprehensive_game_discovery' });
           setActiveJobId(job.id);
           // Trigger backend function
-          base44.functions.invoke('gameDiscoveryAgent', { jobId: job.id }); // Fire and forget-ish (or it awaits)
+          base44.functions.invoke('comprehensiveGameAgent', { jobId: job.id }); // Fire and forget-ish (or it awaits)
           return job;
       }
   });
@@ -580,7 +582,7 @@ export default function Admin() {
                     `}
                   >
                     <Bot className="w-4 h-4 mr-2" />
-                    {(activeJob && activeJob.status === 'running') ? 'Agent Running...' : 'Launch Discovery Agent'}
+                    {(activeJob && activeJob.status === 'running') ? 'Agent Running...' : '🤖 AI Game Agent (All-in-One)'}
                   </Button>
                   <Button 
                     onClick={handleFetchFromIGDB}
@@ -714,22 +716,102 @@ export default function Admin() {
                 </Button>
               </div>
 
+              {/* Filter and Sort Controls */}
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-400">Show:</span>
+                  <Button
+                    size="sm"
+                    variant={showMissingImages ? "default" : "outline"}
+                    onClick={() => setShowMissingImages(!showMissingImages)}
+                    className={showMissingImages ? "bg-orange-600 hover:bg-orange-700" : ""}
+                  >
+                    Missing Images Only
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-400">Sort by:</span>
+                  <Button
+                    size="sm"
+                    variant={gameSortBy === 'release_date' ? "default" : "outline"}
+                    onClick={() => setGameSortBy('release_date')}
+                  >
+                    Release Date (Newest)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={gameSortBy === 'popularity' ? "default" : "outline"}
+                    onClick={() => setGameSortBy('popularity')}
+                  >
+                    Popularity
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={gameSortBy === 'title' ? "default" : "outline"}
+                    onClick={() => setGameSortBy('title')}
+                  >
+                    Title (A-Z)
+                  </Button>
+                </div>
+              </div>
+
               {/* Games List */}
               {gamesLoading ? (
                 <div className="text-center py-12 text-slate-500">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
                   Loading games...
                 </div>
-              ) : existingGames.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-                  <Gamepad2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>No games in database yet</p>
-                  <p className="text-sm">Add games manually or use Auto-Populate</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <AnimatePresence>
-                    {existingGames.map((game) => (
+              ) : (() => {
+                // Filter games with missing images if needed
+                let filteredGames = showMissingImages 
+                  ? existingGames.filter(game => !game.cover_image || game.cover_image.includes('unsplash'))
+                  : existingGames;
+
+                // Sort games based on selected option
+                const sortedGames = [...filteredGames].sort((a, b) => {
+                  if (gameSortBy === 'release_date') {
+                    const yearA = a.original_year || 0;
+                    const yearB = b.original_year || 0;
+                    return yearB - yearA; // Newest first
+                  } else if (gameSortBy === 'popularity') {
+                    // Use price as proxy for popularity (or add a popularity field)
+                    const scoreA = (a.rating || 0) * 10 + (a.original_year || 0);
+                    const scoreB = (b.rating || 0) * 10 + (b.original_year || 0);
+                    return scoreB - scoreA;
+                  } else {
+                    return a.title.localeCompare(b.title);
+                  }
+                });
+
+                const missingCount = existingGames.filter(g => !g.cover_image || g.cover_image.includes('unsplash')).length;
+
+                return sortedGames.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+                    <Gamepad2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    {showMissingImages ? (
+                      <>
+                        <p>No games with missing images found</p>
+                        <p className="text-sm">All games have cover images!</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>No games in database yet</p>
+                        <p className="text-sm">Add games manually or use Auto-Populate</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {showMissingImages && (
+                      <div className="mb-4 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                        <p className="text-orange-400 text-sm font-semibold">
+                          Found {missingCount} game{missingCount !== 1 ? 's' : ''} with missing or placeholder images
+                        </p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <AnimatePresence>
+                        {sortedGames.map((game) => (
                       <motion.div
                         key={game.id}
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -743,9 +825,17 @@ export default function Admin() {
                             alt={game.title}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute top-2 right-2">
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            {(!game.cover_image || game.cover_image.includes('unsplash')) && (
+                              <Badge className="bg-orange-600">No Image</Badge>
+                            )}
                             <Badge className="bg-green-600">${game.price}</Badge>
                           </div>
+                          {game.original_year && (
+                            <div className="absolute bottom-2 left-2">
+                              <Badge variant="outline" className="bg-black/50">{game.original_year}</Badge>
+                            </div>
+                          )}
                         </div>
                         <div className="p-4">
                           <h4 className="font-semibold truncate">{game.title}</h4>
