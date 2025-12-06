@@ -38,14 +38,6 @@ export default function Dashboard() {
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
 
-  // Auto-rotate slowly
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation((prev) => (prev + 0.2) % 360);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleRotateLeft = () => {
     setActiveIndex((prev) => (prev - 1 + itemCount) % itemCount);
   };
@@ -65,10 +57,10 @@ export default function Dashboard() {
   };
 
   const getItemPosition = (index) => {
-    const angle = ((index - activeIndex) * angleStep + rotation) * (Math.PI / 180);
+    const angle = ((index - activeIndex) * angleStep) * (Math.PI / 180);
     const radius = 280;
     const x = Math.sin(angle) * radius;
-    const y = -Math.cos(angle) * radius;
+    const y = Math.cos(angle) * radius; // Positive y to place active item at bottom (under "Online")
     const scale = index === activeIndex ? 1.2 : 0.9;
     const opacity = index === activeIndex ? 1 : 0.6;
     const zIndex = index === activeIndex ? 20 : 10;
@@ -108,11 +100,24 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Title */}
+      {/* Mode Toggle at Top */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-30">
-        <h1 className="text-4xl font-black text-white tracking-wider drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-          AI NEXUS
-        </h1>
+        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-xl rounded-full px-6 py-3 border border-white/10">
+          {[
+            { mode: 'ai', label: 'AI NEXUS' },
+            { mode: 'user', label: 'USER INTERFACE' },
+            { mode: 'economy', label: 'ECONOMY DISTRICT' },
+            { mode: 'records', label: 'HALL OF RECORDS' }
+          ].map(({ mode, label }) => (
+            <button
+              key={mode}
+              onClick={() => {/* TODO: Add mode switching logic */}}
+              className="px-4 py-2 rounded-full text-sm font-bold tracking-wider transition-all hover:bg-white/10 text-white"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Center AI Avatar */}
@@ -132,21 +137,22 @@ export default function Dashboard() {
           <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin" style={{ animationDuration: '20s' }} />
           <div className="absolute inset-4 rounded-full border border-cyan-400/30 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
           
-          {/* AI Avatar */}
-          <div className="relative w-full h-full bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl">
-            {user?.avatar?.model_url ? (
-              <ThreeScene modelUrl={user.avatar.model_url} scale={1.5} />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <User className="w-16 h-16 text-white" />
-                  </div>
-                  <p className="text-white font-bold text-xl">{user?.avatar?.gender === 'male' ? 'ATUM' : 'EVE'}</p>
-                  <p className="text-cyan-300 text-sm">Level {user?.avatar?.level || 1}</p>
-                </div>
-              </div>
-            )}
+          {/* AI Avatar - Iframe Embed */}
+          <div className="relative w-full h-full">
+            <iframe 
+              title="AI Avatar" 
+              frameBorder="0" 
+              allowFullScreen 
+              mozallowfullscreen="true" 
+              webkitallowfullscreen="true" 
+              allow="autoplay; fullscreen; xr-spatial-tracking" 
+              xr-spatial-tracking="true" 
+              execution-while-out-of-viewport="true" 
+              execution-while-not-rendered="true" 
+              web-share="true" 
+              src="https://sketchfab.com/models/a6493956f268493c8e40db5bbbca140f/embed?autostart=1&ui_controls=0&ui_infos=0&ui_stop=0&ui_inspector=0&ui_hint=0"
+              className="w-full h-full rounded-full"
+            />
           </div>
 
           {/* Status Badge */}
@@ -218,40 +224,44 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Navigation Arrows */}
-      <motion.button
-        className="absolute left-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-30"
-        onClick={handleRotateLeft}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <ChevronLeft className="w-8 h-8" />
-      </motion.button>
+      {/* Dot Indicators & Navigation Arrows (Combined) */}
+      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-6 z-30">
+        {/* Left Arrow */}
+        <motion.button
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          onClick={handleRotateLeft}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </motion.button>
 
-      <motion.button
-        className="absolute right-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-30"
-        onClick={handleRotateRight}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <ChevronRight className="w-8 h-8" />
-      </motion.button>
+        {/* Dots */}
+        <div className="flex gap-3">
+          {ORBITAL_ITEMS.map((_, index) => (
+            <motion.button
+              key={index}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === activeIndex
+                  ? 'bg-white w-8'
+                  : 'bg-white/30 hover:bg-white/50'
+              }`}
+              onClick={() => handleDotClick(index)}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+            />
+          ))}
+        </div>
 
-      {/* Dot Indicators */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-3 z-30">
-        {ORBITAL_ITEMS.map((_, index) => (
-          <motion.button
-            key={index}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === activeIndex
-                ? 'bg-white w-8'
-                : 'bg-white/30 hover:bg-white/50'
-            }`}
-            onClick={() => handleDotClick(index)}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-          />
-        ))}
+        {/* Right Arrow */}
+        <motion.button
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          onClick={handleRotateRight}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </motion.button>
       </div>
 
       {/* Secondary Dock Menu */}
