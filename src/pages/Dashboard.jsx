@@ -423,26 +423,26 @@ export default function Dashboard() {
 
         {/* Skill Hotbar - Bottom Right Corner - Only in AI mode */}
         <div className={`absolute right-6 bottom-16 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          {/* Primary Skills - Diagonal Pattern */}
-          <div className="relative h-32 w-32 mb-4">
-            {/* Tab - Base (bottom) */}
-            <div className="absolute bottom-0 left-8 w-12 h-12">
+          {/* Primary Skills - Spaced Diagonal Pattern */}
+          <div className="relative h-40 w-40 mb-6">
+            {/* Tab - Base (bottom center) */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">Tab</span>
               </div>
             </div>
 
-            {/* Q - Middle (upper-left) */}
-            <div className="absolute bottom-10 left-2 w-12 h-12">
+            {/* Q - Left */}
+            <div className="absolute bottom-12 left-0 w-12 h-12">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">Q</span>
               </div>
             </div>
 
-            {/* - - Top (upper-right) */}
-            <div className="absolute bottom-20 left-8 w-12 h-12">
+            {/* - - Top center */}
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 w-12 h-12">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">-</span>
@@ -450,34 +450,34 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Secondary Skills - Diagonal Pattern */}
-          <div className="relative h-40 w-40">
-            {/* 1 - Base (bottom) */}
-            <div className="absolute bottom-0 left-10 w-11 h-11">
+          {/* Secondary Skills - Complete Diamond Pattern */}
+          <div className="relative h-44 w-44">
+            {/* 1 - Bottom */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-11 h-11">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">1</span>
               </div>
             </div>
 
-            {/* 2 - Second (upper-left) */}
-            <div className="absolute bottom-9 left-4 w-11 h-11">
+            {/* 2 - Left */}
+            <div className="absolute bottom-11 left-3 w-11 h-11">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">2</span>
               </div>
             </div>
 
-            {/* 3 - Third (upper-right from 2) */}
-            <div className="absolute bottom-18 left-10 w-11 h-11">
+            {/* 3 - Top */}
+            <div className="absolute bottom-22 left-1/2 -translate-x-1/2 w-11 h-11">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">3</span>
               </div>
             </div>
 
-            {/* 4 - Fourth (upper-left from 3) */}
-            <div className="absolute bottom-27 left-4 w-11 h-11">
+            {/* 4 - Right */}
+            <div className="absolute bottom-11 right-3 w-11 h-11">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rotate-45 rounded-sm hover:border-white/40 transition-all cursor-pointer backdrop-blur-md" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white/60 text-[9px] font-bold">4</span>
