@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Post } from '@/entities/Post';
 import { Comment } from '@/entities/Comment';
+import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import CreatePostForm from '../components/community/CreatePostForm';
 import PostCard from '../components/community/PostCard';
 import FeedPost from '../components/community/FeedPost';
 import CommentSection from '../components/community/CommentSection';
-import ForumSidebar from '../components/community/ForumSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ArrowLeft, Search, Filter, Clock, Flame, Newspaper, LayoutList, Globe, Gamepad2, Trophy, Activity } from 'lucide-react';
+import { Plus, ArrowLeft, Search, Mic, Bell, User, MessageSquare, TrendingUp, Users, Gamepad2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -20,13 +20,9 @@ export default function CommunityPage() {
     const [loading, setLoading] = useState(true);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
-    
-    // Navigation State
-    const [activeSection, setActiveSection] = useState('general_discussion'); // general_discussion, achievement_discussion, game_forums
-    const [activeGame, setActiveGame] = useState(null); // If specific game selected
-    
-    // Filter State
-    const [sortBy, setSortBy] = useState('newest'); // newest, popular
+    const [activeSection, setActiveSection] = useState('general_discussion');
+    const [activeGame, setActiveGame] = useState(null);
+    const [sortBy, setSortBy] = useState('newest');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('all');
     const [trendingTopics, setTrendingTopics] = useState([]);
@@ -49,11 +45,10 @@ export default function CommunityPage() {
         setLoading(true);
         try {
             let filter = {};
-            let sort = '-created_date'; // Default new
+            let sort = '-created_date';
 
             if (sortBy === 'popular') sort = '-score';
 
-            // Section Logic
             if (activeGame) {
                 filter.game_title = activeGame;
             } else if (activeSection === 'general_discussion') {
@@ -61,18 +56,11 @@ export default function CommunityPage() {
             } else if (activeSection === 'achievement_discussion') {
                 filter.type = 'achievement_discussion';
             } else if (activeSection === 'feed') {
-                // For feed, we might want almost everything or just achievements/challenges
-                // Let's assume feed shows everything for now, sorted by new
                 filter = {}; 
             }
 
-            // Genre Filter (if implemented in backend or client side)
-            // Since our backend filter is simple key-value, we'll handle genre/search client side if needed
-            // but ideally we filter by what we can.
-
             const fetchedPosts = await Post.filter(filter, sort);
             
-            // Client-side filtering for advanced cases (Search, Genre)
             let filtered = fetchedPosts;
 
             if (searchQuery) {
@@ -84,7 +72,6 @@ export default function CommunityPage() {
             }
 
             if (selectedGenre !== 'all' && !activeGame) {
-                // Assuming posts have genre field we added
                 filtered = filtered.filter(p => p.genre === selectedGenre);
             }
 
@@ -113,7 +100,6 @@ export default function CommunityPage() {
     const handleCreatePost = async (postData) => {
         if (!isAuthenticated) return;
         
-        // AI Moderation Check
         try {
             const modRes = await base44.functions.invoke('communityAI', {
                 action: 'moderate_content',
@@ -148,76 +134,145 @@ export default function CommunityPage() {
 
     const handleSectionChange = (section) => {
         setActiveSection(section);
-        setActiveGame(null); // Reset game selection when switching main sections
-        setSelectedPost(null);
-    };
-
-    const handleGameChange = (gameTitle) => {
-        setActiveGame(gameTitle);
-        setActiveSection('game_forums'); // Switch context to game forums
+        setActiveGame(null);
         setSelectedPost(null);
     };
 
     return (
         <div 
-          className="min-h-screen text-slate-200 page-container"
-          style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+            className="min-h-screen text-white p-8 overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
-          {/* Ambient Glow Effects */}
-          <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-            <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-          </div>
-            <div className="max-w-[1600px] mx-auto p-4 md:p-6">
+            {/* Ambient Background */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
+            </div>
+
+            <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-4rem)] flex flex-col gap-6">
                 
-                {/* Header */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-                            <LayoutList className="w-8 h-8 text-blue-500" />
-                            COMMUNITY HUB
-                        </h1>
-                        <p className="text-slate-400">Connect, discuss, and discover with fellow players</p>
+                {/* Header Section */}
+                <LiquidGlassCard className="px-8 py-4 flex items-center justify-between" hover={false}>
+                    {/* Left: Logo/Brand */}
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <MessageSquare className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-wide text-white">COMMUNITY</h1>
+                            <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">Forums</span>
+                        </div>
                     </div>
-                    <Button
-                        onClick={() => setShowCreateForm(true)}
-                        className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 font-bold"
-                    >
-                        <Plus className="w-5 h-5 mr-2" /> New Discussion
-                    </Button>
-                </header>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar Navigation */}
-                    <ForumSidebar 
-                        activeSection={activeSection} 
-                        onSectionChange={handleSectionChange}
-                        activeGame={activeGame}
-                        onGameChange={handleGameChange}
-                    />
+                    {/* Center: Navigation */}
+                    <div className="flex items-center gap-8">
+                        {[
+                            { label: 'DISCUSSIONS', value: 'general_discussion' },
+                            { label: 'GAMES', value: 'game_forums' },
+                            { label: 'TRENDING', value: 'trending' }
+                        ].map((item, i) => (
+                            <button 
+                                key={item.value} 
+                                onClick={() => handleSectionChange(item.value)}
+                                className={`text-sm font-bold tracking-wider transition-all ${
+                                    activeSection === item.value 
+                                        ? 'text-cyan-300 border-b-2 border-cyan-300 pb-1' 
+                                        : 'text-white/60 hover:text-white'
+                                }`}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
 
-                    {/* Main Content Area */}
-                    <main className="flex-1 min-w-0">
-                        <AnimatePresence mode="wait">
-                            {selectedPost ? (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden"
+                    {/* Right: Search & Profile */}
+                    <div className="flex items-center gap-6">
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                placeholder="Search" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-64 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
+                            />
+                            <Mic className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 cursor-pointer hover:text-white" />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Button 
+                                onClick={() => setShowCreateForm(true)}
+                                className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-6"
+                            >
+                                <Plus className="w-4 h-4 mr-2" /> New Post
+                            </Button>
+                        </div>
+                    </div>
+                </LiquidGlassCard>
+
+                {/* Main Content Grid */}
+                <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
+                    
+                    {/* Left Column: Categories (25%) */}
+                    <div className="col-span-3 flex flex-col gap-6">
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-sm font-bold text-white/80 tracking-wide">CATEGORIES</h2>
+                        </div>
+                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
+                            {[
+                                { icon: MessageSquare, label: 'General', value: 'general_discussion' },
+                                { icon: Gamepad2, label: 'Game Discussions', value: 'game_forums' },
+                                { icon: TrendingUp, label: 'Achievements', value: 'achievement_discussion' },
+                                { icon: Users, label: 'Clans & Teams', value: 'clans' }
+                            ].map((cat) => (
+                                <button
+                                    key={cat.value}
+                                    onClick={() => handleSectionChange(cat.value)}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
+                                        activeSection === cat.value
+                                            ? 'bg-blue-500/20 border border-blue-400/30 text-white'
+                                            : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+                                    }`}
                                 >
-                                    <div className="p-4 border-b border-slate-800 flex items-center gap-4 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
-                                        <Button variant="ghost" size="sm" onClick={() => setSelectedPost(null)}>
-                                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
+                                    <cat.icon className="w-5 h-5" />
+                                    <span className="font-semibold text-sm">{cat.label}</span>
+                                </button>
+                            ))}
+                        </LiquidGlassCard>
+                    </div>
+
+                    {/* Center Column: Posts Feed (50%) */}
+                    <div className="col-span-6 flex flex-col gap-6">
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-sm font-bold text-white/80 tracking-wide">
+                                {activeSection === 'general_discussion' ? 'GENERAL DISCUSSIONS' : 'POSTS FEED'}
+                            </h2>
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="newest">Newest</SelectItem>
+                                    <SelectItem value="popular">Popular</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <LiquidGlassCard className="flex-1 p-4 overflow-y-auto" hover={false}>
+                            <AnimatePresence mode="wait">
+                                {selectedPost ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                    >
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => setSelectedPost(null)}
+                                            className="mb-4"
+                                        >
+                                            <ArrowLeft className="w-4 h-4 mr-2" /> Back
                                         </Button>
-                                        <div className="h-4 w-px bg-slate-700" />
-                                        <span className="text-sm text-slate-400 font-medium truncate max-w-[300px]">
-                                            {selectedPost.title}
-                                        </span>
-                                    </div>
-                                    <div className="p-6">
                                         <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
-                                        <div className="mt-8">
+                                        <div className="mt-6">
                                             <CommentSection
                                                 postId={selectedPost.id}
                                                 comments={comments}
@@ -225,86 +280,21 @@ export default function CommunityPage() {
                                                     await Comment.create(data);
                                                     fetchComments(selectedPost.id);
                                                 }}
-                                                onVote={async (c, type) => {
-                                                    // Mock implementation
-                                                    fetchComments(selectedPost.id);
-                                                }}
+                                                onVote={async () => fetchComments(selectedPost.id)}
                                             />
                                         </div>
-                                    </div>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="space-y-6"
-                                >
-                                    {/* Feed Header / Filters */}
-                                    <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-                                        <div className="flex items-center gap-3 w-full md:w-auto">
-                                            <div className="bg-slate-800 p-2 rounded-lg">
-                                                {activeGame ? (
-                                                    <Gamepad2 className="w-5 h-5 text-indigo-400" />
-                                                ) : activeSection === 'achievement_discussion' ? (
-                                                    <Trophy className="w-5 h-5 text-yellow-400" />
-                                                ) : (
-                                                    <Globe className="w-5 h-5 text-blue-400" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <h2 className="font-bold text-white">
-                                                    {activeGame || (activeSection === 'achievement_discussion' ? 'Achievement Hunters' : 'General Lounge')}
-                                                </h2>
-                                                <p className="text-xs text-slate-400">
-                                                    {posts.length} discussions active
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 w-full md:w-auto">
-                                            <div className="relative flex-1 md:w-64">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                                <Input 
-                                                    placeholder="Search discussions..." 
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="pl-9 bg-slate-950/50 border-slate-800 h-10"
-                                                />
-                                            </div>
-                                            <Select value={sortBy} onValueChange={setSortBy}>
-                                                <SelectTrigger className="w-[140px] bg-slate-950/50 border-slate-800 h-10">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="newest">
-                                                        <div className="flex items-center gap-2"><Clock className="w-3 h-3" /> Newest</div>
-                                                    </SelectItem>
-                                                    <SelectItem value="popular">
-                                                        <div className="flex items-center gap-2"><Flame className="w-3 h-3" /> Popular</div>
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    {/* Posts List */}
-                                    <div className="space-y-4 min-h-[400px]">
-                                        {/* Trending Topics Bar */}
-                                        {trendingTopics.length > 0 && (
-                                            <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-                                                {trendingTopics.map((trend, i) => (
-                                                    <div key={i} className="flex items-center gap-1 px-3 py-1 bg-slate-800 rounded-full text-xs text-blue-300 whitespace-nowrap">
-                                                        <Activity className="w-3 h-3" /> {trend}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="space-y-3"
+                                    >
                                         {loading ? (
-                                            <div className="space-y-4">
-                                                {[1,2,3].map(i => (
-                                                    <div key={i} className="h-40 bg-slate-900/30 rounded-xl animate-pulse" />
+                                            <div className="space-y-3">
+                                                {[1,2,3,4].map(i => (
+                                                    <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
                                                 ))}
                                             </div>
                                         ) : posts.length > 0 ? (
@@ -329,34 +319,59 @@ export default function CommunityPage() {
                                                 );
                                             })
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-900/20 rounded-xl border border-slate-800 border-dashed">
-                                                <Newspaper className="w-16 h-16 text-slate-700 mb-4" />
-                                                <h3 className="text-xl font-bold text-slate-400">No discussions found</h3>
-                                                <p className="text-slate-500 max-w-md mt-2 mb-6">
-                                                    Be the first to start a conversation in this section!
-                                                </p>
-                                                <Button onClick={() => setShowCreateForm(true)} variant="outline">
-                                                    Start Discussion
-                                                </Button>
+                                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                                <MessageSquare className="w-12 h-12 text-white/20 mb-4" />
+                                                <h3 className="text-lg font-bold text-white/60">No discussions yet</h3>
+                                                <p className="text-white/40 text-sm mt-2">Be the first to start a conversation!</p>
                                             </div>
                                         )}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </main>
-                </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </LiquidGlassCard>
+                    </div>
 
-                <AnimatePresence>
-                    {showCreateForm && (
-                        <CreatePostForm
-                            onSubmit={handleCreatePost}
-                            onCancel={() => setShowCreateForm(false)}
-                            initialType={activeGame ? 'game_discussion' : 'general_discussion'}
-                        />
-                    )}
-                </AnimatePresence>
+                    {/* Right Column: Trending & Stats (25%) */}
+                    <div className="col-span-3 flex flex-col gap-6">
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING NOW</h2>
+                        </div>
+                        <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
+                            {trendingTopics.length > 0 ? (
+                                trendingTopics.slice(0, 8).map((trend, i) => (
+                                    <div 
+                                        key={i}
+                                        className="flex items-start gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                                    >
+                                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                            {i + 1}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-white text-sm font-semibold truncate">{trend}</p>
+                                            <p className="text-white/40 text-xs">Trending topic</p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center text-white/30 text-sm">
+                                    Loading trends...
+                                </div>
+                            )}
+                        </LiquidGlassCard>
+                    </div>
+
+                </div>
             </div>
+
+            <AnimatePresence>
+                {showCreateForm && (
+                    <CreatePostForm
+                        onSubmit={handleCreatePost}
+                        onCancel={() => setShowCreateForm(false)}
+                        initialType={activeGame ? 'game_discussion' : 'general_discussion'}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
