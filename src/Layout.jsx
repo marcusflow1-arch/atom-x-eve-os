@@ -580,6 +580,38 @@ function LayoutContent({ children, currentPageName }) {
                 <span>Discord</span>
               </a>
             )}
+
+            {headerConfig.showModeToggle && (
+              <button
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+                onClick={toggleMode}
+                title="Toggle Interface Mode"
+              >
+                <AnimatePresence mode="wait">
+                  {mode === 'ai' ? (
+                    <motion.div
+                      key="user-icon"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      className="flex items-center justify-center w-full h-full"
+                    >
+                      <User className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="ai-icon"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      className="flex items-center justify-center w-full h-full"
+                    >
+                      <Bot className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            )}
             </div>
 
             {/* Minimized Experience Bar */}
@@ -590,50 +622,18 @@ function LayoutContent({ children, currentPageName }) {
               />
             </div>
 
-            {/* Under Bar Content: Mode Toggle & Dock Items */}
+            {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
               <div className="flex items-center gap-6 mt-1 pl-1">
                 {headerConfig.showModeToggle && (
-                  <div className="flex items-center gap-3">
-                    <button
-                      className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
-                      onClick={toggleMode}
-                      title="Toggle Interface Mode"
-                    >
-                      <AnimatePresence mode="wait">
-                        {mode === 'ai' ? (
-                          <motion.div
-                            key="user-icon"
-                            initial={{ opacity: 0, rotate: -90 }}
-                            animate={{ opacity: 1, rotate: 0 }}
-                            exit={{ opacity: 0, rotate: 90 }}
-                            className="flex items-center justify-center w-full h-full"
-                          >
-                            <User className="w-5 h-5" />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="ai-icon"
-                            initial={{ opacity: 0, rotate: -90 }}
-                            animate={{ opacity: 1, rotate: 0 }}
-                            exit={{ opacity: 0, rotate: 90 }}
-                            className="flex items-center justify-center w-full h-full"
-                          >
-                            <Bot className="w-5 h-5" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </button>
-                    {/* Page Name */}
-                    <motion.span 
-                      key={mode}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-white/80 font-bold text-sm tracking-wide uppercase"
-                    >
-                      {mode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
-                    </motion.span>
-                  </div>
+                  <motion.span 
+                    key={mode}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-white/80 font-bold text-sm tracking-wide uppercase"
+                  >
+                    {mode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
+                  </motion.span>
                 )}
 
                 {/* Dock Items */}
