@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, BookOpen, Zap, Sword, Gamepad2, Settings, Target, Layers,
-  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, X
+  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, X, Bot
 } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -129,16 +129,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleModeLeft = () => {
-    const newIndex = (modeIndex - 1 + MODES.length) % MODES.length;
-    setModeIndex(newIndex);
-    setCurrentMode(MODES[newIndex].id);
-  };
-
-  const handleModeRight = () => {
-    const newIndex = (modeIndex + 1) % MODES.length;
-    setModeIndex(newIndex);
-    setCurrentMode(MODES[newIndex].id);
+  // Mode toggling handled by new icon button
+  const toggleMode = () => {
+    const newMode = currentMode === 'ai' ? 'user' : 'ai';
+    setCurrentMode(newMode);
+    setModeIndex(newMode === 'ai' ? 0 : 1);
   };
 
   const getItemPosition = (index) => {
@@ -423,44 +418,41 @@ export default function Dashboard() {
         <Settings className="w-6 h-6" />
       </motion.button>
 
-      {/* Mode Toggle at Top with Arrows */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4">
-        {/* Left Arrow */}
-        <motion.button
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-          onClick={handleModeLeft}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </motion.button>
-
-        {/* Mode Display */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-full px-6 py-3 border border-white/10 min-w-[200px]">
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={currentMode}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="text-sm font-black text-white tracking-wider text-center"
+      {/* Mode Toggle Button - Top Left */}
+      <motion.button
+        className="absolute top-4 left-4 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+        onClick={toggleMode}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <AnimatePresence mode="wait">
+          {currentMode === 'ai' ? (
+            <motion.div
+              key="user-icon"
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              exit={{ opacity: 0, rotate: 90 }}
+              className="w-full h-full"
             >
-              {MODES[modeIndex].label}
-            </motion.h1>
-          </AnimatePresence>
-        </div>
-
-        {/* Right Arrow */}
-        <motion.button
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-          onClick={handleModeRight}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ChevronRight className="w-6 h-6" />
-        </motion.button>
-      </div>
+              <img 
+                src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop" 
+                alt="User UI" 
+                className="w-full h-full object-cover opacity-80 hover:opacity-100" 
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="ai-icon"
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              exit={{ opacity: 0, rotate: 90 }}
+              className="flex items-center justify-center w-full h-full"
+            >
+              <Bot className="w-6 h-6" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
 
       {/* Conditional Content Based on Mode */}
       <AnimatePresence mode="wait">
