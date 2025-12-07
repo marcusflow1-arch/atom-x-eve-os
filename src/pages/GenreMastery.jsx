@@ -5,7 +5,7 @@ import {
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
   Trophy, Flame, Sparkles, Orbit, ArrowLeft,
   Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
-  Check, Play, RotateCw
+  Check, Play, RotateCw, TrendingUp, Clock, Users, Target
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +20,11 @@ const GENRES = [
     short: 'MMO',
     icon: Globe, 
     color: 'from-purple-500 to-indigo-600', 
+    accent: 'text-purple-400',
     xpType: 'Social XP',
     level: 42, 
     maxLevel: 50,
     rank: 'Warlord',
-    rankIcon: Swords,
     xp: 92,
     skillPoints: 5,
     paths: ['Synergy', 'Raid', 'Trade']
@@ -34,12 +34,12 @@ const GENRES = [
     name: 'Sci-Fi', 
     short: 'SCI',
     icon: Rocket, 
-    color: 'from-cyan-500 to-blue-600', 
+    color: 'from-cyan-500 to-blue-600',
+    accent: 'text-cyan-400', 
     xpType: 'Tech XP',
     level: 28, 
     maxLevel: 50,
     rank: 'Pilot',
-    rankIcon: Shield,
     xp: 78,
     skillPoints: 3,
     paths: ['Cybernetics', 'Spaceflight', 'Hacking']
@@ -49,12 +49,12 @@ const GENRES = [
     name: 'Fantasy', 
     short: 'FAN',
     icon: Crown, 
-    color: 'from-amber-400 to-orange-500', 
+    color: 'from-amber-400 to-orange-500',
+    accent: 'text-amber-400', 
     xpType: 'Magic XP',
     level: 15, 
     maxLevel: 50,
     rank: 'Mage',
-    rankIcon: Sparkles,
     xp: 45,
     skillPoints: 1,
     paths: ['Sorcery', 'Enchanting', 'Lore']
@@ -64,12 +64,12 @@ const GENRES = [
     name: 'Action', 
     short: 'ACT',
     icon: Swords, 
-    color: 'from-red-500 to-rose-600', 
+    color: 'from-red-500 to-rose-600',
+    accent: 'text-red-400', 
     xpType: 'Combat XP',
     level: 33, 
     maxLevel: 50,
     rank: 'Warrior',
-    rankIcon: Swords,
     xp: 60,
     skillPoints: 2,
     paths: ['Combo', 'Reflex', 'Power']
@@ -79,12 +79,12 @@ const GENRES = [
     name: 'Shooter', 
     short: 'FPS',
     icon: Crosshair, 
-    color: 'from-emerald-500 to-green-600', 
+    color: 'from-emerald-500 to-green-600',
+    accent: 'text-emerald-400', 
     xpType: 'Aim XP',
     level: 50, 
     maxLevel: 50,
     rank: 'Sniper',
-    rankIcon: Crosshair,
     xp: 99,
     skillPoints: 8,
     paths: ['Precision', 'Tactics', 'Loadout']
@@ -94,12 +94,12 @@ const GENRES = [
     name: 'Adventure', 
     short: 'ADV',
     icon: Map, 
-    color: 'from-yellow-400 to-orange-400', 
+    color: 'from-yellow-400 to-orange-400',
+    accent: 'text-yellow-400', 
     xpType: 'Discovery XP',
     level: 12, 
     maxLevel: 50,
     rank: 'Explorer',
-    rankIcon: Globe,
     xp: 30,
     skillPoints: 1,
     paths: ['Survival', 'Navigation', 'Crafting']
@@ -109,12 +109,12 @@ const GENRES = [
     name: 'Fear', 
     short: 'HOR',
     icon: Ghost, 
-    color: 'from-slate-800 to-gray-900', 
+    color: 'from-slate-800 to-gray-900',
+    accent: 'text-slate-400', 
     xpType: 'Sanity XP',
     level: 5, 
     maxLevel: 50,
     rank: 'Survivor',
-    rankIcon: Activity,
     xp: 15,
     skillPoints: 0,
     paths: ['Stealth', 'Willpower', 'Investigation']
@@ -124,19 +124,18 @@ const GENRES = [
     name: 'Simulation', 
     short: 'SIM',
     icon: Monitor, 
-    color: 'from-blue-400 to-indigo-400', 
+    color: 'from-blue-400 to-indigo-400',
+    accent: 'text-blue-400', 
     xpType: 'Logic XP',
     level: 20, 
     maxLevel: 50,
     rank: 'Architect',
-    rankIcon: Brain,
     xp: 55,
     skillPoints: 2,
     paths: ['Management', 'Efficiency', 'Design']
   },
 ];
 
-// Rarity System (Borrowed from SeasonalPass for consistency)
 const rarityColors = {
   Common: { bg: 'bg-slate-700', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' },
   Rare: { bg: 'bg-blue-900', border: 'border-blue-500', text: 'text-blue-300', glow: 'shadow-blue-500/50' },
@@ -149,7 +148,6 @@ const rarityColors = {
 // Generate Mock Progression Levels
 const generateProgressionLevels = (genreId) => {
   const levels = [];
-  const rewardTypes = ['Ability', 'Equipment', 'Companion', 'Currency'];
   
   for (let i = 1; i <= 50; i++) {
     const rarity = i % 25 === 0 ? 'Godlike' : 
@@ -262,58 +260,63 @@ const RewardModal = ({ level, onClose }) => {
              </Button>
            </div>
         </div>
-
       </motion.div>
     </motion.div>
   );
 };
 
 
-// Progression Node Component
-const LevelNode = ({ levelData, onClick }) => {
+// Progression Node Component (Updated for Bottom Bar)
+const LevelNode = ({ levelData, onClick, isActive }) => {
   const { level, isUnlocked, cardReward } = levelData;
   const rarity = rarityColors[cardReward.rarity];
 
   return (
     <motion.div
-      whileHover={{ scale: 1.05, y: -5 }}
       onClick={() => onClick(levelData)}
-      className={`relative flex-shrink-0 w-32 h-40 cursor-pointer group`}
+      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-300 ${
+        isActive ? 'w-40 -translate-y-6' : 'w-24'
+      }`}
     >
-      {/* Connector Line (visual only, simplified) */}
-      <div className={`absolute top-1/2 left-full w-8 h-1 -translate-y-1/2 -z-10 ${isUnlocked ? 'bg-blue-500/50' : 'bg-slate-800'}`} />
-
-      <div className={`w-full h-full rounded-2xl border transition-all duration-300 relative overflow-hidden flex flex-col items-center justify-center p-2 ${
-        isUnlocked 
-          ? 'bg-slate-800/80 border-blue-500/30 hover:border-blue-400' 
-          : 'bg-slate-900/50 border-white/5 grayscale opacity-60'
-      }`}>
-         {/* Top Label */}
-         <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">
-           Level {level}
+      {/* Node Content */}
+      <div className={`flex flex-col items-center gap-3 transition-all duration-300`}>
+         
+         {/* Top Info (Only visible if Active or Hovered) */}
+         <div className={`text-center transition-all duration-300 ${isActive || isUnlocked ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'}`}>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Level {level}</div>
+            {isActive && <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/30">CURRENT</Badge>}
          </div>
 
-         {/* Reward Icons Preview */}
-         <div className="flex flex-col items-center gap-2 mt-2">
-            <div className={`w-12 h-16 rounded bg-slate-700 border ${rarity.border} shadow-lg relative overflow-hidden`}>
-               {/* Tiny Card Preview */}
-               <div className={`absolute inset-0 bg-gradient-to-br ${rarity.bg} opacity-50`} />
-               <div className="absolute inset-0 flex items-center justify-center">
-                 <Star className="w-4 h-4 text-white/80" />
-               </div>
+         {/* Card Visual */}
+         <div className={`
+           relative rounded-lg border transition-all duration-300 overflow-hidden shadow-lg
+           ${isActive 
+             ? `w-32 h-44 ${rarity.border} ring-4 ring-blue-500/20 z-20` 
+             : `w-20 h-28 border-white/10 hover:border-white/30 hover:w-24 hover:h-32 hover:-translate-y-2 z-10`
+           }
+           ${isUnlocked ? 'bg-slate-800' : 'bg-slate-900 grayscale opacity-60'}
+         `}>
+            <img src={cardReward.image} alt="Reward" className="w-full h-full object-cover" />
+            <div className={`absolute inset-0 bg-gradient-to-t ${isUnlocked ? 'from-black/80' : 'from-black/95'} to-transparent`} />
+            
+            {/* Lock/Unlock Icon */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+               {isUnlocked ? (
+                 <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/50">
+                    <Check className="w-3 h-3 text-white" />
+                 </div>
+               ) : (
+                 <Lock className="w-4 h-4 text-white/40" />
+               )}
             </div>
-            <div className="flex items-center gap-1 text-[9px] text-slate-400 bg-black/40 px-2 py-0.5 rounded-full">
-              <Shield className="w-2.5 h-2.5" /> + Equip
-            </div>
-         </div>
 
-         {/* Status Icon */}
-         <div className={`absolute bottom-2 w-6 h-6 rounded-full flex items-center justify-center ${
-           isUnlocked ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/40' : 'bg-slate-700 text-slate-500'
-         }`}>
-           {isUnlocked ? <Check className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+            {/* Rarity Stripe */}
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${rarityColors[cardReward.rarity].bg.replace('bg-', 'from-').replace('900', '500')} to-transparent`} />
          </div>
       </div>
+
+      {/* Connection Line Segment */}
+      <div className={`absolute bottom-[-10px] left-1/2 w-[200%] h-1 bg-slate-800 -z-10 ${isUnlocked ? 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]' : ''}`} />
     </motion.div>
   );
 };
@@ -326,6 +329,7 @@ export default function GenreMastery({ onClose }) {
   const [viewingLevel, setViewingLevel] = useState(null);
   const scrollContainerRef = useRef(null);
 
+  // Load progression when genre changes
   useEffect(() => {
     if (selectedGenre) {
       setProgressionData(generateProgressionLevels(selectedGenre.id));
@@ -335,13 +339,7 @@ export default function GenreMastery({ onClose }) {
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, x: -50 },
-    show: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
+    show: { opacity: 1, x: 0, transition: { staggerChildren: 0.05 } }
   };
 
   const itemVariants = {
@@ -352,7 +350,7 @@ export default function GenreMastery({ onClose }) {
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
       const { current } = scrollContainerRef;
-      const scrollAmount = 300;
+      const scrollAmount = 400;
       current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -360,19 +358,20 @@ export default function GenreMastery({ onClose }) {
     }
   };
 
+  // Featured Reward (The next big unlock)
+  const nextBigUnlock = progressionData.find(p => !p.isUnlocked && (p.cardReward.rarity === 'Legendary' || p.cardReward.rarity === 'Mythical')) || progressionData[progressionData.length - 1];
+
   return (
     <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-        
-        {/* Dynamic Glow based on selection */}
         {selectedGenre && (
           <motion.div 
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.3 }}
-            className={`absolute left-0 top-0 bottom-0 w-full bg-gradient-to-r ${selectedGenre.color} blur-[120px] opacity-20`}
+            animate={{ opacity: 0.15 }}
+            className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} blur-[150px]`}
           />
         )}
       </div>
@@ -385,71 +384,47 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* Vertical Sidebar Column */}
-      <div className="h-full flex flex-col justify-center px-8 z-20 overflow-y-auto no-scrollbar py-8 border-r border-white/5 bg-black/20 backdrop-blur-xl">
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col gap-4"
-        >
-          {GENRES.map((genre) => {
-            const Icon = genre.icon;
-            const isSelected = selectedGenre?.id === genre.id;
-            
-            return (
-              <motion.button
-                key={genre.id}
-                variants={itemVariants}
-                onClick={() => setSelectedGenre(genre)}
-                whileHover={{ scale: 1.05, x: 5 }}
-                whileTap={{ scale: 0.95 }}
-                className={`group relative w-20 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 border ${
-                  isSelected 
-                    ? 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
-                    : 'border-white/10 hover:border-white/30'
-                }`}
-                style={{
-                  background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
-                }}
-              >
-                {/* Icon */}
-                <div className={`transition-all duration-300 ${
-                  isSelected 
-                    ? `text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]` 
-                    : 'text-slate-400 group-hover:text-white'
-                }`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                
-                {/* Label */}
-                <span className={`mt-2 text-[9px] font-bold uppercase tracking-wider transition-colors ${
-                  isSelected ? 'text-white' : 'text-slate-500 group-hover:text-white'
-                }`}>
-                  {genre.short || genre.name}
-                </span>
-
-                {/* Left Active Indicator Bar */}
-                {isSelected && (
-                  <motion.div 
-                    layoutId="activeBar"
-                    className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b ${genre.color}`} 
-                  />
-                )}
-
-                {/* Hover Glow */}
-                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${genre.color} opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none`} />
-              </motion.button>
-            );
-          })}
-        </motion.div>
+      {/* LEFT SIDEBAR: Genre Selection */}
+      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
+        <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col gap-6 w-full items-center"
+          >
+            {GENRES.map((genre) => {
+              const Icon = genre.icon;
+              const isSelected = selectedGenre?.id === genre.id;
+              
+              return (
+                <motion.button
+                  key={genre.id}
+                  variants={itemVariants}
+                  onClick={() => setSelectedGenre(genre)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`group relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300 border ${
+                    isSelected 
+                      ? 'border-white/60 shadow-[0_0_25px_rgba(255,255,255,0.3)] bg-white/10' 
+                      : 'border-white/10 hover:border-white/30 bg-white/5'
+                  }`}
+                >
+                  <Icon className={`w-7 h-7 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  {isSelected && (
+                    <motion.div layoutId="activeBar" className={`absolute -left-4 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b ${genre.color}`} />
+                  )}
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col z-10 overflow-hidden">
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
@@ -457,67 +432,192 @@ export default function GenreMastery({ onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col p-12 h-full overflow-hidden"
+              className="flex-1 flex flex-col h-full"
             >
-              {/* Header Section */}
-              <div className="flex items-center gap-6 mb-12">
-                 <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center shadow-2xl`}>
-                    <selectedGenre.icon className="w-10 h-10 text-white" />
-                 </div>
-                 <div>
-                   <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 uppercase tracking-tighter">
-                     {selectedGenre.name}
-                   </h2>
-                   <div className="flex items-center gap-4 mt-2">
-                     <Badge variant="outline" className="border-white/20 text-white/60">Rank: {selectedGenre.rank}</Badge>
-                     <Badge variant="outline" className="border-white/20 text-white/60">Level {selectedGenre.level} / {selectedGenre.maxLevel}</Badge>
-                     <div className="h-1.5 w-32 bg-slate-800 rounded-full overflow-hidden">
-                       <div className="h-full bg-white w-[75%]" />
+              
+              {/* SCROLLABLE TOP CONTENT */}
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-64"> {/* Padding bottom for fixed track */}
+                <div className="max-w-7xl mx-auto p-8 md:p-12 w-full">
+                  
+                  {/* HEADER: Title & Progress */}
+                  <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-12">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
+                          <selectedGenre.icon className="w-3 h-3 mr-2" />
+                          {selectedGenre.rank}
+                        </Badge>
+                        <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
+                          Level {selectedGenre.level} / {selectedGenre.maxLevel}
+                        </Badge>
+                      </div>
+                      <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">
+                        {selectedGenre.name}
+                        <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white/60 to-white/10 tracking-[0.5em] mt-2">
+                          MASTERY TRACK
+                        </span>
+                      </h1>
+                    </div>
+                    
+                    {/* Progress Stats Card */}
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl w-full md:w-auto min-w-[300px]">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Season Progress</span>
+                        <span className="text-white font-bold">{selectedGenre.xp}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-4">
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${selectedGenre.xp}%` }} 
+                          transition={{ duration: 1.5, ease: "circOut" }}
+                          className={`h-full bg-gradient-to-r ${selectedGenre.color} shadow-[0_0_15px_currentColor]`}
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                           <div className="text-white font-bold text-lg">12</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Unlocks</div>
+                        </div>
+                        <div>
+                           <div className="text-white font-bold text-lg">840</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Power</div>
+                        </div>
+                        <div>
+                           <div className="text-white font-bold text-lg">4d</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Time Left</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FEATURED SPOTLIGHT (Celestial Guardian Style) */}
+                  {nextBigUnlock && (
+                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-3xl mb-16 group">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-10 group-hover:opacity-15 transition-opacity duration-1000`} />
+                      
+                      <div className="grid lg:grid-cols-2 gap-0">
+                         {/* Content Side */}
+                         <div className="p-10 md:p-14 flex flex-col justify-center relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-200 text-xs font-bold uppercase tracking-wider w-fit mb-6">
+                              <Sparkles className="w-3 h-3" /> Next Major Reward • Level {nextBigUnlock.level}
+                            </div>
+                            
+                            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+                              {nextBigUnlock.cardReward.name}
+                            </h2>
+                            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-md">
+                              {nextBigUnlock.cardReward.description} Unlock this exclusive reward to dominate the battlefield with enhanced capabilities and prestige.
+                            </p>
+                            
+                            <div className="flex items-center gap-4">
+                              <Button className="h-12 px-8 bg-white text-black hover:bg-slate-200 font-bold rounded-lg" onClick={() => setViewingLevel(nextBigUnlock)}>
+                                Inspect Reward
+                              </Button>
+                              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                                <Lock className="w-4 h-4" /> Requires Level {nextBigUnlock.level}
+                              </div>
+                            </div>
+                         </div>
+
+                         {/* Image Side */}
+                         <div className="relative h-[400px] lg:h-auto overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80 z-10 lg:bg-gradient-to-r" />
+                            <img 
+                              src={nextBigUnlock.cardReward.image} 
+                              alt="Featured" 
+                              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                            />
+                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STATS GRID */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <TrendingUp className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">Top 1%</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Global Ranking</div>
                      </div>
-                   </div>
-                 </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Target className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">98%</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Accuracy Rating</div>
+                     </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Users className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">1,240</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Clan Contributions</div>
+                     </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Clock className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">342h</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Time Played</div>
+                     </div>
+                  </div>
+
+                </div>
               </div>
 
-              {/* Reward Track Section */}
-              <div className="flex-1 flex flex-col justify-center relative">
-                 <div className="flex items-center justify-between mb-6">
-                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                     <Trophy className="w-5 h-5 text-yellow-500" /> Mastery Reward Track
-                   </h3>
-                   <div className="flex gap-2">
-                     <button onClick={() => scroll('left')} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronLeft /></button>
-                     <button onClick={() => scroll('right')} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronRight /></button>
-                   </div>
-                 </div>
+              {/* FIXED BOTTOM TRACK (Cinematic) */}
+              <div className="absolute bottom-0 left-0 right-0 h-48 z-40">
+                 {/* Glass Background */}
+                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]" />
+                 
+                 {/* Decorative Line */}
+                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                 {/* Scrollable Track */}
-                 <div 
-                   ref={scrollContainerRef}
-                   className="flex items-center gap-8 overflow-x-auto pb-12 pt-4 px-4 scrollbar-hide snap-x"
-                   style={{ scrollBehavior: 'smooth' }}
-                 >
-                   {progressionData.map((level, index) => (
-                     <React.Fragment key={level.level}>
-                        <LevelNode 
-                          levelData={level} 
-                          onClick={setViewingLevel} 
-                        />
-                        {/* Connecting Line between nodes */}
-                        {index < progressionData.length - 1 && (
-                          <div className={`h-1 w-16 flex-shrink-0 rounded-full ${level.isUnlocked ? 'bg-blue-500/30' : 'bg-slate-800'}`} />
-                        )}
-                     </React.Fragment>
-                   ))}
+                 <div className="relative h-full flex flex-col justify-center">
+                    {/* Track Header */}
+                    <div className="absolute top-4 left-8 right-8 flex justify-between items-center z-10 pointer-events-none">
+                       <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Trophy className="w-3 h-3" /> Reward Progression Track
+                       </div>
+                       <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em]">
+                          Scroll to Navigate
+                       </div>
+                    </div>
+
+                    {/* Left/Right Controls */}
+                    <button 
+                      onClick={() => scroll('left')}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => scroll('right')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    {/* Scrollable Items */}
+                    <div 
+                      ref={scrollContainerRef}
+                      className="flex items-center gap-0 px-12 overflow-x-auto scrollbar-hide h-full snap-x pt-6"
+                      style={{ scrollBehavior: 'smooth' }}
+                    >
+                      <div className="flex items-end gap-1 min-w-max pb-4">
+                        {progressionData.map((level, index) => (
+                           <LevelNode 
+                             key={level.level}
+                             levelData={level} 
+                             isActive={level.level === 36} // Mock active state
+                             onClick={setViewingLevel} 
+                           />
+                        ))}
+                      </div>
+                    </div>
                  </div>
               </div>
 
             </motion.div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-center opacity-30">
-              <div>
-                 <ArrowLeft className="w-12 h-12 mx-auto mb-4 animate-bounce-x" />
-                 <h1 className="text-4xl font-black uppercase tracking-widest text-white/50">Select a Discipline</h1>
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
+              <Orbit className="w-24 h-24 text-white mb-6 animate-spin-slow" />
+              <h1 className="text-5xl font-black uppercase tracking-widest text-white/50 mb-4">Select a Discipline</h1>
+              <p className="text-white/30 max-w-md mx-auto text-lg">Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.</p>
             </div>
           )}
         </AnimatePresence>
