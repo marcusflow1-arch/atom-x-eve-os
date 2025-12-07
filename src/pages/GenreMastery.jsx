@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, Lock, Unlock, Star, Hexagon, Swords, 
-  Trophy, Flame, Sparkles, Orbit, ArrowLeft
+  Trophy, Flame, Sparkles, Orbit, ArrowLeft,
+  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -12,64 +13,124 @@ import { useNavigate } from 'react-router-dom';
 
 const GENRES = [
   { 
-    id: 'fps', 
-    name: 'First Person Shooter', 
-    short: 'FPS',
-    icon: Crosshair, 
-    color: 'from-cyan-500 to-blue-600', 
-    xpType: 'Tactical XP',
-    level: 28, 
-    maxLevel: 50,
-    rank: 'Elite',
-    rankIcon: Shield,
-    xp: 78,
-    skillPoints: 3,
-    paths: ['Reflex', 'Weaponry', 'Tactics']
-  },
-  { 
-    id: 'rpg', 
-    name: 'Role Playing Game', 
-    short: 'RPG',
-    icon: Flame, 
-    color: 'from-purple-500 to-pink-600', 
-    xpType: 'Story XP',
-    level: 15, 
-    maxLevel: 50,
-    rank: 'Adept',
-    rankIcon: Sparkles,
-    xp: 45,
-    skillPoints: 1,
-    paths: ['Magic', 'Charisma', 'Scaling']
-  },
-  { 
-    id: 'mmo', 
-    name: 'Massively Multiplayer', 
+    id: 'mmorpg', 
+    name: 'MMORPG', 
     short: 'MMO',
     icon: Globe, 
-    color: 'from-green-500 to-emerald-600', 
-    xpType: 'Progression XP',
+    color: 'from-purple-500 to-indigo-600', 
+    xpType: 'Social XP',
     level: 42, 
     maxLevel: 50,
     rank: 'Warlord',
     rankIcon: Swords,
     xp: 92,
     skillPoints: 5,
-    paths: ['Synergy', 'Buffs', 'Command']
+    paths: ['Synergy', 'Raid', 'Trade']
   },
   { 
-    id: 'strategy', 
-    name: 'Strategy & RTS', 
-    short: 'RTS',
-    icon: Brain, 
-    color: 'from-amber-500 to-orange-600', 
-    xpType: 'Tactical XP',
-    level: 10, 
+    id: 'scifi', 
+    name: 'Sci-Fi', 
+    short: 'SCI',
+    icon: Rocket, 
+    color: 'from-cyan-500 to-blue-600', 
+    xpType: 'Tech XP',
+    level: 28, 
     maxLevel: 50,
-    rank: 'Tactician',
-    rankIcon: Activity,
-    xp: 20,
+    rank: 'Pilot',
+    rankIcon: Shield,
+    xp: 78,
+    skillPoints: 3,
+    paths: ['Cybernetics', 'Spaceflight', 'Hacking']
+  },
+  { 
+    id: 'fantasy', 
+    name: 'Fantasy', 
+    short: 'FAN',
+    icon: Crown, 
+    color: 'from-amber-400 to-orange-500', 
+    xpType: 'Magic XP',
+    level: 15, 
+    maxLevel: 50,
+    rank: 'Mage',
+    rankIcon: Sparkles,
+    xp: 45,
+    skillPoints: 1,
+    paths: ['Sorcery', 'Enchanting', 'Lore']
+  },
+  { 
+    id: 'action', 
+    name: 'Action', 
+    short: 'ACT',
+    icon: Swords, 
+    color: 'from-red-500 to-rose-600', 
+    xpType: 'Combat XP',
+    level: 33, 
+    maxLevel: 50,
+    rank: 'Warrior',
+    rankIcon: Swords,
+    xp: 60,
     skillPoints: 2,
-    paths: ['Economy', 'Control', 'Prediction']
+    paths: ['Combo', 'Reflex', 'Power']
+  },
+  { 
+    id: 'shooter', 
+    name: 'Shooter', 
+    short: 'FPS',
+    icon: Crosshair, 
+    color: 'from-emerald-500 to-green-600', 
+    xpType: 'Aim XP',
+    level: 50, 
+    maxLevel: 50,
+    rank: 'Sniper',
+    rankIcon: Crosshair,
+    xp: 99,
+    skillPoints: 8,
+    paths: ['Precision', 'Tactics', 'Loadout']
+  },
+  { 
+    id: 'adventure', 
+    name: 'Adventure', 
+    short: 'ADV',
+    icon: Map, 
+    color: 'from-yellow-400 to-orange-400', 
+    xpType: 'Discovery XP',
+    level: 12, 
+    maxLevel: 50,
+    rank: 'Explorer',
+    rankIcon: Globe,
+    xp: 30,
+    skillPoints: 1,
+    paths: ['Survival', 'Navigation', 'Crafting']
+  },
+  { 
+    id: 'fear', 
+    name: 'Fear', 
+    short: 'HOR',
+    icon: Ghost, 
+    color: 'from-slate-800 to-gray-900', 
+    xpType: 'Sanity XP',
+    level: 5, 
+    maxLevel: 50,
+    rank: 'Survivor',
+    rankIcon: Activity,
+    xp: 15,
+    skillPoints: 0,
+    paths: ['Stealth', 'Willpower', 'Investigation']
+  },
+  { 
+    id: 'simulation', 
+    name: 'Simulation', 
+    short: 'SIM',
+    icon: Monitor, 
+    color: 'from-blue-400 to-indigo-400', 
+    xpType: 'Logic XP',
+    level: 20, 
+    maxLevel: 50,
+    rank: 'Architect',
+    rankIcon: Brain,
+    xp: 55,
+    skillPoints: 2,
+    paths: ['Management', 'Efficiency', 'Design']
   },
 ];
 
@@ -273,7 +334,7 @@ export default function GenreMastery({ onClose }) {
         {/* Body Grid */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar: Genre Selector */}
-          <div className="w-24 flex flex-col items-center py-8 gap-4 border-r border-white/5 bg-black/40 backdrop-blur-md z-20">
+          <div className="w-32 flex flex-col items-center py-8 gap-6 border-r border-white/5 bg-black/40 backdrop-blur-md z-20 overflow-y-auto">
             {GENRES.map((genre) => {
               const Icon = genre.icon;
               const isActive = selectedGenre.id === genre.id;
@@ -281,20 +342,37 @@ export default function GenreMastery({ onClose }) {
                 <button
                   key={genre.id}
                   onClick={() => setSelectedGenre(genre)}
-                  className={`group relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                  className={`group relative w-24 h-24 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 border ${
                     isActive 
-                      ? `bg-gradient-to-br ${genre.color} shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-110` 
-                      : 'bg-white/5 hover:bg-white/10 text-slate-500'
+                      ? 'border-white/40 scale-105' 
+                      : 'border-white/10 hover:border-white/20 hover:scale-105'
                   }`}
+                  style={{
+                    background: isActive ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    boxShadow: isActive ? '0 0 20px rgba(255, 255, 255, 0.1)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  }}
                 >
-                  <Icon className={`w-8 h-8 ${isActive ? 'text-white' : 'group-hover:text-white transition-colors'}`} />
-                  {/* Tooltip-ish label */}
-                  <div className="absolute left-full ml-4 px-3 py-1 bg-black border border-white/20 rounded text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                    {genre.name}
+                  {/* Icon Badge */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                    isActive 
+                      ? `bg-gradient-to-br ${genre.color} text-white` 
+                      : 'bg-white/10 text-slate-400 group-hover:text-white group-hover:bg-white/20'
+                  }`}>
+                    <Icon className="w-5 h-5" />
                   </div>
-                  {/* Active Indicator */}
+                  
+                  {/* Label */}
+                  <span className={`text-[10px] font-bold uppercase tracking-wider text-center px-1 ${
+                    isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'
+                  }`}>
+                    {genre.name}
+                  </span>
+
+                  {/* Active Indicator Glow */}
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-0.5 w-1 h-8 bg-white rounded-r-full" />
+                    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${genre.color} opacity-20 pointer-events-none`} />
                   )}
                 </button>
               );
