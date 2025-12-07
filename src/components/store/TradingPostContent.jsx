@@ -856,35 +856,39 @@ export default function TradingPostContent() {
         </TabsContent>
 
         <TabsContent value="subtab" className="h-[calc(100vh-280px)]">
-           <div className="flex h-full w-full overflow-hidden">
-              <div className="w-[20%] h-full border-r border-white/10 bg-slate-950/30 flex flex-col">
-                  <div className="p-6 border-b border-white/5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Grid className="w-4 h-4 text-cyan-500" />
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Game Genres</h3>
+           <div className="flex gap-6 h-full">
+              {/* Category Menu Box (Left Side) */}
+              <aside className="w-64 flex-shrink-0 h-full">
+                <div className="h-full p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Grid className="w-4 h-4 text-cyan-500" />
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Game Genres</h3>
+                      </div>
+                      <p className="text-[10px] text-slate-400">Select a category</p>
                     </div>
-                    <p className="text-[10px] text-slate-500">Select a category</p>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-1">
-                    {[
-                      "MMORPG", "Sci-Fi", "Fantasy", "Shooter", "RPG", "Action", "Adventure", 
-                      "Strategy", "Sports", "Racing", "Simulation", "Puzzle", "Horror", 
-                      "Survival", "MOBA", "Battle Royale", "Sandbox", "Stealth", "Fighting", "Platformer"
-                    ].map((genre) => (
-                      <button 
-                        key={genre}
-                        onClick={() => { setSubTabGenre(genre); setSubTabGame(null); }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${subTabGenre === genre ? 'bg-cyan-900/20 text-cyan-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                      >
-                        {genre}
-                        {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-500" />}
-                      </button>
-                    ))}
-                  </div>
-              </div>
+                    
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-2">
+                      {[
+                        "MMORPG", "Sci-Fi", "Fantasy", "Shooter", "RPG", "Action", "Adventure", 
+                        "Strategy", "Sports", "Racing", "Simulation", "Puzzle", "Horror", 
+                        "Survival", "MOBA", "Battle Royale", "Sandbox", "Stealth", "Fighting", "Platformer"
+                      ].map((genre) => (
+                        <button 
+                          key={genre}
+                          onClick={() => { setSubTabGenre(genre); setSubTabGame(null); }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${subTabGenre === genre ? 'bg-cyan-900/20 text-cyan-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        >
+                          {genre}
+                          {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-500" />}
+                        </button>
+                      ))}
+                    </div>
+                </div>
+              </aside>
               
-              <div className="w-[80%] h-full p-6 overflow-y-auto bg-slate-900/20">
+              {/* Content Area (Right Side) */}
+              <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar">
                   {!subTabGenre ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500">
                       <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
@@ -941,6 +945,7 @@ export default function TradingPostContent() {
 
                       <div className="flex flex-1 gap-6 overflow-hidden">
                           <div className="w-2/3 flex flex-col gap-4">
+                              {/* Content: Filters & Items (No Box) */}
                               <div className="flex items-center gap-2 overflow-x-auto pb-2">
                                   {['All Items', 'Weapons', 'Armor', 'Consumables', 'Materials'].map((filter) => (
                                       <button key={filter} className="px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all whitespace-nowrap">
@@ -952,7 +957,8 @@ export default function TradingPostContent() {
                                   </div>
                               </div>
 
-                              <div className="flex-1 bg-slate-950/50 rounded-xl border border-white/10 p-4 overflow-y-auto custom-scrollbar shadow-inner">
+                              {/* Items Grid - Removed Outer Box Styles */}
+                              <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
                                   <div className="grid grid-cols-5 gap-3">
                                       {getGameDetails(subTabGame).items.map((item) => (
                                           <div 
