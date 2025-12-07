@@ -25,15 +25,6 @@ const ORBITAL_ITEMS = [
     description: 'View & Unlock Abilities'
   },
   { 
-    id: 'battle', 
-    label: 'Battle Mode', 
-    icon: Swords, 
-    color: 'from-red-500 to-orange-500', 
-    route: 'Challenges',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
-    description: 'Enter Combat Arena'
-  },
-  { 
     id: 'console', 
     label: 'Console', 
     icon: Gamepad2, 
