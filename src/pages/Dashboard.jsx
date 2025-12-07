@@ -79,15 +79,6 @@ const ORBITAL_ITEMS = [
     image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
     description: 'Your Game Library'
   },
-  { 
-    id: 'settings', 
-    label: 'Settings', 
-    icon: Settings, 
-    color: 'from-slate-500 to-gray-500', 
-    route: 'Profile',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
-    description: 'System Configuration'
-  },
 ];
 
 // Secondary Dock Items
@@ -394,6 +385,16 @@ export default function Dashboard() {
       </AnimatePresence>
 
 
+
+      {/* Settings Gear Icon - Top Right */}
+      <motion.button
+        className="absolute top-4 right-4 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+        onClick={() => navigate(createPageUrl('Profile'))}
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Settings className="w-6 h-6" />
+      </motion.button>
 
       {/* Mode Toggle at Top with Arrows */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4">
