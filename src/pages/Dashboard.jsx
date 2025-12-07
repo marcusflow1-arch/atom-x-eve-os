@@ -21,7 +21,7 @@ const ORBITAL_ITEMS = [
     label: 'Skill Tree', 
     icon: Layers, 
     color: 'from-purple-500 to-pink-500', 
-    route: 'Achievements',
+    route: 'GenreMastery',
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
     description: 'View & Unlock Abilities'
   },
