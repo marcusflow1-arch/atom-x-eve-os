@@ -16,6 +16,7 @@ import SettingsPanel from '../components/dashboard/SettingsPanel';
 import GenreMastery from './GenreMastery';
 import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
 import AIHomeOverlay from '../components/dashboard/AIHomeOverlay';
+import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -51,7 +52,7 @@ const ORBITAL_ITEMS = [
     label: 'AI Story', 
     icon: BookOpen, 
     color: 'from-indigo-500 to-purple-500', 
-    route: 'Storyline',
+    // route removed to open in overlay
     image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
     description: 'Continue Your Journey'
   },
@@ -302,7 +303,7 @@ export default function Dashboard() {
               }}
             >
               {/* Header - Hidden for full screen apps that have their own header */}
-              {!['skill-tree', 'battle', 'home'].includes(activeDrawer.id) && (
+              {!['skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) && (
                 <div className="p-6 flex items-center justify-between">
                   <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
                   <button 
@@ -314,7 +315,7 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Close Button Overlay for Full Screen Apps */}
+              {/* Close Button Overlay for Full Screen Apps (Story has its own internal close button) */}
               {['battle', 'home'].includes(activeDrawer.id) && (
                 <button 
                   onClick={() => setActiveDrawer(null)}
@@ -336,6 +337,8 @@ export default function Dashboard() {
                   <BattleModeOverlay onClose={() => setActiveDrawer(null)} />
                 ) : activeDrawer.id === 'home' ? (
                   <AIHomeOverlay onClose={() => setActiveDrawer(null)} />
+                ) : activeDrawer.id === 'story' ? (
+                  <AIStoryOverlay onClose={() => setActiveDrawer(null)} />
                 ) : activeDrawer.id === 'games' ? (
                   <div className="space-y-6">
                     {/* Pinned Games Header */}
