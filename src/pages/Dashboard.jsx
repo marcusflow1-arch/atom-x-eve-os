@@ -418,9 +418,9 @@ export default function Dashboard() {
         <Settings className="w-6 h-6" />
       </motion.button>
 
-      {/* Mode Toggle Button - Top Left */}
+      {/* Mode Toggle Button - Top Center */}
       <motion.button
-        className="absolute top-4 left-4 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+        className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
         onClick={toggleMode}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
