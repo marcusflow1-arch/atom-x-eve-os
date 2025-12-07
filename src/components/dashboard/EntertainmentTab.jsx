@@ -29,17 +29,8 @@ export default function EntertainmentTab() {
 
   return (
     <div className="flex h-full gap-3 p-3">
-      {/* Left Sidebar - Liquid Glass Service Icons */}
-      <div 
-        className="w-[90px] flex-shrink-0 flex flex-col gap-2 p-3 rounded-3xl overflow-y-auto"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-        }}
-      >
+      {/* Left Sidebar - Content Only */}
+      <div className="w-[90px] flex-shrink-0 flex flex-col gap-2 p-3 overflow-y-auto">
         {streamingServices.map((service) => (
           <motion.button
             key={service.id}
@@ -79,17 +70,8 @@ export default function EntertainmentTab() {
         ))}
       </div>
 
-      {/* Right Stage - Streaming Content */}
-      <div 
-        className="flex-1 rounded-3xl overflow-hidden relative"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
-        }}
-      >
+      {/* Right Stage - Content Only */}
+      <div className="flex-1 overflow-hidden relative">
         {/* Service Header Bar */}
         <div 
           className="absolute top-0 left-0 right-0 z-10 h-12 flex items-center px-4 gap-3"

@@ -432,13 +432,9 @@ export default function Dashboard() {
               initial={{ opacity: 0, rotate: -90 }}
               animate={{ opacity: 1, rotate: 0 }}
               exit={{ opacity: 0, rotate: 90 }}
-              className="w-full h-full"
+              className="flex items-center justify-center w-full h-full"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=100&h=100&fit=crop" 
-                alt="User UI" 
-                className="w-full h-full object-cover opacity-80 hover:opacity-100" 
-              />
+              <User className="w-6 h-6" />
             </motion.div>
           ) : (
             <motion.div

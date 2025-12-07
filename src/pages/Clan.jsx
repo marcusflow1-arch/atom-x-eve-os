@@ -79,10 +79,8 @@ export default function ClanPage() {
             {/* Main Content Area with Futuristic Dashboard Layout */}
             <div className="flex-grow flex flex-col h-screen overflow-hidden relative z-10 p-6 gap-6">
                 
-                {/* Floating Header Card */}
-                <header className="flex-shrink-0 p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl flex items-center justify-between relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10 pointer-events-none" />
-                    
+                {/* Header Content */}
+                <header className="flex-shrink-0 p-6 flex items-center justify-between relative overflow-hidden">
                     <div className="flex items-center gap-6 relative z-10">
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500 animate-pulse"></div>
@@ -120,7 +118,6 @@ export default function ClanPage() {
                             </Button>
                         )}
                         
-                        <ThemeToggle selectedTheme={selectedTheme} onThemeSelect={setSelectedTheme} />
                     </div>
                 </header>
 
@@ -168,9 +165,7 @@ export default function ClanPage() {
                     </div>
 
                     {/* Center Content Area */}
-                    <main className="flex-grow bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
-                        
+                    <main className="flex-grow overflow-hidden relative flex flex-col">
                         <div className="flex-grow overflow-y-auto p-6 custom-scrollbar relative z-10">
                             <AnimatePresence mode="wait">
                                 <motion.div
