@@ -482,198 +482,198 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* LEFT SIDEBAR: Genre Selection (Restored with Octagon Style) */}
-      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
-        <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
+      {/* CENTRAL OCTAGON SELECTOR */}
+      <AnimatePresence>
+        {!selectedGenre && (
           <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="flex flex-col gap-6 w-full items-center"
+             initial={{ opacity: 0, scale: 0.8 }}
+             animate={{ opacity: 1, scale: 1 }}
+             exit={{ opacity: 0, scale: 1.2, filter: 'blur(20px)' }}
+             className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
           >
-            {GENRES.map((genre) => {
-              const Icon = genre.icon;
-              const isSelected = selectedGenre?.id === genre.id;
-              
-              return (
-                <motion.button
-                  key={genre.id}
-                  variants={itemVariants}
-                  onClick={() => setSelectedGenre(genre)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`relative w-16 h-16 flex items-center justify-center transition-all duration-300 z-20`}
-                >
-                  <div className={`
-                    relative w-full h-full flex items-center justify-center
-                    before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-br ${genre.color} before:opacity-20 before:blur-md
-                    after:content-[''] after:absolute after:inset-0 after:border-2 ${isSelected ? 'after:border-white' : 'after:border-white/20'} after:rotate-45
-                  `}
-                  style={{
-                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                    background: isSelected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(10px)',
-                  }}
-                  >
-                     <Icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-slate-400'} transition-colors`} />
-                  </div>
-                  {isSelected && (
-                    <motion.div 
-                      layoutId="activeSidebarGlow"
-                      className="absolute inset-0 bg-white/10 blur-xl rounded-full -z-10"
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
+             <div className="relative w-[800px] h-[800px] flex items-center justify-center pointer-events-auto">
+                {/* Central Core */}
+                <div className="absolute w-64 h-64 bg-white/5 backdrop-blur-3xl rounded-full border border-white/10 flex flex-col items-center justify-center text-center p-8 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+                   <Hexagon className="w-16 h-16 text-white/20 mb-4 animate-pulse" />
+                   <h2 className="text-2xl font-black uppercase tracking-widest text-white mb-2">Genre Mastery</h2>
+                   <p className="text-xs text-slate-400 leading-relaxed">Select a discipline to view your season progress and rewards.</p>
+                </div>
+                
+                {/* Rings */}
+                <div className="absolute inset-0 border border-white/5 rounded-full scale-75 animate-spin-slow duration-[60s]" />
+                <div className="absolute inset-0 border border-white/5 rounded-full scale-100" />
+                
+                {/* Genre Nodes */}
+                {GENRES.map((genre, index) => (
+                  <OctagonShape 
+                    key={genre.id}
+                    rotation={index * (360 / GENRES.length)}
+                    color={genre.color}
+                    icon={genre.icon}
+                    label={genre.short || genre.name}
+                    onClick={() => setSelectedGenre(genre)}
+                  />
+                ))}
+             </div>
           </motion.div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
-      </div>
+        )}
+      </AnimatePresence>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {selectedGenre ? (
+      {/* MAIN CONTENT AREA (Visible when genre selected) */}
+      <AnimatePresence>
+          {selectedGenre && (
             <motion.div
-              key={selectedGenre.id}
+              key="content"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full"
+              className="flex-1 flex flex-col h-full z-10 relative"
             >
+              
+              {/* Back Button */}
+              <button 
+                onClick={() => setSelectedGenre(null)}
+                className="absolute top-6 left-8 z-50 flex items-center gap-2 text-white/50 hover:text-white transition-colors uppercase text-xs font-bold tracking-widest"
+              >
+                <ChevronLeft className="w-4 h-4" /> Return to Nexus
+              </button>
 
               {/* SCROLLABLE TOP CONTENT */}
               <div className="flex-1 overflow-y-auto no-scrollbar pb-64 pt-20"> 
                 <div className="max-w-7xl mx-auto p-8 md:p-12 w-full">
                   
                   {/* HEADER: Title & Progress */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h1 className="text-5xl font-black mb-2 text-white">
-                          {selectedGenre.name}: Season 0
-                        </h1>
-                        <p className="text-white/60">Level {selectedGenre.level} / 20 • Season ends in 45 days</p>
+                  <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-12">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
+                          <selectedGenre.icon className="w-3 h-3 mr-2" />
+                          {selectedGenre.rank}
+                        </Badge>
+                        <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
+                          Level {selectedGenre.level} / 20
+                        </Badge>
+                        <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
+                          SEASON 0
+                        </Badge>
                       </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="text-right px-5 py-2.5 rounded-lg bg-white/5 backdrop-blur-xl border border-white/10">
-                          <div className="text-xs text-white/60 font-medium">Season XP</div>
-                          <div className="text-xl font-bold text-white">{selectedGenre.level * 1000} / 20000</div>
+                      <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">
+                        {selectedGenre.name}
+                        <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white/60 to-white/10 tracking-[0.5em] mt-2">
+                          SEASON 0 PASS
+                        </span>
+                      </h1>
+                    </div>
+                    
+                    {/* Progress Stats Card */}
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl w-full md:w-auto min-w-[300px]">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Season Progress</span>
+                        <span className="text-white font-bold">{selectedGenre.xp}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-4">
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${selectedGenre.xp}%` }} 
+                          transition={{ duration: 1.5, ease: "circOut" }}
+                          className={`h-full bg-gradient-to-r ${selectedGenre.color} shadow-[0_0_15px_currentColor]`}
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                           <div className="text-white font-bold text-lg">12</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Unlocks</div>
+                        </div>
+                        <div>
+                           <div className="text-white font-bold text-lg">840</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Power</div>
+                        </div>
+                        <div>
+                           <div className="text-white font-bold text-lg">4d</div>
+                           <div className="text-[10px] text-slate-500 uppercase">Time Left</div>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* XP Progress Bar */}
-                    <div className="w-full h-2.5 rounded-full overflow-hidden bg-white/5 border border-white/10">
-                      <motion.div
-                        className={`h-full bg-gradient-to-r ${selectedGenre.color}`}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${selectedGenre.xp}%` }}
-                        transition={{ duration: 1 }}
-                      />
-                    </div>
                   </div>
-                  
-                  {/* Limited Edition Rewards Carousel */}
-                  <div className="mb-12">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-                        <Sparkles className="w-6 h-6 text-blue-400" />
-                        Limited Edition Season Rewards
-                      </h2>
-                      <div className="text-sm text-white/60">
-                        Exclusive {selectedGenre.name} rewards
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                      {progressionData.filter(l => ['Legendary', 'Mythical', 'Godlike'].includes(l.cardReward.rarity)).slice(0, 6).map((level) => (
-                        <motion.div
-                          key={level.level}
-                          whileHover={{ scale: 1.03, y: -8 }}
-                          onClick={() => setViewingLevel(level)}
-                          className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl bg-white/5 backdrop-blur-xl border border-white/10"
-                        >
-                          {/* Shine Effect */}
-                          <motion.div
-                            className="absolute inset-0 opacity-15 pointer-events-none bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                            animate={{ x: ['-100%', '200%'] }}
-                            transition={{ duration: 5, repeat: Infinity, repeatDelay: 4 }}
-                          />
-                          
-                          {/* Card Image */}
-                          <img src={level.cardReward.image} alt={level.cardReward.name} className="w-full h-56 object-cover" />
-                          
-                          {/* Gradient Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                          
-                          {/* Content */}
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <Badge className="bg-slate-700/80 text-white border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5">
-                                {level.cardReward.rarity}
-                              </Badge>
-                              <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
-                                Level {level.level}
-                              </Badge>
+
+                  {/* FEATURED SPOTLIGHT */}
+                  {nextBigUnlock && (
+                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-3xl mb-16 group">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-10 group-hover:opacity-15 transition-opacity duration-1000`} />
+                      
+                      <div className="grid lg:grid-cols-2 gap-0">
+                         {/* Content Side */}
+                         <div className="p-10 md:p-14 flex flex-col justify-center relative z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-200 text-xs font-bold uppercase tracking-wider w-fit mb-6">
+                              <Sparkles className="w-3 h-3" /> Next Major Reward • Level {nextBigUnlock.level}
                             </div>
                             
-                            <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{level.cardReward.name}</h3>
-                            <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{level.cardReward.description}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Featured Spotlight (Celestial Guardian Style) */}
-                  {nextBigUnlock && (
-                    <div className="mb-12 p-6 rounded-2xl relative overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10">
-                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-5 animate-pulse`} />
-                      <div className="relative z-10 grid md:grid-cols-2 gap-6 items-center">
-                        <div>
-                          <Badge className="mb-3 text-white text-xs bg-blue-500/20 backdrop-blur-xl border border-blue-400/30">
-                            Season 0 Exclusive
-                          </Badge>
-                          <h2 className="text-3xl font-black mb-3 text-white">{nextBigUnlock.cardReward.name}</h2>
-                          <p className="text-base text-white/70 mb-5">
-                            {nextBigUnlock.cardReward.description} Unlock this exclusive reward at level {nextBigUnlock.level} to gain powerful advantages in battle.
-                          </p>
-                          <div className="flex gap-2.5">
-                            <Button className="bg-blue-600 hover:bg-blue-700 h-10" onClick={() => setViewingLevel(nextBigUnlock)}>
-                              <Play className="w-3.5 h-3.5 mr-1.5" />
-                              Inspect Reward
-                            </Button>
-                            <Button variant="outline" className="h-10">
-                              Learn More
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="relative h-80">
-                          <img 
-                            src={nextBigUnlock.cardReward.image} 
-                            alt="Featured" 
-                            className="w-full h-full object-cover rounded-2xl"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl" />
-                        </div>
+                            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+                              {nextBigUnlock.cardReward.name}
+                            </h2>
+                            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-md">
+                              {nextBigUnlock.cardReward.description} Unlock this exclusive reward to dominate the battlefield with enhanced capabilities and prestige.
+                            </p>
+                            
+                            <div className="flex items-center gap-4">
+                              <Button className="h-12 px-8 bg-white text-black hover:bg-slate-200 font-bold rounded-lg" onClick={() => setViewingLevel(nextBigUnlock)}>
+                                Inspect Reward
+                              </Button>
+                              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                                <Lock className="w-4 h-4" /> Requires Level {nextBigUnlock.level}
+                              </div>
+                            </div>
+                         </div>
+
+                         {/* Image Side */}
+                         <div className="relative h-[400px] lg:h-auto overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80 z-10 lg:bg-gradient-to-r" />
+                            <img 
+                              src={nextBigUnlock.cardReward.image} 
+                              alt="Featured" 
+                              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                            />
+                         </div>
                       </div>
                     </div>
                   )}
+
+                  {/* STATS GRID */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <TrendingUp className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">Top 1%</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Global Ranking</div>
+                     </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Target className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">98%</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Accuracy Rating</div>
+                     </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Users className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">1,240</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Clan Contributions</div>
+                     </div>
+                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
+                        <Clock className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
+                        <div className="text-3xl font-bold text-white mb-1">342h</div>
+                        <div className="text-xs text-slate-400 uppercase tracking-wider">Time Played</div>
+                     </div>
+                  </div>
 
                 </div>
               </div>
 
               {/* FIXED BOTTOM TRACK (Cinematic) */}
-              <div className="absolute bottom-0 left-0 right-0 h-48 z-40 pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 h-48 z-40">
+                 {/* Glass Background */}
+                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]" />
                  
                  {/* Decorative Line */}
                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                 <div className="relative h-full flex flex-col justify-center pointer-events-auto">
+                 <div className="relative h-full flex flex-col justify-center">
                     {/* Track Header */}
                     <div className="absolute top-4 left-8 right-8 flex justify-between items-center z-10 pointer-events-none">
                        <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -719,15 +719,8 @@ export default function GenreMastery({ onClose }) {
               </div>
 
             </motion.div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
-              <Orbit className="w-24 h-24 text-white mb-6 animate-spin-slow" />
-              <h1 className="text-5xl font-black uppercase tracking-widest text-white/50 mb-4">Select a Discipline</h1>
-              <p className="text-white/30 max-w-md mx-auto text-lg">Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.</p>
-            </div>
           )}
       </AnimatePresence>
-      </div>
 
       {/* Reward Detail Overlay */}
       <AnimatePresence>
