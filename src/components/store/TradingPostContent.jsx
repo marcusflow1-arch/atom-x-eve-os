@@ -4,7 +4,8 @@ import {
   Search, Filter, Mic, MicOff, X, Plus, Eye, Clock, Coins, Gavel, ArrowLeftRight,
   Package, Star, Zap, Shield, Sword, Users, Bot, TrendingUp, Calendar, MessageSquare,
   Grid, List, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Tag, Gamepad2, Diamond, Heart, Share2, AlertCircle,
-  CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info
+  CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info,
+  SlidersHorizontal, ScrollText, Database, Hammer
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,125 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
+
+// --- Liquid Glass Components (Reused) ---
+const LiquidCard = ({ children, className = "", onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`
+      relative overflow-hidden rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 
+      shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group ${className}
+    `}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    {children}
+  </div>
+);
+
+// --- Filter Sidebar ---
+const TradingFilterSidebar = ({ 
+  filters, setFilters
+}) => {
+  // Custom Trading Post Categories
+  const categories = [
+    { id: 'all', label: 'All Listings', icon: Grid },
+    { id: 'weapon', label: 'Weapons & Tools', icon: Sword },
+    { id: 'armor', label: 'Armor & Suits', icon: Shield },
+    { id: 'tech', label: 'Tech & Cyberware', icon: Zap },
+    { id: 'magic', label: 'Spells & Tomes', icon: Sparkles },
+    { id: 'blueprint', label: 'Blueprints', icon: ScrollText },
+    { id: 'material', label: 'Raw Materials', icon: Hammer },
+    { id: 'consumable', label: 'Consumables', icon: Database },
+  ];
+
+  const toggleRarity = (r) => {
+    setFilters(prev => ({
+      ...prev,
+      rarity: prev.rarity.includes(r) ? prev.rarity.filter(x => x !== r) : [...prev.rarity, r]
+    }));
+  };
+
+  return (
+    <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
+      {/* Categories */}
+      <div className="mb-6">
+        <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+          Categories
+        </h3>
+        <div className="space-y-1">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setFilters(prev => ({ ...prev, category: cat.id }))}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                filters.category === cat.id 
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <cat.icon className={`w-4 h-4 ${filters.category === cat.id ? 'text-cyan-400' : 'text-slate-500'}`} />
+              <span>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-px bg-white/10 my-4" />
+
+      {/* Rarity Filter */}
+      <div className="mb-6">
+        <h3 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Rarity</h3>
+        <div className="space-y-2">
+          {['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'].map((rarity) => (
+            <label key={rarity} className="flex items-center gap-3 cursor-pointer group p-1 rounded hover:bg-white/5">
+              <Checkbox 
+                checked={filters.rarity.includes(rarity)}
+                onCheckedChange={() => toggleRarity(rarity)}
+                className="border-white/30 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+              />
+              <span className={`text-sm transition-colors ${filters.rarity.includes(rarity) ? 'text-white font-medium' : 'text-slate-400 group-hover:text-white'}`}>
+                {rarity}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-px bg-white/10 my-4" />
+
+      {/* Price Range */}
+      <div className="mb-6">
+        <h3 className="text-white font-semibold text-sm mb-3 uppercase tracking-wider">Price Range</h3>
+        <div className="px-1">
+          <Slider
+            value={filters.priceRange}
+            onValueChange={(val) => setFilters(prev => ({ ...prev, priceRange: val }))}
+            max={10000}
+            min={0}
+            step={100}
+            className="mb-3"
+          />
+          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+            <span>{filters.priceRange[0]} AGP</span>
+            <span>{filters.priceRange[1]} AGP</span>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        onClick={() => setFilters({ category: 'all', rarity: [], priceRange: [0, 10000] })}
+        className="w-full mt-6 py-3 text-sm text-slate-400 hover:text-white border border-white/10 rounded-xl hover:bg-white/5 transition-all font-medium flex items-center justify-center gap-2"
+      >
+        <Filter className="w-3 h-3" />
+        Reset Filters
+      </button>
+    </div>
+  );
+};
 
 const GalacticCard = ({ children, className = "", hoverEffect = true }) => (
   <div 
@@ -263,8 +382,13 @@ export default function TradingPostContent() {
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   
+  // Filter State
+  const [filters, setFilters] = useState({
+    category: 'all',
+    rarity: [],
+    priceRange: [0, 10000]
+  });
 
-  
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
 
@@ -332,7 +456,7 @@ export default function TradingPostContent() {
   };
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto pb-20">
+    <div className="relative z-10 max-w-[1920px] mx-auto px-4 md:px-6 py-8 pb-20">
       {/* Page Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -371,37 +495,46 @@ export default function TradingPostContent() {
         </div>
       </motion.div>
 
-      {/* Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex justify-center mb-8">
-          <TabsList 
-            className="p-1 rounded-full"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-            }}
-          >
-            <TabsTrigger 
-              value="board" 
-              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
-            >
-              Global Market
-            </TabsTrigger>
+      {/* Layout Container with Sidebar */}
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <aside className="hidden lg:block w-64 flex-shrink-0">
+          <TradingFilterSidebar filters={filters} setFilters={setFilters} />
+        </aside>
 
-            <TabsTrigger 
-              value="subtab" 
-              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
-            >
-              Inventory
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+          {/* Navigation Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex justify-start mb-8">
+              <TabsList 
+                className="p-1 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
+              >
+                <TabsTrigger 
+                  value="board" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                >
+                  Global Market
+                </TabsTrigger>
 
-        <TabsContent value="board" className="h-[calc(100vh-280px)]">
-          <div className="h-full flex flex-col">
+                <TabsTrigger 
+                  value="subtab" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
+                >
+                  Inventory
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="board" className="h-[calc(100vh-280px)]">
+              <div className="h-full flex flex-col">
             
             {/* Top Navigation Bar */}
             <div className="flex items-center justify-between mb-6">
