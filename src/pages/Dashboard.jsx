@@ -546,30 +546,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Dot Indicators & Navigation Arrows (Combined) - Only in AI mode */}
-      <div className={`absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-5 z-30 transition-opacity duration-500 scale-90 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {/* Left Arrow */}
-        <motion.button
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-          onClick={handleRotateLeft}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </motion.button>
 
-        {/* Dots Removed */}
-
-        {/* Right Arrow */}
-        <motion.button
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-          onClick={handleRotateRight}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ChevronRight className="w-6 h-6" />
-        </motion.button>
-      </div>
 
       {/* Secondary Dock Menu moved to Layout */}
 
