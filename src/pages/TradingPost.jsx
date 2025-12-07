@@ -99,6 +99,83 @@ const tradeListings = [
   { id: 't8', category: 'Trending', name: 'Golden Key', type: 'Item', game: 'Zelda', rarity: 'Epic', price: 1500, seller: 'Link', image: 'https://images.unsplash.com/photo-1618519764620-7403abdbdfe9?w=300' },
 ];
 
+// --- Horizontal Row Component ---
+const MarketCategoryRow = ({ title, icon: Icon, items }) => (
+  <div className="mb-8">
+    <div className="flex items-center justify-between mb-4 px-1">
+      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+        {Icon && <Icon className="w-5 h-5 text-blue-400" />}
+        {title}
+      </h3>
+      <button className="text-sm text-blue-400 hover:text-white transition-colors flex items-center gap-1">
+        See All <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+    
+    <div className="relative group">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-1 pb-4 -mx-1 snap-x">
+        {items.map((item) => (
+          <div key={item.id} className="snap-start flex-shrink-0 w-[280px]">
+            <LiquidCard className="h-full flex flex-col">
+              <div className="relative aspect-[16/9] overflow-hidden bg-slate-950">
+                <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                
+                {/* Top Badges */}
+                <div className="absolute top-3 left-3">
+                  <RarityBadge rarity={item.rarity} />
+                </div>
+                {item.type && (
+                  <div className="absolute top-3 right-3">
+                    <Badge variant="outline" className="bg-black/40 border-white/10 text-white/80 text-[10px] backdrop-blur-md">{item.type}</Badge>
+                  </div>
+                )}
+
+                {/* Bottom Info */}
+                <div className="absolute bottom-3 left-3 right-3">
+                  <h3 className="text-white font-bold text-lg truncate drop-shadow-md">{item.name}</h3>
+                  <p className="text-white/60 text-xs flex items-center gap-1">
+                    <Gamepad2 className="w-3 h-3" /> {item.game}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="p-4 flex-1 flex flex-col bg-gradient-to-b from-slate-900/80 to-slate-900/40">
+                <div className="flex justify-between items-end mb-3">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Current Price</p>
+                    <div className="text-xl font-mono font-bold text-green-400 leading-none">
+                      {item.price.toLocaleString()} <span className="text-xs text-green-400/60">AGP</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-400">{item.seller}</p>
+                    <div className="flex text-yellow-500">
+                      <Star className="w-3 h-3 fill-current" />
+                      <Star className="w-3 h-3 fill-current" />
+                      <Star className="w-3 h-3 fill-current" />
+                      <Star className="w-3 h-3 fill-current" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 mt-auto">
+                  <Button className="w-full bg-white/10 hover:bg-white text-white hover:text-black font-bold text-xs h-9 border border-white/10 transition-all">
+                    View Listing
+                  </Button>
+                </div>
+              </div>
+            </LiquidCard>
+          </div>
+        ))}
+      </div>
+      
+      {/* Fade Edges */}
+      <div className="absolute top-0 bottom-0 right-0 w-12 bg-gradient-to-l from-[#1a1f2e] to-transparent pointer-events-none z-10" />
+    </div>
+  </div>
+);
+
 // --- Filter Sidebar ---
 const TradingFilterSidebar = ({ 
   filters, setFilters
