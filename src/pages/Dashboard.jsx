@@ -14,8 +14,6 @@ import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 import LoadoutPanel from '../components/dashboard/LoadoutPanel';
 import SettingsPanel from '../components/dashboard/SettingsPanel';
 import GenreMastery from './GenreMastery';
-import AIHome from './AIHome';
-import BattleMode from './BattleMode';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -33,6 +31,7 @@ const ORBITAL_ITEMS = [
     label: 'Battle Mode', 
     icon: Swords, 
     color: 'from-red-500 to-orange-500', 
+    route: 'Challenges',
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
     description: 'Enter Combat Arena'
   },
@@ -59,6 +58,7 @@ const ORBITAL_ITEMS = [
     label: 'AI Home', 
     icon: Home, 
     color: 'from-green-500 to-emerald-500', 
+    route: 'Dashboard',
     image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
     description: 'Personal Space'
   },
@@ -281,16 +281,16 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(null)}
             />
             <motion.div
-              initial={['home', 'battle', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-              animate={['home', 'battle', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-              exit={['home', 'battle', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              initial={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              animate={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
-                ['settings', 'skill-tree', 'home', 'battle'].includes(activeDrawer.id)
+                ['settings', 'skill-tree'].includes(activeDrawer.id)
                   ? 'inset-0' 
-                  : 'left-0 rounded-3xl'
+                  : (activeDrawer.id === 'home' ? 'inset-8 border border-white/[0.08] rounded-3xl' : 'left-0 rounded-3xl')
               }`}
-              style={['home', 'battle', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { 
+              style={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { 
                 WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
               } : { 
                 top: '80px',
@@ -300,7 +300,7 @@ export default function Dashboard() {
               }}
             >
               {/* Header */}
-              {!['skill-tree', 'home', 'battle'].includes(activeDrawer.id) && (
+              {activeDrawer.id !== 'skill-tree' && (
                 <div className="p-6 flex items-center justify-between">
                   <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
                   <button 
@@ -313,17 +313,13 @@ export default function Dashboard() {
               )}
 
               {/* Content Area */}
-              <div className={`flex-1 overflow-y-auto ${['skill-tree', 'home', 'battle'].includes(activeDrawer.id) ? '' : 'p-6'}`}>
+              <div className={`flex-1 overflow-y-auto ${activeDrawer.id === 'skill-tree' ? '' : 'p-6'}`}>
                 {activeDrawer.id === 'loadout' ? (
                   <LoadoutPanel />
                 ) : activeDrawer.id === 'settings' ? (
                   <SettingsPanel />
                 ) : activeDrawer.id === 'skill-tree' ? (
                   <GenreMastery onClose={() => setActiveDrawer(null)} />
-                ) : activeDrawer.id === 'home' ? (
-                  <AIHome onClose={() => setActiveDrawer(null)} />
-                ) : activeDrawer.id === 'battle' ? (
-                  <BattleMode onClose={() => setActiveDrawer(null)} />
                 ) : activeDrawer.id === 'games' ? (
                   <div className="space-y-6">
                     {/* Pinned Games Header */}
