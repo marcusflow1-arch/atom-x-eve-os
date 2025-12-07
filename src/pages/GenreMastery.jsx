@@ -146,27 +146,36 @@ const rarityColors = {
 };
 
 // Generate Mock Progression Levels
-const generateProgressionLevels = (genreId) => {
+const generateProgressionLevels = (genreId, genreName) => {
   const levels = [];
   
-  for (let i = 1; i <= 50; i++) {
-    const rarity = i % 25 === 0 ? 'Godlike' : 
-                   i % 10 === 0 ? 'Mythical' :
-                   i % 5 === 0 ? 'Legendary' :
-                   i % 3 === 0 ? 'Rare' : 'Common';
+  // Icons for "transition-free" look (using Lucide for now as placeholders for transparent assets)
+  const getIcon = (id, level) => {
+    // In a real app, these would be URLs to transparent PNGs of weapons/armor
+    return `https://source.unsplash.com/random/500x500?${id},weapon,armor,transparent&sig=${level}`;
+  };
+  
+  for (let i = 1; i <= 20; i++) {
+    const rarity = i === 20 ? 'Godlike' : 
+                   i === 15 ? 'Mythical' :
+                   i === 10 ? 'Legendary' :
+                   i === 5 ? 'Epic' : 
+                   i % 2 === 0 ? 'Rare' : 'Common';
     
     levels.push({
       level: i,
-      isUnlocked: i <= 35, // Mock progress
+      isUnlocked: i <= 12, // Mock progress relative to max level 20
+      season: 0,
       cardReward: {
-        name: `${genreId.toUpperCase()} Mastery Card ${i}`,
-        type: 'Collectible Card',
+        name: `${genreName} Mastery Reward ${i}`,
+        type: 'Ability Reward',
         rarity: rarity,
-        image: `https://source.unsplash.com/random/400x600?${genreId},scifi,cyberpunk&sig=${i}`,
-        description: `A commemorative card celebrating rank ${i} in the ${genreId} discipline.`
+        // Using a different visual approach - intended to be a floating item
+        image: getIcon(genreId, i), 
+        description: `Exclusive Season 0 reward for reaching rank ${i} in ${genreName}.`
       },
       equipmentReward: {
-        name: `Tactical Gear Mk.${i}`,
+        name: `Elite Gear Tier ${i}`,
         type: 'Equipment',
         rarity: rarity === 'Godlike' ? 'Mythical' : rarity === 'Common' ? 'Common' : rarity,
         image: `https://source.unsplash.com/random/300x300?armor,weapon,tech&sig=${i}`,
@@ -190,45 +199,96 @@ const RewardModal = ({ level, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-8"
+      className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] flex items-center justify-center p-8"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="max-w-5xl w-full bg-slate-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row"
+        className="max-w-4xl w-full bg-transparent relative flex flex-col md:flex-row items-center gap-12"
       >
         <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors border border-white/10"
+            className="absolute -top-12 right-0 z-20 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
           >
             <X className="w-6 h-6 text-white" />
         </button>
 
-        {/* Left Side: Collectible Card */}
-        <div className="flex-1 p-8 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 relative overflow-hidden">
-           <div className={`absolute inset-0 bg-gradient-to-br ${cardRarity.bg} opacity-10`} />
-           <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-widest z-10 flex items-center gap-2">
-             <Star className="w-5 h-5 text-yellow-400" /> Collectible Card
-           </h3>
+        {/* Left Side: Floating Item (No Box) */}
+        <div className="flex-1 flex flex-col items-center justify-center relative">
+           {/* Glow Effect */}
+           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-gradient-to-r ${cardRarity.bg.replace('bg-', 'from-').replace('900', '500')} to-transparent opacity-20 blur-[80px] animate-pulse`} />
            
-           <div className={`relative w-72 h-[420px] rounded-2xl overflow-hidden shadow-2xl border-4 ${cardRarity.border} group transition-transform duration-500 hover:scale-105`}>
-             <img src={level.cardReward.image} alt={level.cardReward.name} className="w-full h-full object-cover" />
-             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-             <div className="absolute bottom-0 left-0 right-0 p-6">
-                <Badge className={`${cardRarity.bg} ${cardRarity.text} mb-2`}>{level.cardReward.rarity}</Badge>
-                <h4 className="text-2xl font-black text-white leading-tight mb-1">{level.cardReward.name}</h4>
-                <p className="text-xs text-white/70 line-clamp-2">{level.cardReward.description}</p>
+           <motion.div 
+             animate={{ y: [0, -15, 0] }}
+             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+             className="relative z-10 w-80 h-80 flex items-center justify-center"
+           >
+             {/* Using mask to simulate transparent object if image isn't transparent, 
+                 or just displaying it cleanly. For this mock, we assume the image is the item.
+                 We add a 'glitch' or 'hologram' effect filter.
+             */}
+             <div className="w-full h-full p-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+               <img 
+                  src={level.cardReward.image} 
+                  alt={level.cardReward.name} 
+                  className="w-full h-full object-contain filter brightness-110 contrast-125" 
+               />
              </div>
-             {/* Liquid Shine */}
-             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -translate-x-full group-hover:translate-x-full" style={{ transitionDuration: '1.5s' }} />
+           </motion.div>
+           
+           <div className="text-center mt-8">
+             <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-3 px-3 py-1 text-xs backdrop-blur-md`}>
+                SEASON {level.season} • {level.cardReward.rarity.toUpperCase()}
+             </Badge>
+             <h2 className="text-4xl font-black text-white mb-2 tracking-tight drop-shadow-xl">{level.cardReward.name}</h2>
            </div>
         </div>
 
-        {/* Right Side: Equipment */}
-        <div className="flex-1 p-8 bg-slate-950/50 flex flex-col justify-center relative border-l border-white/5">
+        {/* Right Side: Details & Actions */}
+        <div className="flex-1 w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden">
+           <div className={`absolute inset-0 bg-gradient-to-br ${cardRarity.bg} opacity-5`} />
+           
+           <div className="relative z-10">
+             <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-widest text-white/50">Reward Details</h3>
+             <p className="text-lg text-slate-300 mb-8 leading-relaxed font-light">
+               {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
+             </p>
+
+             <div className="space-y-4 mb-8">
+               <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
+                 <div className="flex items-center gap-3">
+                   <Shield className="w-5 h-5 text-blue-400" />
+                   <span className="text-slate-300 font-medium">Item Type</span>
+                 </div>
+                 <span className="text-white font-bold">{level.cardReward.type}</span>
+               </div>
+               <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
+                 <div className="flex items-center gap-3">
+                   <Zap className="w-5 h-5 text-yellow-400" />
+                   <span className="text-slate-300 font-medium">Power Score</span>
+                 </div>
+                 <span className="text-white font-bold">850</span>
+               </div>
+             </div>
+
+             <Button 
+               className={`w-full py-7 text-lg font-bold tracking-wide rounded-xl transition-all ${
+                 level.isUnlocked 
+                   ? 'bg-white text-black hover:bg-slate-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
+                   : 'bg-white/10 text-white/40 cursor-not-allowed hover:bg-white/10'
+               }`}
+             >
+               {level.isUnlocked ? (
+                 <span className="flex items-center gap-2"><Check className="w-5 h-5" /> CLAIM REWARD</span>
+               ) : (
+                 <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> LOCKED (Lvl {level.level})</span>
+               )}
+             </Button>
+           </div>
+        </div>
            <div className="mb-8">
              <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-widest flex items-center gap-2">
                <Shield className="w-5 h-5 text-blue-400" /> Equipment Reward
@@ -266,57 +326,73 @@ const RewardModal = ({ level, onClose }) => {
 };
 
 
-// Progression Node Component (Updated for Bottom Bar)
+// Progression Node Component (Refined: Liquid Glass, No Black Box)
 const LevelNode = ({ levelData, onClick, isActive }) => {
   const { level, isUnlocked, cardReward } = levelData;
   const rarity = rarityColors[cardReward.rarity];
+  const isElite = ['Legendary', 'Mythical', 'Godlike'].includes(cardReward.rarity);
 
   return (
     <motion.div
       onClick={() => onClick(levelData)}
-      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-300 ${
-        isActive ? 'w-40 -translate-y-6' : 'w-24'
+      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-500 ${
+        isActive ? 'w-44 -translate-y-4' : 'w-28'
       }`}
     >
       {/* Node Content */}
       <div className={`flex flex-col items-center gap-3 transition-all duration-300`}>
          
-         {/* Top Info (Only visible if Active or Hovered) */}
-         <div className={`text-center transition-all duration-300 ${isActive || isUnlocked ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'}`}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Level {level}</div>
-            {isActive && <Badge variant="outline" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/30">CURRENT</Badge>}
+         {/* Top Info */}
+         <div className={`text-center transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 group-hover:opacity-100'}`}>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+              Lvl {level}
+            </div>
          </div>
 
-         {/* Card Visual */}
+         {/* Reward Visual Container (Liquid Glass, No Solid Box) */}
          <div className={`
-           relative rounded-lg border transition-all duration-300 overflow-hidden shadow-lg
+           relative rounded-2xl transition-all duration-300 flex items-center justify-center
            ${isActive 
-             ? `w-32 h-44 ${rarity.border} ring-4 ring-blue-500/20 z-20` 
-             : `w-20 h-28 border-white/10 hover:border-white/30 hover:w-24 hover:h-32 hover:-translate-y-2 z-10`
+             ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` 
+             : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`
            }
-           ${isUnlocked ? 'bg-slate-800' : 'bg-slate-900 grayscale opacity-60'}
-         `}>
-            <img src={cardReward.image} alt="Reward" className="w-full h-full object-cover" />
-            <div className={`absolute inset-0 bg-gradient-to-t ${isUnlocked ? 'from-black/80' : 'from-black/95'} to-transparent`} />
+         `}
+         style={{
+            boxShadow: isActive ? `0 0 20px ${rarity.glow?.replace('shadow-', '') || 'rgba(255,255,255,0.2)'}` : 'none'
+         }}
+         >
+            {/* Inner Glow for Rarity */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
             
-            {/* Lock/Unlock Icon */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+            {/* Reward Image/Icon (Floating) */}
+            <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
+               <img src={cardReward.image} alt="Reward" className="w-full h-full object-contain drop-shadow-lg" />
+            </div>
+            
+            {/* Status Indicator (Minimalist) */}
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
                {isUnlocked ? (
-                 <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/50">
-                    <Check className="w-3 h-3 text-white" />
+                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                    <Check className="w-3 h-3 text-black" />
                  </div>
                ) : (
-                 <Lock className="w-4 h-4 text-white/40" />
+                 <div className="w-4 h-4 rounded-full bg-black/50 border border-white/10 flex items-center justify-center backdrop-blur-md">
+                   <Lock className="w-2.5 h-2.5 text-white/40" />
+                 </div>
                )}
             </div>
 
-            {/* Rarity Stripe */}
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${rarityColors[cardReward.rarity].bg.replace('bg-', 'from-').replace('900', '500')} to-transparent`} />
+            {/* Elite Particle Effect for rare items */}
+            {isElite && isActive && (
+               <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />
+            )}
          </div>
       </div>
 
       {/* Connection Line Segment */}
-      <div className={`absolute bottom-[-10px] left-1/2 w-[200%] h-1 bg-slate-800 -z-10 ${isUnlocked ? 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]' : ''}`} />
+      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
+        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
+      `} />
     </motion.div>
   );
 };
@@ -332,7 +408,7 @@ export default function GenreMastery({ onClose }) {
   // Load progression when genre changes
   useEffect(() => {
     if (selectedGenre) {
-      setProgressionData(generateProgressionLevels(selectedGenre.id));
+      setProgressionData(generateProgressionLevels(selectedGenre.id, selectedGenre.name));
     }
   }, [selectedGenre]);
 
@@ -448,13 +524,16 @@ export default function GenreMastery({ onClose }) {
                           {selectedGenre.rank}
                         </Badge>
                         <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
-                          Level {selectedGenre.level} / {selectedGenre.maxLevel}
+                          Level {selectedGenre.level} / 20
+                        </Badge>
+                        <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
+                          SEASON 0
                         </Badge>
                       </div>
                       <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">
                         {selectedGenre.name}
                         <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white/60 to-white/10 tracking-[0.5em] mt-2">
-                          MASTERY TRACK
+                          SEASON 0 PASS
                         </span>
                       </h1>
                     </div>
