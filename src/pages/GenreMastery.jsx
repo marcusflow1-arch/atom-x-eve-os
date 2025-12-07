@@ -719,6 +719,12 @@ export default function GenreMastery({ onClose }) {
               </div>
 
             </motion.div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
+              <Orbit className="w-24 h-24 text-white mb-6 animate-spin-slow" />
+              <h1 className="text-5xl font-black uppercase tracking-widest text-white/50 mb-4">Select a Discipline</h1>
+              <p className="text-white/30 max-w-md mx-auto text-lg">Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.</p>
+            </div>
           )}
       </AnimatePresence>
 
