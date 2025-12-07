@@ -226,10 +226,6 @@ const RewardModal = ({ level, onClose }) => {
              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
              className="relative z-10 w-80 h-80 flex items-center justify-center"
            >
-             {/* Using mask to simulate transparent object if image isn't transparent, 
-                 or just displaying it cleanly. For this mock, we assume the image is the item.
-                 We add a 'glitch' or 'hologram' effect filter.
-             */}
              <div className="w-full h-full p-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
                <img 
                   src={level.cardReward.image} 
@@ -248,7 +244,7 @@ const RewardModal = ({ level, onClose }) => {
         </div>
 
         {/* Right Side: Details & Actions */}
-        <div className="flex-1 w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden">
+        <div className="flex-1 w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden flex flex-col gap-8">
            <div className={`absolute inset-0 bg-gradient-to-br ${cardRarity.bg} opacity-5`} />
            
            <div className="relative z-10">
@@ -288,38 +284,24 @@ const RewardModal = ({ level, onClose }) => {
                )}
              </Button>
            </div>
-        </div>
-           <div className="mb-8">
-             <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-widest flex items-center gap-2">
-               <Shield className="w-5 h-5 text-blue-400" /> Equipment Reward
+           
+           {/* Equipment Section (Integrated) */}
+           <div className="relative z-10 pt-8 border-t border-white/10">
+             <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+               <Shield className="w-4 h-4 text-blue-400" /> Bonus Equipment
              </h3>
-             <div className="flex items-start gap-6">
-                <div className={`w-24 h-24 rounded-xl border-2 ${equipRarity.border} bg-slate-800 overflow-hidden flex-shrink-0`}>
+             <div className="flex items-center gap-4 bg-black/20 p-3 rounded-xl border border-white/5">
+                <div className={`w-16 h-16 rounded-lg border ${equipRarity.border} bg-slate-800 overflow-hidden flex-shrink-0`}>
                   <img src={level.equipmentReward.image} alt="Equip" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="text-2xl font-bold text-white mb-1">{level.equipmentReward.name}</h4>
-                  <Badge variant="outline" className={`${equipRarity.text} border-current mb-2`}>{level.equipmentReward.rarity}</Badge>
-                  <p className="text-sm text-slate-400">{level.equipmentReward.description}</p>
+                  <h4 className="text-sm font-bold text-white">{level.equipmentReward.name}</h4>
+                  <p className="text-xs text-slate-400 line-clamp-1">{level.equipmentReward.description}</p>
                 </div>
              </div>
-           </div>
-
-           <div className="space-y-4">
-             <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-slate-400 text-sm">Power Level</span>
-                  <span className="text-white font-bold">840</span>
-                </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-blue-500 h-full w-[75%]" />
-                </div>
-             </div>
-             <Button className="w-full py-6 text-lg font-bold bg-white text-black hover:bg-slate-200">
-               {level.isUnlocked ? 'Claim Rewards' : 'Locked'}
-             </Button>
            </div>
         </div>
+
       </motion.div>
     </motion.div>
   );
