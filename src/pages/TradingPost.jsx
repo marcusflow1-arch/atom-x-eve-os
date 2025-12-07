@@ -330,7 +330,15 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
   const [showActionModal, setShowActionModal] = useState(false);
   const [bidAmount, setBidAmount] = useState('');
 
-  const filteredOffers = offers.filter(offer => 
+  // Add seller ratings to offers (mock data)
+  const offersWithRatings = offers.map(offer => ({
+    ...offer,
+    sellerRating: Math.floor(Math.random() * 2) + 4, // 4-5 star rating
+    totalTrades: Math.floor(Math.random() * 200) + 50,
+    timeLeft: offer.type === 'bid' ? Math.floor(Math.random() * 72) + 1 : null // hours left
+  }));
+
+  const filteredOffers = offersWithRatings.filter(offer => 
     offer.owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     offer.description.toLowerCase().includes(searchQuery.toLowerCase())
   ).sort((a, b) => {
@@ -343,6 +351,15 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
       const priceA = a.price || a.currentBid || -1;
       const priceB = b.price || b.currentBid || -1;
       return priceB - priceA;
+    }
+    if (sortBy === 'time_left') {
+      return (a.timeLeft || Infinity) - (b.timeLeft || Infinity);
+    }
+    if (sortBy === 'rating_high') {
+      return b.sellerRating - a.sellerRating;
+    }
+    if (sortBy === 'rating_low') {
+      return a.sellerRating - b.sellerRating;
     }
     return 0;
   });
@@ -395,13 +412,15 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
           />
         </div>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[180px] bg-slate-800/50 border-white/10">
+          <SelectTrigger className="w-[200px] bg-slate-800/50 border-white/10">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="lowest_price">Lowest Price</SelectItem>
-            <SelectItem value="highest_price">Highest Price</SelectItem>
-            <SelectItem value="newest">Newest Listed</SelectItem>
+            <SelectItem value="lowest_price">💰 Lowest Price</SelectItem>
+            <SelectItem value="highest_price">💎 Highest Price</SelectItem>
+            <SelectItem value="time_left">⏰ Time Left (Bids)</SelectItem>
+            <SelectItem value="rating_high">⭐ Highest Rating</SelectItem>
+            <SelectItem value="rating_low">⭐ Lowest Rating</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -454,13 +473,24 @@ const TradeOffersPanel = ({ item, offers, onTrade }) => {
             <div className="w-px h-12 bg-white/10 mx-6" />
 
             {/* Trader Info (Right Side as requested) */}
-            <div className="flex items-center gap-4 min-w-[200px] justify-end">
+            <div className="flex items-center gap-4 min-w-[280px] justify-end">
               <div className="text-right">
                 <div className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors">{offer.owner.name}</div>
-                <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400">
-                  <Star className="w-3 h-3 text-yellow-500 fill-current" /> 
-                  <span>4.9 (128 Trades)</span>
+                <div className="flex items-center justify-end gap-1 text-[10px] text-slate-400 mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`w-3 h-3 ${i < offer.sellerRating ? 'text-yellow-500 fill-current' : 'text-slate-600'}`}
+                    />
+                  ))}
+                  <span className="ml-1">({offer.totalTrades} trades)</span>
                 </div>
+                {offer.timeLeft && (
+                  <div className="flex items-center justify-end gap-1 text-[10px] text-orange-400">
+                    <Clock className="w-3 h-3" />
+                    <span>{offer.timeLeft}h left</span>
+                  </div>
+                )}
               </div>
               <img src={offer.owner.avatar} alt={offer.owner.name} className="w-10 h-10 rounded-full border border-white/10" />
               
