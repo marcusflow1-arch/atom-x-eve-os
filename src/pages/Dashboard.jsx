@@ -284,16 +284,16 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(null)}
             />
             <motion.div
-              initial={['home', 'settings', 'skill-tree', 'battle'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-              animate={['home', 'settings', 'skill-tree', 'battle'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-              exit={['home', 'settings', 'skill-tree', 'battle'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
-                ['settings', 'skill-tree', 'battle', 'home'].includes(activeDrawer.id)
+                ['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id)
                   ? 'inset-0' 
                   : 'left-0 rounded-3xl'
               }`}
-              style={['home', 'settings', 'skill-tree', 'battle'].includes(activeDrawer.id) ? { 
+              style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { 
                 WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
               } : { 
                 top: '80px',
