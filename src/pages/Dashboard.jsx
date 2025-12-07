@@ -10,9 +10,9 @@ import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
 import AINexusView from '../components/dashboard/views/AINexusView';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
-import EconomyDistrictView from '../components/dashboard/views/EconomyDistrictView';
 import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 import LoadoutPanel from '../components/dashboard/LoadoutPanel';
+import SettingsPanel from '../components/dashboard/SettingsPanel';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -91,8 +91,7 @@ const DOCK_ITEMS = [
 
 const MODES = [
   { id: 'ai', label: 'AI NEXUS' },
-  { id: 'user', label: 'USER INTERFACE' },
-  { id: 'economy', label: 'ECONOMY DISTRICT' }
+  { id: 'user', label: 'USER INTERFACE' }
 ];
 
 export default function Dashboard() {
@@ -286,7 +285,9 @@ export default function Dashboard() {
               exit={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
-                activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? 'inset-8 border border-white/[0.08] rounded-3xl' : 'left-0 rounded-3xl'
+                activeDrawer.id === 'settings' 
+                  ? 'inset-0' 
+                  : (activeDrawer.id === 'home' ? 'inset-8 border border-white/[0.08] rounded-3xl' : 'left-0 rounded-3xl')
               }`}
               style={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { 
                 WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
@@ -312,6 +313,8 @@ export default function Dashboard() {
               <div className="flex-1 overflow-y-auto p-6">
                 {activeDrawer.id === 'loadout' ? (
                   <LoadoutPanel />
+                ) : activeDrawer.id === 'settings' ? (
+                  <SettingsPanel />
                 ) : activeDrawer.id === 'games' ? (
                   <div className="space-y-6">
                     {/* Pinned Games Header */}
@@ -389,7 +392,7 @@ export default function Dashboard() {
       {/* Settings Gear Icon - Top Right */}
       <motion.button
         className="absolute top-4 right-4 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-        onClick={() => navigate(createPageUrl('Profile'))}
+        onClick={() => setActiveDrawer({ id: 'settings', label: 'Settings' })}
         whileHover={{ scale: 1.1, rotate: 90 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -447,7 +450,6 @@ export default function Dashboard() {
             className="absolute inset-0 z-20 pt-24 px-8 pb-8"
           >
             {currentMode === 'user' && <UserInterfaceView />}
-            {currentMode === 'economy' && <EconomyDistrictView />}
           </motion.div>
         ) : null}
       </AnimatePresence>
