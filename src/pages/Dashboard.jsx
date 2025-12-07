@@ -86,13 +86,7 @@ const ORBITAL_ITEMS = [
   },
 ];
 
-// Secondary Dock Items
-const DOCK_ITEMS = [
-  { id: 'profile', label: 'Profile', icon: User, route: 'Profile' },
-  { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
-  { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
-  { id: 'marketplace', label: 'Market', icon: Target, route: 'Marketplace' },
-];
+// Secondary Dock Items removed - moved to Layout
 
 const MODES = [
   { id: 'ai', label: 'AI NEXUS' },
@@ -577,24 +571,7 @@ export default function Dashboard() {
         </motion.button>
       </div>
 
-      {/* Secondary Dock Menu - Moved under Experience Bar */}
-      <div className={`absolute top-44 left-4 flex gap-3 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        {DOCK_ITEMS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <motion.button
-              key={item.id}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all"
-              onClick={() => navigate(createPageUrl(item.route))}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="text-[8px] font-medium mt-0.5">{item.label}</span>
-            </motion.button>
-          );
-        })}
-      </div>
+      {/* Secondary Dock Menu moved to Layout */}
 
 
 

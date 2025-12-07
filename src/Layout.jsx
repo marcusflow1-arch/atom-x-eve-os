@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-        LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown
+        LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target
       } from 'lucide-react';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
@@ -472,7 +472,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Menu Button - Custom Header Logic */}
       {(() => {
         const p = location.pathname.toLowerCase();
-        
+
         // Default Config
         let headerConfig = { 
           showMenu: true,
@@ -480,13 +480,16 @@ function LayoutContent({ children, currentPageName }) {
           showLevel: true, 
           showDiscord: true,
           hidden: false,
-          showModeToggle: false
+          showModeToggle: false,
+          showDock: false
         };
 
         // Page Specific Overrides
         if (p === '/' || p.endsWith('/dashboard')) {
              headerConfig.title = mode === 'ai' ? "AI Dashboard Home Page" : "User Interface";
              headerConfig.showModeToggle = true;
+             headerConfig.showDock = true;
+             headerConfig.showMenu = true;
         } else if (p.includes('/store')) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
@@ -523,6 +526,13 @@ function LayoutContent({ children, currentPageName }) {
 
         if (headerConfig.hidden) return null;
 
+        const DOCK_ITEMS = [
+          { id: 'profile', label: 'Profile', icon: User, route: 'Profile' },
+          { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
+          { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
+          { id: 'marketplace', label: 'Market', icon: Target, route: 'Marketplace' },
+        ];
+
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
             <div className="flex items-center gap-4">
@@ -539,7 +549,7 @@ function LayoutContent({ children, currentPageName }) {
                 </div>
               </button>
             )}
-            
+
             <div className="flex items-center gap-3">
               <span className="text-white font-semibold text-sm">{headerConfig.title}</span>
               {headerConfig.showLevel && (
@@ -570,39 +580,8 @@ function LayoutContent({ children, currentPageName }) {
                 <span>Discord</span>
               </a>
             )}
-
-            {headerConfig.showModeToggle && (
-              <button
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
-                onClick={toggleMode}
-                title="Toggle Interface Mode"
-              >
-                <AnimatePresence mode="wait">
-                  {mode === 'ai' ? (
-                    <motion.div
-                      key="user-icon"
-                      initial={{ opacity: 0, rotate: -90 }}
-                      animate={{ opacity: 1, rotate: 0 }}
-                      exit={{ opacity: 0, rotate: 90 }}
-                      className="flex items-center justify-center w-full h-full"
-                    >
-                      <User className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="ai-icon"
-                      initial={{ opacity: 0, rotate: -90 }}
-                      animate={{ opacity: 1, rotate: 0 }}
-                      exit={{ opacity: 0, rotate: 90 }}
-                      className="flex items-center justify-center w-full h-full"
-                    >
-                      <Bot className="w-5 h-5" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-            )}
             </div>
+
             {/* Minimized Experience Bar */}
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
               <div 
@@ -610,6 +589,70 @@ function LayoutContent({ children, currentPageName }) {
                 style={{ width: '16.25%' }} 
               />
             </div>
+
+            {/* Under Bar Content: Mode Toggle & Dock Items */}
+            {(headerConfig.showModeToggle || headerConfig.showDock) && (
+              <div className="flex items-center gap-6 mt-1 pl-1">
+                {headerConfig.showModeToggle && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+                      onClick={toggleMode}
+                      title="Toggle Interface Mode"
+                    >
+                      <AnimatePresence mode="wait">
+                        {mode === 'ai' ? (
+                          <motion.div
+                            key="user-icon"
+                            initial={{ opacity: 0, rotate: -90 }}
+                            animate={{ opacity: 1, rotate: 0 }}
+                            exit={{ opacity: 0, rotate: 90 }}
+                            className="flex items-center justify-center w-full h-full"
+                          >
+                            <User className="w-5 h-5" />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="ai-icon"
+                            initial={{ opacity: 0, rotate: -90 }}
+                            animate={{ opacity: 1, rotate: 0 }}
+                            exit={{ opacity: 0, rotate: 90 }}
+                            className="flex items-center justify-center w-full h-full"
+                          >
+                            <Bot className="w-5 h-5" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                    {/* Page Name */}
+                    <motion.span 
+                      key={mode}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-white/80 font-bold text-sm tracking-wide uppercase"
+                    >
+                      {mode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
+                    </motion.span>
+                  </div>
+                )}
+
+                {/* Dock Items */}
+                {headerConfig.showDock && mode === 'ai' && (
+                   <div className="flex items-center gap-2">
+                       {DOCK_ITEMS.map(item => (
+                           <Link 
+                             key={item.id} 
+                             to={createPageUrl(item.route)}
+                             className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                             title={item.label}
+                           >
+                               <item.icon className="w-4 h-4" />
+                           </Link>
+                       ))}
+                   </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })()}
