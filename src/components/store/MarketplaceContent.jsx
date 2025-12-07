@@ -546,22 +546,20 @@ export default function MarketplaceContent() {
 
   return (
     <div className="pt-6">
-      {/* Secondary Category Nav */}
-      <div className="flex items-center gap-6 mb-8 pb-4 border-b border-white/10 overflow-x-auto scrollbar-hide">
-        {CATEGORIES.slice(1).map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setFilters(prev => ({ ...prev, category: cat.id }))}
-            className={`flex items-center gap-2 text-sm whitespace-nowrap transition-colors ${filters.category === cat.id ? 'text-orange-400 font-medium' : 'text-white/60 hover:text-white'}`}
-          >
-            <cat.icon className="w-4 h-4" />
-            {cat.name}
-          </button>
-        ))}
+      {/* Limited Time Rewards */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+            <Sparkles className="w-6 h-6 text-blue-500" />
+            Limited Edition Rewards
+          </h2>
+        </div>
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollBehavior: 'smooth' }}>
+          {LIMITED_REWARDS.map((card) => (
+            <LimitedEditionCard key={card.id} card={card} />
+          ))}
+        </div>
       </div>
-
-      {/* Sponsored Row */}
-      <ProductRow title="Sponsored • Top rated in Gaming Items" items={sponsoredItems} onItemClick={setSelectedItem} />
 
       <div className="flex gap-6">
         {/* Sidebar */}
@@ -573,11 +571,21 @@ export default function MarketplaceContent() {
         <div className="flex-1 min-w-0">
           {/* Results Header */}
           <div className="flex items-center justify-between mb-4">
-            <div>
+            <div className="flex items-center gap-4">
               <p className="text-white/50 text-sm">
                 {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
-                {searchTerm && <span> for "<span className="text-orange-400">{searchTerm}</span>"</span>}
               </p>
+              {/* Search Bar */}
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition-all"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
