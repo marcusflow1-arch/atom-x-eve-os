@@ -281,16 +281,16 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(null)}
             />
             <motion.div
-              initial={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-              animate={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-              exit={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              initial={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              animate={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
-                activeDrawer.id === 'settings' 
+                ['settings', 'skill-tree'].includes(activeDrawer.id)
                   ? 'inset-0' 
                   : (activeDrawer.id === 'home' ? 'inset-8 border border-white/[0.08] rounded-3xl' : 'left-0 rounded-3xl')
               }`}
-              style={activeDrawer.id === 'home' || activeDrawer.id === 'settings' ? { 
+              style={['home', 'settings', 'skill-tree'].includes(activeDrawer.id) ? { 
                 WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
               } : { 
                 top: '80px',
