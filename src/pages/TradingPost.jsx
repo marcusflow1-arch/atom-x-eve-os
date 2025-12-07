@@ -74,19 +74,29 @@ const RarityBadge = ({ rarity }) => {
 };
 
 // --- Mock Data ---
+// Expanded mock data with categories for horizontal rows
 const userInventory = [
   { id: 'inv_1', name: 'Dragonscale Armor', type: 'Armor', game: 'Elder Scrolls', rarity: 'Legendary', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300', price: 4500, description: 'Forged from ancient scales.' },
   { id: 'inv_2', name: 'Cyber Interface', type: 'Tech', game: 'Cyberpunk 2088', rarity: 'Epic', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300', price: 2500, description: 'Neural link enhancer.' },
   { id: 'inv_3', name: 'Phoenix Spell', type: 'Magic', game: 'Mage Wars', rarity: 'Mythic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300', price: 8000, description: 'Summons eternal fire.' },
-  { id: 'inv_4', name: 'Quantum Rifle', type: 'Weapon', game: 'Galactic War', rarity: 'Rare', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300', price: 1200, description: 'High precision energy weapon.' }
+  { id: 'inv_4', name: 'Quantum Rifle', type: 'Weapon', game: 'Galactic War', rarity: 'Rare', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300', price: 1200, description: 'High precision energy weapon.' },
+  { id: 'inv_5', name: 'Stealth Suit', type: 'Armor', game: 'Metal Gear', rarity: 'Rare', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300', price: 1500, description: 'Invisibility cloak prototype.' },
+  { id: 'inv_6', name: 'Energy Shield', type: 'Tech', game: 'Halo', rarity: 'Uncommon', image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=300', price: 500, description: 'Personal portable shield.' }
 ];
 
 const tradeListings = [
-  { id: 't1', name: 'Dragonscale Armor', type: 'Armor', game: 'Elder Scrolls', rarity: 'Legendary', price: 4500, seller: 'SkyrimLord', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300' },
-  { id: 't2', name: 'Cyber Interface', type: 'Tech', game: 'Cyberpunk 2088', rarity: 'Epic', price: 2500, seller: 'NetRunner', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300' },
-  { id: 't3', name: 'Plasma Sword', type: 'Weapon', game: 'Star Conflict', rarity: 'Rare', price: 900, seller: 'JediMaster', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300' },
-  { id: 't4', name: 'Health Potion XL', type: 'Consumable', game: 'Fantasy World', rarity: 'Common', price: 50, seller: 'Alchemist', image: 'https://images.unsplash.com/photo-1515549832467-8783363e19b6?w=300' },
-  { id: 't5', name: 'Void Essence', type: 'Material', game: 'Dark Souls 4', rarity: 'Legendary', price: 6000, seller: 'AbyssWalker', image: 'https://images.unsplash.com/photo-1534293507227-203d9333692e?w=300' },
+  // Action
+  { id: 't1', category: 'Action', name: 'Dragonscale Armor', type: 'Armor', game: 'Elder Scrolls', rarity: 'Legendary', price: 4500, seller: 'SkyrimLord', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300' },
+  { id: 't3', category: 'Action', name: 'Plasma Sword', type: 'Weapon', game: 'Star Conflict', rarity: 'Rare', price: 900, seller: 'JediMaster', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300' },
+  // RPG
+  { id: 't6', category: 'RPG', name: 'Excalibur', type: 'Weapon', game: 'Final Fantasy', rarity: 'Mythic', price: 12000, seller: 'CloudStrife', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=300' },
+  { id: 't4', category: 'RPG', name: 'Health Potion XL', type: 'Consumable', game: 'Fantasy World', rarity: 'Common', price: 50, seller: 'Alchemist', image: 'https://images.unsplash.com/photo-1515549832467-8783363e19b6?w=300' },
+  // Shooter
+  { id: 't2', category: 'Shooter', name: 'Cyber Interface', type: 'Tech', game: 'Cyberpunk 2088', rarity: 'Epic', price: 2500, seller: 'NetRunner', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300' },
+  { id: 't7', category: 'Shooter', name: 'Sniper MK-II', type: 'Weapon', game: 'Call of Duty', rarity: 'Legendary', price: 3200, seller: 'Ghost', image: 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300' },
+  // Trending
+  { id: 't5', category: 'Trending', name: 'Void Essence', type: 'Material', game: 'Dark Souls 4', rarity: 'Legendary', price: 6000, seller: 'AbyssWalker', image: 'https://images.unsplash.com/photo-1534293507227-203d9333692e?w=300' },
+  { id: 't8', category: 'Trending', name: 'Golden Key', type: 'Item', game: 'Zelda', rarity: 'Epic', price: 1500, seller: 'Link', image: 'https://images.unsplash.com/photo-1618519764620-7403abdbdfe9?w=300' },
 ];
 
 // --- Filter Sidebar ---
