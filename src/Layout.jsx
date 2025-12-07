@@ -127,6 +127,7 @@ function LayoutContent({ children, currentPageName }) {
     { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
     { name: 'Library', icon: Library, path: createPageUrl('Library') },
     { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+    { name: 'Skill Tree', icon: Layers, path: createPageUrl('GenreMastery') },
     { name: 'Luna Template', icon: LayoutGrid, path: createPageUrl('LunaTemplate') },
     { name: 'Seasonal Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
