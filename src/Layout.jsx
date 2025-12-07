@@ -469,49 +469,105 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
-      {/* Menu Button - Hidden on Store page */}
-      {!location.pathname.toLowerCase().includes('/store') && (
-        <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-          >
-            <div className="flex flex-col gap-1">
-              <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-              <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-              <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-            </div>
-          </button>
-          <div className="flex items-center gap-3">
-            <span className="text-white font-semibold text-sm">Atom - Marcus</span>
-            <div className="w-px h-4 bg-white/20"></div>
-            <span className="text-white font-semibold text-sm">Level 1</span>
+      {/* Menu Button - Custom Header Logic */}
+      {(() => {
+        const p = location.pathname.toLowerCase();
+        
+        // Default Config
+        let headerConfig = { 
+          showMenu: true,
+          title: "Adam - Marcus", 
+          showLevel: true, 
+          showDiscord: true,
+          hidden: false 
+        };
+
+        // Page Specific Overrides
+        if (p.includes('/store')) {
+          headerConfig.hidden = true;
+        } else if (p.includes('/clan')) {
+          headerConfig.hidden = true; // Hide everything for clan page
+        } else if (p.includes('/library')) {
+          headerConfig.title = "Adam - Marcus | My Library";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/achievements')) {
+          headerConfig.title = "Adam - Marcus | Achievements";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/genremastery')) {
+          headerConfig.title = "Adam - Marcus | Skill Tree";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/lunatemplate')) {
+          headerConfig.title = "Adam - Marcus | Luna Template";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/seasonalpass')) {
+          headerConfig.title = "Adam - Marcus | Seasonal Pass";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/blacksmith')) {
+          headerConfig.title = "Adam - Marcus | Blacksmith";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        } else if (p.includes('/tradingpost')) {
+          headerConfig.title = "Adam - Marcus | Avatar Profile";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
+        }
+
+        if (headerConfig.hidden) return null;
+
+        return (
+          <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
+            {headerConfig.showMenu && (
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+                style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                </div>
+              </button>
+            )}
+            
+            <div className="flex items-center gap-3">
+              <span className="text-white font-semibold text-sm">{headerConfig.title}</span>
+              {headerConfig.showLevel && (
+                <>
+                  <div className="w-px h-4 bg-white/20"></div>
+                  <span className="text-white font-semibold text-sm">Level 1</span>
+                </>
+              )}
             </div>
 
-            <a
-            href="https://discord.gg/psyA8Qwm"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-medium transition-all hover:scale-105"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}
-            >
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.46 13.46 0 0 0-1.044 2.149 18.257 18.257 0 0 0-4.606 0 13.623 13.623 0 0 0-1.048-2.149.074.074 0 0 0-.079-.037C6.88 3.323 5.16 3.864 3.682 4.37a.069.069 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107 14.282 14.282 0 0 0 1.226 1.994.076.076 0 0 0 .084.028 19.883 19.883 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/>
-            </svg>
-            <span>Discord</span>
-            </a>
-          {location.pathname.toLowerCase().includes('/achievements') && (
-            <h2 className="text-2xl font-black text-white">Achievements</h2>
-          )}
-        </div>
-      )}
+            {headerConfig.showDiscord && (
+              <a
+                href="https://discord.gg/psyA8Qwm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-medium transition-all hover:scale-105"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.46 13.46 0 0 0-1.044 2.149 18.257 18.257 0 0 0-4.606 0 13.623 13.623 0 0 0-1.048-2.149.074.074 0 0 0-.079-.037C6.88 3.323 5.16 3.864 3.682 4.37a.069.069 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107 14.282 14.282 0 0 0 1.226 1.994.076.076 0 0 0 .084.028 19.883 19.883 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/>
+                </svg>
+                <span>Discord</span>
+              </a>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
