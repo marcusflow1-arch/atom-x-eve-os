@@ -529,54 +529,38 @@ export default function Dashboard() {
               onClick={() => setActiveDrawer(item)}
             >
               <motion.div
-                className={`w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 ${
+                className={`w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-6 ${
                   isActive 
                     ? 'border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)]' 
                     : 'border border-white/10'
                 }`}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                 }}
                 whileHover={{ 
                   scale: 1.05,
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
+                  background: 'rgba(255, 255, 255, 0.15)',
                   transition: { duration: 0.3 }
                 }}
               >
-                {/* Card Image */}
-                <div className="relative h-32 overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.label}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-40`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-
-                  {/* Icon Badge */}
-                  <div className={`absolute top-3 right-3 w-10 h-10 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-
-                  {/* Status Indicator */}
-                  <div className="absolute top-3 left-3">
-                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400 animate-pulse' : 'bg-white/40'}`} />
-                  </div>
+                {/* Icon Badge */}
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-4 bg-opacity-80 backdrop-blur-sm`}>
+                  <Icon className="w-8 h-8 text-white" />
                 </div>
 
                 {/* Card Content */}
-                <div className="p-4">
-                  <h3 className="text-white font-bold text-base mb-1 tracking-wide">{item.label}</h3>
-                  <p className="text-white/60 text-xs leading-relaxed">{item.description}</p>
+                <div>
+                  <h3 className="text-white font-bold text-xl mb-2 tracking-wide">{item.label}</h3>
+                  <p className="text-white/60 text-sm leading-relaxed">{item.description}</p>
                 </div>
 
                 {/* Active Highlight Ring */}
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-3xl border-2 border-white/60"
+                    className="absolute inset-0 rounded-3xl border-2 border-white/60 pointer-events-none"
                     animate={{
                       boxShadow: [
                         '0 0 30px rgba(255,255,255,0.5)',
