@@ -614,20 +614,20 @@ export default function Dashboard() {
         </motion.button>
       </div>
 
-      {/* Secondary Dock Menu - Only in AI mode */}
-      <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Secondary Dock Menu - Moved under Experience Bar */}
+      <div className={`absolute top-24 left-4 flex gap-3 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {DOCK_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
             <motion.button
               key={item.id}
-              className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all"
+              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all"
               onClick={() => navigate(createPageUrl(item.route))}
-              whileHover={{ scale: 1.1, y: -5 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Icon className="w-6 h-6 mb-1" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <Icon className="w-5 h-5" />
+              <span className="text-[8px] font-medium mt-0.5">{item.label}</span>
             </motion.button>
           );
         })}
