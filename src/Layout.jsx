@@ -625,16 +625,7 @@ function LayoutContent({ children, currentPageName }) {
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
               <div className="flex items-center gap-6 mt-1 pl-1">
-                {headerConfig.showModeToggle && (
-                  <motion.span 
-                    key={mode}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-white/80 font-bold text-sm tracking-wide uppercase"
-                  >
-                    {mode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
-                  </motion.span>
-                )}
+
 
                 {/* Dock Items */}
                 {headerConfig.showDock && mode === 'ai' && (
