@@ -419,48 +419,8 @@ export default function GenreMastery({ onClose }) {
   // Featured Reward (The next big unlock)
   const nextBigUnlock = progressionData.find(p => !p.isUnlocked && (p.cardReward.rarity === 'Legendary' || p.cardReward.rarity === 'Mythical')) || progressionData[progressionData.length - 1];
 
-  // Octagon Shape Components (inline for self-containment)
-  const OctagonShape = ({ color, isActive, icon: Icon, label, onClick, rotation = 0 }) => {
-    return (
-      <motion.button
-        onClick={onClick}
-        className={`absolute flex flex-col items-center justify-center cursor-pointer transition-all duration-500 z-20`}
-        style={{
-          width: '100px',
-          height: '100px',
-          transform: `rotate(${rotation}deg) translate(280px) rotate(-${rotation}deg)`, // Orbital positioning
-        }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <div className={`
-          relative w-20 h-20 flex items-center justify-center
-          before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-br ${color} before:opacity-20 before:blur-md
-          after:content-[''] after:absolute after:inset-0 after:border-2 after:border-white/20 after:rotate-45
-        `}
-        style={{
-          clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-          background: isActive ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(10px)',
-        }}
-        >
-           <Icon className={`w-8 h-8 ${isActive ? 'text-white' : 'text-slate-400'} transition-colors`} />
-        </div>
-        <div className={`mt-4 text-xs font-bold uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-500'}`}>
-          {label}
-        </div>
-        {isActive && (
-          <motion.div 
-            layoutId="activeGlow"
-            className="absolute inset-0 bg-white/5 blur-xl rounded-full -z-10"
-          />
-        )}
-      </motion.button>
-    );
-  };
-
   return (
-    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex flex-col">
+    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
@@ -482,64 +442,59 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* CENTRAL OCTAGON SELECTOR */}
-      <AnimatePresence>
-        {!selectedGenre && (
+      {/* LEFT SIDEBAR: Genre Selection */}
+      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
+        <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
           <motion.div 
-             initial={{ opacity: 0, scale: 0.8 }}
-             animate={{ opacity: 1, scale: 1 }}
-             exit={{ opacity: 0, scale: 1.2, filter: 'blur(20px)' }}
-             className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col gap-6 w-full items-center"
           >
-             <div className="relative w-[800px] h-[800px] flex items-center justify-center pointer-events-auto">
-                {/* Central Core */}
-                <div className="absolute w-64 h-64 bg-white/5 backdrop-blur-3xl rounded-full border border-white/10 flex flex-col items-center justify-center text-center p-8 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-                   <Hexagon className="w-16 h-16 text-white/20 mb-4 animate-pulse" />
-                   <h2 className="text-2xl font-black uppercase tracking-widest text-white mb-2">Genre Mastery</h2>
-                   <p className="text-xs text-slate-400 leading-relaxed">Select a discipline to view your season progress and rewards.</p>
-                </div>
-                
-                {/* Rings */}
-                <div className="absolute inset-0 border border-white/5 rounded-full scale-75 animate-spin-slow duration-[60s]" />
-                <div className="absolute inset-0 border border-white/5 rounded-full scale-100" />
-                
-                {/* Genre Nodes */}
-                {GENRES.map((genre, index) => (
-                  <OctagonShape 
-                    key={genre.id}
-                    rotation={index * (360 / GENRES.length)}
-                    color={genre.color}
-                    icon={genre.icon}
-                    label={genre.short || genre.name}
-                    onClick={() => setSelectedGenre(genre)}
-                  />
-                ))}
-             </div>
+            {GENRES.map((genre) => {
+              const Icon = genre.icon;
+              const isSelected = selectedGenre?.id === genre.id;
+              
+              return (
+                <motion.button
+                  key={genre.id}
+                  variants={itemVariants}
+                  onClick={() => setSelectedGenre(genre)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`group relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300 border ${
+                    isSelected 
+                      ? 'border-white/60 shadow-[0_0_25px_rgba(255,255,255,0.3)] bg-white/10' 
+                      : 'border-white/10 hover:border-white/30 bg-white/5'
+                  }`}
+                >
+                  <Icon className={`w-7 h-7 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  {isSelected && (
+                    <motion.div layoutId="activeBar" className={`absolute -left-4 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b ${genre.color}`} />
+                  )}
+                </motion.button>
+              );
+            })}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
+      </div>
 
-      {/* MAIN CONTENT AREA (Visible when genre selected) */}
-      <AnimatePresence>
-          {selectedGenre && (
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {selectedGenre ? (
             <motion.div
-              key="content"
+              key={selectedGenre.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full z-10 relative"
+              className="flex-1 flex flex-col h-full"
             >
               
-              {/* Back Button */}
-              <button 
-                onClick={() => setSelectedGenre(null)}
-                className="absolute top-6 left-8 z-50 flex items-center gap-2 text-white/50 hover:text-white transition-colors uppercase text-xs font-bold tracking-widest"
-              >
-                <ChevronLeft className="w-4 h-4" /> Return to Nexus
-              </button>
-
               {/* SCROLLABLE TOP CONTENT */}
-              <div className="flex-1 overflow-y-auto no-scrollbar pb-64 pt-20"> 
+              <div className="flex-1 overflow-y-auto no-scrollbar pb-64"> {/* Padding bottom for fixed track */}
                 <div className="max-w-7xl mx-auto p-8 md:p-12 w-full">
                   
                   {/* HEADER: Title & Progress */}
@@ -596,7 +551,7 @@ export default function GenreMastery({ onClose }) {
                     </div>
                   </div>
 
-                  {/* FEATURED SPOTLIGHT */}
+                  {/* FEATURED SPOTLIGHT (Celestial Guardian Style) */}
                   {nextBigUnlock && (
                     <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-3xl mb-16 group">
                       <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-10 group-hover:opacity-15 transition-opacity duration-1000`} />
@@ -709,7 +664,7 @@ export default function GenreMastery({ onClose }) {
                            <LevelNode 
                              key={level.level}
                              levelData={level} 
-                             isActive={level.level === 12} 
+                             isActive={level.level === 36} // Mock active state
                              onClick={setViewingLevel} 
                            />
                         ))}
@@ -719,8 +674,15 @@ export default function GenreMastery({ onClose }) {
               </div>
 
             </motion.div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
+              <Orbit className="w-24 h-24 text-white mb-6 animate-spin-slow" />
+              <h1 className="text-5xl font-black uppercase tracking-widest text-white/50 mb-4">Select a Discipline</h1>
+              <p className="text-white/30 max-w-md mx-auto text-lg">Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.</p>
+            </div>
           )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
 
       {/* Reward Detail Overlay */}
       <AnimatePresence>
