@@ -418,37 +418,50 @@ export default function Dashboard() {
         <Settings className="w-6 h-6" />
       </motion.button>
 
-      {/* Mode Toggle Button - Top Center */}
-      <motion.button
-        className="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
-        onClick={toggleMode}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <AnimatePresence mode="wait">
-          {currentMode === 'ai' ? (
-            <motion.div
-              key="user-icon"
-              initial={{ opacity: 0, rotate: -90 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: 90 }}
-              className="flex items-center justify-center w-full h-full"
-            >
-              <User className="w-6 h-6" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="ai-icon"
-              initial={{ opacity: 0, rotate: -90 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: 90 }}
-              className="flex items-center justify-center w-full h-full"
-            >
-              <Bot className="w-6 h-6" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+      {/* Mode Toggle & Page Title - Top Left */}
+      <div className="absolute top-24 left-4 z-30 flex items-center gap-4">
+        <motion.button
+          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+          onClick={toggleMode}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <AnimatePresence mode="wait">
+            {currentMode === 'ai' ? (
+              <motion.div
+                key="user-icon"
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                className="flex items-center justify-center w-full h-full"
+              >
+                <User className="w-6 h-6" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="ai-icon"
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                className="flex items-center justify-center w-full h-full"
+              >
+                <Bot className="w-6 h-6" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+        
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          key={currentMode}
+          className="bg-black/20 backdrop-blur-md border border-white/10 px-4 py-2 rounded-lg"
+        >
+          <span className="text-white font-bold tracking-wider uppercase text-sm">
+            {currentMode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
+          </span>
+        </motion.div>
+      </div>
 
       {/* Conditional Content Based on Mode */}
       <AnimatePresence mode="wait">
@@ -615,7 +628,7 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary Dock Menu - Moved under Experience Bar */}
-      <div className={`absolute top-24 left-4 flex gap-3 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute top-44 left-4 flex gap-3 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {DOCK_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
