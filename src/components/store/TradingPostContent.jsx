@@ -852,6 +852,7 @@ export default function TradingPostContent() {
               </AnimatePresence>
             </div>
           </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="subtab" className="h-[calc(100vh-280px)]">
