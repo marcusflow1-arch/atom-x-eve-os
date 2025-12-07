@@ -854,8 +854,8 @@ export default function TradingPostContent() {
           </div>
         </TabsContent>
 
-        <TabsContent value="subtab" className="h-[calc(100vh-300px)]">
-           <div className="flex h-full w-full bg-slate-900/40 rounded-2xl border border-white/5 overflow-hidden">
+        <TabsContent value="subtab" className="h-[calc(100vh-280px)]">
+           <div className="flex h-full w-full overflow-hidden">
               <div className="w-[20%] h-full border-r border-white/10 bg-slate-950/30 flex flex-col">
                   <div className="p-6 border-b border-white/5">
                     <div className="flex items-center gap-2 mb-1">
