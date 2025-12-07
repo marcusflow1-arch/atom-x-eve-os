@@ -39,25 +39,31 @@ export default function UserInterfaceView({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Section Selector */}
-      <div className="flex gap-2 mb-4 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50 w-fit">
-        {features.map((feature, index) => (
-          <motion.button
-            key={feature.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => setActiveFeature(feature.id)}
-            className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
-              activeFeature === feature.id
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-slate-700/50'
-            }`}
-          >
-            <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
-            <span>{feature.name}</span>
-          </motion.button>
-        ))}
+      {/* Header with Section Selector */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold text-white">User Interface</h2>
+          <div className="h-4 w-px bg-slate-700" />
+          <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+            {features.map((feature, index) => (
+              <motion.button
+                key={feature.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => setActiveFeature(feature.id)}
+                className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
+                  activeFeature === feature.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-700/50'
+                }`}
+              >
+                <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
+                <span>{feature.name}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Content Area */}

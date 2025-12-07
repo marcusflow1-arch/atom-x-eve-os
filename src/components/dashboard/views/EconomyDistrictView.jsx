@@ -18,28 +18,34 @@ export default function EconomyDistrictView() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Section Selector */}
-      <div className="flex gap-2 mb-4 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50 w-fit">
-        {economySections.map((section, index) => {
-          const Icon = section.icon;
-          return (
-            <motion.button
-              key={section.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
-                activeSection === section.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-700/50'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${activeSection === section.id ? 'text-white' : section.color}`} />
-              <span>{section.label}</span>
-            </motion.button>
-          );
-        })}
+      {/* Header with Section Selector */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold text-white">Economy District</h2>
+          <div className="h-4 w-px bg-slate-700" />
+          <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+            {economySections.map((section, index) => {
+              const Icon = section.icon;
+              return (
+                <motion.button
+                  key={section.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
+                    activeSection === section.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${activeSection === section.id ? 'text-white' : section.color}`} />
+                  <span>{section.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Content Area */}
