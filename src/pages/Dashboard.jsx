@@ -514,16 +514,31 @@ export default function Dashboard() {
                 scale,
                 opacity,
               }}
-              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              transition={{ 
+                type: 'spring', 
+                stiffness: 100, 
+                damping: 25,
+                mass: 0.8
+              }}
               onClick={() => setActiveDrawer(item)}
             >
               <motion.div
-                className={`w-[280px] h-[210px] rounded-3xl backdrop-blur-2xl overflow-hidden transition-all ${
+                className={`w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 ${
                   isActive 
-                    ? 'bg-white/10 border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)]' 
-                    : 'bg-white/5 border border-white/10'
+                    ? 'border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)]' 
+                    : 'border border-white/10'
                 }`}
-                whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.12)' }}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
+                  transition: { duration: 0.3 }
+                }}
               >
                 {/* Card Image */}
                 <div className="relative h-32 overflow-hidden">
