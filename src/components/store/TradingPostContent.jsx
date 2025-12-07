@@ -39,6 +39,7 @@ const TradingFilterSidebar = ({
   // Custom Trading Post Categories
   const categories = [
     { id: 'all', label: 'All Listings', icon: Grid },
+    { id: 'global', label: 'Global Market', icon: Globe },
     { id: 'weapon', label: 'Weapons & Tools', icon: Sword },
     { id: 'armor', label: 'Armor & Suits', icon: Shield },
     { id: 'tech', label: 'Tech & Cyberware', icon: Zap },
