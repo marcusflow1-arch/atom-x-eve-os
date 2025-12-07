@@ -1101,6 +1101,10 @@ export default function TradingPostContent() {
            </div>
         </TabsContent>
       </Tabs>
+      </div>
+      </div>
+      </TabsContent>
+      </Tabs>
 
       <InternalTradePostModal
         item={selectedItem}
