@@ -133,53 +133,42 @@ const GENRES = [
   },
 ];
 
-// Skill Tree Structure for FPS (Mock - retained for future use)
-const FPS_TREE = {
-  reflex: [
-    { id: 'r1', name: 'Quick Aim', tier: 1, type: 'standard', unlocked: true, description: '+10% ADS Speed' },
-    { id: 'r2', name: 'Slide Kill', tier: 2, type: 'advanced', unlocked: true, description: 'Shoot while sliding with no penalty' },
-    { id: 'r3', name: 'Blink Dodge', tier: 3, type: 'ultimate', unlocked: false, description: 'Short range teleport dash' },
-  ],
-  weaponry: [
-    { id: 'w1', name: 'Armor Pen', tier: 1, type: 'standard', unlocked: true, description: '+15% Bullet Penetration' },
-    { id: 'w2', name: 'Dual Reload', tier: 2, type: 'advanced', unlocked: false, description: 'Reload secondary while firing primary' },
-    { id: 'w3', name: 'Overcharge', tier: 3, type: 'ultimate', unlocked: false, description: 'Next magazine deals +50% damage' },
-  ],
-  tactics: [
-    { id: 't1', name: 'Flank Boost', tier: 1, type: 'standard', unlocked: true, description: '+10% Speed when out of combat' },
-    { id: 't2', name: 'Radar Hack', tier: 2, type: 'advanced', unlocked: false, description: 'Reveal enemies within 20m on kill' },
-    { id: 't3', name: 'Ghost Step', tier: 3, type: 'ultimate', unlocked: false, description: 'Silent footsteps while crouching' },
-  ]
-};
-
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   // Animation variants
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, x: -50 },
     show: {
       opacity: 1,
+      x: 0,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, scale: 0.8, y: 20 },
-    show: { opacity: 1, scale: 1, y: 0 }
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
   };
 
   return (
-    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex flex-col">
+    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-900" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-500/10 rounded-full blur-[100px] opacity-30 animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[80px] opacity-30" />
+        
+        {/* Dynamic Glow based on selection */}
+        {selectedGenre && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.3 }}
+            className={`absolute left-0 top-0 bottom-0 w-1/3 bg-gradient-to-r ${selectedGenre.color} blur-[100px]`}
+          />
+        )}
       </div>
 
       {/* Close Button */}
@@ -190,30 +179,13 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* Main Content Container */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-8">
-        
-        {/* Title */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400">
-              Genre Mastery
-            </span>
-          </h1>
-          <p className="text-slate-400 text-sm tracking-[0.3em] uppercase">Select a discipline</p>
-        </motion.div>
-
-        {/* Genre Grid */}
+      {/* Vertical Sidebar Column */}
+      <div className="h-full flex flex-col justify-center px-8 z-20 overflow-y-auto no-scrollbar py-8">
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto"
+          className="flex flex-col gap-4"
         >
           {GENRES.map((genre) => {
             const Icon = genre.icon;
@@ -224,11 +196,11 @@ export default function GenreMastery({ onClose }) {
                 key={genre.id}
                 variants={itemVariants}
                 onClick={() => setSelectedGenre(genre)}
-                whileHover={{ scale: 1.05, y: -5 }}
+                whileHover={{ scale: 1.05, x: 5 }}
                 whileTap={{ scale: 0.95 }}
-                className={`group relative w-32 h-32 md:w-40 md:h-40 rounded-3xl flex flex-col items-center justify-center transition-all duration-300 border ${
+                className={`group relative w-20 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 border ${
                   isSelected 
-                    ? 'border-white/40 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                    ? 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
                     : 'border-white/10 hover:border-white/30'
                 }`}
                 style={{
@@ -238,33 +210,60 @@ export default function GenreMastery({ onClose }) {
                   boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
                 }}
               >
-                {/* Icon Container */}
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                {/* Icon */}
+                <div className={`transition-all duration-300 ${
                   isSelected 
-                    ? `bg-gradient-to-br ${genre.color} text-white shadow-lg` 
-                    : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white'
+                    ? `text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]` 
+                    : 'text-slate-400 group-hover:text-white'
                 }`}>
-                  <Icon className="w-7 h-7" />
+                  <Icon className="w-6 h-6" />
                 </div>
                 
-                {/* Text */}
-                <span className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+                {/* Label */}
+                <span className={`mt-2 text-[9px] font-bold uppercase tracking-wider transition-colors ${
                   isSelected ? 'text-white' : 'text-slate-500 group-hover:text-white'
                 }`}>
-                  {genre.name}
+                  {genre.short || genre.name}
                 </span>
 
-                {/* Level Badge (Optional detail) */}
-                <div className="absolute top-3 right-3 text-[10px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                  LVL {genre.level}
-                </div>
+                {/* Left Active Indicator Bar */}
+                {isSelected && (
+                  <motion.div 
+                    layoutId="activeBar"
+                    className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b ${genre.color}`} 
+                  />
+                )}
 
                 {/* Hover Glow */}
-                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${genre.color} opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none`} />
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${genre.color} opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none`} />
               </motion.button>
             );
           })}
         </motion.div>
+      </div>
+
+      {/* Main Content Area - Blank Slate for now */}
+      <div className="flex-1 flex items-center justify-center z-10 p-12">
+        <AnimatePresence mode="wait">
+          {selectedGenre ? (
+            <motion.div
+              key={selectedGenre.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="text-center"
+            >
+              <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-500 uppercase tracking-tighter mb-4">
+                {selectedGenre.name}
+              </h2>
+              <p className="text-slate-400 text-sm tracking-[0.5em] uppercase">Mastery Level {selectedGenre.level}</p>
+            </motion.div>
+          ) : (
+            <div className="text-center opacity-30">
+              <h1 className="text-4xl font-black uppercase tracking-widest text-white/50">Select Genre</h1>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
