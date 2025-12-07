@@ -29,11 +29,25 @@ export default function AIStoryOverlay({ onClose }) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black font-serif overflow-hidden"
     >
-      {/* Cinematic Background */}
+      {/* Water Wave Animation Background */}
+      <div className="absolute inset-0 bg-[#0f172a] overflow-hidden">
+        {/* Deep water base */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-black opacity-90" />
+        
+        {/* Wave Layers */}
+        <div className="absolute inset-0 opacity-30">
+           <div className="water-wave w-[200%] h-[200%] absolute top-[-50%] left-[-50%] opacity-40 animate-wave-slow bg-[radial-gradient(circle,rgba(56,189,248,0.3)_0%,transparent_60%)]" />
+           <div className="water-wave w-[200%] h-[200%] absolute top-[-50%] left-[-50%] opacity-30 animate-wave-medium bg-[radial-gradient(circle,rgba(99,102,241,0.3)_0%,transparent_50%)]" />
+           <div className="water-wave w-[200%] h-[200%] absolute top-[-50%] left-[-50%] opacity-20 animate-wave-fast bg-[radial-gradient(circle,rgba(236,72,153,0.2)_0%,transparent_40%)]" />
+        </div>
+      </div>
+
+      {/* Liquid Glass Overlay (The "Gear Icon" Finish) */}
       <div 
-        className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&q=80')] bg-cover bg-center filter blur-sm scale-105"
+        className="absolute inset-0 z-0 bg-white/[0.03] backdrop-blur-3xl"
+        style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent pointer-events-none" />
 
       {/* Content Container */}
       <div className="relative z-10 w-full h-full p-12 md:p-24 flex flex-col">
@@ -167,6 +181,29 @@ export default function AIStoryOverlay({ onClose }) {
         }
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
+        }
+
+        /* Water Wave Animations */
+        @keyframes wave {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          100% { transform: translate(10px, 10px) rotate(360deg); }
+        }
+        
+        .animate-wave-slow {
+          animation: wave 25s linear infinite;
+          transform-origin: 45% 45%;
+        }
+        .animate-wave-medium {
+          animation: wave 20s linear infinite reverse;
+          transform-origin: 55% 55%;
+        }
+        .animate-wave-fast {
+          animation: wave 15s linear infinite;
+          transform-origin: 40% 60%;
+        }
+
+        .water-wave {
+          border-radius: 40% 45% 35% 40%;
         }
       `}</style>
     </motion.div>
