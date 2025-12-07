@@ -90,6 +90,7 @@ function LayoutContent({ children, currentPageName }) {
         { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
         { name: 'Library', icon: Library, path: createPageUrl('Library') },
         { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
+        { name: 'Skill Tree', icon: Layers, path: createPageUrl('GenreMastery') },
         { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
         { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
       ],
