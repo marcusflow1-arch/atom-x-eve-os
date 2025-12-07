@@ -105,6 +105,7 @@ export default function Dashboard() {
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [hoveredMenu, setHoveredMenu] = useState(null);
+  const [hoveredMenu, setHoveredMenu] = useState(null);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
