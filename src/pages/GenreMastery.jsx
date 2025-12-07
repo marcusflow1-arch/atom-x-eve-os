@@ -727,6 +727,7 @@ export default function GenreMastery({ onClose }) {
             </div>
           )}
       </AnimatePresence>
+      </div>
 
       {/* Reward Detail Overlay */}
       <AnimatePresence>
