@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, X, Bot
 } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
+import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
@@ -100,11 +101,10 @@ const MODES = [
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { mode: currentMode } = useDashboardMode();
   const navigate = useNavigate();
   const [rotation, setRotation] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [currentMode, setCurrentMode] = useState('ai');
-  const [modeIndex, setModeIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
 
@@ -127,13 +127,6 @@ export default function Dashboard() {
     if (item.route) {
       navigate(createPageUrl(item.route));
     }
-  };
-
-  // Mode toggling handled by new icon button
-  const toggleMode = () => {
-    const newMode = currentMode === 'ai' ? 'user' : 'ai';
-    setCurrentMode(newMode);
-    setModeIndex(newMode === 'ai' ? 0 : 1);
   };
 
   const getItemPosition = (index) => {
@@ -418,50 +411,7 @@ export default function Dashboard() {
         <Settings className="w-6 h-6" />
       </motion.button>
 
-      {/* Mode Toggle & Page Title - Top Left */}
-      <div className="absolute top-24 left-4 z-30 flex items-center gap-4">
-        <motion.button
-          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
-          onClick={toggleMode}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <AnimatePresence mode="wait">
-            {currentMode === 'ai' ? (
-              <motion.div
-                key="user-icon"
-                initial={{ opacity: 0, rotate: -90 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: 90 }}
-                className="flex items-center justify-center w-full h-full"
-              >
-                <User className="w-6 h-6" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="ai-icon"
-                initial={{ opacity: 0, rotate: -90 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: 90 }}
-                className="flex items-center justify-center w-full h-full"
-              >
-                <Bot className="w-6 h-6" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-        
-        <motion.div 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          key={currentMode}
-          className="bg-black/20 backdrop-blur-md border border-white/10 px-4 py-2 rounded-lg"
-        >
-          <span className="text-white font-bold tracking-wider uppercase text-sm">
-            {currentMode === 'ai' ? 'AI Dashboard Home Page' : 'User Interface'}
-          </span>
-        </motion.div>
-      </div>
+      {/* Mode Toggle moved to Layout header */}
 
       {/* Conditional Content Based on Mode */}
       <AnimatePresence mode="wait">

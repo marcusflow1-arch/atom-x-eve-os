@@ -7,6 +7,7 @@ import {
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
+import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -76,6 +77,7 @@ function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
+  const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navGroups = {
@@ -477,11 +479,15 @@ function LayoutContent({ children, currentPageName }) {
           title: "Adam - Marcus", 
           showLevel: true, 
           showDiscord: true,
-          hidden: false 
+          hidden: false,
+          showModeToggle: false
         };
 
         // Page Specific Overrides
-        if (p.includes('/store')) {
+        if (p === '/' || p.endsWith('/dashboard')) {
+             headerConfig.title = mode === 'ai' ? "AI Dashboard Home Page" : "User Interface";
+             headerConfig.showModeToggle = true;
+        } else if (p.includes('/store')) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
           headerConfig.hidden = true; // Hide everything for clan page
@@ -564,6 +570,38 @@ function LayoutContent({ children, currentPageName }) {
                 <span>Discord</span>
               </a>
             )}
+
+            {headerConfig.showModeToggle && (
+              <button
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
+                onClick={toggleMode}
+                title="Toggle Interface Mode"
+              >
+                <AnimatePresence mode="wait">
+                  {mode === 'ai' ? (
+                    <motion.div
+                      key="user-icon"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      className="flex items-center justify-center w-full h-full"
+                    >
+                      <User className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="ai-icon"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      className="flex items-center justify-center w-full h-full"
+                    >
+                      <Bot className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            )}
             </div>
             {/* Minimized Experience Bar */}
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
@@ -615,11 +653,13 @@ export default function Layout({ children, currentPageName }) {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <CartProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <LayoutContent children={children} currentPageName={currentPageName} />
-          </Suspense>
-        </CartProvider>
+        <DashboardModeProvider>
+          <CartProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <LayoutContent children={children} currentPageName={currentPageName} />
+            </Suspense>
+          </CartProvider>
+        </DashboardModeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
