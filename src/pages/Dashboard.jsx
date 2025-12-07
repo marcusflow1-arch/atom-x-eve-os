@@ -13,6 +13,7 @@ import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 import LoadoutPanel from '../components/dashboard/LoadoutPanel';
 import SettingsPanel from '../components/dashboard/SettingsPanel';
+import GenreMastery from './GenreMastery';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
