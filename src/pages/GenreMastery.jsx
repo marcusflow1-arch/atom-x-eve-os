@@ -543,124 +543,120 @@ export default function GenreMastery({ onClose }) {
                 <div className="max-w-7xl mx-auto p-8 md:p-12 w-full">
                   
                   {/* HEADER: Title & Progress */}
-                  <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-12">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
-                          <selectedGenre.icon className="w-3 h-3 mr-2" />
-                          {selectedGenre.rank}
-                        </Badge>
-                        <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
-                          Level {selectedGenre.level} / 20
-                        </Badge>
-                        <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
-                          SEASON 0
-                        </Badge>
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h1 className="text-5xl font-black mb-2 text-white">
+                          {selectedGenre.name}: Season 0
+                        </h1>
+                        <p className="text-white/60">Level {selectedGenre.level} / 20 • Season ends in 45 days</p>
                       </div>
-                      <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">
-                        {selectedGenre.name}
-                        <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white/60 to-white/10 tracking-[0.5em] mt-2">
-                          SEASON 0 PASS
-                        </span>
-                      </h1>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="text-right px-5 py-2.5 rounded-lg bg-white/5 backdrop-blur-xl border border-white/10">
+                          <div className="text-xs text-white/60 font-medium">Season XP</div>
+                          <div className="text-xl font-bold text-white">{selectedGenre.level * 1000} / 20000</div>
+                        </div>
+                      </div>
                     </div>
                     
-                    {/* Progress Stats Card */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl w-full md:w-auto min-w-[300px]">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Season Progress</span>
-                        <span className="text-white font-bold">{selectedGenre.xp}%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-4">
-                        <motion.div 
-                          initial={{ width: 0 }} 
-                          animate={{ width: `${selectedGenre.xp}%` }} 
-                          transition={{ duration: 1.5, ease: "circOut" }}
-                          className={`h-full bg-gradient-to-r ${selectedGenre.color} shadow-[0_0_15px_currentColor]`}
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                           <div className="text-white font-bold text-lg">12</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Unlocks</div>
-                        </div>
-                        <div>
-                           <div className="text-white font-bold text-lg">840</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Power</div>
-                        </div>
-                        <div>
-                           <div className="text-white font-bold text-lg">4d</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Time Left</div>
-                        </div>
-                      </div>
+                    {/* XP Progress Bar */}
+                    <div className="w-full h-2.5 rounded-full overflow-hidden bg-white/5 border border-white/10">
+                      <motion.div
+                        className={`h-full bg-gradient-to-r ${selectedGenre.color}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${selectedGenre.xp}%` }}
+                        transition={{ duration: 1 }}
+                      />
                     </div>
                   </div>
-
-                  {/* FEATURED SPOTLIGHT */}
+                  
+                  {/* Limited Edition Rewards Carousel */}
+                  <div className="mb-12">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+                        <Sparkles className="w-6 h-6 text-blue-400" />
+                        Limited Edition Season Rewards
+                      </h2>
+                      <div className="text-sm text-white/60">
+                        Exclusive {selectedGenre.name} rewards
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                      {progressionData.filter(l => ['Legendary', 'Mythical', 'Godlike'].includes(l.cardReward.rarity)).slice(0, 6).map((level) => (
+                        <motion.div
+                          key={level.level}
+                          whileHover={{ scale: 1.03, y: -8 }}
+                          onClick={() => setViewingLevel(level)}
+                          className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl bg-white/5 backdrop-blur-xl border border-white/10"
+                        >
+                          {/* Shine Effect */}
+                          <motion.div
+                            className="absolute inset-0 opacity-15 pointer-events-none bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                            animate={{ x: ['-100%', '200%'] }}
+                            transition={{ duration: 5, repeat: Infinity, repeatDelay: 4 }}
+                          />
+                          
+                          {/* Card Image */}
+                          <img src={level.cardReward.image} alt={level.cardReward.name} className="w-full h-56 object-cover" />
+                          
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                          
+                          {/* Content */}
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <Badge className="bg-slate-700/80 text-white border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5">
+                                {level.cardReward.rarity}
+                              </Badge>
+                              <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
+                                Level {level.level}
+                              </Badge>
+                            </div>
+                            
+                            <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{level.cardReward.name}</h3>
+                            <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{level.cardReward.description}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Featured Spotlight (Celestial Guardian Style) */}
                   {nextBigUnlock && (
-                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-3xl mb-16 group">
-                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-10 group-hover:opacity-15 transition-opacity duration-1000`} />
-                      
-                      <div className="grid lg:grid-cols-2 gap-0">
-                         {/* Content Side */}
-                         <div className="p-10 md:p-14 flex flex-col justify-center relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-200 text-xs font-bold uppercase tracking-wider w-fit mb-6">
-                              <Sparkles className="w-3 h-3" /> Next Major Reward • Level {nextBigUnlock.level}
-                            </div>
-                            
-                            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-                              {nextBigUnlock.cardReward.name}
-                            </h2>
-                            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-md">
-                              {nextBigUnlock.cardReward.description} Unlock this exclusive reward to dominate the battlefield with enhanced capabilities and prestige.
-                            </p>
-                            
-                            <div className="flex items-center gap-4">
-                              <Button className="h-12 px-8 bg-white text-black hover:bg-slate-200 font-bold rounded-lg" onClick={() => setViewingLevel(nextBigUnlock)}>
-                                Inspect Reward
-                              </Button>
-                              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                                <Lock className="w-4 h-4" /> Requires Level {nextBigUnlock.level}
-                              </div>
-                            </div>
-                         </div>
-
-                         {/* Image Side */}
-                         <div className="relative h-[400px] lg:h-auto overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80 z-10 lg:bg-gradient-to-r" />
-                            <img 
-                              src={nextBigUnlock.cardReward.image} 
-                              alt="Featured" 
-                              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                            />
-                         </div>
+                    <div className="mb-12 p-6 rounded-2xl relative overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-5 animate-pulse`} />
+                      <div className="relative z-10 grid md:grid-cols-2 gap-6 items-center">
+                        <div>
+                          <Badge className="mb-3 text-white text-xs bg-blue-500/20 backdrop-blur-xl border border-blue-400/30">
+                            Season 0 Exclusive
+                          </Badge>
+                          <h2 className="text-3xl font-black mb-3 text-white">{nextBigUnlock.cardReward.name}</h2>
+                          <p className="text-base text-white/70 mb-5">
+                            {nextBigUnlock.cardReward.description} Unlock this exclusive reward at level {nextBigUnlock.level} to gain powerful advantages in battle.
+                          </p>
+                          <div className="flex gap-2.5">
+                            <Button className="bg-blue-600 hover:bg-blue-700 h-10" onClick={() => setViewingLevel(nextBigUnlock)}>
+                              <Play className="w-3.5 h-3.5 mr-1.5" />
+                              Inspect Reward
+                            </Button>
+                            <Button variant="outline" className="h-10">
+                              Learn More
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="relative h-80">
+                          <img 
+                            src={nextBigUnlock.cardReward.image} 
+                            alt="Featured" 
+                            className="w-full h-full object-cover rounded-2xl"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl" />
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  {/* STATS GRID */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <TrendingUp className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">Top 1%</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Global Ranking</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Target className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">98%</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Accuracy Rating</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Users className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">1,240</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Clan Contributions</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Clock className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">342h</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Time Played</div>
-                     </div>
-                  </div>
 
                 </div>
               </div>
