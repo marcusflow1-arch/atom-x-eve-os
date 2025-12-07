@@ -543,8 +543,8 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             </div>
           </div>
 
-          {/* Search Input */}
-          <div className="flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative">
+          {/* Search Input - Hidden in Marketplace Mode */}
+          <div className={`flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative ${storeMode === 'marketplace' ? 'invisible opacity-0 pointer-events-none' : ''}`}>
             <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
             <input 
               type="text" 

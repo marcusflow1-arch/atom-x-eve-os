@@ -193,6 +193,47 @@ const ProductRow = ({ title, items, onItemClick }) => (
   </div>
 );
 
+// Limited Edition Rewards Data
+const LIMITED_REWARDS = [
+  { id: 1, name: 'Void Reaper', type: 'Ability', rarity: 'Godlike', description: 'Summon a dimensional rift that pulls enemies into the void', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=600&fit=crop' },
+  { id: 2, name: 'Celestial Guardian', type: 'Companion', rarity: 'Mythical', description: 'Ancient spirit that shields allies and provides tactical support', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=600&fit=crop' },
+  { id: 3, name: 'Plasma Katana', type: 'Equipment', rarity: 'Legendary', description: 'Energy-infused blade that cuts through armor', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/87b4c67dd_123-1239359_lightsaber-katana-sword.png' },
+  { id: 5, name: 'Mech Wolf', type: 'Companion', rarity: 'Legendary', description: 'Tactical combat drone with pack hunter AI', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/8c415b4eb_bc6044b0f6806867e2f92d967579b4.png' },
+];
+
+// Limited Edition Card Component
+const LimitedEditionCard = ({ card }) => {
+  const rarityColors = {
+    Godlike: { bg: 'bg-slate-700', border: 'border-pink-400', text: 'text-white', glow: 'shadow-pink-500/80' },
+    Mythical: { bg: 'bg-red-900', border: 'border-red-500', text: 'text-red-300', glow: 'shadow-red-500/50' },
+    Legendary: { bg: 'bg-yellow-900', border: 'border-yellow-500', text: 'text-yellow-300', glow: 'shadow-yellow-500/50' },
+    Epic: { bg: 'bg-purple-900', border: 'border-purple-500', text: 'text-purple-300', glow: 'shadow-purple-500/50' },
+    Rare: { bg: 'bg-blue-900', border: 'border-blue-500', text: 'text-blue-300', glow: 'shadow-blue-500/50' },
+    Common: { bg: 'bg-slate-700', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' }
+  };
+  const rarity = rarityColors[card.rarity] || rarityColors.Common;
+
+  return (
+    <motion.div whileHover={{ scale: 1.03, y: -8 }} className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0" style={{ background: 'rgba(148, 163, 184, 0.06)', backdropFilter: 'blur(50px)', border: '1px solid rgba(148, 163, 184, 0.15)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)' }}>
+      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <Badge className="bg-slate-700/80 text-white border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5">{card.rarity}</Badge>
+          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">{card.type}</Badge>
+        </div>
+        <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
+        <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
+        <div className="flex items-center gap-0.5 mt-2">
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // Filter Sidebar
 const FilterSidebar = ({ filters, setFilters }) => {
   const { category, game, priceRange, rarities, rating, prime, deals } = filters;
