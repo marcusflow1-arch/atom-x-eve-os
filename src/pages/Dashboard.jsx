@@ -72,7 +72,7 @@ const ORBITAL_ITEMS = [
   },
   { 
     id: 'games', 
-    label: 'Games', 
+    label: 'PINGAMES', 
     icon: Gamepad2, 
     color: 'from-cyan-500 to-blue-500', 
     route: 'Library',
