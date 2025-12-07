@@ -208,7 +208,7 @@ const InfoPanel = ({ node, points }) => {
   );
 };
 
-export default function GenreMastery() {
+export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -233,7 +233,7 @@ export default function GenreMastery() {
         <header className="px-8 py-6 flex items-center justify-between border-b border-white/5 bg-black/20 backdrop-blur-sm">
           <div className="flex items-center gap-6">
             <button 
-              onClick={() => navigate(-1)}
+              onClick={() => onClose ? onClose() : navigate(-1)}
               className="p-2 rounded-full hover:bg-white/10 transition-colors group"
             >
               <ArrowLeft className="w-6 h-6 text-slate-400 group-hover:text-white" />
