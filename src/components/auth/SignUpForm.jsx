@@ -93,105 +93,109 @@ export default function SignUpForm({ onComplete, onCancel }) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
         >
-            <div className="bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-blue-500/30 p-8 w-full max-w-md shadow-2xl">
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                        Welcome to Atom X Eve
-                    </h1>
-                    <p className="text-slate-400">Complete your profile to begin your journey</p>
+            <div className="w-full max-w-md bg-white/[0.08] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.4)] relative overflow-hidden">
+                {/* Liquid Glass Shine */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+                
+                <div className="text-center mb-8 relative z-10">
+                    <h1 className="text-3xl font-light text-white tracking-wider mb-2">Initialize Profile</h1>
+                    <p className="text-white/40 text-sm">Begin your journey in the Nexus</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <div className="relative">
-                            <AtSign className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                            <Input
-                                placeholder="Choose a username"
-                                value={formData.username}
-                                onChange={(e) => handleInputChange('username', e.target.value)}
-                                className="pl-10 bg-slate-800/50 border-slate-600 text-white"
-                                maxLength={20}
-                            />
-                        </div>
-                        {errors.username && <p className="text-red-400 text-sm mt-1">{errors.username}</p>}
+                <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+                    {/* Username */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1 font-bold">Identity</label>
+                        <Input
+                            placeholder="Username"
+                            value={formData.username}
+                            onChange={(e) => handleInputChange('username', e.target.value)}
+                            className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:bg-white/5 h-12 rounded-xl backdrop-blur-sm transition-all"
+                            maxLength={20}
+                        />
+                         {errors.username && <p className="text-red-400 text-xs mt-1 ml-1">{errors.username}</p>}
                     </div>
 
-                    <div>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                            <Input
+                    {/* Age & Gender */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                             <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1 font-bold">Level</label>
+                             <Input
                                 type="number"
-                                placeholder="Your age"
+                                placeholder="Age"
                                 value={formData.age}
                                 onChange={(e) => handleInputChange('age', e.target.value)}
-                                className="pl-10 bg-slate-800/50 border-slate-600 text-white"
+                                className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:bg-white/5 h-12 rounded-xl backdrop-blur-sm"
                                 min="13"
                                 max="120"
-                            />
+                             />
+                             {errors.age && <p className="text-red-400 text-xs mt-1 ml-1">{errors.age}</p>}
                         </div>
-                        {errors.age && <p className="text-red-400 text-sm mt-1">{errors.age}</p>}
-                    </div>
-
-                    <div>
-                        <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
-                            <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
-                                <SelectValue placeholder="Select your gender" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600">
-                                <SelectItem value="male">Male</SelectItem>
-                                <SelectItem value="female">Female</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {errors.gender && <p className="text-red-400 text-sm mt-1">{errors.gender}</p>}
-                    </div>
-
-                    <div>
-                        <div className="relative">
-                            <Camera className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                            <Input
-                                placeholder="Avatar URL (optional)"
-                                value={formData.avatar_url}
-                                onChange={(e) => handleInputChange('avatar_url', e.target.value)}
-                                className="pl-10 bg-slate-800/50 border-slate-600 text-white"
-                            />
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1 font-bold">Model</label>
+                            <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
+                                <SelectTrigger className="bg-black/20 border-white/10 text-white h-12 rounded-xl backdrop-blur-sm hover:bg-white/5 transition-all">
+                                    <SelectValue placeholder="Gender" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900/90 border-white/10 backdrop-blur-xl text-white">
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.gender && <p className="text-red-400 text-xs mt-1 ml-1">{errors.gender}</p>}
                         </div>
                     </div>
 
-                    <div>
-                        <Textarea
-                            placeholder="What is your favorite gaming moment? (Determines your Archetype)"
-                            value={formData.bio}
-                            onChange={(e) => handleInputChange('bio', e.target.value)}
-                            className="bg-slate-800/50 border-slate-600 text-white"
-                            rows={3}
-                            maxLength={200}
+                    {/* Avatar URL (Optional - kept simple) */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1 font-bold">Avatar Source</label>
+                        <Input
+                            placeholder="Image URL (Optional)"
+                            value={formData.avatar_url}
+                            onChange={(e) => handleInputChange('avatar_url', e.target.value)}
+                            className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:bg-white/5 h-12 rounded-xl backdrop-blur-sm"
                         />
                     </div>
 
+                    {/* Bio */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 ml-1 font-bold">Origin Story</label>
+                         <Textarea
+                            placeholder="What defines your gaming legacy?"
+                            value={formData.bio}
+                            onChange={(e) => handleInputChange('bio', e.target.value)}
+                            className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:bg-white/5 rounded-xl resize-none min-h-[100px] backdrop-blur-sm"
+                            rows={3}
+                            maxLength={200}
+                        />
+                        <p className="text-[10px] text-white/30 text-right">{formData.bio.length}/200</p>
+                    </div>
+
                     {errors.submit && (
-                        <p className="text-red-400 text-sm text-center">{errors.submit}</p>
+                        <p className="text-red-400 text-xs text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">{errors.submit}</p>
                     )}
 
-                    <div className="flex gap-3 pt-4">
+                    {/* Actions */}
+                    <div className="flex gap-4 pt-4">
                         <Button 
                             type="button" 
-                            variant="outline" 
+                            variant="ghost" 
                             onClick={onCancel}
-                            className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                            className="flex-1 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all"
                         >
-                            Skip for Now
+                            Skip
                         </Button>
                         <Button 
                             type="submit" 
                             disabled={isSubmitting}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
+                            className="flex-[2] bg-white text-black hover:bg-white/90 rounded-xl font-bold tracking-wide shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-[1.02]"
                         >
-                            {isSubmitting ? 'Creating...' : 'Complete Setup'}
+                            {isSubmitting ? 'Processing...' : 'Initialize'}
                         </Button>
                     </div>
                 </form>
