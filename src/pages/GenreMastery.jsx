@@ -5,7 +5,7 @@ import {
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
   Trophy, Flame, Sparkles, Orbit, ArrowLeft,
   Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
-  Check, Play, RotateCw, TrendingUp, Clock, Users, Target
+  Check, Play, RotateCw, TrendingUp, Clock, Users, Target, User
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -187,6 +187,85 @@ const generateProgressionLevels = (genreId, genreName) => {
 };
 
 // --- COMPONENTS ---
+
+// Limited Edition Card Component (Migrated from SeasonalPass)
+const LimitedEditionCard = ({ card, onClick }) => {
+  const rarity = rarityColors[card.rarity];
+  
+  return (
+    <motion.div
+      whileHover={{ scale: 1.03, y: -8 }}
+      onClick={() => onClick(card)}
+      className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0"
+      style={{
+        background: 'rgba(148, 163, 184, 0.06)',
+        backdropFilter: 'blur(50px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+        border: '1px solid rgba(148, 163, 184, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+      }}
+    >
+      {/* Liquid Glass Shine Effect */}
+      <motion.div
+        className="absolute inset-0 opacity-15 pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+        }}
+        animate={{
+          x: ['-100%', '200%'],
+        }}
+        transition={{
+          duration: 5,
+          repeat: Infinity,
+          repeatDelay: 4,
+        }}
+      />
+      
+      {/* Card Image */}
+      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
+      
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+      
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <Badge className={`${rarity.bg} ${rarity.text} border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5`}>
+            {card.rarity}
+          </Badge>
+          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
+            {card.type}
+          </Badge>
+        </div>
+        
+        <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
+        <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
+        
+        {/* Rarity Indicator */}
+        <div className="flex items-center gap-0.5 mt-2">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i} 
+              className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Liquid Glass Border */}
+      <motion.div
+        className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
+        animate={{
+          opacity: [0.25, 0.5, 0.25],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+        }}
+      />
+    </motion.div>
+  );
+};
 
 // Reward Preview Modal
 const RewardModal = ({ level, onClose }) => {
@@ -385,13 +464,31 @@ export default function GenreMastery({ onClose }) {
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [progressionData, setProgressionData] = useState([]);
   const [viewingLevel, setViewingLevel] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const scrollContainerRef = useRef(null);
+  const carouselRef = useRef(null);
 
   // Load progression when genre changes
   useEffect(() => {
     if (selectedGenre) {
       setProgressionData(generateProgressionLevels(selectedGenre.id, selectedGenre.name));
     }
+  }, [selectedGenre]);
+
+  // Auto-scroll carousel
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    
+    let scrollInterval = setInterval(() => {
+      if (carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth) {
+        carousel.scrollLeft = 0;
+      } else {
+        carousel.scrollLeft += 1;
+      }
+    }, 30);
+    
+    return () => clearInterval(scrollInterval);
   }, [selectedGenre]);
 
   // Animation variants
@@ -419,6 +516,13 @@ export default function GenreMastery({ onClose }) {
   // Featured Reward (The next big unlock)
   const nextBigUnlock = progressionData.find(p => !p.isUnlocked && (p.cardReward.rarity === 'Legendary' || p.cardReward.rarity === 'Mythical')) || progressionData[progressionData.length - 1];
 
+  // Carousel Items (Filter specific items for carousel display)
+  const carouselItems = progressionData.filter(p => ['Legendary', 'Mythical', 'Godlike'].includes(p.cardReward.rarity)).map(p => ({
+    ...p.cardReward,
+    id: p.level,
+    season: `Season ${p.season}`
+  }));
+
   return (
     <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
       {/* Background Ambience */}
@@ -442,7 +546,7 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* LEFT SIDEBAR: Genre Selection */}
+      {/* LEFT SIDEBAR: Genre Selection (UNCHANGED) */}
       <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
         <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
         <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
@@ -481,7 +585,7 @@ export default function GenreMastery({ onClose }) {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
       </div>
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
       <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
@@ -490,195 +594,238 @@ export default function GenreMastery({ onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full"
+              className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar"
             >
-              
-              {/* SCROLLABLE TOP CONTENT */}
-              <div className="flex-1 overflow-y-auto no-scrollbar pb-64"> {/* Padding bottom for fixed track */}
-                <div className="max-w-7xl mx-auto p-8 md:p-12 w-full">
-                  
-                  {/* HEADER: Title & Progress */}
-                  <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-12">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
-                          <selectedGenre.icon className="w-3 h-3 mr-2" />
-                          {selectedGenre.rank}
-                        </Badge>
-                        <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
-                          Level {selectedGenre.level} / 20
-                        </Badge>
-                        <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
-                          SEASON 0
-                        </Badge>
+               <div className="p-8 md:p-12 pb-32">
+                 {/* HEADER: Similar to Seasonal Pass */}
+                 <div className="mb-12">
+                   <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
+                     <div>
+                       <div className="flex items-center gap-3 mb-2">
+                         <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
+                           <selectedGenre.icon className="w-3 h-3 mr-2" />
+                           {selectedGenre.rank}
+                         </Badge>
+                         <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
+                           Level {selectedGenre.level} / 20
+                         </Badge>
+                         <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
+                           SEASON 0
+                         </Badge>
+                       </div>
+                       
+                       <h1 className="text-5xl md:text-7xl font-black mb-2 bg-gradient-to-r from-white via-slate-300 to-slate-500 bg-clip-text text-transparent uppercase tracking-tighter">
+                         {selectedGenre.name} Mastery
+                       </h1>
+                       <p className="text-slate-400 text-lg">Level {selectedGenre.level} / 20 • Season 0 Pass</p>
+                     </div>
+                     
+                     <div className="flex items-center gap-4">
+                       <div 
+                         className="text-right px-5 py-3 rounded-xl"
+                         style={{
+                           background: 'rgba(148, 163, 184, 0.08)',
+                           backdropFilter: 'blur(50px) saturate(200%)',
+                           border: '1px solid rgba(148, 163, 184, 0.15)',
+                         }}
+                       >
+                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{selectedGenre.xpType}</div>
+                         <div className="text-2xl font-black text-white">{selectedGenre.xp} / 100</div>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {/* XP Progress Bar */}
+                   <div 
+                     className="w-full h-3 rounded-full overflow-hidden"
+                     style={{
+                       background: 'rgba(255, 255, 255, 0.05)',
+                       backdropFilter: 'blur(20px)',
+                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                     }}
+                   >
+                     <motion.div
+                       className="h-full"
+                       style={{
+                         background: `linear-gradient(90deg, ${selectedGenre.color.split(' ')[1].replace('to-', '')} 0%, white 100%)`,
+                       }}
+                       initial={{ width: 0 }}
+                       animate={{ width: `${selectedGenre.xp}%` }}
+                       transition={{ duration: 1.5, ease: "circOut" }}
+                     />
+                   </div>
+                 </div>
+
+                 {/* CAROUSEL: Limited Edition Rewards (Migrated UI) */}
+                 <div className="mb-12">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+                        <Sparkles className="w-6 h-6 text-yellow-400" />
+                        Exclusive Season Rewards
+                      </h2>
+                      <div className="text-sm text-slate-500 font-medium">
+                        Scroll to explore • Click to preview
                       </div>
-                      <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">
-                        {selectedGenre.name}
-                        <span className="block text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white/60 to-white/10 tracking-[0.5em] mt-2">
-                          SEASON 0 PASS
-                        </span>
-                      </h1>
                     </div>
                     
-                    {/* Progress Stats Card */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl w-full md:w-auto min-w-[300px]">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Season Progress</span>
-                        <span className="text-white font-bold">{selectedGenre.xp}%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-4">
-                        <motion.div 
-                          initial={{ width: 0 }} 
-                          animate={{ width: `${selectedGenre.xp}%` }} 
-                          transition={{ duration: 1.5, ease: "circOut" }}
-                          className={`h-full bg-gradient-to-r ${selectedGenre.color} shadow-[0_0_15px_currentColor]`}
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                           <div className="text-white font-bold text-lg">12</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Unlocks</div>
-                        </div>
-                        <div>
-                           <div className="text-white font-bold text-lg">840</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Power</div>
-                        </div>
-                        <div>
-                           <div className="text-white font-bold text-lg">4d</div>
-                           <div className="text-[10px] text-slate-500 uppercase">Time Left</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* FEATURED SPOTLIGHT (Celestial Guardian Style) */}
-                  {nextBigUnlock && (
-                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-3xl mb-16 group">
-                      <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-10 group-hover:opacity-15 transition-opacity duration-1000`} />
-                      
-                      <div className="grid lg:grid-cols-2 gap-0">
-                         {/* Content Side */}
-                         <div className="p-10 md:p-14 flex flex-col justify-center relative z-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-200 text-xs font-bold uppercase tracking-wider w-fit mb-6">
-                              <Sparkles className="w-3 h-3" /> Next Major Reward • Level {nextBigUnlock.level}
-                            </div>
-                            
-                            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-                              {nextBigUnlock.cardReward.name}
-                            </h2>
-                            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-md">
-                              {nextBigUnlock.cardReward.description} Unlock this exclusive reward to dominate the battlefield with enhanced capabilities and prestige.
-                            </p>
-                            
-                            <div className="flex items-center gap-4">
-                              <Button className="h-12 px-8 bg-white text-black hover:bg-slate-200 font-bold rounded-lg" onClick={() => setViewingLevel(nextBigUnlock)}>
-                                Inspect Reward
-                              </Button>
-                              <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
-                                <Lock className="w-4 h-4" /> Requires Level {nextBigUnlock.level}
-                              </div>
-                            </div>
-                         </div>
-
-                         {/* Image Side */}
-                         <div className="relative h-[400px] lg:h-auto overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80 z-10 lg:bg-gradient-to-r" />
-                            <img 
-                              src={nextBigUnlock.cardReward.image} 
-                              alt="Featured" 
-                              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                            />
-                         </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STATS GRID */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <TrendingUp className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">Top 1%</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Global Ranking</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Target className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">98%</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Accuracy Rating</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Users className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">1,240</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Clan Contributions</div>
-                     </div>
-                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <Clock className={`w-8 h-8 ${selectedGenre.accent} mb-4`} />
-                        <div className="text-3xl font-bold text-white mb-1">342h</div>
-                        <div className="text-xs text-slate-400 uppercase tracking-wider">Time Played</div>
-                     </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* FIXED BOTTOM TRACK (Cinematic) */}
-              <div className="absolute bottom-0 left-0 right-0 h-48 z-40">
-                 {/* Glass Background */}
-                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]" />
-                 
-                 {/* Decorative Line */}
-                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-
-                 <div className="relative h-full flex flex-col justify-center">
-                    {/* Track Header */}
-                    <div className="absolute top-4 left-8 right-8 flex justify-between items-center z-10 pointer-events-none">
-                       <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                          <Trophy className="w-3 h-3" /> Reward Progression Track
-                       </div>
-                       <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em]">
-                          Scroll to Navigate
-                       </div>
-                    </div>
-
-                    {/* Left/Right Controls */}
-                    <button 
-                      onClick={() => scroll('left')}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => scroll('right')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-
-                    {/* Scrollable Items */}
                     <div 
-                      ref={scrollContainerRef}
-                      className="flex items-center gap-0 px-12 overflow-x-auto scrollbar-hide h-full snap-x pt-6"
+                      ref={carouselRef}
+                      className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide mask-fade-sides"
                       style={{ scrollBehavior: 'smooth' }}
                     >
-                      <div className="flex items-end gap-1 min-w-max pb-4">
-                        {progressionData.map((level, index) => (
-                           <LevelNode 
-                             key={level.level}
-                             levelData={level} 
-                             isActive={level.level === 36} // Mock active state
-                             onClick={setViewingLevel} 
-                           />
-                        ))}
-                      </div>
+                      {carouselItems.map((card) => (
+                        <LimitedEditionCard 
+                           key={card.id} 
+                           card={{...card, rarity: card.rarity}} // Ensure rarity prop is passed correctly
+                           onClick={() => setViewingLevel(progressionData.find(p => p.level === card.id))} 
+                        />
+                      ))}
                     </div>
                  </div>
-              </div>
 
+                 {/* FEATURED SPOTLIGHT (Migrated UI) */}
+                 {nextBigUnlock && (
+                   <div 
+                     className="mb-12 p-8 md:p-10 rounded-3xl relative overflow-hidden group cursor-pointer"
+                     onClick={() => setViewingLevel(nextBigUnlock)}
+                     style={{
+                       background: 'rgba(255, 255, 255, 0.03)',
+                       backdropFilter: 'blur(60px) saturate(200%)',
+                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                     }}
+                   >
+                     <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-5 group-hover:opacity-10 transition-opacity duration-1000`} />
+                     <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+                       <div>
+                         <Badge 
+                           className="mb-4 text-white text-xs px-3 py-1"
+                           style={{
+                             background: 'rgba(255, 255, 255, 0.1)',
+                             backdropFilter: 'blur(20px)',
+                             border: '1px solid rgba(255, 255, 255, 0.2)',
+                           }}
+                         >
+                           NEXT MAJOR UNLOCK • LEVEL {nextBigUnlock.level}
+                         </Badge>
+                         <h2 className="text-4xl md:text-5xl font-black mb-4 text-white leading-tight">{nextBigUnlock.cardReward.name}</h2>
+                         <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-lg">
+                           {nextBigUnlock.cardReward.description} Reach level {nextBigUnlock.level} to claim this exclusive reward.
+                         </p>
+                         <div className="flex gap-4">
+                           <Button 
+                             style={{
+                               background: 'white',
+                               color: 'black',
+                               fontSize: '14px',
+                               fontWeight: 'bold',
+                             }}
+                             className="hover:bg-slate-200 h-12 px-8 rounded-xl"
+                           >
+                             <Play className="w-4 h-4 mr-2" />
+                             Inspect Reward
+                           </Button>
+                         </div>
+                       </div>
+                       <div className="relative h-80 flex items-center justify-center">
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-2xl" />
+                         <motion.img 
+                           animate={{ y: [0, -10, 0] }}
+                           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                           src={nextBigUnlock.cardReward.image} 
+                           alt="Reward" 
+                           className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]"
+                         />
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* PROGRESS TRACK HEADER */}
+                 <div className="mb-6">
+                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
+                     <Trophy className="w-6 h-6 text-blue-500" />
+                     Progression Track
+                   </h2>
+                   
+                   {/* Scroll Controls */}
+                   <div className="flex items-center gap-4 mt-6 p-4 bg-white/5 rounded-2xl border border-white/5">
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       className="bg-white/5 hover:bg-white/10 text-white"
+                       onClick={() => scroll('left')}
+                     >
+                       <ChevronLeft className="w-5 h-5" />
+                     </Button>
+                     <div className="flex-1 text-center text-sm text-slate-400 font-medium">
+                       Navigate through 20 Levels of {selectedGenre.name} Mastery
+                     </div>
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       className="bg-white/5 hover:bg-white/10 text-white"
+                       onClick={() => scroll('right')}
+                     >
+                       <ChevronRight className="w-5 h-5" />
+                     </Button>
+                   </div>
+                 </div>
+
+                 {/* HORIZONTAL SCROLL TRACK (Using existing LevelNode but in new layout) */}
+                 <div 
+                    ref={scrollContainerRef}
+                    className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x mb-12"
+                    style={{ 
+                      scrollBehavior: 'smooth',
+                      background: 'rgba(0, 0, 0, 0.2)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                    }}
+                  >
+                    {progressionData.map((level) => (
+                      <LevelNode 
+                        key={level.level}
+                        levelData={level} 
+                        isActive={level.level === 36} // Mock active state
+                        onClick={setViewingLevel} 
+                      />
+                    ))}
+                 </div>
+
+                 {/* STATS GRID (Migrated UI) */}
+                 <div className="grid md:grid-cols-4 gap-4">
+                   {[
+                     { icon: TrendingUp, label: 'Genre Rank', value: selectedGenre.rank, color: 'text-blue-400' },
+                     { icon: Clock, label: 'Time Played', value: '127h', color: 'text-green-400' },
+                     { icon: Trophy, label: 'Unlocks', value: '12/20', color: 'text-yellow-400' },
+                     { icon: Users, label: 'Skill Points', value: selectedGenre.skillPoints, color: 'text-purple-400' }
+                   ].map((stat, i) => (
+                     <div 
+                       key={i} 
+                       className="p-6 rounded-2xl transition-all hover:bg-white/5"
+                       style={{
+                         background: 'rgba(255, 255, 255, 0.03)',
+                         backdropFilter: 'blur(50px) saturate(200%)',
+                         border: '1px solid rgba(255, 255, 255, 0.05)',
+                       }}
+                     >
+                       <div className="flex items-center gap-3 mb-2">
+                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                         <span className="text-sm text-slate-500 font-bold uppercase tracking-wider">{stat.label}</span>
+                       </div>
+                       <div className="text-2xl font-black text-white">{stat.value}</div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
             </motion.div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
-              <Orbit className="w-24 h-24 text-white mb-6 animate-spin-slow" />
-              <h1 className="text-5xl font-black uppercase tracking-widest text-white/50 mb-4">Select a Discipline</h1>
-              <p className="text-white/30 max-w-md mx-auto text-lg">Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.</p>
+              <Orbit className="w-32 h-32 text-white mb-8 animate-spin-slow opacity-50" />
+              <h1 className="text-6xl font-black uppercase tracking-tighter text-white/50 mb-6">Select a Discipline</h1>
+              <p className="text-white/30 max-w-lg mx-auto text-xl font-light">
+                Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.
+              </p>
             </div>
           )}
         </AnimatePresence>
@@ -690,6 +837,19 @@ export default function GenreMastery({ onClose }) {
           <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
         )}
       </AnimatePresence>
+      
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .mask-fade-sides {
+          mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        }
+      `}</style>
     </div>
   );
 }
