@@ -108,7 +108,6 @@ function LayoutContent({ children, currentPageName }) {
       icon: Bot,
       items: [
         { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
-        { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
         { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
       ],
     },
@@ -137,7 +136,6 @@ function LayoutContent({ children, currentPageName }) {
     { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
-    { name: 'Trading Post', icon: ArrowLeftRight, path: createPageUrl('TradingPost') },
     { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
     { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },

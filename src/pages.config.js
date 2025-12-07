@@ -17,7 +17,6 @@ import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import AdamXEve from './pages/AdamXEve';
 import Storyline from './pages/Storyline';
-import TradingPost from './pages/TradingPost';
 import GameDetail from './pages/GameDetail';
 import StreamingHub from './pages/StreamingHub';
 import StreamDetail from './pages/StreamDetail';
@@ -58,7 +57,6 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "AdamXEve": AdamXEve,
     "Storyline": Storyline,
-    "TradingPost": TradingPost,
     "GameDetail": GameDetail,
     "StreamingHub": StreamingHub,
     "StreamDetail": StreamDetail,

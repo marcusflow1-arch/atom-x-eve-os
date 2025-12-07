@@ -483,7 +483,6 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
     { name: 'Challenges', icon: '⚔️' },
     { name: 'Community', icon: '👥' },
     { name: 'Clan', icon: '🏰' },
-    { name: 'TradingPost', icon: '🔄' },
     { name: 'Marketplace', icon: '💰' },
     { name: 'Profile', icon: '👤' },
     { name: 'Admin', icon: '⚙️' },
