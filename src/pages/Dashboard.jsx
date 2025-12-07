@@ -640,37 +640,7 @@ export default function Dashboard() {
           <OctagonSkillTree />
         </div>
 
-        {/* Experience Bar at Bottom - Always visible */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-4 z-40"
-          style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 -4px 30px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <div className="relative h-full w-full overflow-hidden">
-            {/* Progress Fill */}
-            <div 
-              className="absolute inset-y-0 left-0 transition-all duration-1000 ease-out"
-              style={{ 
-                width: '16.25%',
-                background: 'linear-gradient(90deg, rgba(203, 213, 225, 0.8) 0%, rgba(147, 197, 253, 0.9) 50%, rgba(96, 165, 250, 1) 100%)',
-                boxShadow: '0 0 20px rgba(147, 197, 253, 0.5)'
-              }}
-            >
-              {/* Liquid Shine Effect */}
-              <div className="absolute top-0 left-0 right-0 h-[50%] bg-gradient-to-b from-white/40 to-transparent" />
-            </div>
-
-            {/* Divider Lines */}
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="absolute top-0 bottom-0 w-px bg-white/20" style={{ left: `${i * 25}%` }} />
-            ))}
-          </div>
-        </div>
+        {/* Experience Bar Removed */}
         </div>
         );
         }

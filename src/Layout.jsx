@@ -518,7 +518,8 @@ function LayoutContent({ children, currentPageName }) {
         if (headerConfig.hidden) return null;
 
         return (
-          <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
+          <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
+            <div className="flex items-center gap-4">
             {headerConfig.showMenu && (
               <button
                 onClick={() => setDrawerOpen(true)}
@@ -563,6 +564,14 @@ function LayoutContent({ children, currentPageName }) {
                 <span>Discord</span>
               </a>
             )}
+            </div>
+            {/* Minimized Experience Bar */}
+            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" 
+                style={{ width: '16.25%' }} 
+              />
+            </div>
           </div>
         );
       })()}
