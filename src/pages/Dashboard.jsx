@@ -319,7 +319,9 @@ export default function Dashboard() {
 
               {/* Content Area */}
               <div className="flex-1 overflow-y-auto p-6">
-                {activeDrawer.id === 'games' ? (
+                {activeDrawer.id === 'loadout' ? (
+                  <LoadoutPanel />
+                ) : activeDrawer.id === 'games' ? (
                   <div className="space-y-6">
                     {/* Pinned Games Header */}
                     <div className="flex items-center justify-between">
@@ -632,10 +634,7 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Loadout Panel - Right Side - Only in AI mode */}
-      <div className={`absolute right-8 top-[40%] -translate-y-1/2 w-72 z-30 transition-opacity duration-500 ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <LoadoutPanel />
-      </div>
+
 
         {/* Octagon Skill Tree - Bottom Right Corner - Only in AI mode */}
         <div className={`absolute right-6 bottom-4 z-30 transition-opacity duration-500 origin-bottom-right scale-[0.61] ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
