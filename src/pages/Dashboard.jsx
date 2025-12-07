@@ -300,15 +300,17 @@ export default function Dashboard() {
               }}
             >
               {/* Header */}
-              <div className="p-6 flex items-center justify-between">
-                <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
-                <button 
-                  onClick={() => setActiveDrawer(null)}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
+              {activeDrawer.id !== 'skill-tree' && (
+                <div className="p-6 flex items-center justify-between">
+                  <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
+                  <button 
+                    onClick={() => setActiveDrawer(null)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                  >
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+                </div>
+              )}
 
               {/* Content Area */}
               <div className="flex-1 overflow-y-auto p-6">
