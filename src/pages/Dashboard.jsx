@@ -10,7 +10,6 @@ import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
 import AINexusView from '../components/dashboard/views/AINexusView';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
-import EconomyDistrictView from '../components/dashboard/views/EconomyDistrictView';
 import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
 import LoadoutPanel from '../components/dashboard/LoadoutPanel';
 
@@ -91,8 +90,7 @@ const DOCK_ITEMS = [
 
 const MODES = [
   { id: 'ai', label: 'AI NEXUS' },
-  { id: 'user', label: 'USER INTERFACE' },
-  { id: 'economy', label: 'ECONOMY DISTRICT' }
+  { id: 'user', label: 'USER INTERFACE' }
 ];
 
 export default function Dashboard() {
@@ -447,7 +445,6 @@ export default function Dashboard() {
             className="absolute inset-0 z-20 pt-24 px-8 pb-8"
           >
             {currentMode === 'user' && <UserInterfaceView />}
-            {currentMode === 'economy' && <EconomyDistrictView />}
           </motion.div>
         ) : null}
       </AnimatePresence>
