@@ -482,61 +482,67 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* CENTRAL OCTAGON SELECTOR */}
-      <AnimatePresence>
-        {!selectedGenre && (
+      {/* LEFT SIDEBAR: Genre Selection (Restored with Octagon Style) */}
+      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
+        <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
           <motion.div 
-             initial={{ opacity: 0, scale: 0.8 }}
-             animate={{ opacity: 1, scale: 1 }}
-             exit={{ opacity: 0, scale: 1.2, filter: 'blur(20px)' }}
-             className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col gap-6 w-full items-center"
           >
-             <div className="relative w-[800px] h-[800px] flex items-center justify-center pointer-events-auto">
-                {/* Central Core */}
-                <div className="absolute w-64 h-64 bg-white/5 backdrop-blur-3xl rounded-full border border-white/10 flex flex-col items-center justify-center text-center p-8 z-10 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-                   <Hexagon className="w-16 h-16 text-white/20 mb-4 animate-pulse" />
-                   <h2 className="text-2xl font-black uppercase tracking-widest text-white mb-2">Genre Mastery</h2>
-                   <p className="text-xs text-slate-400 leading-relaxed">Select a discipline to view your season progress and rewards.</p>
-                </div>
-                
-                {/* Rings */}
-                <div className="absolute inset-0 border border-white/5 rounded-full scale-75 animate-spin-slow duration-[60s]" />
-                <div className="absolute inset-0 border border-white/5 rounded-full scale-100" />
-                
-                {/* Genre Nodes */}
-                {GENRES.map((genre, index) => (
-                  <OctagonShape 
-                    key={genre.id}
-                    rotation={index * (360 / GENRES.length)}
-                    color={genre.color}
-                    icon={genre.icon}
-                    label={genre.short || genre.name}
-                    onClick={() => setSelectedGenre(genre)}
-                  />
-                ))}
-             </div>
+            {GENRES.map((genre) => {
+              const Icon = genre.icon;
+              const isSelected = selectedGenre?.id === genre.id;
+              
+              return (
+                <motion.button
+                  key={genre.id}
+                  variants={itemVariants}
+                  onClick={() => setSelectedGenre(genre)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`relative w-16 h-16 flex items-center justify-center transition-all duration-300 z-20`}
+                >
+                  <div className={`
+                    relative w-full h-full flex items-center justify-center
+                    before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-br ${genre.color} before:opacity-20 before:blur-md
+                    after:content-[''] after:absolute after:inset-0 after:border-2 ${isSelected ? 'after:border-white' : 'after:border-white/20'} after:rotate-45
+                  `}
+                  style={{
+                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                    background: isSelected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  >
+                     <Icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-slate-400'} transition-colors`} />
+                  </div>
+                  {isSelected && (
+                    <motion.div 
+                      layoutId="activeSidebarGlow"
+                      className="absolute inset-0 bg-white/10 blur-xl rounded-full -z-10"
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
+      </div>
 
-      {/* MAIN CONTENT AREA (Visible when genre selected) */}
-      <AnimatePresence>
-          {selectedGenre && (
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {selectedGenre ? (
             <motion.div
-              key="content"
+              key={selectedGenre.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full z-10 relative"
+              className="flex-1 flex flex-col h-full"
             >
-              
-              {/* Back Button */}
-              <button 
-                onClick={() => setSelectedGenre(null)}
-                className="absolute top-6 left-8 z-50 flex items-center gap-2 text-white/50 hover:text-white transition-colors uppercase text-xs font-bold tracking-widest"
-              >
-                <ChevronLeft className="w-4 h-4" /> Return to Nexus
-              </button>
 
               {/* SCROLLABLE TOP CONTENT */}
               <div className="flex-1 overflow-y-auto no-scrollbar pb-64 pt-20"> 
@@ -662,14 +668,12 @@ export default function GenreMastery({ onClose }) {
               </div>
 
               {/* FIXED BOTTOM TRACK (Cinematic) */}
-              <div className="absolute bottom-0 left-0 right-0 h-48 z-40">
-                 {/* Glass Background */}
-                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.5)]" />
+              <div className="absolute bottom-0 left-0 right-0 h-48 z-40 pointer-events-none">
                  
                  {/* Decorative Line */}
                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
 
-                 <div className="relative h-full flex flex-col justify-center">
+                 <div className="relative h-full flex flex-col justify-center pointer-events-auto">
                     {/* Track Header */}
                     <div className="absolute top-4 left-8 right-8 flex justify-between items-center z-10 pointer-events-none">
                        <div className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
