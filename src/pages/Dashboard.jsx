@@ -313,11 +313,13 @@ export default function Dashboard() {
               )}
 
               {/* Content Area */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className={`flex-1 overflow-y-auto ${activeDrawer.id === 'skill-tree' ? '' : 'p-6'}`}>
                 {activeDrawer.id === 'loadout' ? (
                   <LoadoutPanel />
                 ) : activeDrawer.id === 'settings' ? (
                   <SettingsPanel />
+                ) : activeDrawer.id === 'skill-tree' ? (
+                  <GenreMastery onClose={() => setActiveDrawer(null)} />
                 ) : activeDrawer.id === 'games' ? (
                   <div className="space-y-6">
                     {/* Pinned Games Header */}
