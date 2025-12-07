@@ -495,46 +495,44 @@ export default function TradingPostContent() {
         </div>
       </motion.div>
 
-      {/* Layout Container with Sidebar */}
-      <div className="flex gap-6">
-        {/* Sidebar */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <TradingFilterSidebar filters={filters} setFilters={setFilters} />
-        </aside>
+      {/* Navigation Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex justify-start mb-8">
+          <TabsList 
+            className="p-1 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+            }}
+          >
+            <TabsTrigger 
+              value="board" 
+              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+            >
+              Global Market
+            </TabsTrigger>
 
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          {/* Navigation Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <div className="flex justify-start mb-8">
-              <TabsList 
-                className="p-1 rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-                }}
-              >
-                <TabsTrigger 
-                  value="board" 
-                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
-                >
-                  Global Market
-                </TabsTrigger>
+            <TabsTrigger 
+              value="subtab" 
+              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
+            >
+              Inventory
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-                <TabsTrigger 
-                  value="subtab" 
-                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
-                >
-                  Inventory
-                </TabsTrigger>
-              </TabsList>
-            </div>
+        <TabsContent value="board" className="h-[calc(100vh-280px)]">
+          <div className="flex gap-6 h-full">
+            {/* Sidebar - Custom Categories for Trading Post */}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <TradingFilterSidebar filters={filters} setFilters={setFilters} />
+            </aside>
 
-            <TabsContent value="board" className="h-[calc(100vh-280px)]">
-              <div className="h-full flex flex-col">
+            {/* Content Area */}
+            <div className="flex-1 min-w-0 h-full flex flex-col">
             
             {/* Top Navigation Bar */}
             <div className="flex items-center justify-between mb-6">
