@@ -11,7 +11,7 @@ import { createPageUrl } from '@/utils';
 import ThreeScene from '../components/shared/ThreeScene';
 import AINexusView from '../components/dashboard/views/AINexusView';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
-import OctagonSkillTree from '../components/dashboard/OctagonSkillTree';
+
 import LoadoutPanel from '../components/dashboard/LoadoutPanel';
 import SettingsPanel from '../components/dashboard/SettingsPanel';
 import GenreMastery from './GenreMastery';
@@ -552,10 +552,7 @@ export default function Dashboard() {
 
 
 
-        {/* Octagon Skill Tree - Bottom Right Corner - Only in AI mode */}
-        <div className={`absolute right-6 bottom-4 z-30 transition-opacity duration-500 origin-bottom-right scale-[0.61] ${currentMode === 'ai' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <OctagonSkillTree />
-        </div>
+
 
         {/* Experience Bar Removed */}
         </div>
