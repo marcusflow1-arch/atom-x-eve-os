@@ -17,6 +17,7 @@ import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
 import AIHomeOverlay from '../components/dashboard/AIHomeOverlay';
 import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
 import AINewsContent from '../components/dashboard/AINewsContent';
+import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
@@ -76,6 +77,7 @@ export default function LunaTemplate() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
+  const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
@@ -136,7 +138,7 @@ export default function LunaTemplate() {
 
         {/* Seasonal Pass Button */}
         <button
-          onClick={() => navigate(createPageUrl('SeasonalPass'))}
+          onClick={() => setShowSeasonalPass(true)}
           className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
@@ -691,6 +693,40 @@ export default function LunaTemplate() {
               
               <button 
                 onClick={() => setShowAINews(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Seasonal Pass Overlay */}
+      <AnimatePresence>
+        {showSeasonalPass && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSeasonalPass(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-y-auto">
+                <SeasonalPassContent />
+              </div>
+              
+              <button 
+                onClick={() => setShowSeasonalPass(false)}
                 className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
               >
                 <X className="w-5 h-5" />
