@@ -24,7 +24,7 @@ import {
   Users, Target, Sparkles, Sword, Shield, Heart, Star, Trophy,
   Gamepad2, Cog, Leaf, ShoppingCart
 } from 'lucide-react';
-import { profileData, inventoryData } from '../components/profile/mockData';
+import { profileData, inventoryData, itemData } from '../components/profile/mockData';
 import MarketplaceHistory from '../components/profile/MarketplaceHistory';
 
 export default function Profile() {
@@ -275,7 +275,7 @@ export default function Profile() {
                                  label="Outfit" 
                                  side="left" 
                                  level={true}
-                                 item={{ name: "Banisher's Coat", icon: "https://cdn-icons-png.flaticon.com/512/3273/3273760.png" }} 
+                                 item={itemData[profile?.equipped?.armor?.chest] || { name: "Banisher's Coat", icon: "https://cdn-icons-png.flaticon.com/512/3273/3273760.png" }} 
                              />
                              
                              <div className="relative group cursor-pointer">
@@ -287,7 +287,7 @@ export default function Profile() {
                                      label="Saber & Firebane" 
                                      side="left" 
                                      level={true}
-                                     item={{ name: "Silver Estoc", icon: "https://cdn-icons-png.flaticon.com/512/10095/10095640.png" }}
+                                     item={itemData[profile?.equipped?.weapons?.[0]] || { name: "Silver Estoc", icon: "https://cdn-icons-png.flaticon.com/512/10095/10095640.png" }}
                                  />
                              </div>
 
@@ -295,7 +295,7 @@ export default function Profile() {
                                  label="Rifle" 
                                  side="left" 
                                  level={true}
-                                 item={{ name: "Flintlock Musket", icon: "https://cdn-icons-png.flaticon.com/512/2042/2042337.png" }}
+                                 item={itemData[profile?.equipped?.weapons?.[1]] || { name: "Flintlock Musket", icon: "https://cdn-icons-png.flaticon.com/512/2042/2042337.png" }}
                              />
                              
                              <div className="mt-8">
@@ -303,7 +303,7 @@ export default function Profile() {
                                     label="Decoction" 
                                     side="left" 
                                     level={true}
-                                    item={{ name: "Spirit Flask", icon: "https://cdn-icons-png.flaticon.com/512/867/867448.png" }}
+                                    item={itemData[profile?.equipped?.artifacts?.[0]] || { name: "Spirit Flask", icon: "https://cdn-icons-png.flaticon.com/512/867/867448.png" }}
                                 />
                                 <div className="text-right text-xs text-white/50 mt-1 mr-24">Charges: 3 / 3</div>
                              </div>
@@ -332,25 +332,25 @@ export default function Profile() {
                                     label="Amulet" 
                                     side="right" 
                                     level={true}
-                                    item={{ name: "Traveler's Charm", icon: "https://cdn-icons-png.flaticon.com/512/4064/4064788.png" }}
+                                    item={itemData[profile?.equipped?.armor?.head] || { name: "Traveler's Charm", icon: "https://cdn-icons-png.flaticon.com/512/4064/4064788.png" }}
                                 />
                                 <LoadoutSlot 
                                     label="Wristband" 
                                     side="right" 
                                     level={true}
-                                    item={{ name: "Leather Bracers", icon: "https://cdn-icons-png.flaticon.com/512/10096/10096238.png" }}
+                                    item={itemData[profile?.equipped?.armor?.gloves] || { name: "Leather Bracers", icon: "https://cdn-icons-png.flaticon.com/512/10096/10096238.png" }}
                                 />
                                 <LoadoutSlot 
                                     label="Brooch" 
                                     side="right" 
                                     level={true}
-                                    item={{ name: "Iron Pin", icon: "https://cdn-icons-png.flaticon.com/512/2753/2753429.png" }}
+                                    item={itemData[profile?.equipped?.aspects?.[0]] || { name: "Iron Pin", icon: "https://cdn-icons-png.flaticon.com/512/2753/2753429.png" }}
                                 />
                                 <LoadoutSlot 
                                     label="Bane Ring" 
                                     side="right" 
                                     level={true}
-                                    item={{ name: "Signet of Void", icon: "https://cdn-icons-png.flaticon.com/512/3015/3015504.png" }}
+                                    item={itemData[profile?.equipped?.aspects?.[1]] || { name: "Signet of Void", icon: "https://cdn-icons-png.flaticon.com/512/3015/3015504.png" }}
                                 />
                             </div>
 
