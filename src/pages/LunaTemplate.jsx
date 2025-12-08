@@ -4,7 +4,7 @@ import {
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users,
-  Grid, ArrowUpAz, ArrowDownAz
+  Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -22,7 +22,7 @@ import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import ClanContent from '../components/dashboard/ClanContent';
 import ShinyCard from '../components/shared/ShinyCard';
 import { inventoryData, profileData } from '../components/profile/mockData';
-import { DragDropContext } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 
