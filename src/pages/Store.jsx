@@ -970,7 +970,9 @@ export default function Store() {
 
   // Find "Monster Hunter" background specifically
   const monsterHunterBackground = heroBackgrounds.find(bg => 
-    bg.title?.toLowerCase().includes('monster hunter') || bg.title?.toLowerCase().includes('yt hashtag')
+    bg.title?.toLowerCase().includes('monster hunter') || 
+    bg.title?.toLowerCase().includes('yt hashtag') ||
+    bg.title?.toLowerCase().includes('ytdown')
   );
 
   useEffect(() => {
