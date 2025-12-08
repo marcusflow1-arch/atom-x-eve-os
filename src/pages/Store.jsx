@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import MarketplaceContent from '../components/store/MarketplaceContent';
 import TradingPostContent from '../components/store/TradingPostContent';
+import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 
 // --- Liquid Glass Components ---
 
@@ -474,19 +475,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
 
-  const appPages = [
-    { name: 'Dashboard', icon: '🏠' },
-    { name: 'Store', icon: '🛒' },
-    { name: 'Library', icon: '📚' },
-    { name: 'Achievements', icon: '🏆' },
-    { name: 'TradingCards', icon: '🃏' },
-    { name: 'Challenges', icon: '⚔️' },
-    { name: 'Community', icon: '👥' },
-    { name: 'Clan', icon: '🏰' },
-    { name: 'Marketplace', icon: '💰' },
-    { name: 'Profile', icon: '👤' },
-    { name: 'Admin', icon: '⚙️' },
-  ];
+  // appPages replaced by ALL_NAV_ITEMS from NavigationConfig
 
   useEffect(() => {
     return scrollY.on("change", (latest) => {
@@ -634,15 +623,16 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
             >
               <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">Apps</h2>
               <div className="space-y-1">
-                {appPages.map((page) => (
-                  <button
+                {ALL_NAV_ITEMS.map((page) => (
+                  <Link
                     key={page.name}
-                    onClick={() => { navigate(createPageUrl(page.name)); setDrawerOpen(false); }}
+                    to={page.path}
+                    onClick={() => setDrawerOpen(false)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/[0.06] transition-all text-left border border-transparent hover:border-white/[0.08]"
                   >
-                    <span className="text-lg">{page.icon}</span>
+                    <page.icon className="w-5 h-5" />
                     <span className="font-medium">{page.name}</span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </motion.div>
