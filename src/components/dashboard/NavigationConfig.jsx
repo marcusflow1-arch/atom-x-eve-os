@@ -18,7 +18,6 @@ export const ALL_NAV_ITEMS = [
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
-    { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
     { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
@@ -46,12 +45,6 @@ export const NAV_GROUPS = {
             { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
             { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
             { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
-        ],
-    },
-    'AI & Tools': {
-        icon: Bot,
-        items: [
-            { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
         ],
     },
     'Profile': {
