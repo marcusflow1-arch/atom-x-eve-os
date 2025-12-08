@@ -10,7 +10,7 @@ import RoomsTab from '../clan/RoomsTab';
 import GuildInfoTab from '../clan/GuildInfoTab';
 import ResourcesTab from '../clan/ResourcesTab';
 import { useAuth } from '../auth/AuthContext';
-import { ThemeBackground } from '../shared/ThemeSystem';
+// ThemeBackground removed
 
 const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,8 +26,6 @@ export default function ClanContent() {
     const [allMembers, setAllMembers] = useState([]);
     const [currentUser, setCurrentUser] = useState({ role: 'Leader', name: 'Marcus' });
     const { isAuthenticated } = useAuth();
-    const [selectedTheme, setSelectedTheme] = useState('electric_blue');
-
     // Simulate real-time member presence
     useEffect(() => {
         const simulatePresence = () => {
@@ -71,8 +69,16 @@ export default function ClanContent() {
     };
 
     return (
-        <div className="h-full w-full text-white overflow-hidden relative flex flex-col md:flex-row">
-            <ThemeBackground themeId={selectedTheme} />
+        <div 
+            className="h-full w-full text-white overflow-hidden relative flex flex-col md:flex-row"
+            style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.125)',
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+            }}
+        >
             
             {/* Main Content Area with Futuristic Dashboard Layout */}
             <div className="flex-grow flex flex-col h-full overflow-hidden relative z-10 p-6 gap-6">
