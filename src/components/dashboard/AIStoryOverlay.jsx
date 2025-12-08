@@ -70,8 +70,22 @@ export default function AIStoryOverlay({ onClose }) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] font-serif overflow-hidden"
     >
-      {/* LAYER 1: Dynamic Background Layer */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${timeGradients[timeState]} transition-colors duration-[3000ms] ease-in-out`}>
+      {/* LAYER 0: Plasma Water Video Background */}
+      {plasmaVideo && (
+        <div className="absolute inset-0 z-0">
+           <video
+             src={plasmaVideo.video_url}
+             className="w-full h-full object-cover"
+             autoPlay
+             loop
+             muted
+             playsInline
+           />
+        </div>
+      )}
+
+      {/* LAYER 1: Dynamic Background Layer (Theme Overlay) */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${timeGradients[timeState]} transition-colors duration-[3000ms] ease-in-out opacity-60 mix-blend-multiply z-0`}>
         {/* Animated flow effect */}
         <div className="absolute inset-0 opacity-40 animate-slow-flow bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
