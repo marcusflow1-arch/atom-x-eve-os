@@ -19,6 +19,25 @@ export default function LunaTemplate() {
         <Circle className="w-5 h-5 text-white/80" />
       </button>
 
+      {/* Main Content Area */}
+      <div className="max-w-6xl mx-auto mt-32 px-4">
+        <h2 className="text-3xl font-light tracking-[0.2em] uppercase mb-8 text-white/90 drop-shadow-lg pl-2">Weapons</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column Box */}
+          <div 
+            className="h-[500px] rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:bg-white/[0.05] transition-all duration-500 ease-out"
+            style={{ WebkitBackdropFilter: 'blur(40px)' }}
+          ></div>
+
+          {/* Right Column Box */}
+          <div 
+            className="h-[500px] rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:bg-white/[0.05] transition-all duration-500 ease-out"
+            style={{ WebkitBackdropFilter: 'blur(40px)' }}
+          ></div>
+        </div>
+      </div>
+
       {/* Blank Drawer */}
       <AnimatePresence>
         {drawerOpen && (
