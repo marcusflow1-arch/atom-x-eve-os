@@ -177,7 +177,7 @@ export default function Profile() {
         <DragDropContext onDragEnd={handleDragEnd}>
             <div 
               className="min-h-screen text-white p-0 md:p-4"
-              style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+              style={{ background: 'linear-gradient(to bottom, #333333, #1a1a1a)' }}
             >
               {/* Ambient Glow Effects */}
               <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -249,35 +249,35 @@ export default function Profile() {
 
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
+                                    <div className="bg-white/5 backdrop-blur-md border-none hover:bg-white/10 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                                             <Zap className="w-3 h-3 text-yellow-500" /> Power Level
                                         </div>
                                         <div className="text-2xl md:text-3xl font-bold text-white">{powerLevel.toLocaleString()}</div>
                                     </div>
                                     
-                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
+                                    <div className="bg-white/5 backdrop-blur-md border-none hover:bg-white/10 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                                             <Trophy className="w-3 h-3 text-orange-500" /> Achievements
                                         </div>
                                         <div className="text-2xl md:text-3xl font-bold text-white">{unlockedAchievements.length}</div>
                                     </div>
                                     
-                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
+                                    <div className="bg-white/5 backdrop-blur-md border-none hover:bg-white/10 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                                             <Package className="w-3 h-3 text-blue-500" /> Arsenal Size
                                         </div>
                                         <div className="text-2xl md:text-3xl font-bold text-white">{inventory.length} <span className="text-sm text-slate-500 font-normal">Items</span></div>
                                     </div>
 
-                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
+                                    <div className="bg-white/5 backdrop-blur-md border-none hover:bg-white/10 transition-colors rounded-xl p-3 md:p-4 flex flex-col">
                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                                             <Users className="w-3 h-3 text-purple-500" /> Allies
                                         </div>
                                         <div className="text-2xl md:text-3xl font-bold text-white">{categoryCounts.companion}</div>
                                     </div>
                                     
-                                    <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 transition-colors rounded-xl p-3 md:p-4 flex flex-col col-span-2 md:col-span-4 mt-2">
+                                    <div className="bg-white/5 backdrop-blur-md border-none hover:bg-white/10 transition-colors rounded-xl p-3 md:p-4 flex flex-col col-span-2 md:col-span-4 mt-2">
                                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                                             <Crown className="w-3 h-3 text-pink-500" /> Social Influence
                                         </div>
@@ -300,7 +300,7 @@ export default function Profile() {
 
                 {/* Main Profile Content */}
                 <Tabs defaultValue="loadout" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 mb-6">
+                    <TabsList className="grid w-full grid-cols-4 bg-white/5 backdrop-blur-md mb-6 rounded-xl">
                         <TabsTrigger value="loadout" className="gap-2">
                             <Sword className="w-4 h-4" />
                             Loadout
@@ -331,7 +331,7 @@ export default function Profile() {
 
                             {/* Center: Expanded AI Companion Box */}
                             <div className="lg:col-span-1 flex flex-col gap-4">
-                                <Card className="bg-slate-800/50 border-slate-700 flex-1">
+                                <Card className="bg-white/5 backdrop-blur-md border-none shadow-none flex-1">
                                     <CardContent className="p-6 flex flex-col h-full">
                                         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                             <Sparkles className="w-6 h-6 text-purple-400" />
@@ -349,7 +349,7 @@ export default function Profile() {
                                 </Card>
 
                                 {/* Genre Selector - Moved outside the main card */}
-                                <Card className="bg-slate-800/50 border-slate-700">
+                                <Card className="bg-white/5 backdrop-blur-md border-none shadow-none">
                                     <CardContent className="p-4">
                                         <GenreSelector 
                                             equippedGenres={['RPG', 'Sci-Fi']}
@@ -358,7 +358,7 @@ export default function Profile() {
                                 </Card>
 
                                 {/* Companion Stats - Moved outside the main card */}
-                                <Card className="bg-slate-800/50 border-slate-700">
+                                <Card className="bg-white/5 backdrop-blur-md border-none shadow-none">
                                     <CardContent className="p-4">
                                         <h4 className="text-sm font-semibold text-slate-300 mb-2">Companion Stats</h4>
                                         <div className="space-y-2">
@@ -401,7 +401,7 @@ export default function Profile() {
                     <TabsContent value="stats" className="space-y-6">
                         {/* Stats Overview Header */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                             <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center gap-4">
+                             <div className="bg-white/5 backdrop-blur-md border-none p-4 rounded-xl flex items-center gap-4">
                                 <div className="p-3 bg-red-500/10 rounded-lg">
                                     <Sword className="w-6 h-6 text-red-500" />
                                 </div>
@@ -410,7 +410,7 @@ export default function Profile() {
                                     <div className="text-2xl font-black text-white">{(powerLevel * 1.2).toFixed(0)}</div>
                                 </div>
                              </div>
-                             <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center gap-4">
+                             <div className="bg-white/5 backdrop-blur-md border-none p-4 rounded-xl flex items-center gap-4">
                                 <div className="p-3 bg-blue-500/10 rounded-lg">
                                     <Shield className="w-6 h-6 text-blue-500" />
                                 </div>
@@ -419,7 +419,7 @@ export default function Profile() {
                                     <div className="text-2xl font-black text-white">{(powerLevel * 0.8).toFixed(0)}</div>
                                 </div>
                              </div>
-                             <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center gap-4">
+                             <div className="bg-white/5 backdrop-blur-md border-none p-4 rounded-xl flex items-center gap-4">
                                 <div className="p-3 bg-purple-500/10 rounded-lg">
                                     <Sparkles className="w-6 h-6 text-purple-500" />
                                 </div>
@@ -428,7 +428,7 @@ export default function Profile() {
                                     <div className="text-2xl font-black text-white">142%</div>
                                 </div>
                              </div>
-                             <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center gap-4">
+                             <div className="bg-white/5 backdrop-blur-md border-none p-4 rounded-xl flex items-center gap-4">
                                 <div className="p-3 bg-green-500/10 rounded-lg">
                                     <Target className="w-6 h-6 text-green-500" />
                                 </div>
@@ -597,7 +597,7 @@ export default function Profile() {
                     </TabsContent>
 
                     <TabsContent value="builds">
-                        <Card className="bg-slate-800/50 border-slate-700">
+                        <Card className="bg-white/5 backdrop-blur-md border-none shadow-none">
                             <CardContent className="p-8 text-center">
                                 <Target className="w-16 h-16 text-purple-400 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold text-white mb-2">Saved Builds</h3>
@@ -624,7 +624,7 @@ export default function Profile() {
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         {['Cyberpunk 2088', 'Elder Scrolls', 'Half-Life VR', 'Battle Arena', 'Mystic Quest', 'Space Odyssey'].map((game, index) => (
-                            <Card key={index} className="bg-slate-800/50 border-slate-700 hover:border-blue-500/50 transition-all cursor-pointer group">
+                            <Card key={index} className="bg-white/5 backdrop-blur-md border-none shadow-none hover:border-blue-500/50 transition-all cursor-pointer group">
                                 <CardContent className="p-4 text-center">
                                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mx-auto mb-2 group-hover:scale-110 transition-transform" />
                                     <p className="text-xs text-slate-300">{game}</p>
