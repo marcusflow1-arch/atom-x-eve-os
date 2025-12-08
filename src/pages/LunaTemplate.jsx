@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Circle, X, ArrowLeft } from 'lucide-react';
+import { Circle, X, ArrowLeft, Settings } from 'lucide-react';
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
+import SettingsPanel from '../components/dashboard/SettingsPanel';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
@@ -11,6 +12,7 @@ import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 
 export default function LunaTemplate() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const { mode } = useDashboardMode();
 
@@ -40,6 +42,16 @@ export default function LunaTemplate() {
         >
           <Circle className="w-5 h-5 text-white/80" />
         </button>
+
+        {/* Settings Gear Icon */}
+        <motion.button
+          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          onClick={() => setShowSettings(true)}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Settings className="w-6 h-6" />
+        </motion.button>
 
         {/* Back to Loadout X Button (Only visible when Inventory is open) */}
         <AnimatePresence>
@@ -189,6 +201,40 @@ export default function LunaTemplate() {
               </div>
               {/* Blank Content Area */}
               <div className="flex-1"></div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Overlay */}
+      <AnimatePresence>
+        {showSettings && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSettings(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-y-auto">
+                <SettingsPanel />
+              </div>
+              
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </motion.div>
           </>
         )}
