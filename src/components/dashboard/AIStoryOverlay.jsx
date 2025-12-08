@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Clock, Settings, Play, BookOpen } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function AIStoryOverlay({ onClose }) {
   const [view, setView] = useState('menu'); // menu, timeline, settings
+  
+  // Fetch Plasma Water video or fallback to active background
+  const { data: heroBackgrounds } = useQuery({
+    queryKey: ['heroBackgrounds'],
+    queryFn: () => base44.entities.HeroBackground.list(),
+  });
+
+  const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma water')) || 
+                      heroBackgrounds?.find(bg => bg.is_active);
   const [timeState, setTimeState] = useState('night');
 
   // Time-Based Background Engine
