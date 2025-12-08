@@ -98,8 +98,17 @@ export default function InventoryPanel({ inventory = [], capacity, profile }) {
     return (
         <div className="h-[700px] w-full flex gap-6">
             {/* Category Menu Box (Left Side) */}
-            <aside className="w-64 flex-shrink-0 h-full">
-                <div className="h-full p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+            <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
+                {/* Search Bar Above */}
+                <div className="px-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 block mb-1 font-medium pl-1">Search</label>
+                    <div className="flex items-end gap-2 group">
+                        <div className="h-px bg-white/20 group-hover:bg-white/40 transition-colors flex-1 mb-1.5 relative"></div>
+                        <Search className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors mb-0.5" />
+                    </div>
+                </div>
+
+                <div className="flex-1 p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-3">
                             <Grid className="w-4 h-4 text-cyan-500" />
