@@ -23,11 +23,11 @@ export default function LunaTemplate() {
       <div className="max-w-4xl mx-auto mt-24 px-4 flex flex-col items-center gap-12">
         
         {/* Weapons Section */}
-        <div className="w-full">
+        <div className="w-full flex flex-col items-center">
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-center">Weapons</h2>
-          <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
-            <div className="aspect-[3/4] rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
-            <div className="aspect-[3/4] rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+          <div className="flex gap-4">
+            <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
           </div>
         </div>
 
