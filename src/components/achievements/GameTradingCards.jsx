@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight, Plus, Layers, Sparkles, Skull, Flame, Swords, Wand2, Ghost } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import CardInventoryOverlay from './CardInventoryOverlay';
 
 const CARD_GENRES = [
   { id: 'all', name: 'All Cards', icon: Layers },
@@ -32,7 +33,7 @@ const MOCK_CARDS = [
   { id: 102, name: "", rarity: "Legendary", image: null, series: "", genre: "dark_arts", mint: null, total: null, isEmpty: true },
 ];
 
-const CardComponent = ({ card }) => {
+const CardComponent = ({ card, onClick }) => {
   const rarityColors = {
     Legendary: "border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]",
     Epic: "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]",
@@ -72,6 +73,7 @@ const CardComponent = ({ card }) => {
 
   return (
     <motion.div
+      onClick={() => onClick && onClick(card)}
       onMouseMove={isSpecialCard ? handleMouseMove : undefined}
       onMouseLeave={isSpecialCard ? handleMouseLeave : undefined}
       style={{ 
@@ -168,7 +170,7 @@ const CardComponent = ({ card }) => {
   );
 };
 
-const GenreRow = ({ genre, cards, icon: Icon }) => {
+const GenreRow = ({ genre, cards, icon: Icon, onCardClick }) => {
   if (cards.length === 0) return null;
   
   return (
@@ -195,7 +197,7 @@ const GenreRow = ({ genre, cards, icon: Icon }) => {
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
         {cards.map(card => (
           <div key={card.id} className="flex-shrink-0 w-[200px]">
-            <CardComponent card={card} />
+            <CardComponent card={card} onClick={onCardClick} />
           </div>
         ))}
       </div>
@@ -206,6 +208,7 @@ const GenreRow = ({ genre, cards, icon: Icon }) => {
 export default function GameTradingCards() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const filteredCards = useMemo(() => {
     let cards = MOCK_CARDS;
@@ -223,8 +226,19 @@ export default function GameTradingCards() {
     return acc;
   }, {});
 
+  const handleCardClick = (card) => {
+    setSelectedCard(card);
+  };
+
+  const getRelatedCards = (card) => {
+    if (!card) return [];
+    return MOCK_CARDS.filter(c => 
+      (c.genre === card.genre || c.series === card.series) && c.id !== card.id
+    ).slice(0, 10);
+  };
+
   return (
-    <div className="h-full flex flex-col pt-4">
+    <div className="h-full flex flex-col pt-4 relative">
       <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
       <h2 className="text-3xl font-black mb-6 px-10">Trading Cards</h2>
@@ -271,13 +285,14 @@ export default function GameTradingCards() {
                 genre={genre.name}
                 cards={groupedCards[genre.id] || []}
                 icon={genre.icon}
+                onCardClick={handleCardClick}
               />
             ))}
           </>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {filteredCards.map(card => (
-              <CardComponent key={card.id} card={card} />
+              <CardComponent key={card.id} card={card} onClick={handleCardClick} />
             ))}
           </div>
         )}
@@ -287,6 +302,16 @@ export default function GameTradingCards() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {selectedCard && (
+          <CardInventoryOverlay 
+            card={selectedCard} 
+            relatedCards={getRelatedCards(selectedCard)} 
+            onClose={() => setSelectedCard(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
