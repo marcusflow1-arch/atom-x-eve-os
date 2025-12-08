@@ -1094,48 +1094,51 @@ export default function Store() {
                 />
               </div>
 
-              {/* Main Content: Scrollable */}
-              <div className="flex-1 overflow-y-auto page-container scroll-smooth relative group/scroll-area">
-                  {/* Plasma Water Video Background */}
-                  {plasmaBackground && (
-                    <div className="absolute inset-0 z-0 overflow-hidden sticky top-0 h-full">
-                      <video
-                        src={plasmaBackground.video_url}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover opacity-60"
-                      />
-                      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
-                    </div>
-                  )}
+              {/* Main Content: Container */}
+              <div className="flex-1 flex flex-col overflow-hidden relative group/scroll-area">
+              {/* Plasma Water Video Background */}
+              {plasmaBackground && (
+              <div className="absolute inset-0 z-0 overflow-hidden h-full">
+                <video
+                  src={plasmaBackground.video_url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover opacity-60"
+                />
+                <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+              </div>
+              )}
 
-                  {/* Ambient Glow Effects */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-                    <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
-                    <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-                  </div>
+              {/* Ambient Glow Effects */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
+              <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+              </div>
 
-                  <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2 relative z-10">
-                    <div className="flex gap-6">
-                      {/* Left Sidebar - Filters */}
-                      <aside className="hidden lg:block w-64 flex-shrink-0 pt-2">
-                        <FilterSidebar 
-                          genres={genres}
-                          selectedGenres={selectedGenres}
-                          setSelectedGenres={setSelectedGenres}
-                          priceRange={priceRange}
-                          setPriceRange={setPriceRange}
-                          selectedRating={selectedRating}
-                          setSelectedRating={setSelectedRating}
-                          selectedCategory={selectedCategory}
-                          setSelectedCategory={setSelectedCategory}
-                        />
-                      </aside>
+              <div className="max-w-[1920px] w-full mx-auto px-4 md:px-6 py-4 relative z-10 flex-1 min-h-0 flex flex-col">
+              <div className="flex gap-6 h-full">
+                {/* Left Sidebar - Filters */}
+                <aside className="hidden lg:block w-64 flex-shrink-0 pt-2 h-full overflow-y-auto scrollbar-hide">
+                  <FilterSidebar 
+                    genres={genres}
+                    selectedGenres={selectedGenres}
+                    setSelectedGenres={setSelectedGenres}
+                    priceRange={priceRange}
+                    setPriceRange={setPriceRange}
+                    selectedRating={selectedRating}
+                    setSelectedRating={setSelectedRating}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                  />
+                </aside>
 
-                  {/* Right Content - Results (Luna + Netflix Style) */}
-                  <div className="flex-1 min-w-0">
+              {/* Right Content - Results (Liquid Glass Box) */}
+              <div className="flex-1 min-w-0 h-full relative">
+              <div className="absolute inset-0 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
+                {/* Inner Scroll Container */}
+                <div className="h-full overflow-y-auto p-6 scrollbar-hide">
                     {/* Active Filters - Pill Style */}
                     {(selectedGenres.length > 0 || selectedRating || searchTerm) && (
                       <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -1298,13 +1301,16 @@ export default function Store() {
                             </div>
                           ));
                         })()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              </div> {/* Close flex-1 overflow-y-auto */}
-            </motion.div>
+                        </div>
+                        )}
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </div> {/* Close flex-1 overflow-hidden */}
+                        </motion.div>
           ) : storeMode === 'marketplace' ? (
             <motion.div
               key="marketplace"
