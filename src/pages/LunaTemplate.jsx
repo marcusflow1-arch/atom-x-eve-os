@@ -40,15 +40,7 @@ const ORBITAL_ITEMS = [
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
     description: 'Enter Combat Arena'
   },
-  { 
-    id: 'console', 
-    label: 'Console', 
-    icon: Gamepad2, 
-    color: 'from-blue-500 to-cyan-500', 
-    route: 'AIConsole',
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
-    description: 'Launch Game Hub'
-  },
+
   { 
     id: 'story', 
     label: 'AI Story', 
@@ -66,15 +58,7 @@ const ORBITAL_ITEMS = [
     image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
     description: 'Personal Space'
   },
-  { 
-    id: 'loadout', 
-    label: 'Loadout', 
-    icon: Shield, 
-    color: 'from-amber-500 to-yellow-500', 
-    route: 'Profile',
-    image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400',
-    description: 'Customize Equipment'
-  },
+
   { 
     id: 'games', 
     label: 'PINGAMES', 
