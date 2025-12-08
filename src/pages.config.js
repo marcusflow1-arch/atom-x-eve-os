@@ -21,7 +21,6 @@ import GameDetail from './pages/GameDetail';
 import StreamingHub from './pages/StreamingHub';
 import StreamDetail from './pages/StreamDetail';
 import AvatarStudio from './pages/AvatarStudio';
-import Profile from './pages/Profile';
 import AbilityAchievements from './pages/AbilityAchievements';
 import PlayerProfile from './pages/PlayerProfile';
 import GameProfile from './pages/GameProfile';
@@ -61,7 +60,6 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "StreamDetail": StreamDetail,
     "AvatarStudio": AvatarStudio,
-    "Profile": Profile,
     "AbilityAchievements": AbilityAchievements,
     "PlayerProfile": PlayerProfile,
     "GameProfile": GameProfile,

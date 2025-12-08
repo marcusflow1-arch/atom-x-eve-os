@@ -116,7 +116,7 @@ function LayoutContent({ children, currentPageName }) {
     'Profile': {
       icon: User,
       items: [
-        { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
+
         { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
         { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
       ],
@@ -529,7 +529,7 @@ function LayoutContent({ children, currentPageName }) {
         if (headerConfig.hidden) return null;
 
         const DOCK_ITEMS = [
-          { id: 'profile', label: 'Profile', icon: User, route: 'Profile' },
+
           { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
           { id: 'marketplace', label: 'Market', icon: Target, route: 'Marketplace' },
