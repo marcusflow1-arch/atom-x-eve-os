@@ -1,9 +1,8 @@
-
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -20,6 +19,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
     { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
+    { name: 'Cross Interface', icon: Plus, path: createPageUrl('CrossInterface') },
 ];
 
 export const NAV_GROUPS = {
