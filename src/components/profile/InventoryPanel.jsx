@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, Globe, Sword, Shield, Zap, Sparkles, ScrollText, Hammer, Database, 
   SlidersHorizontal, ChevronRight, ChevronLeft, Gamepad2, TrendingUp, Coins, Info, 
-  ArrowLeftRight, DollarSign, Gavel, Ghost 
+  ArrowLeftRight, DollarSign, Gavel, Ghost, X 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,10 +53,11 @@ const augmentItem = (item) => {
     return { ...details, ...item, game, genre };
 };
 
-export default function InventoryPanel({ inventory = [], capacity, profile }) {
+export default function InventoryPanel({ inventory = [], capacity, profile, onClose }) {
     const [subTabGenre, setSubTabGenre] = useState(null);
     const [subTabGame, setSubTabGame] = useState(null);
     const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Process inventory
     const processedInventory = useMemo(() => {
@@ -99,12 +100,28 @@ export default function InventoryPanel({ inventory = [], capacity, profile }) {
         <div className="h-[700px] w-full flex gap-6">
             {/* Category Menu Box (Left Side) */}
             <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
-                {/* Search Bar Above */}
-                <div className="px-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 block mb-1 font-medium pl-1">Search</label>
-                    <div className="flex items-end gap-2 group">
-                        <div className="h-px bg-white/20 group-hover:bg-white/40 transition-colors flex-1 mb-1.5 relative"></div>
-                        <Search className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors mb-0.5" />
+                {/* Search Bar & Close Button */}
+                <div className="px-2 flex items-end gap-3">
+                    {onClose && (
+                         <button 
+                            onClick={onClose}
+                            className="w-8 h-8 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 group"
+                         >
+                            <X className="w-4 h-4 text-white/60 group-hover:text-white" />
+                         </button>
+                    )}
+                    <div className="flex-1">
+                        <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 block mb-1 font-medium pl-1">Search</label>
+                        <div className="flex items-center gap-2 group relative">
+                            <input 
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-transparent border-none outline-none text-white text-sm py-1 border-b border-white/20 focus:border-white/50 transition-colors placeholder:text-transparent"
+                            />
+                            <Search className="w-4 h-4 text-white/50 absolute right-0 bottom-2 pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 right-0 h-px bg-white/20 group-focus-within:bg-white/50 transition-colors pointer-events-none"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -260,107 +277,103 @@ export default function InventoryPanel({ inventory = [], capacity, profile }) {
                                 </div>
                             </div>
 
-                            <div className="w-1/3 bg-slate-900/80 rounded-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">
+                            <div 
+                                className={`w-1/3 rounded-2xl border flex flex-col overflow-hidden shadow-2xl transition-all duration-500 relative
+                                    ${selectedInventoryItem 
+                                        ? selectedInventoryItem.rarity === 'Mythic' || selectedInventoryItem.rarity === 'Mythical'
+                                            ? 'bg-red-900/20 border-red-500/30'
+                                            : selectedInventoryItem.rarity === 'Epic'
+                                                ? 'bg-purple-900/20 border-purple-500/30'
+                                                : 'bg-slate-900/40 border-white/10'
+                                        : 'bg-slate-900/40 border-white/10'
+                                    }
+                                    backdrop-blur-xl
+                                `}
+                            >
+                                {/* Background Ambient Glow for Rare Items */}
+                                {selectedInventoryItem && (selectedInventoryItem.rarity === 'Mythic' || selectedInventoryItem.rarity === 'Mythical') && (
+                                    <div className="absolute inset-0 bg-gradient-to-b from-red-600/10 to-transparent pointer-events-none" />
+                                )}
+                                {selectedInventoryItem && selectedInventoryItem.rarity === 'Epic' && (
+                                    <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-transparent pointer-events-none" />
+                                )}
+
                                 {selectedInventoryItem ? (
-                                    <>
-                                        <div className="h-48 relative bg-gradient-to-b from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden group">
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-                                            
-                                            {selectedInventoryItem.icon_url || selectedInventoryItem.icon ? (
-                                                 <img src={selectedInventoryItem.icon_url || selectedInventoryItem.icon} alt={selectedInventoryItem.name} className="w-24 h-24 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110" />
-                                            ) : (
-                                                <SwordsIcon className={`w-24 h-24 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 ${
-                                                    selectedInventoryItem.rarity === 'Legendary' ? 'text-orange-500' :
-                                                    selectedInventoryItem.rarity === 'Epic' ? 'text-purple-500' :
-                                                    selectedInventoryItem.rarity === 'Rare' ? 'text-blue-500' : 'text-slate-400'
-                                                }`} />
-                                            )}
-                                            
-                                            <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                                                <Badge className={`
-                                                    ${selectedInventoryItem.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' :
-                                                    selectedInventoryItem.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
-                                                    selectedInventoryItem.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-slate-700 text-slate-300'}
-                                                `}>
-                                                    {selectedInventoryItem.rarity}
-                                                </Badge>
+                                    <div className="flex flex-col h-full relative z-10 p-5">
+                                        {/* Simple Clean Header */}
+                                        <div className="flex items-start gap-4 mb-6">
+                                            <div className={`
+                                                w-20 h-20 rounded-xl flex items-center justify-center flex-shrink-0 bg-black/20 border border-white/10
+                                                ${selectedInventoryItem.rarity === 'Mythic' ? 'shadow-[0_0_20px_rgba(220,38,38,0.3)]' : ''}
+                                                ${selectedInventoryItem.rarity === 'Epic' ? 'shadow-[0_0_20px_rgba(147,51,234,0.3)]' : ''}
+                                            `}>
+                                                {selectedInventoryItem.icon_url || selectedInventoryItem.icon ? (
+                                                     <img src={selectedInventoryItem.icon_url || selectedInventoryItem.icon} alt={selectedInventoryItem.name} className="w-14 h-14 object-contain" />
+                                                ) : (
+                                                    <SwordsIcon className="w-10 h-10 text-white/50" />
+                                                )}
                                             </div>
-                                        </div>
-
-                                        <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto">
                                             <div>
-                                                <h3 className="text-xl font-bold text-white leading-tight">{selectedInventoryItem.name}</h3>
-                                                <p className="text-xs text-slate-400 mt-1">{selectedInventoryItem.type || 'Item'} • Item Level {selectedInventoryItem.level || selectedInventoryItem.levelRequirement || 1}</p>
-                                            </div>
-
-                                            <div className="text-sm text-slate-300 italic border-l-2 border-white/10 pl-3 py-1">
-                                                "{selectedInventoryItem.description || 'No description available.'}"
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                    <div className="text-[10px] text-slate-500 uppercase">Power</div>
-                                                    <div className="text-lg font-mono text-white">{selectedInventoryItem.power || 0}</div>
-                                                </div>
-                                                <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                    <div className="text-[10px] text-slate-500 uppercase">Weight</div>
-                                                    <div className="text-lg font-mono text-white">2.5kg</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-auto bg-cyan-950/20 rounded-xl p-4 border border-cyan-500/20">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1">
-                                                        <TrendingUp className="w-3 h-3" /> Market Value
-                                                    </div>
-                                                    <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
-                                                        High Demand
+                                                <h3 className="text-xl font-bold text-white leading-tight mb-1">{selectedInventoryItem.name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className={`
+                                                        border px-2 py-0 text-[10px] uppercase tracking-wider font-bold bg-transparent
+                                                        ${selectedInventoryItem.rarity === 'Mythic' || selectedInventoryItem.rarity === 'Mythical' ? 'text-red-400 border-red-500/50' :
+                                                          selectedInventoryItem.rarity === 'Epic' ? 'text-purple-400 border-purple-500/50' :
+                                                          selectedInventoryItem.rarity === 'Legendary' ? 'text-orange-400 border-orange-500/50' :
+                                                          selectedInventoryItem.rarity === 'Rare' ? 'text-blue-400 border-blue-500/50' :
+                                                          'text-slate-400 border-slate-500/50'}
+                                                    `}>
+                                                        {selectedInventoryItem.rarity}
                                                     </Badge>
-                                                </div>
-                                                
-                                                <div className="flex items-end justify-between mb-4">
-                                                    <div>
-                                                        <div className="text-[10px] text-slate-400">Average Price</div>
-                                                        <div className="text-2xl font-black text-white flex items-center gap-1">
-                                                            <Coins className="w-4 h-4 text-amber-400" /> {selectedInventoryItem.marketPrice || 1200}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-[10px] text-slate-400">Last Sold</div>
-                                                        <div className="text-xs text-white">2 mins ago</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    <Button 
-                                                      variant="default"
-                                                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-1"
-                                                    >
-                                                        <ArrowLeftRight className="w-3 h-3 mr-1" /> Trade
-                                                    </Button>
-                                                    <Button 
-                                                      variant="default"
-                                                      className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-1"
-                                                    >
-                                                        <DollarSign className="w-3 h-3 mr-1" /> Sell
-                                                    </Button>
-                                                    <Button 
-                                                      variant="default"
-                                                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-1"
-                                                    >
-                                                        <Gavel className="w-3 h-3 mr-1" /> Bid
-                                                    </Button>
+                                                    <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">{selectedInventoryItem.type || 'Item'}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+
+                                        {/* Clean Stats Grid */}
+                                        <div className="grid grid-cols-2 gap-3 mb-6">
+                                            <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                                <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1">Power Level</div>
+                                                <div className="text-xl font-mono text-white font-medium">{selectedInventoryItem.power || 0}</div>
+                                            </div>
+                                            <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                                <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1">Required Lvl</div>
+                                                <div className="text-xl font-mono text-white font-medium">{selectedInventoryItem.level || selectedInventoryItem.levelRequirement || 1}</div>
+                                            </div>
+                                            <div className="bg-white/5 rounded-lg p-3 border border-white/5 col-span-2">
+                                                <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-1">Origin</div>
+                                                <div className="text-sm text-white truncate">{selectedInventoryItem.game || 'Unknown Realm'}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Description */}
+                                        <div className="flex-1 overflow-y-auto mb-6 pr-2">
+                                            <p className="text-sm text-slate-300 leading-relaxed font-light">
+                                                {selectedInventoryItem.description || 'No description available for this item.'}
+                                            </p>
+                                        </div>
+
+                                        {/* Action Footer */}
+                                        <div className="grid grid-cols-3 gap-2 mt-auto">
+                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
+                                                Trade
+                                            </Button>
+                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
+                                                Sell
+                                            </Button>
+                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
+                                                Equip
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                                        <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 animate-pulse">
-                                            <Info className="w-8 h-8 opacity-50" />
+                                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center mb-4">
+                                            <Info className="w-5 h-5 opacity-40" />
                                         </div>
-                                        <h4 className="text-lg font-bold text-slate-400 mb-1">Item Inspector</h4>
-                                        <p className="text-xs">Select an item from your inventory to view details, market analytics, and listing options.</p>
+                                        <h4 className="text-sm font-bold text-slate-400 mb-1">Select an Item</h4>
+                                        <p className="text-[10px] opacity-60 max-w-[180px]">Choose an item from the grid to view its details</p>
                                     </div>
                                 )}
                             </div>

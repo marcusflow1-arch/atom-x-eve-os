@@ -40,14 +40,15 @@ export default function LunaTemplate() {
               style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             >
               <X className="w-5 h-5 text-white/80" />
-            </motion.button>
-          )}
-        </AnimatePresence>
+              </motion.button>
+              )}
+              </AnimatePresence> */
+              }
 
-        {/* Main Content Area */}
-        <div className="w-full mt-24 px-12 relative">
-          <AnimatePresence mode="wait">
-            {!showInventory ? (
+              {/* Main Content Area */}
+              <div className="w-full mt-24 px-12 relative">
+              <AnimatePresence mode="wait">
+              {!showInventory ? (
               <motion.div 
                 key="boxes"
                 initial={{ opacity: 0 }}
@@ -132,6 +133,7 @@ export default function LunaTemplate() {
                   inventory={inventoryData} 
                   capacity={profileData.inventoryCapacity} 
                   profile={profileData} 
+                  onClose={() => setShowInventory(false)}
                 />
               </motion.div>
             )}
