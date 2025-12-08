@@ -625,17 +625,27 @@ function LayoutContent({ children, currentPageName }) {
             </div>
 
             {/* Under Bar Content: Page Name & Dock Items */}
-            <div className="flex items-center gap-6 mt-1 pl-1">
-                <button
-                  onClick={() => setBlankDrawerOpen(true)}
-                  className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-                  style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-                >
-                  <Circle className="w-5 h-5 text-white/80" />
-                </button>
+            {(headerConfig.showModeToggle || headerConfig.showDock) && (
+              <div className="flex items-center gap-6 mt-1 pl-1">
 
 
+                {/* Dock Items */}
+                {headerConfig.showDock && mode === 'ai' && (
+                   <div className="flex items-center gap-2">
+                       {DOCK_ITEMS.map(item => (
+                           <Link 
+                             key={item.id} 
+                             to={createPageUrl(item.route)}
+                             className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                             title={item.label}
+                           >
+                               <item.icon className="w-4 h-4" />
+                           </Link>
+                       ))}
+                   </div>
+                )}
               </div>
+            )}
           </div>
         );
       })()}
