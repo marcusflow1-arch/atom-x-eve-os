@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft } from 'lucide-react';
+import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef } from 'react';
 import ShinyCard from '../shared/ShinyCard';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
@@ -31,6 +32,72 @@ const MOCK_GAMES = INITIAL_GENRES.reduce((acc, genre) => {
   acc[genre] = generateGames(genre, 40);
   return acc;
 }, { default: generateGames('Game', 40) });
+
+const GamesCarousel = ({ games, onSelectGame }) => {
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      const scrollAmount = current.clientWidth * 0.8;
+      current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="relative group/carousel">
+      <motion.div
+        key="games-view"
+        ref={scrollRef}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="flex gap-3 overflow-x-auto pb-2 no-scrollbar scroll-smooth"
+      >
+        {games.map((game) => (
+          <div 
+            key={game.id}
+            onClick={() => onSelectGame(game)}
+            className="flex-shrink-0 w-24 flex flex-col gap-2 cursor-pointer group/game"
+          >
+            <div className="w-24 h-32 rounded-lg bg-slate-800 border border-white/10 overflow-hidden relative group-hover/game:border-blue-400/50 transition-colors">
+              {game.image ? (
+                <img src={game.image} alt={game.title} className="w-full h-full object-cover opacity-60 group-hover/game:opacity-100 transition-opacity" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/20">
+                  <Gamepad2 className="w-8 h-8" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute bottom-2 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2">
+                {game.title}
+              </div>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+      
+      {/* Left Arrow */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); scroll('left'); }}
+        className="absolute -left-2 top-16 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
+      >
+        <ChevronLeft size={14} />
+      </button>
+
+      {/* Right Arrow */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); scroll('right'); }}
+        className="absolute -right-2 top-16 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
+      >
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+};
 
 export default function LunaCardScroll({ onExpand, onCardClick }) {
   // State for pagination per genre
@@ -175,35 +242,10 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                           <div className="relative min-h-[120px]">
                             <AnimatePresence mode="wait">
                               {viewMode === 'games' ? (
-                                <motion.div
-                                  key="games-view"
-                                  initial={{ opacity: 0, x: 20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: -20 }}
-                                  className="flex gap-3 overflow-x-auto pb-2 no-scrollbar"
-                                >
-                                  {gamesList.map((game) => (
-                                    <div 
-                                      key={game.id}
-                                      onClick={() => selectGame(genre, game)}
-                                      className="flex-shrink-0 w-24 flex flex-col gap-2 cursor-pointer group/game"
-                                    >
-                                      <div className="w-24 h-32 rounded-lg bg-slate-800 border border-white/10 overflow-hidden relative group-hover/game:border-blue-400/50 transition-colors">
-                                        {game.image ? (
-                                          <img src={game.image} alt={game.title} className="w-full h-full object-cover opacity-60 group-hover/game:opacity-100 transition-opacity" />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center text-white/20">
-                                            <Gamepad2 className="w-8 h-8" />
-                                          </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                        <div className="absolute bottom-2 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2">
-                                          {game.title}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </motion.div>
+                                <GamesCarousel 
+                                  games={gamesList} 
+                                  onSelectGame={(game) => selectGame(genre, game)} 
+                                />
                               ) : (
                                 <motion.div
                                   key="cards-view"
