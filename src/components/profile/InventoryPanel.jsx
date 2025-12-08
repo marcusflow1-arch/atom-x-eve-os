@@ -103,7 +103,6 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                 {/* Search Bar */}
                 <div className="px-3 pt-4">
                     <div className="flex-1 relative">
-                        <label className="text-[9px] uppercase tracking-[0.2em] text-white/30 absolute -top-3 left-1 font-medium">Search</label>
                         <div className="flex items-center gap-2 group relative">
                             <input 
                                 type="text"
