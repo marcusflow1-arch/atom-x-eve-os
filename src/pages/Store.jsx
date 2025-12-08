@@ -85,7 +85,7 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
           <img
             src={game.cover_image || game.image}
             alt={game.title}
-            className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
+            className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
           />
 
           {/* Gradient Overlay */}
@@ -149,7 +149,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
       <img 
         src={game.cover_image || game.image} 
         alt={game.title}
-        className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
+        className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-90 z-20" />
 
@@ -810,7 +810,7 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
     >
       <div className="w-48 h-full flex-shrink-0 relative bg-slate-950 overflow-hidden">
         <img src={game.cover_image || game.image} alt="" className="w-full h-full object-cover absolute inset-0 opacity-50 blur-sm scale-110" />
-        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-contain relative z-10 p-2" />
+        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover relative z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/80 z-20" />
       </div>
 
@@ -1152,7 +1152,7 @@ export default function Store() {
                                     <img 
                                       src={game.cover_image || game.image} 
                                       alt={game.title}
-                                      className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
+                                      className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90 z-20" />
                                     <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent z-20" />
