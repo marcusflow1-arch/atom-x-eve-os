@@ -20,11 +20,11 @@ export default function LunaTemplate() {
       </button>
 
       {/* Main Content Area */}
-      <div className="max-w-4xl mx-auto mt-24 px-4 flex flex-col items-center gap-12">
+      <div className="w-full mt-24 px-12 flex flex-col items-start gap-12">
         
         {/* Weapons Section */}
-        <div className="w-full flex flex-col items-center">
-          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-center">Weapons</h2>
+        <div className="flex flex-col items-start">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-left pl-1">Weapons</h2>
           <div className="flex gap-4">
             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
@@ -32,8 +32,8 @@ export default function LunaTemplate() {
         </div>
 
         {/* Equipment Section */}
-        <div className="w-full flex flex-col items-center gap-4">
-          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-center">Equipment</h2>
+        <div className="flex flex-col items-start gap-4">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Equipment</h2>
           
           {/* Top: Center Box */}
           <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
