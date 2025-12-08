@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
-  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot
+  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -130,6 +130,15 @@ export default function LunaTemplate() {
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Gamepad2 className="w-5 h-5 text-white/80" />
+        </button>
+
+        {/* Seasonal Pass Button */}
+        <button
+          onClick={() => navigate(createPageUrl('SeasonalPass'))}
+          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <Crown className="w-5 h-5 text-white/80" />
         </button>
 
         {/* Settings Gear Icon */}
