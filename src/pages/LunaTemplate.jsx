@@ -78,6 +78,7 @@ export default function LunaTemplate() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [uiVisible, setUiVisible] = useState(true);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -483,18 +484,39 @@ export default function LunaTemplate() {
               </AnimatePresence> */
               }
 
+              {/* UI Toggle Side Bar */}
+              <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 h-64 flex items-center justify-center">
+                <button 
+                  onClick={() => setUiVisible(!uiVisible)}
+                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-48 ${
+                    uiVisible 
+                      ? 'bg-white/10 hover:bg-white/30 hover:w-1.5' 
+                      : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
+                  }`}
+                />
+              </div>
+
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
-              <AnimatePresence mode="wait">
-                {!showInventory ? (
-                  <motion.div 
-                    key="boxes"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex justify-between gap-12"
-                  >
+              <AnimatePresence>
+              {uiVisible && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full"
+                >
+                <AnimatePresence mode="wait">
+                  {!showInventory ? (
+                    <motion.div 
+                      key="boxes"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex justify-between gap-12"
+                    >
                     <div className="flex flex-col items-start gap-12">
                       {/* Weapons Section */}
                       <div className="flex flex-col items-start">
@@ -583,6 +605,9 @@ export default function LunaTemplate() {
               </motion.div>
             )}
           </AnimatePresence>
+          </motion.div>
+        )}
+        </AnimatePresence>
         </div>
 
       {/* Blank Drawer */}
