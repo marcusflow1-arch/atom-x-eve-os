@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, Trophy, Gamepad2, Users, Shield } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function IntroScreen({ onComplete }) {
+  const { data: heroBackgrounds } = useQuery({
+    queryKey: ['heroBackgrounds'],
+    queryFn: () => base44.entities.HeroBackground.list(),
+  });
+
+  const introVideo = heroBackgrounds?.find(bg => !bg.title?.toLowerCase().includes('plasma')) || 
+                     heroBackgrounds?.find(bg => !bg.title?.toLowerCase().includes('plasma') && bg.is_active);
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
@@ -22,11 +31,27 @@ export default function IntroScreen({ onComplete }) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 flex items-center justify-center overflow-hidden cursor-pointer"
+      className="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center overflow-hidden cursor-pointer"
       onClick={onComplete}
     >
+      {introVideo ? (
+        <div className="absolute inset-0 z-0">
+          <video
+            src={introVideo.video_url}
+            className="w-full h-full object-cover opacity-60"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-blue-950/50 to-purple-950/80" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950" />
+      )}
+
       {/* Animated Moon with Atom Orbitals */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         {/* Moon */}
         <motion.div
           className="relative w-64 h-64"
