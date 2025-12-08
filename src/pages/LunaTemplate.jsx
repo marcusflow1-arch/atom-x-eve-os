@@ -72,6 +72,17 @@ export default function LunaTemplate() {
           </div>
         </div>
 
+        {/* Aspect Section */}
+        <div className="flex flex-col items-start gap-4">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Aspect</h2>
+          
+          <div className="flex gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={`aspect-${i}`} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       {/* Blank Drawer */}
