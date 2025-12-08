@@ -9,25 +9,28 @@ const INITIAL_GENRES = [
   "Adventure", "Strategy", "Puzzle", "Racing", "Sports"
 ];
 
-const MOCK_GAMES = {
-  MMORPG: [
-    { id: 'g1', title: 'World of Warcraft', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=400&fit=crop' },
-    { id: 'g2', title: 'Final Fantasy XIV', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=400&fit=crop' },
-    { id: 'g3', title: 'Elder Scrolls Online', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&h=400&fit=crop' },
-    { id: 'g4', title: 'Guild Wars 2', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=400&fit=crop' }
-  ],
-  Shooter: [
-    { id: 's1', title: 'Call of Duty', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=400&fit=crop' },
-    { id: 's2', title: 'Destiny 2', image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400&h=400&fit=crop' },
-    { id: 's3', title: 'Overwatch', image: 'https://images.unsplash.com/photo-1505489435671-80810714716e?w=400&h=400&fit=crop' }
-  ],
-  // Fallback for others
-  default: [
-    { id: 'd1', title: 'Game Title 1', image: null },
-    { id: 'd2', title: 'Game Title 2', image: null },
-    { id: 'd3', title: 'Game Title 3', image: null }
-  ]
-};
+// Helper to generate consistent mock games
+const generateGames = (genre, count) => Array.from({ length: count }, (_, i) => ({
+  id: `${genre.toLowerCase()}-${i}`,
+  title: `${genre} Title ${i + 1}`,
+  image: `https://images.unsplash.com/photo-${[
+    '1542751371-adc38448a05e',
+    '1552820728-8b83bb6b773f',
+    '1538481199705-c710c4e965fc',
+    '1511512578047-dfb367046420',
+    '1550745165-9bc0b252726f',
+    '1509198397868-475647b2a1e5',
+    '1505489435671-80810714716e',
+    '1542751371-adc38448a05e',
+    '1616514128080-292762c767c0',
+    '1605901309584-818e25960b8f'
+  ][i % 10]}?w=400&h=400&fit=crop`
+}));
+
+const MOCK_GAMES = INITIAL_GENRES.reduce((acc, genre) => {
+  acc[genre] = generateGames(genre, 40);
+  return acc;
+}, { default: generateGames('Game', 40) });
 
 export default function LunaCardScroll({ onExpand, onCardClick }) {
   // State for pagination per genre
