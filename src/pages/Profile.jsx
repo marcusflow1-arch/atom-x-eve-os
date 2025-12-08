@@ -211,7 +211,7 @@ export default function Profile() {
                         <div className="px-6 md:px-10 relative -mt-20 flex flex-col md:flex-row items-end md:items-end gap-8">
                             {/* Avatar */}
                             <div className="relative z-10 group">
-                                <div className="w-36 h-36 md:w-44 md:h-44 rounded-3xl border-4 border-slate-950 bg-slate-900 shadow-2xl overflow-hidden relative">
+                                <div className="w-36 h-36 md:w-44 md:h-44 rounded-3xl border-none bg-white/5 backdrop-blur-md shadow-2xl overflow-hidden relative">
                                     {user?.avatar_url ? (
                                         <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                     ) : (
