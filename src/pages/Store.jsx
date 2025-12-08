@@ -85,7 +85,7 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
           <img
             src={game.cover_image || game.image}
             alt={game.title}
-            className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
+            className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
           />
 
           {/* Gradient Overlay */}
@@ -97,12 +97,12 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
               <div className="flex flex-col gap-2">
                 {game.aiEnhanced && (
                   <Badge className="bg-purple-500/80 backdrop-blur-md text-white text-[10px] border-none w-fit">
-                  <Sparkles className="w-1.5 h-1.5 mr-1" /> AI
+                    <Sparkles className="w-3 h-3 mr-1" /> AI
                   </Badge>
-                  )}
-                  {game.rating >= 4.8 && (
+                )}
+                {game.rating >= 4.8 && (
                   <Badge className="bg-yellow-500/80 backdrop-blur-md text-black text-[10px] border-none font-bold w-fit">
-                  <Trophy className="w-1.5 h-1.5 mr-1" /> TOP
+                    <Trophy className="w-3 h-3 mr-1" /> TOP
                   </Badge>
                 )}
               </div>
@@ -113,7 +113,7 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
                 onClick={(e) => { e.stopPropagation(); addToCart(game); }}
                 className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 border border-white/30 flex items-center justify-center transition-all"
               >
-                <Plus className="w-2.5 h-2.5 text-white" />
+                <Plus className="w-4 h-4 text-white" />
               </motion.button>
             </div>
 
@@ -149,14 +149,14 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
       <img 
         src={game.cover_image || game.image} 
         alt={game.title}
-        className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
+        className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-90 z-20" />
 
       <div className="absolute top-2 left-2 z-10">
          {game.aiEnhanced && (
             <Badge className="bg-purple-500/90 text-white text-[9px] border-none px-1.5 py-0.5 shadow-lg">
-              <Sparkles className="w-1.5 h-1.5 mr-0.5" /> AI
+              <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI
             </Badge>
           )}
       </div>
@@ -165,7 +165,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
         <h3 className="text-white font-bold text-md leading-tight mb-1 truncate drop-shadow-md">{game.title}</h3>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <Star className="w-1.5 h-1.5 text-yellow-400 fill-current" />
+            <Star className="w-3 h-3 text-yellow-400 fill-current" />
             <span className="text-white/90 text-xs">{game.rating || '4.5'}</span>
           </div>
           <span className="text-green-400 text-xs font-bold">${game.price}</span>
@@ -175,7 +175,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
       {/* Hover Play Overlay */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px]">
          <button className="w-12 h-12 rounded-full bg-white/20 border border-white/40 flex items-center justify-center backdrop-blur-md transform scale-75 group-hover:scale-100 transition-transform">
-            <Play className="w-3 h-3 text-white fill-white ml-1" />
+            <Play className="w-5 h-5 text-white fill-white ml-1" />
          </button>
       </div>
     </div>
@@ -183,90 +183,84 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
 );
 
 // --- Hero Section ---
-const HeroSection = ({ game, isMuted, setIsMuted, hasVideo, specialVideo }) => {
+const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
   const navigate = useNavigate();
+  const [isMuted, setIsMuted] = useState(true);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  if (!game) return null;
+  const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
+  const currentBackground = activeBackgrounds[currentBgIndex % Math.max(activeBackgrounds.length, 1)];
 
-  // Check if this is the Monster Hunter game and we have the special video
-  const isMonsterHunter = game.title?.toLowerCase().includes('monster hunter');
-  const showSpecialVideo = isMonsterHunter && specialVideo?.video_url;
+  useEffect(() => {
+    if (activeBackgrounds.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBgIndex(prev => (prev + 1) % activeBackgrounds.length);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [activeBackgrounds.length]);
+
+  if (!featuredGame) return null;
 
   return (
-    <div 
-      className="relative z-30 w-full flex items-center px-6 md:px-12 border-b border-white/10 bg-black/40 overflow-hidden group"
-      style={{ height: '40vh', minHeight: '320px' }}
-    >
-      {/* Background Video/Image inside Box */}
-      <div className="absolute inset-0 z-0">
-        {showSpecialVideo ? (
-          <div className="w-full h-full relative">
-            <video
-              src={specialVideo.video_url}
-              autoPlay
-              loop
-              muted={isMuted}
-              className="w-full h-full object-cover"
-            />
-            {/* Dark overlay for readability */}
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-          </div>
+    <div className="relative w-full h-[50vh] min-h-[400px] mt-0">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10" />
+        {currentBackground?.video_url ? (
+          <video
+            key={currentBackground.id}
+            src={currentBackground.video_url}
+            autoPlay
+            muted={isMuted}
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <>
-            <img 
-              src={game.cover_image || game.image} 
-              alt="Hero Background" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-          </>
+          <img 
+            src={featuredGame.cover_image || featuredGame.image} 
+            alt={featuredGame.title}
+            className="w-full h-full object-cover"
+          />
         )}
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-20 w-full">
+      <div className="absolute inset-0 z-20 flex items-center px-6 md:px-12">
         <div className="max-w-xl">
-          <motion.div 
-            key={game.id}
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }}
-          >
-            <Badge className="mb-2 bg-white/20 backdrop-blur-md border-none text-white text-xs">
-              {game.genre?.toUpperCase()}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <Badge className="mb-3 bg-white/20 backdrop-blur-md border-none text-white text-xs">
+              FEATURED • {featuredGame.genre?.toUpperCase()}
             </Badge>
-            <h1 className="font-black text-white mb-2 leading-tight drop-shadow-2xl text-3xl md:text-5xl">
-              {game.title}
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight">
+              {featuredGame.title}
             </h1>
-            <p className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium">
-              {game.description}
+            <p className="text-sm md:text-base text-gray-300 mb-6 line-clamp-2 max-w-md">
+              {featuredGame.description}
             </p>
             <div className="flex gap-3">
               <Button 
-                className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg shadow-lg"
-                onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg"
+                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
               >
-                <Play className="w-2.5 h-2.5 mr-2 fill-current" /> Play Now
+                <Play className="w-4 h-4 mr-2 fill-current" /> Play Now
               </Button>
               <Button 
-                className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg shadow-lg"
-                onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg"
+                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
               >
-                <Info className="w-2.5 h-2.5 mr-2" /> Details
+                <Info className="w-4 h-4 mr-2" /> Details
               </Button>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {(hasVideo || showSpecialVideo) && (
+      {activeBackgrounds.length > 0 && (
         <button 
           onClick={() => setIsMuted(!isMuted)}
           className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
-          {isMuted ? <VolumeX className="w-2.5 h-2.5" /> : <Volume2 className="w-2.5 h-2.5" />}
+          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
       )}
     </div>
@@ -484,30 +478,14 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   // appPages replaced by ALL_NAV_ITEMS from NavigationConfig
 
   useEffect(() => {
-    const handleScroll = (e) => {
-      setIsScrolled(e.target.scrollTop > 50);
-    };
-    
-    // Find the scrolling container (defined in Layout.js)
-    const container = document.querySelector('.page-container');
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      // Check initial position
-      setIsScrolled(container.scrollTop > 50);
-    }
-    
-    return () => {
-      if (container) container.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+    return scrollY.on("change", (latest) => {
+      setIsScrolled(latest > 50);
+    });
+  }, [scrollY]);
 
   return (
     <>
-      <motion.header 
-        className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          isScrolled ? 'bg-slate-900/80 backdrop-blur-md border-b border-white/10 shadow-lg' : 'bg-transparent'
-        }`}
-      >
+      <motion.header className="sticky top-0 left-0 right-0 z-40 transition-all duration-300">
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Unified Header: Menu + Brand + Search */}
           {/* Menu Button */}
@@ -556,7 +534,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
 
           {/* Search Input - Hidden in Marketplace Mode */}
           <div className={`flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative ${storeMode === 'marketplace' ? 'invisible opacity-0 pointer-events-none' : ''}`}>
-            <Search className="w-2.5 h-2.5 text-white/40 flex-shrink-0" />
+            <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
             <input 
               type="text" 
               placeholder="Search games, genres..." 
@@ -570,7 +548,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                   onClick={() => setSearchTerm('')}
                   className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <X className="w-2 h-2" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
               <button 
@@ -582,7 +560,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 }`}
                 title="AI Voice Search"
               >
-                <Mic className="w-2 h-2" />
+                <Mic className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -606,7 +584,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
               to={createPageUrl('Cart')} 
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
             >
-              <ShoppingCart className="w-2.5 h-2.5 text-white/80" />
+              <ShoppingCart className="w-4 h-4 text-white/80" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                   {cartCount}
@@ -695,11 +673,11 @@ const FilterSidebar = ({
   };
 
   return (
-    <GlassPanel className="p-5 sticky top-4 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
+    <GlassPanel className="p-5 sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
       {/* Categories */}
       <div className="mb-6">
         <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-          <SlidersHorizontal className="w-2.5 h-2.5 text-blue-400" />
+          <SlidersHorizontal className="w-4 h-4 text-blue-400" />
           Categories
         </h3>
         <div className="space-y-1">
@@ -713,7 +691,7 @@ const FilterSidebar = ({
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <cat.icon className="w-2.5 h-2.5" />
+              <cat.icon className="w-4 h-4" />
               <span>{cat.label}</span>
             </button>
           ))}
@@ -785,7 +763,7 @@ const FilterSidebar = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`w-1.5 h-1.5 ${i < rating ? 'text-yellow-400 fill-current' : 'text-white/20'}`} 
+                    className={`w-3 h-3 ${i < rating ? 'text-yellow-400 fill-current' : 'text-white/20'}`} 
                   />
                 ))}
               </div>
@@ -838,13 +816,13 @@ const ResultsHeader = ({ count, viewMode, setViewMode, sortBy, setSortBy }) => (
           onClick={() => setViewMode('grid')}
           className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/20' : ''}`}
         >
-          <Grid className="w-2.5 h-2.5 text-white" />
+          <Grid className="w-4 h-4 text-white" />
         </button>
         <button 
           onClick={() => setViewMode('list')}
           className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/20' : ''}`}
         >
-          <List className="w-2.5 h-2.5 text-white" />
+          <List className="w-4 h-4 text-white" />
         </button>
       </div>
     </div>
@@ -866,7 +844,7 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
     >
       <div className="w-48 h-full flex-shrink-0 relative bg-slate-950 overflow-hidden">
         <img src={game.cover_image || game.image} alt="" className="w-full h-full object-cover absolute inset-0 opacity-50 blur-sm scale-110" />
-        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover relative z-10" />
+        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-contain relative z-10 p-2" />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/80 z-20" />
       </div>
 
@@ -886,12 +864,12 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
         <div className="flex items-center gap-4 mt-auto pt-4">
           <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-md">{game.genre}</Badge>
           <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded-full">
-            <Star className="w-1.5 h-1.5 text-yellow-400 fill-current" />
+            <Star className="w-3 h-3 text-yellow-400 fill-current" />
             <span className="text-yellow-400 text-xs font-bold">{game.rating || '4.5'}</span>
           </div>
           {game.aiEnhanced && (
             <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/30">
-              <Sparkles className="w-1.5 h-1.5 mr-1" /> AI Enhanced
+              <Sparkles className="w-3 h-3 mr-1" /> AI Enhanced
             </Badge>
           )}
         </div>
@@ -902,7 +880,7 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
           className="bg-white text-black hover:bg-blue-50 font-bold"
           onClick={(e) => { e.stopPropagation(); addToCart(game); }}
         >
-          <Plus className="w-2.5 h-2.5 mr-1" /> Add to Cart
+          <Plus className="w-4 h-4 mr-1" /> Add to Cart
         </Button>
         <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
           Details
@@ -925,13 +903,6 @@ export default function Store() {
   // Store Mode State
   const [storeMode, setStoreMode] = useState('store'); // 'store', 'marketplace', 'trading'
   
-  // Background State
-  const [isMuted, setIsMuted] = useState(true);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
-
-  // Selected Game State (for Hero Section)
-  const [selectedGame, setSelectedGame] = useState(null);
-
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 100]);
@@ -941,17 +912,7 @@ export default function Store() {
   const [sortBy, setSortBy] = useState('relevance');
 
   const handleGameNavigate = (gameId) => {
-    const game = games.find(g => g.id === gameId);
-    if (game) {
-      setSelectedGame(game);
-      // Smooth scroll to top to show the hero section
-      const container = document.querySelector('.page-container');
-      if (container) {
-        container.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
+    navigate(createPageUrl(`GameDetail?id=${gameId}`));
   };
 
   const { data: heroBackgrounds = [] } = useQuery({
@@ -959,29 +920,6 @@ export default function Store() {
     queryFn: () => base44.entities.HeroBackground.list(),
     initialData: [],
   });
-
-  const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
-  const currentBackground = activeBackgrounds[currentBgIndex % Math.max(activeBackgrounds.length, 1)];
-  
-  // Find "Plasma Water" background specifically
-  const plasmaBackground = heroBackgrounds.find(bg => 
-    bg.title?.toLowerCase().includes('plasma') && bg.title?.toLowerCase().includes('water')
-  );
-
-  // Find "Monster Hunter" background specifically
-  const monsterHunterBackground = heroBackgrounds.find(bg => 
-    bg.title?.toLowerCase().includes('monster hunter') || 
-    bg.title?.toLowerCase().includes('yt hashtag') ||
-    bg.title?.toLowerCase().includes('ytdown')
-  );
-
-  useEffect(() => {
-    if (activeBackgrounds.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentBgIndex(prev => (prev + 1) % activeBackgrounds.length);
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [activeBackgrounds.length]);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -1071,20 +1009,18 @@ export default function Store() {
 
   const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
 
-  // Set initial selected game
-  useEffect(() => {
-    if (featuredGame && !selectedGame) {
-      setSelectedGame(featuredGame);
-    }
-  }, [featuredGame, selectedGame]);
-
-  const activeGame = selectedGame || featuredGame;
-
   return (
     <div 
       ref={containerRef} 
-      className="h-screen w-screen flex flex-col text-white font-sans selection:bg-cyan-500/30 overflow-hidden bg-slate-950"
+      className="min-h-screen text-white overflow-x-hidden font-sans selection:bg-cyan-500/30"
+      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
     >
+      {/* Ambient Glow Effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+      </div>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1101,7 +1037,7 @@ export default function Store() {
         setStoreMode={setStoreMode}
       />
 
-      <main className="flex-1 flex flex-col min-h-0 relative">
+      <main className="relative">
         {/* Conditional Content Based on Store Mode */}
         <AnimatePresence mode="wait">
           {storeMode === 'store' ? (
@@ -1110,110 +1046,30 @@ export default function Store() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col h-full"
             >
-              {/* Main Content: Container */}
-              <div className="flex-1 flex flex-col overflow-hidden relative group/scroll-area">
+              {/* Hero Section */}
+              <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
 
-              {/* Dynamic Background (Video or Image) */}
-              <div className="absolute inset-0 z-0 overflow-hidden h-full">
-                <AnimatePresence mode="wait">
-                  {activeGame?.title?.toLowerCase().includes('monster hunter') && monsterHunterBackground ? (
-                    <motion.div
-                      key="mh-video"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                       <video
-                        src={monsterHunterBackground.video_url}
-                        autoPlay
-                        loop
-                        muted={isMuted}
-                        playsInline
-                        className="w-full h-full object-cover"
-                       />
-                      {/* Sound Control for Background Video */}
-                       <button 
-                          onClick={() => setIsMuted(!isMuted)}
-                          className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
-                        >
-                          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                        </button>
-                    </motion.div>
-                  ) : activeGame ? (
-                     <motion.div
-                      key={`bg-${activeGame.id}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                      {/* Blurred Backdrop for Fill */}
-                      <img 
-                        src={activeGame.cover_image || activeGame.image} 
-                        alt="" 
-                        className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-40 scale-110"
-                      />
-                      {/* Main Background - Prioritize Screenshots/Landscape */}
-                      <img 
-                        src={activeGame.screenshots?.[0] || activeGame.image || activeGame.cover_image} 
-                        alt="Background" 
-                        className="absolute inset-0 w-full h-full object-cover"
-                        style={{ objectPosition: 'center 20%' }}
-                      />
-                    </motion.div>
-                  ) : plasmaBackground && (
-                    <motion.div
-                      key="plasma-default"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                      <video
-                        src={plasmaBackground.video_url}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover opacity-60"
-                      />
-                    </motion.div>
-                  )}
-                  </AnimatePresence>
-                  <div className="absolute inset-0 bg-slate-950/20" />
-                  </div>
+              {/* Main Content: Amazon-style Layout */}
+              <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
+                <div className="flex gap-6">
+                  {/* Left Sidebar - Filters */}
+                  <aside className="hidden lg:block w-64 flex-shrink-0">
+                    <FilterSidebar 
+                      genres={genres}
+                      selectedGenres={selectedGenres}
+                      setSelectedGenres={setSelectedGenres}
+                      priceRange={priceRange}
+                      setPriceRange={setPriceRange}
+                      selectedRating={selectedRating}
+                      setSelectedRating={setSelectedRating}
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                    />
+                  </aside>
 
-              {/* Ambient Glow Effects */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
-              <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-              </div>
-
-              <div className="max-w-[1920px] w-full mx-auto px-4 md:px-6 py-4 relative z-10 flex-1 min-h-0 flex flex-col">
-              <div className="flex gap-6 h-full">
-                {/* Left Sidebar - Filters */}
-                <aside className="hidden lg:block w-64 flex-shrink-0 pt-2 h-full overflow-y-auto scrollbar-hide">
-                  <FilterSidebar 
-                    genres={genres}
-                    selectedGenres={selectedGenres}
-                    setSelectedGenres={setSelectedGenres}
-                    priceRange={priceRange}
-                    setPriceRange={setPriceRange}
-                    selectedRating={selectedRating}
-                    setSelectedRating={setSelectedRating}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                  />
-                </aside>
-
-              {/* Right Content - Results (Transparent Scroll Container) */}
-              <div className="flex-1 min-w-0 h-full relative">
-              <div className="absolute inset-0 overflow-hidden">
-                {/* Inner Scroll Container */}
-                <div className="h-full overflow-y-auto p-6 scrollbar-hide">
+                  {/* Right Content - Results (Luna + Netflix Style) */}
+                  <div className="flex-1 min-w-0">
                     {/* Active Filters - Pill Style */}
                     {(selectedGenres.length > 0 || selectedRating || searchTerm) && (
                       <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -1266,7 +1122,7 @@ export default function Store() {
                                 Featured & Recommended
                               </h2>
                               <button className="text-white/50 hover:text-white text-sm flex items-center gap-1 transition-colors">
-                                Explore All <ChevronRight className="w-2.5 h-2.5" />
+                                Explore All <ChevronRight className="w-4 h-4" />
                               </button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
@@ -1290,14 +1146,14 @@ export default function Store() {
                                     <img 
                                       src={game.cover_image || game.image} 
                                       alt={game.title}
-                                      className="relative w-full h-full object-cover z-10 transition-transform duration-700 group-hover:scale-105"
+                                      className="relative w-full h-full object-contain z-10 transition-transform duration-700 group-hover:scale-105 p-2"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-90 z-20" />
                                     <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 to-transparent z-20" />
 
                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
-                                        <Play className="w-4 h-4 text-white fill-white ml-1" />
+                                        <Play className="w-7 h-7 text-white fill-white ml-1" />
                                       </div>
                                     </div>
 
@@ -1305,7 +1161,7 @@ export default function Store() {
                                       <div className="flex items-center gap-2 mb-2">
                                         {game.aiEnhanced && (
                                           <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5 shadow-lg">
-                                            <Sparkles className="w-1.5 h-1.5 mr-1" /> AI
+                                            <Sparkles className="w-3 h-3 mr-1" /> AI
                                           </Badge>
                                         )}
                                         <Badge className="bg-white/20 backdrop-blur-md text-white text-[10px] border-none px-2 py-0.5">
@@ -1315,7 +1171,7 @@ export default function Store() {
                                       <h3 className="text-white font-bold text-xl mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">{game.title}</h3>
                                       <div className="flex items-center gap-3 text-sm">
                                         <div className="flex items-center gap-1">
-                                          <Star className="w-2.5 h-2.5 text-yellow-400 fill-current" />
+                                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
                                           <span className="text-white/90">{game.rating || '4.5'}</span>
                                         </div>
                                         <span className="text-white/40">•</span>
@@ -1327,7 +1183,7 @@ export default function Store() {
                                       onClick={(e) => { e.stopPropagation(); addToCart(game); }}
                                       className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20 z-20"
                                     >
-                                      <Plus className="w-3 h-3 text-white" />
+                                      <Plus className="w-5 h-5 text-white" />
                                     </button>
                                   </LiquidCard>
                                 </motion.div>
@@ -1353,7 +1209,7 @@ export default function Store() {
                                   <span className="text-white/30 text-sm font-normal">({genreGames.length})</span>
                                 </h2>
                                 <button className="text-white/40 hover:text-white text-xs flex items-center gap-1 transition-colors opacity-0 group-hover/row:opacity-100">
-                                  See All <ChevronRight className="w-1.5 h-1.5" />
+                                  See All <ChevronRight className="w-3 h-3" />
                                 </button>
                               </div>
 
@@ -1376,15 +1232,12 @@ export default function Store() {
                             </div>
                           ));
                         })()}
-                        </div>
-                        )}
-                        </div>
-                        </div>
-                        </div>
-                        </div>
-                        </div>
-                        </div>
-                        </motion.div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ) : storeMode === 'marketplace' ? (
             <motion.div
               key="marketplace"

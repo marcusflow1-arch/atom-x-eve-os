@@ -17,10 +17,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
-import { LiquidGlassCard } from '../shared/LiquidGlassCard';
 
 // --- Liquid Glass Components (Reused) ---
-// Replaced local LiquidCard with shared LiquidGlassCard
+const LiquidCard = ({ children, className = "", onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`
+      relative overflow-hidden rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 
+      shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group ${className}
+    `}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    {children}
+  </div>
+);
 
 // --- Filter Sidebar ---
 const TradingFilterSidebar = ({ 
@@ -47,7 +57,7 @@ const TradingFilterSidebar = ({
   };
 
   return (
-    <LiquidGlassCard className="p-5 sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto" hover={false}>
+    <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
       {/* Categories */}
       <div className="mb-6">
         <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
@@ -121,14 +131,27 @@ const TradingFilterSidebar = ({
         <Filter className="w-3 h-3" />
         Reset Filters
       </button>
-    </LiquidGlassCard>
+    </div>
   );
 };
 
 const GalacticCard = ({ children, className = "", hoverEffect = true }) => (
-  <LiquidGlassCard className={className} hover={hoverEffect}>
+  <div 
+    className={`
+      relative rounded-2xl overflow-hidden
+      ${hoverEffect ? 'hover:shadow-[0_0_30px_rgba(150,180,220,0.15)] transition-all duration-300' : ''}
+      ${className}
+    `}
+    style={{
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+      backdropFilter: 'blur(40px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+    }}
+  >
     {children}
-  </LiquidGlassCard>
+  </div>
 );
 
 const RarityBadge = ({ rarity }) => {
@@ -292,11 +315,18 @@ const GalacticInventoryItem = ({ item, onClick }) => {
   const borderStyle = rarityColors[item.rarity] || rarityColors.Common;
 
   return (
-    <LiquidGlassCard
+    <motion.div
+      whileHover={{ y: -10, scale: 1.02, rotateY: 5 }}
+      transition={{ type: "spring", stiffness: 300 }}
       onClick={() => onClick(item)}
-      className={`relative group w-full aspect-[2.5/3.5] border-[3px] ${borderStyle.split(' ')[2]} p-0`}
-      hover={true}
+      className={`
+        relative group cursor-pointer w-full aspect-[2.5/3.5] rounded-xl overflow-hidden 
+        border-[3px] ${borderStyle.split(' ')[2]} bg-slate-900
+        shadow-xl hover:shadow-2xl transition-all duration-300
+      `}
     >
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-30 z-20 pointer-events-none transition-opacity duration-500 mix-blend-overlay" />
+      
       <div className="absolute top-0 left-0 right-0 h-8 bg-slate-950/90 z-10 flex items-center justify-between px-2 border-b border-white/10">
         <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider truncate max-w-[60%]">{item.type}</span>
         <div className="flex items-center gap-1">
@@ -338,7 +368,7 @@ const GalacticInventoryItem = ({ item, onClick }) => {
           </Button>
         </div>
       </div>
-    </LiquidGlassCard>
+    </motion.div>
   );
 };
 
@@ -446,9 +476,15 @@ export default function TradingPostContent() {
         </div>
         
         <div className="flex gap-3">
-          <LiquidGlassCard 
-            className="px-4 py-2 flex items-center gap-3"
-            hover={false}
+          <div 
+            className="px-4 py-2 rounded-2xl flex items-center gap-3"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+            }}
           >
             <div className="text-right">
               <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
@@ -457,7 +493,7 @@ export default function TradingPostContent() {
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
-          </LiquidGlassCard>
+          </div>
         </div>
       </motion.div>
 
@@ -522,9 +558,13 @@ export default function TradingPostContent() {
               </div>
               
               {/* Search Pill */}
-              <LiquidGlassCard 
+              <div 
                 className="flex items-center gap-3 px-4 py-2 rounded-full"
-                hover={false}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
                 <Search className="w-4 h-4 text-white/50" />
                 <input 
@@ -532,7 +572,7 @@ export default function TradingPostContent() {
                   placeholder="Search..." 
                   className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
                 />
-              </LiquidGlassCard>
+              </div>
             </div>
 
             {/* Main Content Area */}
@@ -611,9 +651,12 @@ export default function TradingPostContent() {
                                         onClick={() => setSelectedListingGroup(group)}
                                         className="flex-shrink-0 w-48 cursor-pointer group"
                                       >
-                                        <LiquidGlassCard 
-                                          className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 p-0"
-                                          hover={false}
+                                        <div 
+                                          className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3"
+                                          style={{
+                                            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                          }}
                                         >
                                           <img 
                                             src={group.item.image} 
@@ -636,7 +679,7 @@ export default function TradingPostContent() {
                                               <div className="text-blue-400 font-bold text-sm">Trade Only</div>
                                             )}
                                           </div>
-                                        </LiquidGlassCard>
+                                        </div>
                                         
                                         <h4 className="text-white font-semibold text-sm mb-1 truncate group-hover:text-blue-300 transition-colors">
                                           {group.item.name}
@@ -677,9 +720,12 @@ export default function TradingPostContent() {
                   >
                     {/* Left: Item Preview */}
                     <div className="w-[320px] flex-shrink-0">
-                      <LiquidGlassCard 
-                        className="rounded-2xl overflow-hidden h-full p-0"
-                        hover={false}
+                      <div 
+                        className="rounded-2xl overflow-hidden h-full"
+                        style={{
+                          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
                       >
                         <div className="aspect-square relative overflow-hidden">
                           <img 
@@ -720,7 +766,7 @@ export default function TradingPostContent() {
                             Back to Items
                           </button>
                         </div>
-                      </LiquidGlassCard>
+                      </div>
                     </div>
 
                     {/* Right: Offers List */}
@@ -736,7 +782,13 @@ export default function TradingPostContent() {
                             transition={{ delay: idx * 0.05 }}
                             className="group"
                           >
-                            <LiquidGlassCard className="p-4 rounded-xl">
+                            <div 
+                              className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                              }}
+                            >
                               <div className="flex items-center gap-4">
                                 <img 
                                   src={offer.owner.avatar} 
@@ -792,7 +844,7 @@ export default function TradingPostContent() {
                                   </button>
                                 </div>
                               </div>
-                            </LiquidGlassCard>
+                            </div>
                           </motion.div>
                         ))}
                       </div>
@@ -819,7 +871,7 @@ export default function TradingPostContent() {
                   />
                 </div>
 
-                <LiquidGlassCard className="flex-1 p-5 flex flex-col overflow-hidden" hover={false}>
+                <div className="flex-1 p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
                     <div className="mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <Grid className="w-4 h-4 text-cyan-500" />
@@ -846,7 +898,7 @@ export default function TradingPostContent() {
                         </button>
                       ))}
                     </div>
-                </LiquidGlassCard>
+                </div>
               </aside>
               
               {/* Content Area (Right Side) */}
