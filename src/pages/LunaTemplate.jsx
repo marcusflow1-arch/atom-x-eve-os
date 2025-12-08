@@ -26,8 +26,8 @@ export default function LunaTemplate() {
         <div className="flex flex-col items-start">
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-left pl-1">Weapons</h2>
           <div className="flex gap-4">
-            <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
-            <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            <div className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            <div className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
           </div>
         </div>
 
@@ -35,22 +35,17 @@ export default function LunaTemplate() {
         <div className="flex flex-col items-start gap-4">
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Equipment</h2>
           
-          {/* Top: Center Box */}
-          <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
-          
-          {/* Middle: Box Under & Box Right */}
-          <div className="flex gap-4 ml-28">
-             {/* The "Box Under" the first one - offset to align under center if we consider the flex flow, but here we manually position or use grid */}
-             {/* User asked for: one center, then box under it, box to right of it. */}
-             {/* Let's align them: Center box. Then a row with [Under] [Right] */}
-             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 -ml-28"></div> 
-             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+          {/* Top Row: 5 Boxes */}
+          <div className="flex gap-4">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={`top-${i}`} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            ))}
           </div>
 
-          {/* Bottom: Row of 5 */}
-          <div className="flex gap-4 mt-2">
+          {/* Bottom Row: 5 Boxes */}
+          <div className="flex gap-4">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+              <div key={`bottom-${i}`} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
             ))}
           </div>
         </div>
