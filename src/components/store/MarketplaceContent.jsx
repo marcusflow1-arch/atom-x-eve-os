@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ChevronRight, ChevronDown, Star, TrendingUp, Clock,
   Sparkles, DollarSign, Eye, Heart, ShoppingCart,
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { LiquidGlassCard } from '../shared/LiquidGlassCard';
 
 // Enhanced Mock Data
 const MARKETPLACE_ITEMS = [
@@ -53,32 +54,7 @@ const rarityStyles = {
   Mythic: { text: 'text-red-400', bg: 'bg-red-500/20' }
 };
 
-// Liquid Glass Card
-const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
-  const x = useMotionValue(0);
-  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  const waveX = useTransform(mouseX, [0, 1], ["-100%", "200%"]);
-
-  return (
-    <motion.div
-      className={`relative overflow-hidden rounded-xl bg-slate-900/60 backdrop-blur-xl border border-white/10 transition-all duration-300 ${hover ? 'hover:border-white/20 hover:bg-slate-800/60 cursor-pointer' : ''} ${className}`}
-      onMouseMove={({ currentTarget, clientX }) => {
-        const { left, width } = currentTarget.getBoundingClientRect();
-        x.set((clientX - left) / width);
-      }}
-      onMouseLeave={() => x.set(0.5)}
-      onClick={onClick}
-    >
-      {hover && (
-        <motion.div
-          className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12"
-          style={{ left: waveX, width: "60%", height: "100%" }}
-        />
-      )}
-      {children}
-    </motion.div>
-  );
-};
+// Liquid Glass Card removed - imported from shared
 
 // List Item Card
 const ListItemCard = ({ item, onClick }) => {
@@ -87,9 +63,10 @@ const ListItemCard = ({ item, onClick }) => {
   const discountPercent = hasDiscount ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
 
   return (
-    <div 
+    <LiquidGlassCard
       onClick={() => onClick(item)} 
-      className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border-b border-white/5"
+      className="flex gap-4 p-4 mb-2"
+      hover={true}
     >
       <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -146,7 +123,7 @@ const ListItemCard = ({ item, onClick }) => {
           <span className="text-white text-xs">{item.seller.rating}</span>
         </div>
       </div>
-    </div>
+    </LiquidGlassCard>
   );
 };
 
@@ -259,16 +236,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
   };
 
   return (
-    <div 
-      className="w-[220px] flex-shrink-0 p-4 rounded-3xl h-fit"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-      }}
-    >
+    <LiquidGlassCard className="w-[220px] flex-shrink-0 p-4 h-fit" hover={false}>
       <FilterSection title="Department">
         <div className="space-y-1">
           {CATEGORIES.map(cat => (
@@ -402,7 +370,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
           </span>
         </label>
       </FilterSection>
-    </div>
+    </LiquidGlassCard>
   );
 };
 
@@ -625,21 +593,21 @@ export default function MarketplaceContent() {
                 {filteredItems.map(item => {
                   const rarity = rarityStyles[item.rarity];
                   return (
-                    <div 
+                    <LiquidGlassCard
                       key={item.id} 
                       onClick={() => setSelectedItem(item)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      className="p-3 flex flex-col h-full"
                     >
-                      <div className="aspect-square bg-slate-800 rounded-lg overflow-hidden mb-2">
+                      <div className="aspect-square bg-slate-800 rounded-lg overflow-hidden mb-3">
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       </div>
-                      <h3 className="text-blue-400 text-sm line-clamp-2 mb-1">{item.name}</h3>
-                      <div className="flex items-center mb-1">
-                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
-                        <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+                      <h3 className="text-blue-400 text-sm line-clamp-2 mb-1 leading-tight">{item.name}</h3>
+                      <div className="flex items-center mb-2 mt-auto">
+                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-white/20'}`} />)}
+                        <span className="text-white/50 text-xs ml-1">({item.reviews})</span>
                       </div>
-                      <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
-                    </div>
+                      <span className="text-white font-bold text-lg">{item.price.toLocaleString()} <span className="text-xs text-white/50 font-normal">AGP</span></span>
+                    </LiquidGlassCard>
                   );
                 })}
               </div>
