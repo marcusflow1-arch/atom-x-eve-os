@@ -637,25 +637,25 @@ export default function BlacksmithPage() {
                             <motion.div
                             key={item.id}
                             onClick={() => setSelectedItem(item)}
-                            whileHover={{ x: 10, backgroundColor: 'rgba(30,41,59,0.8)' }}
+                            whileHover={{ x: 5 }}
                             className={`
-                                p-4 rounded-2xl cursor-pointer border transition-all flex items-center gap-4 backdrop-blur-md
+                                py-3 px-2 cursor-pointer transition-all flex items-center gap-4 border-b border-white/5 last:border-0
                                 ${selectedItem?.id === item.id 
-                                ? 'bg-slate-700 text-white border-blue-500/50 shadow-lg shadow-blue-500/20' 
-                                : 'bg-slate-800/40 text-slate-300 border-white/10 hover:border-white/20'
+                                ? 'bg-white/5 text-white' 
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                                 }
                             `}
                             >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-white/10">
-                                <img src={item.preview_image_url} className="w-full h-full object-cover" alt="" />
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0">
+                                <img src={item.preview_image_url} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" alt="" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-bold truncate">{item.name}</h4>
-                                <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-300' : 'text-slate-500'}`}>
+                                <h4 className="font-bold truncate text-sm">{item.name}</h4>
+                                <p className="text-xs text-slate-500 truncate">
                                 {item.rarity} • Lv.{item.level_requirement}
                                 </p>
                             </div>
-                            {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-400" />}
+                            {selectedItem?.id === item.id && <ChevronRight className="w-4 h-4 text-blue-400" />}
                             </motion.div>
                         ))
                       ) : (
