@@ -1150,10 +1150,18 @@ export default function Store() {
                       exit={{ opacity: 0 }}
                       className="absolute inset-0"
                     >
+                      {/* Blurred Backdrop for Fill */}
                       <img 
                         src={activeGame.cover_image || activeGame.image} 
+                        alt="" 
+                        className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-40 scale-110"
+                      />
+                      {/* Main Background - Prioritize Screenshots/Landscape */}
+                      <img 
+                        src={activeGame.screenshots?.[0] || activeGame.image || activeGame.cover_image} 
                         alt="Background" 
-                        className="w-full h-full object-cover opacity-60"
+                        className="absolute inset-0 w-full h-full object-cover opacity-60"
+                        style={{ objectPosition: 'center 20%' }}
                       />
                     </motion.div>
                   ) : plasmaBackground && (
