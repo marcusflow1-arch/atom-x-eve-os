@@ -1309,7 +1309,6 @@ export default function Store() {
                         </div>
                         </div>
                         </div>
-                        </div> {/* Close flex-1 overflow-hidden */}
                         </motion.div>
           ) : storeMode === 'marketplace' ? (
             <motion.div
