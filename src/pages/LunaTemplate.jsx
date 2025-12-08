@@ -683,7 +683,7 @@ export default function LunaTemplate() {
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
               <AnimatePresence>
-              {uiVisible && (
+              {uiVisible && !selectedCardForUpgrade && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
