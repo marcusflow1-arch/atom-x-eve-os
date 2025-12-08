@@ -157,23 +157,23 @@ export default function LunaTemplate() {
                 whileTap={{ scale: 0.95 }}
               >
                 <div
-                  className="w-[200px] h-[150px] rounded-2xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-4 border border-white/10 hover:border-white/30"
+                  className="w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-6 border border-white/10 hover:border-white/30"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    boxShadow: '0 6px 24px rgba(0, 0, 0, 0.2)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   {/* Icon Badge */}
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-3 bg-opacity-80 backdrop-blur-sm`}>
-                    <Icon className="w-5 h-5 text-white" />
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-4 bg-opacity-80 backdrop-blur-sm`}>
+                    <Icon className="w-8 h-8 text-white" />
                   </div>
 
                   {/* Card Content */}
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1 tracking-wide">{item.label}</h3>
-                    <p className="text-white/60 text-xs leading-relaxed">{item.description}</p>
+                    <h3 className="text-white font-bold text-xl mb-2 tracking-wide">{item.label}</h3>
+                    <p className="text-white/60 text-sm leading-relaxed">{item.description}</p>
                   </div>
                 </div>
               </motion.div>
