@@ -9,7 +9,7 @@ import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Circle } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import PWAManifest from './components/desktop/PWAManifest';
@@ -79,6 +79,7 @@ function LayoutContent({ children, currentPageName }) {
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [blankDrawerOpen, setBlankDrawerOpen] = useState(false);
 
   const navGroups = {
     'Home': {
@@ -371,6 +372,38 @@ function LayoutContent({ children, currentPageName }) {
           }
       `}</style>
 
+      {/* Blank Drawer */}
+      <AnimatePresence>
+        {blankDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setBlankDrawerOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl border-r border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="p-6 flex justify-end">
+                  <button 
+                    onClick={() => setBlankDrawerOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                  >
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Global Navigation Drawer */}
       <AnimatePresence>
         {drawerOpen && (
@@ -623,8 +656,14 @@ function LayoutContent({ children, currentPageName }) {
             </div>
 
             {/* Under Bar Content: Page Name & Dock Items */}
-            {(headerConfig.showModeToggle || headerConfig.showDock) && (
-              <div className="flex items-center gap-6 mt-1 pl-1">
+            <div className="flex items-center gap-6 mt-1 pl-1">
+                <button
+                  onClick={() => setBlankDrawerOpen(true)}
+                  className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+                  style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+                >
+                  <Circle className="w-5 h-5 text-white/80" />
+                </button>
 
 
                 {/* Dock Items */}
