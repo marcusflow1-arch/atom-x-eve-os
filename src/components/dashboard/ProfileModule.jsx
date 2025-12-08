@@ -18,7 +18,6 @@ export default function ProfileModule() {
   };
 
   const menuItems = [
-    { icon: User, label: 'Profile', href: createPageUrl('Profile'), badge: 0 },
     { icon: Mail, label: 'Messages', href: createPageUrl('Mailbox'), badge: user?.unread_messages || 0 },
     { icon: Bell, label: 'Notifications', href: createPageUrl('Notifications'), badge: user?.unread_notifications || 0 },
     { icon: Trophy, label: 'Achievements', href: createPageUrl('Achievements'), badge: 0 },

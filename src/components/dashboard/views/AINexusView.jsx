@@ -9,7 +9,7 @@ import { createPageUrl } from '@/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import MoveHubTab from '../MoveHubGames';
-import Profile from '../../../pages/Profile';
+import LoadoutPanel from '../LoadoutPanel';
 import Storyline from '../../../pages/Storyline';
 import PinGamesContent from '../PinGamesContent';
 import FusionCore from '../FusionCore';
@@ -252,7 +252,7 @@ export default function AINexusView({ user, setActiveTab, onNavigate }) {
             `}</style>
             {activeFeature === 'story' && <Storyline />}
             {activeFeature === 'skilltree' && <MoveHubTab filter={skillTreeFilter} />}
-            {activeFeature === 'loadout' && <Profile />}
+            {activeFeature === 'loadout' && <LoadoutPanel />}
             {activeFeature === 'pingames' && <div className="p-6"><PinGamesContent /></div>}
             {activeFeature === 'fusion' && <FusionCore />}
             {activeFeature === 'console' && <div className="h-full w-full overflow-hidden"><ConsoleHub /></div>}
