@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, MoreHorizontal, Layers, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,33 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
     { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
     { id: 'craft', label: 'Craft', icon: Hammer, color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/50' },
   ];
+
+  // Card Tilt & Shine Logic
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const rotateX = useTransform(mouseY, [-150, 150], [15, -15]);
+  const rotateY = useTransform(mouseX, [-150, 150], [-15, 15]);
+  
+  // Dynamic gradient position for shine
+  const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
+  const shineY = useTransform(mouseY, [-150, 150], [0, 100]);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    const cX = clientX - left - width / 2;
+    const cY = clientY - top - height / 2;
+    x.set(cX);
+    y.set(cY);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
 
   return (
     <motion.div
@@ -48,30 +75,49 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
           }}
         >
           <div className="flex-1 flex flex-col items-center justify-center">
-            {/* Liquid Glass Card Container */}
-            <div className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]">
+            {/* Interactive Liquid Glass Card Container */}
+            <div 
+              className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
               <motion.div
-                className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border border-white/20"
+                className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border border-white/20 bg-slate-900"
                 style={{
+                  rotateX,
+                  rotateY,
+                  transformStyle: "preserve-3d",
                   boxShadow: `0 0 30px ${card.rarity === 'Legendary' ? 'rgba(249,115,22,0.3)' : card.rarity === 'Mythic' ? 'rgba(244,63,94,0.3)' : 'rgba(59,130,246,0.3)'}`
                 }}
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                {card.image ? (
-                  <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                    <div className="text-white/20 text-4xl">?</div>
-                  </div>
-                )}
-                
-                {/* Shiny Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent opacity-50 pointer-events-none" />
+                {/* Card Content Layer */}
+                <div className="absolute inset-0 z-0" style={{ transform: "translateZ(0)" }}>
+                  {card.image ? (
+                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                      <div className="text-white/20 text-4xl">?</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Interactive Shine Layer */}
+                <motion.div 
+                  className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
+                  style={{
+                    background: useTransform(
+                      shineX, 
+                      val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`
+                    )
+                  }}
+                />
+
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 z-10 bg-gradient-to-tr from-white/10 via-transparent to-black/30 pointer-events-none" />
               </motion.div>
               
               {/* Floor Reflection */}
-              <div className="absolute -bottom-8 left-4 right-4 h-4 bg-black/50 blur-xl rounded-full" />
+              <div className="absolute -bottom-10 left-4 right-4 h-4 bg-black/60 blur-xl rounded-full" />
             </div>
 
             <div className="mt-8 text-center">
@@ -114,20 +160,13 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
           </div>
         </motion.div>
 
-        {/* Right Panel: Related Cards / Flow Network - Independent Box */}
+        {/* Right Panel: Related Cards / Flow Network - Content Only (No Box) */}
         <motion.div 
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="flex-1 rounded-3xl overflow-hidden flex flex-col p-6 md:p-8"
-          style={{
-            background: 'rgba(15, 23, 42, 0.6)',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
-          }}
+          className="flex-1 flex flex-col py-6 pr-6"
         >
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between pl-2">
             <div>
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Layers className="w-5 h-5 text-blue-400" />
@@ -150,22 +189,22 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
                 <motion.div
                   key={relatedCard.id}
                   layoutId={`card-${relatedCard.id}`}
-                  className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer group border transition-all duration-300 ${
+                  className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 ${
                     relatedCard.id === card.id 
-                      ? 'border-blue-400 ring-2 ring-blue-400/30 shadow-lg scale-105 z-10' 
-                      : 'border-white/10 hover:border-white/30 hover:scale-105 hover:z-10 bg-white/5'
+                      ? 'scale-105 z-10 ring-2 ring-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.5)]' 
+                      : 'hover:scale-105 hover:z-10'
                   }`}
                 >
                   {relatedCard.image ? (
-                    <img src={relatedCard.image} alt={relatedCard.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <img src={relatedCard.image} alt={relatedCard.name} className="w-full h-full object-cover rounded-xl" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                    <div className="w-full h-full flex items-center justify-center bg-slate-800/50 rounded-xl">
                       <span className="text-white/10 text-2xl">?</span>
                     </div>
                   )}
                   
                   {/* Info Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 rounded-xl">
                     <p className="text-xs font-bold text-white truncate">{relatedCard.name}</p>
                     <p className="text-[10px] text-white/60">{relatedCard.rarity}</p>
                   </div>
@@ -177,10 +216,10 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
                 </motion.div>
               ))}
               
-              {/* Add Placeholder Slots */}
+              {/* Add Placeholder Slots - Content Only */}
               {[...Array(Math.max(0, 10 - relatedCards.length))].map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-[2.5/3.5] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center group">
-                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/10 group-hover:border-white/20 group-hover:text-white/30 transition-all">
+                <div key={`empty-${i}`} className="aspect-[2.5/3.5] rounded-xl flex items-center justify-center group opacity-30">
+                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:border-white/30 group-hover:text-white/50 transition-all">
                     <Plus className="w-4 h-4" />
                   </div>
                 </div>
