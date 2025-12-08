@@ -392,6 +392,7 @@ export default function TradingPostContent() {
 
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState('');
 
   const GENRE_GAMES = useMemo(() => ({
     "MMORPG": ["Skyrim Online", "World of Warcraft", "Elder Scrolls Online"],
@@ -859,8 +860,18 @@ export default function TradingPostContent() {
         <TabsContent value="subtab" className="h-[calc(100vh-280px)]">
            <div className="flex gap-6 h-full">
               {/* Category Menu Box (Left Side) */}
-              <aside className="w-64 flex-shrink-0 h-full">
-                <div className="h-full p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
+              <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search inventory..." 
+                    value={inventorySearch}
+                    onChange={(e) => setInventorySearch(e.target.value)}
+                    className="pl-9 bg-slate-900/40 border-white/10 text-white placeholder:text-slate-500 rounded-xl"
+                  />
+                </div>
+
+                <div className="flex-1 p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
                     <div className="mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <Grid className="w-4 h-4 text-cyan-500" />
@@ -874,7 +885,9 @@ export default function TradingPostContent() {
                         "MMORPG", "Sci-Fi", "Fantasy", "Shooter", "RPG", "Action", "Adventure", 
                         "Strategy", "Sports", "Racing", "Simulation", "Puzzle", "Horror", 
                         "Survival", "MOBA", "Battle Royale", "Sandbox", "Stealth", "Fighting", "Platformer"
-                      ].map((genre) => (
+                      ]
+                      .filter(genre => genre.toLowerCase().includes(inventorySearch.toLowerCase()))
+                      .map((genre) => (
                         <button 
                           key={genre}
                           onClick={() => { setSubTabGenre(genre); setSubTabGame(null); }}
