@@ -13,7 +13,7 @@ export default function AIStoryOverlay({ onClose }) {
     queryFn: () => base44.entities.HeroBackground.list(),
   });
 
-  const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma water')) || 
+  const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) || 
                       heroBackgrounds?.find(bg => bg.is_active);
   const [timeState, setTimeState] = useState('night');
 
