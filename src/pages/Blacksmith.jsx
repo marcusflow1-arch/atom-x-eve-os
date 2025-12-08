@@ -13,7 +13,7 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
-import BlacksmithGameSelect from '../components/blacksmith/BlacksmithGameSelect';
+import BlacksmithGameSelect from '@/components/blacksmith/BlacksmithGameSelect';
 
 // Mock data for demonstration
 const mockItems = [
