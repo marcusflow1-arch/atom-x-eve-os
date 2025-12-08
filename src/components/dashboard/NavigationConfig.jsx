@@ -19,7 +19,6 @@ export const ALL_NAV_ITEMS = [
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
-    { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
     { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
@@ -54,7 +53,6 @@ export const NAV_GROUPS = {
     'AI & Tools': {
         icon: Bot,
         items: [
-            { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
             { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
         ],
     },
