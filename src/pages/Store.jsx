@@ -1132,8 +1132,8 @@ export default function Store() {
                         loop
                         muted={isMuted}
                         playsInline
-                        className="w-full h-full object-cover opacity-80"
-                      />
+                        className="w-full h-full object-cover"
+                       />
                       {/* Sound Control for Background Video */}
                        <button 
                           onClick={() => setIsMuted(!isMuted)}
@@ -1160,7 +1160,7 @@ export default function Store() {
                       <img 
                         src={activeGame.screenshots?.[0] || activeGame.image || activeGame.cover_image} 
                         alt="Background" 
-                        className="absolute inset-0 w-full h-full object-cover opacity-60"
+                        className="absolute inset-0 w-full h-full object-cover"
                         style={{ objectPosition: 'center 20%' }}
                       />
                     </motion.div>
@@ -1182,9 +1182,9 @@ export default function Store() {
                       />
                     </motion.div>
                   )}
-                </AnimatePresence>
-                <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
-              </div>
+                  </AnimatePresence>
+                  <div className="absolute inset-0 bg-slate-950/20" />
+                  </div>
 
               {/* Ambient Glow Effects */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
