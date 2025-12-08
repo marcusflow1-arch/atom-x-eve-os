@@ -6,14 +6,25 @@ import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext } from '@hello-pangea/dnd';
+import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
+import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 
 export default function LunaTemplate() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const { mode } = useDashboardMode();
 
   const handleBoxClick = () => {
     setShowInventory(true);
   };
+
+  if (mode === 'user') {
+    return (
+      <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
+        <UserInterfaceView />
+      </div>
+    );
+  }
 
   return (
     <DragDropContext onDragEnd={() => {}}>

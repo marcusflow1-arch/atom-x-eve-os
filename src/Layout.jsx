@@ -509,9 +509,10 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/lunatemplate')) {
-          headerConfig.title = "Adam - Marcus | Luna Template";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
+          headerConfig.title = "ATOM - Marcus | Luna Template";
+          headerConfig.showLevel = true;
+          headerConfig.showDiscord = true;
+          headerConfig.showModeToggle = true;
         } else if (p.includes('/seasonalpass')) {
           headerConfig.title = "Adam - Marcus | Seasonal Pass";
           headerConfig.showLevel = false;
@@ -557,7 +558,7 @@ function LayoutContent({ children, currentPageName }) {
               {headerConfig.showLevel && (
                 <>
                   <div className="w-px h-4 bg-white/20"></div>
-                  <span className="text-white font-semibold text-sm">Level 1</span>
+                  <span className="text-white font-semibold text-sm">AI Level 1</span>
                 </>
               )}
             </div>
@@ -616,12 +617,12 @@ function LayoutContent({ children, currentPageName }) {
             )}
             </div>
 
-            {/* Minimized Experience Bar - Dashboard Only */}
-            {mode === 'ai' && (location.pathname === '/' || location.pathname.toLowerCase().endsWith('/dashboard')) && (
+            {/* Minimized Experience Bar - Dashboard & Luna Template */}
+            {mode === 'ai' && (location.pathname === '/' || location.pathname.toLowerCase().endsWith('/dashboard') || location.pathname.toLowerCase().includes('/lunatemplate')) && (
               <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
                 <div 
                   className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" 
-                  style={{ width: '16.25%' }} 
+                  style={{ width: location.pathname.toLowerCase().includes('/lunatemplate') ? '270px' : '16.25%' }} 
                 />
               </div>
             )}
