@@ -17,7 +17,7 @@ const INITIAL_GENRES = [
   "Sports"
 ];
 
-export default function LunaCardScroll({ onExpand }) {
+export default function LunaCardScroll({ onExpand, onCardClick }) {
   // State for pagination per genre
   const [pages, setPages] = useState({});
   // State for order of genres
@@ -105,7 +105,10 @@ export default function LunaCardScroll({ onExpand }) {
                           <div className="grid grid-cols-3 gap-3">
                             {/* Content changes based on page state */}
                             {Array.from({ length: 3 }).map((_, i) => (
-                              <ShinyCard key={`${genre}-${pages[genre] || 0}-${i}`} />
+                              <ShinyCard 
+                                key={`${genre}-${pages[genre] || 0}-${i}`} 
+                                onClick={() => onCardClick && onCardClick({ title: `${genre} Card ${i+1}`, id: `${genre}-${i}` })}
+                              />
                             ))}
                           </div>
 

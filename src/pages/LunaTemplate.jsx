@@ -76,7 +76,7 @@ const ORBITAL_ITEMS = [
 ];
 
 // Expanded Grid View Component
-const ExpandedGenreView = ({ genre, onClose }) => {
+const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
   // Generate 50 items
   const initialItems = Array.from({ length: 50 }, (_, i) => ({
     id: `item-${i}`,
@@ -212,6 +212,7 @@ const ExpandedGenreView = ({ genre, onClose }) => {
                                       {...providedItem.draggableProps}
                                       {...providedItem.dragHandleProps}
                                       className="aspect-[3/4]"
+                                      onClick={() => onCardClick(item)}
                                     >
                                       <ShinyCard>
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -266,6 +267,7 @@ export default function LunaTemplate() {
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [uiVisible, setUiVisible] = useState(true);
+  const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -694,6 +696,7 @@ export default function LunaTemplate() {
                     <ExpandedGenreView 
                       genre={expandedGenre} 
                       onClose={() => setExpandedGenre(null)} 
+                      onCardClick={setSelectedCardForUpgrade}
                     />
                   ) : !showInventory ? (
                     <motion.div 
@@ -770,7 +773,7 @@ export default function LunaTemplate() {
                     {/* Right Side Stats Panel */}
                     <div className="flex-shrink-0 pt-6 flex flex-col">
                       <LunaStatsPanel />
-                      <LunaCardScroll onExpand={setExpandedGenre} />
+                      <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                     </div>
 
                   </motion.div>
