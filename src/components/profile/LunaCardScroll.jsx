@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Maximize2, ArrowRight, Circle } from 'lucide-react';
 
 const GENRES = [
   "MMORPG",
@@ -69,7 +70,9 @@ const ShinyCard = () => {
   );
 };
 
-export default function LunaCardScroll() {
+export default function LunaCardScroll({ onExpand }) {
+  const [page, setPage] = useState(0);
+
   return (
     <div className="w-80 h-[400px] flex flex-col mt-6">
       {/* Scroll Container with custom scrollbar */}
@@ -91,12 +94,47 @@ export default function LunaCardScroll() {
         `}</style>
 
         {GENRES.map((genre) => (
-          <div key={genre}>
-            <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase mb-3 pl-1">{genre}</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <ShinyCard />
-              <ShinyCard />
-              <ShinyCard />
+          <div key={genre} className="relative">
+            <div className="flex items-center justify-between mb-3 pl-1">
+              <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase">{genre}</h3>
+              {genre === 'MMORPG' && (
+                <button 
+                  onClick={() => onExpand && onExpand(genre)}
+                  className="text-white/40 hover:text-white transition-colors"
+                  title="Expand View"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            
+            <div className="relative">
+              <div className="grid grid-cols-3 gap-3">
+                {/* Dynamic content for MMORPG based on page */}
+                {genre === 'MMORPG' ? (
+                   Array.from({ length: 3 }).map((_, i) => (
+                     <ShinyCard key={`mmorpg-${page}-${i}`} />
+                   ))
+                ) : (
+                  <>
+                    <ShinyCard />
+                    <ShinyCard />
+                    <ShinyCard />
+                  </>
+                )}
+              </div>
+
+              {/* Arrow for MMORPG */}
+              {genre === 'MMORPG' && (
+                <div className="absolute -right-12 top-1/2 -translate-y-1/2 flex flex-col items-center">
+                  <button 
+                    onClick={() => setPage(prev => (prev + 1) % 2)}
+                    className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all group"
+                  >
+                    <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

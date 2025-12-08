@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
-  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users
+  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users,
+  Grid, ArrowUpAz, ArrowDownAz
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -73,6 +74,88 @@ const ORBITAL_ITEMS = [
   },
 ];
 
+// Expanded Grid View Component
+const ExpandedGenreView = ({ genre, onClose }) => {
+  const [sortOrder, setSortOrder] = useState('asc');
+  const items = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    title: `Item ${i + 1}`,
+    rarity: ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)]
+  }));
+
+  const sortedItems = [...items].sort((a, b) => {
+    return sortOrder === 'asc' ? a.id - b.id : b.id - a.id;
+  });
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="w-full h-full flex flex-col"
+    >
+      {/* Header / Toolbar */}
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">
+          {genre} Inventory
+        </h2>
+        
+        <div className="flex items-center gap-4">
+          {/* Sort Controls */}
+          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10">
+            <button 
+              onClick={() => setSortOrder('asc')}
+              className={`p-2 rounded-md transition-all ${sortOrder === 'asc' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+              title="Sort Ascending"
+            >
+              <ArrowUpAz className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setSortOrder('desc')}
+              className={`p-2 rounded-md transition-all ${sortOrder === 'desc' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+              title="Sort Descending"
+            >
+              <ArrowDownAz className="w-4 h-4" />
+            </button>
+          </div>
+
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 group"
+          >
+            <X className="w-5 h-5 text-white/60 group-hover:text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Grid Content - No container box as requested */}
+      <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+          {sortedItems.map((item) => (
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="aspect-[3/4] rounded-xl bg-slate-900/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 transition-all group relative cursor-pointer"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                  <span className="text-xs text-white/30">{item.id + 1}</span>
+                </div>
+              </div>
+              
+              <div className="absolute bottom-3 left-3">
+                <div className="text-[10px] font-bold tracking-wider text-white/50 uppercase">{item.rarity}</div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export default function LunaTemplate() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -81,6 +164,7 @@ export default function LunaTemplate() {
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showClan, setShowClan] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [expandedGenre, setExpandedGenre] = useState(null); // New State for Expanded View
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -509,7 +593,12 @@ export default function LunaTemplate() {
                   className="w-full"
                 >
                 <AnimatePresence mode="wait">
-                  {!showInventory ? (
+                  {expandedGenre ? (
+                    <ExpandedGenreView 
+                      genre={expandedGenre} 
+                      onClose={() => setExpandedGenre(null)} 
+                    />
+                  ) : !showInventory ? (
                     <motion.div 
                       key="boxes"
                       initial={{ opacity: 0 }}
@@ -584,7 +673,7 @@ export default function LunaTemplate() {
                     {/* Right Side Stats Panel */}
                     <div className="flex-shrink-0 pt-6 flex flex-col">
                       <LunaStatsPanel />
-                      <LunaCardScroll />
+                      <LunaCardScroll onExpand={setExpandedGenre} />
                     </div>
 
                   </motion.div>
