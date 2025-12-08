@@ -1098,8 +1098,8 @@ export default function Store() {
                   </div>
 
                   <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 relative z-10">
-                <div className="flex gap-6">
-                  {/* Left Sidebar - Filters */}
+                    <div className="flex gap-6">
+                      {/* Left Sidebar - Filters */}
                   <aside className="hidden lg:block w-64 flex-shrink-0">
                     <FilterSidebar 
                       genres={genres}
@@ -1283,6 +1283,7 @@ export default function Store() {
                   </div>
                 </div>
               </div>
+              </div> {/* Close flex-1 overflow-y-auto */}
             </motion.div>
           ) : storeMode === 'marketplace' ? (
             <motion.div
