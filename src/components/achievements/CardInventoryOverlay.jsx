@@ -19,33 +19,34 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/40 backdrop-blur-sm"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
+      <div 
+        className="relative w-full max-w-6xl h-[85vh] flex gap-8"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-6xl h-[85vh] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-        style={{
-          background: 'rgba(20, 20, 30, 0.6)',
-          backdropFilter: 'blur(40px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-        }}
       >
-        {/* Close Button */}
+        {/* Close Button - Floating outside */}
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all"
+          className="absolute -top-12 right-0 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Left Panel: Selected Card & Actions */}
-        <div className="w-full md:w-1/3 lg:w-1/4 p-6 border-r border-white/10 flex flex-col relative bg-gradient-to-b from-white/5 to-transparent">
+        {/* Left Panel: Selected Card & Actions - Independent Box */}
+        <motion.div 
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="w-1/3 rounded-3xl overflow-hidden flex flex-col relative p-6"
+          style={{
+            background: 'rgba(30, 41, 59, 0.4)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+          }}
+        >
           <div className="flex-1 flex flex-col items-center justify-center">
             {/* Liquid Glass Card Container */}
             <div className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]">
@@ -111,10 +112,21 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right Panel: Related Cards / Flow Network */}
-        <div className="flex-1 p-6 md:p-8 overflow-hidden flex flex-col bg-black/20">
+        {/* Right Panel: Related Cards / Flow Network - Independent Box */}
+        <motion.div 
+          initial={{ x: 50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="flex-1 rounded-3xl overflow-hidden flex flex-col p-6 md:p-8"
+          style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(30px)',
+            WebkitBackdropFilter: 'blur(30px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+          }}
+        >
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -143,7 +155,6 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
                       ? 'border-blue-400 ring-2 ring-blue-400/30 shadow-lg scale-105 z-10' 
                       : 'border-white/10 hover:border-white/30 hover:scale-105 hover:z-10 bg-white/5'
                   }`}
-                  // onClick={() => handleCardSelect(relatedCard)} // In a real app, this would switch the selected card
                 >
                   {relatedCard.image ? (
                     <img src={relatedCard.image} alt={relatedCard.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
@@ -210,8 +221,8 @@ export default function CardInventoryOverlay({ card, relatedCards, onClose }) {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
