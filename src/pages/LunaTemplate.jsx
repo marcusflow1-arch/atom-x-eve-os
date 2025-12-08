@@ -152,14 +152,7 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-6xl h-[85vh] flex flex-col p-8 rounded-3xl"
-        style={{
-          background: 'rgba(30, 41, 59, 0.4)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
-        }}
+        className="w-full h-full flex flex-col"
       >
         {/* Header / Toolbar */}
         <div className="flex items-center justify-between mb-8">
@@ -700,7 +693,13 @@ export default function LunaTemplate() {
                   className="w-full"
                 >
                 <AnimatePresence mode="wait">
-                  {!showInventory ? (
+                  {expandedGenre ? (
+                    <ExpandedGenreView 
+                      genre={expandedGenre} 
+                      onClose={() => setExpandedGenre(null)} 
+                      onCardClick={setSelectedCardForUpgrade}
+                    />
+                  ) : !showInventory ? (
                     <motion.div 
                       key="boxes"
                       initial={{ opacity: 0 }}
@@ -972,24 +971,7 @@ export default function LunaTemplate() {
         )}
       </AnimatePresence>
 
-      {/* Expanded Genre Inventory Overlay */}
-      <AnimatePresence>
-        {expandedGenre && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-            onClick={() => setExpandedGenre(null)}
-          >
-            <ExpandedGenreView 
-              genre={expandedGenre} 
-              onClose={() => setExpandedGenre(null)} 
-              onCardClick={setSelectedCardForUpgrade}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
