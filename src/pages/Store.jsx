@@ -444,14 +444,30 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
   // appPages replaced by ALL_NAV_ITEMS from NavigationConfig
 
   useEffect(() => {
-    return scrollY.on("change", (latest) => {
-      setIsScrolled(latest > 50);
-    });
-  }, [scrollY]);
+    const handleScroll = (e) => {
+      setIsScrolled(e.target.scrollTop > 50);
+    };
+    
+    // Find the scrolling container (defined in Layout.js)
+    const container = document.querySelector('.page-container');
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      // Check initial position
+      setIsScrolled(container.scrollTop > 50);
+    }
+    
+    return () => {
+      if (container) container.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   return (
     <>
-      <motion.header className="sticky top-0 left-0 right-0 z-40 transition-all duration-300">
+      <motion.header 
+        className={`sticky top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled ? 'bg-slate-900/80 backdrop-blur-md border-b border-white/10 shadow-lg' : 'bg-transparent'
+        }`}
+      >
         <div className="max-w-[1920px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           {/* Unified Header: Menu + Brand + Search */}
           {/* Menu Button */}
@@ -993,7 +1009,7 @@ export default function Store() {
   return (
     <div 
       ref={containerRef} 
-      className="min-h-screen text-white overflow-x-hidden font-sans selection:bg-cyan-500/30 relative"
+      className="min-h-screen text-white font-sans selection:bg-cyan-500/30 relative"
     >
       {/* Fixed Fullscreen Background Video */}
       <div className="fixed inset-0 z-0 overflow-hidden">
