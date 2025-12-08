@@ -190,9 +190,20 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
 
   return (
     <div 
-      className="sticky top-14 z-30 w-full flex items-center px-6 md:px-12 border-b border-white/10 backdrop-blur-md bg-black/40"
+      className="relative z-30 w-full flex items-center px-6 md:px-12 border-b border-white/10 bg-black/40 overflow-hidden group"
       style={{ height: '50vh', minHeight: '400px' }}
     >
+      {/* Background Video/Image inside Box */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={game.cover_image || game.image} 
+          alt="Hero Background" 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+      </div>
+
       {/* Content Container */}
       <div className="relative z-20 w-full">
         <div className="max-w-xl">
@@ -1039,35 +1050,8 @@ export default function Store() {
   return (
     <div 
       ref={containerRef} 
-      className="min-h-screen text-white font-sans selection:bg-cyan-500/30 relative"
+      className="h-screen w-screen flex flex-col text-white font-sans selection:bg-cyan-500/30 overflow-hidden bg-slate-950"
     >
-      {/* Fixed Fullscreen Background Video */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10" /> {/* Overlay to ensure text readability */}
-        {/* Prioritize showing the selected game's image/video if available, otherwise fallback to system background */}
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeGame?.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
-          >
-            <img 
-              src={activeGame?.cover_image || activeGame?.image} 
-              alt="Background"
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Ambient Glow Effects (kept but lighter) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-1">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-      </div>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -1084,7 +1068,7 @@ export default function Store() {
         setStoreMode={setStoreMode}
       />
 
-      <main className="relative">
+      <main className="flex-1 flex flex-col min-h-0 relative">
         {/* Conditional Content Based on Store Mode */}
         <AnimatePresence mode="wait">
           {storeMode === 'store' ? (
@@ -1093,17 +1077,27 @@ export default function Store() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="flex flex-col h-full"
             >
-              {/* Hero Section */}
-              <HeroSection 
-                game={activeGame} 
-                isMuted={isMuted}
-                setIsMuted={setIsMuted}
-                hasVideo={false}
-              />
+              {/* Hero Section - Fixed/Stationary */}
+              <div className="flex-shrink-0 z-20 shadow-2xl">
+                <HeroSection 
+                  game={activeGame} 
+                  isMuted={isMuted}
+                  setIsMuted={setIsMuted}
+                  hasVideo={false}
+                />
+              </div>
 
-              {/* Main Content: Amazon-style Layout */}
-              <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 relative z-10">
+              {/* Main Content: Scrollable */}
+              <div className="flex-1 overflow-y-auto page-container scroll-smooth relative">
+                  {/* Ambient Glow Effects (moved inside scroll area or fixed behind) */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                    <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
+                    <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+                  </div>
+
+                  <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 relative z-10">
                 <div className="flex gap-6">
                   {/* Left Sidebar - Filters */}
                   <aside className="hidden lg:block w-64 flex-shrink-0">
