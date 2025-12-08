@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, Globe, Sword, Shield, Zap, Sparkles, ScrollText, Hammer, Database, 
   SlidersHorizontal, ChevronRight, ChevronLeft, Gamepad2, TrendingUp, Coins, Info, 
-  ArrowLeftRight, DollarSign, Gavel, Ghost, X 
+  ArrowLeftRight, DollarSign, Gavel, Ghost 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,18 +100,10 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
         <div className="h-[700px] w-full flex gap-6">
             {/* Category Menu Box (Left Side) */}
             <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
-                {/* Search Bar & Close Button */}
-                <div className="px-2 flex items-end gap-3">
-                    {onClose && (
-                         <button 
-                            onClick={onClose}
-                            className="w-8 h-8 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 group"
-                         >
-                            <X className="w-4 h-4 text-white/60 group-hover:text-white" />
-                         </button>
-                    )}
-                    <div className="flex-1">
-                        <label className="text-[10px] uppercase tracking-[0.2em] text-white/30 block mb-1 font-medium pl-1">Search</label>
+                {/* Search Bar */}
+                <div className="px-3 pt-4">
+                    <div className="flex-1 relative">
+                        <label className="text-[9px] uppercase tracking-[0.2em] text-white/30 absolute -top-3 left-1 font-medium">Search</label>
                         <div className="flex items-center gap-2 group relative">
                             <input 
                                 type="text"
