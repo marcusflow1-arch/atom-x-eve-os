@@ -6,6 +6,7 @@ import {
     MessageSquare, Hammer, Gamepad2, Settings, Home, 
     Lightbulb, Heart, Swords, Crown, GitGraph, Share2, Activity
 } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import { NAV_GROUPS, ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 
 const TreeNode = ({ node, depth = 0 }) => {
@@ -97,37 +98,37 @@ export default function NavigationTree() {
                 name: 'Home',
                 icon: Home,
                 children: [
-                    { name: 'Luna Dashboard', path: '/LunaTemplate', icon: Activity, description: 'Main Hub' },
-                    { name: 'News & Updates', path: '/AINews', icon: Radio, description: 'Latest Info' }
+                    { name: 'Luna Dashboard', path: createPageUrl('LunaTemplate'), icon: Activity, description: 'Main Hub' },
+                    { name: 'News & Updates', path: createPageUrl('AINews'), icon: Home, description: 'Latest Info' }
                 ]
             },
             {
                 name: 'Gaming',
                 icon: Gamepad2,
                 children: [
-                    { name: 'Library', path: '/Library', icon: Library, description: 'My Games' },
-                    { name: 'Store', path: '/Store', icon: ShoppingBag, description: 'Purchase Games' },
-                    { name: 'Achievements', path: '/Achievements', icon: Trophy, description: 'Track Progress' },
-                    { name: 'Blacksmith', path: '/Blacksmith', icon: Hammer, description: 'Crafting' },
-                    { name: 'Seasonal Pass', path: '/SeasonalPass', icon: Crown, description: 'Rewards' }
+                    { name: 'Library', path: createPageUrl('Library'), icon: Library, description: 'My Games' },
+                    { name: 'Store', path: createPageUrl('Store'), icon: ShoppingBag, description: 'Purchase Games' },
+                    { name: 'Achievements', path: createPageUrl('Achievements'), icon: Trophy, description: 'Track Progress' },
+                    { name: 'Blacksmith', path: createPageUrl('Blacksmith'), icon: Hammer, description: 'Crafting' },
+                    { name: 'Seasonal Pass', path: createPageUrl('SeasonalPass'), icon: Crown, description: 'Rewards' }
                 ]
             },
             {
                 name: 'Community',
                 icon: Users,
                 children: [
-                    { name: 'Forums', path: '/Community', icon: MessageSquare, description: 'Discussions' },
-                    { name: 'Clans', path: '/Clan', icon: Users, description: 'Guild Management' },
-                    { name: 'Challenges', path: '/Challenges', icon: Swords, description: 'PvP & PvE' }
+                    { name: 'Forums', path: createPageUrl('Community'), icon: MessageSquare, description: 'Discussions' },
+                    { name: 'Clans', path: createPageUrl('Clan'), icon: Users, description: 'Guild Management' },
+                    { name: 'Challenges', path: createPageUrl('Challenges'), icon: Swords, description: 'PvP & PvE' }
                 ]
             },
             {
                 name: 'Profile',
                 icon: User,
                 children: [
-                    { name: 'Ideals', path: '/Ideals', icon: Lightbulb, description: 'Character Trait' },
-                    { name: 'Support', path: '/AdamXEve', icon: Heart, description: 'Help Center' },
-                    { name: 'Admin', path: '/Admin', icon: Settings, description: 'System Settings' }
+                    { name: 'Ideals', path: createPageUrl('Ideals'), icon: Lightbulb, description: 'Character Trait' },
+                    { name: 'Support', path: createPageUrl('AdamXEve'), icon: Heart, description: 'Help Center' },
+                    { name: 'Admin', path: createPageUrl('Admin'), icon: Settings, description: 'System Settings' }
                 ]
             }
         ]
