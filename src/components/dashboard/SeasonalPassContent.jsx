@@ -452,7 +452,7 @@ export default function SeasonalPassContent() {
   
   return (
     <div 
-      className="relative overflow-hidden h-full"
+      className="relative min-h-full overflow-x-hidden"
       style={{
         background: 'rgba(255, 255, 255, 0.01)',
         backdropFilter: 'blur(10px)',
