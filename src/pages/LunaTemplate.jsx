@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Circle, X, ArrowLeft } from 'lucide-react';
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
+import LunaCardScroll from '../components/profile/LunaCardScroll';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext } from '@hello-pangea/dnd';
 
@@ -122,8 +123,9 @@ export default function LunaTemplate() {
                     </div>
 
                     {/* Right Side Stats Panel */}
-                    <div className="flex-shrink-0 pt-6">
+                    <div className="flex-shrink-0 pt-6 flex flex-col">
                       <LunaStatsPanel />
+                      <LunaCardScroll />
                     </div>
 
                   </motion.div>
