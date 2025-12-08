@@ -672,18 +672,7 @@ export default function Library() {
       <div className="relative z-10 px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex-1 flex justify-center">
-            <div className="text-center">
-              <motion.h1 
-                className="text-4xl font-black text-white mb-1"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                My Library
-              </motion.h1>
-              <p className="text-white/40 text-sm">{filteredGames.length} games in your collection</p>
-            </div>
-          </div>
+          <div className="flex-1"></div>
 
           <div className="flex items-center gap-4">
             {/* Search */}
