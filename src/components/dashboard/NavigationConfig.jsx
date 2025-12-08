@@ -1,3 +1,4 @@
+
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -14,7 +15,6 @@ export const ALL_NAV_ITEMS = [
     { name: 'Skill Tree', icon: Layers, path: createPageUrl('GenreMastery') },
     { name: 'Seasonal Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
-    { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
@@ -40,7 +40,6 @@ export const NAV_GROUPS = {
             { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
             { name: 'Skill Tree', icon: Layers, path: createPageUrl('GenreMastery') },
             { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
-            { name: 'Events', icon: Trophy, path: createPageUrl('Events') },
         ],
     },
     'Community': {
