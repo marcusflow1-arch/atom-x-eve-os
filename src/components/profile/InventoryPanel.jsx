@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Grid, Globe, Sword, Shield, Zap, Sparkles, ScrollText, Hammer, Database, 
   SlidersHorizontal, ChevronRight, ChevronLeft, Gamepad2, TrendingUp, Coins, Info, 
-  ArrowLeftRight, DollarSign, Gavel 
+  ArrowLeftRight, DollarSign, Gavel, Ghost 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
