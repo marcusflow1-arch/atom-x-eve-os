@@ -616,13 +616,15 @@ function LayoutContent({ children, currentPageName }) {
             )}
             </div>
 
-            {/* Minimized Experience Bar */}
-            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" 
-                style={{ width: '16.25%' }} 
-              />
-            </div>
+            {/* Minimized Experience Bar - Dashboard Only */}
+            {mode === 'ai' && (location.pathname === '/' || location.pathname.toLowerCase().endsWith('/dashboard')) && (
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" 
+                  style={{ width: '16.25%' }} 
+                />
+              </div>
+            )}
 
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (

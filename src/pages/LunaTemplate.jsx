@@ -20,22 +20,41 @@ export default function LunaTemplate() {
       </button>
 
       {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto mt-32 px-4">
-        <h2 className="text-3xl font-light tracking-[0.2em] uppercase mb-8 text-white/90 drop-shadow-lg pl-2">Weapons</h2>
+      <div className="max-w-4xl mx-auto mt-24 px-4 flex flex-col items-center gap-12">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Column Box */}
-          <div 
-            className="h-[500px] rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:bg-white/[0.05] transition-all duration-500 ease-out"
-            style={{ WebkitBackdropFilter: 'blur(40px)' }}
-          ></div>
-
-          {/* Right Column Box */}
-          <div 
-            className="h-[500px] rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] hover:bg-white/[0.05] transition-all duration-500 ease-out"
-            style={{ WebkitBackdropFilter: 'blur(40px)' }}
-          ></div>
+        {/* Weapons Section */}
+        <div className="w-full">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-center">Weapons</h2>
+          <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
+            <div className="aspect-[3/4] rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            <div className="aspect-[3/4] rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+          </div>
         </div>
+
+        {/* Equipment Section */}
+        <div className="w-full flex flex-col items-center gap-4">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-center">Equipment</h2>
+          
+          {/* Top: Center Box */}
+          <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+          
+          {/* Middle: Box Under & Box Right */}
+          <div className="flex gap-4 ml-28">
+             {/* The "Box Under" the first one - offset to align under center if we consider the flex flow, but here we manually position or use grid */}
+             {/* User asked for: one center, then box under it, box to right of it. */}
+             {/* Let's align them: Center box. Then a row with [Under] [Right] */}
+             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 -ml-28"></div> 
+             <div className="w-24 h-24 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+          </div>
+
+          {/* Bottom: Row of 5 */}
+          <div className="flex gap-4 mt-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300"></div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       {/* Blank Drawer */}
