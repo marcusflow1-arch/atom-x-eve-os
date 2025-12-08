@@ -183,36 +183,76 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
 );
 
 // --- Hero Section ---
-const HeroSection = ({ featuredGame, isMuted, setIsMuted, hasVideo }) => {
+const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
   const navigate = useNavigate();
+  const [isShrunk, setIsShrunk] = useState(false);
 
-  if (!featuredGame) return null;
+  useEffect(() => {
+    const handleScroll = (e) => {
+      // Check if we've scrolled past a threshold
+      const container = document.querySelector('.page-container');
+      if (container) {
+         setIsShrunk(container.scrollTop > 100);
+      } else {
+         setIsShrunk(window.scrollY > 100);
+      }
+    };
+    
+    const container = document.querySelector('.page-container');
+    if (container) container.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      if (container) container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  if (!game) return null;
 
   return (
-    <div className="relative w-full h-[50vh] min-h-[400px] mt-0 flex items-center px-6 md:px-12">
+    <motion.div 
+      className={`sticky top-14 z-30 w-full flex items-center px-6 md:px-12 transition-all duration-500 border-b border-white/10 backdrop-blur-md bg-black/40`}
+      style={{ height: isShrunk ? '240px' : '50vh', minHeight: isShrunk ? '240px' : '400px' }}
+      layout
+    >
       {/* Content Container */}
       <div className="relative z-20 w-full">
         <div className="max-w-xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <Badge className="mb-3 bg-white/20 backdrop-blur-md border-none text-white text-xs">
-              FEATURED • {featuredGame.genre?.toUpperCase()}
+          <motion.div 
+            key={game.id}
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.4 }}
+          >
+            <Badge className="mb-2 bg-white/20 backdrop-blur-md border-none text-white text-xs">
+              {game.genre?.toUpperCase()}
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight drop-shadow-2xl">
-              {featuredGame.title}
+            <h1 className={`font-black text-white mb-2 leading-tight drop-shadow-2xl transition-all duration-300 ${isShrunk ? 'text-2xl md:text-3xl' : 'text-3xl md:text-5xl'}`}>
+              {game.title}
             </h1>
-            <p className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium">
-              {featuredGame.description}
-            </p>
+            <AnimatePresence>
+              {!isShrunk && (
+                <motion.p 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium"
+                >
+                  {game.description}
+                </motion.p>
+              )}
+            </AnimatePresence>
             <div className="flex gap-3">
               <Button 
                 className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg shadow-lg"
-                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
+                onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
               >
                 <Play className="w-4 h-4 mr-2 fill-current" /> Play Now
               </Button>
               <Button 
                 className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg shadow-lg"
-                onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
+                onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
               >
                 <Info className="w-4 h-4 mr-2" /> Details
               </Button>
@@ -229,7 +269,7 @@ const HeroSection = ({ featuredGame, isMuted, setIsMuted, hasVideo }) => {
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
@@ -889,6 +929,9 @@ export default function Store() {
   const [isMuted, setIsMuted] = useState(true);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
+  // Selected Game State (for Hero Section)
+  const [selectedGame, setSelectedGame] = useState(null);
+
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 100]);
@@ -898,7 +941,17 @@ export default function Store() {
   const [sortBy, setSortBy] = useState('relevance');
 
   const handleGameNavigate = (gameId) => {
-    navigate(createPageUrl(`GameDetail?id=${gameId}`));
+    const game = games.find(g => g.id === gameId);
+    if (game) {
+      setSelectedGame(game);
+      // Smooth scroll to top to show the hero section
+      const container = document.querySelector('.page-container');
+      if (container) {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
   };
 
   const { data: heroBackgrounds = [] } = useQuery({
@@ -1006,6 +1059,15 @@ export default function Store() {
 
   const featuredGame = useMemo(() => games.find(g => g.rating >= 4.8) || games[0], [games]);
 
+  // Set initial selected game
+  useEffect(() => {
+    if (featuredGame && !selectedGame) {
+      setSelectedGame(featuredGame);
+    }
+  }, [featuredGame, selectedGame]);
+
+  const activeGame = selectedGame || featuredGame;
+
   return (
     <div 
       ref={containerRef} 
@@ -1014,23 +1076,23 @@ export default function Store() {
       {/* Fixed Fullscreen Background Video */}
       <div className="fixed inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-10" /> {/* Overlay to ensure text readability */}
-        {currentBackground?.video_url ? (
-          <video
-            key={currentBackground.id}
-            src={currentBackground.video_url}
-            autoPlay
-            muted={isMuted}
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <img 
-            src={featuredGame?.cover_image || featuredGame?.image} 
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
-        )}
+        {/* Prioritize showing the selected game's image/video if available, otherwise fallback to system background */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeGame?.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0"
+          >
+            <img 
+              src={activeGame?.cover_image || activeGame?.image} 
+              alt="Background"
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Ambient Glow Effects (kept but lighter) */}
@@ -1066,10 +1128,10 @@ export default function Store() {
             >
               {/* Hero Section */}
               <HeroSection 
-                featuredGame={featuredGame} 
+                game={activeGame} 
                 isMuted={isMuted}
                 setIsMuted={setIsMuted}
-                hasVideo={!!currentBackground?.video_url}
+                hasVideo={false}
               />
 
               {/* Main Content: Amazon-style Layout */}
