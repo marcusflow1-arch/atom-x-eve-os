@@ -72,11 +72,14 @@ export default function ClanContent() {
         <div 
             className="h-full w-full text-white overflow-hidden relative flex flex-col md:flex-row"
             style={{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.125)',
-                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+                background: 'linear-gradient(135deg, rgba(180, 190, 200, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                backdropFilter: 'blur(40px) saturate(120%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(120%)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.4)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.4)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: 'inset 0 4px 30px rgba(255, 255, 255, 0.1), 0 20px 50px rgba(0, 0, 0, 0.5)'
             }}
         >
             
