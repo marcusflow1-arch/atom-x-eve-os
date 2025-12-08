@@ -166,12 +166,6 @@ export const LIBRARY_THEMES = {
     name: 'Spirit Guardian',
     css: 'bg-gradient-to-br from-sky-800 via-blue-900 to-indigo-900',
     animation: 'wisps'
-  },
-  plasma_water: {
-    id: 'plasma_water',
-    name: 'Plasma Water',
-    css: 'bg-gradient-to-br from-indigo-950 via-purple-950 to-blue-950',
-    animation: 'plasma'
   }
 };
 
@@ -271,20 +265,6 @@ export const ThemeBackground = ({ themeId }) => {
                 p.color = Math.random() > 0.5 ? 'rgba(220, 255, 255, 0.4)' : 'rgba(180, 230, 255, 0.3)';
                 p.vy = -(Math.random() * 0.2 + 0.1);
                 p.radius = Math.random() * 2 + 0.5;
-            } else if (type === 'plasma') {
-                p.x = Math.random() * canvas.width;
-                p.y = Math.random() * canvas.height;
-                p.radius = Math.random() * 200 + 100;
-                p.vx = (Math.random() - 0.5) * 2;
-                p.vy = (Math.random() - 0.5) * 2;
-                // Plasma colors: cyans, purples, blues
-                const plasmaColors = [
-                    'rgba(0, 255, 255, 0.4)', 
-                    'rgba(138, 43, 226, 0.4)', 
-                    'rgba(0, 191, 255, 0.4)', 
-                    'rgba(75, 0, 130, 0.4)'
-                ];
-                p.color = plasmaColors[Math.floor(Math.random() * plasmaColors.length)];
             }
 
             particles.push(p);
@@ -525,35 +505,6 @@ export const ThemeBackground = ({ themeId }) => {
                     p.char = String.fromCharCode(0x30A0 + Math.random() * 96);
                 }
             });
-        }
-
-        if (animationType === 'plasma') {
-            // Clear with a slight fade for trails or just clear
-            // For plasma, we want smooth movement
-            
-            // Draw blobs
-            ctx.globalCompositeOperation = 'screen'; // Blend nicely
-            particles.forEach(p => {
-                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-                gradient.addColorStop(0, p.color);
-                gradient.addColorStop(1, 'rgba(0,0,0,0)');
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Move
-                p.x += p.vx;
-                p.y += p.vy;
-
-                // Bounce
-                if (p.x < -p.radius) p.vx = Math.abs(p.vx);
-                if (p.x > canvas.width + p.radius) p.vx = -Math.abs(p.vx);
-                if (p.y < -p.radius) p.vy = Math.abs(p.vy);
-                if (p.y > canvas.height + p.radius) p.vy = -Math.abs(p.vy);
-            });
-            ctx.globalCompositeOperation = 'source-over'; // Reset
         }
 
         if (animationType === 'lightning') {
