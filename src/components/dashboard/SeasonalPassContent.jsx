@@ -452,9 +452,11 @@ export default function SeasonalPassContent() {
   
   return (
     <div 
-      className="relative overflow-hidden"
+      className="relative overflow-hidden h-full"
       style={{
-        background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%, #f1f5f9 100%)'
+        background: 'rgba(255, 255, 255, 0.01)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
       }}
     >
       {/* Ambient Effects */}
@@ -471,7 +473,7 @@ export default function SeasonalPassContent() {
               <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-700 bg-clip-text text-transparent">
                 Season 1: Awakening
               </h1>
-              <p className="text-slate-600">Level {currentLevel} / 100 • 45 days remaining</p>
+              <p className="text-slate-400">Level {currentLevel} / 100 • 45 days remaining</p>
             </div>
             
             <div className="flex items-center gap-4">
@@ -483,8 +485,8 @@ export default function SeasonalPassContent() {
                   border: '1px solid rgba(148, 163, 184, 0.15)',
                 }}
               >
-                <div className="text-xs text-slate-600 font-medium">Season XP</div>
-                <div className="text-xl font-bold text-slate-800">125,430 / 150,000</div>
+                <div className="text-xs text-slate-400 font-medium">Season XP</div>
+                <div className="text-xl font-bold text-white">125,430 / 150,000</div>
               </div>
               <Button 
                 onClick={() => setIsPremiumOwned(!isPremiumOwned)}
@@ -535,11 +537,11 @@ export default function SeasonalPassContent() {
         {/* Limited Edition Cards Carousel */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800">
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
               <Sparkles className="w-6 h-6 text-blue-500" />
               Limited Edition Season Rewards
             </h2>
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-slate-400">
               Scroll to explore • Click to preview
             </div>
           </div>
@@ -578,8 +580,8 @@ export default function SeasonalPassContent() {
               >
                 Season 1 Exclusive
               </Badge>
-              <h2 className="text-3xl font-black mb-3 text-slate-800">Celestial Guardian</h2>
-              <p className="text-base text-slate-700 mb-5">
+              <h2 className="text-3xl font-black mb-3 text-white">Celestial Guardian</h2>
+              <p className="text-base text-slate-200 mb-5">
                 The flagship companion of Season 1. An ancient protector that provides shields, 
                 tactical support, and devastating ultimate abilities for your team.
               </p>
@@ -626,7 +628,7 @@ export default function SeasonalPassContent() {
         
         {/* Season Pass Progress Track */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-slate-800">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-white">
             <Trophy className="w-6 h-6 text-blue-500" />
             Season Pass Progression
           </h2>
@@ -644,7 +646,7 @@ export default function SeasonalPassContent() {
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <div className="flex-1 text-center text-sm text-slate-600">
+            <div className="flex-1 text-center text-sm text-slate-400">
               Scroll or drag to explore all 100 levels
             </div>
             <Button 
@@ -703,9 +705,9 @@ export default function SeasonalPassContent() {
             >
               <div className="flex items-center gap-2.5 mb-1.5">
                 <stat.icon className="w-4.5 h-4.5 text-blue-500" />
-                <span className="text-sm text-slate-600 font-medium">{stat.label}</span>
+                <span className="text-sm text-slate-400 font-medium">{stat.label}</span>
               </div>
-              <div className="text-xl font-bold text-slate-800">{stat.value}</div>
+              <div className="text-xl font-bold text-white">{stat.value}</div>
             </div>
           ))}
         </div>
