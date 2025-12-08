@@ -19,7 +19,6 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import MarketplaceContent from '../components/store/MarketplaceContent';
 import TradingPostContent from '../components/store/TradingPostContent';
-import StoreNewsHeader from '../components/store/StoreNewsHeader';
 import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 
 // --- Liquid Glass Components ---
@@ -1194,8 +1193,7 @@ export default function Store() {
               </div>
 
               <div className="max-w-[1920px] w-full mx-auto px-4 md:px-6 py-4 relative z-10 flex-1 min-h-0 flex flex-col">
-              <StoreNewsHeader />
-              <div className="flex gap-6 flex-1 min-h-0">
+              <div className="flex gap-6 h-full">
                 {/* Left Sidebar - Filters */}
                 <aside className="hidden lg:block w-64 flex-shrink-0 pt-2 h-full overflow-y-auto scrollbar-hide">
                   <FilterSidebar 
