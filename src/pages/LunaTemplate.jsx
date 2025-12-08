@@ -20,6 +20,7 @@ import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
 import AINewsContent from '../components/dashboard/AINewsContent';
 import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import ClanContent from '../components/dashboard/ClanContent';
+import ShinyCard from '../components/shared/ShinyCard';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
@@ -132,13 +133,7 @@ const ExpandedGenreView = ({ genre, onClose }) => {
       <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
           {sortedItems.map((item) => (
-            <motion.div
-              key={item.id}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="aspect-[3/4] rounded-xl bg-slate-900/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 transition-all group relative cursor-pointer"
-            >
+            <ShinyCard key={item.id}>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                   <span className="text-xs text-white/30">{item.id + 1}</span>
@@ -148,7 +143,7 @@ const ExpandedGenreView = ({ genre, onClose }) => {
               <div className="absolute bottom-3 left-3">
                 <div className="text-[10px] font-bold tracking-wider text-white/50 uppercase">{item.rarity}</div>
               </div>
-            </motion.div>
+            </ShinyCard>
           ))}
         </div>
       </div>
