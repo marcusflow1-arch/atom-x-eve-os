@@ -183,69 +183,35 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
 );
 
 // --- Hero Section ---
-const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
+const HeroSection = ({ featuredGame, isMuted, setIsMuted, hasVideo }) => {
   const navigate = useNavigate();
-  const [isMuted, setIsMuted] = useState(true);
-  const [currentBgIndex, setCurrentBgIndex] = useState(0);
-
-  const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
-  const currentBackground = activeBackgrounds[currentBgIndex % Math.max(activeBackgrounds.length, 1)];
-
-  useEffect(() => {
-    if (activeBackgrounds.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentBgIndex(prev => (prev + 1) % activeBackgrounds.length);
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [activeBackgrounds.length]);
 
   if (!featuredGame) return null;
 
   return (
-    <div className="relative w-full h-[50vh] min-h-[400px] mt-0">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10" />
-        {currentBackground?.video_url ? (
-          <video
-            key={currentBackground.id}
-            src={currentBackground.video_url}
-            autoPlay
-            muted={isMuted}
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <img 
-            src={featuredGame.cover_image || featuredGame.image} 
-            alt={featuredGame.title}
-            className="w-full h-full object-cover"
-          />
-        )}
-      </div>
-
-      <div className="absolute inset-0 z-20 flex items-center px-6 md:px-12">
+    <div className="relative w-full h-[50vh] min-h-[400px] mt-0 flex items-center px-6 md:px-12">
+      {/* Content Container */}
+      <div className="relative z-20 w-full">
         <div className="max-w-xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Badge className="mb-3 bg-white/20 backdrop-blur-md border-none text-white text-xs">
               FEATURED • {featuredGame.genre?.toUpperCase()}
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight">
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-3 leading-tight drop-shadow-2xl">
               {featuredGame.title}
             </h1>
-            <p className="text-sm md:text-base text-gray-300 mb-6 line-clamp-2 max-w-md">
+            <p className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium">
               {featuredGame.description}
             </p>
             <div className="flex gap-3">
               <Button 
-                className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg"
+                className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg shadow-lg"
                 onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
               >
                 <Play className="w-4 h-4 mr-2 fill-current" /> Play Now
               </Button>
               <Button 
-                className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg"
+                className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg shadow-lg"
                 onClick={() => navigate(createPageUrl(`GameDetail?id=${featuredGame.id}`))}
               >
                 <Info className="w-4 h-4 mr-2" /> Details
@@ -255,7 +221,7 @@ const HeroSection = ({ featuredGame, heroBackgrounds = [] }) => {
         </div>
       </div>
 
-      {activeBackgrounds.length > 0 && (
+      {hasVideo && (
         <button 
           onClick={() => setIsMuted(!isMuted)}
           className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
@@ -903,6 +869,10 @@ export default function Store() {
   // Store Mode State
   const [storeMode, setStoreMode] = useState('store'); // 'store', 'marketplace', 'trading'
   
+  // Background State
+  const [isMuted, setIsMuted] = useState(true);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
+
   // Filter States
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 100]);
@@ -920,6 +890,17 @@ export default function Store() {
     queryFn: () => base44.entities.HeroBackground.list(),
     initialData: [],
   });
+
+  const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
+  const currentBackground = activeBackgrounds[currentBgIndex % Math.max(activeBackgrounds.length, 1)];
+
+  useEffect(() => {
+    if (activeBackgrounds.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBgIndex(prev => (prev + 1) % activeBackgrounds.length);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [activeBackgrounds.length]);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -1012,14 +993,34 @@ export default function Store() {
   return (
     <div 
       ref={containerRef} 
-      className="min-h-screen text-white overflow-x-hidden font-sans selection:bg-cyan-500/30"
-      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+      className="min-h-screen text-white overflow-x-hidden font-sans selection:bg-cyan-500/30 relative"
     >
-      {/* Ambient Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+      {/* Fixed Fullscreen Background Video */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-black/40 z-10" /> {/* Overlay to ensure text readability */}
+        {currentBackground?.video_url ? (
+          <video
+            key={currentBackground.id}
+            src={currentBackground.video_url}
+            autoPlay
+            muted={isMuted}
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img 
+            src={featuredGame?.cover_image || featuredGame?.image} 
+            alt="Background"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* Ambient Glow Effects (kept but lighter) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-1">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
       </div>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -1048,10 +1049,15 @@ export default function Store() {
               exit={{ opacity: 0 }}
             >
               {/* Hero Section */}
-              <HeroSection featuredGame={featuredGame} heroBackgrounds={heroBackgrounds} />
+              <HeroSection 
+                featuredGame={featuredGame} 
+                isMuted={isMuted}
+                setIsMuted={setIsMuted}
+                hasVideo={!!currentBackground?.video_url}
+              />
 
               {/* Main Content: Amazon-style Layout */}
-              <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8">
+              <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 relative z-10">
                 <div className="flex gap-6">
                   {/* Left Sidebar - Filters */}
                   <aside className="hidden lg:block w-64 flex-shrink-0">
