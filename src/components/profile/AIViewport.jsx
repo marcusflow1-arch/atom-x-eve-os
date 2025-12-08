@@ -10,7 +10,7 @@ export default function AIViewport({ name, status = 'online' }) {
     };
 
     return (
-        <div className="relative w-full h-full min-h-[600px] flex items-center justify-center overflow-hidden">
+        <div className="relative w-full h-full min-h-[600px] bg-slate-900/50 border border-slate-700 rounded-lg overflow-hidden flex items-center justify-center">
             <div className="w-full h-full relative z-10">
                 <iframe 
                     title="Sinestrea WAVE (AOV)" 
@@ -28,7 +28,10 @@ export default function AIViewport({ name, status = 'online' }) {
                 />
             </div>
 
-            {/* Name tag removed for cleaner UI */}
+            <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-md text-white flex items-center gap-2 z-10">
+                <div className={`w-2 h-2 rounded-full ${statusColors[status]} animate-pulse`}></div>
+                <span className="font-semibold">{name}</span>
+            </div>
         </div>
     );
 }
