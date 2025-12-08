@@ -464,6 +464,10 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "Adam - Marcus | Avatar Profile";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
+        } else if (p.includes('/community')) {
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.discordSmall = true;
         }
 
         if (headerConfig.hidden) return null;
@@ -507,7 +511,7 @@ function LayoutContent({ children, currentPageName }) {
                 href="https://discord.gg/psyA8Qwm"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-medium transition-all hover:scale-105"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white font-medium transition-all hover:scale-105 ${headerConfig.discordSmall ? 'scale-[0.85] origin-left' : ''}`}
                 style={{
                   background: 'rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(20px)',
