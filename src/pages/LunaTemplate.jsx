@@ -28,6 +28,22 @@ export default function LunaTemplate() {
           <Circle className="w-5 h-5 text-white/80" />
         </button>
 
+        {/* Back to Loadout X Button (Only visible when Inventory is open) */}
+        <AnimatePresence>
+          {showInventory && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => setShowInventory(false)}
+              className="fixed top-40 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+            >
+              <X className="w-5 h-5 text-white/80" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
         {/* Main Content Area */}
         <div className="w-full mt-24 px-12 relative">
           <AnimatePresence mode="wait">
@@ -112,15 +128,6 @@ export default function LunaTemplate() {
                 transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
                 className="w-full max-w-5xl"
               >
-                <div className="mb-4">
-                  <button 
-                    onClick={() => setShowInventory(false)}
-                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm font-medium bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Loadout
-                  </button>
-                </div>
                 <InventoryPanel 
                   inventory={inventoryData} 
                   capacity={profileData.inventoryCapacity} 
