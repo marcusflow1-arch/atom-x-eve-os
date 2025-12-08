@@ -1112,33 +1112,71 @@ export default function Store() {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              {/* Hero Section - Fixed/Stationary */}
-              <div className="flex-shrink-0 z-20 shadow-2xl">
-                <HeroSection 
-                  game={activeGame} 
-                  isMuted={isMuted}
-                  setIsMuted={setIsMuted}
-                  hasVideo={false}
-                  specialVideo={monsterHunterBackground}
-                />
-              </div>
-
               {/* Main Content: Container */}
               <div className="flex-1 flex flex-col overflow-hidden relative group/scroll-area">
-              {/* Plasma Water Video Background */}
-              {plasmaBackground && (
+
+              {/* Dynamic Background (Video or Image) */}
               <div className="absolute inset-0 z-0 overflow-hidden h-full">
-                <video
-                  src={plasmaBackground.video_url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover opacity-60"
-                />
+                <AnimatePresence mode="wait">
+                  {activeGame?.title?.toLowerCase().includes('monster hunter') && monsterHunterBackground ? (
+                    <motion.div
+                      key="mh-video"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0"
+                    >
+                       <video
+                        src={monsterHunterBackground.video_url}
+                        autoPlay
+                        loop
+                        muted={isMuted}
+                        playsInline
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                      {/* Sound Control for Background Video */}
+                       <button 
+                          onClick={() => setIsMuted(!isMuted)}
+                          className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                        >
+                          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </button>
+                    </motion.div>
+                  ) : activeGame ? (
+                     <motion.div
+                      key={`bg-${activeGame.id}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0"
+                    >
+                      <img 
+                        src={activeGame.cover_image || activeGame.image} 
+                        alt="Background" 
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                    </motion.div>
+                  ) : plasmaBackground && (
+                    <motion.div
+                      key="plasma-default"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0"
+                    >
+                      <video
+                        src={plasmaBackground.video_url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
               </div>
-              )}
 
               {/* Ambient Glow Effects */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
