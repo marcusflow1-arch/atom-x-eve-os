@@ -128,10 +128,10 @@ const LimitedEditionCard = ({ card, onClick }) => {
       onClick={() => onClick(card)}
       className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl"
       style={{
-        background: 'rgba(148, 163, 184, 0.06)',
+        background: 'rgba(255, 255, 255, 0.06)',
         backdropFilter: 'blur(50px) saturate(200%)',
         WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-        border: '1px solid rgba(148, 163, 184, 0.15)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
       }}
     >
@@ -218,11 +218,11 @@ const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onCl
           style={{
             background: isUnlocked && isPremiumOwned 
               ? 'rgba(250, 204, 21, 0.12)' 
-              : 'rgba(148, 163, 184, 0.05)',
+              : 'rgba(255, 255, 255, 0.05)',
             backdropFilter: 'blur(30px) saturate(180%)',
             border: isUnlocked && isPremiumOwned 
               ? '1px solid rgba(250, 204, 21, 0.3)' 
-              : '1px solid rgba(148, 163, 184, 0.1)',
+              : '1px solid rgba(255, 255, 255, 0.1)',
           }}
         >
           {isUnlocked && isPremiumOwned ? (
@@ -239,11 +239,11 @@ const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onCl
         style={{
           background: isUnlocked 
             ? 'rgba(96, 165, 250, 0.12)' 
-            : 'rgba(148, 163, 184, 0.05)',
+            : 'rgba(255, 255, 255, 0.05)',
           backdropFilter: 'blur(30px) saturate(180%)',
           border: isUnlocked 
             ? '1px solid rgba(96, 165, 250, 0.3)' 
-            : '1px solid rgba(148, 163, 184, 0.1)',
+            : '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
         {isUnlocked ? (
@@ -259,11 +259,11 @@ const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onCl
         style={{
           background: isCurrentLevel 
             ? 'rgba(96, 165, 250, 0.2)' 
-            : 'rgba(148, 163, 184, 0.08)',
+            : 'rgba(255, 255, 255, 0.08)',
           backdropFilter: 'blur(20px) saturate(180%)',
           border: isCurrentLevel 
             ? '1px solid rgba(96, 165, 250, 0.4)' 
-            : '1px solid rgba(148, 163, 184, 0.15)',
+            : '1px solid rgba(255, 255, 255, 0.15)',
           color: isCurrentLevel ? '#60a5fa' : '#64748b',
         }}
       >
@@ -303,11 +303,11 @@ const TrackSelector = ({ activeTrack, onTrackChange }) => {
           style={{
             background: activeTrack === track.id 
               ? 'rgba(96, 165, 250, 0.15)' 
-              : 'rgba(148, 163, 184, 0.05)',
+              : 'rgba(255, 255, 255, 0.05)',
             backdropFilter: 'blur(50px) saturate(200%)',
             border: activeTrack === track.id 
               ? '1px solid rgba(96, 165, 250, 0.3)' 
-              : '1px solid rgba(148, 163, 184, 0.12)',
+              : '1px solid rgba(255, 255, 255, 0.12)',
             color: activeTrack === track.id ? '#3b82f6' : '#64748b',
           }}
         >
@@ -480,9 +480,9 @@ export default function SeasonalPassContent() {
               <div 
                 className="text-right px-5 py-2.5 rounded-lg"
                 style={{
-                  background: 'rgba(148, 163, 184, 0.08)',
+                  background: 'rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(50px) saturate(200%)',
-                  border: '1px solid rgba(148, 163, 184, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                 }}
               >
                 <div className="text-xs text-slate-400 font-medium">Season XP</div>
@@ -514,9 +514,9 @@ export default function SeasonalPassContent() {
           <div 
             className="w-full h-2.5 rounded-full overflow-hidden"
             style={{
-              background: 'rgba(148, 163, 184, 0.1)',
+              background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(148, 163, 184, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
             }}
           >
             <motion.div
@@ -561,9 +561,9 @@ export default function SeasonalPassContent() {
         <div 
           className="mb-12 p-6 rounded-2xl relative overflow-hidden"
           style={{
-            background: 'rgba(148, 163, 184, 0.08)',
+            background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(60px) saturate(200%)',
-            border: '1px solid rgba(148, 163, 184, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
           }}
         >
@@ -602,9 +602,9 @@ export default function SeasonalPassContent() {
                 </Button>
                 <Button 
                   style={{
-                    background: 'rgba(148, 163, 184, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(50px)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: '#64748b',
                     fontSize: '14px',
                     fontWeight: '600',
@@ -668,9 +668,9 @@ export default function SeasonalPassContent() {
             className="relative flex gap-2.5 overflow-x-auto pb-8 pt-2 px-4 rounded-xl scrollbar-hide"
             style={{ 
               scrollBehavior: 'smooth',
-              background: 'rgba(148, 163, 184, 0.06)',
+              background: 'rgba(255, 255, 255, 0.06)',
               backdropFilter: 'blur(50px) saturate(200%)',
-              border: '1px solid rgba(148, 163, 184, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
             }}
           >
             {seasonLevels.map((level) => (
@@ -698,9 +698,9 @@ export default function SeasonalPassContent() {
               key={i} 
               className="p-5 rounded-lg"
               style={{
-                background: 'rgba(148, 163, 184, 0.08)',
+                background: 'rgba(255, 255, 255, 0.08)',
                 backdropFilter: 'blur(50px) saturate(200%)',
-                border: '1px solid rgba(148, 163, 184, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             >
               <div className="flex items-center gap-2.5 mb-1.5">
