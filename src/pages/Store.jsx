@@ -191,7 +191,7 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
   return (
     <div 
       className="relative z-30 w-full flex items-center px-6 md:px-12 border-b border-white/10 bg-black/40 overflow-hidden group"
-      style={{ height: '50vh', minHeight: '400px' }}
+      style={{ height: '40vh', minHeight: '320px' }}
     >
       {/* Background Video/Image inside Box */}
       <div className="absolute inset-0 z-0">
@@ -674,7 +674,7 @@ const FilterSidebar = ({
   };
 
   return (
-    <GlassPanel className="p-5 sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
+    <GlassPanel className="p-5 sticky top-4 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
       {/* Categories */}
       <div className="mb-6">
         <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
@@ -1117,22 +1117,22 @@ export default function Store() {
                     <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
                   </div>
 
-                  <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-8 relative z-10">
+                  <div className="max-w-[1920px] mx-auto px-4 md:px-6 py-2 relative z-10">
                     <div className="flex gap-6">
                       {/* Left Sidebar - Filters */}
-                  <aside className="hidden lg:block w-64 flex-shrink-0">
-                    <FilterSidebar 
-                      genres={genres}
-                      selectedGenres={selectedGenres}
-                      setSelectedGenres={setSelectedGenres}
-                      priceRange={priceRange}
-                      setPriceRange={setPriceRange}
-                      selectedRating={selectedRating}
-                      setSelectedRating={setSelectedRating}
-                      selectedCategory={selectedCategory}
-                      setSelectedCategory={setSelectedCategory}
-                    />
-                  </aside>
+                      <aside className="hidden lg:block w-64 flex-shrink-0 pt-2">
+                        <FilterSidebar 
+                          genres={genres}
+                          selectedGenres={selectedGenres}
+                          setSelectedGenres={setSelectedGenres}
+                          priceRange={priceRange}
+                          setPriceRange={setPriceRange}
+                          selectedRating={selectedRating}
+                          setSelectedRating={setSelectedRating}
+                          selectedCategory={selectedCategory}
+                          setSelectedCategory={setSelectedCategory}
+                        />
+                      </aside>
 
                   {/* Right Content - Results (Luna + Netflix Style) */}
                   <div className="flex-1 min-w-0">
