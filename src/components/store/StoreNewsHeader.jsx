@@ -24,7 +24,7 @@ export default function StoreNewsHeader() {
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "out" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full mb-6 grid grid-cols-1 lg:grid-cols-12 gap-4"
     >
       {/* Recommended Titles - Spans 6 columns */}
