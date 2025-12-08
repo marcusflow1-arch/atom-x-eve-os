@@ -159,7 +159,7 @@ const CardComponent = ({ card, onClick }) => {
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                delay: i * 0.2,
+                repeatDelay: 4,
                 ease: "easeOut"
               }}
             />

@@ -13,8 +13,9 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
+import BlacksmithGameSelect from '../components/blacksmith/BlacksmithGameSelect';
 
-// Mock data for demonstration (Preserved)
+// Mock data for demonstration
 const mockItems = [
   {
     id: 'item_1',
@@ -129,55 +130,18 @@ const rarityStyles = {
 
 // --- Console UI Components ---
 
-const ConsoleItemCard = ({ item, onClick, isSelected }) => {
-  const style = rarityStyles[item.rarity] || rarityStyles.Common;
-  
-  return (
-    <motion.div
-      layoutId={`item-${item.id}`}
-      onClick={() => onClick(item)}
-      whileHover={{ scale: 1.05, zIndex: 10 }}
-      whileTap={{ scale: 0.98 }}
-      className={`
-        relative flex-shrink-0 w-48 h-64 rounded-3xl overflow-hidden cursor-pointer
-        transition-all duration-500 ease-out bg-slate-800/40 backdrop-blur-2xl border border-white/10
-        shadow-[0_8px_32px_rgba(0,0,0,0.3)]
-        ${isSelected ? `ring-2 ring-white/50 scale-105 z-10 ${style.glow}` : 'hover:scale-102 hover:shadow-xl hover:bg-slate-700/40'}
-      `}
-    >
-      {/* Background Image with Glass Overlay */}
-      <div className="absolute inset-0 p-2">
-        <div className="w-full h-full rounded-2xl overflow-hidden relative">
-          <img 
-            src={item.preview_image_url} 
-            alt={item.name} 
-            className="w-full h-full object-cover transition-transform duration-700 opacity-80"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
-        </div>
-      </div>
-
-      {/* Card Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-1">
-        <Badge className={`w-fit bg-slate-900/60 backdrop-blur-md border ${style.border} ${style.color} text-[10px] px-2 py-0.5 shadow-sm`}>
-          {item.rarity}
-        </Badge>
-        <h3 className="text-white font-bold text-lg leading-tight">
-          {item.name}
-        </h3>
-        <p className="text-slate-400 text-xs truncate font-medium">{item.type}</p>
-      </div>
-
-      {/* Selection Glint */}
-      {isSelected && (
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 to-transparent pointer-events-none" />
-      )}
-    </motion.div>
-  );
-};
-
 const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
-  if (!item) return null;
+  if (!item) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-slate-500">
+        <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5">
+          <Hammer className="w-10 h-10 opacity-30" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Black Forge</h2>
+        <p className="max-w-md text-center">Select an item from the list to view stats, apply enchantments, or reforge equipment.</p>
+      </div>
+    );
+  }
   
   const style = rarityStyles[item.rarity] || rarityStyles.Common;
   const associatedSet = mockSets.find(set => set.id === item.set_id);
@@ -310,7 +274,8 @@ const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
 
 export default function BlacksmithPage() {
   const { user } = useAuth();
-  const [selectedItem, setSelectedItem] = useState(mockItems[0]);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [viewMode, setViewMode] = useState('forge'); // 'forge', 'materials', 'collab'
   const [categoryFilter, setCategoryFilter] = useState('all');
   
@@ -333,9 +298,16 @@ export default function BlacksmithPage() {
 
   // Filter logic
   const displayedItems = useMemo(() => {
-    if (categoryFilter === 'all') return mockItems;
-    return mockItems.filter(i => i.type === categoryFilter);
-  }, [categoryFilter]);
+    let items = mockItems;
+    
+    // Filter by selected game if in forge mode
+    if (viewMode === 'forge' && selectedGame) {
+      items = items.filter(i => i.game_id === selectedGame.id);
+    }
+    
+    if (categoryFilter === 'all') return items;
+    return items.filter(i => i.type === categoryFilter);
+  }, [categoryFilter, selectedGame, viewMode]);
 
   // Background based on selection
   const bgImage = selectedItem?.preview_image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80';
@@ -425,65 +397,94 @@ export default function BlacksmithPage() {
           
           {viewMode === 'forge' ? (
             <>
-              {/* Left: Categories & Item Scroll */}
-              <div className="w-full max-w-[400px] flex flex-col gap-6">
-                {/* Category Tabs */}
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                  {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoryFilter(cat)}
-                      className={`text-sm font-bold uppercase whitespace-nowrap transition-colors ${
-                        categoryFilter === cat ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-slate-400 hover:text-slate-600'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+              {!selectedGame ? (
+                <BlacksmithGameSelect itemsData={mockItems} onGameSelect={(game) => {
+                    setSelectedGame(game);
+                    setSelectedItem(null); 
+                }} />
+              ) : (
+                <>
+                  {/* Left: Categories & Item Scroll */}
+                  <div className="w-full max-w-[400px] flex flex-col gap-6">
+                    <div className="flex items-center justify-between">
+                        <Button 
+                        variant="ghost" 
+                        onClick={() => setSelectedGame(null)}
+                        className="text-left justify-start text-white/70 hover:text-white px-0"
+                        >
+                        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Games
+                        </Button>
+                        <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
+                            {selectedGame.title}
+                        </Badge>
+                    </div>
 
-                {/* Vertical Scrollable Grid (Apple Glass List) */}
-                <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar">
-                  {displayedItems.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      onClick={() => setSelectedItem(item)}
-                      whileHover={{ x: 10, backgroundColor: 'rgba(30,41,59,0.8)' }}
-                      className={`
-                        p-4 rounded-2xl cursor-pointer border transition-all flex items-center gap-4 backdrop-blur-md
-                        ${selectedItem?.id === item.id 
-                          ? 'bg-slate-700 text-white border-blue-500/50 shadow-lg shadow-blue-500/20' 
-                          : 'bg-slate-800/40 text-slate-300 border-white/10 hover:border-white/20'
-                        }
-                      `}
-                    >
-                      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-white/10">
-                        <img src={item.preview_image_url} className="w-full h-full object-cover" alt="" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold truncate">{item.name}</h4>
-                        <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-300' : 'text-slate-500'}`}>
-                          {item.rarity} • Lv.{item.level_requirement}
-                        </p>
-                      </div>
-                      {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-400" />}
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+                    {/* Category Tabs */}
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                      {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setCategoryFilter(cat)}
+                          className={`text-sm font-bold uppercase whitespace-nowrap transition-colors ${
+                            categoryFilter === cat ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
 
-              {/* Right: Details (Expands to fill) */}
-              <div className="flex-1 relative">
-                <AnimatePresence mode="wait">
-                  <ConsoleDetailView 
-                    key={selectedItem?.id} 
-                    item={selectedItem}
-                    onEnchant={handleEnchant}
-                    onCombine={handleCombine}
-                    onSalvage={handleSalvage}
-                  />
-                </AnimatePresence>
-              </div>
+                    {/* Vertical Scrollable Grid (Apple Glass List) */}
+                    <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar">
+                      {displayedItems.length > 0 ? (
+                          displayedItems.map((item) => (
+                            <motion.div
+                            key={item.id}
+                            onClick={() => setSelectedItem(item)}
+                            whileHover={{ x: 10, backgroundColor: 'rgba(30,41,59,0.8)' }}
+                            className={`
+                                p-4 rounded-2xl cursor-pointer border transition-all flex items-center gap-4 backdrop-blur-md
+                                ${selectedItem?.id === item.id 
+                                ? 'bg-slate-700 text-white border-blue-500/50 shadow-lg shadow-blue-500/20' 
+                                : 'bg-slate-800/40 text-slate-300 border-white/10 hover:border-white/20'
+                                }
+                            `}
+                            >
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-white/10">
+                                <img src={item.preview_image_url} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="font-bold truncate">{item.name}</h4>
+                                <p className={`text-xs truncate ${selectedItem?.id === item.id ? 'text-slate-300' : 'text-slate-500'}`}>
+                                {item.rarity} • Lv.{item.level_requirement}
+                                </p>
+                            </div>
+                            {selectedItem?.id === item.id && <ChevronRight className="w-5 h-5 text-blue-400" />}
+                            </motion.div>
+                        ))
+                      ) : (
+                          <div className="text-center py-10 text-slate-500">
+                              <Package className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                              <p>No items found for this category.</p>
+                          </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Details (Expands to fill) */}
+                  <div className="flex-1 relative">
+                    <AnimatePresence mode="wait">
+                      <ConsoleDetailView 
+                        key={selectedItem?.id} 
+                        item={selectedItem}
+                        onEnchant={handleEnchant}
+                        onCombine={handleCombine}
+                        onSalvage={handleSalvage}
+                      />
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
             </>
           ) : viewMode === 'collab' ? (
             <div className="w-full h-full overflow-y-auto">
