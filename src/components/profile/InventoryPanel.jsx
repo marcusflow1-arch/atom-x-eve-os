@@ -70,7 +70,15 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
         const _gamesByGenre = {};
         const _itemsByGame = {};
 
-        processedInventory.forEach(item => {
+        const filteredInventory = searchQuery 
+            ? processedInventory.filter(item => 
+                (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                (item.type && item.type.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (item.game && item.game.toLowerCase().includes(searchQuery.toLowerCase()))
+              )
+            : processedInventory;
+
+        filteredInventory.forEach(item => {
             const g = item.genre || 'Misc';
             const game = item.game || 'Unknown Game';
             
@@ -94,7 +102,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
             gamesByGenre: Object.fromEntries(Object.entries(_gamesByGenre).map(([k, v]) => [k, Array.from(v)])),
             itemsByGame: _itemsByGame
         };
-    }, [processedInventory]);
+    }, [processedInventory, searchQuery]);
 
     return (
         <div className="h-[700px] w-full flex gap-6">
@@ -218,6 +226,17 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                     <div className="ml-auto text-xs text-amber-400 font-mono flex items-center gap-1 bg-amber-950/30 px-3 py-1 rounded border border-amber-500/20">
                                         <Coins className="w-3 h-3" /> 14,520 G
                                     </div>
+                                </div>
+
+                                <div className="relative mb-2">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search items..." 
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent border border-white/10 rounded-lg h-9 pl-9 text-xs text-white focus:bg-white/5 transition-all outline-none"
+                                    />
                                 </div>
 
                                 {/* Items Grid - Removed Outer Box Styles */}

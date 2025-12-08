@@ -392,6 +392,7 @@ export default function TradingPostContent() {
 
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState("");
 
   const GENRE_GAMES = useMemo(() => ({
     "MMORPG": ["Skyrim Online", "World of Warcraft", "Elder Scrolls Online"],
@@ -958,10 +959,24 @@ export default function TradingPostContent() {
                                   </div>
                               </div>
 
+                              {/* Search Bar */}
+                              <div className="relative mb-2">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                                <Input 
+                                  type="text" 
+                                  placeholder="Search inventory..." 
+                                  value={inventorySearch}
+                                  onChange={(e) => setInventorySearch(e.target.value)}
+                                  className="w-full bg-slate-800/50 border-white/5 h-9 pl-9 text-xs focus:bg-slate-800 transition-all"
+                                />
+                              </div>
+
                               {/* Items Grid - Removed Outer Box Styles */}
                               <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
                                   <div className="grid grid-cols-5 gap-3">
-                                      {getGameDetails(subTabGame).items.map((item) => (
+                                      {getGameDetails(subTabGame).items
+                                        .filter(item => !inventorySearch || item.name.toLowerCase().includes(inventorySearch.toLowerCase()) || item.type.toLowerCase().includes(inventorySearch.toLowerCase()))
+                                        .map((item) => (
                                           <div 
                                               key={item.id}
                                               onClick={() => setSelectedInventoryItem(item)}
