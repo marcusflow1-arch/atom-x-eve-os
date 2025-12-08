@@ -1201,9 +1201,9 @@ export default function Store() {
                   />
                 </aside>
 
-              {/* Right Content - Results (Liquid Glass Box) */}
+              {/* Right Content - Results (Transparent Scroll Container) */}
               <div className="flex-1 min-w-0 h-full relative">
-              <div className="absolute inset-0 rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
+              <div className="absolute inset-0 overflow-hidden">
                 {/* Inner Scroll Container */}
                 <div className="h-full overflow-y-auto p-6 scrollbar-hide">
                     {/* Active Filters - Pill Style */}
