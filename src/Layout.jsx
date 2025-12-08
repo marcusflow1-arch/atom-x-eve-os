@@ -666,23 +666,7 @@ function LayoutContent({ children, currentPageName }) {
                 </button>
 
 
-                {/* Dock Items */}
-                {headerConfig.showDock && mode === 'ai' && (
-                   <div className="flex items-center gap-2">
-                       {DOCK_ITEMS.map(item => (
-                           <Link 
-                             key={item.id} 
-                             to={createPageUrl(item.route)}
-                             className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
-                             title={item.label}
-                           >
-                               <item.icon className="w-4 h-4" />
-                           </Link>
-                       ))}
-                   </div>
-                )}
               </div>
-            )}
           </div>
         );
       })()}
