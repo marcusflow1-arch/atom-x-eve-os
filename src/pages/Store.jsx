@@ -185,36 +185,13 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
 // --- Hero Section ---
 const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
   const navigate = useNavigate();
-  const [isShrunk, setIsShrunk] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = (e) => {
-      // Check if we've scrolled past a threshold
-      const container = document.querySelector('.page-container');
-      if (container) {
-         setIsShrunk(container.scrollTop > 100);
-      } else {
-         setIsShrunk(window.scrollY > 100);
-      }
-    };
-    
-    const container = document.querySelector('.page-container');
-    if (container) container.addEventListener('scroll', handleScroll);
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      if (container) container.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   if (!game) return null;
 
   return (
-    <motion.div 
-      className={`sticky top-14 z-30 w-full flex items-center px-6 md:px-12 transition-all duration-500 border-b border-white/10 backdrop-blur-md bg-black/40`}
-      style={{ height: isShrunk ? '240px' : '50vh', minHeight: isShrunk ? '240px' : '400px' }}
-      layout
+    <div 
+      className="sticky top-14 z-30 w-full flex items-center px-6 md:px-12 border-b border-white/10 backdrop-blur-md bg-black/40"
+      style={{ height: '50vh', minHeight: '400px' }}
     >
       {/* Content Container */}
       <div className="relative z-20 w-full">
@@ -228,21 +205,12 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
             <Badge className="mb-2 bg-white/20 backdrop-blur-md border-none text-white text-xs">
               {game.genre?.toUpperCase()}
             </Badge>
-            <h1 className={`font-black text-white mb-2 leading-tight drop-shadow-2xl transition-all duration-300 ${isShrunk ? 'text-2xl md:text-3xl' : 'text-3xl md:text-5xl'}`}>
+            <h1 className="font-black text-white mb-2 leading-tight drop-shadow-2xl text-3xl md:text-5xl">
               {game.title}
             </h1>
-            <AnimatePresence>
-              {!isShrunk && (
-                <motion.p 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium"
-                >
-                  {game.description}
-                </motion.p>
-              )}
-            </AnimatePresence>
+            <p className="text-sm md:text-base text-gray-100 mb-6 line-clamp-2 max-w-md drop-shadow-md font-medium">
+              {game.description}
+            </p>
             <div className="flex gap-3">
               <Button 
                 className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg shadow-lg"
