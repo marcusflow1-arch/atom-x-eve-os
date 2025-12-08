@@ -183,10 +183,14 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
 );
 
 // --- Hero Section ---
-const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
+const HeroSection = ({ game, isMuted, setIsMuted, hasVideo, specialVideo }) => {
   const navigate = useNavigate();
 
   if (!game) return null;
+
+  // Check if this is the Monster Hunter game and we have the special video
+  const isMonsterHunter = game.title?.toLowerCase().includes('monster hunter');
+  const showSpecialVideo = isMonsterHunter && specialVideo?.video_url;
 
   return (
     <div 
@@ -195,13 +199,30 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
     >
       {/* Background Video/Image inside Box */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={game.cover_image || game.image} 
-          alt="Hero Background" 
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        {showSpecialVideo ? (
+          <div className="w-full h-full relative">
+            <video
+              src={specialVideo.video_url}
+              autoPlay
+              loop
+              muted={isMuted}
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          </div>
+        ) : (
+          <>
+            <img 
+              src={game.cover_image || game.image} 
+              alt="Hero Background" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          </>
+        )}
       </div>
 
       {/* Content Container */}
@@ -240,7 +261,7 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo }) => {
         </div>
       </div>
 
-      {hasVideo && (
+      {(hasVideo || showSpecialVideo) && (
         <button 
           onClick={() => setIsMuted(!isMuted)}
           className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
@@ -947,6 +968,11 @@ export default function Store() {
     bg.title?.toLowerCase().includes('plasma') && bg.title?.toLowerCase().includes('water')
   );
 
+  // Find "Monster Hunter" background specifically
+  const monsterHunterBackground = heroBackgrounds.find(bg => 
+    bg.title?.toLowerCase().includes('monster hunter') || bg.title?.toLowerCase().includes('yt hashtag')
+  );
+
   useEffect(() => {
     if (activeBackgrounds.length <= 1) return;
     const interval = setInterval(() => {
@@ -1091,6 +1117,7 @@ export default function Store() {
                   isMuted={isMuted}
                   setIsMuted={setIsMuted}
                   hasVideo={false}
+                  specialVideo={monsterHunterBackground}
                 />
               </div>
 
