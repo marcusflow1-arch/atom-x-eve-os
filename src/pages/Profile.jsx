@@ -181,7 +181,7 @@ export default function Profile() {
                  {/* Glass Slot Container */}
                  <div className="w-20 h-20 bg-white/5 backdrop-blur-md border border-white/20 rounded-sm shadow-xl flex items-center justify-center relative overflow-hidden group-hover:border-white/40 transition-all duration-300">
                      {item ? (
-                         <img src={item.icon || "https://via.placeholder.com/64"} alt={label} className="w-full h-full object-cover p-2 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                         <img src={item.icon_url || item.icon || "https://via.placeholder.com/64"} alt={label} className="w-full h-full object-cover p-2 opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all" />
                      ) : (
                          <div className="w-full h-full flex items-center justify-center opacity-20">
                              <div className="w-8 h-8 rounded-full border border-white/30" />
