@@ -33,6 +33,7 @@ import Admin from './pages/Admin';
 import SeasonalPass from './pages/SeasonalPass';
 import LunaTemplate from './pages/LunaTemplate';
 import GenreMastery from './pages/GenreMastery';
+import NavigationTree from './pages/NavigationTree';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "SeasonalPass": SeasonalPass,
     "LunaTemplate": LunaTemplate,
     "GenreMastery": GenreMastery,
+    "NavigationTree": NavigationTree,
 }
 
 export const pagesConfig = {
