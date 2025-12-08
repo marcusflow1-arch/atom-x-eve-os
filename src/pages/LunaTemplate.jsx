@@ -123,6 +123,15 @@ export default function LunaTemplate() {
           <Circle className="w-5 h-5 text-white/80" />
         </button>
 
+        {/* Pin Games Button */}
+        <button
+          onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'games'))}
+          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <Gamepad2 className="w-5 h-5 text-white/80" />
+        </button>
+
         {/* Settings Gear Icon */}
         <motion.button
           className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
@@ -134,51 +143,26 @@ export default function LunaTemplate() {
           <Settings className="w-6 h-6 text-white/80" />
         </motion.button>
 
-        {/* Orbital Menu */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full transition-opacity duration-500 z-30 pointer-events-none`}>
-          <div className="relative w-full h-full pointer-events-auto">
-          {ORBITAL_ITEMS.map((item, index) => {
-            const { x, y, scale, opacity, zIndex } = getItemPosition(index);
+        {/* Bottom Dock Menu */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-end justify-center gap-6 pointer-events-auto pb-4 overflow-x-auto w-full px-8 no-scrollbar">
+          {ORBITAL_ITEMS.filter(item => ['home', 'story', 'battle', 'skill-tree'].includes(item.id)).map((item) => {
             const Icon = item.icon;
-            const isActive = index === activeIndex;
-
+            
             return (
               <motion.div
                 key={item.id}
-                className="absolute top-1/2 left-1/2 cursor-pointer"
-                style={{
-                  x: x - 140,
-                  y: y - 105,
-                  zIndex,
-                }}
-                animate={{
-                  scale,
-                  opacity,
-                }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 100, 
-                  damping: 25,
-                  mass: 0.8
-                }}
+                className="flex-shrink-0 cursor-pointer"
                 onClick={() => setActiveDrawer(item)}
+                whileHover={{ y: -20, transition: { duration: 0.3 } }}
+                whileTap={{ scale: 0.95 }}
               >
-                <motion.div
-                  className={`w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-6 ${
-                    isActive 
-                      ? 'border-2 border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.3)]' 
-                      : 'border border-white/10'
-                  }`}
+                <div
+                  className="w-[280px] h-[210px] rounded-3xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-6 border border-white/10 hover:border-white/30"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-                  }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    transition: { duration: 0.3 }
                   }}
                 >
                   {/* Icon Badge */}
@@ -191,26 +175,10 @@ export default function LunaTemplate() {
                     <h3 className="text-white font-bold text-xl mb-2 tracking-wide">{item.label}</h3>
                     <p className="text-white/60 text-sm leading-relaxed">{item.description}</p>
                   </div>
-
-                  {/* Active Highlight Ring */}
-                  {isActive && (
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl border-2 border-white/60 pointer-events-none"
-                      animate={{
-                        boxShadow: [
-                          '0 0 30px rgba(255,255,255,0.5)',
-                          '0 0 50px rgba(255,255,255,0.8)',
-                          '0 0 30px rgba(255,255,255,0.5)',
-                        ],
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  )}
-                </motion.div>
+                </div>
               </motion.div>
             );
           })}
-          </div>
         </div>
 
         {/* Universal Slide-Out Drawer */}
