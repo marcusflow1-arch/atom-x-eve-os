@@ -17,6 +17,7 @@ import BlacksmithGameSelect from '@/components/blacksmith/BlacksmithGameSelect';
 
 // Mock data for demonstration
 const mockItems = [
+  // Fantasy (Elder Scrolls: Reborn)
   {
     id: 'item_1',
     name: 'Stormbreaker Sword',
@@ -27,13 +28,45 @@ const mockItems = [
     game_title: 'Elder Scrolls: Reborn',
     genre: 'Fantasy',
     set_id: 'stormforged_set',
-    set_position: 1,
     base_stats: { attack: 120, speed: 10 },
     modifiers: [{ name: 'Lightning Strike', effect: '+20 Electric Damage' }],
     enchantment_slots: 2,
     preview_image_url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
     level_requirement: 25
   },
+  {
+    id: 'item_3',
+    name: 'Stormforged Helm',
+    description: 'Protective headgear forged from storm essence.',
+    rarity: 'Legendary',
+    type: 'Armor',
+    game_id: 'elder_scrolls_reborn',
+    game_title: 'Elder Scrolls: Reborn',
+    genre: 'Fantasy',
+    set_id: 'stormforged_set',
+    base_stats: { defense: 85, resistance: 40 },
+    modifiers: [],
+    enchantment_slots: 3,
+    preview_image_url: 'https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?w=300&h=300&fit=crop',
+    level_requirement: 25
+  },
+  {
+    id: 'item_5',
+    name: 'Molten Core Shield',
+    description: 'A heavy shield containing the heart of a dying star.',
+    rarity: 'Mythic',
+    type: 'Armor',
+    game_id: 'elder_scrolls_reborn',
+    game_title: 'Elder Scrolls: Reborn',
+    genre: 'Fantasy',
+    base_stats: { defense: 200, fire_resist: 80 },
+    modifiers: [{ name: 'Magma Shell', effect: 'Reflects 15% damage as Fire' }],
+    enchantment_slots: 1,
+    preview_image_url: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=300&fit=crop',
+    level_requirement: 40
+  },
+
+  // Sci-Fi (Cyberpunk 2088, Destiny Forge)
   {
     id: 'item_2',
     name: 'Cyber Neural Interface',
@@ -50,23 +83,6 @@ const mockItems = [
     level_requirement: 20
   },
   {
-    id: 'item_3',
-    name: 'Stormforged Helm',
-    description: 'Protective headgear forged from storm essence.',
-    rarity: 'Legendary',
-    type: 'Armor',
-    game_id: 'elder_scrolls_reborn',
-    game_title: 'Elder Scrolls: Reborn',
-    genre: 'Fantasy',
-    set_id: 'stormforged_set',
-    set_position: 2,
-    base_stats: { defense: 85, resistance: 40 },
-    modifiers: [],
-    enchantment_slots: 3,
-    preview_image_url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
-    level_requirement: 25
-  },
-  {
     id: 'item_4',
     name: 'Void Walker Boots',
     description: 'Step through shadows with these ethereal boots.',
@@ -81,20 +97,192 @@ const mockItems = [
     preview_image_url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=300&fit=crop',
     level_requirement: 18
   },
+
+  // Action (Kratos' Legacy)
   {
-    id: 'item_5',
-    name: 'Molten Core Shield',
-    description: 'A heavy shield containing the heart of a dying star.',
-    rarity: 'Mythic',
-    type: 'Armor',
-    game_id: 'elder_scrolls_reborn',
-    game_title: 'Elder Scrolls: Reborn',
-    genre: 'Fantasy',
-    base_stats: { defense: 200, fire_resist: 80 },
-    modifiers: [{ name: 'Magma Shell', effect: 'Reflects 15% damage as Fire' }],
+    id: 'item_6',
+    name: 'Leviathan Axe Replica',
+    description: 'A frozen axe that returns to the wielder\'s hand.',
+    rarity: 'Legendary',
+    type: 'Weapon',
+    game_id: 'kratos_legacy',
+    game_title: 'Kratos\' Legacy',
+    genre: 'Action',
+    base_stats: { attack: 150, frost_damage: 50 },
+    modifiers: [{ name: 'Permafrost', effect: 'Slows enemies on hit' }],
+    enchantment_slots: 2,
+    preview_image_url: 'https://images.unsplash.com/photo-1589241062272-c0a3f5d75c15?w=300&h=300&fit=crop',
+    level_requirement: 30
+  },
+
+  // Horror (Silent Hill: Echoes)
+  {
+    id: 'item_7',
+    name: 'Rusty Pipe',
+    description: 'A terrifyingly effective blunt instrument from a nightmare.',
+    rarity: 'Common',
+    type: 'Weapon',
+    game_id: 'silent_hill_echoes',
+    game_title: 'Silent Hill: Echoes',
+    genre: 'Horror',
+    base_stats: { attack: 40, fear: 10 },
+    modifiers: [],
+    enchantment_slots: 0,
+    preview_image_url: 'https://images.unsplash.com/photo-1581072036677-6a47b7472463?w=300&h=300&fit=crop',
+    level_requirement: 5
+  },
+
+  // Racing (Velocity X)
+  {
+    id: 'item_8',
+    name: 'Nitrous Injector V8',
+    description: 'High-performance boost system for street racing.',
+    rarity: 'Rare',
+    type: 'Trinket',
+    game_id: 'velocity_x',
+    game_title: 'Velocity X',
+    genre: 'Racing',
+    base_stats: { speed: 50, acceleration: 20 },
+    modifiers: [{ name: 'Turbo Boost', effect: '+15% Max Speed for 5s' }],
     enchantment_slots: 1,
-    preview_image_url: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=300&fit=crop',
+    preview_image_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&h=300&fit=crop',
+    level_requirement: 15
+  },
+
+  // Shooter (Frontline Ops)
+  {
+    id: 'item_9',
+    name: 'Tactical Vest Level 3',
+    description: 'Standard issue ballistic protection.',
+    rarity: 'Rare',
+    type: 'Armor',
+    game_id: 'frontline_ops',
+    game_title: 'Frontline Ops',
+    genre: 'Shooter',
+    base_stats: { armor: 100, mobility: -5 },
+    modifiers: [],
+    enchantment_slots: 1,
+    preview_image_url: 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300&h=300&fit=crop',
+    level_requirement: 10
+  },
+
+  // RPG (Final Fantasy: Crystal)
+  {
+    id: 'item_10',
+    name: 'Buster Sword Replica',
+    description: 'An incredibly massive sword requiring immense strength.',
+    rarity: 'Epic',
+    type: 'Weapon',
+    game_id: 'ff_crystal',
+    game_title: 'Final Fantasy: Crystal',
+    genre: 'RPG',
+    base_stats: { attack: 200, weight: 50 },
+    modifiers: [{ name: 'Limit Break', effect: 'Charge attacks deal 200% damage' }],
+    enchantment_slots: 3,
+    preview_image_url: 'https://images.unsplash.com/photo-1592155931584-901ac15763e3?w=300&h=300&fit=crop',
+    level_requirement: 35
+  },
+
+  // Strategy (Civ Empires)
+  {
+    id: 'item_11',
+    name: 'Crown of Leadership',
+    description: 'Symbol of authority for a burgeoning empire.',
+    rarity: 'Legendary',
+    type: 'Trinket',
+    game_id: 'civ_empires',
+    game_title: 'Civ Empires',
+    genre: 'Strategy',
+    base_stats: { diplomacy: 50, influence: 100 },
+    modifiers: [{ name: 'Golden Age', effect: '+20% Resource Generation' }],
+    enchantment_slots: 1,
+    preview_image_url: 'https://images.unsplash.com/photo-1605806616949-1e87b487bc2a?w=300&h=300&fit=crop',
     level_requirement: 40
+  },
+
+  // Sports (FIFA Street)
+  {
+    id: 'item_12',
+    name: 'Golden Cleats',
+    description: 'Boots that seem to magnetically attract the ball.',
+    rarity: 'Epic',
+    type: 'Armor', // Using armor slot for footwear
+    game_id: 'fifa_street',
+    game_title: 'FIFA Street',
+    genre: 'Sports',
+    base_stats: { speed: 30, control: 45 },
+    modifiers: [{ name: 'Curve Shot', effect: '+25% Accuracy' }],
+    enchantment_slots: 1,
+    preview_image_url: 'https://images.unsplash.com/photo-1511886929837-354d827aae26?w=300&h=300&fit=crop',
+    level_requirement: 20
+  },
+
+  // Fighting (Iron Fist Tournament)
+  {
+    id: 'item_13',
+    name: 'Black Belt Gi',
+    description: 'Traditional martial arts attire worn by grandmasters.',
+    rarity: 'Rare',
+    type: 'Armor',
+    game_id: 'iron_fist',
+    game_title: 'Iron Fist Tournament',
+    genre: 'Fighting',
+    base_stats: { agility: 20, defense: 15 },
+    modifiers: [{ name: 'Counter', effect: '10% chance to parry' }],
+    enchantment_slots: 2,
+    preview_image_url: 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=300&h=300&fit=crop',
+    level_requirement: 15
+  },
+
+  // Puzzle (Portal Paradox)
+  {
+    id: 'item_14',
+    name: 'Weighted Companion Cube',
+    description: 'A loyal friend that will never threaten to stab you.',
+    rarity: 'Common',
+    type: 'Trinket',
+    game_id: 'portal_paradox',
+    game_title: 'Portal Paradox',
+    genre: 'Puzzle',
+    base_stats: { love: 100, weight: 50 },
+    modifiers: [],
+    enchantment_slots: 0,
+    preview_image_url: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?w=300&h=300&fit=crop',
+    level_requirement: 1
+  },
+
+  // Survival (Block World)
+  {
+    id: 'item_15',
+    name: 'Diamond Pickaxe',
+    description: 'The ultimate tool for mining and crafting.',
+    rarity: 'Epic',
+    type: 'Weapon', // Tool/Weapon
+    game_id: 'block_world',
+    game_title: 'Block World',
+    genre: 'Survival',
+    base_stats: { mining_speed: 500, durability: 1500 },
+    modifiers: [{ name: 'Fortune', effect: 'Double drop rate' }],
+    enchantment_slots: 3,
+    preview_image_url: 'https://images.unsplash.com/photo-1627850604058-52e40de1b847?w=300&h=300&fit=crop',
+    level_requirement: 30
+  },
+
+  // Adventure (Tomb Raider: Lost City)
+  {
+    id: 'item_16',
+    name: 'Climbing Axe',
+    description: 'Essential gear for scaling treacherous cliffs.',
+    rarity: 'Uncommon',
+    type: 'Weapon',
+    game_id: 'tomb_raider',
+    game_title: 'Tomb Raider: Lost City',
+    genre: 'Adventure',
+    base_stats: { attack: 25, mobility: 20 },
+    modifiers: [],
+    enchantment_slots: 1,
+    preview_image_url: 'https://images.unsplash.com/photo-1533624820386-a427f9c24251?w=300&h=300&fit=crop',
+    level_requirement: 10
   }
 ];
 
@@ -302,7 +490,15 @@ export default function BlacksmithPage() {
     
     // Filter by selected game if in forge mode
     if (viewMode === 'forge' && selectedGame) {
-      items = items.filter(i => i.game_id === selectedGame.id);
+      // Check for the special "all items" selection from the new "Empty Box"
+      if (selectedGame.id.startsWith('all_')) {
+        // If it's a genre-specific "all" box (e.g., "all_Fantasy")
+        const genre = selectedGame.id.replace('all_', '');
+        items = items.filter(i => i.genre === genre);
+      } else {
+        // Specific game selected
+        items = items.filter(i => i.game_id === selectedGame.id);
+      }
     }
     
     if (categoryFilter === 'all') return items;

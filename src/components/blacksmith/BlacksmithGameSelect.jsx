@@ -14,10 +14,10 @@ export default function BlacksmithGameSelect({ itemsData, onGameSelect }) {
     }, [itemsData]);
 
     const gamesByGenre = useMemo(() => {
-        return itemsData.reduce((acc, item) => {
+        const grouped = itemsData.reduce((acc, item) => {
             if (!acc[item.genre]) acc[item.genre] = [];
             // Dedup games
-            if (!acc[item.genre].some(g => g.game_id === item.game_id)) {
+            if (!acc[item.genre].some(g => g.id === item.game_id)) {
                 acc[item.genre].push({
                     id: item.game_id,
                     title: item.game_title,
@@ -26,6 +26,18 @@ export default function BlacksmithGameSelect({ itemsData, onGameSelect }) {
             }
             return acc;
         }, {});
+
+        // Add the "Empty Box" / "Generic Game" option to each genre
+        Object.keys(grouped).forEach(genre => {
+            grouped[genre].unshift({
+                id: `all_${genre}`,
+                title: `All ${genre} Items`,
+                image: null, // Will render as placeholder
+                isPlaceholder: true
+            });
+        });
+
+        return grouped;
     }, [itemsData]);
 
     const filteredGenres = useMemo(() => {
@@ -105,25 +117,45 @@ export default function BlacksmithGameSelect({ itemsData, onGameSelect }) {
                                             whileHover={{ scale: 1.05, y: -5 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => onGameSelect(game)}
-                                            className="group cursor-pointer relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 shadow-lg bg-slate-800"
+                                            className={`group cursor-pointer relative aspect-[3/4] rounded-2xl overflow-hidden border shadow-lg transition-colors ${
+                                                game.isPlaceholder 
+                                                    ? 'border-dashed border-white/30 bg-white/5 hover:bg-white/10 hover:border-blue-400/50' 
+                                                    : 'border-white/10 bg-slate-800'
+                                            }`}
                                         >
-                                            <img 
-                                                src={game.image} 
-                                                alt={game.title} 
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                                            
-                                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                <h3 className="text-white font-bold text-lg leading-tight group-hover:text-blue-400 transition-colors">
-                                                    {game.title}
-                                                </h3>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                     <Badge className="bg-white/10 hover:bg-white/20 text-white/80 border-white/10 text-[10px]">
-                                                        Select
-                                                     </Badge>
+                                            {game.isPlaceholder ? (
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all">
+                                                        <Gamepad2 className="w-8 h-8 text-white/40 group-hover:text-blue-400" />
+                                                    </div>
+                                                    <h3 className="text-white/80 font-bold text-lg group-hover:text-white">
+                                                        {game.title}
+                                                    </h3>
+                                                    <p className="text-white/40 text-xs mt-2">
+                                                        View all items in this genre
+                                                    </p>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                <>
+                                                    <img 
+                                                        src={game.image} 
+                                                        alt={game.title} 
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                                    
+                                                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                                                        <h3 className="text-white font-bold text-lg leading-tight group-hover:text-blue-400 transition-colors">
+                                                            {game.title}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                             <Badge className="bg-white/10 hover:bg-white/20 text-white/80 border-white/10 text-[10px]">
+                                                                Select
+                                                             </Badge>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </motion.div>
                                     ))}
                                 </div>
