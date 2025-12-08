@@ -97,12 +97,12 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
               <div className="flex flex-col gap-2">
                 {game.aiEnhanced && (
                   <Badge className="bg-purple-500/80 backdrop-blur-md text-white text-[10px] border-none w-fit">
-                    <Sparkles className="w-3 h-3 mr-1" /> AI
+                  <Sparkles className="w-1.5 h-1.5 mr-1" /> AI
                   </Badge>
-                )}
-                {game.rating >= 4.8 && (
+                  )}
+                  {game.rating >= 4.8 && (
                   <Badge className="bg-yellow-500/80 backdrop-blur-md text-black text-[10px] border-none font-bold w-fit">
-                    <Trophy className="w-3 h-3 mr-1" /> TOP
+                  <Trophy className="w-1.5 h-1.5 mr-1" /> TOP
                   </Badge>
                 )}
               </div>
@@ -113,7 +113,7 @@ const GameGridCard = ({ game, addToCart, onNavigate }) => {
                 onClick={(e) => { e.stopPropagation(); addToCart(game); }}
                 className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 border border-white/30 flex items-center justify-center transition-all"
               >
-                <Plus className="w-4 h-4 text-white" />
+                <Plus className="w-2.5 h-2.5 text-white" />
               </motion.button>
             </div>
 
@@ -156,7 +156,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
       <div className="absolute top-2 left-2 z-10">
          {game.aiEnhanced && (
             <Badge className="bg-purple-500/90 text-white text-[9px] border-none px-1.5 py-0.5 shadow-lg">
-              <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI
+              <Sparkles className="w-1.5 h-1.5 mr-0.5" /> AI
             </Badge>
           )}
       </div>
@@ -165,7 +165,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
         <h3 className="text-white font-bold text-md leading-tight mb-1 truncate drop-shadow-md">{game.title}</h3>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+            <Star className="w-1.5 h-1.5 text-yellow-400 fill-current" />
             <span className="text-white/90 text-xs">{game.rating || '4.5'}</span>
           </div>
           <span className="text-green-400 text-xs font-bold">${game.price}</span>
@@ -175,7 +175,7 @@ const StoreRowCard = ({ game, onNavigate, addToCart }) => (
       {/* Hover Play Overlay */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40 backdrop-blur-[2px]">
          <button className="w-12 h-12 rounded-full bg-white/20 border border-white/40 flex items-center justify-center backdrop-blur-md transform scale-75 group-hover:scale-100 transition-transform">
-            <Play className="w-5 h-5 text-white fill-white ml-1" />
+            <Play className="w-3 h-3 text-white fill-white ml-1" />
          </button>
       </div>
     </div>
@@ -248,13 +248,13 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo, specialVideo }) => {
                 className="bg-white text-black hover:bg-gray-200 font-bold px-6 h-11 rounded-lg shadow-lg"
                 onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
               >
-                <Play className="w-4 h-4 mr-2 fill-current" /> Play Now
+                <Play className="w-2.5 h-2.5 mr-2 fill-current" /> Play Now
               </Button>
               <Button 
                 className="bg-white/20 backdrop-blur-xl hover:bg-white/30 text-white border-none font-medium px-6 h-11 rounded-lg shadow-lg"
                 onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
               >
-                <Info className="w-4 h-4 mr-2" /> Details
+                <Info className="w-2.5 h-2.5 mr-2" /> Details
               </Button>
             </div>
           </motion.div>
@@ -266,7 +266,7 @@ const HeroSection = ({ game, isMuted, setIsMuted, hasVideo, specialVideo }) => {
           onClick={() => setIsMuted(!isMuted)}
           className="absolute bottom-6 right-6 z-30 w-9 h-9 rounded-full border border-white/30 bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          {isMuted ? <VolumeX className="w-2.5 h-2.5" /> : <Volume2 className="w-2.5 h-2.5" />}
         </button>
       )}
     </div>
@@ -556,7 +556,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
 
           {/* Search Input - Hidden in Marketplace Mode */}
           <div className={`flex-1 max-w-xl flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 transition-all focus-within:bg-white/15 focus-within:border-white/20 relative ${storeMode === 'marketplace' ? 'invisible opacity-0 pointer-events-none' : ''}`}>
-            <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
+            <Search className="w-2.5 h-2.5 text-white/40 flex-shrink-0" />
             <input 
               type="text" 
               placeholder="Search games, genres..." 
@@ -570,7 +570,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                   onClick={() => setSearchTerm('')}
                   className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-2 h-2" />
                 </button>
               )}
               <button 
@@ -582,7 +582,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
                 }`}
                 title="AI Voice Search"
               >
-                <Mic className="w-3.5 h-3.5" />
+                <Mic className="w-2 h-2" />
               </button>
             </div>
 
@@ -606,7 +606,7 @@ const FloatingNav = ({ scrollY, searchTerm, setSearchTerm, allGames, onGameNavig
               to={createPageUrl('Cart')} 
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative"
             >
-              <ShoppingCart className="w-4 h-4 text-white/80" />
+              <ShoppingCart className="w-2.5 h-2.5 text-white/80" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                   {cartCount}
@@ -699,7 +699,7 @@ const FilterSidebar = ({
       {/* Categories */}
       <div className="mb-6">
         <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-blue-400" />
+          <SlidersHorizontal className="w-2.5 h-2.5 text-blue-400" />
           Categories
         </h3>
         <div className="space-y-1">
@@ -713,7 +713,7 @@ const FilterSidebar = ({
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <cat.icon className="w-4 h-4" />
+              <cat.icon className="w-2.5 h-2.5" />
               <span>{cat.label}</span>
             </button>
           ))}
@@ -785,7 +785,7 @@ const FilterSidebar = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`w-3 h-3 ${i < rating ? 'text-yellow-400 fill-current' : 'text-white/20'}`} 
+                    className={`w-1.5 h-1.5 ${i < rating ? 'text-yellow-400 fill-current' : 'text-white/20'}`} 
                   />
                 ))}
               </div>
@@ -838,13 +838,13 @@ const ResultsHeader = ({ count, viewMode, setViewMode, sortBy, setSortBy }) => (
           onClick={() => setViewMode('grid')}
           className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/20' : ''}`}
         >
-          <Grid className="w-4 h-4 text-white" />
+          <Grid className="w-2.5 h-2.5 text-white" />
         </button>
         <button 
           onClick={() => setViewMode('list')}
           className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/20' : ''}`}
         >
-          <List className="w-4 h-4 text-white" />
+          <List className="w-2.5 h-2.5 text-white" />
         </button>
       </div>
     </div>
@@ -886,12 +886,12 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
         <div className="flex items-center gap-4 mt-auto pt-4">
           <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-md">{game.genre}</Badge>
           <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded-full">
-            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+            <Star className="w-1.5 h-1.5 text-yellow-400 fill-current" />
             <span className="text-yellow-400 text-xs font-bold">{game.rating || '4.5'}</span>
           </div>
           {game.aiEnhanced && (
             <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/30">
-              <Sparkles className="w-3 h-3 mr-1" /> AI Enhanced
+              <Sparkles className="w-1.5 h-1.5 mr-1" /> AI Enhanced
             </Badge>
           )}
         </div>
@@ -902,7 +902,7 @@ const GameListCard = ({ game, addToCart, onNavigate }) => (
           className="bg-white text-black hover:bg-blue-50 font-bold"
           onClick={(e) => { e.stopPropagation(); addToCart(game); }}
         >
-          <Plus className="w-4 h-4 mr-1" /> Add to Cart
+          <Plus className="w-2.5 h-2.5 mr-1" /> Add to Cart
         </Button>
         <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
           Details
@@ -1266,7 +1266,7 @@ export default function Store() {
                                 Featured & Recommended
                               </h2>
                               <button className="text-white/50 hover:text-white text-sm flex items-center gap-1 transition-colors">
-                                Explore All <ChevronRight className="w-4 h-4" />
+                                Explore All <ChevronRight className="w-2.5 h-2.5" />
                               </button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
@@ -1297,7 +1297,7 @@ export default function Store() {
 
                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30 transform scale-75 group-hover:scale-100 transition-transform shadow-lg shadow-white/10">
-                                        <Play className="w-7 h-7 text-white fill-white ml-1" />
+                                        <Play className="w-4 h-4 text-white fill-white ml-1" />
                                       </div>
                                     </div>
 
@@ -1305,7 +1305,7 @@ export default function Store() {
                                       <div className="flex items-center gap-2 mb-2">
                                         {game.aiEnhanced && (
                                           <Badge className="bg-purple-500/80 text-white text-[10px] border-none px-2 py-0.5 shadow-lg">
-                                            <Sparkles className="w-3 h-3 mr-1" /> AI
+                                            <Sparkles className="w-1.5 h-1.5 mr-1" /> AI
                                           </Badge>
                                         )}
                                         <Badge className="bg-white/20 backdrop-blur-md text-white text-[10px] border-none px-2 py-0.5">
@@ -1315,7 +1315,7 @@ export default function Store() {
                                       <h3 className="text-white font-bold text-xl mb-1 group-hover:text-blue-300 transition-colors drop-shadow-lg">{game.title}</h3>
                                       <div className="flex items-center gap-3 text-sm">
                                         <div className="flex items-center gap-1">
-                                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                          <Star className="w-2.5 h-2.5 text-yellow-400 fill-current" />
                                           <span className="text-white/90">{game.rating || '4.5'}</span>
                                         </div>
                                         <span className="text-white/40">•</span>
@@ -1327,7 +1327,7 @@ export default function Store() {
                                       onClick={(e) => { e.stopPropagation(); addToCart(game); }}
                                       className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20 border border-white/20 z-20"
                                     >
-                                      <Plus className="w-5 h-5 text-white" />
+                                      <Plus className="w-3 h-3 text-white" />
                                     </button>
                                   </LiquidCard>
                                 </motion.div>
@@ -1353,7 +1353,7 @@ export default function Store() {
                                   <span className="text-white/30 text-sm font-normal">({genreGames.length})</span>
                                 </h2>
                                 <button className="text-white/40 hover:text-white text-xs flex items-center gap-1 transition-colors opacity-0 group-hover/row:opacity-100">
-                                  See All <ChevronRight className="w-3 h-3" />
+                                  See All <ChevronRight className="w-1.5 h-1.5" />
                                 </button>
                               </div>
 
