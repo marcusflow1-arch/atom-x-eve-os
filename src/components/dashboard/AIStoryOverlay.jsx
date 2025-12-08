@@ -71,15 +71,19 @@ export default function AIStoryOverlay({ onClose }) {
       className="fixed inset-0 z-[100] font-serif overflow-hidden"
     >
       {/* LAYER 0: Plasma Water Video Background */}
+      {/* LAYER 0: Plasma Water Video Background */}
       {plasmaVideo && (
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 transform-gpu">
            <video
+             key={plasmaVideo.video_url}
              src={plasmaVideo.video_url}
              className="w-full h-full object-cover"
              autoPlay
              loop
              muted
              playsInline
+             preload="auto"
+             style={{ transform: 'translateZ(0)', willChange: 'transform' }}
            />
         </div>
       )}
