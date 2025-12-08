@@ -125,7 +125,6 @@ function LayoutContent({ children, currentPageName }) {
 
   const allNavItems = [
     { name: 'Luna Dashboard', icon: Home, path: createPageUrl('LunaTemplate') },
-    { name: 'Dashboard', icon: LayoutGrid, path: createPageUrl('Dashboard') },
     { name: 'Store', icon: ShoppingBag, path: createPageUrl('Store') },
     { name: 'Library', icon: Library, path: createPageUrl('Library') },
     { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
@@ -139,7 +138,6 @@ function LayoutContent({ children, currentPageName }) {
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'AI Console', icon: Bot, path: createPageUrl('AIConsole') },
     { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
-    { name: 'My Profile', icon: User, path: createPageUrl('Profile') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
     { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
