@@ -45,12 +45,13 @@ export default function LunaTemplate() {
 
         {/* Settings Gear Icon */}
         <motion.button
-          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
           onClick={() => setShowSettings(true)}
           whileHover={{ scale: 1.1, rotate: 90 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Settings className="w-6 h-6" />
+          <Settings className="w-6 h-6 text-white/80" />
         </motion.button>
 
         {/* Back to Loadout X Button (Only visible when Inventory is open) */}
