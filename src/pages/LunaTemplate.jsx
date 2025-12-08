@@ -164,6 +164,7 @@ export default function LunaTemplate() {
           </>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </DragDropContext>
   );
 }
