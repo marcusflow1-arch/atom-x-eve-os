@@ -941,6 +941,11 @@ export default function Store() {
 
   const activeBackgrounds = heroBackgrounds.filter(bg => bg.is_active);
   const currentBackground = activeBackgrounds[currentBgIndex % Math.max(activeBackgrounds.length, 1)];
+  
+  // Find "Plasma Water" background specifically
+  const plasmaBackground = heroBackgrounds.find(bg => 
+    bg.title?.toLowerCase().includes('plasma') && bg.title?.toLowerCase().includes('water')
+  );
 
   useEffect(() => {
     if (activeBackgrounds.length <= 1) return;
@@ -1090,8 +1095,23 @@ export default function Store() {
               </div>
 
               {/* Main Content: Scrollable */}
-              <div className="flex-1 overflow-y-auto page-container scroll-smooth relative">
-                  {/* Ambient Glow Effects (moved inside scroll area or fixed behind) */}
+              <div className="flex-1 overflow-y-auto page-container scroll-smooth relative group/scroll-area">
+                  {/* Plasma Water Video Background */}
+                  {plasmaBackground && (
+                    <div className="absolute inset-0 z-0 overflow-hidden sticky top-0 h-full">
+                      <video
+                        src={plasmaBackground.video_url}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                    </div>
+                  )}
+
+                  {/* Ambient Glow Effects */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
                     <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[150px]" />
                     <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
