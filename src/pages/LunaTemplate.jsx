@@ -77,49 +77,88 @@ const ORBITAL_ITEMS = [
 
 // Expanded Grid View Component
 const ExpandedGenreView = ({ genre, onClose }) => {
-  const [sortOrder, setSortOrder] = useState('asc');
-  const items = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
+  // Generate 50 items
+  const initialItems = Array.from({ length: 50 }, (_, i) => ({
+    id: `item-${i}`,
+    numericId: i + 1,
     title: `Item ${i + 1}`,
     rarity: ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)]
   }));
 
-  const sortedItems = [...items].sort((a, b) => {
-    return sortOrder === 'asc' ? a.id - b.id : b.id - a.id;
-  });
+  // Chunk into rows of 8
+  const chunkItems = (items, size) => {
+    const chunks = [];
+    for (let i = 0; i < items.length; i += size) {
+      chunks.push(items.slice(i, i + size));
+    }
+    return chunks;
+  };
+
+  const [rows, setRows] = useState(() => chunkItems(initialItems, 8));
+
+  const moveRow = (index, direction) => {
+    if (index + direction < 0 || index + direction >= rows.length) return;
+    const newRows = Array.from(rows);
+    const [removed] = newRows.splice(index, 1);
+    newRows.splice(index + direction, 0, removed);
+    setRows(newRows);
+  };
+
+  const handleDragEnd = (result) => {
+    const { source, destination, type } = result;
+    
+    if (!destination) return;
+
+    // Handle Row Reordering
+    if (type === 'ROW') {
+      const newRows = Array.from(rows);
+      const [removed] = newRows.splice(source.index, 1);
+      newRows.splice(destination.index, 0, removed);
+      setRows(newRows);
+      return;
+    }
+
+    // Handle Item Swapping (Row to Row or same Row)
+    if (type === 'ITEM') {
+      const sourceRowIndex = parseInt(source.droppableId.split('-')[1]);
+      const destRowIndex = parseInt(destination.droppableId.split('-')[1]);
+      
+      const newRows = Array.from(rows).map(row => [...row]); // Deep copy
+      
+      if (destRowIndex < newRows.length) {
+         const sourceItem = newRows[sourceRowIndex][source.index];
+         
+         // Check if dropping on an existing item to swap
+         if (destination.index < newRows[destRowIndex].length) {
+             const targetItem = newRows[destRowIndex][destination.index];
+             
+             // SWAP
+             newRows[sourceRowIndex][source.index] = targetItem;
+             newRows[destRowIndex][destination.index] = sourceItem;
+         } else {
+             // Append if moving to empty space (rare in grid but possible at end)
+             newRows[sourceRowIndex].splice(source.index, 1);
+             newRows[destRowIndex].splice(destination.index, 0, sourceItem);
+         }
+         setRows(newRows);
+      }
+    }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="w-full h-full flex flex-col"
-    >
-      {/* Header / Toolbar */}
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">
-          {genre} Inventory
-        </h2>
-        
-        <div className="flex items-center gap-4">
-          {/* Sort Controls */}
-          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1 border border-white/10">
-            <button 
-              onClick={() => setSortOrder('asc')}
-              className={`p-2 rounded-md transition-all ${sortOrder === 'asc' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
-              title="Sort Ascending"
-            >
-              <ArrowUpAz className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setSortOrder('desc')}
-              className={`p-2 rounded-md transition-all ${sortOrder === 'desc' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
-              title="Sort Descending"
-            >
-              <ArrowDownAz className="w-4 h-4" />
-            </button>
-          </div>
-
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full h-full flex flex-col"
+      >
+        {/* Header / Toolbar */}
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">
+            {genre} Inventory
+          </h2>
+          
           <button 
             onClick={onClose}
             className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 group"
@@ -127,27 +166,90 @@ const ExpandedGenreView = ({ genre, onClose }) => {
             <X className="w-5 h-5 text-white/60 group-hover:text-white" />
           </button>
         </div>
-      </div>
 
-      {/* Grid Content - No container box as requested */}
-      <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
-          {sortedItems.map((item) => (
-            <ShinyCard key={item.id}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                  <span className="text-xs text-white/30">{item.id + 1}</span>
-                </div>
+        {/* Rows Content */}
+        <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+          <Droppable droppableId="all-rows" type="ROW">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-6">
+                {rows.map((row, rowIndex) => (
+                  <Draggable key={`row-${rowIndex}`} draggableId={`row-${rowIndex}`} index={rowIndex}>
+                    {(providedRow) => (
+                      <div 
+                        ref={providedRow.innerRef} 
+                        {...providedRow.draggableProps} 
+                        className="flex items-center gap-4 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors"
+                      >
+                        {/* Left Control Circle */}
+                        <div 
+                          {...providedRow.dragHandleProps}
+                          className="flex-shrink-0 w-12 h-12 rounded-full bg-black/40 border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors group"
+                        >
+                          <ArrowUp 
+                            className="w-3 h-3 text-white/30 hover:text-white mb-1 cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, -1); }}
+                          />
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-blue-400 mb-1" />
+                          <ArrowDown 
+                            className="w-3 h-3 text-white/30 hover:text-white cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, 1); }}
+                          />
+                        </div>
+
+                        {/* Items Row */}
+                        <Droppable droppableId={`row-${rowIndex}`} type="ITEM" direction="horizontal">
+                          {(providedItems) => (
+                            <div 
+                              ref={providedItems.innerRef} 
+                              {...providedItems.droppableProps} 
+                              className="flex-1 grid grid-cols-8 gap-4"
+                            >
+                              {row.map((item, itemIndex) => (
+                                <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
+                                  {(providedItem) => (
+                                    <div
+                                      ref={providedItem.innerRef}
+                                      {...providedItem.draggableProps}
+                                      {...providedItem.dragHandleProps}
+                                      className="aspect-[3/4]"
+                                    >
+                                      <ShinyCard>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center font-mono text-sm text-white/40">
+                                            {item.numericId}
+                                          </div>
+                                        </div>
+                                        <div className="absolute bottom-3 left-3">
+                                          <div className="text-[8px] font-bold tracking-wider text-white/50 uppercase">{item.rarity}</div>
+                                        </div>
+                                      </ShinyCard>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {providedItems.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+
+                        {/* Right Control Circle (Duplicate for symmetry) */}
+                        <div 
+                          {...providedRow.dragHandleProps}
+                          className="flex-shrink-0 w-12 h-12 rounded-full bg-black/40 border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors group"
+                        >
+                           <GripVertical className="w-4 h-4 text-white/30 group-hover:text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
               </div>
-              
-              <div className="absolute bottom-3 left-3">
-                <div className="text-[10px] font-bold tracking-wider text-white/50 uppercase">{item.rarity}</div>
-              </div>
-            </ShinyCard>
-          ))}
+            )}
+          </Droppable>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </DragDropContext>
   );
 };
 
