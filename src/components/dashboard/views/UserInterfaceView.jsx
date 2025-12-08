@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Gamepad2, Play, Video, TrendingUp, Package, ImageIcon, Monitor, Archive, Users as UsersIcon, Clapperboard, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActivityHub from '../ActivityHub';
-
+import EntertainmentTab from '../EntertainmentTab';
 import SocialHub from '../SocialHub';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
@@ -28,9 +28,10 @@ export default function UserInterfaceView({
   setShowClips,
   setShowAINewsOverlay 
 }) {
-  const [activeFeature, setActiveFeature] = useState('social');
+  const [activeFeature, setActiveFeature] = useState('entertainment');
 
   const features = [
+    { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
     { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
@@ -66,7 +67,7 @@ export default function UserInterfaceView({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+      <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30">
         <motion.div
           key={activeFeature}
           initial={{ opacity: 0, y: 20 }}
@@ -75,6 +76,7 @@ export default function UserInterfaceView({
           transition={{ duration: 0.3 }}
           className="h-full overflow-y-auto"
         >
+          {activeFeature === 'entertainment' && <EntertainmentTab />}
           {activeFeature === 'social' && <SocialHub />}
           {activeFeature === 'streaming' && <StreamingHub />}
           {activeFeature === 'stream_team' && <StreamTeam />}
