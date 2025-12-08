@@ -17,7 +17,6 @@ export const ALL_NAV_ITEMS = [
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
-    { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'Marketplace', icon: Gavel, path: createPageUrl('Marketplace') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
@@ -46,7 +45,6 @@ export const NAV_GROUPS = {
         items: [
             { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
             { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
-            { name: 'Game Dev Hub', icon: Rocket, path: createPageUrl('GameDevHub') },
             { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
         ],
     },
