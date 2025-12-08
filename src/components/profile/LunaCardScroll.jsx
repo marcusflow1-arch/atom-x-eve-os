@@ -110,12 +110,12 @@ export default function LunaCardScroll({ onExpand }) {
                           </div>
 
                           {/* Arrow for Pagination - Now for ALL genres */}
-                          <div className="absolute -right-12 top-1/2 -translate-y-1/2 flex flex-col items-center">
+                          <div className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-gradient-to-l from-slate-900/80 to-transparent">
                             <button 
                               onClick={() => togglePage(genre)}
-                              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all group"
+                              className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 flex items-center justify-center transition-all shadow-lg"
                             >
-                              <ArrowRight className="w-4 h-4 text-white/60 group-hover:text-white" />
+                              <ArrowRight className="w-4 h-4 text-white" />
                             </button>
                           </div>
                         </div>

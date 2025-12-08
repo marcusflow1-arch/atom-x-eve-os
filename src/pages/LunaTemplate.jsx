@@ -178,20 +178,20 @@ const ExpandedGenreView = ({ genre, onClose }) => {
                       <div 
                         ref={providedRow.innerRef} 
                         {...providedRow.draggableProps} 
-                        className="flex items-center gap-4 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors"
+                        className="flex items-center gap-4 py-2"
                       >
                         {/* Left Control Circle */}
                         <div 
                           {...providedRow.dragHandleProps}
-                          className="flex-shrink-0 w-12 h-12 rounded-full bg-black/40 border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors group"
+                          className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10"
                         >
                           <ArrowUp 
-                            className="w-3 h-3 text-white/30 hover:text-white mb-1 cursor-pointer" 
+                            className="w-3 h-3 text-white/50 hover:text-white mb-0.5 cursor-pointer" 
                             onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, -1); }}
                           />
-                          <div className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-blue-400 mb-1" />
+                          <div className="w-1 h-1 rounded-full bg-white/30 group-hover:bg-blue-400 mb-0.5" />
                           <ArrowDown 
-                            className="w-3 h-3 text-white/30 hover:text-white cursor-pointer" 
+                            className="w-3 h-3 text-white/50 hover:text-white cursor-pointer" 
                             onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, 1); }}
                           />
                         </div>
@@ -232,12 +232,12 @@ const ExpandedGenreView = ({ genre, onClose }) => {
                           )}
                         </Droppable>
 
-                        {/* Right Control Circle (Duplicate for symmetry) */}
+                        {/* Right Control Circle */}
                         <div 
                           {...providedRow.dragHandleProps}
-                          className="flex-shrink-0 w-12 h-12 rounded-full bg-black/40 border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 transition-colors group"
+                          className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10"
                         >
-                           <GripVertical className="w-4 h-4 text-white/30 group-hover:text-white" />
+                           <GripVertical className="w-4 h-4 text-white/50 group-hover:text-white" />
                         </div>
                       </div>
                     )}
