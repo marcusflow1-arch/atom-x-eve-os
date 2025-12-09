@@ -410,20 +410,15 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
             </div>
          </div>
 
-         {/* Reward Visual Container (Liquid Glass, No Solid Box) */}
+         {/* Reward Visual Container (No Box, Just Icon) */}
          <div className={`
-           relative rounded-2xl transition-all duration-300 flex items-center justify-center
+           relative transition-all duration-300 flex items-center justify-center
            ${isActive 
-             ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` 
-             : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`
+             ? `w-32 h-32 z-20 scale-110` 
+             : `w-20 h-20 hover:w-24 hover:h-24 z-10`
            }
          `}
-         style={{
-            boxShadow: isActive ? `0 0 20px ${rarity.glow?.replace('shadow-', '') || 'rgba(255,255,255,0.2)'}` : 'none'
-         }}
          >
-            {/* Inner Glow for Rarity */}
-            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
             
             {/* Reward Image/Icon (Floating) */}
             <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>

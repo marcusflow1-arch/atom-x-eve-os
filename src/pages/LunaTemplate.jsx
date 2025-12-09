@@ -374,13 +374,7 @@ export default function LunaTemplate() {
                 whileTap={{ scale: 0.95 }}
               >
                 <div
-                  className="w-[140px] h-[105px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-3 border border-white/10 hover:border-white/30"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                  }}
+                  className="w-[140px] h-[105px] overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-3"
                 >
                   {/* Icon Badge */}
                   <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-2 bg-opacity-80 backdrop-blur-sm`}>
