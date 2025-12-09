@@ -32,6 +32,24 @@ const LiquidCard = ({ children, className = "", onClick }) => (
   </div>
 );
 
+const HollowCard = ({ children, className = "" }) => (
+  <div className={`
+    relative w-48 h-72 flex-shrink-0 rounded-xl border-2 border-white/10 
+    bg-transparent hover:border-cyan-400/50 transition-all duration-300 group
+    overflow-hidden cursor-pointer ${className}
+  `}>
+    <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors" />
+    {/* Inner Border/Glow */}
+    <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]" />
+    {/* Diagonal shine line */}
+    <div className="absolute inset-0 -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12" />
+    
+    <div className="relative z-10 p-4 h-full flex flex-col">
+        {children}
+    </div>
+  </div>
+);
+
 // --- Filter Sidebar ---
 const TradingFilterSidebar = ({ 
   filters, setFilters
