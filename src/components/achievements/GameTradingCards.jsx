@@ -254,7 +254,7 @@ export default function GameTradingCards() {
   };
 
   return (
-    <div className="h-full flex flex-col pt-4 relative">
+    <div className="flex flex-col pt-4 relative">
       <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
       <div className="flex items-center justify-between mb-6 px-10">
@@ -304,7 +304,7 @@ export default function GameTradingCards() {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 px-10">
+      <div className="flex-1 pr-2 px-10">
         {selectedGenre === 'all' && !viewInventoryMode ? (
           <>
             {CARD_GENRES.filter(g => g.id !== 'all').map(genre => (

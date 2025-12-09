@@ -514,7 +514,7 @@ export default function Achievements() {
 
   return (
     <div
-      className="h-full text-white relative overflow-hidden"
+      className="h-full text-white relative overflow-y-auto custom-scrollbar"
       style={{
         cursor: 'default',
         background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)'
