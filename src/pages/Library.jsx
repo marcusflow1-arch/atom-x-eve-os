@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { allMockGames } from '../components/store/mockData';
@@ -656,6 +656,16 @@ export default function Library() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [minRating, setMinRating] = useState(0);
+  const [isGenreOpen, setIsGenreOpen] = useState(true);
+
+  const gamesByGenre = React.useMemo(() => {
+    return ownedGames.reduce((acc, game) => {
+      const g = game.genre || 'Uncategorized';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(game);
+      return acc;
+    }, {});
+  }, [ownedGames]);
 
   const handleStreamGame = async (game) => {
     try {
