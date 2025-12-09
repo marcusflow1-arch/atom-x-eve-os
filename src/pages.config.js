@@ -1,5 +1,6 @@
 import Achievements from './pages/Achievements';
 import Blacksmith from './pages/Blacksmith';
+import Clan from './pages/Clan';
 import AIConsole from './pages/AIConsole';
 import Library from './pages/Library';
 import AINews from './pages/AINews';
@@ -37,6 +38,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "Achievements": Achievements,
     "Blacksmith": Blacksmith,
+    "Clan": Clan,
     "AIConsole": AIConsole,
     "Library": Library,
     "AINews": AINews,

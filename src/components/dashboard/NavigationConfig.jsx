@@ -15,6 +15,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Seasonal Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
+    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'World Events', icon: Globe, path: createPageUrl('WorldEvents') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
@@ -41,6 +42,7 @@ export const NAV_GROUPS = {
         icon: Users,
         items: [
             { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
+            { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
             { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
         ],
     },
