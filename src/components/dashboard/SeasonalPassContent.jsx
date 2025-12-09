@@ -201,86 +201,84 @@ const LimitedEditionCard = ({ card, onClick }) => {
 const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onClick }) => {
   const { freeReward, premiumReward, level: levelNumber } = level;
   const isCurrentLevel = levelNumber === currentLevel;
-  const rarity = rarityColors[freeReward.rarity];
   
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
+      whileHover="hover"
       onClick={() => onClick(level)}
-      className={`relative flex-shrink-0 w-16 h-20 cursor-pointer transition-all ${
-        isCurrentLevel ? 'scale-105' : ''
+      className={`relative flex-shrink-0 w-32 h-48 rounded-2xl cursor-pointer transition-all overflow-hidden group border ${
+        isCurrentLevel 
+          ? 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-slate-800/80' 
+          : 'border-white/10 bg-slate-900/40 hover:border-white/30 hover:bg-slate-800/60'
       }`}
     >
-      {/* Premium Track */}
-      {premiumReward && (
-        <div 
-          className="absolute top-0 left-0 right-0 h-8 rounded-t-md flex items-center justify-center"
-          style={{
-            background: isUnlocked && isPremiumOwned 
-              ? 'rgba(250, 204, 21, 0.12)' 
-              : 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(30px) saturate(180%)',
-            border: isUnlocked && isPremiumOwned 
-              ? '1px solid rgba(250, 204, 21, 0.3)' 
-              : '1px solid rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          {isUnlocked && isPremiumOwned ? (
-            <Check className="w-3.5 h-3.5 text-yellow-600" />
-          ) : (
-            <Crown className="w-3.5 h-3.5 text-slate-400/40" />
-          )}
+      {/* Shiny Light Effect */}
+      <motion.div
+        variants={{
+          hover: { x: '250%', opacity: 1, transition: { duration: 0.8, ease: 'easeInOut' } }
+        }}
+        initial={{ x: '-150%', opacity: 0 }}
+        className="absolute inset-0 z-20 pointer-events-none w-full h-full"
+        style={{
+          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.2) 55%, transparent 80%)',
+          transform: 'skewX(-20deg)'
+        }}
+      />
+
+      {/* Card Header (Level) */}
+      <div className="absolute top-2 left-0 right-0 text-center z-10">
+        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+          isCurrentLevel 
+            ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' 
+            : 'bg-black/40 text-white/50 border-white/10'
+        }`}>
+          LVL {levelNumber}
+        </span>
+      </div>
+
+      {/* Rewards Container */}
+      <div className="flex flex-col h-full pt-10 pb-2 px-2 gap-2">
+        {/* Premium Reward */}
+        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
+            premiumReward 
+                ? (isPremiumOwned && isUnlocked ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-yellow-500/5 border border-dashed border-yellow-500/20') 
+                : 'bg-white/5 border border-dashed border-white/10'
+        }`}>
+            {premiumReward ? (
+                <>
+                    <div className="text-2xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">{premiumReward.icon}</div>
+                    {(!isPremiumOwned || !isUnlocked) && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                            <Lock className="w-4 h-4 text-white/40" />
+                        </div>
+                    )}
+                    <div className="absolute top-1 right-1"><Crown className="w-3 h-3 text-yellow-500/50" /></div>
+                </>
+            ) : (
+                <span className="text-white/10 text-[10px]">Empty</span>
+            )}
         </div>
-      )}
-      
-      {/* Free Track */}
-      <div 
-        className={`absolute bottom-0 left-0 right-0 h-8 rounded-b-md flex items-center justify-center ${premiumReward ? 'top-9' : 'top-0 rounded-t-md'}`}
-        style={{
-          background: isUnlocked 
-            ? 'rgba(96, 165, 250, 0.12)' 
-            : 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          border: isUnlocked 
-            ? '1px solid rgba(96, 165, 250, 0.3)' 
-            : '1px solid rgba(255, 255, 255, 0.1)',
-        }}
-      >
-        {isUnlocked ? (
-          <Check className="w-3.5 h-3.5 text-blue-500" />
-        ) : (
-          <Lock className="w-3.5 h-3.5 text-slate-400/40" />
-        )}
+
+        {/* Free Reward */}
+        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
+            freeReward 
+                ? (isUnlocked ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-500/5 border border-dashed border-blue-500/20') 
+                : 'bg-white/5 border border-dashed border-white/10'
+        }`}>
+             {freeReward ? (
+                <>
+                    <div className="text-2xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">{freeReward.icon}</div>
+                    {!isUnlocked && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                            <Lock className="w-4 h-4 text-white/40" />
+                        </div>
+                    )}
+                </>
+            ) : (
+                <span className="text-white/10 text-[10px]">Empty</span>
+            )}
+        </div>
       </div>
-      
-      {/* Level Number */}
-      <div 
-        className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[10px] font-semibold"
-        style={{
-          background: isCurrentLevel 
-            ? 'rgba(96, 165, 250, 0.2)' 
-            : 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          border: isCurrentLevel 
-            ? '1px solid rgba(96, 165, 250, 0.4)' 
-            : '1px solid rgba(255, 255, 255, 0.15)',
-          color: isCurrentLevel ? '#60a5fa' : '#64748b',
-        }}
-      >
-        {levelNumber}
-      </div>
-      
-      {/* Current Level Indicator */}
-      {isCurrentLevel && (
-        <motion.div
-          className="absolute -inset-0.5 rounded-md pointer-events-none"
-          style={{
-            border: '1.5px solid rgba(96, 165, 250, 0.5)',
-          }}
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      )}
     </motion.div>
   );
 };
@@ -443,7 +441,7 @@ export default function SeasonalPassContent() {
     const progress = progressRef.current;
     if (!progress) return;
     
-    const nodeWidth = 128; // Width including margin
+    const nodeWidth = 144; // Width (128) + Gap (16)
     const scrollPosition = (currentLevel - 1) * nodeWidth - (progress.clientWidth / 2) + (nodeWidth / 2);
     progress.scrollLeft = scrollPosition;
   }, [currentLevel]);
@@ -665,7 +663,7 @@ export default function SeasonalPassContent() {
           {/* Progress Track */}
           <div 
             ref={progressRef}
-            className="relative flex gap-2.5 overflow-x-auto pb-8 pt-2 px-4 rounded-xl scrollbar-hide"
+            className="relative flex gap-4 overflow-x-auto pb-8 pt-6 px-6 rounded-xl scrollbar-hide"
             style={{ 
               scrollBehavior: 'smooth',
               background: 'rgba(255, 255, 255, 0.06)',
