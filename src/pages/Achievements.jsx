@@ -396,29 +396,47 @@ export default function Achievements() {
                     <div>
                         <h2 className="text-4xl font-black text-white mb-2">{selectedGame.title}</h2>
                         <div className="flex items-center gap-4 text-slate-400 text-sm">
-                            <span className="flex items-center gap-1"><Trophy className="w-4 h-4" /> {gameAchievements.length} Achievements</span>
-                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Trading Cards Available</span>
+                            <span className="flex items-center gap-1"><Layers className="w-4 h-4" /> {tradingCards.length} Trading Cards</span>
+                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Collect & Upgrade</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
-                    {gameAchievements.length > 0 ? (
+                    {tradingCards.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                            {gameAchievements.map(ach => (
-                                <AchievementCard 
-                                    key={ach.id} 
-                                    achievement={ach} 
-                                    onClick={setSelectedAchievement}
-                                    isUnlocked={user?.unlocked_achievements?.includes(ach.id)} 
-                                />
+                            {tradingCards.map((card, i) => (
+                                <div key={card.id} className="aspect-[2.5/3.5]">
+                                    <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
+                                        <div className="absolute inset-0 flex flex-col p-3">
+                                            <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                            </div>
+                                            <div className="flex-1 flex flex-col justify-between">
+                                                <div>
+                                                    <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                                    <div className="flex gap-1 flex-wrap">
+                                                        <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                                            card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                                            card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                                            card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                            'border-slate-500/50 text-slate-400'
+                                                        }`}>
+                                                            {card.rarity}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </ShinyCard>
+                                </div>
                             ))}
                         </div>
                     ) : (
                         <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                            <Trophy className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">No achievements found</p>
-                            <p className="text-sm">Start playing to unlock rewards!</p>
+                            <Layers className="w-16 h-16 mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No trading cards found</p>
                         </div>
                     )}
                 </div>
