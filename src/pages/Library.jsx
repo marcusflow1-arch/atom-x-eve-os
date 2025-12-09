@@ -5,7 +5,9 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import { allMockGames } from '../components/store/mockData';
 import RecentlyAchievedOverlay from '../components/library/RecentlyAchievedOverlay';
 import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
@@ -14,6 +16,84 @@ import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+
+// --- Shiny Sidebar Box Component ---
+const ShinySidebarBox = ({ children, className = "" }) => {
+  const x = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  
+  const gradientBg = useTransform(
+    mouseX, 
+    [0, 1], 
+    ["linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 0%, transparent 100%)", 
+     "linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)"]
+  );
+
+  function handleMouseMove({ currentTarget, clientX }) {
+    const { left, width } = currentTarget.getBoundingClientRect();
+    x.set((clientX - left) / width);
+  }
+
+  return (
+    <motion.div
+      className={`relative overflow-hidden bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => x.set(0.5)}
+      style={{
+        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+      }}
+    >
+        <motion.div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+                background: useTransform(mouseX, val => 
+                    `linear-gradient(105deg, transparent ${val * 100 - 20}%, rgba(255,255,255,0.1) ${val * 100}%, transparent ${val * 100 + 20}%)`
+                ),
+                opacity: 1
+            }}
+        />
+        {children}
+    </motion.div>
+  );
+};
+
+function SwordsIcon(props) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+            <path d="m13 19 6-6" />
+            <path d="M16 16l4 4" />
+            <path d="M19 21l2-2" />
+        </svg>
+    )
+}
+
+const GENRE_ICONS = {
+    'Action': SwordsIcon,
+    'RPG': Shield,
+    'Strategy': Trophy,
+    'Simulation': Monitor,
+    'Sports': Trophy,
+    'Racing': Car,
+    'Horror': Skull,
+    'Shooter': Crosshair,
+    'Music': Music,
+    'Adventure': Gamepad2,
+    'Puzzle': Zap,
+    'Romance': Heart,
+    'Sci-Fi': Sparkles,
+};
 
 // Luna Hero Game Card
 const LunaHeroCard = ({ game, onPlay, onSelect }) => {
