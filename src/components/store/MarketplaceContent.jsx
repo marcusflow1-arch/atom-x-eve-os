@@ -91,9 +91,9 @@ const ListItemCard = ({ item, onClick }) => {
   return (
     <div 
       onClick={() => onClick(item)} 
-      className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border-b border-white/5"
+      className="flex gap-6 p-4 hover:bg-white/5 rounded-2xl transition-all cursor-pointer border border-white/5 hover:border-white/10 bg-white/[0.02]"
     >
-      <div className="w-[160px] h-[160px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-800">
+      <div className="w-[160px] h-[160px] flex-shrink-0 rounded-xl overflow-hidden bg-slate-800 shadow-lg">
         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
       </div>
 
