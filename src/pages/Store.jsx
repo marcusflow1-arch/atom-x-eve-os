@@ -11,7 +11,7 @@ import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
-import { aiGames, otherSampleGames } from '../components/store/mockData';
+import { aiGamesList, otherSampleGames } from '../components/store/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -397,7 +397,7 @@ export default function Store() {
                 setGames(enhancedGames);
             } catch (error) {
                 console.error("Error fetching games:", error);
-                setGames([...aiGames, ...otherSampleGames]);
+                setGames([...aiGamesList, ...otherSampleGames]);
             }
             setLoading(false);
         };

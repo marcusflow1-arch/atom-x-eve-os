@@ -229,7 +229,7 @@ export const classicBestSellers = [
 ];
 
 // AI Enhanced Games
-export const aiGames = [
+export const aiGamesList = [
   {
     id: 'ai_dungeon_master',
     title: 'AI Dungeon Master',
@@ -302,7 +302,7 @@ const testGameAlphaData = {
 export const allMockGames = {
   ...enhancedMockGameData,
   'test_game_alpha': testGameAlphaData, // Add the test game to the global mock object
-  ...[...aiGames, ...otherSampleGames].reduce((acc, game) => {
+  ...[...aiGamesList, ...otherSampleGames].reduce((acc, game) => {
     // Merge with detailed data if it exists, otherwise use the basic data
     acc[game.id] = { ...game, ...(enhancedMockGameData[game.id] || {}) };
     return acc;
