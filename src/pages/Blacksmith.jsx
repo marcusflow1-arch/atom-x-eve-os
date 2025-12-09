@@ -5,15 +5,145 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
   Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight,
-  ChevronRight, ChevronLeft, Menu
+  ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
-import BlacksmithGameSelect from '@/components/blacksmith/BlacksmithGameSelect';
+// BlacksmithGameSelect is replaced by the sidebar
+
+// --- Shiny Sidebar Box Component ---
+const ShinySidebarBox = ({ children, className = "" }) => {
+  const x = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
+  
+  function handleMouseMove({ currentTarget, clientX }) {
+    const { left, width } = currentTarget.getBoundingClientRect();
+    x.set((clientX - left) / width);
+  }
+
+  return (
+    <motion.div
+      className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => x.set(0.5)}
+      style={{
+        background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)',
+      }}
+    >
+        <motion.div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+                background: useTransform(mouseX, val => 
+                    `linear-gradient(105deg, transparent ${val * 100 - 20}%, rgba(255,255,255,0.15) ${val * 100}%, transparent ${val * 100 + 20}%)`
+                ),
+                opacity: 1
+            }}
+        />
+        {children}
+    </motion.div>
+  );
+};
+
+// --- Item Detail Modal (Refactored ConsoleDetailView) ---
+const ItemDetailModal = ({ item, onClose, onEnchant, onCombine, onSalvage, rarityStyles, associatedSet }) => {
+  if (!item) return null;
+  const style = rarityStyles[item.rarity] || rarityStyles.Common;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/40 hover:bg-white/10 transition-colors text-white">
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Left: Image */}
+        <div className="w-full md:w-1/3 bg-slate-800 relative">
+           <img src={item.preview_image_url} alt={item.name} className="w-full h-full object-cover" />
+           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+           <div className="absolute bottom-4 left-4 right-4">
+              <Badge className={`text-sm px-3 py-1 ${style.border} bg-slate-800/60 backdrop-blur-md ${style.color} shadow-sm mb-2`}>
+                {item.rarity} {item.type}
+              </Badge>
+           </div>
+        </div>
+
+        {/* Right: Details */}
+        <div className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar bg-slate-900/95">
+          <h1 className="text-3xl font-black text-white mb-2 tracking-tight">{item.name}</h1>
+          <p className="text-slate-400 italic mb-6 border-l-2 border-blue-500/50 pl-3">
+            "{item.description}"
+          </p>
+
+          <div className="space-y-6">
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                <Layers className="w-3 h-3" /> Base Stats
+              </h3>
+              <div className="grid grid-cols-2 gap-y-2">
+                {Object.entries(item.base_stats).map(([stat, value]) => (
+                  <div key={stat} className="flex justify-between items-center pr-4">
+                    <span className="text-slate-300 capitalize text-sm">{stat.replace('_', ' ')}</span>
+                    <span className="text-white font-mono font-bold">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                <Sparkles className="w-3 h-3" /> Enhancements
+              </h3>
+              {item.modifiers.length > 0 ? (
+                <div className="space-y-2">
+                  {item.modifiers.map((mod, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-black/20">
+                      <Zap className="w-4 h-4 text-amber-400" />
+                      <div>
+                        <div className="text-white font-bold text-sm">{mod.name}</div>
+                        <div className="text-slate-400 text-xs">{mod.effect}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-slate-500 text-sm italic">No active enchantments</div>
+              )}
+            </div>
+            
+            {associatedSet && (
+                <div className="bg-gradient-to-r from-amber-900/10 to-transparent border-l-2 border-amber-600 pl-4 py-2">
+                  <h3 className="text-amber-400 font-bold text-sm mb-1">{associatedSet.name}</h3>
+                  <div className="space-y-1">
+                    {associatedSet.bonuses.map((bonus, idx) => (
+                      <div key={idx} className="text-slate-400 text-xs flex gap-2">
+                        <span className="text-amber-500 font-bold">({bonus.pieces_required})</span>
+                        <span>{bonus.bonus_description}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+            )}
+          </div>
+
+          <div className="mt-8 flex gap-3">
+             <Button onClick={() => onEnchant(item)} className="flex-1 bg-blue-600 hover:bg-blue-500 font-bold h-12 rounded-xl">Enchant</Button>
+             <Button onClick={() => onCombine(item)} variant="outline" className="flex-1 border-white/20 hover:bg-white/10 h-12 rounded-xl text-white">Reforge</Button>
+             <Button onClick={() => onSalvage(item)} variant="destructive" className="flex-1 bg-rose-600 hover:bg-rose-500 h-12 rounded-xl">Salvage</Button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // Mock data for demonstration
 const mockItems = [
@@ -316,163 +446,22 @@ const rarityStyles = {
   Mythic: { color: 'text-rose-400', glow: 'shadow-rose-500/20', border: 'border-rose-500/50' }
 };
 
-// --- Console UI Components ---
-
-const ConsoleDetailView = ({ item, onEnchant, onCombine, onSalvage }) => {
-  if (!item) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center text-slate-500">
-        <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5">
-          <Hammer className="w-10 h-10 opacity-30" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Black Forge</h2>
-        <p className="max-w-md text-center">Select an item from the list to view stats, apply enchantments, or reforge equipment.</p>
-      </div>
-    );
-  }
-  
-  const style = rarityStyles[item.rarity] || rarityStyles.Common;
-  const associatedSet = mockSets.find(set => set.id === item.set_id);
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 50 }}
-      className="h-full flex flex-col"
-    >
-      {/* Header Area */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Badge className={`text-sm px-3 py-1 ${style.border} bg-slate-800/60 backdrop-blur-md ${style.color} shadow-sm`}>
-            {item.rarity} {item.type}
-          </Badge>
-          <Badge variant="outline" className="text-sm text-slate-400 border-slate-600 bg-slate-800/30">
-            Lv. {item.level_requirement}
-          </Badge>
-        </div>
-        <h1 className="text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">{item.name}</h1>
-        <p className="text-xl text-slate-300 max-w-2xl font-medium leading-relaxed border-l-4 border-blue-500/50 pl-4 bg-slate-800/20 py-2 rounded-r-xl">
-          "{item.description}"
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-6 mb-8 max-w-3xl">
-        <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-lg">
-          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
-            <Layers className="w-4 h-4" /> Base Stats
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(item.base_stats).map(([stat, value]) => (
-              <div key={stat} className="flex justify-between items-center">
-                <span className="text-slate-300 capitalize font-medium">{stat}</span>
-                <div className="h-px flex-grow mx-4 bg-white/10" />
-                <span className="text-white font-mono font-bold text-lg">{value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-lg">
-          <h3 className="text-slate-400 uppercase tracking-wider text-xs font-bold mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> Enhancements
-          </h3>
-          {item.modifiers.length > 0 ? (
-            <div className="space-y-3">
-              {item.modifiers.map((mod, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-2 rounded-xl bg-slate-700/30">
-                  <Zap className="w-5 h-5 text-amber-400 mt-0.5" />
-                  <div>
-                    <div className="text-white font-bold">{mod.name}</div>
-                    <div className="text-slate-300 text-sm">{mod.effect}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-slate-500 italic flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-slate-700" /> No active enchantments
-            </div>
-          )}
-          
-          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
-            <span className="text-slate-400">Slots Available</span>
-            <span className="text-white font-bold">{item.modifiers.length} / {item.enchantment_slots}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Set Bonus */}
-      {associatedSet && (
-        <div className="mb-8 max-w-3xl bg-gradient-to-r from-amber-900/20 to-transparent border-l-4 border-amber-600 p-6 rounded-r-xl shadow-sm backdrop-blur-md">
-          <h3 className="text-amber-400 font-black text-lg flex items-center gap-2 mb-2">
-            <Crown className="w-5 h-5" /> {associatedSet.name}
-          </h3>
-          <div className="space-y-1">
-            {associatedSet.bonuses.map((bonus, idx) => (
-              <div key={idx} className="text-slate-300 text-sm flex gap-2 font-medium">
-                <span className="text-amber-500 font-bold">({bonus.pieces_required})</span>
-                <span>{bonus.bonus_description}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons (Star Wave Effect) */}
-      <div className="mt-auto flex gap-4">
-        <Button 
-          size="lg" 
-          className="btn-star-wave h-16 px-8 text-lg font-bold bg-blue-600 text-white hover:bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/30 border border-white/20 overflow-hidden"
-          onClick={() => onEnchant(item)}
-        >
-          <span className="relative z-10 flex items-center">
-            <span className="w-6 h-6 rounded-full border-2 border-white/50 mr-3 flex items-center justify-center text-xs font-black bg-white/10">A</span>
-            Enchant
-          </span>
-        </Button>
-        
-        <Button 
-          size="lg" 
-          className="btn-star-wave h-16 px-8 text-lg font-bold bg-white text-slate-900 hover:bg-slate-50 rounded-2xl shadow-lg shadow-slate-200/50 border border-white overflow-hidden"
-          onClick={() => onCombine(item)}
-        >
-          <span className="relative z-10 flex items-center">
-            <span className="w-6 h-6 rounded-full border-2 border-slate-300 mr-3 flex items-center justify-center text-xs font-black bg-slate-100">X</span>
-            Reforge
-          </span>
-        </Button>
-
-        <Button 
-          size="lg" 
-          variant="destructive"
-          className="btn-star-wave h-16 px-8 text-lg font-bold bg-rose-500 text-white hover:bg-rose-400 rounded-2xl shadow-lg shadow-rose-500/30 border border-white/20 ml-auto overflow-hidden"
-          onClick={() => onSalvage(item)}
-        >
-          <span className="relative z-10 flex items-center">
-            <span className="w-6 h-6 rounded-full border-2 border-white/50 mr-3 flex items-center justify-center text-xs font-black bg-white/10">Y</span>
-            Salvage
-          </span>
-        </Button>
-      </div>
-    </motion.div>
-  );
-};
+// ConsoleDetailView Removed - Refactored into ItemDetailModal
 
 export default function BlacksmithPage() {
   const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [viewMode, setViewMode] = useState('forge'); // 'forge', 'materials', 'collab'
+  const [viewMode, setViewMode] = useState('forge'); 
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [isGenreOpen, setIsGenreOpen] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Forge Mastery XP
   const [forgeXP, setForgeXP] = useState(2450);
   const [forgeLevel, setForgeLevel] = useState(18);
   const maxXP = 5000;
   
-  // Calculate rank based on level
   const getRank = (level) => {
     if (level <= 50) return 'Novice';
     if (level <= 100) return 'Adept';
@@ -484,73 +473,46 @@ export default function BlacksmithPage() {
   const handleCombine = (item) => console.log('Combining:', item.name);
   const handleSalvage = (item) => console.log('Salvaging:', item.name);
 
-  // Filter logic
+  // Group games by genre for sidebar
+  const gamesByGenre = useMemo(() => {
+    const grouped = mockItems.reduce((acc, item) => {
+        if (!acc[item.genre]) acc[item.genre] = [];
+        if (!acc[item.genre].some(g => g.id === item.game_id)) {
+            acc[item.genre].push({
+                id: item.game_id,
+                title: item.game_title,
+                image: item.preview_image_url,
+                genre: item.genre
+            });
+        }
+        return acc;
+    }, {});
+    return grouped;
+  }, []);
+
   const displayedItems = useMemo(() => {
     let items = mockItems;
-    
-    // Filter by selected game if in forge mode
     if (viewMode === 'forge' && selectedGame) {
-      // Check for the special "all items" selection from the new "Empty Box"
-      if (selectedGame.id.startsWith('all_')) {
-        // If it's a genre-specific "all" box (e.g., "all_Fantasy")
-        const genre = selectedGame.id.replace('all_', '');
-        items = items.filter(i => i.genre === genre);
-      } else {
-        // Specific game selected
-        items = items.filter(i => i.game_id === selectedGame.id);
-      }
+      items = items.filter(i => i.game_id === selectedGame.id);
     }
-    
-    if (categoryFilter === 'all') return items;
-    return items.filter(i => i.type === categoryFilter);
+    if (categoryFilter !== 'all') {
+       items = items.filter(i => i.type === categoryFilter);
+    }
+    return items;
   }, [categoryFilter, selectedGame, viewMode]);
-
-  // Background based on selection
-  const bgImage = selectedItem?.preview_image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80';
 
   return (
     <div className="h-screen w-full bg-[#0f172a] text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
-      {/* Star-Wave Animation Style */}
-      <style>{`
-        @keyframes star-wave-glow {
-          0% { left: -100%; opacity: 0; }
-          50% { opacity: 0.5; }
-          100% { left: 200%; opacity: 0; }
-        }
-        .btn-star-wave {
-          position: relative;
-          overflow: hidden;
-        }
-        .btn-star-wave::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-          transform: skewX(-20deg);
-          transition: none;
-        }
-        .btn-star-wave:active::after {
-          animation: star-wave-glow 0.6s ease-out forwards;
-        }
-      `}</style>
-
-      {/* Darker Ethereal Space Background */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        
-        {/* Dark Nebula Effect */}
         <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
 
-      {/* Main Content Layout */}
-      <div className="relative z-10 flex flex-col h-full p-8 md:p-12">
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
         {/* Top Navigation Bar */}
-        <header className="flex items-center justify-between mb-10">
+        <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-8">
             <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
               <Hammer className="w-8 h-8 fill-white" />
@@ -573,7 +535,6 @@ export default function BlacksmithPage() {
             </nav>
           </div>
 
-          {/* User Resources */}
           <div className="flex gap-6 items-center">
             {mockMaterials.slice(0, 2).map(mat => (
               <div key={mat.id} className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
@@ -589,98 +550,159 @@ export default function BlacksmithPage() {
         </header>
 
         {/* Main Body */}
-        <div className="flex-1 flex gap-12 overflow-hidden">
+        <div className="flex-1 flex gap-8 overflow-hidden">
           
           {viewMode === 'forge' ? (
             <>
-              {!selectedGame ? (
-                <BlacksmithGameSelect itemsData={mockItems} onGameSelect={(game) => {
-                    setSelectedGame(game);
-                    setSelectedItem(null); 
-                }} />
-              ) : (
-                <>
-                  {/* Left: Categories & Item Scroll */}
-                  <div className="w-full max-w-[400px] flex flex-col gap-6">
-                    <div className="flex items-center justify-between">
-                        <Button 
-                        variant="ghost" 
-                        onClick={() => setSelectedGame(null)}
-                        className="text-left justify-start text-white/70 hover:text-white px-0"
-                        >
-                        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Games
-                        </Button>
-                        <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
-                            {selectedGame.title}
-                        </Badge>
-                    </div>
+              {/* LEFT SIDEBAR (Shiny Box Style) */}
+              <div className="w-[300px] flex-shrink-0 h-full overflow-hidden">
+                  <ShinySidebarBox className="h-full p-6 flex flex-col">
+                       {/* Search */}
+                       <div className="relative group mb-6">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search games..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+                            />
+                            <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
+                                <Mic className="w-4 h-4" />
+                            </button>
+                       </div>
 
-                    {/* Category Tabs */}
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
-                        <button
-                          key={cat}
-                          onClick={() => setCategoryFilter(cat)}
-                          className={`text-sm font-bold uppercase whitespace-nowrap transition-colors ${
-                            categoryFilter === cat ? 'text-blue-600 border-b-2 border-blue-600 pb-1' : 'text-slate-400 hover:text-slate-600'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Vertical Scrollable Grid (Apple Glass List) */}
-                    <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar">
-                      {displayedItems.length > 0 ? (
-                          displayedItems.map((item) => (
-                            <motion.div
-                            key={item.id}
-                            onClick={() => setSelectedItem(item)}
-                            whileHover={{ x: 5 }}
-                            className={`
-                                py-3 px-2 cursor-pointer transition-all flex items-center gap-4 border-b border-white/5 last:border-0
-                                ${selectedItem?.id === item.id 
-                                ? 'bg-white/5 text-white' 
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                                }
-                            `}
+                       {/* Game List with Genres */}
+                       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            <button
+                                onClick={() => setIsGenreOpen(!isGenreOpen)}
+                                className="w-full flex items-center justify-between text-white/40 text-xs font-bold uppercase tracking-widest mb-4 hover:text-white transition-colors px-1"
                             >
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0">
-                                <img src={item.preview_image_url} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" alt="" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h4 className="font-bold truncate text-sm">{item.name}</h4>
-                                <p className="text-xs text-slate-500 truncate">
-                                {item.rarity} • Lv.{item.level_requirement}
-                                </p>
-                            </div>
-                            {selectedItem?.id === item.id && <ChevronRight className="w-4 h-4 text-blue-400" />}
-                            </motion.div>
-                        ))
-                      ) : (
-                          <div className="text-center py-10 text-slate-500">
-                              <Package className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                              <p>No items found for this category.</p>
-                          </div>
-                      )}
-                    </div>
-                  </div>
+                                <span>Categories</span>
+                                {isGenreOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            </button>
 
-                  {/* Right: Details (Expands to fill) */}
-                  <div className="flex-1 relative">
-                    <AnimatePresence mode="wait">
-                      <ConsoleDetailView 
-                        key={selectedItem?.id} 
-                        item={selectedItem}
-                        onEnchant={handleEnchant}
-                        onCombine={handleCombine}
-                        onSalvage={handleSalvage}
-                      />
-                    </AnimatePresence>
-                  </div>
-                </>
-              )}
+                            <AnimatePresence>
+                                {isGenreOpen && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="space-y-6"
+                                    >
+                                        {Object.entries(gamesByGenre).map(([genre, games]) => (
+                                            <div key={genre}>
+                                                <h4 className="text-white/60 text-xs font-semibold mb-2 flex items-center gap-2 pl-2">
+                                                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                                                    {genre}
+                                                </h4>
+                                                <div className="space-y-1 border-l border-white/5 pl-2 ml-0.5">
+                                                    {games.filter(g => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map(game => (
+                                                        <button
+                                                            key={game.id}
+                                                            onClick={() => {
+                                                                setSelectedGame(game);
+                                                                setSelectedItem(null);
+                                                            }}
+                                                            className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group ${selectedGame?.id === game.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                        >
+                                                            <div className="w-8 h-8 rounded bg-slate-800 flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-white/30">
+                                                                <img src={game.image} alt="" className="w-full h-full object-cover" />
+                                                            </div>
+                                                            <span className={`text-sm truncate ${selectedGame?.id === game.id ? 'text-white font-medium' : 'text-slate-400 group-hover:text-white'}`}>
+                                                                {game.title}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                       </div>
+                  </ShinySidebarBox>
+              </div>
+
+              {/* RIGHT CONTENT: Items Grid */}
+              <div className="flex-1 h-full flex flex-col overflow-hidden">
+                   {selectedGame ? (
+                       <div className="flex flex-col h-full">
+                           {/* Game Header */}
+                           <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg border border-white/10">
+                                        <img src={selectedGame.image} className="w-full h-full object-cover" alt={selectedGame.title} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl font-black text-white leading-tight">{selectedGame.title}</h2>
+                                        <p className="text-slate-400 text-sm flex items-center gap-2">
+                                            {selectedGame.genre} • {displayedItems.length} items available
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
+                                        <button
+                                          key={cat}
+                                          onClick={() => setCategoryFilter(cat)}
+                                          className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${
+                                            categoryFilter === cat ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+                                          }`}
+                                        >
+                                          {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                           </div>
+
+                           {/* Items Grid */}
+                           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                {displayedItems.length > 0 ? (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                                        {displayedItems.map(item => {
+                                            const style = rarityStyles[item.rarity];
+                                            return (
+                                                <motion.div
+                                                    key={item.id}
+                                                    whileHover={{ y: -5, scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => setSelectedItem(item)}
+                                                    className="group cursor-pointer relative aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-white/5 hover:border-white/20 shadow-lg"
+                                                >
+                                                    <img src={item.preview_image_url} alt={item.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-300" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                                    
+                                                    <div className="absolute top-3 right-3">
+                                                         <Badge className={`text-[10px] px-2 py-0.5 ${style.border} bg-black/40 backdrop-blur-md ${style.color}`}>
+                                                            {item.rarity}
+                                                         </Badge>
+                                                    </div>
+
+                                                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                                                        <h3 className="text-white font-bold text-sm leading-tight mb-1 group-hover:text-blue-300 transition-colors line-clamp-2">{item.name}</h3>
+                                                        <p className="text-white/40 text-xs">Lv. {item.level_requirement}</p>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                                        <Package className="w-12 h-12 mb-4 opacity-20" />
+                                        <p>No items found in this category</p>
+                                    </div>
+                                )}
+                           </div>
+                       </div>
+                   ) : (
+                       <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                           <Gamepad2 className="w-20 h-20 mb-6 opacity-20" />
+                           <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
+                           <p className="max-w-md text-center">Choose a game from the sidebar to view its craftable items, weapons, and armor sets.</p>
+                       </div>
+                   )}
+              </div>
             </>
           ) : viewMode === 'collab' ? (
             <div className="w-full h-full overflow-y-auto">
@@ -711,16 +733,20 @@ export default function BlacksmithPage() {
           </div>
         </div>
 
-        {/* Footer Hints */}
-        <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-sm font-medium text-slate-500">
-          <div className="flex gap-6">
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">B</span> Back</span>
-            <span className="flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700 shadow-sm">≡</span> Options</span>
-          </div>
-          <div>
-            Credits: <span className="text-white font-bold">24,500</span>
-          </div>
-        </div>
+        {/* Item Detail Modal Overlay */}
+        <AnimatePresence>
+            {selectedItem && (
+                <ItemDetailModal 
+                    item={selectedItem} 
+                    onClose={() => setSelectedItem(null)}
+                    onEnchant={handleEnchant}
+                    onCombine={handleCombine}
+                    onSalvage={handleSalvage}
+                    rarityStyles={rarityStyles}
+                    associatedSet={mockSets.find(s => s.id === selectedItem.set_id)}
+                />
+            )}
+        </AnimatePresence>
       </div>
     </div>
   );
