@@ -82,6 +82,40 @@ const LiquidCard = ({ children, className = "", onClick, hover = true }) => {
   );
 };
 
+// Ice Trading Card Component
+const IceTradingCard = ({ item }) => {
+  return (
+    <div className="group relative w-[160px] h-[240px] flex-shrink-0 perspective-[1000px]" style={{ perspective: '1000px' }}>
+      <motion.div
+        animate={{ rotateY: 360 }}
+        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        className="w-full h-full relative preserve-3d"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <div className="absolute inset-0 rounded-xl border border-cyan-400/30 bg-cyan-500/5 backdrop-blur-md shadow-[0_0_30px_rgba(34,211,238,0.15)] overflow-hidden">
+           {/* Ice Texture / Glass Effect */}
+           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-cyan-400/5 to-transparent pointer-events-none z-20" />
+           
+           {/* Content */}
+           <div className="absolute inset-0 p-2 flex flex-col items-center justify-center z-10">
+              <div className="w-full h-full rounded-lg overflow-hidden relative">
+                 <img src={item.image} alt={item.name} className="w-full h-full object-cover opacity-90" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/40 to-transparent" />
+              </div>
+           </div>
+
+           {/* Frost/Ice Border Overlay */}
+           <div className="absolute inset-0 border-2 border-white/10 rounded-xl z-30 ring-1 ring-cyan-400/20" />
+           <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent z-20" />
+        </div>
+      </motion.div>
+      
+      {/* Floating Base Shadow */}
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-2/3 h-4 bg-cyan-500/20 blur-xl rounded-full" />
+    </div>
+  );
+};
+
 // List Item Card
 const ListItemCard = ({ item, onClick }) => {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
@@ -91,13 +125,12 @@ const ListItemCard = ({ item, onClick }) => {
   return (
     <div 
       onClick={() => onClick(item)} 
-      className="flex gap-6 p-4 hover:bg-white/5 rounded-2xl transition-all cursor-pointer border border-white/5 hover:border-white/10 bg-white/[0.02]"
+      className="flex gap-8 p-6 hover:bg-white/5 rounded-3xl transition-all cursor-pointer border border-white/5 hover:border-white/10 bg-white/[0.02] items-center"
     >
-      <div className="w-[160px] h-[160px] flex-shrink-0 rounded-xl overflow-hidden bg-slate-800 shadow-lg">
-        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-      </div>
+      {/* 3D Ice Card */}
+      <IceTradingCard item={item} />
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 py-2">
         <h3 className="text-blue-400 hover:text-orange-400 font-medium text-base leading-snug mb-1 line-clamp-2 transition-colors">
           {item.name}
         </h3>
