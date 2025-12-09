@@ -730,6 +730,7 @@ export default function MarketplaceContent() {
       </div>
 
       <ItemDetailModal item={selectedItem} isOpen={!!selectedItem} onClose={() => setSelectedItem(null)} />
+      </div>
     </div>
   );
 }
