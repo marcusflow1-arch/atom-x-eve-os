@@ -209,8 +209,31 @@ export const EventsOverlay = ({ onClose }) => {
   ];
 
   return (
-    <GlassContainer title="World Hub" onClose={onClose} widthClass="md:w-[1100px] md:left-1/2 md:-translate-x-1/2">
-      <div className="grid grid-cols-3 h-full divide-x divide-white/10">
+    <motion.div
+      initial={{ x: '100%', opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: '100%', opacity: 0 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      className="fixed right-0 top-0 bottom-0 w-[1100px] z-[1500] flex flex-col border-l border-white/10 shadow-2xl"
+      style={{
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(30px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+        <h2 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
+          <Calendar className="w-6 h-6 text-cyan-400" />
+          World Hub
+        </h2>
+        <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+          <X className="w-5 h-5 text-white/70" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 grid grid-cols-3 divide-x divide-white/10 overflow-hidden">
         
         {/* Left Column: Active Challenges */}
         <div className="flex flex-col h-full bg-white/[0.02]">
@@ -334,6 +357,6 @@ export const EventsOverlay = ({ onClose }) => {
         </div>
 
       </div>
-    </GlassContainer>
+    </motion.div>
   );
 };

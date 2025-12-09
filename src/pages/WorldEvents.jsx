@@ -87,7 +87,6 @@ const BottomMenu = ({ onAction, activeAction }) => {
     { id: 'loadout', label: 'Loadout', icon: Crosshair },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
     { id: 'friends', label: 'Friends', icon: Users },
-    { id: 'events', label: 'Events', icon: Calendar },
   ];
 
   return (
@@ -143,6 +142,14 @@ export default function WorldEvents() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Auto-open Event Hub if URL has ?open=events (optional, for external links)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'events') {
+      setActiveMenu('events');
+    }
+  }, []);
   
   // Mock Players moving
   const [otherPlayers, setOtherPlayers] = useState([
@@ -362,6 +369,14 @@ export default function WorldEvents() {
                 {showFilters ? <X className="w-5 h-5" /> : <Filter className="w-5 h-5" />}
             </button>
         </div>
+
+        {/* Event Hub Button - Pulls from Right */}
+        <button
+            onClick={() => setActiveMenu(activeMenu === 'events' ? null : 'events')}
+            className="fixed top-24 right-6 z-[1000] w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all shadow-[0_0_20px_rgba(0,0,0,0.3)] group"
+        >
+            <Calendar className="w-6 h-6 group-hover:text-cyan-400 transition-colors" />
+        </button>
 
         {/* App Drawer Overlay */}
         <AnimatePresence>
