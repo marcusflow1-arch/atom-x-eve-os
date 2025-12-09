@@ -391,7 +391,7 @@ export default function Store() {
             try {
                 const fetchedGames = await Game.list();
                 const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
-                    ...aiGames,
+                    ...aiGamesList,
                     ...otherSampleGames
                 ];
                 setGames(enhancedGames);
