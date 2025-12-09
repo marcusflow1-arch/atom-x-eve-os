@@ -5,11 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import PartyPanel from '../../clan/PartyPanel';
-import DashboardTab from '../../clan/DashboardTab';
-import MembersTab from '../../clan/MembersTab';
-import RoomsTab from '../../clan/RoomsTab';
-import GuildInfoTab from '../../clan/GuildInfoTab';
+// Clan components removed
+const PartyPanel = () => <div className="p-4 text-slate-400">Party Panel Unavailable</div>;
+const DashboardTab = () => <div className="p-4 text-slate-400">Dashboard Unavailable</div>;
+const MembersTab = () => <div className="p-4 text-slate-400">Members Unavailable</div>;
+const RoomsTab = () => <div className="p-4 text-slate-400">Rooms Unavailable</div>;
+const GuildInfoTab = () => <div className="p-4 text-slate-400">Guild Info Unavailable</div>;
 import { useAuth } from '../../auth/AuthContext';
 import { ThemeBackground, ThemeToggle } from '../../shared/ThemeSystem';
 
