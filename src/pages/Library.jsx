@@ -651,6 +651,11 @@ export default function Library() {
   const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
+  
+  // Sidebar Filters
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [minRating, setMinRating] = useState(0);
 
   const handleStreamGame = async (game) => {
     try {
@@ -699,6 +704,15 @@ export default function Library() {
   const getFilteredGames = () => {
     let games = activeTab === 'installed' ? ownedGames.slice(0, Math.ceil(ownedGames.length / 2)) 
               : activeTab === 'favorites' ? favoriteGames : ownedGames;
+    
+    // Sidebar Filters
+    if (selectedGenres.length > 0) {
+        games = games.filter(game => selectedGenres.includes(game.genre));
+    }
+    if (minRating > 0) {
+        games = games.filter(game => (game.rating || 0) >= minRating);
+    }
+
     if (searchTerm) {
       games = games.filter(game =>
         game?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
