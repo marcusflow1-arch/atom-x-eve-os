@@ -450,7 +450,7 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/lunatemplate')) {
-          headerConfig.title = "ATOM - Marcus | Luna Template";
+          headerConfig.title = "ATOM - Marcus | Luna Dashboard";
           headerConfig.showLevel = true;
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
