@@ -868,6 +868,7 @@ export default function Store() {
                             </>
                         )}
                     </motion.div>
+                    )
                 ) : storeMode === 'marketplace' ? (
                     <motion.div
                         key="marketplace"
