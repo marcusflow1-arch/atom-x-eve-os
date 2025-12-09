@@ -1,282 +1,126 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge'; // Added Badge import
+import { Badge } from '@/components/ui/badge';
 import {
-  Award, Trophy, Star, Package, BrainCircuit, Heart, Search, Filter, Zap, Shield, Sword, ChevronRight, Mic, Bot,
-  LayoutGrid, List, Check, X, ArrowLeft, Share2, Plus, Gamepad2, Users, Crown, Play, Sparkles, Target, Book // Added new icons
+  Trophy, Search, Filter, Mic, Volume2, ChevronRight,
+  Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
+  ChevronDown, Mic as MicIcon
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { Achievement } from '@/entities/Achievement';
 import { Game } from '@/entities/Game';
 import { allMockGames } from '../components/store/mockData';
-import GenreFilter from '../components/achievements/GenreFilter';
-import AchievementSearch from '../components/achievements/AchievementSearch';
-import TrackingPanel from '../components/achievements/TrackingPanel';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
-import AchievementFilterBar from '../components/achievements/AchievementFilterBar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import GameTradingCards from '../components/achievements/GameTradingCards';
-
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import { base44 } from '@/api/base44Client';
 
-const rarityStyles = {
-  Common: { color: "text-slate-300", bg: "bg-slate-800/80", border: "border-slate-600" },
-  Uncommon: { color: "text-green-400", bg: "bg-green-900/80", border: "border-green-500/80" },
-  Rare: { color: "text-blue-400", bg: "bg-blue-900/80", border: "border-blue-500/80" },
-  Epic: { color: "text-purple-400", bg: "bg-purple-900/80", border: "border-purple-500/80" },
-  Legendary: { color: "text-orange-400", bg: "bg-orange-900/80", border: "border-orange-500/80" },
-  Mythical: { color: "text-red-400", bg: "bg-red-900/80", border: "border-red-500/80" },
-  Limitless: { color: "text-fuchsia-400", bg: "bg-fuchsia-900/80", border: "border-fuchsia-500/80" }
+// --- Shiny Sidebar Box Component ---
+const ShinySidebarBox = ({ children, className = "" }) => {
+  return (
+    <motion.div
+      className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
+      style={{
+        background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)',
+      }}
+    >
+        {children}
+    </motion.div>
+  );
 };
 
-const GameCard = ({ game, onClick, isSelected }) =>
-<motion.div
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  exit={{ opacity: 0, scale: 0.95 }}
-  whileHover={{ scale: 1.03, y: -5 }}
-  onClick={() => onClick(game)}
-  className={`group relative rounded-xl overflow-hidden cursor-pointer bg-slate-800 border transition-all duration-300 ${
-  isSelected ? 'border-blue-500/80 shadow-lg shadow-blue-500/20' : 'border-slate-700/50'}`
+// --- Achievement Card (Trading Card Style) ---
+const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [20, -20]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-20, 20]);
+
+  function handleMouseMove(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXPos = event.clientX - rect.left;
+    const mouseYPos = event.clientY - rect.top;
+    x.set(mouseXPos / width - 0.5);
+    y.set(mouseYPos / height - 0.5);
   }
-  style={{ cursor: 'pointer' }}>
 
-    <img src={game.cover_image} alt={game.title} className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105" />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
-    <div className="absolute bottom-0 p-4">
-      <h3 className="font-bold text-lg text-white">{game.title}</h3>
-      <p className="text-sm text-slate-400">{game.genre}</p>
-    </div>
-    {isSelected &&
-  <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
-        Selected
-      </div>
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
   }
-  </motion.div>;
 
+  const rarityColors = {
+    Common: "border-slate-600 shadow-slate-500/20",
+    Uncommon: "border-green-500 shadow-green-500/20",
+    Rare: "border-blue-500 shadow-blue-500/20",
+    Epic: "border-purple-500 shadow-purple-500/20",
+    Legendary: "border-orange-500 shadow-orange-500/20",
+    Mythic: "border-red-500 shadow-red-500/20",
+    Godlike: "border-yellow-400 shadow-yellow-500/40"
+  };
 
-const AchievementListItem = ({ achievement, onSelect, isUnlocked, isSelected }) => {
-  const rarity = rarityStyles[achievement.rarity] || rarityStyles.Common;
+  const rarityColor = rarityColors[achievement.rarity] || rarityColors.Common;
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      whileHover={{ x: 5 }}
-      onClick={() => onSelect(achievement)}
-      className={`relative p-4 rounded-lg cursor-pointer transition-all duration-200 border-l-4 ${
-      isSelected ?
-      `bg-slate-700/80 ${rarity.border} border-l-4` :
-      `bg-slate-800/40 hover:bg-slate-700/60 border-l-slate-600`} ${
-      isUnlocked ? '' : 'opacity-60 grayscale'}`}
-      style={{ cursor: 'pointer' }}>
-
-      <div className="flex items-center gap-4">
-        <div className="text-3xl">{achievement.icon}</div>
-        <div className="flex-1 min-w-0">
-          <h3 className={`font-bold text-base ${rarity.color} truncate`}>{achievement.title}</h3>
-          <p className="text-sm text-slate-400 truncate">{achievement.description}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge className={`text-xs ${rarity.bg} ${rarity.color}`}>
-              {achievement.rarity}
-            </Badge>
-            <span className="text-yellow-400 font-semibold text-sm">{achievement.points} pts</span>
-          </div>
-        </div>
-        {isUnlocked && <Check className="w-5 h-5 text-green-400 flex-shrink-0" />}
-      </div>
-    </motion.div>);
-
-};
-
-const AchievementDetailPanel = ({ achievement, isUnlocked, onTrack, isTracked, onClose, onShare, onChallenge }) => {
-  if (!achievement) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center text-slate-500">
-          <Trophy className="w-16 h-16 mx-auto mb-4 opacity-30" />
-          <p className="text-lg font-semibold">Select an achievement</p>
-          <p className="text-sm mt-2">Click an achievement from the list to view details</p>
-        </div>
-      </div>);
-
-  }
-
-  const rarity = rarityStyles[achievement.rarity] || rarityStyles.Common;
-
-  // Mock video URL - in production this would come from the achievement data
-  const videoUrl = achievement.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1&playlist=dQw4w9WgXcQ';
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      className="h-full overflow-y-auto space-y-6 p-6 bg-slate-800/30 rounded-xl">
-
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <div className={`text-6xl ${rarity.color}`}>{achievement.icon}</div>
-          <div>
-            <h2 className={`text-3xl font-black ${rarity.color} mb-2`}>{achievement.title}</h2>
-            <div className="flex items-center gap-3">
-              <Badge className={`${rarity.bg} ${rarity.color} ${rarity.border} border text-sm px-3 py-1`}>
-                {achievement.rarity}
-              </Badge>
-              <Badge variant="outline" className="text-sm">
-                {achievement.category}
-              </Badge>
-              <Badge variant="outline" className="text-sm text-yellow-400">
-                {achievement.points} Points
-              </Badge>
-            </div>
-          </div>
-        </div>
-        {isUnlocked &&
-        <Badge className="bg-green-600 text-white px-3 py-1">
-            <Check className="w-4 h-4 mr-1" /> Unlocked
+      onClick={() => onClick(achievement)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ 
+        rotateX, 
+        rotateY, 
+        transformStyle: "preserve-3d" 
+      }}
+      whileHover={{ scale: 1.05 }}
+      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
+    >
+      {/* Card Content */}
+      <div className="absolute inset-0 flex flex-col items-center p-4 transform-style-3d">
+        {/* Header */}
+        <div className="w-full flex justify-between items-start mb-2" style={{ transform: "translateZ(20px)" }}>
+          <Badge variant="outline" className="bg-black/50 border-white/10 text-[10px]">
+            {achievement.category || 'General'}
           </Badge>
-        }
-      </div>
+          <div className="text-yellow-400 font-bold text-xs">{achievement.points} pts</div>
+        </div>
 
-      {/* Description */}
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-        <h3 className="text-white font-semibold mb-2">Description</h3>
-        <p className="text-slate-300 leading-relaxed">{achievement.description}</p>
-      </div>
+        {/* Icon / Image Area */}
+        <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(30px)" }}>
+          <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
+            {achievement.icon || '🏆'}
+          </div>
+        </div>
 
-      {/* Video Demonstration */}
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-          <Play className="w-5 h-5 text-blue-400" />
-          Reward Demonstration
-        </h3>
-        <div className="aspect-video bg-black rounded-lg overflow-hidden">
-          <iframe
-            width="100%"
-            height="100%"
-            src={videoUrl}
-            title="Achievement Reward Demo"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full">
-          </iframe>
+        {/* Info */}
+        <div className="w-full text-center mt-auto" style={{ transform: "translateZ(25px)" }}>
+          <h3 className="text-white font-bold text-lg leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
+          <p className="text-slate-400 text-xs line-clamp-2">{achievement.description}</p>
+        </div>
+
+        {/* Rarity Label */}
+        <div className="mt-3 w-full border-t border-white/10 pt-2 flex justify-between items-center" style={{ transform: "translateZ(20px)" }}>
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
+            {achievement.rarity}
+          </span>
+          {isUnlocked && <Check className="w-4 h-4 text-green-400" />}
         </div>
       </div>
 
-      {/* Reward Details */}
-      {achievement.reward &&
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-yellow-400" />
-            Unlocked Rewards
-          </h3>
-          <div className="space-y-3">
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-blue-500/30">
-              <div className="flex items-start gap-3">
-                <div className="text-3xl">{achievement.reward.icon || '🎁'}</div>
-                <div className="flex-1">
-                  <h4 className="text-white font-semibold">{achievement.reward.name || `${achievement.title} Reward`}</h4>
-                  <p className="text-sm text-slate-400 mt-1">
-                    {achievement.reward.description || 'Special reward for unlocking this achievement'}
-                  </p>
-                  {achievement.reward.stats &&
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                      {Object.entries(achievement.reward.stats).map(([key, value]) =>
-                  <div key={key} className="flex items-center gap-2 text-sm" key={key}>
-                          <ChevronRight className="w-3 h-3 text-green-400" />
-                          <span className="text-slate-300">{key}: <span className="text-white font-semibold">+{value}</span></span>
-                        </div>
-                  )}
-                    </div>
-                }
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
-      {/* How to Unlock */}
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-400" />
-          How to Unlock
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-400 font-bold text-sm">1</span>
-            </div>
-            <div>
-              <p className="text-white font-medium">Complete the Required Challenge</p>
-              <p className="text-slate-400 text-sm mt-1">{achievement.description}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-400 font-bold text-sm">2</span>
-            </div>
-            <div>
-              <p className="text-white font-medium">Achievement Automatically Unlocks</p>
-              <p className="text-slate-400 text-sm mt-1">Once conditions are met, rewards are instantly granted</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-blue-400 font-bold text-sm">3</span>
-            </div>
-            <div>
-              <p className="text-white font-medium">Claim Your Rewards</p>
-              <p className="text-slate-400 text-sm mt-1">Access your new {achievement.category} in your arsenal</p>
-            </div>
-          </div>
-        </div>
-        
-        <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
-          <Book className="w-4 h-4 mr-2" />
-          View Community Guides
-        </Button>
-      </div>
-
-      {/* Progress Tracking */}
-      {!isUnlocked &&
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white font-semibold">Track Progress</h3>
-            <Button
-            onClick={() => onTrack(achievement)}
-            variant={isTracked ? "outline" : "default"}
-            size="sm"
-            className={isTracked ? "border-blue-500 text-blue-400" : "bg-blue-600 hover:bg-blue-700"}>
-
-              {isTracked ? '✓ Tracking' : 'Track Achievement'}
-            </Button>
-          </div>
-          <p className="text-slate-400 text-sm">
-            {isTracked ?
-          'This achievement is being tracked. View progress in the tracking panel.' :
-          'Track this achievement to monitor your progress toward unlocking it.'}
-          </p>
-        </div>
-      }
-
-      {/* Game Info */}
-      <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
-        <h3 className="text-white font-semibold mb-2">Game Information</h3>
-        <div className="flex items-center gap-2">
-          <Gamepad2 className="w-4 h-4 text-blue-400" />
-          <span className="text-slate-300">{achievement.game}</span>
-        </div>
-      </div>
-    </motion.div>);
-
+      {/* Shine Effect */}
+      <motion.div 
+        style={{
+          opacity: useTransform(rotateX, (val) => Math.abs(val) / 30 + 0.1),
+          background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%)",
+          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
+        }}
+        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+      />
+    </motion.div>
+  );
 };
 
 export default function Achievements() {
@@ -291,41 +135,30 @@ export default function Achievements() {
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
 
-  // DOM refs for positioning
-  const gameBoxRef = useRef(null);
-
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [rarityFilter, setRarityFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [activeGenre, setActiveGenre] = useState(null);
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [activeSubTab, setActiveSubTab] = useState('achievements');
+  const [activeGenre, setActiveGenre] = useState('All');
+  const [isGenreOpen, setIsGenreOpen] = useState(true);
 
-
-  // Fetch initial data safely with error handling
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Fetch games with error handling
         let games = [];
         try {
           games = await Game.list();
         } catch (err) {
-          console.error('Error fetching games from DB:', err);
-          games = [];
+          console.error('Error fetching games:', err);
         }
 
-        // Fetch achievements with error handling
         let achievements = [];
         try {
           achievements = await Achievement.list();
         } catch (err) {
-          console.error('Error fetching achievements from DB:', err);
-          achievements = [];
+          console.error('Error fetching achievements:', err);
         }
 
         const ownedGameIds = new Set(user?.purchased_items || []);
@@ -337,22 +170,14 @@ export default function Achievements() {
           const combined = [...dbOwnedGames, ...mockOwnedGames];
           userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
         } else {
-          // If achievements failed to load, we can't filter by "games with achievements".
-          // In this case, show all available mock games.
-          if (achievements.length === 0) {
-            userGames = Object.values(allMockGames);
-          } else {
-            const gamesWithAchievements = new Set(achievements.map((a) => a.game));
-            const dbGames = games.filter((g) => gamesWithAchievements.has(g.title));
-            const mockGames = Object.values(allMockGames).filter((g) => gamesWithAchievements.has(g.title));
-            const combined = [...dbGames, ...mockGames];
-            userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
-          }
+          // If no purchases, show all mock games + DB games
+          const combined = [...games, ...Object.values(allMockGames)];
+          userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
         }
 
         setAllGames(userGames);
+        if (userGames.length > 0) setSelectedGame(userGames[0]);
 
-        // Organize achievements by game locally
         const achievementsByGame = {};
         achievements.forEach((ach) => {
           if (!achievementsByGame[ach.game]) {
@@ -361,29 +186,22 @@ export default function Achievements() {
           achievementsByGame[ach.game].push(ach);
         });
         setLocalAchievements(achievementsByGame);
-
-        // Initialize tracked achievements from user data
         setTrackedAchievements(user?.tracked_achievements || []);
 
       } catch (error) {
         console.error("Error fetching achievement data:", error);
-        setError(error.message || 'Failed to load achievements');
-        // Fallback to mock data if a critical error occurred during the overall process
-        setAllGames(Object.values(allMockGames));
-        setLocalAchievements({});
+        setError(error.message);
+        setAllGames(Object.values(allMockGames)); // Fallback
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Add a small delay to ensure contexts are initialized
-    const timeoutId = setTimeout(fetchData, 100);
-    return () => clearTimeout(timeoutId);
+    fetchData();
   }, [user, isAuthenticated]);
 
   const handleTrackAchievement = useCallback(async (achievement) => {
     if (!isAuthenticated || !user) return;
-
     try {
       const isCurrentlyTracked = trackedAchievements.includes(achievement.id);
       const newTracked = isCurrentlyTracked ?
@@ -394,27 +212,13 @@ export default function Achievements() {
       await updateUserData({ tracked_achievements: newTracked });
     } catch (err) {
       console.error('Error tracking achievement:', err);
-      // Optionally, show a toast notification to the user
-    }
-  }, [isAuthenticated, user, updateUserData, trackedAchievements]);
-
-  const handleUntrackAchievement = useCallback(async (achievementId) => {
-    if (!isAuthenticated || !user) return;
-
-    try {
-      const newTracked = trackedAchievements.filter((id) => id !== achievementId);
-      setTrackedAchievements(newTracked);
-      await updateUserData({ tracked_achievements: newTracked });
-    } catch (err) {
-      console.error('Error untracking achievement:', err);
-      // Optionally, show a toast notification to the user
     }
   }, [isAuthenticated, user, updateUserData, trackedAchievements]);
 
   const handleShareAchievement = async (achievement) => {
+    // Share logic preserved
     if (!user) return;
     try {
-      // Generate content using AI
       const aiResponse = await base44.functions.invoke('communityAI', {
         action: 'generate_achievement_post',
         data: {
@@ -446,16 +250,10 @@ export default function Achievements() {
     setChallengeModalOpen(true);
   };
 
-  const handleGameSelect = (game) => {
-    setSelectedGame(game);
-    setSelectedAchievement(null);
-    setSearchTerm('');
-  };
-
   const filteredGames = useMemo(() => {
     if (isLoading || !allGames) return [];
     return allGames.filter((game) => {
-      const genreMatch = !activeGenre || game.genre?.toLowerCase().includes(activeGenre.toLowerCase());
+      const genreMatch = activeGenre === 'All' || !activeGenre || game.genre?.toLowerCase().includes(activeGenre.toLowerCase());
       const searchMatch = searchTerm === '' || game.title.toLowerCase().includes(searchTerm.toLowerCase());
       return genreMatch && searchMatch;
     });
@@ -463,329 +261,186 @@ export default function Achievements() {
 
   const gameAchievements = useMemo(() => {
     if (!selectedGame || !localAchievements[selectedGame.title]) return [];
+    return localAchievements[selectedGame.title];
+  }, [selectedGame, localAchievements]);
 
-    const achievementsForGame = localAchievements[selectedGame.title] || [];
-
-    return achievementsForGame.filter((ach) => {
-      if (!ach) return false;
-
-      const searchMatch = searchTerm === '' || ach.title?.toLowerCase().includes(searchTerm.toLowerCase());
-      const rarityMatch = rarityFilter === 'all' || ach.rarity === rarityFilter;
-      const unlocked = user?.unlocked_achievements?.includes(ach.id);
-      const statusMatch = statusFilter === 'all' ||
-      statusFilter === 'unlocked' && unlocked ||
-      statusFilter === 'locked' && !unlocked;
-      const categoryMatch = categoryFilter === 'all' || ach.category === categoryFilter;
-
-      return searchMatch && rarityMatch && statusMatch && categoryMatch;
-    });
-  }, [selectedGame, localAchievements, searchTerm, rarityFilter, statusFilter, categoryFilter, user]);
-
-
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading Achievement Hub...</p>
-        </div>
-      </div>);
-
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-        <div className="text-center max-w-md p-4 bg-slate-800 rounded-lg shadow-xl border border-red-700/50">
-          <Trophy className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Error Loading Achievements</h2>
-          <p className="text-slate-400 mb-4">{error}</p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="bg-red-600 hover:bg-red-700 text-white">
-
-            Retry
-          </Button>
-        </div>
-      </div>);
-
-  }
+  const genres = useMemo(() => {
+    const g = new Set(allGames.map(game => game.genre).filter(Boolean));
+    return ['All', ...Array.from(g)];
+  }, [allGames]);
 
   return (
-    <div
-      className="h-full text-white relative overflow-y-auto custom-scrollbar"
-      style={{
-        cursor: 'default',
-        background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)'
-      }}>
-
-      {/* Ambient Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+    <div className="h-screen w-full bg-[#0f172a] text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
+      {/* Ambient Glow */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
-      <style>{`
-        /* Prevent flashing cursor on non-input elements */
-        .bg-slate-900 * {
-          user-select: none;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          cursor: default;
-        }
+
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
-        /* Allow text selection and proper cursor only in input fields */
-        input, textarea, [contenteditable="true"] {
-          user-select: text !important;
-          -webkit-user-select: text !important;
-          -moz-user-select: text !important;
-          -ms-user-select: text !important;
-          cursor: text !important;
-        }
-        
-        /* Proper cursor for clickable elements */
-        button, [role="button"], a, .cursor-pointer {
-          cursor: pointer !important;
-        }
+        {/* Main Layout: 2 Columns */}
+        <div className="flex gap-8 h-full overflow-hidden">
+          
+          {/* Left Sidebar (Shiny Box) */}
+          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
+            
+            {/* Header with Speaker Icon */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+                Achievements <Volume2 className="w-6 h-6 text-blue-400" />
+              </h1>
+            </div>
 
-        /* Virtualized list for performance */
-        .achievement-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1rem;
-          max-height: 60vh;
-          overflow-y: auto;
-          padding-right: 8px;
-        }
+            {/* Shiny Box Container */}
+            <ShinySidebarBox className="flex-1 flex flex-col p-5">
+              
+              {/* Search with Mic */}
+              <div className="relative group mb-6">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+                />
+                <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
+                  <MicIcon className="w-4 h-4" />
+                </button>
+              </div>
 
-        .achievement-grid::-webkit-scrollbar {
-          width: 6px;
-        }
+              {/* Genre Filters */}
+              <div className="mb-4">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {genres.slice(0, 5).map(genre => (
+                    <button
+                      key={genre}
+                      onClick={() => setActiveGenre(genre)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                        activeGenre === genre 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        .achievement-grid::-webkit-scrollbar-track {
-          background: rgba(51, 65, 85, 0.3);
-          border-radius: 3px;
-        }
+              {/* Game List */}
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                {filteredGames.map(game => (
+                  <motion.button
+                    key={game.id}
+                    onClick={() => {
+                        setSelectedGame(game);
+                        setSelectedAchievement(null);
+                    }}
+                    className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                        selectedGame?.id === game.id 
+                        ? 'bg-white/10 shadow-lg border border-white/10' 
+                        : 'hover:bg-white/5 border border-transparent'
+                    }`}
+                    whileHover={{ x: 4 }}
+                  >
+                    {/* Small Box (Image) */}
+                    <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
+                      <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    
+                    {/* Name */}
+                    <div className="flex-1 text-left overflow-hidden">
+                      <h3 className={`font-bold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                        {game.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 truncate">{game.genre}</p>
+                    </div>
 
-        .achievement-grid::-webkit-scrollbar-thumb {
-          background: rgba(59, 130, 246, 0.5);
-          border-radius: 3px;
-        }
+                    {selectedGame?.id === game.id && (
+                        <div className="w-1 h-8 bg-blue-500 rounded-full" />
+                    )}
+                  </motion.button>
+                ))}
+              </div>
 
-        .achievement-grid::-webkit-scrollbar-thumb:hover {
-          background: rgba(59, 130, 246, 0.7);
-        }
-      `}</style>
+            </ShinySidebarBox>
+          </div>
 
-      <div className="relative z-10">
-        <AnimatePresence>
-          {selectedAchievement && !selectedGame && // Only show overlay if no game is selected (global achievement view)
+          {/* Right Content: Achievements Grid (Cards) */}
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {selectedGame ? (
+              <>
+                <div className="mb-6 flex items-end gap-6">
+                    <div className="w-24 h-32 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black/50 hidden md:block">
+                        <img src={selectedGame.cover_image} className="w-full h-full object-cover" alt={selectedGame.title} />
+                    </div>
+                    <div>
+                        <h2 className="text-4xl font-black text-white mb-2">{selectedGame.title}</h2>
+                        <div className="flex items-center gap-4 text-slate-400 text-sm">
+                            <span className="flex items-center gap-1"><Trophy className="w-4 h-4" /> {gameAchievements.length} Achievements</span>
+                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Trading Cards Available</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
+                    {gameAchievements.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                            {gameAchievements.map(ach => (
+                                <AchievementCard 
+                                    key={ach.id} 
+                                    achievement={ach} 
+                                    onClick={setSelectedAchievement}
+                                    isUnlocked={user?.unlocked_achievements?.includes(ach.id)} 
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                            <Trophy className="w-16 h-16 mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No achievements found</p>
+                            <p className="text-sm">Start playing to unlock rewards!</p>
+                        </div>
+                    )}
+                </div>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
+                <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
+                <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+
+      {/* Detail Overlay */}
+      <AnimatePresence>
+        {selectedAchievement && (
           <AchievementDetailOverlay
             achievement={selectedAchievement}
             onClose={() => setSelectedAchievement(null)}
             onTrack={handleTrackAchievement}
             isTracked={trackedAchievements.includes(selectedAchievement.id)}
             onShare={handleShareAchievement}
-            onChallenge={handleChallenge} />
+            onChallenge={handleChallenge} 
+          />
+        )}
+      </AnimatePresence>
 
-          }
-        </AnimatePresence>
-
-        <div className="p-8">
-          <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-            <div className="flex justify-center items-center flex-wrap gap-4">
-              <TabsList className="p-1 rounded-full bg-transparent border-0">
-                <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
-                <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-purple-500/30">Trading Cards</TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="achievements">
-              {!selectedGame ?
-              <>
-              
-              {/* Genre Filter */}
-              <div className="flex items-center gap-4 mb-4">
-                <GenreFilter activeGenre={activeGenre} onSelectGenre={setActiveGenre} />
-              </div>
-
-              {/* Main Search Bar with Voice Search */}
-              <div className="mb-6">
-                <AchievementSearch onSearch={setSearchTerm} />
-              </div>
-
-              {/* Game Boxes by Genre (Scrollable) */}
-              <div className="space-y-8 pb-20">
-                {activeGenre || searchTerm ? (
-                   // Flat Grid for Search/Filter Results
-                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                        {filteredGames.map((game) => (
-                            <div key={game.id} ref={game === selectedGame ? gameBoxRef : null}>
-                                <GameCard
-                                    game={game}
-                                    onClick={handleGameSelect}
-                                    isSelected={game === selectedGame} 
-                                />
-                            </div>
-                        ))}
-                   </div>
-                ) : (
-                    // Genre Rows
-                    (() => {
-                        const gamesByGenre = filteredGames.reduce((acc, game) => {
-                            const g = game.genre || 'Other';
-                            if (!acc[g]) acc[g] = [];
-                            acc[g].push(game);
-                            return acc;
-                        }, {});
-
-                        // Expand data for "more boxes" request
-                        const genres = Object.keys(gamesByGenre).sort();
-                        
-                        return genres.map(genre => (
-                            <div key={genre} className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                        {genre} <span className="text-slate-500 text-sm font-normal">({gamesByGenre[genre].length})</span>
-                                    </h3>
-                                    <Button 
-                                        variant="ghost" 
-                                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
-                                        onClick={() => {
-                                            // Set filters to simulate "See All" inventory view
-                                            setActiveGenre(genre);
-                                        }}
-                                    >
-                                        See All <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                                <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                                    {/* Doubling data to ensure scrollability as requested */}
-                                    {[...gamesByGenre[genre], ...gamesByGenre[genre], ...gamesByGenre[genre]].slice(0, 15).map((game, idx) => (
-                                        <div key={`${game.id}-${idx}`} className="w-[280px] flex-shrink-0 snap-start">
-                                            <GameCard
-                                                game={game}
-                                                onClick={handleGameSelect}
-                                                isSelected={game === selectedGame} 
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ));
-                    })()
-                )}
-              </div>
-            </> :
-
-              <div className="h-[calc(100vh-64px)] flex flex-col"> {/* Adjusted height for sticky header/footer if present */}
-              <Button variant="ghost" onClick={() => {
-              setSelectedGame(null);
-              setSearchTerm('');
-              setSelectedAchievement(null); // Clear selected achievement when going back to game list
-            }} className="mb-4 self-start" style={{ cursor: 'pointer' }}>
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Game Library
-              </Button>
-              
-              <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-6">
-                <div className="flex justify-between items-center flex-wrap gap-4">
-                  <h1 className="text-5xl font-black">{selectedGame.title}</h1>
-                  <TabsList
-                  className="p-1 rounded-full"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                  }}>
-
-                    <TabsTrigger value="achievements" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Achievements</TabsTrigger>
-                    <TabsTrigger value="tradingCards" className="rounded-full px-5 data-[state=active]:bg-blue-500/30">Trading Cards</TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <TabsContent value="achievements" className="space-y-6">
-                  <p className="text-slate-400 mb-4">
-                    {gameAchievements.length} achievement{gameAchievements.length !== 1 ? 's' : ''} available
-                  </p>
-
-                  {/* Achievement Filter Bar */}
-                  <AchievementFilterBar
-                  searchTerm={searchTerm}
-                  rarityFilter={rarityFilter}
-                  statusFilter={statusFilter}
-                  categoryFilter={categoryFilter}
-                  onSearch={setSearchTerm}
-                  onRarityChange={setRarityFilter}
-                  onStatusChange={setStatusFilter}
-                  onCategoryChange={setCategoryFilter} />
-
-
-                  {/* Split Panel Layout */}
-                  <div className="flex-1 flex gap-6 overflow-hidden mt-6">
-                    {/* Left Panel - Achievement List */}
-                    <div className="w-[400px] flex-shrink-0 overflow-y-auto space-y-2 pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 350px)' }}>
-                      {gameAchievements.length > 0 ?
-                    gameAchievements.map((ach) =>
-                    <AchievementListItem
-                      key={ach.id}
-                      achievement={ach}
-                      onSelect={setSelectedAchievement}
-                      isUnlocked={user?.unlocked_achievements?.includes(ach.id)}
-                      isSelected={selectedAchievement?.id === ach.id} />
-
-                    ) :
-
-                    <div className="text-center py-20 text-slate-500">
-                          <Trophy className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                          <h3 className="text-xl font-semibold mb-2">No achievements match your filters</h3>
-                          <p>Try adjusting your search or filter criteria</p>
-                        </div>
-                    }
-                    </div>
-
-                    {/* Vertical Divider */}
-                    <div className="w-px bg-gradient-to-b from-transparent via-blue-500/50 to-transparent flex-shrink-0"></div>
-
-                    {/* Right Panel - Achievement Details */}
-                    <div className="flex-1 overflow-hidden">
-                      <AchievementDetailPanel
-                      achievement={selectedAchievement}
-                      isUnlocked={selectedAchievement && user?.unlocked_achievements?.includes(selectedAchievement.id)}
-                      onTrack={handleTrackAchievement}
-                      isTracked={selectedAchievement && trackedAchievements.includes(selectedAchievement.id)}
-                      onClose={() => setSelectedAchievement(null)}
-                      onShare={handleShareAchievement}
-                      onChallenge={handleChallenge} />
-
-                    </div>
-                    </div>
-                    </TabsContent>
-
-                    <TabsContent value="tradingCards">
-                    <GameTradingCards />
-                    </TabsContent>
-                    </Tabs>
-                    </div>
-                    }
-                    </TabsContent>
-
-                    <TabsContent value="tradingCards">
-                    <GameTradingCards />
-                    </TabsContent>
-                    </Tabs>
-        </div>
-      </div>
-
-
-
-      {achievementToChallenge &&
-      <ChallengeFriendModal
-        achievement={achievementToChallenge}
-        isOpen={challengeModalOpen}
-        onClose={() => setChallengeModalOpen(false)} />
-
-      }
-    </div>);
-
+      {/* Challenge Modal */}
+      {achievementToChallenge && (
+        <ChallengeFriendModal
+          achievement={achievementToChallenge}
+          isOpen={challengeModalOpen}
+          onClose={() => setChallengeModalOpen(false)} 
+        />
+      )}
+    </div>
+  );
 }
