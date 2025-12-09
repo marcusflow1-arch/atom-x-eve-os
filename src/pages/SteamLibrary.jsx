@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Search, Filter, Play, Clock, Cloud, Star, Settings } from 'lucide-react';
+import { Menu, Search, Filter, Play, Clock, Cloud, Star, Settings, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SteamLibrary() {
