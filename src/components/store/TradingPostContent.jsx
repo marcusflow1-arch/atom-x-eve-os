@@ -393,6 +393,24 @@ export default function TradingPostContent() {
   const [subTabGenre, setSubTabGenre] = useState(null);
   const [subTabGame, setSubTabGame] = useState(null);
   const [inventorySearch, setInventorySearch] = useState('');
+  const [allStoreGames, setAllStoreGames] = useState([]);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+        try {
+            const fetchedGames = await Game.list();
+            const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
+                ...Object.values(aiGames),
+                ...Object.values(otherSampleGames)
+            ];
+            setAllStoreGames(enhancedGames);
+        } catch (error) {
+            console.error("Error fetching games:", error);
+            setAllStoreGames([...Object.values(aiGames), ...Object.values(otherSampleGames)]);
+        }
+    };
+    fetchGames();
+  }, []);
 
   const GENRE_GAMES = useMemo(() => ({
     "MMORPG": ["Skyrim Online", "World of Warcraft", "Elder Scrolls Online"],
@@ -409,76 +427,116 @@ export default function TradingPostContent() {
   // Cross Interface State
   const [activeGenreIndex, setActiveGenreIndex] = useState(0);
   const [activeGameIndex, setActiveGameIndex] = useState(0);
-  const [crossViewLevel, setCrossViewLevel] = useState(0); // 0: Nav, 1: Idol, 2: Offers
+  const [crossViewLevel, setCrossViewLevel] = useState(0); // 0: Nav (Games), 1: Game Items, 2: Offers
   const [activeCrossGame, setActiveCrossGame] = useState(null);
+  const [activeCrossItem, setActiveCrossItem] = useState(null);
+
+  // Mock Item Generator
+  const generateGameItems = (game) => {
+    const types = ['Weapon', 'Armor', 'Ability', 'Consumable', 'Material'];
+    const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'];
+    
+    // Deterministic pseudo-random based on game ID
+    const seed = game.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const itemCount = 12 + (seed % 10); // 12-21 items per game
+    
+    return Array.from({ length: itemCount }).map((_, i) => {
+        const typeIndex = (seed + i) % types.length;
+        const rarityIndex = (seed + i * 2) % rarities.length;
+        return {
+            id: `${game.id}_item_${i}`,
+            name: `${game.title.split(' ')[0]} ${types[typeIndex]} ${i + 1}`,
+            type: types[typeIndex],
+            rarity: rarities[rarityIndex],
+            game: game.title,
+            image: game.cover_image || game.image, // Fallback to game image for now, ideally specific item art
+            description: `A ${rarities[rarityIndex]} ${types[typeIndex]} from ${game.title}.`,
+            level: 1 + (i * 5),
+            power: 100 + (i * 50),
+            marketPrice: 100 + (i * 150),
+            demand: i % 3 === 0 ? "High" : "Normal"
+        };
+    });
+  };
+
+  // Group Games for Cross Interface
+  const crossData = useMemo(() => {
+    if (!allStoreGames.length) return [];
+
+    // 1. Group games by genre
+    const groups = {};
+    
+    allStoreGames.forEach(game => {
+        const genre = game.genre || 'Other';
+        
+        // Generate items for the game to check filters
+        const items = generateGameItems(game);
+        
+        // Apply Category Filters
+        // Filter Logic:
+        // - Category: 'weapon' -> checks item.type
+        // - Rarity: checks item.rarity
+        // - Price: checks item.marketPrice
+        
+        const filteredItems = items.filter(item => {
+            // Category Filter
+            if (filters.category !== 'all' && filters.category !== 'global') {
+                const cat = filters.category;
+                if (cat === 'weapon' && item.type !== 'Weapon') return false;
+                if (cat === 'armor' && item.type !== 'Armor') return false;
+                if (cat === 'consumable' && item.type !== 'Consumable') return false;
+                if (cat === 'material' && item.type !== 'Material') return false;
+                if (cat === 'magic' && item.type !== 'Ability') return false;
+                // Add other mappings as needed
+            }
+            
+            // Rarity Filter
+            if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
+            
+            // Price Filter
+            if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
+            
+            return true;
+        });
+
+        // Only include game if it has matching items (or no filters active)
+        // If filtering is active, we only want games that contain relevant items.
+        // If no specific item filters, show all games.
+        const hasMatchingItems = filteredItems.length > 0;
+        
+        if (hasMatchingItems) {
+            if (!groups[genre]) {
+                groups[genre] = {
+                    id: genre,
+                    label: genre,
+                    icon: genre === 'Action' ? Rocket : 
+                          genre === 'RPG' ? Shield : 
+                          genre === 'Sci-Fi' ? Zap : 
+                          genre === 'Fantasy' ? Sparkles : 
+                          genre === 'Shooter' ? Crosshair : Grid,
+                    games: []
+                };
+            }
+            // Store game with its filtered items
+            groups[genre].games.push({
+                ...game,
+                filteredItems: filteredItems
+            });
+        }
+    });
+
+    return Object.values(groups).sort((a, b) => a.label.localeCompare(b.label));
+  }, [allStoreGames, filters]);
 
   const getGameDetails = (gameName) => {
     return {
       items: [
         { id: 1, name: "Void Walker's Blade", type: "Weapon", rarity: "Legendary", level: 60, power: 850, marketPrice: 4500, demand: "High", description: "A blade forged from the essence of the void itself. Vibrates with dark energy." },
         { id: 2, name: "Cybernetic Core", type: "Material", rarity: "Epic", level: 1, power: 0, marketPrice: 1200, demand: "Medium", description: "Essential component for high-grade cyberware upgrades." },
-        { id: 3, name: "Ancient Scroll", type: "Consumable", rarity: "Rare", level: 1, power: 0, marketPrice: 350, demand: "Low", description: "Contains forgotten knowledge of the old world." },
-        { id: 4, name: "Steel Plated Armor", type: "Armor", rarity: "Uncommon", level: 25, power: 150, marketPrice: 80, demand: "Low", description: "Standard issue plating for frontline infantry." },
-        { id: 5, name: "Health Potion XL", type: "Consumable", rarity: "Common", level: 1, power: 0, marketPrice: 15, demand: "High", description: "Restores a large amount of health instantly." },
-        { id: 6, name: "Dragon Scale", type: "Material", rarity: "Legendary", level: 1, power: 0, marketPrice: 8000, demand: "Very High", description: "A pristine scale from an Elder Dragon." },
       ],
       currency: { name: "Gold", amount: 14520 }
     };
   };
-
-  const gamesList = useMemo(() => {
-    const games = {};
-    listings.forEach(listing => {
-      const game = listing.item.game;
-      if (!games[game]) {
-        games[game] = {
-          name: game,
-          count: 0,
-          image: listing.item.image
-        };
-      }
-      games[game].count++;
-    });
-    return Object.values(games);
-  }, [listings]);
-
-  // Group Listings for Cross Interface
-  const crossData = useMemo(() => {
-    const groups = {};
-    listings.forEach(listing => {
-        // Use listing.item.genre if available, otherwise map game to genre or default
-        const genre = listing.item.genre || 'Other'; 
-        if (!groups[genre]) {
-            groups[genre] = {
-                id: genre,
-                label: genre,
-                // Map genre to icon if possible, else default
-                icon: genre === 'Action' ? Rocket : 
-                      genre === 'RPG' ? Shield : 
-                      genre === 'Sci-Fi' ? Zap : 
-                      genre === 'Fantasy' ? Sparkles : 
-                      genre === 'Shooter' ? Crosshair : Grid,
-                games: {}
-            };
-        }
-        
-        const gameTitle = listing.item.game;
-        if (!groups[genre].games[gameTitle]) {
-            groups[genre].games[gameTitle] = {
-                id: gameTitle,
-                title: gameTitle,
-                image: listing.item.image, // Using item image as game proxy for now
-                listings: []
-            };
-        }
-        groups[genre].games[gameTitle].listings.push(listing);
-    });
-
-    return Object.values(groups).map(group => ({
-        ...group,
-        games: Object.values(group.games)
-    }));
-  }, [listings]);
 
   // Keyboard Navigation for Cross Interface
   useEffect(() => {
@@ -943,12 +1001,12 @@ export default function TradingPostContent() {
                           <button
                             onClick={() => {
                                 setSelectedListingGroup(null);
-                                setCrossViewLevel(1); // Go back to Idol view
+                                setCrossViewLevel(1); // Go back to Items view
                             }}
                             className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center justify-center gap-2"
                           >
                             <ChevronLeft className="w-4 h-4" />
-                            Back to Game
+                            Back to Items
                           </button>
                         </div>
                       </div>
