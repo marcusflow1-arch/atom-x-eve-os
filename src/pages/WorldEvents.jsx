@@ -12,17 +12,19 @@ import BattleModal from '../components/worldevents/BattleModal';
 
 // --- Custom Marker Icons ---
 const monsterIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3065/3065746.png',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-  popupAnchor: [0, -20]
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/1628/1628003.png', // More aggressive monster icon
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+  popupAnchor: [0, -24],
+  className: 'drop-shadow-lg filter hue-rotate-15'
 });
 
 const chestIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/4230/4230569.png',
-  iconSize: [35, 35],
-  iconAnchor: [17, 17],
-  popupAnchor: [0, -17]
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/9335/9335359.png', // Crystal/Mining icon style
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20],
+  className: 'drop-shadow-lg'
 });
 
 const playerIcon = new L.Icon({
