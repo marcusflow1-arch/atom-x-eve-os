@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Zap, Sword, Search, MessageSquare, UserPlus, Calendar, Clock, MapPin, Send, MoreVertical, Gift, Package } from 'lucide-react';
+import { X, Shield, Zap, Sword, Search, MessageSquare, UserPlus, Calendar, Clock, MapPin, Send, MoreVertical, Gift, Package, Trophy, Star, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- Shared Liquid Glass Container ---
-const GlassContainer = ({ children, title, onClose, className = "" }) => (
+const GlassContainer = ({ children, title, onClose, className = "", widthClass = "md:w-96" }) => (
   <motion.div
     initial={{ opacity: 0, y: 100, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: 100, scale: 0.95 }}
-    className={`fixed inset-x-4 bottom-24 top-24 md:inset-x-auto md:right-8 md:top-24 md:bottom-8 md:w-96 rounded-3xl overflow-hidden flex flex-col z-[1500] ${className}`}
+    className={`fixed inset-x-4 bottom-24 top-24 md:inset-x-auto md:right-8 md:top-24 md:bottom-8 ${widthClass} rounded-3xl overflow-hidden flex flex-col z-[1500] ${className}`}
     style={{
       background: 'rgba(30, 41, 59, 0.4)',
       backdropFilter: 'blur(20px) saturate(180%)',
@@ -194,34 +194,146 @@ export const FriendsOverlay = ({ onClose }) => {
 
 // --- Events Overlay ---
 export const EventsOverlay = ({ onClose }) => {
-  return (
-    <GlassContainer title="World Events" onClose={onClose}>
-      <ScrollArea className="h-full p-4">
-        <div className="space-y-4">
-          <div className="bg-gradient-to-br from-red-900/40 to-slate-900/40 rounded-xl p-4 border border-red-500/30">
-            <div className="flex justify-between items-start mb-2">
-              <Badge className="bg-red-500 text-white border-none">RAID BOSS</Badge>
-              <span className="text-red-300 text-xs font-mono flex items-center"><Clock className="w-3 h-3 mr-1" /> 2h 45m</span>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1">Inferno Dragon Attack</h3>
-            <p className="text-white/60 text-xs mb-3">A massive dragon has been spotted in Central Park. Gather your squad.</p>
-            <div className="flex items-center gap-2 text-xs text-white/40 mb-3">
-              <MapPin className="w-3 h-3" /> <span>Central Park, NYC</span>
-            </div>
-            <Button size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white border-none">Join Raid</Button>
-          </div>
+  const challenges = [
+    { id: 1, title: 'Dragon Slayer', desc: 'Defeat 5 Dragons', progress: 2, total: 5, reward: '1000 XP' },
+    { id: 2, title: 'Treasure Hunter', desc: 'Open 10 Rare Chests', progress: 7, total: 10, reward: '500 Gold' },
+    { id: 3, title: 'PVP Dominator', desc: 'Win 3 Duel Matches', progress: 1, total: 3, reward: 'Epic Title' },
+  ];
 
-          <div className="bg-gradient-to-br from-blue-900/40 to-slate-900/40 rounded-xl p-4 border border-blue-500/30">
-            <div className="flex justify-between items-start mb-2">
-              <Badge className="bg-blue-500 text-white border-none">EVENT</Badge>
-              <span className="text-blue-300 text-xs font-mono flex items-center"><Clock className="w-3 h-3 mr-1" /> 2d remaining</span>
-            </div>
-            <h3 className="text-lg font-bold text-white mb-1">Double XP Weekend</h3>
-            <p className="text-white/60 text-xs mb-3">Earn 2x XP from all monster battles and chest unlocks.</p>
-            <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white border-none">View Details</Button>
+  const leaderboard = [
+    { rank: 1, name: 'SlayerKing', score: 15420, avatar: '👑' },
+    { rank: 2, name: 'LunaFan99', score: 14200, avatar: '⚔️' },
+    { rank: 3, name: 'VoidWalker', score: 13850, avatar: '👻' },
+    { rank: 4, name: 'IronClad', score: 12100, avatar: '🛡️' },
+    { rank: 5, name: 'PixelMage', score: 11500, avatar: '✨' },
+  ];
+
+  return (
+    <GlassContainer title="World Hub" onClose={onClose} widthClass="md:w-[1100px] md:left-1/2 md:-translate-x-1/2">
+      <div className="grid grid-cols-3 h-full divide-x divide-white/10">
+        
+        {/* Left Column: Active Challenges */}
+        <div className="flex flex-col h-full bg-white/[0.02]">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-400" /> Challenges
+            </h3>
+            <Badge variant="outline" className="text-[10px] border-white/20 text-white/50">Daily</Badge>
           </div>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-3">
+              {challenges.map(c => (
+                <div key={c.id} className="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-colors">
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="text-sm font-bold text-white">{c.title}</h4>
+                    <span className="text-[10px] text-yellow-400 font-mono">{c.reward}</span>
+                  </div>
+                  <p className="text-xs text-white/50 mb-3">{c.desc}</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] text-white/40">
+                      <span>Progress</span>
+                      <span>{c.progress}/{c.total}</span>
+                    </div>
+                    <div className="h-1.5 bg-black/40 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-cyan-400" 
+                        style={{ width: `${(c.progress / c.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button size="sm" variant="ghost" className="w-full text-white/40 text-xs hover:text-white mt-2">
+                View All Challenges <ChevronRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
+
+        {/* Middle Column: World Events */}
+        <div className="flex flex-col h-full bg-white/[0.02]">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between">
+             <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-red-400" /> Active Events
+            </h3>
+            <div className="flex items-center gap-1 text-[10px] text-red-400 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span> LIVE
+            </div>
+          </div>
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-red-900/40 to-slate-900/40 rounded-xl p-4 border border-red-500/30 shadow-lg shadow-red-900/10">
+                <div className="flex justify-between items-start mb-2">
+                  <Badge className="bg-red-500 text-white border-none shadow-sm shadow-red-500/50">RAID BOSS</Badge>
+                  <span className="text-red-300 text-xs font-mono flex items-center bg-black/20 px-2 py-0.5 rounded"><Clock className="w-3 h-3 mr-1" /> 2h 45m</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-1">Inferno Dragon</h3>
+                <p className="text-white/60 text-xs mb-3">A massive dragon has been spotted in Central Park. Gather your squad and claim legendary loot.</p>
+                <div className="flex items-center gap-2 text-xs text-white/40 mb-3 bg-black/20 p-2 rounded">
+                  <MapPin className="w-3 h-3" /> <span>Central Park, NYC</span>
+                </div>
+                <Button size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20 font-bold tracking-wide">
+                  <Sword className="w-3 h-3 mr-2" /> Join Raid
+                </Button>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-900/40 to-slate-900/40 rounded-xl p-4 border border-blue-500/30">
+                <div className="flex justify-between items-start mb-2">
+                  <Badge className="bg-blue-500 text-white border-none">EVENT</Badge>
+                  <span className="text-blue-300 text-xs font-mono flex items-center"><Clock className="w-3 h-3 mr-1" /> 2d left</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-1">Double XP Weekend</h3>
+                <p className="text-white/60 text-xs mb-3">Earn 2x XP from all monster battles and chest unlocks this weekend.</p>
+                <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white border-none">View Details</Button>
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Right Column: Leaderboard */}
+        <div className="flex flex-col h-full bg-white/[0.02]">
+           <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider flex items-center gap-2">
+              <Star className="w-4 h-4 text-purple-400" /> Leaderboard
+            </h3>
+            <Badge variant="outline" className="text-[10px] border-white/20 text-white/50">Global</Badge>
+          </div>
+          <ScrollArea className="flex-1 p-0">
+            <div className="divide-y divide-white/5">
+              {leaderboard.map((player, idx) => (
+                <div key={player.rank} className="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
+                  <div className={`w-6 h-6 flex items-center justify-center text-sm font-bold rounded ${
+                    idx === 0 ? 'bg-yellow-500 text-black' : 
+                    idx === 1 ? 'bg-slate-300 text-black' : 
+                    idx === 2 ? 'bg-orange-700 text-white' : 'text-white/30'
+                  }`}>
+                    {player.rank}
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-lg">
+                    {player.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-white truncate">{player.name}</div>
+                    <div className="text-xs text-white/40">Level 42 • Warrior</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-mono text-cyan-400">{player.score.toLocaleString()}</div>
+                    <div className="text-[10px] text-white/20">PTS</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+           <div className="p-4 border-t border-white/5 bg-white/[0.02]">
+             <div className="flex items-center gap-3 opacity-60">
+                <div className="text-sm font-bold text-white/50">#142</div>
+                <div className="text-sm font-bold text-white">You</div>
+                <div className="ml-auto text-sm font-mono text-white/50">4,250 PTS</div>
+             </div>
+           </div>
+        </div>
+
+      </div>
     </GlassContainer>
   );
 };
