@@ -580,11 +580,47 @@ export default function MarketplaceContent() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input 
                   type="text" 
-                  placeholder="Search..." 
+                  placeholder={window.marketplaceListening ? "Listening..." : "Search..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-10 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition-all"
                 />
+                <button
+                  onClick={() => {
+                    // Simple inline speech recognition logic to avoid complex props passing from Store.js
+                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                        if (window.marketplaceRecognition && window.marketplaceListening) {
+                            window.marketplaceRecognition.stop();
+                            return;
+                        }
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        const recognition = new SpeechRecognition();
+                        recognition.lang = 'en-US';
+                        recognition.interimResults = false;
+                        recognition.onstart = () => {
+                            window.marketplaceListening = true;
+                            // Force re-render to show listening state (simplified)
+                            setSearchTerm(prev => prev); 
+                        };
+                        recognition.onend = () => {
+                            window.marketplaceListening = false;
+                            window.marketplaceRecognition = null;
+                            setSearchTerm(prev => prev);
+                        };
+                        recognition.onresult = (event) => {
+                            const transcript = event.results[0][0].transcript;
+                            setSearchTerm(transcript);
+                        };
+                        window.marketplaceRecognition = recognition;
+                        recognition.start();
+                    } else {
+                        alert("Voice search not supported in this browser.");
+                    }
+                  }}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors hover:bg-white/10 ${window.marketplaceListening ? 'text-red-400 animate-pulse' : 'text-white/40 hover:text-white'}`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                </button>
               </div>
             </div>
             <div className="flex items-center gap-3">

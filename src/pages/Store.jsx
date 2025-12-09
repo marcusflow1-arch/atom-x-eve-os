@@ -5,7 +5,7 @@ import {
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2, LayoutGrid
+    X, Mic, MicOff, Loader2, LayoutGrid, MessageSquare
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -256,6 +256,50 @@ Format your response as JSON:
   );
 };
 
+// --- Regular Voice Input Hook ---
+const useVoiceInput = (onResult) => {
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false; // Only final results for simple input
+            recognitionRef.current.lang = 'en-US';
+
+            recognitionRef.current.onresult = (event) => {
+                const result = event.results[0][0].transcript;
+                onResult(result);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onerror = (event) => {
+                console.error('Speech error:', event.error);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, [onResult]);
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+        } else {
+            recognitionRef.current?.start();
+            setIsListening(true);
+        }
+    };
+
+    return { isListening, toggleListening };
+};
+
+
 export default function Store() {
     const navigate = useNavigate();
     const [games, setGames] = useState([]);
@@ -268,11 +312,18 @@ export default function Store() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
+    const [showVoiceOptions, setShowVoiceOptions] = useState(false); // New state for voice dropdown
 
     // Navigation State
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
     const [activeGameIndex, setActiveGameIndex] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
+
+    // Regular Voice Input for Store
+    const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
+        setSearchTerm(text);
+        setShowVoiceOptions(false);
+    });
 
     // Initial Data Fetch
     useEffect(() => {
@@ -496,13 +547,13 @@ export default function Store() {
                 </div>
 
                 {/* Search Bar */}
-                <div className={`flex items-center gap-3 transition-opacity duration-300 ${storeMode === 'marketplace' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`flex items-center gap-3 transition-opacity duration-300 ${storeMode === 'marketplace' || storeMode === 'trading' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="relative">
                         <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 w-80 hover:bg-black/40 hover:border-white/20 transition-all focus-within:bg-black/50 focus-within:border-white/30 shadow-lg">
                             <Search className="w-4 h-4 text-white/50" />
                             <input 
                                 type="text" 
-                                placeholder="Search games..." 
+                                placeholder={isRegularVoiceListening ? "Listening..." : "Search games..."}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-full font-medium"
@@ -512,15 +563,63 @@ export default function Store() {
                                     <X className="w-3 h-3" />
                                 </button>
                             )}
-                            <button 
-                                onClick={() => setVoiceSearchOpen(!voiceSearchOpen)}
-                                className={`p-1 rounded-full transition-colors ${voiceSearchOpen ? 'bg-purple-500/50 text-white' : 'text-white/40 hover:text-white'}`}
-                            >
-                                <Mic className="w-3.5 h-3.5" />
-                            </button>
+                            
+                            {/* Voice Options Trigger */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowVoiceOptions(!showVoiceOptions)}
+                                    className={`p-1 rounded-full transition-colors ${voiceSearchOpen || isRegularVoiceListening ? 'bg-purple-500/50 text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    <Mic className="w-3.5 h-3.5" />
+                                </button>
+
+                                {/* Voice Options Dropdown */}
+                                <AnimatePresence>
+                                    {showVoiceOptions && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 backdrop-blur-xl"
+                                        >
+                                            <button 
+                                                onClick={() => {
+                                                    setVoiceSearchOpen(true);
+                                                    setShowVoiceOptions(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                                            >
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                                    <Sparkles className="w-4 h-4 text-white" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-medium text-white block">AI Search</span>
+                                                    <span className="text-[10px] text-white/50">Ask Sophie for ideas</span>
+                                                </div>
+                                            </button>
+                                            <div className="h-px bg-white/10" />
+                                            <button 
+                                                onClick={() => {
+                                                    toggleRegularVoice();
+                                                    setShowVoiceOptions(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                                            >
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isRegularVoiceListening ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`}>
+                                                    <Mic className="w-4 h-4 text-white" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-medium text-white block">Voice Search</span>
+                                                    <span className="text-[10px] text-white/50">Search by name</span>
+                                                </div>
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                         
-                        {/* Voice Search Popup */}
+                        {/* Voice Search Popup (Sophie) */}
                         <AnimatePresence>
                             {voiceSearchOpen && (
                                 <AIVoiceSearch 
@@ -868,14 +967,13 @@ export default function Store() {
                             </>
                         )}
                     </motion.div>
-                    )
                 ) : storeMode === 'marketplace' ? (
                     <motion.div
                         key="marketplace"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24" // Added top padding to account for fixed header
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
                         <MarketplaceContent />
                     </motion.div>
@@ -885,7 +983,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24"
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
                         <TradingPostContent />
                     </motion.div>
