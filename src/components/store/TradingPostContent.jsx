@@ -569,9 +569,51 @@ export default function TradingPostContent() {
                 <Search className="w-4 h-4 text-white/50" />
                 <input 
                   type="text" 
-                  placeholder="Search..." 
+                  id="trading-search-input"
+                  placeholder={window.tradingListening ? "Listening..." : "Search..."}
                   className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
                 />
+                <button
+                  onClick={() => {
+                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                        if (window.tradingRecognition && window.tradingListening) {
+                            window.tradingRecognition.stop();
+                            return;
+                        }
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        const recognition = new SpeechRecognition();
+                        recognition.lang = 'en-US';
+                        recognition.interimResults = false;
+                        recognition.onstart = () => {
+                            window.tradingListening = true;
+                            // Force update
+                            const input = document.getElementById('trading-search-input');
+                            if(input) input.placeholder = "Listening...";
+                        };
+                        recognition.onend = () => {
+                            window.tradingListening = false;
+                            window.tradingRecognition = null;
+                            const input = document.getElementById('trading-search-input');
+                            if(input) input.placeholder = "Search...";
+                        };
+                        recognition.onresult = (event) => {
+                            const transcript = event.results[0][0].transcript;
+                            const input = document.getElementById('trading-search-input');
+                            if(input) {
+                                input.value = transcript;
+                                // Trigger change event manually if needed by react state in future, for now just DOM update
+                            }
+                        };
+                        window.tradingRecognition = recognition;
+                        recognition.start();
+                    } else {
+                        alert("Voice search not supported");
+                    }
+                  }}
+                  className={`p-1 rounded-full transition-colors hover:bg-white/10 ${window.tradingListening ? 'text-purple-400 animate-pulse' : 'text-white/40 hover:text-white'}`}
+                >
+                    <Mic className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
