@@ -757,6 +757,7 @@ export default function Store() {
                             </div>
                         </motion.div>
                     ) : (
+                        // CROSS INTERFACE VIEW
                     <motion.div 
                         key="cross-interface"
                         className="w-full h-full relative"
@@ -967,6 +968,7 @@ export default function Store() {
                             </>
                         )}
                     </motion.div>
+                    ) // Closing viewMode check
                 ) : storeMode === 'marketplace' ? (
                     <motion.div
                         key="marketplace"
