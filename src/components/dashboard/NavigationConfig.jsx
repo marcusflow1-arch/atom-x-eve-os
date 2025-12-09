@@ -21,6 +21,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
 
     { name: 'Cross Menu', icon: Gamepad2, path: createPageUrl('CrossMenu') },
+    { name: 'Steam Library', icon: Layers, path: createPageUrl('SteamLibrary') },
 ];
 
 export const NAV_GROUPS = {

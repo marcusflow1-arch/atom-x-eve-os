@@ -431,6 +431,8 @@ function LayoutContent({ children, currentPageName }) {
              headerConfig.showModeToggle = true;
              headerConfig.showDock = true;
              headerConfig.showMenu = true;
+        } else if (p.includes('/steamlibrary')) {
+          headerConfig.hidden = true;
         } else if (p.includes('/store')) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
