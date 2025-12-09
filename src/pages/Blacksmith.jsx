@@ -514,7 +514,7 @@ export default function BlacksmithPage() {
         {/* Top Navigation Bar */}
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-8">
-            <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
+            <h1 className="ml-16 text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
               <Hammer className="w-8 h-8 fill-white" />
               BLACK FORGE
             </h1>

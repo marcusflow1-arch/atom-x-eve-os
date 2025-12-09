@@ -318,7 +318,7 @@ export default function Achievements() {
             
             {/* Header with Speaker Icon */}
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-2">
                 Achievements <Volume2 className="w-6 h-6 text-blue-400" />
               </h1>
             </div>
