@@ -454,15 +454,6 @@ export default function BlacksmithPage() {
   const handleCombine = (item) => console.log('Combining:', item.name);
   const handleSalvage = (item) => console.log('Salvaging:', item.name);
 
-  // Auto-select first item when game changes
-  useEffect(() => {
-    if (selectedGame && displayedItems.length > 0) {
-        if (!selectedItem || !displayedItems.find(i => i.id === selectedItem.id)) {
-            setSelectedItem(displayedItems[0]);
-        }
-    }
-  }, [selectedGame, displayedItems]);
-
   // Group games by genre for sidebar
   const gamesByGenre = useMemo(() => {
     const grouped = mockItems.reduce((acc, item) => {
@@ -490,6 +481,15 @@ export default function BlacksmithPage() {
     }
     return items;
   }, [categoryFilter, selectedGame, viewMode]);
+
+  // Auto-select first item when game changes
+  useEffect(() => {
+    if (selectedGame && displayedItems.length > 0) {
+        if (!selectedItem || !displayedItems.find(i => i.id === selectedItem.id)) {
+            setSelectedItem(displayedItems[0]);
+        }
+    }
+  }, [selectedGame, displayedItems]);
 
   return (
     <div className="h-screen w-full bg-[#0f172a] text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
