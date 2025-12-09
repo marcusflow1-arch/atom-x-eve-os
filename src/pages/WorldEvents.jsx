@@ -147,17 +147,61 @@ export default function WorldEvents() {
     { id: 'p2', name: 'LunaFan', lat: 40.7120, lng: -74.0055 },
   ]);
 
+  // Procedural Event Generation (Simulating MH Now density)
+  const generateProceduralEvents = (centerLat, centerLng) => {
+    const newEvents = [];
+    const radius = 0.005; // approx 500m
+    const count = 20; // Density
+
+    // Pseudo-random generator based on location to keep it deterministic-ish
+    const seed = Math.floor(centerLat * 1000) + Math.floor(centerLng * 1000);
+    
+    for (let i = 0; i < count; i++) {
+        // Use seed to make random-looking but stable offsets
+        const offsetLat = (Math.sin(seed + i) * radius * 0.8) + (Math.cos(i * 13) * 0.001);
+        const offsetLng = (Math.cos(seed + i * 2) * radius * 0.8) + (Math.sin(i * 7) * 0.001);
+        
+        const type = i % 3 === 0 ? 'Chest' : 'Monster';
+        const difficulty = i % 5 === 0 ? 'Hard' : (i % 2 === 0 ? 'Medium' : 'Easy');
+        
+        newEvents.push({
+            id: `proc_${seed}_${i}`,
+            type: type,
+            name: type === 'Monster' 
+                ? ['Rathalos', 'Diablos', 'Great Jagras', 'Pukei-Pukei', 'Anjanath'][i % 5] 
+                : ['Gathering Point', 'Bonepile', 'Mining Outcrop'][i % 3],
+            description: type === 'Monster' 
+                ? `A ${difficulty.toLowerCase()} threat level monster.` 
+                : 'Contains valuable crafting materials.',
+            latitude: centerLat + offsetLat,
+            longitude: centerLng + offsetLng,
+            level: Math.floor(Math.random() * 50) + 1,
+            difficulty: difficulty,
+            rewards: type === 'Monster' ? ['Monster Bone', 'Scale'] : ['Iron Ore', 'Herb']
+        });
+    }
+    return newEvents;
+  };
+
   useEffect(() => {
+    // Load initial events from DB and merge with procedural ones
     const loadEvents = async () => {
         try {
-            const data = await base44.entities.WorldEvent.list();
-            setEvents(data);
+            const dbData = await base44.entities.WorldEvent.list();
+            
+            // Generate local events around user
+            const localEvents = generateProceduralEvents(userLocation.lat, userLocation.lng);
+            
+            // Combine, preferring DB events if IDs clash (unlikely with prefix)
+            setEvents([...dbData, ...localEvents]);
         } catch (error) {
             console.error("Failed to load world events", error);
+            // Fallback to just procedural if DB fails
+            setEvents(generateProceduralEvents(userLocation.lat, userLocation.lng));
         }
     };
     loadEvents();
-  }, []);
+  }, [userLocation.lat, userLocation.lng]);
 
   // Real Geolocation Tracking
   useEffect(() => {
