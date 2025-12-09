@@ -13,6 +13,7 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
+import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 // BlacksmithGameSelect is replaced by the sidebar
 
 // --- Shiny Sidebar Box Component ---
@@ -801,6 +802,14 @@ export default function BlacksmithPage() {
         </div>
 
         {/* Modal removed - using inline detail view */}
+        <AnimatePresence>
+          {selectedItem && (
+            <CardEnhancementOverlay 
+              card={selectedItem} 
+              onClose={() => setSelectedItem(null)} 
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

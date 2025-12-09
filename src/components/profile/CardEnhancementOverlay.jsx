@@ -48,7 +48,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
       id: `related-${i}`,
       name: `${card?.series || 'Series'} Card ${i+1}`,
       rarity: ['Common', 'Rare', 'Epic'][Math.floor(Math.random() * 3)],
-      image: i % 2 === 0 ? card?.image : null
+      image: i % 2 === 0 ? (card?.image || card?.preview_image_url) : null
     }));
   });
 
