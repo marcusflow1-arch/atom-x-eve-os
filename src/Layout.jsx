@@ -440,11 +440,11 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/worldevents')) {
           headerConfig.hidden = true;
         } else if (p.includes('/library')) {
-          headerConfig.title = "Adam - Marcus | My Library";
+          headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/achievements')) {
-          headerConfig.title = "Adam - Marcus | Achievements";
+          headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/genremastery')) {
@@ -457,11 +457,11 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
         } else if (p.includes('/seasonalpass')) {
-          headerConfig.title = "Adam - Marcus | Seasonal Pass";
+          headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/blacksmith')) {
-          headerConfig.title = "Adam - Marcus | Blacksmith";
+          headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/tradingpost')) {
