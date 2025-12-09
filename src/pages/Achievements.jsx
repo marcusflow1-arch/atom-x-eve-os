@@ -316,10 +316,10 @@ export default function Achievements() {
           {/* Left Sidebar (Shiny Box) */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
             
-            {/* Header with Speaker Icon */}
+            {/* Header */}
             <div className="flex items-center gap-3">
-              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-2">
-                Achievements <Volume2 className="w-6 h-6 text-blue-400" />
+              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white">
+                Achievements
               </h1>
             </div>
 
