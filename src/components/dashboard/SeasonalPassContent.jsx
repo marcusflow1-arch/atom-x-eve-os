@@ -467,7 +467,7 @@ export default function SeasonalPassContent() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
+            <div className="ml-16">
               <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-700 bg-clip-text text-transparent">
                 Season 1: Awakening
               </h1>
