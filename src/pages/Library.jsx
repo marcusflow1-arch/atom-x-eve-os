@@ -651,6 +651,7 @@ export default function Library() {
   const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
+  const [activeDetailTab, setActiveDetailTab] = useState('overview');
   
   // Sidebar Filters
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -841,8 +842,8 @@ export default function Library() {
         {viewMode === 'grid' ? (
           <div className="flex h-full">
               {/* LEFT SIDEBAR - SHINY BOX */}
-              <div className="w-[300px] flex-shrink-0 h-full pr-6 overflow-y-auto custom-scrollbar hidden lg:block sticky top-0">
-                  <ShinySidebarBox className="p-6 h-full min-h-[80vh]">
+              <div className="w-[300px] flex-shrink-0 h-[calc(100vh-140px)] pr-6 overflow-y-auto custom-scrollbar hidden lg:block sticky top-24">
+                  <ShinySidebarBox className="p-6 min-h-full">
                       {/* Categories (Mapped to Tabs for Library) */}
                       <div className="mb-8">
                           <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -915,53 +916,188 @@ export default function Library() {
                   </ShinySidebarBox>
               </div>
 
-              {/* RIGHT CONTENT AREA */}
-              <div className="flex-1">
-                {/* Hero Section - Featured Game */}
-                {filteredGames.length > 0 && (
-                  <div className="mb-10">
-                    <LunaHeroCard 
-                      game={selectedGame || filteredGames[0]} 
-                      onPlay={handleLaunchGame}
-                      onSelect={setSelectedGame}
-                    />
-                  </div>
-                )}
-
-                {/* Games Grid by Genre */}
-                {(() => {
-                  const gamesByGenre = filteredGames.reduce((acc, game) => {
-                    const genre = game?.genre || 'Other';
-                    const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
-                    if (!acc[genreKey]) acc[genreKey] = [];
-                    acc[genreKey].push(game);
-                    return acc;
-                  }, {});
-
-                  return Object.entries(gamesByGenre).map(([genre, genreGames]) => {
-                    const GenreIcon = GENRE_ICONS[Object.keys(GENRE_ICONS).find(k => k.toLowerCase() === genre.toLowerCase())] || Gamepad2;
-                    return (
-                    <div key={genre} className="mb-12">
-                      <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-2">
-                        <GenreIcon className="w-5 h-5 text-blue-400" />
-                        <h2 className="text-lg font-bold text-white uppercase tracking-wider">{genre}</h2>
-                        <span className="text-white/20 text-sm ml-auto">{genreGames.length} titles</span>
+              {/* RIGHT CONTENT AREA - GAME DETAILS */}
+              <div className="flex-1 h-[calc(100vh-140px)] flex flex-col overflow-hidden">
+                {selectedGame ? (
+                  <>
+                    {/* Game Header (No Box) */}
+                    <div className="mb-8">
+                      <div className="flex items-end gap-6 mb-6">
+                         <div className="w-32 h-40 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
+                           <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+                         </div>
+                         <div className="flex-1">
+                           <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
+                           <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
+                           <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
+                             <div className="flex items-center gap-2">
+                               <Clock className="w-4 h-4 text-blue-400" />
+                               <span>12.5h played</span>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <Trophy className="w-4 h-4 text-yellow-400" />
+                               <span>8/15 achievements</span>
+                             </div>
+                           </div>
+                           <div className="flex gap-3">
+                             <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
+                               <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                             </Button>
+                             <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                               <Radio className="w-4 h-4 mr-2" /> Stream
+                             </Button>
+                           </div>
+                         </div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-                        {genreGames.map((game, idx) => (
-                          <LunaGameCard
-                            key={game.id}
-                            game={game}
-                            index={idx}
-                            isStreaming={game.id === streamingGameId}
-                            onSelect={setSelectedGame}
-                            onPlay={handleLaunchGame}
-                          />
-                        ))}
+
+                      {/* Clean Navigation Line */}
+                      <div className="flex items-center gap-8 border-b border-white/10">
+                        {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements'].map((tab) => {
+                          const id = tab.toLowerCase();
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => setActiveDetailTab(id)}
+                              className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
+                                activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
+                              }`}
+                            >
+                              {tab}
+                              {activeDetailTab === id && (
+                                <motion.div 
+                                  layoutId="activeTabLine"
+                                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                                />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-                  )});
-                })()}
+
+                    {/* Content Area (Scrollable) */}
+                    <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                      <AnimatePresence mode="wait">
+                        {activeDetailTab === 'overview' && (
+                          <motion.div 
+                            key="overview"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-8"
+                          >
+                             <div className="grid grid-cols-3 gap-6">
+                                <div className="col-span-2 space-y-6">
+                                  <div>
+                                    <h3 className="text-lg font-bold text-white mb-3">About</h3>
+                                    <p className="text-white/60 leading-relaxed text-sm">
+                                      {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
+                                    </p>
+                                  </div>
+                                  
+                                  {/* Trailer */}
+                                  <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-video relative group cursor-pointer">
+                                     <img src={selectedGame.banner || selectedGame.cover_image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
+                                     <div className="absolute inset-0 flex items-center justify-center">
+                                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                                          <Play className="w-6 h-6 fill-white text-white" />
+                                       </div>
+                                     </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                      <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Game Stats</h4>
+                                      <div className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-sm text-white/60">Last Played</span>
+                                          <span className="text-sm text-white font-medium">Today</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-sm text-white/60">Time Played</span>
+                                          <span className="text-sm text-white font-medium">12.5 hrs</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-sm text-white/60">Achievements</span>
+                                          <span className="text-sm text-white font-medium">8 / 15</span>
+                                        </div>
+                                      </div>
+                                   </div>
+                                   
+                                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                      <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Friends Playing</h4>
+                                      <div className="flex -space-x-2">
+                                        {[1,2,3].map(i => (
+                                          <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs font-bold">
+                                            {String.fromCharCode(64+i)}
+                                          </div>
+                                        ))}
+                                      </div>
+                                   </div>
+                                </div>
+                             </div>
+                          </motion.div>
+                        )}
+
+                        {activeDetailTab === 'discussion' && (
+                          <motion.div key="discussion" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                             <div className="flex justify-between items-center">
+                               <h3 className="font-bold text-lg">Community Threads</h3>
+                               <Button size="sm" variant="secondary">New Topic</Button>
+                             </div>
+                             {[1,2,3,4].map(i => (
+                               <div key={i} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 flex gap-4">
+                                  <div className="flex-1">
+                                     <h4 className="text-white font-medium mb-1">Anyone found the hidden chest in Level {i}?</h4>
+                                     <p className="text-white/40 text-xs">Posted by User{i} • 2 hours ago</p>
+                                  </div>
+                                  <div className="text-right">
+                                     <div className="text-white font-bold">{10 * i}</div>
+                                     <div className="text-white/40 text-xs">Replies</div>
+                                  </div>
+                               </div>
+                             ))}
+                          </motion.div>
+                        )}
+                        
+                        {activeDetailTab === 'achievements' && (
+                          <motion.div key="achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-4">
+                             {[
+                                { title: 'First Blood', desc: 'Get your first kill', xp: 500, unlocked: true },
+                                { title: 'Master Explorer', desc: 'Discover all locations', xp: 1000, unlocked: false },
+                                { title: 'Speed Demon', desc: 'Complete level 1 in under 5 mins', xp: 750, unlocked: true },
+                                { title: 'Collector', desc: 'Find all hidden items', xp: 2000, unlocked: false },
+                             ].map((ach, i) => (
+                                <div key={i} className={`p-4 rounded-xl border ${ach.unlocked ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5 border-white/10'} flex items-center gap-4`}>
+                                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${ach.unlocked ? 'bg-blue-500/20' : 'bg-white/5 grayscale'}`}>
+                                      🏆
+                                   </div>
+                                   <div>
+                                      <h4 className={`font-bold ${ach.unlocked ? 'text-white' : 'text-white/50'}`}>{ach.title}</h4>
+                                      <p className="text-xs text-white/40">{ach.desc}</p>
+                                   </div>
+                                   <div className="ml-auto text-xs font-bold text-white/30">{ach.xp} XP</div>
+                                </div>
+                             ))}
+                          </motion.div>
+                        )}
+
+                        {['streamers', 'guide', 'support'].includes(activeDetailTab) && (
+                          <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
+                             <Bot className="w-12 h-12 mb-4 opacity-50" />
+                             <p>Content for {activeDetailTab} coming soon.</p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-white/30">
+                    <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
+                    <p>Select a game from the library</p>
+                  </div>
+                )}
               </div>
           </div>
         ) : (
