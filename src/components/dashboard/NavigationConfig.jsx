@@ -2,7 +2,7 @@ import {
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -15,6 +15,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
+    { name: 'World Events', icon: Globe, path: createPageUrl('WorldEvents') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
