@@ -556,8 +556,8 @@ export default function Store() {
     }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode]);
 
     // Active Item Helpers
-    const activeCategory = genreData[activeGenreIndex];
-    const activeGame = activeCategory?.items[activeGameIndex];
+    const currentNavGenre = genreData[activeGenreIndex];
+    const activeGame = currentNavGenre?.items[activeGameIndex];
 
     // Constants for positioning
     const ITEM_HEIGHT = 80; // height of genre item
@@ -1027,12 +1027,12 @@ export default function Store() {
                                     <p className="text-white/50 tracking-widest uppercase text-xs">Loading Store...</p>
                                 </div>
                             </div>
-                        ) : !activeCategory ? null : (
+                        ) : !currentNavGenre ? null : (
                             <>
                                 {/* Dynamic Background */}
                                 <AnimatePresence mode="wait">
                                     <motion.div 
-                                        key={activeGame?.id || activeCategory.id}
+                                        key={activeGame?.id || currentNavGenre?.id}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
@@ -1071,7 +1071,7 @@ export default function Store() {
                                             <span>Store</span>
                                         </div>
                                         <ChevronRight className="w-4 h-4" />
-                                        <span className="text-white">{activeCategory.label}</span>
+                                        <span className="text-white">{currentNavGenre.label}</span>
                                         
                                         {/* Classic UI Toggle Button */}
                                         <button 
@@ -1136,7 +1136,7 @@ export default function Store() {
                                             }}
                                             transition={{ type: "spring", stiffness: 250, damping: 25 }}
                                         >
-                                            {activeCategory.items.map((game, idx) => {
+                                            {currentNavGenre.items.map((game, idx) => {
                                                 const isActive = idx === activeGameIndex;
                                                 
                                                 return (
