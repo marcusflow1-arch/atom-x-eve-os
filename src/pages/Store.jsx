@@ -5,7 +5,7 @@ import {
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2
+    X, Mic, MicOff, Loader2, LayoutGrid
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -264,6 +264,7 @@ export default function Store() {
     
     // Store Mode State
     const [storeMode, setStoreMode] = useState('store'); // 'store', 'marketplace', 'trading'
+    const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
@@ -453,7 +454,7 @@ export default function Store() {
 
                     {/* Title */}
                     <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                        AdamXEStore
+                        Atom X Eve Store
                     </span>
 
                     {/* Divider */}
@@ -584,6 +585,79 @@ export default function Store() {
             {/* MAIN CONTENT AREA */}
             <AnimatePresence mode="wait">
                 {storeMode === 'store' ? (
+                    viewMode === 'classic' ? (
+                         // CLASSIC GRID VIEW
+                        <motion.div
+                            key="classic-store"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="w-full h-full overflow-y-auto pt-24 pb-12 px-8 bg-slate-950"
+                        >
+                            <div className="max-w-[1600px] mx-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                                        <LayoutGrid className="w-6 h-6 text-blue-400" />
+                                        Game Catalog
+                                    </h2>
+                                    
+                                    <button 
+                                        onClick={() => setViewMode('cross')}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium text-white/80 hover:text-white"
+                                    >
+                                        <Gamepad2 className="w-4 h-4" />
+                                        Switch to Cross Interface
+                                    </button>
+                                </div>
+
+                                <div className="space-y-12">
+                                    {genreData.map((genre) => (
+                                        <div key={genre.id} className="space-y-4">
+                                            <div className="flex items-center gap-3 border-b border-white/10 pb-2">
+                                                <genre.icon className="w-5 h-5 text-blue-400" />
+                                                <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                                                {genre.items.map((game) => (
+                                                    <motion.div
+                                                        key={game.id}
+                                                        whileHover={{ y: -5, scale: 1.02 }}
+                                                        className="group relative aspect-[3/4] bg-slate-900 rounded-xl overflow-hidden border border-white/10 cursor-pointer shadow-lg hover:shadow-blue-500/10 hover:border-blue-500/30 transition-all"
+                                                        onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                                                    >
+                                                        <img 
+                                                            src={game.cover_image || game.image} 
+                                                            alt={game.title} 
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                                                        
+                                                        <div className="absolute top-2 right-2">
+                                                            <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
+                                                                ${game.price}
+                                                            </Badge>
+                                                        </div>
+
+                                                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                            <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
+                                                            <div className="flex items-center justify-between text-xs text-white/50">
+                                                                <span>{game.genre}</span>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                                                    <span>{game.rating || 4.5}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : (
                     <motion.div 
                         key="cross-interface"
                         className="w-full h-full relative"
@@ -637,13 +711,22 @@ export default function Store() {
                                 <div className="relative z-10 w-full h-full pt-20"> {/* pt-20 for header space */}
                                     
                                     {/* Breadcrumb moved slightly down */}
-                                    <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase">
+                                    <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
                                         <div className="flex items-center gap-2">
                                             <Gamepad2 className="w-4 h-4" />
                                             <span>Store</span>
                                         </div>
                                         <ChevronRight className="w-4 h-4" />
                                         <span className="text-white">{activeCategory.label}</span>
+                                        
+                                        {/* Classic UI Toggle Button */}
+                                        <button 
+                                            onClick={() => setViewMode('classic')}
+                                            className="ml-2 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all group"
+                                            title="Switch to Classic Grid View"
+                                        >
+                                            <LayoutGrid className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
+                                        </button>
                                     </div>
 
                                     {/* VERTICAL AXIS (Genres) */}
