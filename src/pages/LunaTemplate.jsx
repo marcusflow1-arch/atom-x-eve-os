@@ -362,7 +362,7 @@ export default function LunaTemplate() {
 
         {/* Bottom Dock Menu */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-end justify-center gap-6 pointer-events-auto pb-4 overflow-x-auto w-full px-8 no-scrollbar">
-          {ORBITAL_ITEMS.filter(item => ['home', 'story', 'battle', 'skill-tree'].includes(item.id)).map((item) => {
+          {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
             const Icon = item.icon;
             
             return (
@@ -828,8 +828,30 @@ export default function LunaTemplate() {
                     <X className="w-4 h-4 text-white/60" />
                   </button>
               </div>
-              {/* Blank Content Area */}
-              <div className="flex-1"></div>
+              {/* Menu Content Area */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree'].includes(item.id)).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        setActiveDrawer(item);
+                      }}
+                      className="w-full p-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 transition-all group flex items-center gap-4 hover:scale-105"
+                    >
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-white font-bold text-lg">{item.label}</h3>
+                        <p className="text-white/40 text-xs">{item.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
           </>
         )}
