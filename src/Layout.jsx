@@ -437,6 +437,8 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
           headerConfig.hidden = true; // Hide everything for clan page
+        } else if (p.includes('/worldevents')) {
+          headerConfig.hidden = true;
         } else if (p.includes('/library')) {
           headerConfig.title = "Adam - Marcus | My Library";
           headerConfig.showLevel = false;

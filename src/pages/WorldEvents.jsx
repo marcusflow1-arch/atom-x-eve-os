@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { 
   Users, Filter, X, Crosshair, Backpack, MessageSquare, Calendar, Gift, Sword
@@ -9,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 import L from 'leaflet';
 import { InventoryOverlay, LoadoutOverlay, MessagesOverlay, FriendsOverlay, EventsOverlay } from '../components/worldevents/WorldEventOverlays';
 import BattleModal from '../components/worldevents/BattleModal';
+import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 
 // --- Custom Marker Icons ---
 const monsterIcon = new L.Icon({
@@ -140,6 +142,7 @@ export default function WorldEvents() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Mock Players moving
   const [otherPlayers, setOtherPlayers] = useState([
@@ -314,21 +317,91 @@ export default function WorldEvents() {
         </MapContainer>
 
         {/* UI Overlay - Top Bar */}
-        <div className="absolute top-0 left-0 right-0 p-6 z-[1000] flex justify-between items-start pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 p-4 z-[1000] flex justify-between items-center pointer-events-none">
             <div className="pointer-events-auto flex items-center gap-4">
-                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-2">
+                {/* Menu Button */}
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  className="w-10 h-10 rounded-xl bg-black/40 backdrop-blur-md hover:bg-white/10 flex items-center justify-center transition-all border border-white/10"
+                >
+                  <div className="flex flex-col gap-[3px]">
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                  </div>
+                </button>
+
+                {/* Title */}
+                <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+                    <span className="text-white font-bold text-sm">World Events</span>
+                </div>
+
+                {/* Discord */}
+                <a
+                  href="https://discord.gg/psyA8Qwm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-medium transition-all bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.46 13.46 0 0 0-1.044 2.149 18.257 18.257 0 0 0-4.606 0 13.623 13.623 0 0 0-1.048-2.149.074.074 0 0 0-.079-.037C6.88 3.323 5.16 3.864 3.682 4.37a.069.069 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.118.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107 14.282 14.282 0 0 0 1.226 1.994.076.076 0 0 0 .084.028 19.883 19.883 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/>
+                  </svg>
+                </a>
+
+                {/* GPS Indicator (Moved Here) */}
+                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-2 flex items-center gap-2">
                      <div className={`w-2 h-2 rounded-full ${permissionGranted ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                     <span className="text-white text-sm font-bold tracking-wide">{permissionGranted ? 'LIVE TRACKING' : 'GPS OFF'}</span>
-                 </div>
+                     <span className="text-white text-xs font-bold tracking-wide">{permissionGranted ? 'LIVE' : 'OFF'}</span>
+                </div>
             </div>
             
             <button 
                 onClick={() => setShowFilters(!showFilters)}
-                className="pointer-events-auto w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                className="pointer-events-auto w-10 h-10 rounded-xl bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
             >
                 {showFilters ? <X className="w-5 h-5" /> : <Filter className="w-5 h-5" />}
             </button>
         </div>
+
+        {/* App Drawer Overlay */}
+        <AnimatePresence>
+            {drawerOpen && (
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000]"
+                        onClick={() => setDrawerOpen(false)}
+                    />
+                    <motion.div
+                        initial={{ x: -300, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -300, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed top-0 left-0 bottom-0 w-72 bg-slate-900/90 backdrop-blur-3xl border-r border-white/10 z-[2001] p-6 shadow-2xl"
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider">Navigation</h2>
+                            <button onClick={() => setDrawerOpen(false)} className="text-white/40 hover:text-white"><X className="w-5 h-5"/></button>
+                        </div>
+                        <div className="space-y-1">
+                            {ALL_NAV_ITEMS.map((page) => (
+                                <Link
+                                    key={page.name}
+                                    to={page.path}
+                                    onClick={() => setDrawerOpen(false)}
+                                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-left"
+                                >
+                                    <page.icon className="w-5 h-5" />
+                                    <span className="font-medium">{page.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
 
         <AnimatePresence>
             {showFilters && <FilterOverlay filters={filters} toggleFilter={toggleFilter} />}
