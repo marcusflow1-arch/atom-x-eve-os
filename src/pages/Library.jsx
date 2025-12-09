@@ -803,7 +803,8 @@ export default function Library() {
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs (List View Only) */}
+        {viewMode === 'list' && (
         <div className="flex items-center gap-6 mb-8">
           {['all', 'installed', 'favorites'].map(tab => (
             <button
@@ -825,52 +826,150 @@ export default function Library() {
             </button>
           ))}
         </div>
+        )}
 
         {viewMode === 'grid' ? (
-          <>
-            {/* Hero Section - Featured Game */}
-            {filteredGames.length > 0 && (
-              <div className="mb-10">
-                <LunaHeroCard 
-                  game={selectedGame || filteredGames[0]} 
-                  onPlay={handleLaunchGame}
-                  onSelect={setSelectedGame}
-                />
+          <div className="flex h-full">
+              {/* LEFT SIDEBAR - SHINY BOX */}
+              <div className="w-[300px] flex-shrink-0 h-full pr-6 overflow-y-auto custom-scrollbar hidden lg:block sticky top-0">
+                  <ShinySidebarBox className="p-6 h-full min-h-[80vh]">
+                      {/* Categories (Mapped to Tabs for Library) */}
+                      <div className="mb-8">
+                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                              <LayoutGrid className="w-3 h-3" /> Library
+                          </h3>
+                          <div className="space-y-1">
+                              {['all', 'installed', 'favorites'].map((item) => (
+                                  <button 
+                                      key={item}
+                                      onClick={() => setActiveTab(item)}
+                                      className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex items-center justify-between group capitalize ${
+                                          activeTab === item ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                      }`}
+                                  >
+                                      <span>{item} Games</span>
+                                      {activeTab === item && <ChevronRight className="w-3 h-3" />}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+
+                      <div className="h-px bg-white/10 mb-8" />
+
+                      {/* Genre Filters */}
+                      <div className="mb-8">
+                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Genre</h3>
+                          <div className="space-y-3">
+                              {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation'].map((g) => (
+                                  <label key={g} className="flex items-center gap-3 cursor-pointer group">
+                                      <Checkbox 
+                                          className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 rounded" 
+                                          checked={selectedGenres.includes(g)}
+                                          onCheckedChange={() => {
+                                              if (selectedGenres.includes(g)) setSelectedGenres(selectedGenres.filter(x => x !== g));
+                                              else setSelectedGenres([...selectedGenres, g]);
+                                          }}
+                                      />
+                                      <span className="text-sm text-slate-400 group-hover:text-white transition-colors">{g}</span>
+                                  </label>
+                              ))}
+                          </div>
+                      </div>
+
+                      <div className="h-px bg-white/10 mb-8" />
+
+                      {/* Price Range (Visual Only) */}
+                      <div className="mb-8 opacity-50 pointer-events-none">
+                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Price Range</h3>
+                          <Slider 
+                              defaultValue={[0, 100]} 
+                              max={100} 
+                              step={1} 
+                              value={priceRange}
+                              onValueChange={setPriceRange}
+                              className="mb-3"
+                          />
+                          <div className="flex items-center justify-between text-xs text-white/60 font-mono">
+                              <span>Owned</span>
+                              <span>Games</span>
+                          </div>
+                      </div>
+
+                      {/* Customer Rating */}
+                      <div className="mb-6">
+                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Rating</h3>
+                          <div className="space-y-2">
+                              {[4, 3, 2, 1].map((rating) => (
+                                  <button 
+                                      key={rating} 
+                                      onClick={() => setMinRating(rating === minRating ? 0 : rating)}
+                                      className={`flex items-center gap-2 w-full text-sm ${minRating === rating ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                                  >
+                                      <div className="flex">
+                                          {[...Array(5)].map((_, i) => (
+                                              <Star 
+                                                  key={i} 
+                                                  className={`w-3.5 h-3.5 ${i < rating ? 'text-yellow-500 fill-current' : 'text-slate-700'}`} 
+                                              />
+                                          ))}
+                                      </div>
+                                      <span className="text-xs">& Up</span>
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+                  </ShinySidebarBox>
               </div>
-            )}
 
-            {/* Games Grid by Genre */}
-            {(() => {
-              const gamesByGenre = filteredGames.reduce((acc, game) => {
-                const genre = game?.genre || 'Other';
-                const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
-                if (!acc[genreKey]) acc[genreKey] = [];
-                acc[genreKey].push(game);
-                return acc;
-              }, {});
+              {/* RIGHT CONTENT AREA */}
+              <div className="flex-1">
+                {/* Hero Section - Featured Game */}
+                {filteredGames.length > 0 && (
+                  <div className="mb-10">
+                    <LunaHeroCard 
+                      game={selectedGame || filteredGames[0]} 
+                      onPlay={handleLaunchGame}
+                      onSelect={setSelectedGame}
+                    />
+                  </div>
+                )}
 
-              return Object.entries(gamesByGenre).map(([genre, genreGames]) => (
-                <div key={genre} className="mb-12">
-                  <div className="flex items-center gap-3 mb-6">
-                    <h2 className="text-xl font-bold text-white">{genre}</h2>
-                    <span className="text-white/30 text-sm">({genreGames.length})</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-                    {genreGames.map((game, idx) => (
-                      <LunaGameCard
-                        key={game.id}
-                        game={game}
-                        index={idx}
-                        isStreaming={game.id === streamingGameId}
-                        onSelect={setSelectedGame}
-                        onPlay={handleLaunchGame}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ));
-            })()}
-          </>
+                {/* Games Grid by Genre */}
+                {(() => {
+                  const gamesByGenre = filteredGames.reduce((acc, game) => {
+                    const genre = game?.genre || 'Other';
+                    const genreKey = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+                    if (!acc[genreKey]) acc[genreKey] = [];
+                    acc[genreKey].push(game);
+                    return acc;
+                  }, {});
+
+                  return Object.entries(gamesByGenre).map(([genre, genreGames]) => {
+                    const GenreIcon = GENRE_ICONS[Object.keys(GENRE_ICONS).find(k => k.toLowerCase() === genre.toLowerCase())] || Gamepad2;
+                    return (
+                    <div key={genre} className="mb-12">
+                      <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-2">
+                        <GenreIcon className="w-5 h-5 text-blue-400" />
+                        <h2 className="text-lg font-bold text-white uppercase tracking-wider">{genre}</h2>
+                        <span className="text-white/20 text-sm ml-auto">{genreGames.length} titles</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                        {genreGames.map((game, idx) => (
+                          <LunaGameCard
+                            key={game.id}
+                            game={game}
+                            index={idx}
+                            isStreaming={game.id === streamingGameId}
+                            onSelect={setSelectedGame}
+                            onPlay={handleLaunchGame}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )});
+                })()}
+              </div>
+          </div>
         ) : (
           /* List View */
           <div className="flex gap-6">
