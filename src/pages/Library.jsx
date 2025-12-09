@@ -876,48 +876,7 @@ export default function Library() {
                           </div>
                       </div>
 
-                      <div className="h-px bg-white/10 mb-8" />
 
-                      {/* Price Range (Visual Only) */}
-                      <div className="mb-8 opacity-50 pointer-events-none">
-                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Price Range</h3>
-                          <Slider 
-                              defaultValue={[0, 100]} 
-                              max={100} 
-                              step={1} 
-                              value={priceRange}
-                              onValueChange={setPriceRange}
-                              className="mb-3"
-                          />
-                          <div className="flex items-center justify-between text-xs text-white/60 font-mono">
-                              <span>Owned</span>
-                              <span>Games</span>
-                          </div>
-                      </div>
-
-                      {/* Customer Rating */}
-                      <div className="mb-6">
-                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Rating</h3>
-                          <div className="space-y-2">
-                              {[4, 3, 2, 1].map((rating) => (
-                                  <button 
-                                      key={rating} 
-                                      onClick={() => setMinRating(rating === minRating ? 0 : rating)}
-                                      className={`flex items-center gap-2 w-full text-sm ${minRating === rating ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                                  >
-                                      <div className="flex">
-                                          {[...Array(5)].map((_, i) => (
-                                              <Star 
-                                                  key={i} 
-                                                  className={`w-3.5 h-3.5 ${i < rating ? 'text-yellow-500 fill-current' : 'text-slate-700'}`} 
-                                              />
-                                          ))}
-                                      </div>
-                                      <span className="text-xs">& Up</span>
-                                  </button>
-                              ))}
-                          </div>
-                      </div>
                   </ShinySidebarBox>
               </div>
 
