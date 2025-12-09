@@ -313,58 +313,113 @@ export default function Store() {
         }));
     }, [games, loading]);
 
-    // Keyboard Navigation (Only when storeMode is 'store')
+    // Navigation Logic (Keyboard + Wheel)
     useEffect(() => {
         if (storeMode !== 'store') return;
 
+        // --- Keyboard Handler ---
         const handleKeyDown = (e) => {
             if (loading || genreData.length === 0 || isNavigating) return;
 
-            switch (e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    if (activeGenreIndex > 0) {
-                        setActiveGenreIndex(prev => prev - 1);
-                        setActiveGameIndex(0);
+            const key = e.key.toLowerCase();
+
+            // Up: Genre Previous
+            if (key === 'arrowup' || key === 'w') {
+                e.preventDefault();
+                if (activeGenreIndex > 0) {
+                    setActiveGenreIndex(prev => prev - 1);
+                    setActiveGameIndex(0);
+                }
+            }
+            // Down: Genre Next
+            else if (key === 'arrowdown' || key === 's') {
+                e.preventDefault();
+                if (activeGenreIndex < genreData.length - 1) {
+                    setActiveGenreIndex(prev => prev + 1);
+                    setActiveGameIndex(0);
+                }
+            }
+            // Left: Game Previous
+            else if (key === 'arrowleft' || key === 'a') {
+                e.preventDefault();
+                if (activeGameIndex > 0) {
+                    setActiveGameIndex(prev => prev - 1);
+                }
+            }
+            // Right: Game Next
+            else if (key === 'arrowright' || key === 'd') {
+                e.preventDefault();
+                if (activeGameIndex < genreData[activeGenreIndex].items.length - 1) {
+                    setActiveGameIndex(prev => prev + 1);
+                }
+            }
+            // Enter: Select
+            else if (key === 'enter') {
+                e.preventDefault();
+                const game = genreData[activeGenreIndex].items[activeGameIndex];
+                if (game) {
+                    setIsNavigating(true);
+                    setTimeout(() => {
+                        navigate(createPageUrl(`GameDetail?id=${game.id}`));
+                        setIsNavigating(false);
+                    }, 300);
+                }
+            }
+        };
+
+        // --- Wheel Handler ---
+        let lastWheelTime = 0;
+        const WHEEL_COOLDOWN = 150; // ms to prevent rapid scrolling
+
+        const handleWheel = (e) => {
+            if (loading || genreData.length === 0 || isNavigating) return;
+
+            const now = Date.now();
+            if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+            // Prioritize horizontal scrolling if shift is held or if deltaX is dominant
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
+                // Horizontal (Games)
+                if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+                    // Right
+                     if (activeGameIndex < genreData[activeGenreIndex].items.length - 1) {
+                        setActiveGameIndex(prev => prev + 1);
+                        lastWheelTime = now;
                     }
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
+                } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
+                    // Left
+                    if (activeGameIndex > 0) {
+                        setActiveGameIndex(prev => prev - 1);
+                        lastWheelTime = now;
+                    }
+                }
+            } else {
+                // Vertical (Genres)
+                if (e.deltaY > 0) {
+                    // Down
                     if (activeGenreIndex < genreData.length - 1) {
                         setActiveGenreIndex(prev => prev + 1);
                         setActiveGameIndex(0);
+                        lastWheelTime = now;
                     }
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    if (activeGameIndex > 0) {
-                        setActiveGameIndex(prev => prev - 1);
+                } else if (e.deltaY < 0) {
+                    // Up
+                    if (activeGenreIndex > 0) {
+                        setActiveGenreIndex(prev => prev - 1);
+                        setActiveGameIndex(0);
+                        lastWheelTime = now;
                     }
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    if (activeGameIndex < genreData[activeGenreIndex].items.length - 1) {
-                        setActiveGameIndex(prev => prev + 1);
-                    }
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    const game = genreData[activeGenreIndex].items[activeGameIndex];
-                    if (game) {
-                        setIsNavigating(true);
-                        setTimeout(() => {
-                            navigate(createPageUrl(`GameDetail?id=${game.id}`));
-                            setIsNavigating(false);
-                        }, 300);
-                    }
-                    break;
-                default:
-                    break;
+                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('wheel', handleWheel, { passive: false });
+        
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('wheel', handleWheel);
+        };
     }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode]);
 
     // Active Item Helpers
