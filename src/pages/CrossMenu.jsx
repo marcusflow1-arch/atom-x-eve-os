@@ -5,7 +5,7 @@ import {
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target, Star, Monitor, Zap, Disc
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Star, Monitor, Zap, Disc, Shield
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
