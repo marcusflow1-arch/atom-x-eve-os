@@ -363,11 +363,6 @@ export default function CardEnhancementOverlay({ card, onClose }) {
                     <Button disabled={!fusionMaterial} className="bg-blue-600 hover:bg-blue-700 w-full max-w-sm h-12 text-lg">Initiate Fusion</Button>
                  </div>
               </motion.div>
-            ) : (
-              /* CRAFT VIEW Placeholder */
-              <motion.div key="craft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex items-center justify-center text-white/30">
-                 Crafting feature coming soon...
-              </motion.div>
             ) : selectedAction === 'score' ? (
               /* SCORE VIEW */
               <motion.div key="score" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
@@ -384,7 +379,12 @@ export default function CardEnhancementOverlay({ card, onClose }) {
                   </div>
                 </div>
               </motion.div>
-            ) : null}
+            ) : (
+              /* CRAFT VIEW Placeholder */
+              <motion.div key="craft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex items-center justify-center text-white/30">
+                 Crafting feature coming soon...
+              </motion.div>
+            )}
           </AnimatePresence>
         </motion.div>
       </div>
