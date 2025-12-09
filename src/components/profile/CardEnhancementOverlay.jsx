@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, Layers, Plus, GitBranch, Hexagon, ArrowRight } from 'lucide-react';
+import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, Layers, Plus, GitBranch, Hexagon, ArrowRight, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
