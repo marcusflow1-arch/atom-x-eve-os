@@ -224,23 +224,30 @@ const LimitedEditionCard = ({ card }) => {
   const rarity = rarityColors[card.rarity] || rarityColors.Common;
 
   return (
-    <motion.div whileHover={{ scale: 1.03, y: -8 }} className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0" style={{ background: 'rgba(148, 163, 184, 0.06)', backdropFilter: 'blur(50px)', border: '1px solid rgba(148, 163, 184, 0.15)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)' }}>
-      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <Badge className="bg-slate-700/80 text-white border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5">{card.rarity}</Badge>
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">{card.type}</Badge>
-        </div>
-        <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
-        <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
-        <div className="flex items-center gap-0.5 mt-2">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} />
-          ))}
-        </div>
+    <div className="w-64 flex-shrink-0 flex flex-col gap-4 group cursor-pointer">
+      <div className="w-full">
+        <ShinyCard>
+          <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-3 left-3 right-3">
+             <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md`}>{card.rarity}</Badge>
+          </div>
+        </ShinyCard>
       </div>
-    </motion.div>
+
+      <div className="px-1">
+        <div className="flex items-center justify-between mb-2">
+          <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] px-2 py-0.5">{card.type}</Badge>
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} />
+            ))}
+          </div>
+        </div>
+        <h3 className="text-lg font-bold text-white mb-1 leading-tight group-hover:text-blue-400 transition-colors line-clamp-2">{card.name}</h3>
+        <p className="text-xs text-white/50 line-clamp-2">{card.description}</p>
+      </div>
+    </div>
   );
 };
 
