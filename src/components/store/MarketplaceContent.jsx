@@ -551,7 +551,7 @@ export default function MarketplaceContent() {
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
       {/* Top Header Bar */}
-      <div className="sticky top-0 z-50 bg-slate-900/40 backdrop-blur-3xl border border-white/10 shadow-2xl rounded-3xl mb-8 overflow-hidden">
+      <div className="relative bg-slate-900/40 backdrop-blur-3xl border border-white/10 shadow-2xl rounded-3xl mb-8 overflow-hidden">
         <div className="flex items-center h-20 px-8 gap-8">
           {/* Logo */}
           <div className="flex items-center gap-2">
