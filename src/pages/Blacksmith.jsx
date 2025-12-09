@@ -454,6 +454,15 @@ export default function BlacksmithPage() {
   const handleCombine = (item) => console.log('Combining:', item.name);
   const handleSalvage = (item) => console.log('Salvaging:', item.name);
 
+  // Auto-select first item when game changes
+  useEffect(() => {
+    if (selectedGame && displayedItems.length > 0) {
+        if (!selectedItem || !displayedItems.find(i => i.id === selectedItem.id)) {
+            setSelectedItem(displayedItems[0]);
+        }
+    }
+  }, [selectedGame, displayedItems]);
+
   // Group games by genre for sidebar
   const gamesByGenre = useMemo(() => {
     const grouped = mockItems.reduce((acc, item) => {
@@ -606,81 +615,158 @@ export default function BlacksmithPage() {
               </div>
 
               {/* RIGHT CONTENT: Items Grid */}
-              <div className="flex-1 h-full flex flex-col overflow-hidden">
+              <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-900/50">
                    {selectedGame ? (
                        <div className="flex flex-col h-full">
-                           {/* Game Header */}
-                           <div className="flex items-center justify-between mb-8">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg border border-white/10">
-                                        <img src={selectedGame.image} className="w-full h-full object-cover" alt={selectedGame.title} />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-black text-white leading-tight">{selectedGame.title}</h2>
-                                        <p className="text-slate-400 text-sm flex items-center gap-2">
-                                            {selectedGame.genre} • {displayedItems.length} items available
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
-                                        <button
-                                          key={cat}
-                                          onClick={() => setCategoryFilter(cat)}
-                                          className={`px-4 py-2 rounded-lg text-sm font-bold uppercase transition-all ${
-                                            categoryFilter === cat ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
-                                          }`}
-                                        >
-                                          {cat}
-                                        </button>
-                                    ))}
-                                </div>
+                           {/* Game Header Bar */}
+                           <div className="h-16 flex items-center justify-between px-8 border-b border-white/10 shrink-0">
+                               <button 
+                                   onClick={() => setSelectedGame(null)} 
+                                   className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+                               >
+                                   <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                   <span className="font-bold uppercase tracking-wider text-sm">Back to Games</span>
+                               </button>
+                               <Badge variant="outline" className="bg-blue-900/20 border-blue-500/30 text-blue-400">
+                                   {selectedGame.title}
+                               </Badge>
                            </div>
 
-                           {/* Items Grid */}
-                           <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                                {displayedItems.length > 0 ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {displayedItems.map(item => {
-                                            const style = rarityStyles[item.rarity];
-                                            return (
-                                                <motion.div
-                                                    key={item.id}
-                                                    whileHover={{ y: -5, scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => setSelectedItem(item)}
-                                                    className="group cursor-pointer relative aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-white/5 hover:border-white/20 shadow-lg"
-                                                >
-                                                    <img src={item.preview_image_url} alt={item.name} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-300" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                                                    
-                                                    <div className="absolute top-3 right-3">
-                                                         <Badge className={`text-[10px] px-2 py-0.5 ${style.border} bg-black/40 backdrop-blur-md ${style.color}`}>
-                                                            {item.rarity}
-                                                         </Badge>
-                                                    </div>
+                           <div className="flex-1 flex overflow-hidden">
+                               {/* Inner Sidebar: Item List */}
+                               <div className="w-80 flex flex-col border-r border-white/10 bg-slate-900/30">
+                                   {/* Tabs */}
+                                   <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5">
+                                       {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
+                                           <button
+                                               key={cat}
+                                               onClick={() => setCategoryFilter(cat)}
+                                               className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+                                                   categoryFilter === cat ? 'text-blue-400 border-b-2 border-blue-400 pb-1' : 'text-slate-500 hover:text-slate-300 pb-1 border-b-2 border-transparent'
+                                               }`}
+                                           >
+                                               {cat === 'all' ? 'ALL' : cat.toUpperCase()}
+                                           </button>
+                                       ))}
+                                   </div>
 
-                                                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                        <h3 className="text-white font-bold text-sm leading-tight mb-1 group-hover:text-blue-300 transition-colors line-clamp-2">{item.name}</h3>
-                                                        <p className="text-white/40 text-xs">Lv. {item.level_requirement}</p>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                                        <Package className="w-12 h-12 mb-4 opacity-20" />
-                                        <p>No items found in this category</p>
-                                    </div>
-                                )}
+                                   {/* List */}
+                                   <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                       {displayedItems.map(item => (
+                                           <div
+                                               key={item.id}
+                                               onClick={() => setSelectedItem(item)}
+                                               className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
+                                                   selectedItem?.id === item.id 
+                                                       ? 'bg-blue-600/10 border border-blue-500/30' 
+                                                       : 'hover:bg-white/5 border border-transparent'
+                                               }`}
+                                           >
+                                               <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0`}>
+                                                   <img src={item.preview_image_url} className="w-full h-full object-cover" />
+                                               </div>
+                                               <div className="min-w-0">
+                                                   <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : 'text-slate-300'}`}>
+                                                       {item.name}
+                                                   </div>
+                                                   <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                       <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
+                                                       <span>•</span>
+                                                       <span>Lv.{item.level_requirement}</span>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                       ))}
+                                   </div>
+                               </div>
+
+                               {/* Main Content: Item Details */}
+                               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 relative bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/10">
+                                   {selectedItem ? (
+                                       <div className="max-w-4xl mx-auto">
+                                           <div className="flex items-center gap-3 mb-4">
+                                               <Badge className={`bg-transparent border ${rarityStyles[selectedItem.rarity].border} ${rarityStyles[selectedItem.rarity].color}`}>
+                                                   {selectedItem.rarity} {selectedItem.type}
+                                               </Badge>
+                                               <Badge variant="secondary" className="bg-slate-800 text-slate-400">
+                                                   Lv. {selectedItem.level_requirement}
+                                               </Badge>
+                                           </div>
+
+                                           <h1 className="text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">
+                                               {selectedItem.name}
+                                           </h1>
+
+                                           <div className="border-l-4 border-blue-500 pl-4 py-1 mb-10">
+                                               <p className="text-xl text-slate-400 italic">
+                                                   "{selectedItem.description}"
+                                               </p>
+                                           </div>
+
+                                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                                               <div className="bg-slate-800/50 rounded-3xl p-6 border border-white/5">
+                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">
+                                                       <Layers className="w-4 h-4" /> Base Stats
+                                                   </h3>
+                                                   <div className="space-y-6">
+                                                       {Object.entries(selectedItem.base_stats).map(([stat, value]) => (
+                                                           <div key={stat} className="space-y-2">
+                                                               <div className="flex justify-between text-sm font-bold uppercase tracking-wider">
+                                                                   <span className="text-slate-400">{stat.replace('_', ' ')}</span>
+                                                                   <span className="text-white">{value}</span>
+                                                               </div>
+                                                               <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
+                                                                   <div 
+                                                                       className="h-full bg-slate-500" 
+                                                                       style={{ width: `${Math.min((value / 200) * 100, 100)}%` }}
+                                                                   />
+                                                               </div>
+                                                           </div>
+                                                       ))}
+                                                   </div>
+                                               </div>
+
+                                               <div className="bg-slate-800/50 rounded-3xl p-6 border border-white/5">
+                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">
+                                                       <Sparkles className="w-4 h-4" /> Enhancements
+                                                   </h3>
+                                                   <div className="space-y-3">
+                                                       {selectedItem.modifiers.map((mod, i) => (
+                                                           <div key={i} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                                                               <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                                                                   <Zap className="w-5 h-5 fill-current" />
+                                                               </div>
+                                                               <div>
+                                                                   <div className="font-bold text-white text-sm">{mod.name}</div>
+                                                                   <div className="text-slate-400 text-xs">{mod.effect}</div>
+                                                               </div>
+                                                           </div>
+                                                       ))}
+                                                       {selectedItem.modifiers.length === 0 && (
+                                                           <div className="text-slate-600 text-sm text-center py-4">No enhancements active</div>
+                                                       )}
+                                                   </div>
+                                                   <div className="mt-6 flex justify-between items-center text-xs text-slate-500 border-t border-white/5 pt-4">
+                                                       <span>Slots Available</span>
+                                                       <span className="text-white font-mono">{selectedItem.enchantment_slots - selectedItem.modifiers.length} / {selectedItem.enchantment_slots}</span>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                       </div>
+                                   ) : (
+                                       <div className="h-full flex flex-col items-center justify-center text-slate-600">
+                                           <Hammer className="w-20 h-20 mb-4 opacity-20" />
+                                           <p className="text-lg font-medium">Select an item to view details</p>
+                                       </div>
+                                   )}
+                               </div>
                            </div>
                        </div>
                    ) : (
                        <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                            <Gamepad2 className="w-20 h-20 mb-6 opacity-20" />
                            <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                           <p className="max-w-md text-center">Choose a game from the sidebar to view its craftable items, weapons, and armor sets.</p>
+                           <p className="max-w-md text-center">Choose a game from the sidebar to view your inventory.</p>
                        </div>
                    )}
               </div>
@@ -714,20 +800,7 @@ export default function BlacksmithPage() {
           </div>
         </div>
 
-        {/* Item Detail Modal Overlay */}
-        <AnimatePresence>
-            {selectedItem && (
-                <ItemDetailModal 
-                    item={selectedItem} 
-                    onClose={() => setSelectedItem(null)}
-                    onEnchant={handleEnchant}
-                    onCombine={handleCombine}
-                    onSalvage={handleSalvage}
-                    rarityStyles={rarityStyles}
-                    associatedSet={mockSets.find(s => s.id === selectedItem.set_id)}
-                />
-            )}
-        </AnimatePresence>
+        {/* Modal removed - using inline detail view */}
       </div>
     </div>
   );
