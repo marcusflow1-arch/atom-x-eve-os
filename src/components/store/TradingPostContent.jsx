@@ -810,164 +810,76 @@ export default function TradingPostContent() {
                     exit={{ opacity: 0 }}
                     className="relative w-full h-full"
                   >
-                    {/* CROSS INTERFACE IMPLEMENTATION */}
-                    {crossData.length > 0 ? (
-                        <>
-                            {/* IDOL VIEW (Level 1) */}
-                            <AnimatePresence>
-                                {crossViewLevel === 1 && activeCrossGame && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 1.2 }}
-                                        className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/80 backdrop-blur-xl"
-                                        onClick={() => {
-                                            // Also allow clicking to proceed
-                                            setCrossViewLevel(2);
-                                            const group = {
-                                                item: {
-                                                    name: activeCrossGame.title,
-                                                    description: `Browse all available listings for ${activeCrossGame.title}`,
-                                                    type: 'Game Hub',
-                                                    game: activeCrossGame.title,
-                                                    image: activeCrossGame.image,
-                                                    rarity: 'Legendary'
-                                                },
-                                                offers: activeCrossGame.listings
-                                            };
-                                            setSelectedListingGroup(group);
-                                        }}
-                                    >
-                                        <div className="relative w-[400px] aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border border-white/20 cursor-pointer group">
-                                            <img 
-                                                src={activeCrossGame.image} 
-                                                alt={activeCrossGame.title} 
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                                            
-                                            <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
-                                                <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">{activeCrossGame.title}</h2>
-                                                <p className="text-cyan-400 font-medium mb-4">{activeCrossGame.listings.length} Listings Available</p>
-                                                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-sm text-white/80 border border-white/10 group-hover:bg-white/20 transition-all">
-                                                    <span>Click to View Offers</span>
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setCrossViewLevel(0);
-                                                setActiveCrossGame(null);
-                                            }}
-                                            className="absolute top-8 right-8 p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-                                        >
-                                            <X className="w-6 h-6" />
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* NAVIGATION VIEW (Level 0) */}
-                            <div className={`w-full h-full transition-all duration-500 ${crossViewLevel === 1 ? 'blur-sm scale-95 opacity-50' : ''}`}>
-                                {/* Vertical Axis (Genres) */}
-                                <div className="absolute top-0 bottom-0 left-0 w-48 flex flex-col items-center justify-center z-20 pointer-events-none">
-                                    <motion.div
-                                        className="flex flex-col items-center gap-6 pointer-events-auto"
-                                        animate={{ y: -activeGenreIndex * 100 + 200 }} // Adjust offset as needed
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    >
-                                        {crossData.map((genre, idx) => {
-                                            const isActive = idx === activeGenreIndex;
-                                            return (
-                                                <motion.div
-                                                    key={genre.id}
-                                                    onClick={() => { setActiveGenreIndex(idx); setActiveGameIndex(0); }}
-                                                    animate={{ 
-                                                        scale: isActive ? 1.2 : 0.9, 
-                                                        opacity: isActive ? 1 : 0.4,
-                                                        x: isActive ? 20 : 0
-                                                    }}
-                                                    className="flex flex-col items-center gap-2 cursor-pointer w-32 transition-colors"
-                                                >
-                                                    <div className={`
-                                                        w-16 h-16 rounded-2xl flex items-center justify-center
-                                                        ${isActive ? 'bg-cyan-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]' : 'bg-white/5 text-white/40 border border-white/10'}
-                                                    `}>
-                                                        <genre.icon className="w-8 h-8" />
-                                                    </div>
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-center">{genre.label}</span>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </motion.div>
+                    {/* NEW HOLLOW CARD LIST VIEW */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar relative p-6 h-full">
+                        {crossData.length > 0 ? crossData.map((genre) => (
+                            <div key={genre.id} className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex items-center gap-3 mb-4 sticky left-0">
+                                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                                        <genre.icon className="w-5 h-5 text-cyan-400" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
+                                    <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4" />
                                 </div>
-
-                                {/* Horizontal Axis (Games) */}
-                                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-96 z-10 flex items-center pointer-events-none pl-56">
-                                    <motion.div
-                                        className="flex items-center gap-8 pointer-events-auto"
-                                        animate={{ x: -activeGameIndex * 320 }} // Card width 280 + gap 40
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    >
-                                        {crossData[activeGenreIndex]?.games.map((game, idx) => {
-                                            const isActive = idx === activeGameIndex;
-                                            return (
-                                                <motion.div
-                                                    key={game.id}
-                                                    onClick={() => {
-                                                        setActiveGameIndex(idx);
-                                                        // If already active, enter idol mode
-                                                        if (isActive) {
-                                                            setActiveCrossGame(game);
-                                                            setCrossViewLevel(1);
-                                                        }
-                                                    }}
-                                                    animate={{ 
-                                                        scale: isActive ? 1.1 : 0.9,
-                                                        opacity: isActive ? 1 : 0.3,
-                                                        y: isActive ? 0 : 30
-                                                    }}
-                                                    className={`
-                                                        w-[280px] aspect-[3/4] flex-shrink-0 rounded-2xl relative overflow-hidden cursor-pointer
-                                                        transition-all duration-300
-                                                        ${isActive ? 'shadow-[0_0_50px_rgba(6,182,212,0.2)] ring-2 ring-cyan-400' : 'bg-black/40 grayscale'}
-                                                    `}
-                                                >
-                                                    <img src={game.image} alt={game.title} className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-90" />
-                                                    
-                                                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                                                        <h3 className={`text-2xl font-black uppercase leading-none mb-2 ${isActive ? 'text-white' : 'text-white/50'}`}>
-                                                            {game.title}
-                                                        </h3>
-                                                        {isActive && (
-                                                            <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold tracking-wider">
-                                                                <span>{game.listings.length} OFFERS</span>
-                                                                <ArrowLeftRight className="w-3 h-3" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
+                                
+                                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                                    {(() => {
+                                        // Collect items from games in this genre
+                                        const genreItems = genre.games.flatMap(g => g.filteredItems);
+                                        const displayItems = genreItems.slice(0, 10);
+                                        const placeholders = Math.max(0, 10 - displayItems.length);
                                         
-                                        {(!crossData[activeGenreIndex]?.games || crossData[activeGenreIndex]?.games.length === 0) && (
-                                            <div className="w-[280px] h-64 flex items-center justify-center text-white/20 italic">
-                                                No games in this category
-                                            </div>
-                                        )}
-                                    </motion.div>
+                                        return (
+                                            <>
+                                                {displayItems.map((item, i) => (
+                                                    <HollowCard key={item.id + i} className="snap-start" onClick={() => {
+                                                        // Show details (using existing structure)
+                                                        const group = {
+                                                            item: item,
+                                                            offers: [/* Mock offer for direct item click */ {
+                                                                id: 'offer_1',
+                                                                type: 'sale',
+                                                                price: item.marketPrice,
+                                                                owner: { name: 'MarketBot', avatar: item.image },
+                                                                description: 'Direct market listing'
+                                                            }]
+                                                        };
+                                                        setSelectedListingGroup(group);
+                                                    }}>
+                                                        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
+                                                            <div className="w-24 h-24 mb-4 relative">
+                                                                <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
+                                                                <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </div>
+                                                            <h4 className="text-sm font-bold text-white mb-1 line-clamp-2">{item.name}</h4>
+                                                            <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
+                                                        </div>
+                                                        <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center">
+                                                            <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.game}</span>
+                                                            <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
+                                                        </div>
+                                                    </HollowCard>
+                                                ))}
+                                                
+                                                {/* Placeholders */}
+                                                {[...Array(placeholders)].map((_, i) => (
+                                                    <HollowCard key={`placeholder-${genre.id}-${i}`} className="opacity-30 snap-start border-dashed border-white/5">
+                                                        <div className="flex-1 flex items-center justify-center">
+                                                            <Plus className="w-8 h-8 text-white/20" />
+                                                        </div>
+                                                    </HollowCard>
+                                                ))}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
-                        </>
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-white/30">
-                            No listings available
-                        </div>
-                    )}
+                        )) : (
+                            <div className="flex items-center justify-center h-full text-white/30">
+                                No listings found matching your filters.
+                            </div>
+                        )}
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
