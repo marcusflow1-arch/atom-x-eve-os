@@ -13,6 +13,7 @@ import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
+import ItemWorkstation from '../components/blacksmith/ItemWorkstation';
 // BlacksmithGameSelect is replaced by the sidebar
 
 // --- Shiny Sidebar Box Component ---
@@ -437,6 +438,7 @@ export default function BlacksmithPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isGenreOpen, setIsGenreOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showWorkstation, setShowWorkstation] = useState(false);
   
   // Forge Mastery XP
   const [forgeXP, setForgeXP] = useState(2450);
@@ -499,7 +501,15 @@ export default function BlacksmithPage() {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
+      <motion.div 
+        className="relative z-10 flex flex-col h-full p-6 md:p-8"
+        animate={{ 
+            scale: showWorkstation ? 0.95 : 1, 
+            opacity: showWorkstation ? 0.5 : 1,
+            filter: showWorkstation ? 'blur(5px)' : 'blur(0px)' 
+        }}
+        transition={{ duration: 0.4 }}
+      >
         
         {/* Top Navigation Bar */}
         <header className="flex items-center justify-between mb-8">
@@ -655,7 +665,10 @@ export default function BlacksmithPage() {
                                        {displayedItems.map(item => (
                                            <div
                                                key={item.id}
-                                               onClick={() => setSelectedItem(item)}
+                                               onClick={() => {
+                                                   setSelectedItem(item);
+                                                   setShowWorkstation(true);
+                                               }}
                                                className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
                                                    selectedItem?.id === item.id 
                                                        ? 'bg-blue-600/10 border border-blue-500/30' 
@@ -801,7 +814,17 @@ export default function BlacksmithPage() {
         </div>
 
         {/* Modal removed - using inline detail view */}
-      </div>
+      </motion.div>
+
+      {/* Workstation Overlay */}
+      <AnimatePresence>
+        {showWorkstation && selectedItem && (
+            <ItemWorkstation 
+                item={selectedItem} 
+                onClose={() => setShowWorkstation(false)} 
+            />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
