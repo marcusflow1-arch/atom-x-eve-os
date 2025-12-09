@@ -839,14 +839,15 @@ export default function LunaTemplate() {
                         setDrawerOpen(false);
                         setActiveDrawer(item);
                       }}
-                      className="w-full p-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 transition-all group flex items-center gap-4 hover:scale-105"
+                      className="w-full p-4 transition-all group flex items-center gap-4 hover:scale-105"
                     >
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
-                      <div className="text-left">
+                      <div className="text-left relative">
                         <h3 className="text-white font-bold text-lg">{item.label}</h3>
                         <p className="text-white/40 text-xs">{item.description}</p>
+                        <div className="absolute -bottom-2 left-0 h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full" />
                       </div>
                     </button>
                   );
