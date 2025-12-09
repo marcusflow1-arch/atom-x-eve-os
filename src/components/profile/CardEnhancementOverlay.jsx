@@ -368,7 +368,23 @@ export default function CardEnhancementOverlay({ card, onClose }) {
               <motion.div key="craft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex items-center justify-center text-white/30">
                  Crafting feature coming soon...
               </motion.div>
-            )}
+            ) : selectedAction === 'score' ? (
+              /* SCORE VIEW */
+              <motion.div key="score" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
+                <div className="mb-8">
+                  <h2 className="text-4xl font-black text-white mb-2 flex items-center gap-3"><Trophy className="w-8 h-8 text-yellow-400"/> Achievement Score</h2>
+                  <p className="text-white/50">Your total achievement points.</p>
+                </div>
+                <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-amber-600 mb-4 drop-shadow-2xl">
+                      12,450
+                    </div>
+                    <div className="text-white/40 uppercase tracking-widest text-lg">Total Score</div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
           </AnimatePresence>
         </motion.div>
       </div>
