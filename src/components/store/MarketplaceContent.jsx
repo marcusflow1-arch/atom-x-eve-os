@@ -563,7 +563,10 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
         ].map((item) => (
           <button 
             key={item.name}
-            onClick={() => setFilters(prev => ({ ...prev, category: item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name }))}
+            onClick={() => {
+              const target = item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name;
+              setFilters(prev => ({ ...prev, category: prev.category === target ? 'all' : target }));
+            }}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filters.category === (item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
             <item.icon className="w-3.5 h-3.5" />
