@@ -567,15 +567,19 @@ export default function GenreMastery({ onClose }) {
                   onClick={() => setSelectedGenre(genre)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`group relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300 border ${
-                    isSelected 
-                      ? 'border-white/60 shadow-[0_0_25px_rgba(255,255,255,0.3)] bg-white/10' 
-                      : 'border-white/10 hover:border-white/30 bg-white/5'
-                  }`}
+                  className="group relative flex flex-col items-center justify-center gap-2 py-3 w-full"
                 >
-                  <Icon className={`w-7 h-7 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  <Icon className={`w-8 h-8 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  
+                  <div className="relative flex flex-col items-center">
+                    <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                      {genre.name}
+                    </span>
+                    <div className="h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full mt-1" />
+                  </div>
+
                   {isSelected && (
-                    <motion.div layoutId="activeBar" className={`absolute -left-4 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b ${genre.color}`} />
+                    <motion.div layoutId="activeBar" className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-12 rounded-r-full bg-gradient-to-b ${genre.color}`} />
                   )}
                 </motion.button>
               );
