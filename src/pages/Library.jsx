@@ -22,13 +22,6 @@ const ShinySidebarBox = ({ children, className = "" }) => {
   const x = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
   
-  const gradientBg = useTransform(
-    mouseX, 
-    [0, 1], 
-    ["linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 0%, transparent 100%)", 
-     "linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)"]
-  );
-
   function handleMouseMove({ currentTarget, clientX }) {
     const { left, width } = currentTarget.getBoundingClientRect();
     x.set((clientX - left) / width);
@@ -36,18 +29,18 @@ const ShinySidebarBox = ({ children, className = "" }) => {
 
   return (
     <motion.div
-      className={`relative overflow-hidden bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl ${className}`}
+      className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => x.set(0.5)}
       style={{
-        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+        background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)', // Darker blue background
       }}
     >
         <motion.div
             className="absolute inset-0 pointer-events-none z-10"
             style={{
                 background: useTransform(mouseX, val => 
-                    `linear-gradient(105deg, transparent ${val * 100 - 20}%, rgba(255,255,255,0.1) ${val * 100}%, transparent ${val * 100 + 20}%)`
+                    `linear-gradient(105deg, transparent ${val * 100 - 20}%, rgba(255,255,255,0.15) ${val * 100}%, transparent ${val * 100 + 20}%)`
                 ),
                 opacity: 1
             }}
@@ -491,10 +484,10 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
+              className="space-y-8"
             >
               {/* About */}
-              <LiquidGlassCard className="p-5" hover={false}>
+              <div className="p-1">
                 <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-blue-400" />
                   About This Game
@@ -502,27 +495,27 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                 <p className="text-white/60 leading-relaxed">
                   {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
                 </p>
-              </LiquidGlassCard>
+              </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-8">
                 {[
                   { icon: Clock, value: '12.5h', label: 'Playtime', color: 'text-blue-400' },
                   { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
                   { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
                 ].map((stat, i) => (
-                  <LiquidGlassCard key={i} className="p-4 text-center" hover={false}>
+                  <div key={i} className="text-center">
                     <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
                     <p className="text-2xl font-bold text-white">{stat.value}</p>
                     <p className="text-white/40 text-xs">{stat.label}</p>
-                  </LiquidGlassCard>
+                  </div>
                 ))}
               </div>
 
               {/* Game Trailer */}
-              <LiquidGlassCard className="p-5" hover={false}>
+              <div className="p-1">
                 <h3 className="text-white font-bold text-lg mb-4">Game Trailer</h3>
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
                   <video 
                     className="w-full h-full object-cover"
                     controls
@@ -531,7 +524,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                     <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                   </video>
                 </div>
-              </LiquidGlassCard>
+              </div>
             </motion.div>
           )}
 
@@ -543,7 +536,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <LiquidGlassCard className="p-5" hover={false}>
+              <div className="p-1">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-white font-bold text-lg">Community Discussion</h3>
                   <Button size="sm" className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30">
@@ -551,27 +544,26 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                     New Post
                   </Button>
                 </div>
-                
-                <div className="space-y-3">
+
+                <div className="space-y-4">
                   {[
                     { title: 'Best build for endgame content?', replies: 45, user: 'DragonSlayer' },
                     { title: 'Hidden easter eggs in Chapter 5', replies: 23, user: 'MysticMage' },
                     { title: 'Looking for raid group tonight', replies: 12, user: 'ShadowNinja' },
                   ].map((topic, i) => (
-                    <motion.div 
+                    <div 
                       key={i} 
-                      className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-white/5 hover:border-white/10"
-                      whileHover={{ x: 4 }}
+                      className="pb-4 border-b border-white/10 last:border-0 cursor-pointer group"
                     >
-                      <h4 className="text-white font-medium mb-1">{topic.title}</h4>
+                      <h4 className="text-white font-medium mb-1 group-hover:text-blue-400 transition-colors">{topic.title}</h4>
                       <div className="flex items-center gap-4 text-xs text-white/40">
                         <span>by {topic.user}</span>
                         <span>{topic.replies} replies</span>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-              </LiquidGlassCard>
+              </div>
             </motion.div>
           )}
 
@@ -581,7 +573,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
+              className="space-y-6"
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-white font-bold text-lg">Achievement Progress</h3>
@@ -592,15 +584,15 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                   View All <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
-              
-              <div className="space-y-3">
+
+              <div className="space-y-4">
                 {[
                   { name: 'Dragon Slayer Supreme', icon: '🐉', rarity: 'Legendary', progress: 100 },
                   { name: 'Master Thief', icon: '💰', rarity: 'Epic', progress: 75 },
                   { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
                   { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
                 ].map((achievement, i) => (
-                  <LiquidGlassCard key={i} className="p-4">
+                  <div key={i} className="p-1">
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">{achievement.icon}</div>
                       <div className="flex-1">
@@ -623,9 +615,8 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                           />
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-white/30" />
                     </div>
-                  </LiquidGlassCard>
+                  </div>
                 ))}
               </div>
             </motion.div>
@@ -1105,7 +1096,7 @@ export default function Library() {
           <div className="flex gap-6">
             {/* Left Sidebar - Game List */}
             <div className="w-80 flex-shrink-0">
-              <LiquidGlassCard className="p-4" hover={false}>
+              <ShinySidebarBox className="p-4 h-full">
                 <div className="mb-4">
                   <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
                 </div>
@@ -1121,7 +1112,7 @@ export default function Library() {
                     />
                   ))}
                 </div>
-              </LiquidGlassCard>
+              </ShinySidebarBox>
             </div>
 
             {/* Game Detail Panel */}
