@@ -26,6 +26,7 @@ import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
+import PinGamesContent from '../components/dashboard/PinGamesContent';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -263,6 +264,7 @@ export default function LunaTemplate() {
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showClan, setShowClan] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [showPinGames, setShowPinGames] = useState(false);
   const [expandedGenre, setExpandedGenre] = useState(null); // New State for Expanded View
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
@@ -315,7 +317,7 @@ export default function LunaTemplate() {
 
         {/* Pin Games Button */}
         <button
-          onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'games'))}
+          onClick={() => setShowPinGames(true)}
           className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
@@ -995,6 +997,40 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
 
+
+      {/* Pin Games Overlay */}
+      <AnimatePresence>
+        {showPinGames && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowPinGames(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col p-8"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-hidden">
+                <PinGamesContent />
+              </div>
+              
+              <button 
+                onClick={() => setShowPinGames(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
