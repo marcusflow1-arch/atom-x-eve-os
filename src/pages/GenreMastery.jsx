@@ -546,15 +546,15 @@ export default function GenreMastery({ onClose }) {
         <X className="w-5 h-5 text-white/60" />
       </button>
 
-      {/* LEFT SIDEBAR: Genre Selection (UNCHANGED) */}
-      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/5 bg-black/40 backdrop-blur-xl relative">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black to-transparent z-10" />
+      {/* LEFT SIDEBAR: Genre Selection (Updated UI) */}
+      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/10 bg-white/[0.02] backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] relative">
+        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/50 to-transparent z-10" />
         <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
           <motion.div 
             variants={containerVariants}
             initial="hidden"
             animate="show"
-            className="flex flex-col gap-6 w-full items-center"
+            className="flex flex-col gap-4 w-full items-center"
           >
             {GENRES.map((genre) => {
               const Icon = genre.icon;
@@ -567,26 +567,28 @@ export default function GenreMastery({ onClose }) {
                   onClick={() => setSelectedGenre(genre)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="group relative flex flex-col items-center justify-center gap-2 py-3 w-full"
+                  className="group relative flex flex-col items-center justify-center gap-2 py-4 w-full rounded-xl overflow-hidden"
                 >
-                  <Icon className={`w-8 h-8 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  {/* 5% Opacity Background Box */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${genre.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
                   
-                  <div className="relative flex flex-col items-center">
+                  <Icon className={`w-8 h-8 relative z-10 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
+                  
+                  <div className="relative z-10 flex flex-col items-center">
                     <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
                       {genre.name}
                     </span>
-                    <div className="h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full mt-1" />
                   </div>
 
                   {isSelected && (
-                    <motion.div layoutId="activeBar" className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-12 rounded-r-full bg-gradient-to-b ${genre.color}`} />
+                    <motion.div layoutId="activeBar" className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-full bg-gradient-to-b ${genre.color}`} />
                   )}
                 </motion.button>
               );
             })}
           </motion.div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent z-10" />
       </div>
 
       {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
