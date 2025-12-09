@@ -691,7 +691,7 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full overflow-y-auto pt-24 pb-12 px-8 bg-slate-950"
+                            className="w-full h-full overflow-y-auto pt-24 pb-12 px-8 bg-gray-500/10 backdrop-blur-3xl"
                         >
                             <div className="max-w-[1600px] mx-auto">
                                 <div className="flex items-center justify-between mb-8">
@@ -712,7 +712,7 @@ export default function Store() {
                                 <div className="space-y-12">
                                     {genreData.map((genre) => (
                                         <div key={genre.id} className="space-y-4">
-                                            <div className="flex items-center gap-3 border-b border-white/10 pb-2">
+                                            <div className="flex items-center gap-3">
                                                 <genre.icon className="w-5 h-5 text-blue-400" />
                                                 <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
                                             </div>
