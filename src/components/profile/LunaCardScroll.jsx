@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
