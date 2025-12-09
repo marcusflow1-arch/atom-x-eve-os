@@ -6,8 +6,9 @@ import {
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { ALL_NAV_ITEMS } from '@/components/dashboard/NavigationConfig';
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
@@ -306,13 +307,16 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* Circle Icon Button */}
+        {/* Menu Button */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="fixed top-24 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          className="fixed top-24 left-8 z-40 w-11 h-11 rounded-xl bg-black/40 backdrop-blur-md hover:bg-white/10 flex items-center justify-center transition-all border border-white/10"
         >
-          <Circle className="w-5 h-5 text-white/80" />
+          <div className="flex flex-col gap-[3px]">
+            <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+            <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+            <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+          </div>
         </button>
 
         {/* World Events Button */}
@@ -817,7 +821,7 @@ export default function LunaTemplate() {
         </AnimatePresence>
         </div>
 
-      {/* Blank Drawer */}
+      {/* Navigation Drawer */}
       <AnimatePresence>
         {drawerOpen && (
           <>
@@ -829,45 +833,28 @@ export default function LunaTemplate() {
               onClick={() => setDrawerOpen(false)}
             />
             <motion.div
-              initial={{ x: -320, opacity: 0 }}
+              initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -320, opacity: 0 }}
+              exit={{ x: -300, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl border-r border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+              className="fixed top-0 left-0 bottom-0 w-72 bg-slate-900/90 backdrop-blur-3xl border-r border-white/10 z-[101] p-6 shadow-2xl"
             >
-              <div className="p-6 flex justify-end">
-                  <button 
-                    onClick={() => setDrawerOpen(false)}
-                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                  >
-                    <X className="w-4 h-4 text-white/60" />
-                  </button>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider">Navigation</h2>
+                <button onClick={() => setDrawerOpen(false)} className="text-white/40 hover:text-white"><X className="w-5 h-5"/></button>
               </div>
-              {/* Menu Content Area */}
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        setActiveDrawer(item);
-                      }}
-                      className="w-full p-4 transition-all group flex items-center gap-4 hover:scale-105"
-                    >
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="text-left relative">
-                        <h3 className="text-white font-bold text-lg">{item.label}</h3>
-                        <p className="text-white/40 text-xs">{item.description}</p>
-                        <div className="absolute -bottom-2 left-0 h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full" />
-                      </div>
-                    </button>
-                  );
-                })}
+              <div className="space-y-1">
+                {ALL_NAV_ITEMS.map((page) => (
+                  <Link
+                    key={page.name}
+                    to={page.path}
+                    onClick={() => setDrawerOpen(false)}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-left"
+                  >
+                    <page.icon className="w-5 h-5" />
+                    <span className="font-medium">{page.name}</span>
+                  </Link>
+                ))}
               </div>
             </motion.div>
           </>
