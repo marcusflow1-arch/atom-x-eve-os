@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
+import { Game } from '@/entities/Game';
+import { aiGamesList, otherSampleGames } from './mockData';
 
 // --- Liquid Glass Components (Reused) ---
 const LiquidCard = ({ children, className = "", onClick }) => (
@@ -417,16 +419,14 @@ export default function TradingPostContent() {
     const fetchGames = async () => {
         try {
             const fetchedGames = await Game.list();
-            // Using placeholder data until backend is fully populated
             const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
-                ...userInventory.map(item => ({ id: item.game, title: item.game, genre: item.genre, image: item.image, listings: [] })), // minimal mock game objects from inventory
-                // In a real app, this would be a proper list of games
+                ...aiGamesList,
+                ...otherSampleGames
             ];
             setAllStoreGames(enhancedGames);
         } catch (error) {
             console.error("Error fetching games:", error);
-            // fallback
-            setAllStoreGames([]);
+            setAllStoreGames([...aiGamesList, ...otherSampleGames]);
         }
     };
     fetchGames();
