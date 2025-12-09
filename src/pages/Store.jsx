@@ -358,6 +358,7 @@ export default function Store() {
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [marketplaceSearchTerm, setMarketplaceSearchTerm] = useState(''); // Dedicated state for marketplace
     const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
     const [showVoiceOptions, setShowVoiceOptions] = useState(false); // New state for voice dropdown
 
@@ -632,34 +633,68 @@ export default function Store() {
                     </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className={`flex items-center gap-3 transition-opacity duration-300 ${storeMode === 'marketplace' || storeMode === 'trading' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                    <div className="relative">
-                        <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 w-80 hover:bg-black/40 hover:border-white/20 transition-all focus-within:bg-black/50 focus-within:border-white/30 shadow-lg">
-                            <Search className="w-4 h-4 text-white/50" />
-                            <input 
-                                type="text" 
-                                placeholder={isRegularVoiceListening ? "Listening..." : "Search games..."}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-full font-medium"
-                            />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-white/40 hover:text-white">
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                            
-                            {/* Voice Options Trigger */}
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setShowVoiceOptions(!showVoiceOptions)}
-                                    className={`p-1 rounded-full transition-colors ${voiceSearchOpen || isRegularVoiceListening ? 'bg-purple-500/50 text-white' : 'text-white/40 hover:text-white'}`}
-                                >
-                                    <Mic className="w-3.5 h-3.5" />
-                                </button>
+                {/* Header Controls Area */}
+                <div className="flex items-center gap-4 ml-6">
+                    {storeMode === 'marketplace' ? (
+                        /* Marketplace Bar (Next to Trading Post) */
+                        <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-full p-1.5 pr-4 shadow-lg">
+                             <div className="relative group flex items-center bg-slate-800/50 rounded-full px-3 py-1.5 border border-white/5 hover:border-white/20 transition-all focus-within:bg-slate-800 focus-within:border-white/30">
+                                <Search className="w-3.5 h-3.5 text-white/50 mr-2" />
+                                <input 
+                                    type="text" 
+                                    value={marketplaceSearchTerm}
+                                    onChange={(e) => setMarketplaceSearchTerm(e.target.value)}
+                                    placeholder="Search market..." 
+                                    className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-40 font-medium"
+                                />
+                             </div>
 
-                                {/* Voice Options Dropdown */}
+                             {/* Balance */}
+                            <div className="flex items-center gap-1.5 text-white px-2">
+                              <span className="text-green-400 font-bold">$</span>
+                              <span className="font-bold text-sm">24.5k</span>
+                            </div>
+
+                             {/* Cart */}
+                            <Link to={createPageUrl('Cart')} className="relative text-white/70 hover:text-white transition-colors">
+                              <ShoppingCart className="w-5 h-5" />
+                              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                {cartCount}
+                              </span>
+                            </Link>
+
+                             {/* Avatar */}
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[1px] cursor-pointer">
+                              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900">
+                                 <img src={user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"} alt="User" className="w-full h-full object-cover" />
+                              </div>
+                            </div>
+                        </div>
+                    ) : storeMode === 'store' ? (
+                        /* Standard Store Search */
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 w-72 hover:bg-black/40 hover:border-white/20 transition-all focus-within:bg-black/50 focus-within:border-white/30 shadow-lg">
+                                    <Search className="w-4 h-4 text-white/50" />
+                                    <input 
+                                        type="text" 
+                                        placeholder={isRegularVoiceListening ? "Listening..." : "Search games..."}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-full font-medium"
+                                    />
+                                    {searchTerm && (
+                                        <button onClick={() => setSearchTerm('')} className="text-white/40 hover:text-white">
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
+                                    <button 
+                                        onClick={() => setShowVoiceOptions(!showVoiceOptions)}
+                                        className={`p-1 rounded-full transition-colors ${voiceSearchOpen || isRegularVoiceListening ? 'bg-purple-500/50 text-white' : 'text-white/40 hover:text-white'}`}
+                                    >
+                                        <Mic className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                                 <AnimatePresence>
                                     {showVoiceOptions && (
                                         <motion.div
@@ -668,65 +703,28 @@ export default function Store() {
                                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                             className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 backdrop-blur-xl"
                                         >
-                                            <button 
-                                                onClick={() => {
-                                                    setVoiceSearchOpen(true);
-                                                    setShowVoiceOptions(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
-                                            >
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                                    <Sparkles className="w-4 h-4 text-white" />
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm font-medium text-white block">AI Search</span>
-                                                    <span className="text-[10px] text-white/50">Ask Sophie for ideas</span>
-                                                </div>
+                                            <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors">
+                                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                                <span className="text-sm font-medium text-white">AI Search</span>
                                             </button>
                                             <div className="h-px bg-white/10" />
-                                            <button 
-                                                onClick={() => {
-                                                    toggleRegularVoice();
-                                                    setShowVoiceOptions(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
-                                            >
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isRegularVoiceListening ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`}>
-                                                    <Mic className="w-4 h-4 text-white" />
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm font-medium text-white block">Voice Search</span>
-                                                    <span className="text-[10px] text-white/50">Search by name</span>
-                                                </div>
+                                            <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors">
+                                                <Mic className="w-4 h-4 text-blue-400" />
+                                                <span className="text-sm font-medium text-white">Voice Search</span>
                                             </button>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
+                                <AnimatePresence>
+                                    {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
+                                </AnimatePresence>
                             </div>
+                            <Link to={createPageUrl('Cart')} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative backdrop-blur-md border border-white/10">
+                                <ShoppingCart className="w-4 h-4 text-white/80" />
+                                {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
+                            </Link>
                         </div>
-                        
-                        {/* Voice Search Popup (Sophie) */}
-                        <AnimatePresence>
-                            {voiceSearchOpen && (
-                                <AIVoiceSearch 
-                                    onSearchResult={(term) => {
-                                        setSearchTerm(term);
-                                        setVoiceSearchOpen(false);
-                                    }}
-                                    onClose={() => setVoiceSearchOpen(false)} 
-                                />
-                            )}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Cart & User (Restored from previous design for completeness) */}
-                    <Link 
-                      to={createPageUrl('Cart')} 
-                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative backdrop-blur-md border border-white/10"
-                    >
-                      <ShoppingCart className="w-4 h-4 text-white/80" />
-                      {/* Badge logic would go here if cartCount accessible */}
-                    </Link>
+                    ) : null}
                 </div>
             </div>
 
@@ -1234,7 +1232,7 @@ export default function Store() {
                         exit={{ opacity: 0 }}
                         className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
-                        <MarketplaceContent />
+                        <MarketplaceContent searchTerm={marketplaceSearchTerm} />
                     </motion.div>
                 ) : (
                     <motion.div

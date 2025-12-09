@@ -508,10 +508,11 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
   );
 };
 
-export default function MarketplaceContent() {
+export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
   const { user } = useAuth();
   const { getCartCount } = useCart();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const searchTerm = propSearchTerm !== undefined ? propSearchTerm : internalSearchTerm;
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('list');
@@ -550,80 +551,25 @@ export default function MarketplaceContent() {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
-      {/* Top Header Bar */}
-      <div className="relative bg-slate-900/40 backdrop-blur-3xl border border-white/10 shadow-2xl rounded-3xl mb-8 overflow-hidden">
-        <div className="flex items-center h-20 px-8 gap-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <h1 className="text-white font-bold text-xl tracking-tight">Atom X Eve Market</h1>
-          </div>
-
-          {/* Search Bar Area */}
-          <div className="flex-1 max-w-4xl flex items-center">
-            <div className="relative group flex w-full">
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 text-white/70 text-sm font-medium border-r border-white/10 rounded-l-lg hover:bg-slate-700 hover:text-white transition-colors whitespace-nowrap">
-                All Departments
-                <ChevronDown className="w-3 h-3" />
-              </button>
-              <input 
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search gaming items..." 
-                className="flex-1 bg-slate-800 text-white px-4 py-2.5 text-sm focus:outline-none focus:bg-slate-700/50 transition-colors placeholder:text-white/30"
-              />
-              <button className="bg-orange-600 hover:bg-orange-500 text-white px-5 rounded-r-lg transition-colors flex items-center justify-center">
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-6 ml-auto">
-            {/* Balance */}
-            <div className="flex items-center gap-2 text-white">
-              <span className="text-green-400 font-bold">$</span>
-              <span className="font-bold text-lg">24,500</span>
-              <span className="text-xs text-white/50 font-bold mt-1">AGP</span>
-            </div>
-
-            {/* Cart */}
-            <button className="relative text-white/80 hover:text-white transition-colors">
-              <ShoppingCart className="w-6 h-6" />
-              <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-600 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-slate-900">
-                {getCartCount()}
-              </span>
-            </button>
-
-            {/* Avatar */}
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-0.5 cursor-pointer hover:scale-105 transition-transform">
-              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900">
-                 <img src={user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop"} alt="User" className="w-full h-full object-cover" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary Navigation */}
-        <div className="flex items-center gap-2 px-8 py-3 bg-white/[0.02] border-t border-white/5 overflow-x-auto scrollbar-hide">
-          {[
-            { name: 'Companions', icon: Ghost },
-            { name: 'Gear & Equipment', icon: Shield },
-            { name: 'Abilities & Skills', icon: Zap },
-            { name: 'Consumables', icon: Package },
-            { name: 'Crafting Materials', icon: Gem },
-            { name: 'Mounts & Vehicles', icon: Truck },
-          ].map((item) => (
-            <button 
-              key={item.name}
-              onClick={() => setFilters(prev => ({ ...prev, category: item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name }))}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filters.category === (item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-            >
-              <item.icon className="w-3.5 h-3.5" />
-              {item.name}
-            </button>
-          ))}
-        </div>
+      {/* Secondary Navigation (moved from header) */}
+      <div className="flex items-center gap-2 px-6 py-3 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-2xl mb-8 overflow-x-auto scrollbar-hide">
+        {[
+          { name: 'Companions', icon: Ghost },
+          { name: 'Gear & Equipment', icon: Shield },
+          { name: 'Abilities & Skills', icon: Zap },
+          { name: 'Consumables', icon: Package },
+          { name: 'Crafting Materials', icon: Gem },
+          { name: 'Mounts & Vehicles', icon: Truck },
+        ].map((item) => (
+          <button 
+            key={item.name}
+            onClick={() => setFilters(prev => ({ ...prev, category: item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name }))}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filters.category === (item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <item.icon className="w-3.5 h-3.5" />
+            {item.name}
+          </button>
+        ))}
       </div>
 
       <div className="px-2 pb-6">
