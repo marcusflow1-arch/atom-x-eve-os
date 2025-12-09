@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
-  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users,
+  ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -315,10 +315,19 @@ export default function LunaTemplate() {
           <Circle className="w-5 h-5 text-white/80" />
         </button>
 
+        {/* World Events Button */}
+        <button
+          onClick={() => navigate(createPageUrl('WorldEvents'))}
+          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <Globe className="w-5 h-5 text-white/80" />
+        </button>
+
         {/* Pin Games Button */}
         <button
           onClick={() => setShowPinGames(true)}
-          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
+          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
           style={{ 
             background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
             backdropFilter: 'blur(40px) saturate(180%)',
@@ -332,7 +341,7 @@ export default function LunaTemplate() {
         {/* Seasonal Pass Button */}
         <button
           onClick={() => setShowSeasonalPass(true)}
-          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Crown className="w-5 h-5 text-white/80" />
@@ -341,7 +350,7 @@ export default function LunaTemplate() {
         {/* AI News Button */}
         <button
           onClick={() => setShowAINews(true)}
-          className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Radio className="w-5 h-5 text-white/80" />
@@ -350,7 +359,7 @@ export default function LunaTemplate() {
         {/* Clan Button */}
         <button
           onClick={() => setShowClan(true)}
-          className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Users className="w-5 h-5 text-white/80" />
