@@ -1,4 +1,3 @@
-import Marketplace from './pages/Marketplace';
 import Achievements from './pages/Achievements';
 import Blacksmith from './pages/Blacksmith';
 import Clan from './pages/Clan';
@@ -38,7 +37,6 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Marketplace": Marketplace,
     "Achievements": Achievements,
     "Blacksmith": Blacksmith,
     "Clan": Clan,
@@ -77,7 +75,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Marketplace",
+    mainPage: "Achievements",
     Pages: PAGES,
     Layout: __Layout,
 };

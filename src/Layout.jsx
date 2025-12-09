@@ -478,7 +478,7 @@ function LayoutContent({ children, currentPageName }) {
 
           { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
-          { id: 'marketplace', label: 'Market', icon: Target, route: 'Marketplace' },
+          { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
         ];
 
         return (

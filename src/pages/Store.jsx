@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
@@ -348,12 +348,13 @@ const useVoiceInput = (onResult) => {
 
 export default function Store() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user, cartCount } = useAuth();
     
     // Store Mode State
-    const [storeMode, setStoreMode] = useState('store'); // 'store', 'marketplace', 'trading'
+    const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
