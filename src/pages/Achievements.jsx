@@ -6,6 +6,7 @@ import {
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { Achievement } from '@/entities/Achievement';
@@ -340,23 +341,32 @@ export default function Achievements() {
                 </button>
               </div>
 
-              {/* Genre Filters */}
-              <div className="mb-4">
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {genres.slice(0, 5).map(genre => (
-                    <button
-                      key={genre}
-                      onClick={() => setActiveGenre(genre)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase whitespace-nowrap transition-all ${
-                        activeGenre === genre 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      {genre}
+              {/* Genre Filters - Liquid Glass Dropdown */}
+              <div className="mb-6">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
+                      <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
+                      <ChevronDown className="w-4 h-4 text-white/70" />
                     </button>
-                  ))}
-                </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                    style={{ background: 'rgba(30, 41, 59, 0.7)' }} // Fallback/base color for better readability
+                  >
+                    {genres.map((genre) => (
+                      <DropdownMenuItem
+                        key={genre}
+                        onClick={() => setActiveGenre(genre)}
+                        className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
+                          activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {genre}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* Game List */}
