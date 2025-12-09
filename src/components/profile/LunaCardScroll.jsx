@@ -99,6 +99,81 @@ const GamesCarousel = ({ games, onSelectGame }) => {
   );
 };
 
+const CardsCarousel = ({ genre, activeGame, onCardClick }) => {
+  const scrollRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!isHovered) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        scroll('right');
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        scroll('left');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isHovered]);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      const scrollAmount = current.clientWidth * 0.5;
+      current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div 
+      className="relative group/cards"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Left Arrow - Outside, No Box */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); scroll('left'); }}
+        className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 text-white/30 hover:text-white transition-colors opacity-0 group-hover/cards:opacity-100"
+      >
+        <ChevronLeft size={24} />
+      </button>
+
+      {/* Scroll Container */}
+      <motion.div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-1"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 20 }}
+      >
+        {/* Mock 10 cards for scroll */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="flex-shrink-0 w-[30%] min-w-[90px]">
+            <ShinyCard 
+              onClick={() => onCardClick && onCardClick({ 
+                title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
+                id: `${genre}-${i}`,
+                image: activeGame?.image
+              })}
+            />
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Right Arrow - Outside, No Box */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); scroll('right'); }}
+        className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 text-white/30 hover:text-white transition-colors opacity-0 group-hover/cards:opacity-100"
+      >
+        <ChevronRight size={24} />
+      </button>
+    </div>
+  );
+};
+
 export default function LunaCardScroll({ onExpand, onCardClick }) {
   // State for pagination per genre
   const [pages, setPages] = useState({});
@@ -247,39 +322,13 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                   onSelectGame={(game) => selectGame(genre, game)} 
                                 />
                               ) : (
-                                <motion.div
-                                  key="cards-view"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  exit={{ opacity: 0, x: 20 }}
-                                  className="grid grid-cols-3 gap-3"
-                                >
-                                  {/* Content changes based on page state */}
-                                  {Array.from({ length: 3 }).map((_, i) => (
-                                    <ShinyCard 
-                                      key={`${genre}-${pages[genre] || 0}-${i}-${activeGame?.id || 'all'}`} 
-                                      onClick={() => onCardClick && onCardClick({ 
-                                        title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
-                                        id: `${genre}-${i}`,
-                                        image: activeGame?.image
-                                      })}
-                                    />
-                                  ))}
-                                </motion.div>
+                                <CardsCarousel 
+                                  genre={genre}
+                                  activeGame={activeGame}
+                                  onCardClick={onCardClick}
+                                />
                               )}
                             </AnimatePresence>
-
-                            {/* Arrow for Pagination - Only in Cards View */}
-                            {viewMode === 'cards' && (
-                              <div className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-gradient-to-l from-slate-900/80 to-transparent pointer-events-none">
-                                <button 
-                                  onClick={() => togglePage(genre)}
-                                  className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 flex items-center justify-center transition-all shadow-lg pointer-events-auto"
-                                >
-                                  <ArrowRight className="w-4 h-4 text-white" />
-                                </button>
-                              </div>
-                            )}
                           </div>
                         </div>
                       )}
