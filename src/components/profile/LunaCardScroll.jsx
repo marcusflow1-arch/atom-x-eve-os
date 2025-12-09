@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight, Shield, Sword, Gem, Zap, Scroll, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRef } from 'react';
 import ShinyCard from '../shared/ShinyCard';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -8,6 +10,14 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 const INITIAL_GENRES = [
   "MMORPG", "RPG", "Fear", "Shooter", "Action",
   "Adventure", "Strategy", "Puzzle", "Racing", "Sports"
+];
+
+const FILTER_OPTIONS = [
+  { id: 'armor', icon: Shield, label: 'Armor' },
+  { id: 'weapon', icon: Sword, label: 'Weapon' },
+  { id: 'ring', icon: Gem, label: 'Ring' },
+  { id: 'ability', icon: Zap, label: 'Ability' },
+  { id: 'relic', icon: Scroll, label: 'Relic' }
 ];
 
 // Helper to generate consistent mock games
@@ -99,9 +109,22 @@ const GamesCarousel = ({ games, onSelectGame }) => {
   );
 };
 
-const CardsCarousel = ({ genre, activeGame, onCardClick }) => {
+const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Generate consistent cards with types for filtering
+  const cards = React.useMemo(() => {
+    return Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      type: FILTER_OPTIONS[i % FILTER_OPTIONS.length].id
+    }));
+  }, []);
+
+  const filteredCards = React.useMemo(() => {
+    if (!filter) return cards;
+    return cards.filter(c => c.type === filter);
+  }, [cards, filter]);
 
   useEffect(() => {
     if (!isHovered) return;
@@ -149,18 +172,24 @@ const CardsCarousel = ({ genre, activeGame, onCardClick }) => {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
       >
-        {/* Mock 10 cards for scroll */}
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-[30%] min-w-[90px]">
-            <ShinyCard 
-              onClick={() => onCardClick && onCardClick({ 
-                title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
-                id: `${genre}-${i}`,
-                image: activeGame?.image
-              })}
-            />
+        {filteredCards.length > 0 ? (
+          filteredCards.map((card, i) => (
+            <div key={card.id} className="flex-shrink-0 w-[30%] min-w-[90px]">
+              <ShinyCard 
+                onClick={() => onCardClick && onCardClick({ 
+                  title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
+                  id: `${genre}-${i}`,
+                  image: activeGame?.image,
+                  type: card.type
+                })}
+              />
+            </div>
+          ))
+        ) : (
+          <div className="w-full h-32 flex items-center justify-center text-white/30 text-xs italic">
+            No items found
           </div>
-        ))}
+        )}
       </motion.div>
 
       {/* Right Arrow - Outside, No Box */}
@@ -184,6 +213,8 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
   const [viewModes, setViewModes] = useState({});
   // State for selected game filter per genre
   const [selectedGames, setSelectedGames] = useState({});
+  // State for active filter per genre
+  const [activeFilters, setActiveFilters] = useState({});
 
   const togglePage = (genre) => {
     setPages(prev => ({
@@ -271,7 +302,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                         >
                           <div className="flex items-center justify-between mb-3 pl-1">
                             <div className="flex items-center gap-2 overflow-hidden">
-                              <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase whitespace-nowrap">
+                              <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase whitespace-nowrap max-w-[120px] truncate">
                                 {activeGame ? activeGame.title : genre}
                               </h3>
                               {activeGame && (
@@ -279,15 +310,51 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                   onClick={() => {
                                     setSelectedGames(prev => ({ ...prev, [genre]: null }));
                                     setViewModes(prev => ({ ...prev, [genre]: 'games' }));
+                                    setActiveFilters(prev => ({ ...prev, [genre]: null }));
                                   }}
-                                  className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded hover:bg-white/20 text-white/60 hover:text-white transition-colors flex items-center gap-1"
+                                  className="w-6 h-6 bg-white/10 rounded-full hover:bg-white/20 text-white/60 hover:text-white transition-colors flex items-center justify-center"
+                                  title="Back"
                                 >
-                                  <ChevronLeft className="w-3 h-3" /> Back
+                                  <ChevronLeft className="w-4 h-4" />
                                 </button>
                               )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              </div>
+
+                              {/* Filter Controls (When Game Active) */}
+                              {activeGame && (
+                              <div className="flex items-center gap-1 mr-2">
+                                  <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                          <button className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${activeFilters[genre] ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40 hover:text-white'}`}>
+                                              {activeFilters[genre] ? (
+                                                  (() => {
+                                                      const Opt = FILTER_OPTIONS.find(o => o.id === activeFilters[genre]);
+                                                      return Opt ? <Opt.icon className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;
+                                                  })()
+                                              ) : (
+                                                  <ChevronDown className="w-3 h-3" />
+                                              )}
+                                          </button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="bg-slate-900 border-white/10 text-white">
+                                          <DropdownMenuItem onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: null }))}>
+                                              All Items
+                                          </DropdownMenuItem>
+                                          {FILTER_OPTIONS.map(opt => (
+                                              <DropdownMenuItem 
+                                                  key={opt.id}
+                                                  onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: opt.id }))}
+                                                  className="gap-2"
+                                              >
+                                                  <opt.icon className="w-4 h-4" /> {opt.label}
+                                              </DropdownMenuItem>
+                                          ))}
+                                      </DropdownMenuContent>
+                                  </DropdownMenu>
+                              </div>
+                              )}
+
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button 
                                 onClick={() => toggleViewMode(genre)}
                                 className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
@@ -326,6 +393,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                   genre={genre}
                                   activeGame={activeGame}
                                   onCardClick={onCardClick}
+                                  filter={activeFilters[genre]}
                                 />
                               )}
                             </AnimatePresence>
