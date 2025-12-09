@@ -13,6 +13,8 @@ import { Game } from '@/entities/Game';
 import { allMockGames } from '../components/store/mockData';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
+import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
+import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 
 // --- Shiny Sidebar Box Component ---
