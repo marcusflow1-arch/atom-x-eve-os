@@ -169,20 +169,27 @@ const ProductRow = ({ title, items, onItemClick }) => (
         See more <ChevronRight className="w-4 h-4" />
       </button>
     </div>
-    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-6 overflow-x-auto pb-8 pt-4 px-2 scrollbar-hide">
       {items.slice(0, 6).map((item) => {
-        const rarity = rarityStyles[item.rarity];
+        const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
         const hasDiscount = item.originalPrice && item.originalPrice > item.price;
         return (
           <div 
             key={item.id} 
             onClick={() => onItemClick(item)} 
-            className="w-[180px] flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="w-[180px] flex-shrink-0 cursor-pointer group"
           >
-            <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 mb-2">
-              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            <div className="w-full mb-3">
+              <ShinyCard>
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-2 left-2 right-2">
+                   <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md`}>{item.rarity}</Badge>
+                </div>
+              </ShinyCard>
             </div>
-            <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 hover:text-orange-400">{item.name}</h3>
+            
+            <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 group-hover:text-orange-400 transition-colors">{item.name}</h3>
             <div className="flex items-center gap-1 mb-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
