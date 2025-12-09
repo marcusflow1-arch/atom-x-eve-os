@@ -11,7 +11,7 @@ import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
-import { aiGames, otherSampleGames } from '@/components/store/mockData';
+import { aiGames, otherSampleGames } from '../components/store/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -391,13 +391,13 @@ export default function Store() {
             try {
                 const fetchedGames = await Game.list();
                 const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
-                    ...Object.values(aiGames),
-                    ...Object.values(otherSampleGames)
+                    ...aiGames,
+                    ...otherSampleGames
                 ];
                 setGames(enhancedGames);
             } catch (error) {
                 console.error("Error fetching games:", error);
-                setGames([...Object.values(aiGames), ...Object.values(otherSampleGames)]);
+                setGames([...aiGames, ...otherSampleGames]);
             }
             setLoading(false);
         };
@@ -915,7 +915,7 @@ export default function Store() {
                                         </div>
                                         
                                         <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                                            {[...Object.values(aiGames)].slice(0, 5).map((game) => (
+                                            {[...aiGames].slice(0, 5).map((game) => (
                                                 <motion.div
                                                     key={game.id}
                                                     whileHover={{ scale: 1.02, y: -5 }}
