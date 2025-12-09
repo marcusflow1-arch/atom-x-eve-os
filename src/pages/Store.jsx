@@ -20,6 +20,7 @@ import TradingPostContent from '../components/store/TradingPostContent';
 import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
+import StoreSpotlight from '../components/store/StoreSpotlight';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -904,6 +905,9 @@ export default function Store() {
                                             <Gamepad2 className="w-6 h-6" />
                                         </button>
                                     </div>
+
+                                    {/* Store Spotlight Feature */}
+                                    <StoreSpotlight games={aiGamesList} />
 
                                     {/* Featured Section (Horizontal Scroll) */}
                                     <div className="mb-12">
