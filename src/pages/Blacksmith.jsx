@@ -615,7 +615,7 @@ export default function BlacksmithPage() {
               </div>
 
               {/* RIGHT CONTENT: Items Grid */}
-              <div className="flex-1 h-full flex flex-col overflow-hidden bg-slate-900/50">
+              <div className="flex-1 h-full flex flex-col overflow-hidden">
                    {selectedGame ? (
                        <div className="flex flex-col h-full">
                            {/* Game Header Bar */}
@@ -634,7 +634,7 @@ export default function BlacksmithPage() {
 
                            <div className="flex-1 flex overflow-hidden">
                                {/* Inner Sidebar: Item List */}
-                               <div className="w-80 flex flex-col border-r border-white/10 bg-slate-900/30">
+                               <div className="w-80 flex flex-col border-r border-white/10">
                                    {/* Tabs */}
                                    <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5">
                                        {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
@@ -681,7 +681,7 @@ export default function BlacksmithPage() {
                                </div>
 
                                {/* Main Content: Item Details */}
-                               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 relative bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/10">
+                               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 relative">
                                    {selectedItem ? (
                                        <div className="max-w-4xl mx-auto">
                                            <div className="flex items-center gap-3 mb-4">
