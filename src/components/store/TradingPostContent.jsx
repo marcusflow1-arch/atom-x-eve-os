@@ -433,7 +433,7 @@ export default function TradingPostContent() {
 
   // Mock Item Generator
   const generateGameItems = (game) => {
-    const types = ['Weapon', 'Armor', 'Ability', 'Consumable', 'Material'];
+    const types = ['Weapon', 'Armor', 'Ability', 'Consumable', 'Material', 'Tech', 'Blueprint'];
     const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'];
     
     // Deterministic pseudo-random based on game ID
@@ -487,7 +487,8 @@ export default function TradingPostContent() {
                 if (cat === 'consumable' && item.type !== 'Consumable') return false;
                 if (cat === 'material' && item.type !== 'Material') return false;
                 if (cat === 'magic' && item.type !== 'Ability') return false;
-                // Add other mappings as needed
+                if (cat === 'tech' && item.type !== 'Tech') return false;
+                if (cat === 'blueprint' && item.type !== 'Blueprint') return false;
             }
             
             // Rarity Filter
