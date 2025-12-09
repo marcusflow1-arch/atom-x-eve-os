@@ -131,6 +131,7 @@ export default function Achievements() {
   const [localAchievements, setLocalAchievements] = useState({});
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [selectedCard, setSelectedCard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [trackedAchievements, setTrackedAchievements] = useState([]);
