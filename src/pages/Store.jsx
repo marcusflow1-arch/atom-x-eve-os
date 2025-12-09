@@ -915,7 +915,7 @@ export default function Store() {
                                         </div>
                                         
                                         <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                                            {[...aiGames].slice(0, 5).map((game) => (
+                                            {[...aiGamesList].slice(0, 5).map((game) => (
                                                 <motion.div
                                                     key={game.id}
                                                     whileHover={{ scale: 1.02, y: -5 }}
