@@ -267,6 +267,19 @@ export default function Achievements() {
     return localAchievements[selectedGame.title];
   }, [selectedGame, localAchievements]);
 
+  const tradingCards = useMemo(() => {
+    if (!selectedGame) return [];
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: `card-${selectedGame.id}-${i}`,
+      title: `${selectedGame.title} Card ${i + 1}`,
+      series: selectedGame.title,
+      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
+      image: selectedGame.cover_image || selectedGame.cover,
+      description: `A collectible trading card from ${selectedGame.title}.`,
+      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
+    }));
+  }, [selectedGame]);
+
   const genres = useMemo(() => {
     const g = new Set(allGames.map(game => game.genre).filter(Boolean));
     return ['All', ...Array.from(g)];
