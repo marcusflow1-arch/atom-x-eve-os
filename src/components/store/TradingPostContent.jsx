@@ -417,14 +417,16 @@ export default function TradingPostContent() {
     const fetchGames = async () => {
         try {
             const fetchedGames = await Game.list();
+            // Using placeholder data until backend is fully populated
             const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
-                ...Object.values(aiGames),
-                ...Object.values(otherSampleGames)
+                ...userInventory.map(item => ({ id: item.game, title: item.game, genre: item.genre, image: item.image, listings: [] })), // minimal mock game objects from inventory
+                // In a real app, this would be a proper list of games
             ];
             setAllStoreGames(enhancedGames);
         } catch (error) {
             console.error("Error fetching games:", error);
-            setAllStoreGames([...Object.values(aiGames), ...Object.values(otherSampleGames)]);
+            // fallback
+            setAllStoreGames([]);
         }
     };
     fetchGames();
