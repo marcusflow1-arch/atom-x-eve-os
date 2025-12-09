@@ -467,6 +467,16 @@ export default function Achievements() {
         )}
       </AnimatePresence>
 
+      {/* Card Enhancement Overlay */}
+      <AnimatePresence>
+        {selectedCard && (
+          <CardEnhancementOverlay
+            card={selectedCard}
+            onClose={() => setSelectedCard(null)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Challenge Modal */}
       {achievementToChallenge && (
         <ChallengeFriendModal
