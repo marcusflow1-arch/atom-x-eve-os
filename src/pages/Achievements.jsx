@@ -308,7 +308,14 @@ export default function Achievements() {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
+      {/* Absolute Header Title */}
+      <div className="absolute top-4 left-20 z-50 flex items-center gap-2 pointer-events-none">
+           <h1 className="text-xl font-black tracking-tighter text-white flex items-center gap-2 drop-shadow-lg">
+             Achievements <Volume2 className="w-5 h-5 text-blue-400" />
+           </h1>
+      </div>
+
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-16">
         
         {/* Main Layout: 2 Columns */}
         <div className="flex gap-8 h-full overflow-hidden">
@@ -316,13 +323,8 @@ export default function Achievements() {
           {/* Left Sidebar (Shiny Box) */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
             
-            {/* Header with Speaker Icon */}
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
-                Achievements <Volume2 className="w-6 h-6 text-blue-400" />
-              </h1>
-            </div>
-
+            {/* Header moved to top next to menu button */}
+            
             {/* Shiny Box Container */}
             <ShinySidebarBox className="flex-1 flex flex-col p-5">
               

@@ -501,8 +501,16 @@ export default function BlacksmithPage() {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
       </div>
 
+      {/* Absolute Title Header */}
+      <div className="absolute top-4 left-20 z-50 flex items-center gap-3 pointer-events-none">
+            <Hammer className="w-6 h-6 fill-white text-white drop-shadow-md" />
+            <h1 className="text-xl font-black tracking-tighter text-white drop-shadow-md">
+              BLACK FORGE
+            </h1>
+      </div>
+
       <motion.div 
-        className="relative z-10 flex flex-col h-full p-6 md:p-8"
+        className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-4"
         animate={{ 
             scale: showWorkstation ? 0.95 : 1, 
             opacity: showWorkstation ? 0.5 : 1,
@@ -512,13 +520,10 @@ export default function BlacksmithPage() {
       >
         
         {/* Top Navigation Bar */}
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-8 pl-14"> {/* Added padding-left to clear title */}
           <div className="flex items-center gap-8">
-            <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
-              <Hammer className="w-8 h-8 fill-white" />
-              BLACK FORGE
-            </h1>
-            <nav className="flex gap-1 bg-slate-800/50 rounded-full p-1 backdrop-blur-xl border border-white/10 shadow-lg">
+             {/* Title Moved to Absolute Position */}
+            <nav className="flex gap-1 bg-slate-800/50 rounded-full p-1 backdrop-blur-xl border border-white/10 shadow-lg ml-32">
               {['forge', 'materials', 'collab'].map((mode) => (
                 <button
                   key={mode}
