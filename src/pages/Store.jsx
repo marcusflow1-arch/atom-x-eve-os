@@ -318,6 +318,15 @@ export default function Store() {
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
     const [activeGameIndex, setActiveGameIndex] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [hoveredGame, setHoveredGame] = useState(null);
+    const genreRefs = useRef([]);
+
+    // Scroll active genre into view for Classic Mode
+    useEffect(() => {
+        if (viewMode === 'classic' && genreRefs.current[activeGenreIndex]) {
+            genreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [activeGenreIndex, viewMode]);
 
     // Regular Voice Input for Store
     const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
@@ -691,8 +700,33 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full overflow-y-auto pt-24 pb-12 px-8 bg-gray-500/10 backdrop-blur-3xl"
+                            className="w-full h-full overflow-y-auto pt-24 pb-12 px-8 bg-gray-500/10 backdrop-blur-3xl relative z-10"
                         >
+                             {/* Dynamic Background for Grid View */}
+                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+                                <AnimatePresence mode="wait">
+                                    {(hoveredGame || activeGame) && (
+                                        <motion.div
+                                            key={(hoveredGame || activeGame)?.id}
+                                            initial={{ opacity: 0, scale: 1.1 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.8 }}
+                                            className="absolute inset-0"
+                                        >
+                                            {/* Primary Image */}
+                                            <img 
+                                                src={(hoveredGame || activeGame)?.cover_image || (hoveredGame || activeGame)?.image} 
+                                                className="w-full h-full object-cover opacity-60"
+                                                alt="Background"
+                                            />
+                                            {/* Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-950/20" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                             </div>
+
                             <div className="max-w-[1600px] mx-auto">
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -710,46 +744,63 @@ export default function Store() {
                                 </div>
 
                                 <div className="space-y-12">
-                                    {genreData.map((genre) => (
-                                        <div key={genre.id} className="space-y-4">
+                                    {genreData.map((genre, gIdx) => (
+                                        <div 
+                                            key={genre.id} 
+                                            ref={el => genreRefs.current[gIdx] = el}
+                                            className={`space-y-4 transition-opacity duration-300 ${activeGenreIndex === gIdx ? 'opacity-100' : 'opacity-60'}`}
+                                        >
                                             <div className="flex items-center gap-3">
                                                 <genre.icon className="w-5 h-5 text-blue-400" />
                                                 <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
                                             </div>
                                             
                                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                                                {genre.items.map((game) => (
-                                                    <motion.div
-                                                        key={game.id}
-                                                        whileHover={{ y: -5, scale: 1.02 }}
-                                                        className="group relative aspect-[3/4] bg-slate-900 rounded-xl overflow-hidden border border-white/10 cursor-pointer shadow-lg hover:shadow-blue-500/10 hover:border-blue-500/30 transition-all"
-                                                        onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
-                                                    >
-                                                        <img 
-                                                            src={game.cover_image || game.image} 
-                                                            alt={game.title} 
-                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
-                                                        
-                                                        <div className="absolute top-2 right-2">
-                                                            <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
-                                                                ${game.price}
-                                                            </Badge>
-                                                        </div>
+                                                {genre.items.map((game, itemIdx) => {
+                                                    const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
+                                                    return (
+                                                        <motion.div
+                                                            key={game.id}
+                                                            whileHover={{ y: -5, scale: 1.02 }}
+                                                            onMouseEnter={() => {
+                                                                setHoveredGame(game);
+                                                                // Optional: Update active indices on hover for seamless switch?
+                                                                // setActiveGenreIndex(gIdx);
+                                                                // setActiveGameIndex(itemIdx); 
+                                                            }}
+                                                            onMouseLeave={() => setHoveredGame(null)}
+                                                            className={`
+                                                                group relative aspect-[3/4] bg-slate-900 rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
+                                                                ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
+                                                            `}
+                                                            onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                                                        >
+                                                            <img 
+                                                                src={game.cover_image || game.image} 
+                                                                alt={game.title} 
+                                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                                                            
+                                                            <div className="absolute top-2 right-2">
+                                                                <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
+                                                                    ${game.price}
+                                                                </Badge>
+                                                            </div>
 
-                                                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                            <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
-                                                            <div className="flex items-center justify-between text-xs text-white/50">
-                                                                <span>{game.genre}</span>
-                                                                <div className="flex items-center gap-1">
-                                                                    <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                                                    <span>{game.rating || 4.5}</span>
+                                                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                                <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
+                                                                <div className="flex items-center justify-between text-xs text-white/50">
+                                                                    <span>{game.genre}</span>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                                                        <span>{game.rating || 4.5}</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </motion.div>
-                                                ))}
+                                                        </motion.div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     ))}
