@@ -56,6 +56,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
     { id: 'skills', label: 'Skills', icon: Sparkles, color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/50' },
     { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
     { id: 'craft', label: 'Craft', icon: Hammer, color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/50' },
+    { id: 'score', label: 'Score', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
   ];
 
   // Card Tilt & Shine Logic (Copied from CardInventoryOverlay)
