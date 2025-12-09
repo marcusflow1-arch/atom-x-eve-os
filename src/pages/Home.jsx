@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Circle, X, ArrowLeft, Settings,
-  Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
+  Home as HomeIcon, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical
 } from 'lucide-react';
@@ -58,7 +58,7 @@ const ORBITAL_ITEMS = [
   { 
     id: 'home', 
     label: 'AI Home', 
-    icon: Home, 
+    icon: HomeIcon, 
     color: 'from-green-500 to-emerald-500', 
     route: 'Dashboard',
     image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
