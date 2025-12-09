@@ -837,7 +837,7 @@ export default function LunaTemplate() {
               </div>
               {/* Menu Content Area */}
               <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree'].includes(item.id)).map((item) => {
+                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
                   const Icon = item.icon;
                   return (
                     <button
