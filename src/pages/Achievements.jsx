@@ -616,19 +616,67 @@ export default function Achievements() {
                 <AchievementSearch onSearch={setSearchTerm} />
               </div>
 
+              {/* Game Boxes by Genre (Scrollable) */}
+              <div className="space-y-8 pb-20">
+                {activeGenre || searchTerm ? (
+                   // Flat Grid for Search/Filter Results
+                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        {filteredGames.map((game) => (
+                            <div key={game.id} ref={game === selectedGame ? gameBoxRef : null}>
+                                <GameCard
+                                    game={game}
+                                    onClick={handleGameSelect}
+                                    isSelected={game === selectedGame} 
+                                />
+                            </div>
+                        ))}
+                   </div>
+                ) : (
+                    // Genre Rows
+                    (() => {
+                        const gamesByGenre = filteredGames.reduce((acc, game) => {
+                            const g = game.genre || 'Other';
+                            if (!acc[g]) acc[g] = [];
+                            acc[g].push(game);
+                            return acc;
+                        }, {});
 
-
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filteredGames.map((game) =>
-              <div key={game.id} ref={game === selectedGame ? gameBoxRef : null}>
-                    <GameCard
-                  game={game}
-                  onClick={handleGameSelect}
-                  isSelected={game === selectedGame} />
-
-                  </div>
-              )}
+                        // Expand data for "more boxes" request
+                        const genres = Object.keys(gamesByGenre).sort();
+                        
+                        return genres.map(genre => (
+                            <div key={genre} className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        {genre} <span className="text-slate-500 text-sm font-normal">({gamesByGenre[genre].length})</span>
+                                    </h3>
+                                    <Button 
+                                        variant="ghost" 
+                                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                        onClick={() => {
+                                            // Set filters to simulate "See All" inventory view
+                                            setActiveGenre(genre);
+                                        }}
+                                    >
+                                        See All <ChevronRight className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                                    {/* Doubling data to ensure scrollability as requested */}
+                                    {[...gamesByGenre[genre], ...gamesByGenre[genre], ...gamesByGenre[genre]].slice(0, 15).map((game, idx) => (
+                                        <div key={`${game.id}-${idx}`} className="w-[280px] flex-shrink-0 snap-start">
+                                            <GameCard
+                                                game={game}
+                                                onClick={handleGameSelect}
+                                                isSelected={game === selectedGame} 
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ));
+                    })()
+                )}
               </div>
             </> :
 

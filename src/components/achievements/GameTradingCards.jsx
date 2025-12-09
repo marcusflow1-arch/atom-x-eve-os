@@ -209,9 +209,20 @@ export default function GameTradingCards() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedCard, setSelectedCard] = useState(null);
+  const [viewInventoryMode, setViewInventoryMode] = useState(false);
+
+  // Generate expanded mock cards for the "row of 50" requirement
+  const expandedMockCards = useMemo(() => {
+      // Create 50+ cards by duplicating and modifying
+      let cards = [];
+      for (let i = 0; i < 5; i++) {
+          cards = [...cards, ...MOCK_CARDS.map(c => ({...c, id: `${c.id}_${i}`, mint: (c.mint || 1) + i}))];
+      }
+      return cards;
+  }, []);
 
   const filteredCards = useMemo(() => {
-    let cards = MOCK_CARDS;
+    let cards = viewInventoryMode ? expandedMockCards : MOCK_CARDS;
     if (selectedGenre !== 'all') {
       cards = cards.filter(card => card.genre === selectedGenre);
     }
@@ -219,15 +230,20 @@ export default function GameTradingCards() {
       cards = cards.filter(card => card.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     return cards;
-  }, [searchTerm, selectedGenre]);
+  }, [searchTerm, selectedGenre, viewInventoryMode, expandedMockCards]);
 
   const groupedCards = CARD_GENRES.filter(g => g.id !== 'all').reduce((acc, genre) => {
-    acc[genre.id] = MOCK_CARDS.filter(card => card.genre === genre.id);
+    acc[genre.id] = expandedMockCards.filter(card => card.genre === genre.id).slice(0, 15); // Show horizontal scroll slice
     return acc;
   }, {});
 
   const handleCardClick = (card) => {
     setSelectedCard(card);
+  };
+
+  const handleSeeAll = (genreId) => {
+      setSelectedGenre(genreId);
+      setViewInventoryMode(true);
   };
 
   const getRelatedCards = (card) => {
@@ -241,24 +257,36 @@ export default function GameTradingCards() {
     <div className="h-full flex flex-col pt-4 relative">
       <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
-      <h2 className="text-3xl font-black mb-6 px-10">Trading Cards</h2>
-
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide px-10">
-        {CARD_GENRES.map(genre => (
-          <button
-            key={genre.id}
-            onClick={() => setSelectedGenre(genre.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
-              selectedGenre === genre.id
-                ? 'bg-purple-500/30 text-white border border-purple-400/50'
-                : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <genre.icon className="w-4 h-4" />
-            <span className="text-sm font-medium">{genre.name}</span>
-          </button>
-        ))}
+      <div className="flex items-center justify-between mb-6 px-10">
+          <h2 className="text-3xl font-black">Trading Cards</h2>
+          {viewInventoryMode && (
+              <button 
+                  onClick={() => { setViewInventoryMode(false); setSelectedGenre('all'); }}
+                  className="text-blue-400 hover:text-white transition-colors text-sm"
+              >
+                  Back to Categories
+              </button>
+          )}
       </div>
+
+      {!viewInventoryMode && (
+          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide px-10">
+            {CARD_GENRES.map(genre => (
+              <button
+                key={genre.id}
+                onClick={() => setSelectedGenre(genre.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                  selectedGenre === genre.id
+                    ? 'bg-purple-500/30 text-white border border-purple-400/50'
+                    : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <genre.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{genre.name}</span>
+              </button>
+            ))}
+          </div>
+      )}
 
       <div className="flex items-center gap-2 px-4 py-2 rounded-full mb-6 mx-10"
         style={{
@@ -277,20 +305,44 @@ export default function GameTradingCards() {
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 px-10">
-        {selectedGenre === 'all' ? (
+        {selectedGenre === 'all' && !viewInventoryMode ? (
           <>
             {CARD_GENRES.filter(g => g.id !== 'all').map(genre => (
-              <GenreRow 
-                key={genre.id}
-                genre={genre.name}
-                cards={groupedCards[genre.id] || []}
-                icon={genre.icon}
-                onCardClick={handleCardClick}
-              />
+              <div key={genre.id} className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        <genre.icon className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <h2 className="text-xl font-bold text-white">{genre.name}</h2>
+                      <span className="text-white/40 text-sm">({groupedCards[genre.id]?.length || 0})</span>
+                    </div>
+                    <button 
+                        onClick={() => handleSeeAll(genre.id)}
+                        className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                    >
+                      See All <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                    {(groupedCards[genre.id] || []).map(card => (
+                      <div key={card.id} className="flex-shrink-0 w-[200px]">
+                        <CardComponent card={card} onClick={handleCardClick} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
             ))}
           </>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-20">
             {filteredCards.map(card => (
               <CardComponent key={card.id} card={card} onClick={handleCardClick} />
             ))}

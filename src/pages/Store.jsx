@@ -374,6 +374,7 @@ export default function Store() {
     }, [activeGenreIndex, viewMode]);
 
     // Filters for Sidebar
+    const [activeCategory, setActiveCategory] = useState('All Games');
     const [priceRange, setPriceRange] = useState([0, 100]);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [minRating, setMinRating] = useState(0);
@@ -403,12 +404,33 @@ export default function Store() {
         fetchGames();
     }, []);
 
-    // Group Games by Genre
+    // Group Games by Genre with Filters
     const genreData = useMemo(() => {
         if (loading || games.length === 0) return [];
         
+        // Filter Games
+        const filteredGames = games.filter(game => {
+            // Category Filter
+            if (activeCategory === 'Trending Now' && (game.rating < 4.5 && game.reviews < 1000)) return false;
+            if (activeCategory === 'New Releases' && game.original_year < 2024) return false;
+            if (activeCategory === 'Top Rated' && game.rating < 4.8) return false;
+            if (activeCategory === 'AI Enhanced' && !game.aiEnhanced) return false;
+            if (activeCategory === 'On Sale' && (!game.originalPrice || game.price >= game.originalPrice)) return false;
+
+            // Genre Filter
+            if (selectedGenres.length > 0 && !selectedGenres.includes(game.genre)) return false;
+
+            // Price Filter
+            if (game.price < priceRange[0] || game.price > priceRange[1]) return false;
+
+            // Rating Filter
+            if (minRating > 0 && (game.rating || 0) < minRating) return false;
+
+            return true;
+        });
+
         const groups = {};
-        games.forEach(game => {
+        filteredGames.forEach(game => {
             const g = game.genre || 'Other';
             if (!groups[g]) groups[g] = [];
             groups[g].push(game);
@@ -422,7 +444,7 @@ export default function Store() {
             icon: GENRE_ICONS[genre] || Gamepad2,
             items: groups[genre]
         }));
-    }, [games, loading]);
+    }, [games, loading, activeCategory, selectedGenres, priceRange, minRating]);
 
     // Navigation Logic (Keyboard + Wheel)
     useEffect(() => {
@@ -788,12 +810,13 @@ export default function Store() {
                                                 {['All Games', 'Trending Now', 'New Releases', 'Top Rated', 'AI Enhanced', 'On Sale'].map((item) => (
                                                     <button 
                                                         key={item}
+                                                        onClick={() => setActiveCategory(item)}
                                                         className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex items-center justify-between group ${
-                                                            item === 'All Games' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                            activeCategory === item ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
                                                         }`}
                                                     >
                                                         <span>{item}</span>
-                                                        {item === 'All Games' && <ChevronRight className="w-3 h-3" />}
+                                                        {activeCategory === item && <ChevronRight className="w-3 h-3" />}
                                                     </button>
                                                 ))}
                                             </div>
