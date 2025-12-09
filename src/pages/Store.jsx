@@ -41,11 +41,11 @@ const ShinySidebarBox = ({ children, className = "" }) => {
 
   return (
     <motion.div
-      className={`relative overflow-hidden bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl ${className}`}
+      className={`relative overflow-hidden bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => x.set(0.5)}
       style={{
-        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+        WebkitBackdropFilter: 'blur(50px) saturate(200%)'
       }}
     >
         {/* The Shine Effect */}
@@ -565,7 +565,10 @@ export default function Store() {
     const CROSS_Y_VH = 40; // Intersection point in VH
 
     return (
-        <div className="h-screen w-full relative overflow-hidden bg-slate-950 text-white font-sans select-none">
+        <div 
+            className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
+            style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+        >
             
             {/* Top Navigation Bar (Translucent/Invisible) */}
             <div className="absolute top-0 left-0 right-0 z-50 h-20 flex items-center justify-between px-8" 
@@ -772,7 +775,7 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full pt-20 pb-0 bg-gray-950"
+                            className="w-full h-full pt-20 pb-0 bg-transparent"
                         >
                             {/* Dynamic Background */}
                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -972,7 +975,7 @@ export default function Store() {
                                                                 }}
                                                                 onMouseLeave={() => setHoveredGame(null)}
                                                                 className={`
-                                                                    group relative aspect-[3/4] bg-slate-900 rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
+                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
                                                                     ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
                                                                 `}
                                                                 onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
@@ -1040,7 +1043,7 @@ export default function Store() {
                                         className="absolute inset-0 z-0"
                                     >
                                         {/* Dark overlay base */}
-                                        <div className="absolute inset-0 bg-slate-950" />
+                                        <div className="absolute inset-0 bg-transparent" />
                                         
                                         {/* Game Image Background */}
                                         {activeGame?.cover_image && (
@@ -1112,8 +1115,8 @@ export default function Store() {
                                                         <div className={`
                                                             w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300
                                                             ${isActive 
-                                                                ? 'bg-white text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
-                                                                : 'bg-white/5 text-white/60 border border-white/10'
+                                                                ? 'bg-white/20 text-white shadow-[0_0_30px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
+                                                                : 'bg-white/5 text-white/60 border border-white/10 backdrop-blur-sm'
                                                             }
                                                         `}>
                                                             <Icon className="w-8 h-8" />
