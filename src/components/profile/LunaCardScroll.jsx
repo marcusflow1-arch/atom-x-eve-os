@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight, Shield, Sword, Gem, Zap, Scroll, ChevronDown } from 'lucide-react';
+import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight, Shield, Sword, Gem, Zap, Scroll, ChevronDown, Hexagon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRef } from 'react';
@@ -17,7 +17,8 @@ const FILTER_OPTIONS = [
   { id: 'weapon', icon: Sword, label: 'Weapon' },
   { id: 'ring', icon: Gem, label: 'Ring' },
   { id: 'ability', icon: Zap, label: 'Ability' },
-  { id: 'relic', icon: Scroll, label: 'Relic' }
+  { id: 'relic', icon: Scroll, label: 'Relic' },
+  { id: 'aspect', icon: Hexagon, label: 'Aspect' }
 ];
 
 // Helper to generate consistent mock games
