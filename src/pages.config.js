@@ -31,7 +31,6 @@ import SeasonalPass from './pages/SeasonalPass';
 import LunaTemplate from './pages/LunaTemplate';
 import GenreMastery from './pages/GenreMastery';
 import WorldEvents from './pages/WorldEvents';
-import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -69,7 +68,6 @@ export const PAGES = {
     "LunaTemplate": LunaTemplate,
     "GenreMastery": GenreMastery,
     "WorldEvents": WorldEvents,
-    "Home": Home,
 }
 
 export const pagesConfig = {
