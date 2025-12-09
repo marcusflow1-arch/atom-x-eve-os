@@ -70,13 +70,21 @@ export default function PinGamesContent() {
   };
 
   return (
-    <div className="bg-slate-950 rounded-lg overflow-hidden h-full flex flex-col md:flex-row shadow-2xl border border-white/10">
+    <div 
+      className="rounded-3xl overflow-hidden h-full flex flex-col md:flex-row shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%)',
+        backdropFilter: 'blur(40px)', // Stick/Thick glass effect
+        WebkitBackdropFilter: 'blur(40px)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.1)'
+      }}
+    >
       
       {/* LEFT SIDEBAR: Game Library List */}
-      <div className="w-full md:w-80 flex-shrink-0 bg-slate-900 flex flex-col border-r border-white/5">
+      <div className="w-full md:w-80 flex-shrink-0 bg-slate-900/20 flex flex-col border-r border-white/5">
         
         {/* Sidebar Header & Filters */}
-        <div className="p-4 flex flex-col gap-3 bg-slate-900 z-10 shadow-lg">
+        <div className="p-4 flex flex-col gap-3 bg-transparent z-10">
           <div className="flex items-center gap-2 mb-1">
              <div className="p-2 bg-blue-600 rounded-lg">
                 <Gamepad2 className="w-5 h-5 text-white" />
@@ -159,7 +167,7 @@ export default function PinGamesContent() {
 
                 return (
                     <div key={group} className="mb-4">
-                         <div className="px-3 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider sticky top-0 bg-slate-900/95 backdrop-blur-sm z-0">
+                         <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider sticky top-0 bg-slate-900/40 backdrop-blur-md z-0">
                             {group} ({list.length})
                         </div>
                         {list.map(game => (
@@ -179,7 +187,7 @@ export default function PinGamesContent() {
       </div>
 
       {/* RIGHT CONTENT: Game Details */}
-      <div className="flex-1 flex flex-col bg-slate-950 overflow-y-auto custom-scrollbar relative">
+      <div className="flex-1 flex flex-col bg-transparent overflow-y-auto custom-scrollbar relative">
         {selectedGame ? (
             <>
                 {/* Hero Banner */}
@@ -188,10 +196,10 @@ export default function PinGamesContent() {
                         <img 
                             src={selectedGame.cover_image || selectedGame.image} 
                             alt={selectedGame.title} 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover opacity-80"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-transparent to-transparent" />
                     </div>
 
                     <div className="absolute bottom-0 left-0 p-8 w-full">
@@ -302,7 +310,7 @@ export default function PinGamesContent() {
 
                                     {/* Side Column */}
                                     <div className="space-y-6">
-                                        <div className="bg-slate-900 rounded-xl p-5 border border-white/5">
+                                        <div className="bg-white/5 rounded-xl p-5 border border-white/10 backdrop-blur-md">
                                             <h4 className="text-white font-bold text-sm uppercase mb-4">Game Info</h4>
                                             <div className="space-y-3 text-sm">
                                                 <div className="flex justify-between">
@@ -320,7 +328,7 @@ export default function PinGamesContent() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-900 rounded-xl p-5 border border-white/5">
+                                        <div className="bg-white/5 rounded-xl p-5 border border-white/10 backdrop-blur-md">
                                             <h4 className="text-white font-bold text-sm uppercase mb-4">Friends Who Play</h4>
                                             <div className="flex -space-x-2">
                                                 {[1,2,3,4].map(i => (
