@@ -844,7 +844,7 @@ export default function LunaTemplate() {
                 <button onClick={() => setDrawerOpen(false)} className="text-white/40 hover:text-white"><X className="w-5 h-5"/></button>
               </div>
               <div className="space-y-1">
-                {ALL_NAV_ITEMS.filter(item => item.name !== 'Clans').map((page) => (
+                {ALL_NAV_ITEMS.map((page) => (
                   <Link
                     key={page.name}
                     to={page.path}
