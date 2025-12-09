@@ -19,32 +19,13 @@ import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
-  const x = useMotionValue(0);
-  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  
-  function handleMouseMove({ currentTarget, clientX }) {
-    const { left, width } = currentTarget.getBoundingClientRect();
-    x.set((clientX - left) / width);
-  }
-
   return (
     <motion.div
       className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => x.set(0.5)}
       style={{
         background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)', // Darker blue background
       }}
     >
-        <motion.div
-            className="absolute inset-0 pointer-events-none z-10"
-            style={{
-                background: useTransform(mouseX, val => 
-                    `linear-gradient(105deg, transparent ${val * 100 - 20}%, rgba(255,255,255,0.15) ${val * 100}%, transparent ${val * 100 + 20}%)`
-                ),
-                opacity: 1
-            }}
-        />
         {children}
     </motion.div>
   );
