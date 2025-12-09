@@ -136,7 +136,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
           <div className="flex-1 flex flex-col items-center justify-center">
             {/* Interactive Liquid Glass Card Container */}
             <div 
-              className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]"
+              className="relative group perspective-1000 w-full max-w-[220px] aspect-[2.5/3.5]"
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
             >
@@ -176,8 +176,8 @@ export default function CardEnhancementOverlay({ card, onClose }) {
               <div className="absolute -bottom-10 left-4 right-4 h-4 bg-black/60 blur-xl rounded-full" />
             </div>
 
-            <div className="mt-8 text-center">
-              <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{card?.title || card?.name || "Unknown Card"}</h2>
+            <div className="mt-4 text-center">
+              <h2 className="text-2xl font-black text-white mb-1 tracking-tight">{card?.title || card?.name || "Unknown Card"}</h2>
               <div className="flex items-center justify-center gap-2">
                 <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">{card?.series || "Unknown Series"}</Badge>
                 <Badge className={`${
@@ -193,19 +193,19 @@ export default function CardEnhancementOverlay({ card, onClose }) {
           </div>
 
           {/* Actions Grid */}
-          <div className="mt-auto pt-6 grid grid-cols-2 gap-3">
+          <div className="mt-auto pt-4 grid grid-cols-2 gap-2 border-t border-white/5">
             {actions.map((action) => (
               <button
                 key={action.id}
                 onClick={() => setSelectedAction(selectedAction === action.id ? null : action.id)}
-                className={`relative p-3 rounded-xl border transition-all duration-300 flex flex-col items-center gap-2 group overflow-hidden ${
+                className={`relative p-2 rounded-lg border transition-all duration-300 flex items-center gap-3 group overflow-hidden ${
                   selectedAction === action.id
-                    ? `${action.bg} ${action.border} scale-105 shadow-lg`
+                    ? `${action.bg} ${action.border} shadow-lg`
                     : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
-                <div className={`p-2 rounded-lg bg-black/20 ${action.color}`}>
-                  <action.icon className="w-5 h-5" />
+                <div className={`p-1.5 rounded-md bg-black/20 ${action.color}`}>
+                  <action.icon className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{action.label}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
