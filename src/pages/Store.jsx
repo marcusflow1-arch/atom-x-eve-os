@@ -11,6 +11,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
 import { aiGames, otherSampleGames } from '@/components/store/mockData';
+import { Badge } from '@/components/ui/badge';
 
 // Icon mapping for genres
 const GENRE_ICONS = {
