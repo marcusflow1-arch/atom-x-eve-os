@@ -19,7 +19,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Ideals', icon: Lightbulb, path: createPageUrl('Ideals') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
     { name: 'Admin', icon: Settings, path: createPageUrl('Admin') },
-    { name: 'Cross Interface', icon: Plus, path: createPageUrl('CrossInterface') },
+
     { name: 'Cross Menu', icon: Gamepad2, path: createPageUrl('CrossMenu') },
 ];
 
