@@ -34,6 +34,7 @@ import SeasonalPass from './pages/SeasonalPass';
 import LunaTemplate from './pages/LunaTemplate';
 import GenreMastery from './pages/GenreMastery';
 import CrossInterface from './pages/CrossInterface';
+import CrossMenu from './pages/CrossMenu';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +75,7 @@ export const PAGES = {
     "LunaTemplate": LunaTemplate,
     "GenreMastery": GenreMastery,
     "CrossInterface": CrossInterface,
+    "CrossMenu": CrossMenu,
 }
 
 export const pagesConfig = {
