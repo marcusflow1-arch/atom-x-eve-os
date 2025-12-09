@@ -848,7 +848,7 @@ export default function Library() {
                           <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                               <LayoutGrid className="w-3 h-3" /> Library
                           </h3>
-                          <div className="space-y-1">
+                          <div className="space-y-1 mb-6">
                               {['all', 'installed', 'favorites'].map((item) => (
                                   <button 
                                       key={item}
@@ -862,31 +862,56 @@ export default function Library() {
                                   </button>
                               ))}
                           </div>
-                      </div>
 
-                      <div className="h-px bg-white/10 mb-8" />
+                          {/* Genre Dropdown with Games */}
+                          <div className="mt-6">
+                              <button
+                                  onClick={() => setIsGenreOpen(!isGenreOpen)}
+                                  className="w-full flex items-center justify-between text-white/40 text-xs font-bold uppercase tracking-widest mb-4 hover:text-white transition-colors px-1"
+                              >
+                                  <span>Genre Categories</span>
+                                  {isGenreOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                              </button>
 
-                      {/* Genre Filters */}
-                      <div className="mb-8">
-                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Genre</h3>
-                          <div className="space-y-3">
-                              {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation'].map((g) => (
-                                  <label key={g} className="flex items-center gap-3 cursor-pointer group">
-                                      <Checkbox 
-                                          className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 rounded" 
-                                          checked={selectedGenres.includes(g)}
-                                          onCheckedChange={() => {
-                                              if (selectedGenres.includes(g)) setSelectedGenres(selectedGenres.filter(x => x !== g));
-                                              else setSelectedGenres([...selectedGenres, g]);
-                                          }}
-                                      />
-                                      <span className="text-sm text-slate-400 group-hover:text-white transition-colors">{g}</span>
-                                  </label>
-                              ))}
+                              <AnimatePresence>
+                                  {isGenreOpen && (
+                                      <motion.div
+                                          initial={{ height: 0, opacity: 0 }}
+                                          animate={{ height: 'auto', opacity: 1 }}
+                                          exit={{ height: 0, opacity: 0 }}
+                                          className="overflow-hidden"
+                                      >
+                                          <div className="space-y-6 pl-2">
+                                              {Object.entries(gamesByGenre).map(([genre, games]) => (
+                                                  <div key={genre}>
+                                                      <h4 className="text-white/60 text-xs font-semibold mb-2 flex items-center gap-2">
+                                                          <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                                                          {genre}
+                                                      </h4>
+                                                      <div className="space-y-1 border-l border-white/5 pl-2 ml-0.5">
+                                                          {games.map(game => (
+                                                              <button
+                                                                  key={game.id}
+                                                                  onClick={() => setSelectedGame(game)}
+                                                                  className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group ${selectedGame?.id === game.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                              >
+                                                                  <div className="w-8 h-8 rounded bg-slate-800 flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-white/30">
+                                                                      <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
+                                                                  </div>
+                                                                  <span className={`text-sm truncate ${selectedGame?.id === game.id ? 'text-white font-medium' : 'text-slate-400 group-hover:text-white'}`}>
+                                                                      {game.title}
+                                                                  </span>
+                                                              </button>
+                                                          ))}
+                                                      </div>
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      </motion.div>
+                                  )}
+                              </AnimatePresence>
                           </div>
                       </div>
-
-
                   </ShinySidebarBox>
               </div>
 
