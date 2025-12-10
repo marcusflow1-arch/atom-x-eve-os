@@ -35,42 +35,110 @@ const GlassContainer = ({ children, title, onClose, className = "", widthClass =
   </motion.div>
 );
 
-// --- Inventory Overlay ---
+// --- Inventory Overlay (Full Screen Liquid Glass) ---
 export const InventoryOverlay = ({ onClose }) => {
-  const items = Array.from({ length: 24 }).map((_, i) => ({
+  const [activeCategory, setActiveCategory] = useState('All');
+  const categories = ['All', 'Weapons', 'Armor', 'Materials', 'Consumables'];
+  
+  const items = Array.from({ length: 48 }).map((_, i) => ({
     id: i,
-    name: `Item ${i + 1}`,
+    name: `Ancient Artifact ${i + 1}`,
+    category: ['Weapons', 'Armor', 'Materials', 'Consumables'][Math.floor(Math.random() * 4)],
     rarity: ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)],
-    icon: i % 2 === 0 ? Package : Gift
+    icon: i % 3 === 0 ? Sword : (i % 3 === 1 ? Shield : Package)
   }));
 
+  const filteredItems = activeCategory === 'All' ? items : items.filter(i => i.category === activeCategory);
+
   return (
-    <GlassContainer title="Inventory" onClose={onClose}>
-      <ScrollArea className="h-full p-4">
-        <div className="grid grid-cols-4 gap-3">
-          {items.map((item) => (
-            <motion.button
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      className="fixed inset-4 md:inset-8 z-[1500] rounded-[2.5rem] overflow-hidden flex flex-col"
+      style={{
+        background: 'rgba(255, 255, 255, 0.05)', // Highly transparent liquid glass
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 0 100px rgba(0,0,0,0.5) inset'
+      }}
+    >
+      {/* Liquid Header */}
+      <div className="flex items-center justify-between p-8 border-b border-white/10">
+        <div className="flex items-center gap-6">
+          <h2 className="text-4xl font-light text-white tracking-[0.2em] uppercase">Backpack</h2>
+          <div className="flex gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-6 py-2 rounded-full text-sm tracking-wider transition-all duration-300 ${
+                  activeCategory === cat 
+                    ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.4)]' 
+                    : 'bg-black/20 text-white/60 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button 
+          onClick={onClose}
+          className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all hover:rotate-90"
+        >
+          <X className="w-6 h-6 text-white" />
+        </button>
+      </div>
+
+      {/* Grid Content */}
+      <ScrollArea className="flex-1 p-8">
+        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+          {filteredItems.map((item) => (
+            <motion.div
               key={item.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`aspect-square rounded-xl flex items-center justify-center relative border transition-all ${
-                item.rarity === 'Legendary' ? 'bg-yellow-500/10 border-yellow-500/30' :
-                item.rarity === 'Epic' ? 'bg-purple-500/10 border-purple-500/30' :
-                item.rarity === 'Rare' ? 'bg-blue-500/10 border-blue-500/30' :
-                'bg-slate-500/10 border-white/10'
-              }`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.random() * 0.2 }}
+              className="group relative aspect-square"
             >
-              <item.icon className={`w-6 h-6 ${
-                item.rarity === 'Legendary' ? 'text-yellow-400' :
-                item.rarity === 'Epic' ? 'text-purple-400' :
-                item.rarity === 'Rare' ? 'text-blue-400' :
-                'text-slate-400'
-              }`} />
-            </motion.button>
+              {/* Card Container */}
+              <div className={`w-full h-full rounded-2xl flex flex-col items-center justify-center relative border backdrop-blur-md transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl ${
+                item.rarity === 'Legendary' ? 'bg-yellow-500/5 border-yellow-500/20 group-hover:border-yellow-400/50 group-hover:shadow-yellow-500/20' :
+                item.rarity === 'Epic' ? 'bg-purple-500/5 border-purple-500/20 group-hover:border-purple-400/50 group-hover:shadow-purple-500/20' :
+                item.rarity === 'Rare' ? 'bg-blue-500/5 border-blue-500/20 group-hover:border-blue-400/50 group-hover:shadow-blue-500/20' :
+                'bg-white/5 border-white/10 group-hover:border-white/30 group-hover:shadow-white/10'
+              }`}>
+                
+                <item.icon className={`w-10 h-10 mb-2 opacity-80 group-hover:scale-110 transition-transform ${
+                  item.rarity === 'Legendary' ? 'text-yellow-200' :
+                  item.rarity === 'Epic' ? 'text-purple-200' :
+                  item.rarity === 'Rare' ? 'text-blue-200' :
+                  'text-slate-300'
+                }`} />
+                
+                <div className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{item.rarity}</div>
+                
+                {/* Gloss Effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+              </div>
+
+              {/* Hover Tooltip/Label */}
+              <div className="absolute -bottom-8 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                 <span className="text-xs text-white bg-black/60 px-2 py-1 rounded backdrop-blur-md">{item.name}</span>
+              </div>
+            </motion.div>
           ))}
         </div>
       </ScrollArea>
-    </GlassContainer>
+
+      {/* Footer Info */}
+      <div className="p-6 border-t border-white/10 flex justify-between items-center text-white/40 text-sm">
+        <span>Capacity: {items.length} / 100</span>
+        <span>Drag items to organize</span>
+      </div>
+    </motion.div>
   );
 };
 
@@ -106,89 +174,223 @@ export const LoadoutOverlay = ({ onClose }) => {
   );
 };
 
-// --- Messages Overlay ---
+// --- Messages Overlay (1/3 Page Liquid Glass) ---
 export const MessagesOverlay = ({ onClose }) => {
+  const [activeTab, setActiveTab] = useState('World');
+  const [inputText, setInputText] = useState('');
+  
+  const channels = ['World', 'Area', 'Party', 'Whisper'];
+  
   const messages = [
-    { id: 1, sender: 'SlayerX', text: 'Raiding the dragon soon?', time: '2m ago', online: true },
-    { id: 2, sender: 'LunaFan', text: 'Found a rare chest at the park!', time: '15m ago', online: false },
-    { id: 3, sender: 'Guild Leader', text: 'Meeting at 8 PM EST.', time: '1h ago', online: true },
+    { id: 1, channel: 'World', sender: 'SlayerX', text: 'Anyone up for the Inferno Dragon raid?', time: '2m', color: 'text-yellow-400' },
+    { id: 2, channel: 'Area', sender: 'LunaFan', text: 'Rare chest spawned at the fountain!', time: '5m', color: 'text-cyan-400' },
+    { id: 3, channel: 'World', sender: 'IronHeart', text: 'Selling Epic Sword, DM me offers', time: '8m', color: 'text-white' },
+    { id: 4, channel: 'Party', sender: 'You', text: 'On my way!', time: 'Now', color: 'text-purple-400' },
+    { id: 5, channel: 'Area', sender: 'NoobMaster', text: 'Where is the blacksmith?', time: '10m', color: 'text-white/60' },
   ];
 
   return (
-    <GlassContainer title="Comms Link" onClose={onClose}>
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-white/5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <input 
-              type="text" 
-              placeholder="Search comms..." 
-              className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-4 py-2 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-cyan-500/50"
-            />
-          </div>
-        </div>
-        
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {messages.map((msg) => (
-              <button key={msg.id} className="w-full p-3 rounded-xl hover:bg-white/5 transition-colors flex items-center gap-3 text-left group">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-300 font-bold border border-indigo-500/30">
-                    {msg.sender[0]}
-                  </div>
-                  {msg.online && <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-slate-900" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-0.5">
-                    <span className="text-white font-medium text-sm group-hover:text-cyan-400 transition-colors">{msg.sender}</span>
-                    <span className="text-white/30 text-[10px]">{msg.time}</span>
-                  </div>
-                  <p className="text-white/60 text-xs truncate">{msg.text}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
+    <motion.div
+      initial={{ x: '100%', opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: '100%', opacity: 0 }}
+      className="fixed top-8 bottom-8 right-8 w-full md:w-[35vw] rounded-[2rem] overflow-hidden flex flex-col z-[1500]"
+      style={{
+        background: 'rgba(15, 23, 42, 0.4)',
+        backdropFilter: 'blur(30px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
+      }}
+    >
+      {/* Header */}
+      <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between">
+         <h2 className="text-2xl font-light tracking-widest text-white uppercase">CommLink</h2>
+         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5 text-white/60" /></button>
+      </div>
 
-        <div className="p-4 border-t border-white/10 bg-white/5">
-           <Button className="w-full bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 border border-cyan-500/30">
-             <MessageSquare className="w-4 h-4 mr-2" /> New Transmission
-           </Button>
+      {/* Tabs */}
+      <div className="flex p-2 bg-black/20 gap-1">
+        {channels.map(channel => (
+          <button
+            key={channel}
+            onClick={() => setActiveTab(channel)}
+            className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+              activeTab === channel 
+                ? 'bg-white/10 text-white shadow-lg' 
+                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+            }`}
+          >
+            {channel}
+          </button>
+        ))}
+      </div>
+
+      {/* Chat Area */}
+      <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-transparent to-black/20">
+        <div className="space-y-4">
+          {messages.map((msg) => (
+             <motion.div 
+               key={msg.id} 
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               className={`p-3 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm ${msg.sender === 'You' ? 'ml-12 border-purple-500/20 bg-purple-500/5' : 'mr-4'}`}
+             >
+                <div className="flex items-center gap-2 mb-1">
+                   <span className={`text-xs font-bold ${msg.color}`}>{msg.sender}</span>
+                   <span className="text-[10px] text-white/30 uppercase border border-white/10 px-1 rounded">{msg.channel}</span>
+                   <span className="text-[10px] text-white/20 ml-auto">{msg.time}</span>
+                </div>
+                <p className="text-sm text-white/90 font-light leading-relaxed">
+                  {msg.text}
+                </p>
+             </motion.div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {/* Input Area */}
+      <div className="p-4 bg-white/5 border-t border-white/10">
+        <div className="relative flex items-center gap-2">
+           <div className="flex-1 relative">
+             <input 
+               type="text" 
+               value={inputText}
+               onChange={(e) => setInputText(e.target.value)}
+               placeholder={`Message [${activeTab}]...`}
+               className="w-full bg-black/30 border border-white/10 rounded-full pl-5 pr-12 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 focus:bg-black/40 transition-all"
+             />
+             <Button 
+               size="icon" 
+               className="absolute right-1 top-1 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
+             >
+               <Send className="w-3 h-3" />
+             </Button>
+           </div>
         </div>
       </div>
-    </GlassContainer>
+    </motion.div>
   );
 };
 
-// --- Friends Overlay ---
+// --- Friends Overlay (MH Now Style) ---
 export const FriendsOverlay = ({ onClose }) => {
+  const [activeTab, setActiveTab] = useState('Online');
+  
+  const onlineFriends = [
+    { id: 1, name: 'SlayerKing', level: 45, status: 'Hunting Rathalos', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Slayer' },
+    { id: 2, name: 'LunaMage', level: 32, status: 'In Lobby', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna' },
+  ];
+
+  const nearbyHunters = [
+    { id: 3, name: 'Hunter_NY', level: 50, distance: '120m away', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=NY' },
+    { id: 4, name: 'Draconis', level: 28, distance: '350m away', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Draco' },
+  ];
+
+  const recentAllies = [
+    { id: 5, name: 'SupportMain', level: 40, lastSeen: 'Battled Inferno Dragon', time: '10m ago', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Supp' },
+  ];
+
+  const getList = () => {
+    switch(activeTab) {
+      case 'Online': return onlineFriends;
+      case 'Nearby': return nearbyHunters;
+      case 'Recent': return recentAllies;
+      default: return [];
+    }
+  };
+
   return (
-    <GlassContainer title="Friends List" onClose={onClose}>
-      <div className="p-4 space-y-4">
-        <Button className="w-full bg-white/5 hover:bg-white/10 border border-white/10">
-          <UserPlus className="w-4 h-4 mr-2" /> Add Friend
-        </Button>
-        
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500" />
-                <div>
-                  <div className="text-sm font-medium text-white">Player {i}</div>
-                  <div className="text-xs text-green-400 flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-400" /> Online
-                  </div>
-                </div>
-              </div>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+    <motion.div
+      initial={{ x: '100%', opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: '100%', opacity: 0 }}
+      className="fixed top-24 bottom-24 right-8 w-full md:w-96 rounded-3xl overflow-hidden flex flex-col z-[1500]"
+      style={{
+        background: 'rgba(30, 41, 59, 0.6)',
+        backdropFilter: 'blur(30px) saturate(180%)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
+      }}
+    >
+      <div className="p-5 border-b border-white/10 bg-white/5 flex justify-between items-center">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2"><Users className="w-5 h-5" /> Hunter Network</h2>
+        <button onClick={onClose}><X className="w-5 h-5 text-white/50 hover:text-white" /></button>
       </div>
-    </GlassContainer>
+
+      <div className="flex border-b border-white/5">
+        {['Online', 'Nearby', 'Recent'].map(tab => (
+           <button
+             key={tab}
+             onClick={() => setActiveTab(tab)}
+             className={`flex-1 py-3 text-xs font-bold uppercase transition-colors relative ${
+                activeTab === tab ? 'text-cyan-400 bg-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'
+             }`}
+           >
+             {tab}
+             {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
+           </button>
+        ))}
+      </div>
+
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-3">
+          {getList().map(player => (
+            <motion.div 
+              key={player.id} 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 border border-white/5 rounded-2xl p-3 flex items-center gap-3 group hover:border-white/20 transition-all"
+            >
+              <div className="relative">
+                 <img src={player.avatar} alt={player.name} className="w-12 h-12 rounded-full bg-black/20" />
+                 {activeTab === 'Online' && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800" />}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center">
+                   <h3 className="text-white font-bold text-sm truncate">{player.name}</h3>
+                   <span className="text-[10px] text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">LVL {player.level}</span>
+                </div>
+                <p className="text-xs text-white/50 truncate">
+                  {player.status || player.distance || player.lastSeen}
+                </p>
+                {player.time && <p className="text-[10px] text-white/30">{player.time}</p>}
+              </div>
+
+              <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                 {activeTab !== 'Online' && (
+                   <Button size="icon" className="h-7 w-7 rounded-full bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500 hover:text-white" title="Add Friend">
+                      <UserPlus className="w-3 h-3" />
+                   </Button>
+                 )}
+                 <Button size="icon" className="h-7 w-7 rounded-full bg-white/10 text-white hover:bg-white/20" title="Message">
+                    <MessageSquare className="w-3 h-3" />
+                 </Button>
+              </div>
+            </motion.div>
+          ))}
+          
+          {getList().length === 0 && (
+            <div className="text-center py-10 text-white/30 text-sm">
+               No hunters found in this category.
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+      
+      {activeTab === 'Nearby' && (
+         <div className="p-4 border-t border-white/10 bg-cyan-900/10">
+            <div className="flex items-center gap-3 text-cyan-300 text-xs mb-3">
+               <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+               Scanning for nearby signals...
+            </div>
+            <Button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg shadow-cyan-900/20">
+               Broadcast Invite
+            </Button>
+         </div>
+      )}
+    </motion.div>
   );
 };
 
