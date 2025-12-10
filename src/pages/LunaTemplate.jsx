@@ -271,6 +271,7 @@ export default function LunaTemplate() {
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
+  const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -1139,26 +1140,78 @@ export default function LunaTemplate() {
                     className="h-full overflow-y-auto"
                   >
                     {blankPageTab === 'entertainment' && (
-                      <div className="flex flex-wrap gap-4">
-                        {['Netflix', 'Disney+', 'HBO Max', 'Prime Video', 'Hulu', 'Apple TV+', 'Paramount+', 'Peacock'].map((service, idx) => (
+                      <AnimatePresence mode="wait">
+                        {!selectedStreamingService ? (
                           <motion.div
-                            key={service}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                            style={{
-                              background: 'rgba(147, 197, 253, 0.2)',
-                              backdropFilter: 'blur(20px)',
-                              WebkitBackdropFilter: 'blur(20px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            }}
+                            key="service-grid"
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4 }}
+                            className="flex flex-wrap gap-4"
                           >
-                            <Clapperboard className="w-7 h-7 text-white/80" />
+                            {['Netflix', 'Disney+', 'HBO Max', 'Prime Video', 'Hulu', 'Apple TV+', 'Paramount+', 'Peacock'].map((service, idx) => (
+                              <motion.div
+                                key={service}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                onClick={() => setSelectedStreamingService(service)}
+                                className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                                style={{
+                                  background: 'rgba(147, 197, 253, 0.2)',
+                                  backdropFilter: 'blur(20px)',
+                                  WebkitBackdropFilter: 'blur(20px)',
+                                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                }}
+                              >
+                                <Clapperboard className="w-7 h-7 text-white/80" />
+                              </motion.div>
+                            ))}
                           </motion.div>
-                        ))}
-                      </div>
+                        ) : (
+                          <motion.div
+                            key="streaming-app"
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="absolute inset-0 flex flex-col"
+                          >
+                            <div className="flex items-center justify-between mb-6">
+                              <button
+                                onClick={() => setSelectedStreamingService(null)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/80 hover:text-white transition-all"
+                                style={{
+                                  background: 'rgba(147, 197, 253, 0.2)',
+                                  backdropFilter: 'blur(20px)',
+                                  WebkitBackdropFilter: 'blur(20px)',
+                                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                                }}
+                              >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to Services
+                              </button>
+                              <h3 className="text-2xl font-bold text-white/90">{selectedStreamingService}</h3>
+                            </div>
+
+                            <div 
+                              className="flex-1 rounded-2xl flex items-center justify-center"
+                              style={{
+                                background: 'rgba(0, 0, 0, 0.4)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                              }}
+                            >
+                              <div className="text-center">
+                                <Clapperboard className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                                <p className="text-white/60 text-lg">{selectedStreamingService} app will load here</p>
+                                <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     )}
                     {blankPageTab === 'streaming' && (
                       <div className="text-white">
