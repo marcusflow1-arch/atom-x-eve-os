@@ -447,7 +447,7 @@ export default function TradingPostContent() {
   // Cross Interface State
   const [activeGenreIndex, setActiveGenreIndex] = useState(0);
   const [activeGameIndex, setActiveGameIndex] = useState(0);
-  const [crossViewLevel, setCrossViewLevel] = useState(0); // 0: Nav (Games), 1: Game Items, 2: Offers
+  const [crossViewLevel, setCrossViewLevel] = useState(0); // 0: Genre/Game Selection, 1: Game Items
   const [activeCrossGame, setActiveCrossGame] = useState(null);
   const [activeCrossItem, setActiveCrossItem] = useState(null);
 
@@ -712,9 +712,38 @@ export default function TradingPostContent() {
 
         <TabsContent value="board" className="h-[calc(100vh-280px)]">
           <div className="flex gap-6 h-full">
-            {/* Sidebar - Custom Categories for Trading Post */}
-            <aside className="hidden lg:block w-64 flex-shrink-0">
-              <TradingFilterSidebar filters={filters} setFilters={setFilters} />
+            {/* Sidebar - Dynamic Based on Level */}
+            <aside className="hidden lg:block w-64 flex-shrink-0 transition-all duration-300">
+              {crossViewLevel === 0 ? (
+                // LEVEL 0: Genre Selection Sidebar
+                <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg h-full overflow-y-auto">
+                  <div className="mb-4">
+                    <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
+                      <Grid className="w-4 h-4 text-cyan-400" />
+                      Game Genres
+                    </h3>
+                    <div className="space-y-1">
+                      {crossData.map((genre, idx) => (
+                        <button
+                          key={genre.id}
+                          onClick={() => setActiveGenreIndex(idx)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                            activeGenreIndex === idx 
+                              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
+                              : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <genre.icon className={`w-4 h-4 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
+                          <span>{genre.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // LEVEL 1: Item Filters Sidebar
+                <TradingFilterSidebar filters={filters} setFilters={setFilters} />
+              )}
             </aside>
 
             {/* Content Area */}
@@ -723,11 +752,18 @@ export default function TradingPostContent() {
             {/* Top Navigation Bar */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                {selectedListingGroup && (
+                {(crossViewLevel === 1 || selectedListingGroup) && (
                   <motion.button
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    onClick={() => setSelectedListingGroup(null)}
+                    onClick={() => {
+                        if (selectedListingGroup) {
+                            setSelectedListingGroup(null);
+                        } else {
+                            setCrossViewLevel(0);
+                            setActiveCrossGame(null);
+                        }
+                    }}
                     className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                   >
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
@@ -737,7 +773,7 @@ export default function TradingPostContent() {
                   </motion.button>
                 )}
                 <h2 className="text-2xl font-bold text-white">
-                  {selectedListingGroup ? selectedListingGroup.item.name : 'Global Market'}
+                  {selectedListingGroup ? selectedListingGroup.item.name : crossViewLevel === 1 ? activeCrossGame?.title : 'Global Market'}
                 </h2>
               </div>
               
@@ -804,86 +840,104 @@ export default function TradingPostContent() {
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden relative">
               <AnimatePresence mode="wait">
-                {!selectedListingGroup ? (
+                {crossViewLevel === 0 ? (
+                    // LEVEL 0: Game Selection View
+                    <motion.div
+                        key="level-0-games"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="h-full overflow-y-auto custom-scrollbar p-6"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {crossData[activeGenreIndex]?.games.map((game) => (
+                                <LiquidCard 
+                                    key={game.id} 
+                                    onClick={() => {
+                                        setActiveCrossGame(game);
+                                        setCrossViewLevel(1);
+                                    }}
+                                    className="h-64 flex flex-col group"
+                                >
+                                    <div className="flex-1 relative overflow-hidden">
+                                        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+                                        <div className="absolute bottom-4 left-4 right-4">
+                                            <h3 className="text-xl font-bold text-white mb-1 leading-tight">{game.title}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="border-white/20 text-white/70 text-[10px]">{game.genre}</Badge>
+                                                <span className="text-[10px] text-cyan-400 font-mono">{game.filteredItems.length} items</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="h-12 bg-white/5 border-t border-white/10 flex items-center justify-between px-4">
+                                        <span className="text-xs text-white/50">View Market</span>
+                                        <ChevronRight className="w-4 h-4 text-white/50 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </LiquidCard>
+                            ))}
+                        </div>
+                    </motion.div>
+                ) : !selectedListingGroup ? (
+                  // LEVEL 1: Item Listing View (Existing)
                   <motion.div
                     key="cross-interface"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
                     className="relative w-full h-full"
                   >
-                    {/* NEW HOLLOW CARD LIST VIEW */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar relative p-6 h-full">
-                        {crossData.length > 0 ? crossData.map((genre) => (
-                            <div key={genre.id} className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="flex items-center gap-3 mb-4 sticky left-0">
-                                    <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                                        <genre.icon className="w-5 h-5 text-cyan-400" />
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                            {/* Filter items to show only for the active game */}
+                            {generateGameItems(activeCrossGame).filter(item => {
+                                // Apply same filters as before
+                                if (filters.category !== 'all' && filters.category !== 'global') {
+                                    const cat = filters.category;
+                                    if (cat === 'weapon' && item.type !== 'Weapon') return false;
+                                    if (cat === 'armor' && item.type !== 'Armor') return false;
+                                    if (cat === 'consumable' && item.type !== 'Consumable') return false;
+                                    if (cat === 'material' && item.type !== 'Material') return false;
+                                    if (cat === 'magic' && item.type !== 'Ability') return false;
+                                    if (cat === 'tech' && item.type !== 'Tech') return false;
+                                    if (cat === 'blueprint' && item.type !== 'Blueprint') return false;
+                                }
+                                if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
+                                if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
+                                return true;
+                            }).map((item, i) => (
+                                <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
+                                    const group = {
+                                        item: item,
+                                        offers: [{
+                                            id: 'offer_1',
+                                            type: 'sale',
+                                            price: item.marketPrice,
+                                            owner: { name: 'MarketBot', avatar: item.image },
+                                            description: 'Direct market listing'
+                                        }]
+                                    };
+                                    setSelectedListingGroup(group);
+                                }}>
+                                    <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
+                                        <div className="w-24 h-24 mb-4 relative">
+                                            <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
+                                            <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                        <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 px-2">{item.name}</h4>
+                                        <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
                                     </div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
-                                    <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4" />
-                                </div>
-                                
-                                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                                    {(() => {
-                                        // Collect items from games in this genre
-                                        const genreItems = genre.games.flatMap(g => g.filteredItems);
-                                        const displayItems = genreItems.slice(0, 10);
-                                        const placeholders = Math.max(0, 10 - displayItems.length);
-                                        
-                                        return (
-                                            <>
-                                                {displayItems.map((item, i) => (
-                                                    <HollowCard key={item.id + i} className="snap-start" onClick={() => {
-                                                        // Show details (using existing structure)
-                                                        const group = {
-                                                            item: item,
-                                                            offers: [/* Mock offer for direct item click */ {
-                                                                id: 'offer_1',
-                                                                type: 'sale',
-                                                                price: item.marketPrice,
-                                                                owner: { name: 'MarketBot', avatar: item.image },
-                                                                description: 'Direct market listing'
-                                                            }]
-                                                        };
-                                                        setSelectedListingGroup(group);
-                                                    }}>
-                                                        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                                            <div className="w-24 h-24 mb-4 relative">
-                                                                <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
-                                                                <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                            </div>
-                                                            <h4 className="text-sm font-bold text-white mb-1 line-clamp-2">{item.name}</h4>
-                                                            <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
-                                                        </div>
-                                                        <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center">
-                                                            <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.game}</span>
-                                                            <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
-                                                        </div>
-                                                    </HollowCard>
-                                                ))}
-                                                
-                                                {/* Placeholders */}
-                                                {[...Array(placeholders)].map((_, i) => (
-                                                    <HollowCard key={`placeholder-${genre.id}-${i}`} className="opacity-30 snap-start border-dashed border-white/5">
-                                                        <div className="flex-1 flex items-center justify-center">
-                                                            <Plus className="w-8 h-8 text-white/20" />
-                                                        </div>
-                                                    </HollowCard>
-                                                ))}
-                                            </>
-                                        );
-                                    })()}
-                                </div>
-                            </div>
-                        )) : (
-                            <div className="flex items-center justify-center h-full text-white/30">
-                                No listings found matching your filters.
-                            </div>
-                        )}
+                                    <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center px-2">
+                                        <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.type}</span>
+                                        <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
+                                    </div>
+                                </HollowCard>
+                            ))}
+                        </div>
                     </div>
                   </motion.div>
                 ) : (
+                  // LEVEL 2: Offer Details View
                   <motion.div
                     key="offers"
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -934,7 +988,7 @@ export default function TradingPostContent() {
                           <button
                             onClick={() => {
                                 setSelectedListingGroup(null);
-                                setCrossViewLevel(1); // Go back to Items view
+                                // Stay at Level 1 (Items)
                             }}
                             className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center justify-center gap-2"
                           >
