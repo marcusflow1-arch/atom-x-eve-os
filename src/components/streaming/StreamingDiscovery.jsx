@@ -466,7 +466,7 @@ export default function StreamingDiscovery() {
                           <h3 className="text-2xl font-bold text-white hover:text-blue-400 transition-colors">{selectedStreamer.name}</h3>
                           <div className="flex items-center gap-2 text-sm mt-1">
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{selectedStreamer.category}</Badge>
-                            {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>
+                            {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>}
                           </div>
                         </div>
                       </div>
