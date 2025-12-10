@@ -425,18 +425,7 @@ function AchievementsView({ onSwitchToForge }) {
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {selectedGame ? (
               <>
-                <div className="mb-6 flex items-end gap-6">
-                    <div className="w-24 h-32 rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-black/50 hidden md:block">
-                        <img src={selectedGame.cover_image} className="w-full h-full object-cover" alt={selectedGame.title} />
-                    </div>
-                    <div>
-                        <h2 className="text-4xl font-black text-white mb-2">{selectedGame.title}</h2>
-                        <div className="flex items-center gap-4 text-slate-400 text-sm">
-                            <span className="flex items-center gap-1"><Layers className="w-4 h-4" /> {tradingCards.length} Trading Cards</span>
-                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> Collect & Upgrade</span>
-                        </div>
-                    </div>
-                </div>
+                {/* Header Removed as requested - Only Cards Displayed */}
 
                 <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
                     {tradingCards.length > 0 ? (
