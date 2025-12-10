@@ -1,4 +1,3 @@
-
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -14,6 +13,7 @@ export const ALL_NAV_ITEMS = [
     { name: 'Achievements', icon: Trophy, path: createPageUrl('Achievements') },
     { name: 'Seasonal Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
     { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
+    { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'World Events', icon: Globe, path: createPageUrl('WorldEvents') },
     { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
