@@ -1,3 +1,4 @@
+
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -16,7 +17,6 @@ export const ALL_NAV_ITEMS = [
     { name: 'Clans', icon: Users, path: createPageUrl('Clan') },
     { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
     { name: 'World Events', icon: Globe, path: createPageUrl('WorldEvents') },
-    { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
     { name: 'Support', icon: Heart, path: createPageUrl('AdamXEve') },
 ];
 
@@ -39,7 +39,6 @@ export const NAV_GROUPS = {
         icon: Users,
         items: [
             { name: 'Forums', icon: MessageSquare, path: createPageUrl('Community') },
-            { name: 'Challenges', icon: Swords, path: createPageUrl('Challenges') },
         ],
     },
     'Profile': {
