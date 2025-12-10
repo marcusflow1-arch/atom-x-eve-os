@@ -25,7 +25,6 @@ import Orders from './pages/Orders';
 import Ideals from './pages/Ideals';
 import GameDevHub from './pages/GameDevHub';
 import Events from './pages/Events';
-import Challenges from './pages/Challenges';
 import Admin from './pages/Admin';
 import SeasonalPass from './pages/SeasonalPass';
 import LunaTemplate from './pages/LunaTemplate';
@@ -64,7 +63,6 @@ export const PAGES = {
     "Ideals": Ideals,
     "GameDevHub": GameDevHub,
     "Events": Events,
-    "Challenges": Challenges,
     "Admin": Admin,
     "SeasonalPass": SeasonalPass,
     "LunaTemplate": LunaTemplate,
