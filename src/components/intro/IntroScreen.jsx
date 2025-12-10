@@ -7,15 +7,12 @@ export default function IntroScreen({ onComplete }) {
 
   useEffect(() => {
     // Sequence Timeline
-    // 0: Walk Cycle (0-5s)
-    // 1: Look Up (5-7s)
-    // 2: Morph to Moon (7-10s)
-    // 3: "Flawless Creativity" (10-13s)
-    // 4: "Adam X Eve" (13s+)
+    // 0: Moon (0-3s)
+    // 1: "Flawless Creativity" (3-6s)
+    // 2: "ATOM X Eve" (6s+)
     
     const sequence = [
-      { time: 5000, stage: 1 },
-      { time: 2000, stage: 2 },
+      { time: 100, stage: 2 }, // Start immediately at moon phase
       { time: 3000, stage: 3 },
       { time: 3000, stage: 4 }
     ];
@@ -94,58 +91,7 @@ export default function IntroScreen({ onComplete }) {
         </div>
 
 
-        {/* THE CHARACTER (Walker) */}
-        <AnimatePresence>
-          {stage < 2 && (
-            <motion.div
-              className="absolute bottom-[25%] left-0 w-32 h-48"
-              initial={{ x: '-20%' }}
-              animate={{ 
-                x: stage === 0 ? '45%' : '45%', // Walk to center then stop
-              }}
-              exit={{ opacity: 0, scale: 0, y: -200 }} // Morph exit
-              transition={{ 
-                x: { duration: 5, ease: "linear" },
-                exit: { duration: 2 }
-              }}
-            >
-              {/* Abstract Watercolor Body */}
-              <motion.div 
-                className="w-full h-full relative"
-                animate={{ 
-                  y: stage === 0 ? [0, -10, 0] : 0, // Bounce while walking
-                }}
-                transition={{ 
-                  y: { duration: 0.6, repeat: Infinity, ease: "easeInOut" } 
-                }}
-              >
-                {/* Head */}
-                <motion.div 
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 bg-slate-800/80 rounded-full blur-sm"
-                  animate={{ 
-                    rotate: stage === 1 ? -30 : 0, // Look up
-                    y: stage === 1 ? -5 : 0
-                  }}
-                  transition={{ duration: 1 }}
-                />
-                {/* Torso */}
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-10 h-20 bg-slate-800/70 rounded-3xl blur-sm" />
-                
-                {/* Legs (Simulated with scaling blobs) */}
-                <motion.div 
-                  className="absolute bottom-0 left-4 w-4 h-16 bg-slate-800/60 rounded-full blur-sm"
-                  animate={{ height: stage === 0 ? [64, 40, 64] : 64, rotate: stage === 0 ? [15, -15, 15] : 0 }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                />
-                <motion.div 
-                  className="absolute bottom-0 right-4 w-4 h-16 bg-slate-800/60 rounded-full blur-sm"
-                  animate={{ height: stage === 0 ? [40, 64, 40] : 64, rotate: stage === 0 ? [-15, 15, -15] : 0 }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* THE CHARACTER (Walker) - Removed */}
 
 
         {/* THE TRANSFORMATION (Moon) */}
