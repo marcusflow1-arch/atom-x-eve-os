@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Zap, Trophy, Gamepad2, Users, Shield } from 'lucide-react';
 
 export default function IntroScreen({ onComplete }) {
   const [stage, setStage] = useState(0);
@@ -8,12 +7,12 @@ export default function IntroScreen({ onComplete }) {
   useEffect(() => {
     // Stage progression
     const stageTimer = setTimeout(() => {
-      if (stage < 4) {
+      if (stage < 3) {
         setStage(stage + 1);
       } else {
         onComplete();
       }
-    }, 3000); // 3 seconds per stage
+    }, 3500); // 3.5 seconds per stage
 
     return () => {
       clearTimeout(stageTimer);
@@ -22,333 +21,119 @@ export default function IntroScreen({ onComplete }) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 flex items-center justify-center overflow-hidden cursor-pointer"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden cursor-pointer bg-white"
       onClick={onComplete}
     >
-      {/* Animated Moon with Atom Orbitals */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        {/* Moon */}
+      {/* Watercolor Background Effect */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#fdfbf7]">
+        {/* Abstract Watercolor Blobs */}
+        <motion.div 
+          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-300/40 rounded-full blur-[80px] mix-blend-multiply"
+          animate={{ x: [0, 50, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute top-[10%] right-[-10%] w-[60%] h-[60%] bg-pink-300/40 rounded-full blur-[100px] mix-blend-multiply"
+          animate={{ x: [0, -40, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] bg-purple-300/40 rounded-full blur-[90px] mix-blend-multiply"
+          animate={{ x: [0, 30, 0], y: [0, -40, 0], scale: [1, 1.15, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-indigo-300/30 rounded-full blur-[70px] mix-blend-multiply"
+          animate={{ x: [0, -20, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Paper Texture Overlay */}
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")` }} />
+      </div>
+
+      {/* Moon - Always Visible */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         <motion.div
-          className="relative w-64 h-64"
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 60,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
+          className="relative w-48 h-48 md:w-64 md:h-64 rounded-full bg-gradient-to-tr from-blue-100 via-white to-white shadow-[0_0_60px_rgba(100,149,237,0.4)]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 2, ease: "easeOut" }}
         >
-          {/* Orbital Ring 1 - Behind Moon */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-[280px] h-[80px] -translate-x-1/2 -translate-y-1/2 border-2 border-blue-400/40 rounded-full"
-            style={{ transformStyle: 'preserve-3d' }}
-            animate={{
-              rotateZ: 360,
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            {/* Electron 1 */}
-            <motion.div
-              className="absolute top-0 left-1/2 w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50"
-              animate={{
-                scale: [1, 1.4, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-          </motion.div>
-
-          {/* Orbital Ring 2 - Behind Moon */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-[300px] h-[90px] -translate-x-1/2 -translate-y-1/2 border-2 border-purple-400/40 rounded-full"
-            style={{ transformStyle: 'preserve-3d', transform: 'rotateY(60deg)' }}
-            animate={{
-              rotateZ: -360,
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            {/* Electron 2 */}
-            <motion.div
-              className="absolute top-0 left-1/2 w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-400 shadow-lg shadow-purple-400/50"
-              animate={{
-                scale: [1, 1.4, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 0.5,
-              }}
-            />
-          </motion.div>
-
-          {/* Orbital Ring 3 - Behind Moon */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-[320px] h-[70px] -translate-x-1/2 -translate-y-1/2 border-2 border-cyan-400/40 rounded-full"
-            style={{ transformStyle: 'preserve-3d', transform: 'rotateY(-60deg)' }}
-            animate={{
-              rotateZ: 360,
-            }}
-            transition={{
-              duration: 12,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            {/* Electron 3 */}
-            <motion.div
-              className="absolute top-0 left-1/2 w-5 h-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50"
-              animate={{
-                scale: [1, 1.4, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 1,
-              }}
-            />
-          </motion.div>
-
-          {/* Moon Core - On top of orbitals */}
-          <motion.div
-            className="absolute inset-0 rounded-full bg-gradient-to-br from-slate-300 via-slate-200 to-slate-400 shadow-2xl"
-            animate={{
-              scale: [1, 1.05, 1],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            {/* Moon Craters */}
-            <div className="absolute top-1/4 left-1/4 w-8 h-8 rounded-full bg-slate-400/40"></div>
-            <div className="absolute top-1/3 right-1/3 w-12 h-12 rounded-full bg-slate-400/30"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-6 h-6 rounded-full bg-slate-400/50"></div>
-            <div className="absolute top-2/3 right-1/4 w-10 h-10 rounded-full bg-slate-400/35"></div>
-            
-            {/* Moon Glow */}
-            <div className="absolute inset-0 rounded-full bg-blue-200/20 blur-xl"></div>
-          </motion.div>
+          {/* Subtle Moon Details/Watercolor strokes on moon */}
+          <div className="absolute inset-0 rounded-full overflow-hidden opacity-50">
+             <div className="absolute top-[20%] left-[20%] w-[30%] h-[20%] bg-blue-200/30 blur-xl rounded-full" />
+             <div className="absolute bottom-[30%] right-[20%] w-[40%] h-[30%] bg-purple-200/20 blur-xl rounded-full" />
+          </div>
+          {/* Glowing ring */}
+          <div className="absolute inset-0 rounded-full border border-white/50 shadow-[0_0_20px_rgba(255,255,255,0.8)]" />
         </motion.div>
       </div>
 
-      {/* Animated Background Particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              x: [
-                Math.random() * window.innerWidth,
-                Math.random() * window.innerWidth,
-              ],
-              y: [
-                Math.random() * window.innerHeight,
-                Math.random() * window.innerHeight,
-              ],
-              opacity: [0.2, 0.8, 0.2],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 text-center px-8 max-w-4xl pointer-events-none">
+      {/* Text Content */}
+      <div className="relative z-20 w-full h-full flex flex-col items-center">
         <AnimatePresence mode="wait">
+          
+          {/* Stage 0: "Adam X Eve" - Middle Top */}
           {stage === 0 && (
             <motion.div
               key="stage0"
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.2, y: -20 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="space-y-8"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+              className="absolute top-[15%] w-full text-center"
             >
-              {/* Logo */}
-              <motion.div
-                initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-              >
-                <h1 className="text-7xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  ATOM×EVE OS
-                </h1>
-                <motion.div
-                  className="h-1 w-64 mx-auto mt-4 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                />
-              </motion.div>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="text-2xl text-slate-300 font-light"
-              >
-                Welcome to the Future of Gaming
-              </motion.p>
+              <h1 className="text-4xl md:text-6xl font-serif tracking-widest text-slate-800 font-light" style={{ textShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                Adam <span className="text-blue-500/80">X</span> Eve
+              </h1>
             </motion.div>
           )}
 
+          {/* Stage 1: "Dreams through Reality" - Center (Overlaying Moon slightly or below) */}
           {stage === 1 && (
             <motion.div
               key="stage1"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-              className="space-y-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none"
             >
-              <motion.div
-                className="flex justify-center"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              >
-                <Sparkles className="w-24 h-24 text-blue-400" />
-              </motion.div>
-              <h2 className="text-5xl font-bold text-white">AI-Powered Companions</h2>
-              <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                Meet Atum and Eve - your intelligent AI companions that evolve with your gameplay
-              </p>
+              <h2 className="text-3xl md:text-5xl font-serif text-slate-800/90 font-thin italic tracking-wide mix-blend-color-burn">
+                Dreams through Reality
+              </h2>
             </motion.div>
           )}
 
+          {/* Stage 2: "Your ideals are unreal" - Center */}
           {stage === 2 && (
             <motion.div
               key="stage2"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-              className="space-y-8"
-            >
-              <div className="flex justify-center gap-8">
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                >
-                  <Trophy className="w-24 h-24 text-yellow-400" />
-                </motion.div>
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-                >
-                  <Shield className="w-24 h-24 text-blue-400" />
-                </motion.div>
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
-                >
-                  <Zap className="w-24 h-24 text-purple-400" />
-                </motion.div>
-              </div>
-              <h2 className="text-5xl font-bold text-white">Cross-Game Progression</h2>
-              <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                Unlock achievements and abilities that carry across all your favorite games
-              </p>
-            </motion.div>
-          )}
-
-          {stage === 3 && (
-            <motion.div
-              key="stage3"
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.2 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-              className="space-y-8"
+              exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none"
             >
-              <motion.div
-                className="flex justify-center"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Users className="w-24 h-24 text-green-400" />
-              </motion.div>
-              <h2 className="text-5xl font-bold text-white">Community & Clans</h2>
-              <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                Join forces with players worldwide in epic guild battles and events
-              </p>
-            </motion.div>
-          )}
-
-          {stage === 4 && (
-            <motion.div
-              key="stage4"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="space-y-8"
-            >
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360],
-                }}
-                transition={{ duration: 2, ease: 'easeInOut' }}
-              >
-                <Gamepad2 className="w-32 h-32 mx-auto text-blue-400" />
-              </motion.div>
-              <h2 className="text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Let's Begin
+              <h2 className="text-3xl md:text-5xl font-serif text-slate-800/90 font-thin italic tracking-wide mix-blend-color-burn">
+                Your ideals are unreal
               </h2>
-              <motion.div
-                className="flex justify-center gap-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="w-3 h-3 bg-blue-400 rounded-full"
-                    animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  />
-                ))}
-              </motion.div>
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
 
-      {/* Bottom Ambient Line */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent pointer-events-none"
-        animate={{ opacity: [0.3, 1, 0.3] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* Skip/Enter hint */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.5 }}
+        transition={{ delay: 5 }}
+        className="absolute bottom-8 text-slate-400 text-sm tracking-widest font-light"
+      >
+        CLICK TO ENTER
+      </motion.div>
     </div>
   );
 }
