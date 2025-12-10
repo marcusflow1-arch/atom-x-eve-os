@@ -269,6 +269,7 @@ export default function LunaTemplate() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [uiVisible, setUiVisible] = useState(true);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
+  const [showBlankPage, setShowBlankPage] = useState(false);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -352,6 +353,15 @@ export default function LunaTemplate() {
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Radio className="w-5 h-5 text-white/80" />
+        </button>
+
+        {/* Blank Page Button */}
+        <button
+          onClick={() => setShowBlankPage(true)}
+          className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <User className="w-5 h-5 text-white/80" />
         </button>
 
 
@@ -1017,6 +1027,36 @@ export default function LunaTemplate() {
             card={selectedCardForUpgrade} 
             onClose={() => setSelectedCardForUpgrade(null)} 
           />
+        )}
+      </AnimatePresence>
+
+      {/* Blank Page Overlay */}
+      <AnimatePresence>
+        {showBlankPage && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowBlankPage(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <button 
+                onClick={() => setShowBlankPage(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
