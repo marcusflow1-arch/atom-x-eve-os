@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, Send, Trophy, Star, Gift, Award, Crown, Users } from 'lucide-react';
+import { X, Send, Trophy, Star, Gift, Award, Crown, Users, Flame, Zap, Settings, Shield, Ban, MessageSquare, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Mock streamer data
 const MOCK_STREAMERS = [
@@ -34,6 +35,23 @@ const SEASON_PASS_TIERS = [
   { tier: 5, reward: 'Diamond Card', icon: Gift, progress: 0, claimed: false }
 ];
 
+// Channel Points Rewards
+const CHANNEL_REWARDS = [
+  { id: 1, name: 'Highlight My Message', cost: 300, icon: Star, color: 'yellow' },
+  { id: 2, name: 'Emote Only Mode (1min)', cost: 500, icon: MessageSquare, color: 'blue' },
+  { id: 3, name: 'Request Song', cost: 800, icon: Gift, color: 'purple' },
+  { id: 4, name: 'Choose Next Game', cost: 1500, icon: Trophy, color: 'orange' }
+];
+
+// Chat Rules
+const DEFAULT_CHAT_RULES = [
+  { id: 1, rule: 'No spam or excessive caps', enabled: true },
+  { id: 2, rule: 'Be respectful to everyone', enabled: true },
+  { id: 3, rule: 'No spoilers', enabled: true },
+  { id: 4, rule: 'English only', enabled: false },
+  { id: 5, rule: 'No self-promotion', enabled: true }
+];
+
 export default function StreamWatch() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,6 +62,11 @@ export default function StreamWatch() {
   const [seasonRank, setSeasonRank] = useState(2);
   const [timeWatched, setTimeWatched] = useState('24h 35m');
   const [monthsSubscribed, setMonthsSubscribed] = useState(3);
+  const [channelPoints, setChannelPoints] = useState(2450);
+  const [hypeTrainProgress, setHypeTrainProgress] = useState(65);
+  const [hypeTrainLevel, setHypeTrainLevel] = useState(2);
+  const [showChatSettings, setShowChatSettings] = useState(false);
+  const [chatRules, setChatRules] = useState(DEFAULT_CHAT_RULES);
 
   const handleSendMessage = () => {
     if (chatMessage.trim()) {
@@ -351,12 +374,75 @@ export default function StreamWatch() {
               </div>
           </div>
 
-          {/* Right: Chat */}
-          <div className="lg:col-span-1">
-            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden flex flex-col h-[calc(100vh-8rem)]">
-              <div className="p-4 border-b border-white/10">
-                <h3 className="text-white font-bold">Stream Chat</h3>
-                <p className="text-white/60 text-sm">{streamer.viewers.toLocaleString()} viewers</p>
+          {/* Right: Chat & Community Features */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Hype Train */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-orange-600/20 to-red-600/20 backdrop-blur-xl border border-orange-500/30 rounded-xl p-4"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-orange-400 animate-pulse" />
+                  <h3 className="text-white font-bold text-sm">HYPE TRAIN</h3>
+                  <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs">Level {hypeTrainLevel}</Badge>
+                </div>
+                <span className="text-white/80 text-xs font-bold">{hypeTrainProgress}%</span>
+              </div>
+              <div className="w-full h-2 bg-slate-900/50 rounded-full overflow-hidden mb-2">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-orange-500 to-red-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${hypeTrainProgress}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <p className="text-white/60 text-xs">Next level: 15 more subs or 50 bits!</p>
+            </motion.div>
+
+            {/* Channel Points & Rewards */}
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-sm">Channel Points</h3>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-white font-bold">{channelPoints.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {CHANNEL_REWARDS.map(reward => (
+                  <button
+                    key={reward.id}
+                    className="w-full bg-slate-700/50 hover:bg-slate-700/70 rounded-lg p-3 text-left transition-all border border-white/10 hover:border-white/20"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <reward.icon className={`w-4 h-4 text-${reward.color}-400`} />
+                        <span className="text-white text-xs font-semibold">{reward.name}</span>
+                      </div>
+                      <Badge className={`bg-${reward.color}-500/20 text-${reward.color}-300 border-${reward.color}-500/30 text-xs`}>
+                        {reward.cost}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat */}
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden flex flex-col" style={{ height: '500px' }}>
+              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-bold">Stream Chat</h3>
+                  <p className="text-white/60 text-sm">{streamer.viewers.toLocaleString()} viewers</p>
+                </div>
+                <button 
+                  onClick={() => setShowChatSettings(!showChatSettings)}
+                  className="w-8 h-8 rounded-lg bg-slate-700/50 hover:bg-slate-700/70 flex items-center justify-center transition-all"
+                >
+                  <Settings className="w-4 h-4 text-white/60" />
+                </button>
               </div>
 
               {/* Chat Messages */}
@@ -393,6 +479,197 @@ export default function StreamWatch() {
             </div>
           </div>
         </div>
+
+        {/* Chat Settings Modal */}
+        <AnimatePresence>
+          {showChatSettings && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                onClick={() => setShowChatSettings(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto"
+              >
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-slate-800/95 backdrop-blur-xl">
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-6 h-6 text-blue-400" />
+                    <h2 className="text-2xl font-bold text-white">Chat Settings & Moderation</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowChatSettings(false)}
+                    className="w-10 h-10 rounded-full bg-slate-700/50 hover:bg-slate-700/70 flex items-center justify-center transition-all"
+                  >
+                    <X className="w-5 h-5 text-white/60" />
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  <Tabs defaultValue="rules" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger value="rules">Chat Rules</TabsTrigger>
+                      <TabsTrigger value="moderation">Auto-Mod</TabsTrigger>
+                      <TabsTrigger value="banned">Banned Words</TabsTrigger>
+                    </TabsList>
+
+                    {/* Chat Rules Tab */}
+                    <TabsContent value="rules" className="space-y-4">
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm mb-1">Community Guidelines</h4>
+                            <p className="text-white/70 text-xs">Set rules to keep your chat friendly and welcoming for everyone.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {chatRules.map(rule => (
+                        <div key={rule.id} className="bg-slate-700/50 rounded-lg p-4 flex items-center justify-between border border-white/10">
+                          <div className="flex items-center gap-3 flex-1">
+                            <CheckCircle className={`w-5 h-5 ${rule.enabled ? 'text-green-400' : 'text-white/20'}`} />
+                            <span className={`text-sm ${rule.enabled ? 'text-white' : 'text-white/40'}`}>{rule.rule}</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const updated = chatRules.map(r => 
+                                r.id === rule.id ? { ...r, enabled: !r.enabled } : r
+                              );
+                              setChatRules(updated);
+                            }}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                              rule.enabled 
+                                ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                                : 'bg-slate-600/50 text-white/40 border border-white/10'
+                            }`}
+                          >
+                            {rule.enabled ? 'Enabled' : 'Disabled'}
+                          </button>
+                        </div>
+                      ))}
+
+                      <button className="w-full mt-4 py-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-300 font-semibold transition-all">
+                        + Add Custom Rule
+                      </button>
+                    </TabsContent>
+
+                    {/* Auto-Mod Tab */}
+                    <TabsContent value="moderation" className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-semibold text-sm">Block Spam</span>
+                            <button className="px-4 py-1.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg text-xs font-semibold">
+                              Enabled
+                            </button>
+                          </div>
+                          <p className="text-white/60 text-xs">Automatically timeout users sending repetitive messages</p>
+                        </div>
+
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-semibold text-sm">Block Links</span>
+                            <button className="px-4 py-1.5 bg-slate-600/50 text-white/40 border border-white/10 rounded-lg text-xs font-semibold">
+                              Disabled
+                            </button>
+                          </div>
+                          <p className="text-white/60 text-xs">Prevent non-mods from posting links</p>
+                        </div>
+
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-semibold text-sm">Excessive Caps</span>
+                            <button className="px-4 py-1.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg text-xs font-semibold">
+                              Enabled
+                            </button>
+                          </div>
+                          <p className="text-white/60 text-xs">Block messages with too many capital letters</p>
+                        </div>
+
+                        <div className="bg-slate-700/50 rounded-lg p-4 border border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-semibold text-sm">Slow Mode</span>
+                            <select className="px-3 py-1.5 bg-slate-900/60 border border-white/20 rounded-lg text-white text-xs">
+                              <option>Off</option>
+                              <option>5 seconds</option>
+                              <option>10 seconds</option>
+                              <option>30 seconds</option>
+                              <option>60 seconds</option>
+                            </select>
+                          </div>
+                          <p className="text-white/60 text-xs">Limit how often users can send messages</p>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* Banned Words Tab */}
+                    <TabsContent value="banned" className="space-y-4">
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+                        <div className="flex items-start gap-3">
+                          <Ban className="w-5 h-5 text-red-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm mb-1">Blocked Terms</h4>
+                            <p className="text-white/70 text-xs">Messages containing these words will be automatically deleted.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-700/50 rounded-lg p-4 border border-white/10">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {['spam', 'hate', 'offensive'].map(word => (
+                            <div key={word} className="bg-red-500/20 border border-red-500/30 rounded-full px-3 py-1 flex items-center gap-2">
+                              <span className="text-red-300 text-xs">{word}</span>
+                              <button className="text-red-400 hover:text-red-300">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Add banned word..."
+                          className="w-full bg-slate-900/60 border border-white/20 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-red-500"
+                        />
+                      </div>
+
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                        <h4 className="text-white font-semibold text-sm mb-2 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                          Timeout Settings
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/70 text-xs">First offense:</span>
+                            <select className="px-3 py-1 bg-slate-900/60 border border-white/20 rounded text-white text-xs">
+                              <option>Warning</option>
+                              <option>10 min timeout</option>
+                              <option>1 hour timeout</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/70 text-xs">Second offense:</span>
+                            <select className="px-3 py-1 bg-slate-900/60 border border-white/20 rounded text-white text-xs">
+                              <option>1 hour timeout</option>
+                              <option>24 hour ban</option>
+                              <option>Permanent ban</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
