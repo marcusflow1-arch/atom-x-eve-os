@@ -508,7 +508,7 @@ export default function Store() {
         const WHEEL_COOLDOWN = 150; // ms to prevent rapid scrolling
 
         const handleWheel = (e) => {
-            if (loading || genreData.length === 0 || isNavigating) return;
+            if (loading || genreData.length === 0 || isNavigating || viewMode === 'classic') return;
 
             const now = Date.now();
             if (now - lastWheelTime < WHEEL_COOLDOWN) return;
@@ -556,7 +556,7 @@ export default function Store() {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('wheel', handleWheel);
         };
-    }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode]);
+    }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode, viewMode]);
 
     // Active Item Helpers
     const currentNavGenre = genreData[activeGenreIndex];
@@ -953,7 +953,7 @@ export default function Store() {
                                             <div 
                                                 key={genre.id} 
                                                 ref={el => genreRefs.current[gIdx] = el}
-                                                className={`space-y-4 transition-opacity duration-300 ${activeGenreIndex === gIdx ? 'opacity-100' : 'opacity-80'}`}
+                                                className={`space-y-4 transition-opacity duration-300 ${viewMode === 'classic' || activeGenreIndex === gIdx ? 'opacity-100' : 'opacity-80'}`}
                                             >
                                                 <div className="flex items-center gap-3 border-b border-white/5 pb-2">
                                                     <genre.icon className="w-5 h-5 text-blue-400" />
