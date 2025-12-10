@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, TrendingUp, Users } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, TrendingUp, Users, ChevronLeft, Globe, Calendar, Play } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 
@@ -18,12 +18,124 @@ const STREAM_CATEGORIES = [
 
 // Mock streamer data
 const MOCK_STREAMERS = [
-  { id: 1, name: 'ProGamer_Elite', intro: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop', category: 'League of Legends', hasCamera: true, isNew: false, streamFrequency: 'daily', viewers: 12500 },
-  { id: 2, name: 'CasualPlayer', intro: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop', category: 'Just Chatting', hasCamera: false, isNew: true, streamFrequency: 'weekly', viewers: 3200 },
-  { id: 3, name: 'TechMaster', intro: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop', category: 'Valorant', hasCamera: true, isNew: false, streamFrequency: 'daily', viewers: 8900 },
-  { id: 4, name: 'CreativeArtist', intro: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=300&fit=crop', category: 'Art', hasCamera: true, isNew: true, streamFrequency: 'occasional', viewers: 1500 },
-  { id: 5, name: 'SpeedRunner99', intro: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop', category: 'Minecraft', hasCamera: false, isNew: false, streamFrequency: 'daily', viewers: 15000 },
-  { id: 6, name: 'MusicVibes', intro: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&h=300&fit=crop', category: 'Music', hasCamera: true, isNew: false, streamFrequency: 'weekly', viewers: 5600 },
+  { 
+    id: 1, 
+    name: 'ProGamer_Elite', 
+    intro: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop',
+    category: 'FPS', 
+    hasCamera: true, 
+    isNew: true, 
+    streamFrequency: 'daily', 
+    viewers: 12500,
+    bio: 'Professional FPS player with 10+ years of competitive experience. Love high-action gameplay and engaging with chat!',
+    favoriteGames: ['Counter-Strike 2', 'Valorant', 'Call of Duty', 'Apex Legends'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Mon-Fri, 7PM-11PM EST',
+    languages: ['English', 'Spanish']
+  },
+  { 
+    id: 2, 
+    name: 'CasualPlayer', 
+    intro: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+    category: 'RPG', 
+    hasCamera: false, 
+    isNew: true, 
+    streamFrequency: 'weekly', 
+    viewers: 3200,
+    bio: 'Just here to have fun and explore amazing RPG worlds. Cozy vibes and chill gaming sessions.',
+    favoriteGames: ['Elden Ring', 'Baldurs Gate 3', 'Skyrim', 'The Witcher 3'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Weekends, 2PM-6PM EST',
+    languages: ['English']
+  },
+  { 
+    id: 3, 
+    name: 'TechMaster', 
+    intro: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
+    category: 'Strategy', 
+    hasCamera: true, 
+    isNew: true, 
+    streamFrequency: 'daily', 
+    viewers: 8900,
+    bio: 'Strategy game enthusiast and tech reviewer. Breaking down complex tactics and builds for my community.',
+    favoriteGames: ['Starcraft 2', 'Age of Empires', 'Civilization VI', 'Total War'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Daily, 5PM-9PM EST',
+    languages: ['English', 'German']
+  },
+  { 
+    id: 4, 
+    name: 'CreativeArtist', 
+    intro: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
+    category: 'Creative', 
+    hasCamera: true, 
+    isNew: true, 
+    streamFrequency: 'occasional', 
+    viewers: 1500,
+    bio: 'Digital artist creating game-inspired artwork. Join me for art streams and creative challenges!',
+    favoriteGames: ['Art', 'Music', 'Creative Tools'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Tue, Thu, Sat - 3PM-7PM EST',
+    languages: ['English', 'French']
+  },
+  { 
+    id: 5, 
+    name: 'SpeedRunner99', 
+    intro: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
+    category: 'Action', 
+    hasCamera: false, 
+    isNew: true, 
+    streamFrequency: 'daily', 
+    viewers: 15000,
+    bio: 'World record holder speedrunner. Watch me break games and set new records live!',
+    favoriteGames: ['Minecraft', 'Dark Souls', 'Celeste', 'Hollow Knight'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Daily, 12PM-6PM EST',
+    languages: ['English', 'Japanese']
+  },
+  { 
+    id: 6, 
+    name: 'MusicVibes', 
+    intro: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&h=450&fit=crop', 
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop',
+    category: 'Rhythm and Music', 
+    hasCamera: true, 
+    isNew: true, 
+    streamFrequency: 'weekly', 
+    viewers: 5600,
+    bio: 'Music producer and rhythm game master. Creating beats and hitting perfect combos live!',
+    favoriteGames: ['Beat Saber', 'Guitar Hero', 'DJ Hero', 'Rhythm Heaven'],
+    eventImages: [
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=200&fit=crop'
+    ],
+    schedule: 'Wed, Sat - 8PM-12AM EST',
+    languages: ['English']
+  },
 ];
 
 const FilterSidebar = ({ filters, setFilters }) => {
@@ -217,6 +329,10 @@ export default function StreamingDiscovery() {
     viewerRange: null
   });
 
+  const [selectedStreamer, setSelectedStreamer] = useState(MOCK_STREAMERS.filter(s => s.isNew)[0]);
+  const [detailView, setDetailView] = useState('overview'); // 'overview' or 'details'
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
   const filteredStreamers = MOCK_STREAMERS.filter(streamer => {
     if (filters.category !== 'all' && streamer.category !== filters.category) return false;
     if (filters.cameraOnly === 'with' && !streamer.hasCamera) return false;
@@ -238,15 +354,189 @@ export default function StreamingDiscovery() {
       <div className="flex-1 overflow-y-auto">
         {/* Introduce Yourself Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Video className="w-6 h-6 text-blue-400" />
             Introduce Yourself
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_STREAMERS.filter(s => s.isNew).map(streamer => (
-              <StreamerIntroCard key={streamer.id} streamer={streamer} />
-            ))}
+          {/* Main Streamer Showcase */}
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden mb-6">
+            <div className="flex flex-col lg:flex-row">
+              {/* Left: Video/Images */}
+              <div className="lg:w-[60%] p-6">
+                {/* Main Intro Video */}
+                <div className="relative aspect-video rounded-xl overflow-hidden mb-4 group cursor-pointer">
+                  <img src={selectedStreamer.intro} alt={selectedStreamer.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                      <Play className="w-8 h-8 text-white ml-1" />
+                    </div>
+                  </div>
+                  <div className="absolute top-3 left-3">
+                    <div className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      LIVE
+                    </div>
+                  </div>
+                </div>
+
+                {/* Event/Game Images Grid */}
+                <div className="grid grid-cols-4 gap-2">
+                  {selectedStreamer.eventImages.map((img, idx) => (
+                    <div key={idx} className="aspect-video rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all">
+                      <img src={img} alt={`Event ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Navigation Arrows */}
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    onClick={() => setDetailView(detailView === 'overview' ? 'details' : 'overview')}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
+                  >
+                    {detailView === 'overview' ? (
+                      <>More Details <ChevronRight className="w-4 h-4" /></>
+                    ) : (
+                      <><ChevronLeft className="w-4 h-4" /> Back to Overview</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Details */}
+              <div className="lg:w-[40%] p-6 bg-slate-800/40">
+                <AnimatePresence mode="wait">
+                  {detailView === 'overview' ? (
+                    <motion.div
+                      key="overview"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-4"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <img src={selectedStreamer.avatar} alt={selectedStreamer.name} className="w-16 h-16 rounded-full border-2 border-blue-400" />
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{selectedStreamer.name}</h3>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{selectedStreamer.category}</Badge>
+                            {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-white/70 text-sm leading-relaxed">{selectedStreamer.bio}</p>
+
+                      <div>
+                        <h4 className="text-white font-semibold text-sm mb-2 flex items-center gap-2">
+                          <Users className="w-4 h-4 text-blue-400" />
+                          {selectedStreamer.viewers.toLocaleString()} watching now
+                        </h4>
+                      </div>
+
+                      <div>
+                        <h4 className="text-white font-semibold text-sm mb-2">Favorite Games</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedStreamer.favoriteGames.map((game, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-slate-700/50 text-white/80 text-xs rounded-full">
+                              {game}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="details"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-4"
+                    >
+                      <h3 className="text-xl font-bold text-white mb-4">More About {selectedStreamer.name}</h3>
+
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <Calendar className="w-5 h-5 text-blue-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">Schedule</h4>
+                            <p className="text-white/60 text-sm">{selectedStreamer.schedule}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Globe className="w-5 h-5 text-blue-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">Languages</h4>
+                            <p className="text-white/60 text-sm">{selectedStreamer.languages.join(', ')}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Clock className="w-5 h-5 text-blue-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">Stream Frequency</h4>
+                            <p className="text-white/60 text-sm capitalize">{selectedStreamer.streamFrequency} streams</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Camera className="w-5 h-5 text-blue-400 mt-0.5" />
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">Camera Setup</h4>
+                            <p className="text-white/60 text-sm">{selectedStreamer.hasCamera ? 'Camera enabled' : 'No camera'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button className="w-full mt-4 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                        Follow {selectedStreamer.name}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Carousel of Other Streamers */}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">More Streamers</h3>
+              <button
+                onClick={() => setCarouselIndex(prev => prev + 4)}
+                className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors flex items-center gap-2"
+              >
+                Load More <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {MOCK_STREAMERS.filter(s => s.isNew).slice(carouselIndex % MOCK_STREAMERS.length, (carouselIndex % MOCK_STREAMERS.length) + 5).map((streamer) => (
+                <div
+                  key={streamer.id}
+                  onClick={() => {
+                    setSelectedStreamer(streamer);
+                    setDetailView('overview');
+                  }}
+                  className={`cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedStreamer.id === streamer.id 
+                      ? 'border-blue-400 ring-2 ring-blue-400/50' 
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <div className="relative aspect-square">
+                    <img src={streamer.avatar} alt={streamer.name} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <h4 className="text-white font-bold text-sm truncate">{streamer.name}</h4>
+                      <p className="text-white/60 text-xs truncate">{streamer.category}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
