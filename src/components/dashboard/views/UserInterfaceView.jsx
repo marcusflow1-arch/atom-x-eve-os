@@ -7,7 +7,6 @@ import ActivityHub from '../ActivityHub';
 import SocialHub from '../SocialHub';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
-import EntertainmentHub from '../EntertainmentHub';
 
 const NewsCard = ({ title, description, image, time }) => (
   <div className="bg-slate-700/30 rounded-lg overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer">
@@ -33,39 +32,35 @@ export default function UserInterfaceView({
 
   const features = [
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
-    { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
     { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
   ];
 
   return (
     <div className="h-full flex flex-col gap-4">
-      {/* Top Section: Mode Button + Section Selector Box */}
-      <div className="flex items-start gap-4">
-        {/* This space is for the mode toggle button that's in the layout */}
-        <div className="flex-1 bg-slate-800/20 rounded-xl border border-slate-700/30 p-4">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold text-white">User Interface</h2>
-            <div className="h-4 w-px bg-slate-700" />
-            <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
-              {features.map((feature, index) => (
-                <motion.button
-                  key={feature.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => setActiveFeature(feature.id)}
-                  className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
-                    activeFeature === feature.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700/50'
-                  }`}
-                >
-                  <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
-                  <span>{feature.name}</span>
-                </motion.button>
-              ))}
-            </div>
+      {/* Top Box: Section Selector */}
+      <div className="bg-slate-800/20 rounded-xl border border-slate-700/30 p-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold text-white">User Interface</h2>
+          <div className="h-4 w-px bg-slate-700" />
+          <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+            {features.map((feature, index) => (
+              <motion.button
+                key={feature.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => setActiveFeature(feature.id)}
+                className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
+                  activeFeature === feature.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-700/50'
+                }`}
+              >
+                <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
+                <span>{feature.name}</span>
+              </motion.button>
+            ))}
           </div>
         </div>
       </div>
@@ -81,7 +76,6 @@ export default function UserInterfaceView({
           className="h-full overflow-y-auto"
         >
           {activeFeature === 'social' && <SocialHub />}
-          {activeFeature === 'entertainment' && <EntertainmentHub />}
           {activeFeature === 'streaming' && <StreamingHub />}
           {activeFeature === 'stream_team' && <StreamTeam />}
         </motion.div>
