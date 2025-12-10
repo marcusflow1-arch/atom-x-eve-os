@@ -4,7 +4,8 @@ import {
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
-  Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard
+  Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -1142,25 +1143,37 @@ export default function LunaTemplate() {
                             transition={{ duration: 0.4 }}
                             className="flex flex-wrap gap-4"
                           >
-                            {['Netflix', 'Disney+', 'HBO Max', 'Prime Video', 'Hulu', 'Apple TV+', 'Paramount+', 'Peacock'].map((service, idx) => (
-                              <motion.div
-                                key={service}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.05 }}
-                                onClick={() => setSelectedStreamingService(service)}
-                                className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                                style={{
-                                  background: 'rgba(147, 197, 253, 0.2)',
-                                  backdropFilter: 'blur(20px)',
-                                  WebkitBackdropFilter: 'blur(20px)',
-                                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                }}
-                              >
-                                <Clapperboard className="w-7 h-7 text-white/80" />
-                              </motion.div>
-                            ))}
+                            {[
+                              { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)' },
+                              { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)' },
+                              { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)' },
+                              { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)' },
+                              { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)' },
+                              { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)' },
+                              { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)' },
+                              { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)' }
+                            ].map((service, idx) => {
+                              const Icon = service.icon;
+                              return (
+                                <motion.div
+                                  key={service.name}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  onClick={() => setSelectedStreamingService(service.name)}
+                                  className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${service.color} 0%, rgba(147, 197, 253, 0.15) 100%)`,
+                                    backdropFilter: 'blur(20px)',
+                                    WebkitBackdropFilter: 'blur(20px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                  }}
+                                >
+                                  <Icon className="w-7 h-7 text-white/90" />
+                                </motion.div>
+                              );
+                            })}
                           </motion.div>
                         ) : (
                           <motion.div
