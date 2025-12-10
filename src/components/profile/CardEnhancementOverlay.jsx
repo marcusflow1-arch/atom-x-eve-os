@@ -34,7 +34,7 @@ const MOCK_SKILL_TREE = [
   }
 ];
 
-export default function CardEnhancementOverlay({ card, onClose, readOnly = false }) {
+export default function CardEnhancementOverlay({ card, onClose }) {
   const [selectedAction, setSelectedAction] = useState(null); // null = Collection View
   const [stats, setStats] = useState({ level: 1, strength: 150, xp: 0, xpToNext: 1000 });
   const [selectedNode, setSelectedNode] = useState('root');
@@ -194,32 +194,25 @@ export default function CardEnhancementOverlay({ card, onClose, readOnly = false
           </div>
 
           {/* Actions Grid */}
-          {!readOnly && (
-            <div className="mt-auto pt-4 grid grid-cols-2 gap-2 border-t border-white/5">
-              {actions.map((action) => (
-                <button
-                  key={action.id}
-                  onClick={() => setSelectedAction(selectedAction === action.id ? null : action.id)}
-                  className={`relative p-2 rounded-lg border transition-all duration-300 flex items-center gap-3 group overflow-hidden ${
-                    selectedAction === action.id
-                      ? `${action.bg} ${action.border} shadow-lg`
-                      : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                  }`}
-                >
-                  <div className={`p-1.5 rounded-md bg-black/20 ${action.color}`}>
-                    <action.icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{action.label}</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                </button>
-              ))}
-            </div>
-          )}
-          {readOnly && (
-            <div className="mt-auto pt-4 border-t border-white/5 text-center">
-              <p className="text-white/40 text-xs italic">Blacksmith Mode Required to Edit</p>
-            </div>
-          )}
+          <div className="mt-auto pt-4 grid grid-cols-2 gap-2 border-t border-white/5">
+            {actions.map((action) => (
+              <button
+                key={action.id}
+                onClick={() => setSelectedAction(selectedAction === action.id ? null : action.id)}
+                className={`relative p-2 rounded-lg border transition-all duration-300 flex items-center gap-3 group overflow-hidden ${
+                  selectedAction === action.id
+                    ? `${action.bg} ${action.border} shadow-lg`
+                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className={`p-1.5 rounded-md bg-black/20 ${action.color}`}>
+                  <action.icon className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{action.label}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {/* Right Panel: Dynamic Content (Collection Network OR Feature UI) */}
