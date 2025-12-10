@@ -165,7 +165,7 @@ const rarityColors = {
 
 export default function GameDetailPanel({ gameId, onClose, showBackButton = true, from = 'store' }) {
   const { addToCart, isPurchased } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, updateUserData } = useAuth();
   
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -202,9 +202,14 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
     }
   }, [gameId]);
 
-  const handlePurchase = () => {
-    if (game) {
-      addToCart(game);
+  const handlePurchase = async () => {
+    if (game && isAuthenticated) {
+      const currentPurchased = user?.purchased_items || [];
+      if (!currentPurchased.includes(game.id)) {
+        await updateUserData({ 
+          purchased_items: [...currentPurchased, game.id] 
+        });
+      }
     }
   };
 
