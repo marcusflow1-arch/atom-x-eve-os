@@ -42,11 +42,6 @@ export default function UserInterfaceView({
       <div className="bg-slate-800/20 rounded-xl border border-slate-700/30 p-4">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold text-white">User Interface</h2>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-            <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-          </div>
           <div className="h-4 w-px bg-slate-700" />
           <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
             {features.map((feature, index) => (
