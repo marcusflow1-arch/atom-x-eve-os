@@ -270,6 +270,7 @@ export default function LunaTemplate() {
   const [uiVisible, setUiVisible] = useState(true);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
+  const [blankPageTab, setBlankPageTab] = useState('entertainment');
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -1046,15 +1047,88 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center"
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col p-8"
               style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
             >
-              <button 
-                onClick={() => setShowBlankPage(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {/* Header with Tabs */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-2xl font-bold text-white">Menu</h2>
+                  <div className="h-6 w-px bg-white/20" />
+                  <div className="flex gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
+                    <button
+                      onClick={() => setBlankPageTab('entertainment')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        blankPageTab === 'entertainment'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      Entertainment
+                    </button>
+                    <button
+                      onClick={() => setBlankPageTab('streaming')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        blankPageTab === 'streaming'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      Streaming
+                    </button>
+                    <button
+                      onClick={() => setBlankPageTab('social')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        blankPageTab === 'social'
+                          ? 'bg-blue-600 text-white'
+                          : 'text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      Social Hub
+                    </button>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setShowBlankPage(false)}
+                  className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 overflow-hidden bg-white/5 rounded-xl border border-white/10">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={blankPageTab}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full overflow-y-auto p-6"
+                  >
+                    {blankPageTab === 'entertainment' && (
+                      <div className="text-white">
+                        <h3 className="text-xl font-semibold mb-4">Entertainment</h3>
+                        <p className="text-white/60">Entertainment content will appear here</p>
+                      </div>
+                    )}
+                    {blankPageTab === 'streaming' && (
+                      <div className="text-white">
+                        <h3 className="text-xl font-semibold mb-4">Streaming</h3>
+                        <p className="text-white/60">Streaming content will appear here</p>
+                      </div>
+                    )}
+                    {blankPageTab === 'social' && (
+                      <div className="text-white">
+                        <h3 className="text-xl font-semibold mb-4">Social Hub</h3>
+                        <p className="text-white/60">Social Hub content will appear here</p>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </motion.div>
           </>
         )}
