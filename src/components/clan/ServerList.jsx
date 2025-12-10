@@ -19,7 +19,7 @@ export default function ServerList({ activeClanId, onSelectClan, onCreateClan })
   });
 
   return (
-    <div className="w-[84px] h-full flex flex-col items-center py-4 gap-3 bg-white/60 backdrop-blur-xl border-r border-slate-200/60 overflow-y-auto no-scrollbar z-20 shadow-lg">
+    <div className="w-[84px] h-full flex flex-col items-center pb-4 pt-20 gap-3 bg-white/60 backdrop-blur-xl border-r border-slate-200/60 overflow-y-auto no-scrollbar z-20 shadow-lg">
       
       {/* Home / Direct Messages */}
       <TooltipProvider delayDuration={0}>

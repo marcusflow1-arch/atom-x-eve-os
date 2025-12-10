@@ -436,7 +436,9 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/store')) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
-          headerConfig.hidden = true; // Hide everything for clan page
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/worldevents')) {
           headerConfig.hidden = true;
         } else if (p.includes('/library')) {
