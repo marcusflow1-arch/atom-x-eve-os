@@ -292,7 +292,7 @@ export default function LunaTemplate() {
 
   if (mode === 'user') {
     return (
-      <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
+      <div className="h-screen w-full bg-slate-900 pt-28 px-8 pb-8">
         <UserInterfaceView />
       </div>
     );

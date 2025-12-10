@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Play, Video, TrendingUp, Package, ImageIcon, Monitor, Archive, Users as UsersIcon, Clapperboard, Radio } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import ActivityHub from '../ActivityHub';
-import EntertainmentTab from '../EntertainmentTab';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Users as UsersIcon, Radio } from 'lucide-react';
 import SocialHub from '../SocialHub';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
+import { useDashboardMode } from '../DashboardModeContext';
 
 const NewsCard = ({ title, description, image, time }) => (
   <div className="bg-slate-700/30 rounded-lg overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer">
@@ -28,10 +26,9 @@ export default function UserInterfaceView({
   setShowClips,
   setShowAINewsOverlay 
 }) {
-  const [activeFeature, setActiveFeature] = useState('entertainment');
+  const { activeSection, setActiveSection } = useDashboardMode();
 
   const features = [
-    { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
     { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
@@ -39,47 +36,21 @@ export default function UserInterfaceView({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with Section Selector */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-white">User Interface</h2>
-          <div className="h-4 w-px bg-slate-700" />
-          <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
-            {features.map((feature, index) => (
-              <motion.button
-                key={feature.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => setActiveFeature(feature.id)}
-                className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
-                  activeFeature === feature.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700/50'
-                }`}
-              >
-                <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
-                <span>{feature.name}</span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Header with Section Selector - Now always visible at top */}
 
       {/* Content Area */}
       <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30">
         <motion.div
-          key={activeFeature}
+          key={activeSection}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
           className="h-full overflow-y-auto"
         >
-          {activeFeature === 'entertainment' && <EntertainmentTab />}
-          {activeFeature === 'social' && <SocialHub />}
-          {activeFeature === 'streaming' && <StreamingHub />}
-          {activeFeature === 'stream_team' && <StreamTeam />}
+          {activeSection === 'social' && <SocialHub />}
+          {activeSection === 'streaming' && <StreamingHub />}
+          {activeSection === 'stream_team' && <StreamTeam />}
         </motion.div>
       </div>
     </div>

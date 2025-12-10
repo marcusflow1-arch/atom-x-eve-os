@@ -10,7 +10,7 @@ import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Users as UsersIcon, Radio } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import PWAManifest from './components/desktop/PWAManifest';
@@ -27,6 +27,36 @@ const LoadingFallback = () => (
     </div>
   </div>
 );
+
+const UserModeDock = () => {
+  const { activeSection, setActiveSection } = useDashboardMode();
+  
+  const sections = [
+    { id: 'social', name: 'Social Hub', icon: UsersIcon },
+    { id: 'streaming', name: 'Streaming', icon: Radio },
+    { id: 'stream_team', name: 'Clan', icon: UsersIcon }
+  ];
+  
+  return (
+    <div className="flex items-center gap-2">
+      {sections.map(section => (
+        <button
+          key={section.id}
+          onClick={() => setActiveSection(section.id)}
+          className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs font-medium transition-all ${
+            activeSection === section.id 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white/10 text-white/70 hover:bg-white/20'
+          }`}
+          title={section.name}
+        >
+          <section.icon className="w-4 h-4" />
+          <span>{section.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -595,6 +625,9 @@ function LayoutContent({ children, currentPageName }) {
                            </Link>
                        ))}
                    </div>
+                )}
+                {headerConfig.showDock && mode === 'user' && (
+                   <UserModeDock />
                 )}
               </div>
             )}
