@@ -1144,14 +1144,14 @@ export default function LunaTemplate() {
                             className="flex flex-wrap gap-4"
                           >
                             {[
-                              { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)' },
-                              { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)' },
-                              { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)' },
-                              { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)' },
-                              { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)' },
-                              { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)' },
-                              { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)' },
-                              { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)' }
+                              { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
+                              { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)', topText: 'Disney', bottomText: '+' },
+                              { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)', topText: 'HBO', bottomText: 'Max' },
+                              { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)', topText: 'Prime', bottomText: 'Video' },
+                              { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)', topText: 'Hulu', bottomText: '' },
+                              { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)', topText: 'Apple', bottomText: 'TV+' },
+                              { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)', topText: 'Paramount', bottomText: '+' },
+                              { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)', topText: 'Peacock', bottomText: '' }
                             ].map((service, idx) => {
                               const Icon = service.icon;
                               return (
@@ -1161,7 +1161,7 @@ export default function LunaTemplate() {
                                   animate={{ opacity: 1, scale: 1 }}
                                   transition={{ delay: idx * 0.05 }}
                                   onClick={() => setSelectedStreamingService(service.name)}
-                                  className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                                  className="w-20 h-20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform p-1"
                                   style={{
                                     background: `linear-gradient(135deg, ${service.color} 0%, rgba(147, 197, 253, 0.15) 100%)`,
                                     backdropFilter: 'blur(20px)',
@@ -1170,7 +1170,9 @@ export default function LunaTemplate() {
                                     boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
                                   }}
                                 >
-                                  <Icon className="w-7 h-7 text-white/90" />
+                                  <span className="text-white/90 text-[10px] font-semibold">{service.topText}</span>
+                                  <Icon className="w-5 h-5 text-white/90 my-0.5" />
+                                  {service.bottomText && <span className="text-white/90 text-[10px] font-semibold">{service.bottomText}</span>}
                                 </motion.div>
                               );
                             })}
