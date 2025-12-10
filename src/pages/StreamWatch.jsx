@@ -93,8 +93,7 @@ export default function StreamWatch() {
             </div>
 
             {/* Sponsors & General Information */}
-            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-8">
-              <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
                 {/* About Section */}
                 <div className="space-y-6">
                   <div>
@@ -228,15 +227,9 @@ export default function StreamWatch() {
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* Season Pass System - Full Width Replica */}
-            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-6 overflow-hidden relative">
-              {/* Background Decoration */}
-              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-
-              <div className="relative z-10">
+            <div>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
@@ -356,7 +349,6 @@ export default function StreamWatch() {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
           {/* Right: Chat */}
