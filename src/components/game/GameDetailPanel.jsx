@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
 import {
   ArrowLeft, Play, ShoppingCart, Heart, Share, Star, Trophy, Sword, Zap, Package,
-  Monitor, Gamepad, Cpu, HardDrive, Download, Eye, Users, MessageSquare, Crown, Bot
+  Monitor, Gamepad, Cpu, HardDrive, Download, Eye, Users, MessageSquare, Crown, Bot, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
