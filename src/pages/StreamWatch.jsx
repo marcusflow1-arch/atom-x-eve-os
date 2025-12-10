@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, Send, Trophy, Star, Gift, Award, Crown } from 'lucide-react';
+import { X, Send, Trophy, Star, Gift, Award, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
