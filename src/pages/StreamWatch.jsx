@@ -78,96 +78,144 @@ export default function StreamWatch() {
             </div>
 
             {/* Stream Info */}
-            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <img src={streamer.avatar} alt={streamer.name} className="w-16 h-16 rounded-full border-2 border-blue-400" />
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <img src={streamer.avatar} alt={streamer.name} className="w-12 h-12 rounded-full border-2 border-blue-400" />
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white">{streamer.name}</h2>
+                  <h2 className="text-xl font-bold text-white">{streamer.name}</h2>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{streamer.category}</Badge>
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">{streamer.category}</Badge>
                     <span className="text-white/60 text-sm">Playing: {streamer.game}</span>
                   </div>
                 </div>
-                <Button className="bg-red-600 hover:bg-red-700">Follow</Button>
+                <Button size="sm" className="bg-red-600 hover:bg-red-700">Follow</Button>
               </div>
             </div>
 
-            {/* Season Pass System */}
-            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">Season Pass</h3>
-                <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade
-                </Button>
-              </div>
+            {/* Season Pass System - Full Width Replica */}
+            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-6 overflow-hidden relative">
+              {/* Background Decoration */}
+              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-slate-900/60 rounded-lg p-4 text-center">
-                  <div className="text-white/50 text-xs mb-1">Season Rank</div>
-                  <div className="text-2xl font-bold text-white">{seasonRank}</div>
+              <div className="relative z-10">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-1">Streamer Season Pass</h3>
+                    <p className="text-white/60 text-sm">Earn exclusive rewards by watching {streamer.name}</p>
+                  </div>
+                  <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade Pass
+                  </Button>
                 </div>
-                <div className="bg-slate-900/60 rounded-lg p-4 text-center">
-                  <div className="text-white/50 text-xs mb-1">Time Watched</div>
-                  <div className="text-xl font-bold text-white">{timeWatched}</div>
-                </div>
-                <div className="bg-slate-900/60 rounded-lg p-4 text-center">
-                  <div className="text-white/50 text-xs mb-1">Rewards</div>
-                  <div className="text-2xl font-bold text-green-400">3/5</div>
-                </div>
-                <div className="bg-slate-900/60 rounded-lg p-4 text-center">
-                  <div className="text-white/50 text-xs mb-1">Months Subscribed</div>
-                  <div className="text-2xl font-bold text-purple-400">{monthsSubscribed}</div>
-                </div>
-              </div>
 
-              {/* Season Pass Progression */}
-              <div>
-                <h4 className="text-white font-semibold mb-4">Collectible Cards</h4>
-                <div className="space-y-4">
-                  {SEASON_PASS_TIERS.map((tier, idx) => {
-                    const Icon = tier.icon;
-                    return (
-                      <motion.div
-                        key={tier.tier}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="bg-slate-900/40 rounded-lg p-4 border border-white/10"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
-                            tier.claimed ? 'bg-green-500/20' : tier.progress > 0 ? 'bg-blue-500/20' : 'bg-slate-700/20'
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white/70 text-sm">Season Progress</span>
+                    <span className="text-white font-bold">Level {seasonRank}</span>
+                  </div>
+                  <div className="w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: '40%' }} />
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-4 gap-3 mb-6">
+                  <div className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                    <div className="text-white/50 text-xs uppercase tracking-wider mb-1">Season Rank</div>
+                    <div className="text-2xl font-bold text-white">{seasonRank}</div>
+                  </div>
+                  <div className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                    <div className="text-white/50 text-xs uppercase tracking-wider mb-1">Time Watched</div>
+                    <div className="text-xl font-bold text-blue-400">{timeWatched}</div>
+                  </div>
+                  <div className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                    <div className="text-white/50 text-xs uppercase tracking-wider mb-1">Rewards Claimed</div>
+                    <div className="text-2xl font-bold text-green-400">3/5</div>
+                  </div>
+                  <div className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                    <div className="text-white/50 text-xs uppercase tracking-wider mb-1">Months Subbed</div>
+                    <div className="text-2xl font-bold text-purple-400">{monthsSubscribed}</div>
+                  </div>
+                </div>
+
+                {/* Rewards Track */}
+                <div className="relative">
+                  <div className="absolute top-12 left-0 right-0 h-1 bg-slate-700/50" />
+                  <div className="relative grid grid-cols-5 gap-4">
+                    {SEASON_PASS_TIERS.map((tier, idx) => {
+                      const Icon = tier.icon;
+                      const isLocked = tier.progress === 0;
+                      const isClaimed = tier.claimed;
+                      const canClaim = tier.progress === 100 && !isClaimed;
+
+                      return (
+                        <motion.div
+                          key={tier.tier}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="relative"
+                        >
+                          {/* Reward Box */}
+                          <div className={`relative rounded-xl p-4 border-2 transition-all ${
+                            isClaimed 
+                              ? 'bg-green-500/10 border-green-500/50' 
+                              : canClaim 
+                                ? 'bg-blue-500/20 border-blue-500 animate-pulse' 
+                                : isLocked
+                                  ? 'bg-slate-800/40 border-slate-700/50'
+                                  : 'bg-slate-800/60 border-slate-600/50'
                           }`}>
-                            <Icon className={`w-8 h-8 ${
-                              tier.claimed ? 'text-green-400' : tier.progress > 0 ? 'text-blue-400' : 'text-white/30'
-                            }`} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-white font-semibold">Tier {tier.tier}: {tier.reward}</h5>
-                              {tier.claimed ? (
-                                <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Claimed</Badge>
-                              ) : tier.progress === 100 ? (
-                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-7 text-xs">Claim</Button>
+                            {/* Icon */}
+                            <div className="flex justify-center mb-3">
+                              <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+                                isClaimed 
+                                  ? 'bg-green-500/20' 
+                                  : canClaim 
+                                    ? 'bg-blue-500/30' 
+                                    : 'bg-slate-700/50'
+                              }`}>
+                                <Icon className={`w-8 h-8 ${
+                                  isClaimed 
+                                    ? 'text-green-400' 
+                                    : canClaim 
+                                      ? 'text-blue-400' 
+                                      : 'text-white/20'
+                                }`} />
+                              </div>
+                            </div>
+
+                            {/* Title */}
+                            <h5 className={`text-center text-sm font-bold mb-1 ${
+                              isLocked ? 'text-white/30' : 'text-white'
+                            }`}>
+                              {tier.reward}
+                            </h5>
+
+                            {/* Progress/Status */}
+                            <div className="text-center">
+                              {isClaimed ? (
+                                <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">Claimed</Badge>
+                              ) : canClaim ? (
+                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-6 text-xs w-full">Claim</Button>
                               ) : (
-                                <span className="text-white/40 text-sm">{tier.progress}%</span>
+                                <span className="text-white/40 text-xs">{tier.progress}%</span>
                               )}
                             </div>
-                            <div className="w-full bg-slate-700/50 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all ${
-                                  tier.claimed ? 'bg-green-500' : 'bg-blue-500'
-                                }`}
-                                style={{ width: `${tier.progress}%` }}
-                              />
-                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+
+                          {/* Tier Number */}
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/20 rounded-full w-6 h-6 flex items-center justify-center">
+                            <span className="text-white/80 text-xs font-bold">{tier.tier}</span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
