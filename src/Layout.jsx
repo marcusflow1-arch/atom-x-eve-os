@@ -10,7 +10,7 @@ import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users as UsersIcon, Radio } from 'lucide-react';
+import { X } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import PWAManifest from './components/desktop/PWAManifest';
@@ -32,9 +32,9 @@ const UserModeDock = () => {
   const { activeSection, setActiveSection } = useDashboardMode();
   
   const sections = [
-    { id: 'social', name: 'Social Hub', icon: UsersIcon },
+    { id: 'social', name: 'Social Hub', icon: Users },
     { id: 'streaming', name: 'Streaming', icon: Radio },
-    { id: 'stream_team', name: 'Clan', icon: UsersIcon }
+    { id: 'stream_team', name: 'Clan', icon: Users }
   ];
   
   return (
