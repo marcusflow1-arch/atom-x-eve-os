@@ -337,14 +337,14 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
           </div>
         </div>
 
-        {/* Back Button */}
+        {/* Close Button */}
         {showBackButton && onClose && (
-          <div className="absolute top-6 left-6">
-            <Button variant="outline" onClick={onClose}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </div>
+          <button 
+            onClick={onClose}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm flex items-center justify-center transition-all text-white/80 hover:text-white z-10"
+          >
+            <X className="w-5 h-5" />
+          </button>
         )}
       </div>
 
