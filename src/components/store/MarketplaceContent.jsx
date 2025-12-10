@@ -129,7 +129,7 @@ const ListItemCard = ({ item, onClick }) => {
             </div>
           )}
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-white">{item.price?.toLocaleString()}</span>
             <span className="text-white/50 text-sm">AGP</span>
             {hasDiscount && (
               <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
@@ -197,7 +197,7 @@ const ProductRow = ({ title, items, onItemClick }) => (
               <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-white font-bold">{item.price.toLocaleString()}</span>
+              <span className="text-white font-bold">{item.price?.toLocaleString()}</span>
               <span className="text-white/40 text-xs">AGP</span>
             </div>
             {hasDiscount && (
@@ -464,7 +464,7 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
                 </div>
               )}
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white">{item.price.toLocaleString()}</span>
+                <span className="text-3xl font-bold text-white">{item.price?.toLocaleString()}</span>
                 <span className="text-white/50">AGP</span>
                 {hasDiscount && (
                   <span className="text-white/40 text-sm line-through ml-2">List: {item.originalPrice?.toLocaleString()} AGP</span>
@@ -689,7 +689,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
                           <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                           <span className="text-white font-bold">{item.price.toLocaleString()} AGP</span>
+                           <span className="text-white font-bold">{item.price?.toLocaleString()} AGP</span>
                            <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
                         </div>
                       </div>
