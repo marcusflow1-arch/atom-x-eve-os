@@ -34,12 +34,15 @@ const LiquidCard = ({ children, className = "", onClick }) => (
   </div>
 );
 
-const HollowCard = ({ children, className = "" }) => (
-  <div className={`
-    relative w-48 h-72 flex-shrink-0 rounded-xl border-2 border-white/10 
-    bg-transparent hover:border-cyan-400/50 transition-all duration-300 group
-    overflow-hidden cursor-pointer ${className}
-  `}>
+const HollowCard = ({ children, className = "", onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`
+      relative w-48 h-72 flex-shrink-0 rounded-xl border-2 border-white/10 
+      bg-transparent hover:border-cyan-400/50 transition-all duration-300 group
+      overflow-hidden cursor-pointer ${className}
+    `}
+  >
     <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors" />
     {/* Inner Border/Glow */}
     <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]" />
