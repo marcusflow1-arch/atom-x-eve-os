@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, TrendingUp, Users, ChevronLeft, Globe, Calendar, Play } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { createPageUrl } from '@/utils';
 
 // Game Genre Categories
 const STREAM_CATEGORIES = [
@@ -320,6 +322,7 @@ const StreamerIntroCard = ({ streamer }) => (
 );
 
 export default function StreamingDiscovery() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     category: 'all',
     cameraOnly: 'any',
@@ -454,13 +457,16 @@ export default function StreamingDiscovery() {
                       exit={{ opacity: 0, x: -20 }}
                       className="h-full overflow-y-auto space-y-6"
                     >
-                      <div className="flex items-center gap-3 mb-4">
+                      <div 
+                        className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-700/20 rounded-lg p-2 -m-2 transition-colors"
+                        onClick={() => navigate(createPageUrl(`StreamerProfile?id=${selectedStreamer.id}`))}
+                      >
                         <img src={selectedStreamer.avatar} alt={selectedStreamer.name} className="w-20 h-20 rounded-full border-2 border-blue-400" />
                         <div>
-                          <h3 className="text-2xl font-bold text-white">{selectedStreamer.name}</h3>
+                          <h3 className="text-2xl font-bold text-white hover:text-blue-400 transition-colors">{selectedStreamer.name}</h3>
                           <div className="flex items-center gap-2 text-sm mt-1">
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{selectedStreamer.category}</Badge>
-                            {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>}
+                            {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>
                           </div>
                         </div>
                       </div>
@@ -569,10 +575,7 @@ export default function StreamingDiscovery() {
               {MOCK_STREAMERS.filter(s => s.isNew).slice(carouselIndex % MOCK_STREAMERS.length, (carouselIndex % MOCK_STREAMERS.length) + 5).map((streamer) => (
                 <div
                   key={streamer.id}
-                  onClick={() => {
-                    setSelectedStreamer(streamer);
-                    setDetailView('overview');
-                  }}
+                  onClick={() => navigate(createPageUrl(`StreamerProfile?id=${streamer.id}`))}
                   className={`cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
                     selectedStreamer.id === streamer.id 
                       ? 'border-blue-400 ring-2 ring-blue-400/50' 

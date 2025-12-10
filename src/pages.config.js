@@ -32,6 +32,7 @@ import GenreMastery from './pages/GenreMastery';
 import WorldEvents from './pages/WorldEvents';
 import Home from './pages/Home';
 import Clan from './pages/Clan';
+import StreamerProfile from './pages/StreamerProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +71,7 @@ export const PAGES = {
     "WorldEvents": WorldEvents,
     "Home": Home,
     "Clan": Clan,
+    "StreamerProfile": StreamerProfile,
 }
 
 export const pagesConfig = {
