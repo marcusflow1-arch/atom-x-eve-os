@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
+  Hammer, Trophy, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
   Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight,
   ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X
 } from 'lucide-react';
