@@ -1139,9 +1139,25 @@ export default function LunaTemplate() {
                     className="h-full overflow-y-auto"
                   >
                     {blankPageTab === 'entertainment' && (
-                      <div className="text-white">
-                        <h3 className="text-2xl font-semibold mb-4 text-white/90">Entertainment</h3>
-                        <p className="text-white/60 text-lg">Entertainment content will appear here</p>
+                      <div className="flex flex-wrap gap-4">
+                        {['Netflix', 'Disney+', 'HBO Max', 'Prime Video', 'Hulu', 'Apple TV+', 'Paramount+', 'Peacock'].map((service, idx) => (
+                          <motion.div
+                            key={service}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="w-16 h-16 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                            style={{
+                              background: 'rgba(147, 197, 253, 0.2)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                            }}
+                          >
+                            <Clapperboard className="w-7 h-7 text-white/80" />
+                          </motion.div>
+                        ))}
                       </div>
                     )}
                     {blankPageTab === 'streaming' && (
