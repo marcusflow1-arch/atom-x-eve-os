@@ -117,6 +117,47 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- DELETE CLAN ---
+        if (action === 'delete_clan') {
+            const { divisionId } = data;
+             // Verify user is leader
+            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!member.length || member[0].role !== 'leader') {
+                 return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            // Delete Division (Cascading deletes would ideally be handled, but for now we just delete the main record)
+            // In a real app, we'd delete all members, messages, channels, etc.
+            await base44.entities.Division.delete(divisionId);
+            
+            // Clean up members
+            const members = await base44.entities.ClanMember.filter({ divisionId });
+            for(const m of members) {
+                await base44.entities.ClanMember.delete(m.id);
+            }
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- CREATE CHANNEL ---
+        if (action === 'create_channel') {
+             const { divisionId, name, type } = data;
+             // Verify permissions (leader/officer)
+             const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+             if (!member.length || (member[0].role !== 'leader' && member[0].role !== 'officer')) {
+                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+             }
+
+             const newChannel = await base44.entities.ClanChannel.create({
+                 divisionId,
+                 name: name.toLowerCase().replace(/\s+/g, '-'), // Discord style slugs
+                 type: type || 'text',
+                 position: 0 // Simplification
+             });
+             
+             return new Response(JSON.stringify({ success: true, channel: newChannel }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
     } catch (error) {
