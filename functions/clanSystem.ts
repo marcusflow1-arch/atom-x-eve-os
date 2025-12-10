@@ -103,6 +103,20 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- UPDATE CLAN ---
+        if (action === 'update_clan') {
+            const { divisionId, updates } = data;
+            
+            // Verify user is leader
+            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!member.length || member[0].role !== 'leader') {
+                 return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            await base44.entities.Division.update(divisionId, updates);
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
     } catch (error) {
