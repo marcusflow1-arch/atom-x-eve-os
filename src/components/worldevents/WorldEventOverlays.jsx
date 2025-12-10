@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Zap, Sword, Search, MessageSquare, UserPlus, Calendar, Clock, MapPin, Send, MoreVertical, Gift, Package, Trophy, Star, ChevronRight } from 'lucide-react';
+import { X, Shield, Zap, Sword, Search, MessageSquare, UserPlus, Calendar, Clock, MapPin, Send, MoreVertical, Gift, Package, Trophy, Star, ChevronRight, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
