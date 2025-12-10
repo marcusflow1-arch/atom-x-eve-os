@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Shield, Calendar, MessageSquare, Plus, Search, 
   Crown, Sword, Star, Trophy, Settings, LogOut, X, 
-  ChevronRight, MapPin, Clock, UserPlus, Send
+  ChevronRight, MapPin, Clock, UserPlus, Send, Radio, Edit
 } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -81,6 +81,50 @@ const CreateClanModal = ({ isOpen, onClose, onCreate }) => {
   );
 };
 
+const InviteMemberModal = ({ isOpen, onClose, onInvite }) => {
+  const [email, setEmail] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onInvite(email);
+    setEmail('');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-white">Recruit Agent</h2>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-400 hover:text-white" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Agent Email</label>
+            <Input 
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="bg-black/20 border-white/10 text-white"
+              placeholder="agent@example.com"
+              required
+              type="email"
+            />
+          </div>
+          <div className="pt-4 flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white">Send Invite</Button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
 const ClanCard = ({ clan, onJoin }) => (
   <div className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-all group">
     <div className="flex justify-between items-start mb-4">
@@ -92,7 +136,7 @@ const ClanCard = ({ clan, onJoin }) => (
           <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">{clan.name}</h3>
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Users className="w-3 h-3" /> {clan.memberCount} Members
-            <span className="w-1 h-1 bg-slate-600 rounded-full" />
+            <span className="w-1.5 h-1.5 bg-slate-600 rounded-full" />
             <Star className="w-3 h-3 text-yellow-500" /> Lvl {clan.level}
           </div>
         </div>
@@ -153,7 +197,9 @@ export default function ClanPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [settingsData, setSettingsData] = useState({ description: '', banner: '' });
 
   // 1. Fetch User's Clan Membership
   const { data: membership, isLoading: loadingMembership } = useQuery({
@@ -175,6 +221,13 @@ export default function ClanPage() {
     },
     enabled: !!membership
   });
+
+  // Pre-fill settings
+  useEffect(() => {
+    if (myClan) {
+      setSettingsData({ description: myClan.description, banner: myClan.banner });
+    }
+  }, [myClan]);
 
   // 3. Fetch All Clans (if not member)
   const { data: allClans, isLoading: loadingAllClans } = useQuery({
@@ -264,6 +317,25 @@ export default function ClanPage() {
       onSuccess: () => queryClient.invalidateQueries(['clanEvents'])
   });
 
+  const inviteMemberMutation = useMutation({
+    mutationFn: (email) => base44.functions.invoke('clanSystem', { action: 'invite_member', data: { divisionId: myClan.id, inviteeEmail: email } }),
+    onSuccess: (res) => {
+      if (res.data.success) {
+        alert("Invite sent successfully!");
+        setIsInviteModalOpen(false);
+      } else {
+        alert(res.data.error || "Failed to invite");
+      }
+    }
+  });
+
+  const updateClanMutation = useMutation({
+    mutationFn: (updates) => base44.functions.invoke('clanSystem', { action: 'update_clan', data: { divisionId: myClan.id, updates } }),
+    onSuccess: () => {
+      alert("Settings updated!");
+      queryClient.invalidateQueries(['myClan']);
+    }
+  });
 
   // --- Render Logic ---
 
@@ -311,6 +383,8 @@ export default function ClanPage() {
   }
 
   // Clan Dashboard View
+  const isLeader = membership.role === 'leader';
+
   return (
     <div className="h-screen w-full bg-slate-950 text-white flex overflow-hidden">
       
@@ -330,6 +404,7 @@ export default function ClanPage() {
             { id: 'roster', label: 'Roster', icon: Users },
             { id: 'events', label: 'Operations', icon: Calendar },
             { id: 'chat', label: 'Comms', icon: MessageSquare },
+            ...(isLeader ? [{ id: 'settings', label: 'Settings', icon: Settings }] : []),
           ].map(item => (
             <button
               key={item.id}
@@ -424,7 +499,7 @@ export default function ClanPage() {
                     <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                         <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                             <h3 className="font-bold text-white">Active Personnel</h3>
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-500"><UserPlus className="w-4 h-4 mr-2" /> Invite</Button>
+                            <Button size="sm" onClick={() => setIsInviteModalOpen(true)} className="bg-blue-600 hover:bg-blue-500"><UserPlus className="w-4 h-4 mr-2" /> Invite</Button>
                         </div>
                         <div className="divide-y divide-white/5">
                             {members?.map(member => (
@@ -514,9 +589,47 @@ export default function ClanPage() {
                     </div>
                 )}
 
+                {activeTab === 'settings' && isLeader && (
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-4">Division Settings</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Manifesto</label>
+                          <textarea 
+                            value={settingsData.description}
+                            onChange={e => setSettingsData({...settingsData, description: e.target.value})}
+                            className="w-full bg-black/20 border border-white/10 rounded-md p-3 text-sm text-white"
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Banner URL</label>
+                          <Input 
+                            value={settingsData.banner}
+                            onChange={e => setSettingsData({...settingsData, banner: e.target.value})}
+                            className="bg-black/20 border-white/10 text-white"
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => updateClanMutation.mutate(settingsData)}
+                          className="bg-blue-600 hover:bg-blue-500"
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
             </div>
         </div>
 
+        <InviteMemberModal 
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          onInvite={(email) => inviteMemberMutation.mutate(email)}
+        />
       </div>
     </div>
   );
