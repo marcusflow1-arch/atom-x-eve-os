@@ -92,6 +92,60 @@ export default function StreamWatch() {
               </div>
             </div>
 
+            {/* Sponsors & General Information */}
+            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* About Section */}
+                <div>
+                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    About
+                  </h3>
+                  <p className="text-white/70 text-sm leading-relaxed">
+                    Professional gamer and content creator. Join me for epic gameplay sessions and community events!
+                  </p>
+                </div>
+
+                {/* Sponsors */}
+                <div>
+                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    Sponsors
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
+                      <span className="text-white/40 text-xs">Logo</span>
+                    </div>
+                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
+                      <span className="text-white/40 text-xs">Logo</span>
+                    </div>
+                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
+                      <span className="text-white/40 text-xs">Logo</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Links & Info */}
+                <div>
+                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-purple-400" />
+                    Links
+                  </h3>
+                  <div className="space-y-2">
+                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                      🎮 Discord Community
+                    </a>
+                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                      🐦 Twitter/X
+                    </a>
+                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                      📺 YouTube Channel
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Season Pass System - Full Width Replica */}
             <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-6 overflow-hidden relative">
               {/* Background Decoration */}
