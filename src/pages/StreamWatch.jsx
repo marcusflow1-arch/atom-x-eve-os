@@ -93,54 +93,138 @@ export default function StreamWatch() {
             </div>
 
             {/* Sponsors & General Information */}
-            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-6">
-              <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+              <div className="grid md:grid-cols-3 gap-8">
                 {/* About Section */}
-                <div>
-                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-400" />
-                    About
-                  </h3>
-                  <p className="text-white/70 text-sm leading-relaxed">
-                    Professional gamer and content creator. Join me for epic gameplay sessions and community events!
-                  </p>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-400" />
+                      About
+                    </h3>
+                    <p className="text-white/70 text-sm leading-relaxed mb-4">
+                      Professional gamer and content creator. Join me for epic gameplay sessions and community events!
+                    </p>
+                    <p className="text-white/60 text-xs leading-relaxed">
+                      Streaming since 2020 with a focus on competitive gameplay and community building. Always looking to help new players improve their skills.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Stream Schedule</h4>
+                    <div className="space-y-1.5 text-xs text-white/60">
+                      <div>Mon-Fri: 7PM-11PM EST</div>
+                      <div>Weekends: 2PM-8PM EST</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Setup</h4>
+                    <div className="space-y-1.5 text-xs text-white/60">
+                      <div>• PC: RTX 4090, i9-13900K</div>
+                      <div>• Monitor: 360Hz 1440p</div>
+                      <div>• Mic: Shure SM7B</div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Sponsors */}
-                <div>
-                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Star className="w-4 h-4 text-yellow-400" />
-                    Sponsors
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
-                      <span className="text-white/40 text-xs">Logo</span>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <Star className="w-4 h-4 text-yellow-400" />
+                      Sponsors
+                    </h3>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
+                      <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors">
+                        <span className="text-white/40 text-xs">Logo</span>
+                      </div>
                     </div>
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
-                      <span className="text-white/40 text-xs">Logo</span>
-                    </div>
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center border border-white/10">
-                      <span className="text-white/40 text-xs">Logo</span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Partnership Info</h4>
+                    <p className="text-white/60 text-xs leading-relaxed">
+                      For sponsorship inquiries and business partnerships, reach out via email or Discord DM.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Affiliate Links</h4>
+                    <div className="space-y-1.5">
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                        💻 Gaming PC Specs
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                        🎧 Audio Equipment
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                        🖱️ Peripherals
+                      </a>
                     </div>
                   </div>
                 </div>
 
                 {/* Social Links & Info */}
-                <div>
-                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-purple-400" />
-                    Links
-                  </h3>
-                  <div className="space-y-2">
-                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                      🎮 Discord Community
-                    </a>
-                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                      🐦 Twitter/X
-                    </a>
-                    <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                      📺 YouTube Channel
-                    </a>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-purple-400" />
+                      Links
+                    </h3>
+                    <div className="space-y-2.5">
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        🎮 Discord Community
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        🐦 Twitter/X
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        📺 YouTube Channel
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        📷 Instagram
+                      </a>
+                      <a href="#" className="block text-blue-400 hover:text-blue-300 text-sm transition-colors">
+                        🎵 TikTok
+                      </a>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Achievements</h4>
+                    <div className="space-y-1.5 text-xs text-white/60">
+                      <div>🏆 Regional Champion 2023</div>
+                      <div>🥇 Tournament Winner x5</div>
+                      <div>⭐ 100K+ Followers</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">Support</h4>
+                    <div className="space-y-2">
+                      <button className="w-full bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg px-3 py-2 text-blue-300 text-xs font-semibold transition-all">
+                        Subscribe
+                      </button>
+                      <button className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 rounded-lg px-3 py-2 text-purple-300 text-xs font-semibold transition-all">
+                        Donate
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
