@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, Layers, Plus, GitBranch, Hexagon, ArrowRight, Trophy } from 'lucide-react';
+import { X, Layers, Plus, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -51,13 +51,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
     }));
   }, [card]);
 
-  const actions = [
-    { id: 'combine', label: 'Combine', icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
-    { id: 'skills', label: 'Skills', icon: Sparkles, color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/50' },
-    { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
-    { id: 'craft', label: 'Craft', icon: Hammer, color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/50' },
-    { id: 'score', label: 'Score', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
-  ];
+  // Actions removed - showing description only
 
   // Card Tilt & Shine Logic (Copied from CardInventoryOverlay)
   const x = useMotionValue(0);
@@ -193,26 +187,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
             </div>
           </div>
 
-          {/* Actions Grid */}
-          <div className="mt-auto pt-4 grid grid-cols-2 gap-2 border-t border-white/5">
-            {actions.map((action) => (
-              <button
-                key={action.id}
-                onClick={() => setSelectedAction(selectedAction === action.id ? null : action.id)}
-                className={`relative p-2 rounded-lg border transition-all duration-300 flex items-center gap-3 group overflow-hidden ${
-                  selectedAction === action.id
-                    ? `${action.bg} ${action.border} shadow-lg`
-                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                }`}
-              >
-                <div className={`p-1.5 rounded-md bg-black/20 ${action.color}`}>
-                  <action.icon className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{action.label}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-              </button>
-            ))}
-          </div>
+
         </motion.div>
 
         {/* Right Panel: Dynamic Content (Collection Network OR Feature UI) */}
@@ -221,171 +196,84 @@ export default function CardEnhancementOverlay({ card, onClose }) {
           animate={{ x: 0, opacity: 1 }}
           className="flex-1 flex flex-col py-6 pr-6"
         >
-          <AnimatePresence mode="wait">
-            {!selectedAction ? (
-              /* DEFAULT VIEW: Collection Network */
-              <motion.div 
-                key="collection"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col h-full"
-              >
-                <div className="mb-6 flex items-center justify-between pl-2">
-                  <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-blue-400" />
-                      Collection Network
-                    </h3>
-                    <p className="text-white/40 text-sm">Related cards from {card?.series || "this series"}</p>
-                  </div>
-                  <Badge variant="outline" className="bg-white/5 border-white/10 px-3 py-1 text-white/60">
-                    {relatedCards.length} Cards Found
-                  </Badge>
-                </div>
+          {/* Card Description Record */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full flex flex-col"
+          >
+            <div className="mb-6 pl-2">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                <ScrollText className="w-6 h-6 text-cyan-400" />
+                Card Record
+              </h3>
+              <p className="text-white/40 text-sm">Detailed information about this card</p>
+            </div>
 
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {relatedCards.map((relatedCard) => (
-                      <motion.div
-                        key={relatedCard.id}
-                        layoutId={`card-${relatedCard.id}`}
-                        className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-105 hover:z-10`}
-                      >
-                        {relatedCard.image ? (
-                          <img src={relatedCard.image} alt={relatedCard.name} className="w-full h-full object-cover rounded-xl" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-slate-800/50 rounded-xl">
-                            <span className="text-white/10 text-2xl">?</span>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-2xl p-6 border border-white/10">
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Description</label>
+                    <p className="text-slate-300 leading-relaxed italic text-sm">
+                      "{card?.description || "A mysterious card from the vast collection. Its true power and origins remain shrouded in mystery, waiting to be discovered by those brave enough to seek its secrets."}"
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/10">
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Series</label>
+                      <p className="text-white font-medium">{card?.series || "Unknown Series"}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Rarity</label>
+                      <Badge className={`${
+                        card?.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' :
+                        card?.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
+                        card?.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 
+                        card?.rarity === 'Mythic' ? 'bg-red-500/20 text-red-400 border-red-500/50' : 
+                        'bg-slate-500/20 text-slate-400 border-slate-500/50'
+                      } border`}>
+                        {card?.rarity || "Common"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {card?.stats && Object.keys(card.stats).length > 0 && (
+                    <div className="pt-4 border-t border-white/10">
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Stats</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(card.stats).map(([key, value]) => (
+                          <div key={key} className="bg-black/30 p-3 rounded-lg border border-white/5">
+                            <div className="text-xs text-slate-400 uppercase tracking-wide">{key.replace('_', ' ')}</div>
+                            <div className="text-2xl font-bold text-white mt-1">{value}</div>
                           </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 rounded-xl">
-                          <p className="text-xs font-bold text-white truncate">{relatedCard.name}</p>
-                          <p className="text-[10px] text-white/60">{relatedCard.rarity}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                    {[...Array(3)].map((_, i) => (
-                      <div key={`empty-${i}`} className="aspect-[2.5/3.5] rounded-xl flex items-center justify-center group opacity-30">
-                        <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:border-white/30 group-hover:text-white/50 transition-all">
-                          <Plus className="w-4 h-4" />
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-white/10">
+                    <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Card Details</label>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center py-2 border-b border-white/5">
+                        <span className="text-slate-400">Card ID</span>
+                        <span className="text-white font-mono">{card?.id || "---"}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-white/5">
+                        <span className="text-slate-400">Type</span>
+                        <span className="text-white">{card?.type || "Trading Card"}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-slate-400">Collection</span>
+                        <span className="text-white">{card?.series || "Unknown"}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            ) : selectedAction === 'train' ? (
-              /* TRAIN VIEW */
-              <motion.div key="train" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                <div className="mb-8">
-                   <h2 className="text-4xl font-black text-white mb-2 flex items-center gap-3"><Swords className="w-8 h-8 text-red-400"/> Training Grounds</h2>
-                   <p className="text-white/50">Gain experience to level up card stats.</p>
-                </div>
-                <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center">
-                   <div className="w-full max-w-md space-y-8">
-                      <div className="text-center">
-                        <div className="text-6xl font-black text-white mb-2">{stats.level}</div>
-                        <div className="text-white/40 uppercase tracking-widest text-sm">Current Level</div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                           <span className="text-white/60">XP Progress</span>
-                           <span className="text-white">{stats.xp} / {stats.xpToNext}</span>
-                        </div>
-                        <div className="h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                           <motion.div className="h-full bg-red-500" initial={{ width: 0 }} animate={{ width: `${(stats.xp / stats.xpToNext) * 100}%` }} />
-                        </div>
-                      </div>
-                      <Button onClick={handleTrain} className="w-full h-14 text-lg font-bold bg-red-600 hover:bg-red-700">
-                         <Zap className="w-5 h-5 mr-2" /> Train (+250 XP)
-                      </Button>
-                   </div>
-                </div>
-              </motion.div>
-            ) : selectedAction === 'skills' ? (
-              /* SKILLS VIEW */
-              <motion.div key="skills" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                 <div className="mb-4">
-                    <h2 className="text-4xl font-black text-white mb-2 flex items-center gap-3"><Sparkles className="w-8 h-8 text-purple-400"/> Ability Matrix</h2>
-                    <p className="text-white/50">Unlock and mutate abilities.</p>
-                 </div>
-                 <div className="flex-1 relative bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       {/* Simplified Skill Tree for Demo */}
-                       <div className="relative w-full h-full">
-                          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30">
-                            <path d="M 50% 50% L 30% 30%" stroke="white" strokeWidth="2" strokeDasharray="5,5" />
-                            <path d="M 50% 50% L 70% 30%" stroke="white" strokeWidth="2" strokeDasharray="5,5" />
-                          </svg>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                             <SkillNode node={MOCK_SKILL_TREE[0]} selected={selectedNode === 'root'} unlocked={true} onClick={() => setSelectedNode('root')} />
-                          </div>
-                          <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2">
-                             <SkillNode node={MOCK_SKILL_TREE[1]} selected={selectedNode === 'branch_1'} unlocked={unlockedNodes.includes('branch_1')} onClick={() => setSelectedNode('branch_1')} />
-                          </div>
-                          <div className="absolute top-[30%] left-[70%] -translate-x-1/2 -translate-y-1/2">
-                             <SkillNode node={MOCK_SKILL_TREE[2]} selected={selectedNode === 'branch_2'} unlocked={unlockedNodes.includes('branch_2')} onClick={() => setSelectedNode('branch_2')} />
-                          </div>
-                       </div>
-                    </div>
-                    {/* Node Details Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-black/60 backdrop-blur-md border-t border-white/10">
-                       <h3 className="text-xl font-bold text-white mb-1">{currentNode.name}</h3>
-                       <p className="text-white/60 text-sm mb-4">{currentNode.description}</p>
-                       {!unlockedNodes.includes(currentNode.id) && (
-                          <Button onClick={() => handleUnlock(currentNode.id)} size="sm" className="bg-purple-600 hover:bg-purple-700">Unlock ({currentNode.cost} AP)</Button>
-                       )}
-                    </div>
-                 </div>
-              </motion.div>
-            ) : selectedAction === 'combine' ? (
-              /* FUSION VIEW */
-              <motion.div key="combine" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                 <div className="mb-8">
-                    <h2 className="text-4xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Fusion Core</h2>
-                    <p className="text-white/50">Combine cards to increase rarity.</p>
-                 </div>
-                 <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center p-8">
-                    <div className="flex items-center gap-8">
-                       <div className="w-40 aspect-[3/4] bg-white/10 rounded-xl border border-white/20 flex items-center justify-center"><span className="font-bold text-white">Base</span></div>
-                       <Plus className="w-8 h-8 text-white/40" />
-                       <button onClick={() => setFusionMaterial(fusionMaterial ? null : {})} className={`w-40 aspect-[3/4] rounded-xl border-2 border-dashed flex items-center justify-center transition-all ${fusionMaterial ? 'bg-blue-500/20 border-blue-500' : 'border-white/20 hover:border-white/40'}`}>
-                          {fusionMaterial ? <span className="font-bold text-blue-300">Material</span> : <span className="text-white/40">Select</span>}
-                       </button>
-                       <ArrowRight className="w-8 h-8 text-white/40" />
-                       <div className="w-40 aspect-[3/4] bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/50 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                          <Hexagon className="w-12 h-12 text-blue-300" />
-                       </div>
-                    </div>
-                 </div>
-                 <div className="mt-6 flex justify-center">
-                    <Button disabled={!fusionMaterial} className="bg-blue-600 hover:bg-blue-700 w-full max-w-sm h-12 text-lg">Initiate Fusion</Button>
-                 </div>
-              </motion.div>
-            ) : selectedAction === 'score' ? (
-              /* SCORE VIEW */
-              <motion.div key="score" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                <div className="mb-8">
-                  <h2 className="text-4xl font-black text-white mb-2 flex items-center gap-3"><Trophy className="w-8 h-8 text-yellow-400"/> Achievement Score</h2>
-                  <p className="text-white/50">Your total achievement points.</p>
-                </div>
-                <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-amber-600 mb-4 drop-shadow-2xl">
-                      12,450
-                    </div>
-                    <div className="text-white/40 uppercase tracking-widest text-lg">Total Score</div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              /* CRAFT VIEW Placeholder */
-              <motion.div key="craft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex items-center justify-center text-white/30">
-                 Crafting feature coming soon...
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </motion.div>
