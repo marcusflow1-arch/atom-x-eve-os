@@ -4,15 +4,16 @@ import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, Trend
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 
-// Twitch-inspired categories
+// Game Genre Categories
 const STREAM_CATEGORIES = [
-  'Just Chatting', 'League of Legends', 'Grand Theft Auto V', 'Valorant', 'Minecraft',
-  'Fortnite', 'Call of Duty: Warzone', 'Counter-Strike 2', 'Apex Legends', 'Dota 2',
-  'World of Warcraft', 'Overwatch 2', 'Teamfight Tactics', 'Escape from Tarkov',
-  'Dead by Daylight', 'PUBG: BATTLEGROUNDS', 'Rocket League', 'FIFA 24', 'Hearthstone',
-  'The Last of Us', 'Resident Evil', 'Elden Ring', 'Cyberpunk 2077', 'Starfield',
-  'Baldurs Gate 3', 'Hogwarts Legacy', 'Marvel Snap', 'Music', 'Art', 'Slots',
-  'Sports', 'IRL', 'ASMR', 'Fitness & Health', 'Food & Drink', 'Travel & Outdoors'
+  'Party', 'FPS', 'Driving/Racing', 'Shooter', 'Gambling/Card and Board', 
+  'Strategy', 'Fighting', 'Stealth', 'Game Overlay', 'Horror', 'Creative', 
+  'Catch', 'Educational Games', 'RPG', 'Puzzle', 'Simulation', 'MOBA', 
+  'Strategy in Real Life/IRL', 'Survival', 'Word/Spell', 'Metroidvania', 
+  'Arcade', 'Action', 'Rhythm and Music', 'Indie', 'Fight Simulators', 
+  'Penth Ball', 'Gambling Games', 'Open World', 'RTS', 'Hidden Objectives', 
+  'Mobile Games', 'Roguelike', 'Point-and-Click', 'Platforms', 'Sports Games', 
+  'Novel Games', 'MMO'
 ];
 
 // Mock streamer data
@@ -89,95 +90,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
         </div>
       </FilterSection>
 
-      <FilterSection title="Stream Setup">
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={filters.cameraOnly === 'with'}
-              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'with' : 'any' }))}
-              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
-            />
-            <Camera className="w-4 h-4 text-white/60" />
-            <span className="text-white/70 text-sm">With Camera</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={filters.cameraOnly === 'without'}
-              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'without' : 'any' }))}
-              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
-            />
-            <CameraOff className="w-4 h-4 text-white/60" />
-            <span className="text-white/70 text-sm">Without Camera</span>
-          </label>
-        </div>
-      </FilterSection>
 
-      <FilterSection title="Streamer Status">
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={filters.newStreamers}
-              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, newStreamers: checked }))}
-              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
-            />
-            <Star className="w-4 h-4 text-yellow-400" />
-            <span className="text-white/70 text-sm">New Streamers</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={filters.establishedStreamers}
-              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, establishedStreamers: checked }))}
-              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
-            />
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-white/70 text-sm">Established Streamers</span>
-          </label>
-        </div>
-      </FilterSection>
-
-      <FilterSection title="Stream Frequency">
-        <div className="space-y-1">
-          {['daily', 'weekly', 'occasional'].map(freq => (
-            <button
-              key={freq}
-              onClick={() => setFilters(prev => ({ ...prev, frequency: prev.frequency === freq ? 'any' : freq }))}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                filters.frequency === freq ? 'text-blue-400 font-medium bg-blue-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Clock className="w-3 h-3" />
-              {freq.charAt(0).toUpperCase() + freq.slice(1)}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      <FilterSection title="Viewer Count">
-        <div className="space-y-1">
-          {[
-            { label: '10k+ Viewers', min: 10000 },
-            { label: '5k-10k Viewers', min: 5000, max: 10000 },
-            { label: '1k-5k Viewers', min: 1000, max: 5000 },
-            { label: 'Under 1k', max: 1000 }
-          ].map(range => (
-            <button
-              key={range.label}
-              onClick={() => setFilters(prev => ({ 
-                ...prev, 
-                viewerRange: prev.viewerRange?.min === range.min && prev.viewerRange?.max === range.max ? null : range 
-              }))}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                filters.viewerRange?.min === range.min && filters.viewerRange?.max === range.max 
-                  ? 'text-blue-400 font-medium bg-blue-500/10' 
-                  : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Users className="w-3 h-3" />
-              {range.label}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
     </div>
   );
 };
@@ -245,6 +158,106 @@ export default function StreamingDiscovery() {
             <Video className="w-6 h-6 text-blue-400" />
             Introduce Yourself
           </h2>
+          
+          {/* Filter Options Below Header */}
+          <div className="mb-6 p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Camera Filter */}
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-3">Camera</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={filters.cameraOnly === 'with'}
+                      onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'with' : 'any' }))}
+                      className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                    />
+                    <Camera className="w-4 h-4 text-white/60" />
+                    <span className="text-white/70 text-sm">With Camera</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={filters.cameraOnly === 'without'}
+                      onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'without' : 'any' }))}
+                      className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                    />
+                    <CameraOff className="w-4 h-4 text-white/60" />
+                    <span className="text-white/70 text-sm">Without Camera</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Streamer Status Filter */}
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-3">Streamer Status</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={filters.newStreamers}
+                      onCheckedChange={(checked) => setFilters(prev => ({ ...prev, newStreamers: checked }))}
+                      className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                    />
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    <span className="text-white/70 text-sm">New Streamers</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={filters.establishedStreamers}
+                      onCheckedChange={(checked) => setFilters(prev => ({ ...prev, establishedStreamers: checked }))}
+                      className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                    />
+                    <TrendingUp className="w-4 h-4 text-green-400" />
+                    <span className="text-white/70 text-sm">Established</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Stream Frequency Filter */}
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-3">Stream Frequency</h3>
+                <div className="space-y-2">
+                  {['daily', 'weekly', 'occasional'].map(freq => (
+                    <label key={freq} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={filters.frequency === freq}
+                        onCheckedChange={(checked) => setFilters(prev => ({ ...prev, frequency: checked ? freq : 'any' }))}
+                        className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                      />
+                      <Clock className="w-4 h-4 text-white/60" />
+                      <span className="text-white/70 text-sm">{freq.charAt(0).toUpperCase() + freq.slice(1)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Viewer Count Filter */}
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-3">Viewer Count</h3>
+                <div className="space-y-2">
+                  {[
+                    { label: '10k+', min: 10000 },
+                    { label: '5k-10k', min: 5000, max: 10000 },
+                    { label: '1k-5k', min: 1000, max: 5000 },
+                    { label: 'Under 1k', max: 1000 }
+                  ].map(range => (
+                    <label key={range.label} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={filters.viewerRange?.min === range.min && filters.viewerRange?.max === range.max}
+                        onCheckedChange={(checked) => setFilters(prev => ({ 
+                          ...prev, 
+                          viewerRange: checked ? range : null 
+                        }))}
+                        className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+                      />
+                      <Users className="w-4 h-4 text-white/60" />
+                      <span className="text-white/70 text-sm">{range.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {MOCK_STREAMERS.filter(s => s.isNew).map(streamer => (
               <StreamerIntroCard key={streamer.id} streamer={streamer} />
