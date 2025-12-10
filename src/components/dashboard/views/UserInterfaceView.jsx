@@ -7,6 +7,7 @@ import ActivityHub from '../ActivityHub';
 import SocialHub from '../SocialHub';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
+import StreamingDiscovery from '../streaming/StreamingDiscovery';
 
 const NewsCard = ({ title, description, image, time }) => (
   <div className="bg-slate-700/30 rounded-lg overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer">
@@ -76,7 +77,7 @@ export default function UserInterfaceView({
           className="h-full overflow-y-auto"
         >
           {activeFeature === 'social' && <SocialHub />}
-          {activeFeature === 'streaming' && <StreamingHub />}
+          {activeFeature === 'streaming' && <StreamingDiscovery />}
           {activeFeature === 'stream_team' && <StreamTeam />}
         </motion.div>
       </div>
