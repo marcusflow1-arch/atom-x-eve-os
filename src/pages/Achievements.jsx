@@ -321,13 +321,18 @@ function AchievementsView({ onSwitchToForge }) {
             <div className="flex items-center gap-3">
               <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-3">
                 Achievements
-                <button 
+                <div 
                   onClick={onSwitchToForge}
-                  className="ml-2 p-2 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 transition-all group"
+                  className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
                   title="Go to Blacksmith Forge"
                 >
-                  <Hammer className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                </button>
+                  {/* Holographic Black Hammer */}
+                  <div className="relative z-10">
+                    <Hammer className="w-6 h-6 text-black fill-black/80 drop-shadow-[0_0_2px_rgba(255,255,255,0.5)] group-hover:scale-110 transition-transform duration-300" />
+                    {/* Holographic Glitch/Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
+                  </div>
+                </div>
               </h1>
             </div>
 
