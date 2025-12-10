@@ -578,7 +578,10 @@ export default function StreamingDiscovery() {
               {MOCK_STREAMERS.filter(s => s.isNew).slice(carouselIndex % MOCK_STREAMERS.length, (carouselIndex % MOCK_STREAMERS.length) + 5).map((streamer) => (
                 <div
                   key={streamer.id}
-                  onClick={() => navigate(createPageUrl(`StreamerProfile?id=${streamer.id}`))}
+                  onClick={() => {
+                    setSelectedStreamer(streamer);
+                    setDetailView('overview');
+                  }}
                   className={`cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
                     selectedStreamer.id === streamer.id 
                       ? 'border-blue-400 ring-2 ring-blue-400/50' 
