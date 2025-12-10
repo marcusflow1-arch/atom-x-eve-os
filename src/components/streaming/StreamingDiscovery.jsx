@@ -90,7 +90,91 @@ const FilterSidebar = ({ filters, setFilters }) => {
         </div>
       </FilterSection>
 
+      <FilterSection title="Camera">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.cameraOnly === 'with'}
+              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'with' : 'any' }))}
+              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+            />
+            <Camera className="w-4 h-4 text-white/60" />
+            <span className="text-white/70 text-sm">With Camera</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.cameraOnly === 'without'}
+              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, cameraOnly: checked ? 'without' : 'any' }))}
+              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+            />
+            <CameraOff className="w-4 h-4 text-white/60" />
+            <span className="text-white/70 text-sm">Without Camera</span>
+          </label>
+        </div>
+      </FilterSection>
 
+      <FilterSection title="Streamer Status">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.newStreamers}
+              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, newStreamers: checked }))}
+              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+            />
+            <Star className="w-4 h-4 text-yellow-400" />
+            <span className="text-white/70 text-sm">New Streamers</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.establishedStreamers}
+              onCheckedChange={(checked) => setFilters(prev => ({ ...prev, establishedStreamers: checked }))}
+              className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+            />
+            <TrendingUp className="w-4 h-4 text-green-400" />
+            <span className="text-white/70 text-sm">Established</span>
+          </label>
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Stream Frequency">
+        <div className="space-y-2">
+          {['daily', 'weekly', 'occasional'].map(freq => (
+            <label key={freq} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filters.frequency === freq}
+                onCheckedChange={(checked) => setFilters(prev => ({ ...prev, frequency: checked ? freq : 'any' }))}
+                className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+              />
+              <Clock className="w-4 h-4 text-white/60" />
+              <span className="text-white/70 text-sm">{freq.charAt(0).toUpperCase() + freq.slice(1)}</span>
+            </label>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Viewer Count">
+        <div className="space-y-2">
+          {[
+            { label: '10k+', min: 10000 },
+            { label: '5k-10k', min: 5000, max: 10000 },
+            { label: '1k-5k', min: 1000, max: 5000 },
+            { label: 'Under 1k', max: 1000 }
+          ].map(range => (
+            <label key={range.label} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filters.viewerRange?.min === range.min && filters.viewerRange?.max === range.max}
+                onCheckedChange={(checked) => setFilters(prev => ({ 
+                  ...prev, 
+                  viewerRange: checked ? range : null 
+                }))}
+                className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
+              />
+              <Users className="w-4 h-4 text-white/60" />
+              <span className="text-white/70 text-sm">{range.label}</span>
+            </label>
+          ))}
+        </div>
+      </FilterSection>
     </div>
   );
 };
