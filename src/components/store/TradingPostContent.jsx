@@ -772,12 +772,14 @@ export default function TradingPostContent() {
 
               {/* Breadcrumb/Back & Search (Only for Board Tab usually, but depends on context) */}
               <div className="flex items-center gap-4">
-                {(activeTab === 'board' && (crossViewLevel === 1 || selectedListingGroup)) && (
+                {(activeTab === 'board' && (crossViewLevel === 1 || selectedListingGroup || selectedOffer)) && (
                   <motion.button
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={() => {
-                        if (selectedListingGroup) {
+                        if (selectedOffer) {
+                            setSelectedOffer(null);
+                        } else if (selectedListingGroup) {
                             setSelectedListingGroup(null);
                         } else {
                             setCrossViewLevel(0);
@@ -796,7 +798,7 @@ export default function TradingPostContent() {
                 {(activeTab === 'board') && (
                   <div className="flex items-center gap-3">
                     <h2 className="text-xl font-bold text-white mr-4 hidden xl:block">
-                      {selectedListingGroup ? selectedListingGroup.item.name : crossViewLevel === 1 ? activeCrossGame?.title : 'Market Overview'}
+                      {selectedOffer ? `${selectedOffer.seller.name}'s Offer` : selectedListingGroup ? selectedListingGroup.item.name : crossViewLevel === 1 ? activeCrossGame?.title : 'Market Overview'}
                     </h2>
                     
                     <div 
