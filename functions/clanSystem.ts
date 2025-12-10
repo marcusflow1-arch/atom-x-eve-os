@@ -136,6 +136,21 @@ Deno.serve(async (req) => {
                 await base44.entities.ClanMember.delete(m.id);
             }
 
+            // Clean up channels
+            const channels = await base44.entities.ClanChannel.filter({ divisionId });
+            for(const c of channels) {
+                await base44.entities.ClanChannel.delete(c.id);
+            }
+
+            // Clean up messages (optional, might be too many to delete one by one without bulk delete)
+            // For now, let's leave messages or delete a batch. 
+            // In a real production app, we'd use a cascade delete or a background job.
+            // Let's delete at least the recent ones to be tidy.
+            const messages = await base44.entities.ClanMessage.filter({ divisionId });
+            for(const msg of messages) {
+                await base44.entities.ClanMessage.delete(msg.id);
+            }
+
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
