@@ -4,7 +4,7 @@ import {
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
-  Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical
+  Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Hammer
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -269,6 +269,7 @@ export default function LunaTemplate() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [uiVisible, setUiVisible] = useState(true);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
+  const [blacksmithMode, setBlacksmithMode] = useState(false);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -1016,9 +1017,27 @@ export default function LunaTemplate() {
           <CardEnhancementOverlay 
             card={selectedCardForUpgrade} 
             onClose={() => setSelectedCardForUpgrade(null)} 
+            readOnly={!blacksmithMode}
           />
         )}
       </AnimatePresence>
+
+      {/* Blacksmith Mode Toggle */}
+      <motion.button
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        onClick={() => setBlacksmithMode(!blacksmithMode)}
+        className={`fixed bottom-8 right-64 z-50 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md border shadow-2xl transition-all ${
+          blacksmithMode 
+            ? 'bg-orange-500/20 border-orange-500/50 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]' 
+            : 'bg-black/80 border-white/10 text-slate-400 hover:bg-black hover:text-white'
+        }`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        title={blacksmithMode ? "Exit Forge" : "Enter Forge"}
+      >
+        <Hammer className={`w-5 h-5 ${blacksmithMode ? 'fill-current' : ''}`} />
+      </motion.button>
 
       {/* Floating Score Display */}
       <motion.div 
