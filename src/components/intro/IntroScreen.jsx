@@ -156,7 +156,7 @@ export default function IntroScreen({ onComplete }) {
               </motion.div>
             )}
 
-            {/* Stage 4: Adam X Eve */}
+            {/* Stage 4: ATOM X Eve */}
             {stage >= 4 && (
               <motion.div
                 key="text-logo"
@@ -166,7 +166,7 @@ export default function IntroScreen({ onComplete }) {
                 className="w-full text-center mt-48"
               >
                 <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-purple-200 drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] tracking-tighter">
-                  Adam <span className="text-blue-400 font-light mx-2">X</span> Eve
+                  ATOM <span className="text-blue-400 font-light mx-2">X</span> Eve
                 </h1>
                 <motion.div 
                   initial={{ width: 0, opacity: 0 }}
