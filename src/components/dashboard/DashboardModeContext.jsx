@@ -8,9 +8,7 @@ export const useDashboardMode = () => {
     return {
       mode: 'ai',
       toggleMode: () => {},
-      setMode: () => {},
-      activeSection: 'social',
-      setActiveSection: () => {}
+      setMode: () => {}
     };
   }
   return context;
@@ -18,14 +16,13 @@ export const useDashboardMode = () => {
 
 export const DashboardModeProvider = ({ children }) => {
   const [mode, setMode] = useState('ai');
-  const [activeSection, setActiveSection] = useState('social');
 
   const toggleMode = () => {
     setMode(prev => prev === 'ai' ? 'user' : 'ai');
   };
 
   return (
-    <DashboardModeContext.Provider value={{ mode, setMode, toggleMode, activeSection, setActiveSection }}>
+    <DashboardModeContext.Provider value={{ mode, setMode, toggleMode }}>
       {children}
     </DashboardModeContext.Provider>
   );

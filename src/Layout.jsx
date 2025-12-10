@@ -28,36 +28,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-const UserModeDock = () => {
-  const { activeSection, setActiveSection } = useDashboardMode();
-  
-  const sections = [
-    { id: 'social', name: 'Social Hub', icon: Users },
-    { id: 'streaming', name: 'Streaming', icon: Radio },
-    { id: 'stream_team', name: 'Clan', icon: Users }
-  ];
-  
-  return (
-    <div className="flex items-center gap-2">
-      {sections.map(section => (
-        <button
-          key={section.id}
-          onClick={() => setActiveSection(section.id)}
-          className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs font-medium transition-all ${
-            activeSection === section.id 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-white/10 text-white/70 hover:bg-white/20'
-          }`}
-          title={section.name}
-        >
-          <section.icon className="w-4 h-4" />
-          <span>{section.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-};
-
 const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isGroupActive = items.some(item => item.path === currentPath);
@@ -625,9 +595,6 @@ function LayoutContent({ children, currentPageName }) {
                            </Link>
                        ))}
                    </div>
-                )}
-                {headerConfig.showDock && mode === 'user' && (
-                   <UserModeDock />
                 )}
               </div>
             )}
