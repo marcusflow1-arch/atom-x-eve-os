@@ -7,6 +7,7 @@ import ActivityHub from '../ActivityHub';
 import SocialHub from '../SocialHub';
 import StreamingHub from '../../../pages/StreamingHub';
 import StreamTeam from '../streaming/StreamTeam';
+import EntertainmentHub from '../EntertainmentHub';
 
 const NewsCard = ({ title, description, image, time }) => (
   <div className="bg-slate-700/30 rounded-lg overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer">
@@ -32,6 +33,7 @@ export default function UserInterfaceView({
 
   const features = [
     { id: 'social', name: 'Social Hub', icon: UsersIcon, color: 'bg-green-600' },
+    { id: 'entertainment', name: 'Entertainment', icon: Clapperboard, color: 'bg-purple-600' },
     { id: 'streaming', name: 'Streaming', icon: Radio, color: 'bg-red-600' },
     { id: 'stream_team', name: 'Clan', icon: UsersIcon, color: 'bg-orange-600' }
   ];
@@ -79,6 +81,7 @@ export default function UserInterfaceView({
           className="h-full overflow-y-auto"
         >
           {activeFeature === 'social' && <SocialHub />}
+          {activeFeature === 'entertainment' && <EntertainmentHub />}
           {activeFeature === 'streaming' && <StreamingHub />}
           {activeFeature === 'stream_team' && <StreamTeam />}
         </motion.div>
