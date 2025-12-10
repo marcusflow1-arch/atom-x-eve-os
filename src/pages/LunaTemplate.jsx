@@ -1115,16 +1115,9 @@ export default function LunaTemplate() {
                 
                 <button 
                   onClick={() => setShowBlankPage(false)}
-                  className="w-12 h-12 rounded-full flex items-center justify-center transition-all text-white hover:scale-110"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
-                  }}
+                  className="text-white/60 hover:text-white transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-8 h-8" />
                 </button>
               </div>
 
@@ -1175,39 +1168,19 @@ export default function LunaTemplate() {
                             initial={{ opacity: 0, scale: 1.1 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5 }}
-                            className="absolute inset-0 flex flex-col"
+                            className="fixed inset-0 flex items-center justify-center bg-black z-[100]"
                           >
-                            <div className="flex items-center justify-between mb-6">
-                              <button
-                                onClick={() => setSelectedStreamingService(null)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white/80 hover:text-white transition-all"
-                                style={{
-                                  background: 'rgba(147, 197, 253, 0.2)',
-                                  backdropFilter: 'blur(20px)',
-                                  WebkitBackdropFilter: 'blur(20px)',
-                                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                                }}
-                              >
-                                <ArrowLeft className="w-4 h-4" />
-                                Back to Services
-                              </button>
-                              <h3 className="text-2xl font-bold text-white/90">{selectedStreamingService}</h3>
-                            </div>
-
-                            <div 
-                              className="flex-1 rounded-2xl flex items-center justify-center"
-                              style={{
-                                background: 'rgba(0, 0, 0, 0.4)',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                              }}
+                            <button
+                              onClick={() => setSelectedStreamingService(null)}
+                              className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors"
                             >
-                              <div className="text-center">
-                                <Clapperboard className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                                <p className="text-white/60 text-lg">{selectedStreamingService} app will load here</p>
-                                <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
-                              </div>
+                              <X className="w-8 h-8" />
+                            </button>
+
+                            <div className="text-center">
+                              <Clapperboard className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                              <p className="text-white/60 text-lg">{selectedStreamingService} app will load here</p>
+                              <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
                             </div>
                           </motion.div>
                         )}
