@@ -293,7 +293,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
         boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
       }}
     >
-      <FilterSection title="Department">
+      <FilterSection title="Equipment and Items">
         <div className="space-y-1">
           {CATEGORIES.map(cat => (
             <button
@@ -304,7 +304,24 @@ const FilterSidebar = ({ filters, setFilters }) => {
               }`}
             >
               {category === cat.id && <ChevronRight className="w-3 h-3" />}
-              {cat.name}
+              {cat.id === 'all' ? 'All Loot' : cat.name}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Genre">
+        <div className="space-y-1">
+          {['All Genres', 'Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror'].map(genre => (
+            <button
+              key={genre}
+              onClick={() => setFilters(prev => ({ ...prev, genre: genre }))}
+              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
+                filters.genre === genre ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              {filters.genre === genre && <ChevronRight className="w-3 h-3" />}
+              {genre}
             </button>
           ))}
         </div>
@@ -325,21 +342,6 @@ const FilterSidebar = ({ filters, setFilters }) => {
               </div>
               <span className="text-white/60 text-sm">& Up</span>
             </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      <FilterSection title="Game">
-        <div className="space-y-1.5">
-          {GAMES.map(g => (
-            <label key={g} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={game === g}
-                onCheckedChange={() => setFilters(prev => ({ ...prev, game: prev.game === g ? 'All Games' : g }))}
-                className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
-              />
-              <span className="text-white/70 text-sm hover:text-white">{g}</span>
-            </label>
           ))}
         </div>
       </FilterSection>
@@ -412,19 +414,6 @@ const FilterSidebar = ({ filters, setFilters }) => {
             <span className="text-white/70 text-sm">All Discounts</span>
           </label>
         </div>
-      </FilterSection>
-
-      <FilterSection title="Delivery">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <Checkbox
-            checked={prime}
-            onCheckedChange={() => setFilters(prev => ({ ...prev, prime: !prev.prime }))}
-            className="border-white/30 data-[state=checked]:bg-blue-500 w-4 h-4"
-          />
-          <span className="text-blue-400 text-sm flex items-center gap-1">
-            <Truck className="w-3.5 h-3.5" /> Prime Eligible
-          </span>
-        </label>
       </FilterSection>
     </div>
   );
@@ -542,6 +531,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
   const [filters, setFilters] = useState({
     category: 'all',
     game: 'All Games',
+    genre: 'All Genres',
     priceRange: [0, 200000],
     rarities: [],
     rating: null,
@@ -638,6 +628,22 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
+              <select
+                value={filters.genre}
+                onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
+                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+              >
+                <option value="All Genres">All Genres</option>
+                <option value="Action">Action</option>
+                <option value="RPG">RPG</option>
+                <option value="Shooter">Shooter</option>
+                <option value="Strategy">Strategy</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Sports">Sports</option>
+                <option value="Racing">Racing</option>
+                <option value="Simulation">Simulation</option>
+                <option value="Horror">Horror</option>
+              </select>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
