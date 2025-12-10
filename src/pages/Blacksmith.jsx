@@ -430,7 +430,7 @@ const rarityStyles = {
 
 // ConsoleDetailView Removed - Refactored into ItemDetailModal
 
-export default function BlacksmithPage() {
+export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const { user } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -514,10 +514,21 @@ export default function BlacksmithPage() {
         {/* Top Navigation Bar */}
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-8">
-            <h1 className="ml-16 text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
-              <Hammer className="w-8 h-8 fill-white" />
-              BLACK FORGE
-            </h1>
+            <div className="flex items-center gap-3">
+              {isEmbedded && (
+                <button 
+                  onClick={onToggleView}
+                  className="p-2 rounded-full bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 transition-all group mr-2"
+                  title="Back to Achievements"
+                >
+                  <Trophy className="w-6 h-6 text-yellow-400 group-hover:scale-110 transition-transform" />
+                </button>
+              )}
+              <h1 className="ml-4 text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
+                <Hammer className="w-8 h-8 fill-white" />
+                Blacksmith Forge
+              </h1>
+            </div>
             <nav className="flex gap-1 bg-slate-800/50 rounded-full p-1 backdrop-blur-xl border border-white/10 shadow-lg">
               {['forge', 'materials', 'collab'].map((mode) => (
                 <button

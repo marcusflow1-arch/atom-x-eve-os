@@ -17,6 +17,7 @@ import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
+import BlacksmithPage from './Blacksmith';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -126,7 +127,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
   );
 };
 
-export default function Achievements() {
+function AchievementsView({ onSwitchToForge }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
   const [allGames, setAllGames] = useState([]);
   const [localAchievements, setLocalAchievements] = useState({});
@@ -318,8 +319,15 @@ export default function Achievements() {
             
             {/* Header */}
             <div className="flex items-center gap-3">
-              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white">
+              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-3">
                 Achievements
+                <button 
+                  onClick={onSwitchToForge}
+                  className="ml-2 p-2 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 transition-all group"
+                  title="Go to Blacksmith Forge"
+                >
+                  <Hammer className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+                </button>
               </h1>
             </div>
 
@@ -523,6 +531,38 @@ export default function Achievements() {
           <div className="text-xl font-black text-white leading-none">{totalScore.toLocaleString()}</div>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+export default function Achievements() {
+  const [viewMode, setViewMode] = useState('achievements');
+
+  return (
+    <div className="h-screen w-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        {viewMode === 'achievements' ? (
+          <motion.div
+            key="achievements"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="h-full w-full"
+          >
+            <AchievementsView onSwitchToForge={() => setViewMode('blacksmith')} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="blacksmith"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="h-full w-full"
+          >
+            <BlacksmithPage isEmbedded={true} onToggleView={() => setViewMode('achievements')} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
