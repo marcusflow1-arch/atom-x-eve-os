@@ -418,10 +418,13 @@ export default function StreamingDiscovery() {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-4"
                     >
-                      <div className="flex items-center gap-3 mb-4">
+                      <div 
+                        className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-700/20 rounded-lg p-2 -m-2 transition-colors"
+                        onClick={() => navigate(createPageUrl(`StreamerProfile?id=${selectedStreamer.id}`))}
+                      >
                         <img src={selectedStreamer.avatar} alt={selectedStreamer.name} className="w-16 h-16 rounded-full border-2 border-blue-400" />
                         <div>
-                          <h3 className="text-xl font-bold text-white">{selectedStreamer.name}</h3>
+                          <h3 className="text-xl font-bold text-white hover:text-blue-400 transition-colors">{selectedStreamer.name}</h3>
                           <div className="flex items-center gap-2 text-sm">
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{selectedStreamer.category}</Badge>
                             {selectedStreamer.isNew && <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">NEW</Badge>}
