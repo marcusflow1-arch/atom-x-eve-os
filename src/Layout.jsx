@@ -488,7 +488,6 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = true;
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
-          headerConfig.showDock = true;
         } else if (p.includes('/seasonalpass')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
