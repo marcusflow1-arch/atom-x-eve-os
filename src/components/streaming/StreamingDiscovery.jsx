@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, TrendingUp, Users, ChevronLeft, Globe, Calendar, Play } from 'lucide-react';
+import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, TrendingUp, Users, ChevronLeft, Globe, Calendar, Play, Volume2, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
@@ -172,13 +172,16 @@ const FilterSidebar = ({ filters, setFilters }) => {
       }}
     >
       <FilterSection title="Categories">
-        <input
-          type="text"
-          placeholder="Search categories..."
-          value={categorySearch}
-          onChange={(e) => setCategorySearch(e.target.value)}
-          className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-3 py-2 text-white text-sm mb-3 placeholder:text-white/40 focus:outline-none focus:border-blue-500"
-        />
+        <div className="relative mb-3">
+          <Volume2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={categorySearch}
+            onChange={(e) => setCategorySearch(e.target.value)}
+            className="w-full bg-slate-800/50 border border-white/20 rounded-lg pl-10 pr-3 py-2 text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-blue-500"
+          />
+        </div>
         <div className="space-y-1 max-h-[300px] overflow-y-auto">
           <button
             onClick={() => setFilters(prev => ({ ...prev, category: 'all' }))}
@@ -293,8 +296,8 @@ const FilterSidebar = ({ filters, setFilters }) => {
   );
 };
 
-const StreamerIntroCard = ({ streamer }) => (
-  <div className="group cursor-pointer">
+const StreamerIntroCard = ({ streamer, onWatch }) => (
+  <div className="group cursor-pointer" onClick={() => onWatch(streamer)}>
     <div className="relative aspect-video rounded-xl overflow-hidden mb-3">
       <img src={streamer.intro} alt={streamer.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -335,6 +338,7 @@ export default function StreamingDiscovery() {
   const [selectedStreamer, setSelectedStreamer] = useState(MOCK_STREAMERS.filter(s => s.isNew)[0]);
   const [detailView, setDetailView] = useState('overview'); // 'overview' or 'details'
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [currentUserName] = useState('ProStreamer_User'); // Mock current user
 
   const filteredStreamers = MOCK_STREAMERS.filter(streamer => {
     if (filters.category !== 'all' && streamer.category !== filters.category) return false;
@@ -352,6 +356,17 @@ export default function StreamingDiscovery() {
 
   return (
     <div className="flex gap-6 h-full p-6">
+      {/* User Profile Button */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => navigate(createPageUrl('StreamerProfileEdit'))}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/30 rounded-lg text-white transition-all"
+        >
+          <User className="w-4 h-4" />
+          <span className="font-semibold">{currentUserName}</span>
+        </button>
+      </div>
+
       <FilterSidebar filters={filters} setFilters={setFilters} />
 
       <div className="flex-1 overflow-y-auto">
@@ -615,7 +630,11 @@ export default function StreamingDiscovery() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredStreamers.map(streamer => (
-              <StreamerIntroCard key={streamer.id} streamer={streamer} />
+              <StreamerIntroCard 
+                key={streamer.id} 
+                streamer={streamer} 
+                onWatch={(s) => navigate(createPageUrl(`StreamWatch?id=${s.id}`))}
+              />
             ))}
           </div>
           {filteredStreamers.length === 0 && (

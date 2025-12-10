@@ -33,6 +33,8 @@ import WorldEvents from './pages/WorldEvents';
 import Home from './pages/Home';
 import Clan from './pages/Clan';
 import StreamerProfile from './pages/StreamerProfile';
+import StreamerProfileEdit from './pages/StreamerProfileEdit';
+import StreamWatch from './pages/StreamWatch';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +74,8 @@ export const PAGES = {
     "Home": Home,
     "Clan": Clan,
     "StreamerProfile": StreamerProfile,
+    "StreamerProfileEdit": StreamerProfileEdit,
+    "StreamWatch": StreamWatch,
 }
 
 export const pagesConfig = {
