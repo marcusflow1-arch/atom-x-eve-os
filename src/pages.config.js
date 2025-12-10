@@ -28,6 +28,7 @@ import Events from './pages/Events';
 import Challenges from './pages/Challenges';
 import Admin from './pages/Admin';
 import SeasonalPass from './pages/SeasonalPass';
+import LunaTemplate from './pages/LunaTemplate';
 import GenreMastery from './pages/GenreMastery';
 import WorldEvents from './pages/WorldEvents';
 import Home from './pages/Home';
@@ -65,6 +66,7 @@ export const PAGES = {
     "Challenges": Challenges,
     "Admin": Admin,
     "SeasonalPass": SeasonalPass,
+    "LunaTemplate": LunaTemplate,
     "GenreMastery": GenreMastery,
     "WorldEvents": WorldEvents,
     "Home": Home,
