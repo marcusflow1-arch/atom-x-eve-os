@@ -77,7 +77,7 @@ const TradingFilterSidebar = ({
   };
 
   return (
-    <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg sticky top-20 h-fit max-h-[calc(100vh-6rem)] overflow-y-auto">
+    <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg h-full overflow-y-auto custom-scrollbar">
       {/* Categories */}
       <div className="mb-6">
         <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
@@ -493,11 +493,6 @@ export default function TradingPostContent() {
         const items = generateGameItems(game);
         
         // Apply Category Filters
-        // Filter Logic:
-        // - Category: 'weapon' -> checks item.type
-        // - Rarity: checks item.rarity
-        // - Price: checks item.marketPrice
-        
         const filteredItems = items.filter(item => {
             // Category Filter
             if (filters.category !== 'all' && filters.category !== 'global') {
@@ -520,9 +515,6 @@ export default function TradingPostContent() {
             return true;
         });
 
-        // Only include game if it has matching items (or no filters active)
-        // If filtering is active, we only want games that contain relevant items.
-        // If no specific item filters, show all games.
         const hasMatchingItems = filteredItems.length > 0;
         
         if (hasMatchingItems) {
@@ -593,8 +585,6 @@ export default function TradingPostContent() {
             // Idol Mode
             if (key === 'enter') {
                 setCrossViewLevel(2);
-                // Map the game's listings to the structure expected by the offers view
-                // We construct a "group" object similar to what the old UI used
                 const game = crossData[activeGenreIndex].games[activeGameIndex];
                 const group = {
                     item: {
@@ -642,455 +632,75 @@ export default function TradingPostContent() {
   };
 
   return (
-    <div className="relative z-10 max-w-[1920px] mx-auto px-4 md:px-6 py-8 pb-20">
-      {/* Page Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6"
-      >
-        <div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2 flex items-center gap-3">
-            <Orbit className="w-10 h-10 text-cyan-400" />
-            GALACTIC EXCHANGE
-          </h1>
-          <p className="text-slate-400 text-lg flex items-center gap-2">
-            Interstellar Trading Post <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span> Live Network
-          </p>
-        </div>
+    <div className="relative z-10 max-w-[1920px] mx-auto px-4 md:px-6 py-4 h-[calc(100vh-80px)]">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex gap-6">
         
-        <div className="flex gap-3">
-          <div 
-            className="px-4 py-2 rounded-2xl flex items-center gap-3"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-            }}
-          >
-            <div className="text-right">
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
-              <p className="text-xl font-bold text-white font-mono">24,500 AGP</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <DollarSign className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+        {/* LEFT COLUMN: Header & Sidebar Controls */}
+        <div className="w-72 flex-shrink-0 flex flex-col gap-6">
+           {/* HEADER */}
+           <div>
+              <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-1 flex items-center gap-2">
+                <Orbit className="w-6 h-6 text-cyan-400" />
+                GALACTIC EXCHANGE
+              </h1>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Interstellar Trading Post</p>
+           </div>
 
-      {/* Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex justify-start mb-8">
-          <TabsList 
-            className="p-1 rounded-full"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-            }}
-          >
-            <TabsTrigger 
-              value="board" 
-              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+           {/* BALANCE */}
+           <div 
+              className="px-4 py-3 rounded-2xl flex items-center gap-3 w-full"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
             >
-              Global Market
-            </TabsTrigger>
-
-            <TabsTrigger 
-              value="subtab" 
-              className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
-            >
-              Inventory
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="board" className="h-[calc(100vh-280px)]">
-          <div className="flex gap-6 h-full">
-            {/* Sidebar - Dynamic Based on Level */}
-            <aside className="hidden lg:block w-64 flex-shrink-0 transition-all duration-300">
-              {crossViewLevel === 0 ? (
-                // LEVEL 0: Genre Selection Sidebar
-                <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg h-full overflow-y-auto">
-                  <div className="mb-4">
-                    <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
-                      <Grid className="w-4 h-4 text-cyan-400" />
-                      Game Genres
-                    </h3>
-                    <div className="space-y-1">
-                      {crossData.map((genre, idx) => (
-                        <button
-                          key={genre.id}
-                          onClick={() => setActiveGenreIndex(idx)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                            activeGenreIndex === idx 
-                              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
-                              : 'text-slate-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          <genre.icon className={`w-4 h-4 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
-                          <span>{genre.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // LEVEL 1: Item Filters Sidebar
-                <TradingFilterSidebar filters={filters} setFilters={setFilters} />
-              )}
-            </aside>
-
-            {/* Content Area */}
-            <div className="flex-1 min-w-0 h-full flex flex-col">
-            
-            {/* Top Navigation Bar */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                {(crossViewLevel === 1 || selectedListingGroup) && (
-                  <motion.button
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    onClick={() => {
-                        if (selectedListingGroup) {
-                            setSelectedListingGroup(null);
-                        } else {
-                            setCrossViewLevel(0);
-                            setActiveCrossGame(null);
-                        }
-                    }}
-                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                      <ChevronLeft className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm font-medium">Back</span>
-                  </motion.button>
-                )}
-                <h2 className="text-2xl font-bold text-white">
-                  {selectedListingGroup ? selectedListingGroup.item.name : crossViewLevel === 1 ? activeCrossGame?.title : 'Global Market'}
-                </h2>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+                <DollarSign className="w-5 h-5 text-white" />
               </div>
-              
-              {/* Search Pill */}
-              <div 
-                className="flex items-center gap-3 px-4 py-2 rounded-full"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <Search className="w-4 h-4 text-white/50" />
-                <input 
-                  type="text" 
-                  id="trading-search-input"
-                  placeholder={window.tradingListening ? "Listening..." : "Search..."}
-                  className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
-                />
-                <button
-                  onClick={() => {
-                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                        if (window.tradingRecognition && window.tradingListening) {
-                            window.tradingRecognition.stop();
-                            return;
-                        }
-                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        const recognition = new SpeechRecognition();
-                        recognition.lang = 'en-US';
-                        recognition.interimResults = false;
-                        recognition.onstart = () => {
-                            window.tradingListening = true;
-                            // Force update
-                            const input = document.getElementById('trading-search-input');
-                            if(input) input.placeholder = "Listening...";
-                        };
-                        recognition.onend = () => {
-                            window.tradingListening = false;
-                            window.tradingRecognition = null;
-                            const input = document.getElementById('trading-search-input');
-                            if(input) input.placeholder = "Search...";
-                        };
-                        recognition.onresult = (event) => {
-                            const transcript = event.results[0][0].transcript;
-                            const input = document.getElementById('trading-search-input');
-                            if(input) {
-                                input.value = transcript;
-                                // Trigger change event manually if needed by react state in future, for now just DOM update
-                            }
-                        };
-                        window.tradingRecognition = recognition;
-                        recognition.start();
-                    } else {
-                        alert("Voice search not supported");
-                    }
-                  }}
-                  className={`p-1 rounded-full transition-colors hover:bg-white/10 ${window.tradingListening ? 'text-purple-400 animate-pulse' : 'text-white/40 hover:text-white'}`}
-                >
-                    <Mic className="w-3.5 h-3.5" />
-                </button>
+              <div className="min-w-0">
+                <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
+                <p className="text-lg font-bold text-white font-mono truncate">24,500 AGP</p>
               </div>
-            </div>
+           </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 overflow-hidden relative">
-              <AnimatePresence mode="wait">
+           {/* SIDEBARS (Conditionally rendered via TabsContent) */}
+           <TabsContent value="board" className="flex-1 min-h-0 data-[state=inactive]:hidden mt-0">
+              <div className="h-full flex flex-col">
                 {crossViewLevel === 0 ? (
-                    // LEVEL 0: Game Selection View
-                    <motion.div
-                        key="level-0-games"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="h-full overflow-y-auto custom-scrollbar p-6"
-                    >
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {crossData[activeGenreIndex]?.games.map((game) => (
-                                <LiquidCard 
-                                    key={game.id} 
-                                    onClick={() => {
-                                        setActiveCrossGame(game);
-                                        setCrossViewLevel(1);
-                                    }}
-                                    className="h-64 flex flex-col group"
-                                >
-                                    <div className="flex-1 relative overflow-hidden">
-                                        <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
-                                        <div className="absolute bottom-4 left-4 right-4">
-                                            <h3 className="text-xl font-bold text-white mb-1 leading-tight">{game.title}</h3>
-                                            <div className="flex items-center gap-2">
-                                                <Badge variant="outline" className="border-white/20 text-white/70 text-[10px]">{game.genre}</Badge>
-                                                <span className="text-[10px] text-cyan-400 font-mono">{game.filteredItems.length} items</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="h-12 bg-white/5 border-t border-white/10 flex items-center justify-between px-4">
-                                        <span className="text-xs text-white/50">View Market</span>
-                                        <ChevronRight className="w-4 h-4 text-white/50 group-hover:translate-x-1 transition-transform" />
-                                    </div>
-                                </LiquidCard>
-                            ))}
-                        </div>
-                    </motion.div>
-                ) : !selectedListingGroup ? (
-                  // LEVEL 1: Item Listing View (Existing)
-                  <motion.div
-                    key="cross-interface"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="relative w-full h-full"
-                  >
-                    <div className="flex-1 overflow-y-auto custom-scrollbar relative p-6 h-full">
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                            {/* Filter items to show only for the active game */}
-                            {generateGameItems(activeCrossGame).filter(item => {
-                                // Apply same filters as before
-                                if (filters.category !== 'all' && filters.category !== 'global') {
-                                    const cat = filters.category;
-                                    if (cat === 'weapon' && item.type !== 'Weapon') return false;
-                                    if (cat === 'armor' && item.type !== 'Armor') return false;
-                                    if (cat === 'consumable' && item.type !== 'Consumable') return false;
-                                    if (cat === 'material' && item.type !== 'Material') return false;
-                                    if (cat === 'magic' && item.type !== 'Ability') return false;
-                                    if (cat === 'tech' && item.type !== 'Tech') return false;
-                                    if (cat === 'blueprint' && item.type !== 'Blueprint') return false;
-                                }
-                                if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
-                                if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
-                                return true;
-                            }).map((item, i) => (
-                                <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
-                                    const group = {
-                                        item: item,
-                                        offers: [{
-                                            id: 'offer_1',
-                                            type: 'sale',
-                                            price: item.marketPrice,
-                                            owner: { name: 'MarketBot', avatar: item.image },
-                                            description: 'Direct market listing'
-                                        }]
-                                    };
-                                    setSelectedListingGroup(group);
-                                }}>
-                                    <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <div className="w-24 h-24 mb-4 relative">
-                                            <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
-                                            <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </div>
-                                        <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 px-2">{item.name}</h4>
-                                        <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
-                                    </div>
-                                    <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center px-2">
-                                        <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.type}</span>
-                                        <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
-                                    </div>
-                                </HollowCard>
-                            ))}
-                        </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  // LEVEL 2: Offer Details View
-                  <motion.div
-                    key="offers"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    className="h-full flex gap-6"
-                  >
-                    {/* Left: Item Preview */}
-                    <div className="w-[320px] flex-shrink-0">
-                      <div 
-                        className="rounded-2xl overflow-hidden h-full"
-                        style={{
-                          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                        }}
-                      >
-                        <div className="aspect-square relative overflow-hidden">
-                          <img 
-                            src={selectedListingGroup.item.image} 
-                            alt={selectedListingGroup.item.name}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                          <div className="absolute bottom-4 left-4 right-4">
-                            <RarityBadge rarity={selectedListingGroup.item.rarity} />
-                          </div>
-                        </div>
-
-                        <div className="p-5">
-                          <h2 className="text-xl font-bold text-white mb-2">{selectedListingGroup.item.name}</h2>
-                          <p className="text-white/50 text-sm mb-4">{selectedListingGroup.item.description}</p>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/40">Type</span>
-                              <span className="text-white">{selectedListingGroup.item.type}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/40">Game</span>
-                              <span className="text-white">{selectedListingGroup.item.game}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/40">Total Offers</span>
-                              <span className="text-blue-400 font-bold">{selectedListingGroup.offers.length}</span>
-                            </div>
-                          </div>
-
+                  // LEVEL 0: Genre Selection Sidebar
+                  <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg h-full overflow-y-auto custom-scrollbar">
+                    <div className="mb-4">
+                      <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
+                        <Grid className="w-4 h-4 text-cyan-400" />
+                        Game Genres
+                      </h3>
+                      <div className="space-y-1">
+                        {crossData.map((genre, idx) => (
                           <button
-                            onClick={() => {
-                                setSelectedListingGroup(null);
-                                // Stay at Level 1 (Items)
-                            }}
-                            className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center justify-center gap-2"
+                            key={genre.id}
+                            onClick={() => setActiveGenreIndex(idx)}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                              activeGenreIndex === idx 
+                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
                           >
-                            <ChevronLeft className="w-4 h-4" />
-                            Back to Items
+                            <genre.icon className={`w-4 h-4 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
+                            <span>{genre.label}</span>
                           </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right: Offers List */}
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <h3 className="text-white font-bold text-lg mb-4">Available Offers</h3>
-                      
-                      <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                        {selectedListingGroup.offers.map((offer, idx) => (
-                          <motion.div
-                            key={offer.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="group"
-                          >
-                            <div 
-                              className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
-                              style={{
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                              }}
-                            >
-                              <div className="flex items-center gap-4">
-                                <img 
-                                  src={offer.owner.avatar} 
-                                  alt={offer.owner.name}
-                                  className="w-12 h-12 rounded-full border-2 border-white/20"
-                                />
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-white font-bold">{offer.owner.name}</span>
-                                    <div className="flex items-center gap-1">
-                                      <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                      <span className="text-white/60 text-xs">4.9</span>
-                                    </div>
-                                  </div>
-                                  <p className="text-white/40 text-sm truncate">{offer.description}</p>
-                                </div>
-
-                                <div className="text-right">
-                                  <div className={`text-xs font-bold uppercase mb-1 ${
-                                    offer.type === 'sale' ? 'text-green-400' :
-                                    offer.type === 'bid' ? 'text-purple-400' :
-                                    'text-blue-400'
-                                  }`}>
-                                    {offer.type === 'sale' ? 'BUY NOW' : offer.type === 'bid' ? 'AUCTION' : 'TRADE'}
-                                  </div>
-                                  {(offer.price || offer.currentBid) && (
-                                    <div className="text-xl font-bold text-white">
-                                      {(offer.price || offer.currentBid).toLocaleString()}
-                                      <span className="text-xs text-white/40 ml-1">AGP</span>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                  {offer.type === 'sale' && (
-                                    <button className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors">
-                                      Buy
-                                    </button>
-                                  )}
-                                  {offer.type === 'bid' && (
-                                    <button className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold transition-colors">
-                                      Bid
-                                    </button>
-                                  )}
-                                  {offer.type === 'trade' && (
-                                    <button className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold transition-colors">
-                                      Offer
-                                    </button>
-                                  )}
-                                  <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors">
-                                    <MessageSquare className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
                         ))}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
+                ) : (
+                  // LEVEL 1: Item Filters Sidebar
+                  <TradingFilterSidebar filters={filters} setFilters={setFilters} />
                 )}
-              </AnimatePresence>
-            </div>
-          </div>
-          </div>
-        </TabsContent>
+              </div>
+           </TabsContent>
 
-        <TabsContent value="subtab" className="h-[calc(100vh-280px)]">
-           <div className="flex gap-6 h-full">
-              {/* Category Menu Box (Left Side) */}
-              <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
+           <TabsContent value="subtab" className="flex-1 min-h-0 data-[state=inactive]:hidden mt-0">
+              <div className="h-full flex flex-col gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input 
@@ -1129,228 +739,555 @@ export default function TradingPostContent() {
                       ))}
                     </div>
                 </div>
-              </aside>
-              
-              {/* Content Area (Right Side) */}
-              <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar">
-                  {!subTabGenre ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-500">
-                      <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
-                      <p className="text-lg font-medium">Select a Genre to View Games</p>
-                      <p className="text-sm opacity-60">Choose from the list on the left</p>
+              </div>
+           </TabsContent>
+        </div>
+
+        {/* RIGHT COLUMN: Tabs List & Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+           {/* TOP BAR: TABS & SEARCH */}
+           <div className="flex items-center justify-between mb-6">
+              <TabsList 
+                className="p-1 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                }}
+              >
+                <TabsTrigger 
+                  value="board" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+                >
+                  Global Market
+                </TabsTrigger>
+
+                <TabsTrigger 
+                  value="subtab" 
+                  className="rounded-full px-6 py-2 text-sm font-medium data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all"
+                >
+                  Inventory
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Breadcrumb/Back & Search (Only for Board Tab usually, but depends on context) */}
+              <div className="flex items-center gap-4">
+                {(activeTab === 'board' && (crossViewLevel === 1 || selectedListingGroup)) && (
+                  <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => {
+                        if (selectedListingGroup) {
+                            setSelectedListingGroup(null);
+                        } else {
+                            setCrossViewLevel(0);
+                            setActiveCrossGame(null);
+                        }
+                    }}
+                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                      <ChevronLeft className="w-5 h-5" />
                     </div>
-                  ) : !subTabGame ? (
-                    <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                      <div className="flex items-center gap-3 mb-8">
-                        <Badge variant="outline" className="text-cyan-400 border-cyan-500/30 px-3 py-1">{subTabGenre}</Badge>
-                        <h2 className="text-2xl font-bold text-white">Available Games</h2>
-                      </div>
-                      
-                      <div className="grid grid-cols-3 gap-6">
-                        {(GENRE_GAMES[subTabGenre] || [`Generic ${subTabGenre} Game 1`, `Generic ${subTabGenre} Game 2`, `Generic ${subTabGenre} Game 3`]).map((game) => (
-                          <motion.div 
-                            key={game}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSubTabGame(game)}
-                            className="bg-slate-800/40 border border-white/5 rounded-xl p-4 cursor-pointer hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all group h-48 flex flex-col"
-                          >
-                            <div className="flex-1 flex items-center justify-center bg-black/20 rounded-lg mb-4 relative overflow-hidden">
-                              <Gamepad2 className="w-12 h-12 text-slate-600 group-hover:text-cyan-400 transition-colors" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{game}</h3>
-                              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400" />
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
+                    <span className="text-sm font-medium">Back</span>
+                  </motion.button>
+                )}
+
+                {(activeTab === 'board') && (
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-white mr-4 hidden xl:block">
+                      {selectedListingGroup ? selectedListingGroup.item.name : crossViewLevel === 1 ? activeCrossGame?.title : 'Market Overview'}
+                    </h2>
+                    
+                    <div 
+                      className="flex items-center gap-3 px-4 py-2 rounded-full"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      <Search className="w-4 h-4 text-white/50" />
+                      <input 
+                        type="text" 
+                        placeholder="Search market..."
+                        className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
+                      />
                     </div>
-                  ) : (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full flex flex-col">
-                      <button 
-                        onClick={() => setSubTabGame(null)}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors w-fit"
-                      >
-                        <ChevronLeft className="w-4 h-4" /> Back to {subTabGenre} Games
-                      </button>
-                      
-                      <div className="flex items-end gap-6 mb-8 border-b border-white/5 pb-6">
-                        <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 flex items-center justify-center shadow-xl">
-                           <Gamepad2 className="w-10 h-10 text-cyan-400" />
-                        </div>
-                        <div>
-                           <Badge className="mb-2 bg-cyan-500/10 text-cyan-400 border-cyan-500/20">{subTabGenre}</Badge>
-                           <h2 className="text-4xl font-black text-white tracking-tight">{subTabGame}</h2>
-                           <p className="text-slate-400 mt-1">Your Progress & Collection</p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-1 gap-6 overflow-hidden">
-                          <div className="w-2/3 flex flex-col gap-4">
-                              {/* Content: Filters & Items (No Box) */}
-                              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                                  {['All Items', 'Weapons', 'Armor', 'Consumables', 'Materials'].map((filter) => (
-                                      <button key={filter} className="px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all whitespace-nowrap">
-                                          {filter}
-                                      </button>
-                                  ))}
-                                  <div className="ml-auto text-xs text-amber-400 font-mono flex items-center gap-1 bg-amber-950/30 px-3 py-1 rounded border border-amber-500/20">
-                                      <Coins className="w-3 h-3" /> {getGameDetails(subTabGame).currency.amount.toLocaleString()} G
-                                  </div>
-                              </div>
-
-                              {/* Items Grid - Removed Outer Box Styles */}
-                              <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
-                                  <div className="grid grid-cols-5 gap-3">
-                                      {getGameDetails(subTabGame).items.map((item) => (
-                                          <div 
-                                              key={item.id}
-                                              onClick={() => setSelectedInventoryItem(item)}
-                                              className={`
-                                                  aspect-square rounded-lg border-2 relative group cursor-pointer transition-all
-                                                  flex flex-col items-center justify-center bg-slate-900/80
-                                                  ${selectedInventoryItem?.id === item.id 
-                                                      ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)] scale-105 z-10' 
-                                                      : item.rarity === 'Legendary' ? 'border-orange-500/30 hover:border-orange-400'
-                                                      : item.rarity === 'Epic' ? 'border-purple-500/30 hover:border-purple-400'
-                                                      : item.rarity === 'Rare' ? 'border-blue-500/30 hover:border-blue-400'
-                                                      : 'border-slate-700 hover:border-slate-500'
-                                                  }
-                                              `}
-                                          >
-                                              <SwordsIcon className={`w-8 h-8 ${
-                                                  item.rarity === 'Legendary' ? 'text-orange-400' :
-                                                  item.rarity === 'Epic' ? 'text-purple-400' :
-                                                  item.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-500'
-                                              }`} />
-                                              
-                                              <div className="absolute top-1 left-1 text-[9px] font-mono text-slate-500">
-                                                  Lv.{item.level}
-                                              </div>
-
-                                              <div className="absolute bottom-1 right-1">
-                                                  {item.demand === "High" || item.demand === "Very High" ? (
-                                                      <TrendingUp className="w-3 h-3 text-green-500" />
-                                                  ) : null}
-                                              </div>
-                                          </div>
-                                      ))}
-                                      {[...Array(20 - getGameDetails(subTabGame).items.length)].map((_, i) => (
-                                          <div key={`empty-${i}`} className="aspect-square rounded-lg border border-white/5 bg-slate-900/20 flex items-center justify-center opacity-30">
-                                              <div className="w-2 h-2 rounded-full bg-slate-800" />
-                                          </div>
-                                      ))}
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div className="w-1/3 bg-slate-900/80 rounded-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">
-                              {selectedInventoryItem ? (
-                                  <>
-                                      <div className="h-48 relative bg-gradient-to-b from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden group">
-                                          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-                                          <SwordsIcon className={`w-24 h-24 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 ${
-                                              selectedInventoryItem.rarity === 'Legendary' ? 'text-orange-500' :
-                                              selectedInventoryItem.rarity === 'Epic' ? 'text-purple-500' :
-                                              selectedInventoryItem.rarity === 'Rare' ? 'text-blue-500' : 'text-slate-400'
-                                          }`} />
-                                          
-                                          <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                                              <Badge className={`
-                                                  ${selectedInventoryItem.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' :
-                                                  selectedInventoryItem.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
-                                                  selectedInventoryItem.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-slate-700 text-slate-300'}
-                                              `}>
-                                                  {selectedInventoryItem.rarity}
-                                              </Badge>
-                                          </div>
-                                      </div>
-
-                                      <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto">
-                                          <div>
-                                              <h3 className="text-xl font-bold text-white leading-tight">{selectedInventoryItem.name}</h3>
-                                              <p className="text-xs text-slate-400 mt-1">{selectedInventoryItem.type} • Item Level {selectedInventoryItem.level}</p>
-                                          </div>
-
-                                          <div className="text-sm text-slate-300 italic border-l-2 border-white/10 pl-3 py-1">
-                                              "{selectedInventoryItem.description}"
-                                          </div>
-
-                                          <div className="grid grid-cols-2 gap-2">
-                                              <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                  <div className="text-[10px] text-slate-500 uppercase">Power</div>
-                                                  <div className="text-lg font-mono text-white">{selectedInventoryItem.power}</div>
-                                              </div>
-                                              <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                  <div className="text-[10px] text-slate-500 uppercase">Weight</div>
-                                                  <div className="text-lg font-mono text-white">2.5kg</div>
-                                              </div>
-                                          </div>
-
-                                          <div className="mt-auto bg-cyan-950/20 rounded-xl p-4 border border-cyan-500/20">
-                                              <div className="flex items-center justify-between mb-3">
-                                                  <div className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1">
-                                                      <TrendingUp className="w-3 h-3" /> Market Value
-                                                  </div>
-                                                  <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
-                                                      {selectedInventoryItem.demand} Demand
-                                                  </Badge>
-                                              </div>
-                                              
-                                              <div className="flex items-end justify-between mb-4">
-                                                  <div>
-                                                      <div className="text-[10px] text-slate-400">Average Price</div>
-                                                      <div className="text-2xl font-black text-white flex items-center gap-1">
-                                                          <Coins className="w-4 h-4 text-amber-400" /> {selectedInventoryItem.marketPrice}
-                                                      </div>
-                                                  </div>
-                                                  <div className="text-right">
-                                                      <div className="text-[10px] text-slate-400">Last Sold</div>
-                                                      <div className="text-xs text-white">2 mins ago</div>
-                                                  </div>
-                                              </div>
-
-                                              <div className="grid grid-cols-3 gap-2">
-                                                  <Button 
-                                                    onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('trade'); setShowTradeModal(true); }}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-1"
-                                                  >
-                                                      <ArrowLeftRight className="w-3 h-3 mr-1" /> Trade
-                                                  </Button>
-                                                  <Button 
-                                                    onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('sale'); setShowTradeModal(true); }}
-                                                    className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-1"
-                                                  >
-                                                      <DollarSign className="w-3 h-3 mr-1" /> Sell
-                                                  </Button>
-                                                  <Button 
-                                                    onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('bid'); setShowTradeModal(true); }}
-                                                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-1"
-                                                  >
-                                                      <Gavel className="w-3 h-3 mr-1" /> Bid
-                                                  </Button>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </>
-                              ) : (
-                                  <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                                      <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 animate-pulse">
-                                          <Info className="w-8 h-8 opacity-50" />
-                                      </div>
-                                      <h4 className="text-lg font-bold text-slate-400 mb-1">Item Inspector</h4>
-                                      <p className="text-xs">Select an item from your inventory to view details, market analytics, and listing options.</p>
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
+                )}
               </div>
            </div>
-        </TabsContent>
+
+           {/* CONTENT AREA */}
+           <div className="flex-1 overflow-hidden relative">
+              <TabsContent value="board" className="h-full mt-0 data-[state=inactive]:hidden">
+                <AnimatePresence mode="wait">
+                  {crossViewLevel === 0 ? (
+                      // LEVEL 0: Game Selection View
+                      <motion.div
+                          key="level-0-games"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="h-full overflow-y-auto custom-scrollbar pr-2 pb-6"
+                      >
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                              {crossData[activeGenreIndex]?.games.map((game) => (
+                                  <LiquidCard 
+                                      key={game.id} 
+                                      onClick={() => {
+                                          setActiveCrossGame(game);
+                                          setCrossViewLevel(1);
+                                      }}
+                                      className="h-64 flex flex-col group"
+                                  >
+                                      <div className="flex-1 relative overflow-hidden">
+                                          <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+                                          <div className="absolute bottom-4 left-4 right-4">
+                                              <h3 className="text-xl font-bold text-white mb-1 leading-tight">{game.title}</h3>
+                                              <div className="flex items-center gap-2">
+                                                  <Badge variant="outline" className="border-white/20 text-white/70 text-[10px]">{game.genre}</Badge>
+                                                  <span className="text-[10px] text-cyan-400 font-mono">{game.filteredItems.length} items</span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <div className="h-12 bg-white/5 border-t border-white/10 flex items-center justify-between px-4">
+                                          <span className="text-xs text-white/50">View Market</span>
+                                          <ChevronRight className="w-4 h-4 text-white/50 group-hover:translate-x-1 transition-transform" />
+                                      </div>
+                                  </LiquidCard>
+                              ))}
+                          </div>
+                      </motion.div>
+                  ) : !selectedListingGroup ? (
+                    // LEVEL 1: Item Listing View (Existing)
+                    <motion.div
+                      key="cross-interface"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="relative w-full h-full"
+                    >
+                      <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 h-full pb-6">
+                          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                              {/* Filter items to show only for the active game */}
+                              {generateGameItems(activeCrossGame).filter(item => {
+                                  // Apply same filters as before
+                                  if (filters.category !== 'all' && filters.category !== 'global') {
+                                      const cat = filters.category;
+                                      if (cat === 'weapon' && item.type !== 'Weapon') return false;
+                                      if (cat === 'armor' && item.type !== 'Armor') return false;
+                                      if (cat === 'consumable' && item.type !== 'Consumable') return false;
+                                      if (cat === 'material' && item.type !== 'Material') return false;
+                                      if (cat === 'magic' && item.type !== 'Ability') return false;
+                                      if (cat === 'tech' && item.type !== 'Tech') return false;
+                                      if (cat === 'blueprint' && item.type !== 'Blueprint') return false;
+                                  }
+                                  if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
+                                  if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
+                                  return true;
+                              }).map((item, i) => (
+                                  <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
+                                      const group = {
+                                          item: item,
+                                          offers: [{
+                                              id: 'offer_1',
+                                              type: 'sale',
+                                              price: item.marketPrice,
+                                              owner: { name: 'MarketBot', avatar: item.image },
+                                              description: 'Direct market listing'
+                                          }]
+                                      };
+                                      setSelectedListingGroup(group);
+                                  }}>
+                                      <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
+                                          <div className="w-24 h-24 mb-4 relative">
+                                              <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
+                                              <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                          </div>
+                                          <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 px-2">{item.name}</h4>
+                                          <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
+                                      </div>
+                                      <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center px-2">
+                                          <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.type}</span>
+                                          <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
+                                      </div>
+                                  </HollowCard>
+                              ))}
+                          </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    // LEVEL 2: Offer Details View
+                    <motion.div
+                      key="offers"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      className="h-full flex gap-6"
+                    >
+                      {/* Left: Item Preview */}
+                      <div className="w-[320px] flex-shrink-0">
+                        <div 
+                          className="rounded-2xl overflow-hidden h-full"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                          }}
+                        >
+                          <div className="aspect-square relative overflow-hidden">
+                            <img 
+                              src={selectedListingGroup.item.image} 
+                              alt={selectedListingGroup.item.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <RarityBadge rarity={selectedListingGroup.item.rarity} />
+                            </div>
+                          </div>
+
+                          <div className="p-5">
+                            <h2 className="text-xl font-bold text-white mb-2">{selectedListingGroup.item.name}</h2>
+                            <p className="text-white/50 text-sm mb-4">{selectedListingGroup.item.description}</p>
+                            
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/40">Type</span>
+                                <span className="text-white">{selectedListingGroup.item.type}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/40">Game</span>
+                                <span className="text-white">{selectedListingGroup.item.game}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-white/40">Total Offers</span>
+                                <span className="text-blue-400 font-bold">{selectedListingGroup.offers.length}</span>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                  setSelectedListingGroup(null);
+                                  setCrossViewLevel(1); // Go back to Items view
+                              }}
+                              className="w-full mt-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center justify-center gap-2"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              Back to Items
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Offers List */}
+                      <div className="flex-1 flex flex-col min-w-0">
+                        <h3 className="text-white font-bold text-lg mb-4">Available Offers</h3>
+                        
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                          {selectedListingGroup.offers.map((offer, idx) => (
+                            <motion.div
+                              key={offer.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: idx * 0.05 }}
+                              className="group"
+                            >
+                              <div 
+                                className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.01] cursor-pointer"
+                                style={{
+                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                  border: '1px solid rgba(255,255,255,0.08)',
+                                }}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <img 
+                                    src={offer.owner.avatar} 
+                                    alt={offer.owner.name}
+                                    className="w-12 h-12 rounded-full border-2 border-white/20"
+                                  />
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-white font-bold">{offer.owner.name}</span>
+                                      <div className="flex items-center gap-1">
+                                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                        <span className="text-white/60 text-xs">4.9</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-white/40 text-sm truncate">{offer.description}</p>
+                                  </div>
+
+                                  <div className="text-right">
+                                    <div className={`text-xs font-bold uppercase mb-1 ${
+                                      offer.type === 'sale' ? 'text-green-400' :
+                                      offer.type === 'bid' ? 'text-purple-400' :
+                                      'text-blue-400'
+                                    }`}>
+                                      {offer.type === 'sale' ? 'BUY NOW' : offer.type === 'bid' ? 'AUCTION' : 'TRADE'}
+                                    </div>
+                                    {(offer.price || offer.currentBid) && (
+                                      <div className="text-xl font-bold text-white">
+                                        {(offer.price || offer.currentBid).toLocaleString()}
+                                        <span className="text-xs text-white/40 ml-1">AGP</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-2">
+                                    {offer.type === 'sale' && (
+                                      <button className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-bold transition-colors">
+                                        Buy
+                                      </button>
+                                    )}
+                                    {offer.type === 'bid' && (
+                                      <button className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold transition-colors">
+                                        Bid
+                                      </button>
+                                    )}
+                                    {offer.type === 'trade' && (
+                                      <button className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold transition-colors">
+                                        Offer
+                                      </button>
+                                    )}
+                                    <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors">
+                                      <MessageSquare className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </TabsContent>
+
+              {/* INVENTORY TAB CONTENT */}
+              <TabsContent value="subtab" className="h-full mt-0 data-[state=inactive]:hidden">
+                  <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar pr-2 pb-6">
+                      {!subTabGenre ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                          <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
+                          <p className="text-lg font-medium">Select a Genre to View Games</p>
+                          <p className="text-sm opacity-60">Choose from the list on the left</p>
+                        </div>
+                      ) : !subTabGame ? (
+                        <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                          <div className="flex items-center gap-3 mb-8">
+                            <Badge variant="outline" className="text-cyan-400 border-cyan-500/30 px-3 py-1">{subTabGenre}</Badge>
+                            <h2 className="text-2xl font-bold text-white">Available Games</h2>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-6">
+                            {(GENRE_GAMES[subTabGenre] || [`Generic ${subTabGenre} Game 1`, `Generic ${subTabGenre} Game 2`, `Generic ${subTabGenre} Game 3`]).map((game) => (
+                              <motion.div 
+                                key={game}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setSubTabGame(game)}
+                                className="bg-slate-800/40 border border-white/5 rounded-xl p-4 cursor-pointer hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all group h-48 flex flex-col"
+                              >
+                                <div className="flex-1 flex items-center justify-center bg-black/20 rounded-lg mb-4 relative overflow-hidden">
+                                  <Gamepad2 className="w-12 h-12 text-slate-600 group-hover:text-cyan-400 transition-colors" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <h3 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{game}</h3>
+                                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400" />
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full flex flex-col">
+                          <button 
+                            onClick={() => setSubTabGame(null)}
+                            className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors w-fit"
+                          >
+                            <ChevronLeft className="w-4 h-4" /> Back to {subTabGenre} Games
+                          </button>
+                          
+                          <div className="flex items-end gap-6 mb-8 border-b border-white/5 pb-6">
+                            <div className="w-24 h-24 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-white/10 flex items-center justify-center shadow-xl">
+                               <Gamepad2 className="w-10 h-10 text-cyan-400" />
+                            </div>
+                            <div>
+                               <Badge className="mb-2 bg-cyan-500/10 text-cyan-400 border-cyan-500/20">{subTabGenre}</Badge>
+                               <h2 className="text-4xl font-black text-white tracking-tight">{subTabGame}</h2>
+                               <p className="text-slate-400 mt-1">Your Progress & Collection</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-1 gap-6 overflow-hidden">
+                              <div className="w-2/3 flex flex-col gap-4">
+                                  {/* Content: Filters & Items (No Box) */}
+                                  <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                                      {['All Items', 'Weapons', 'Armor', 'Consumables', 'Materials'].map((filter) => (
+                                          <button key={filter} className="px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-700 transition-all whitespace-nowrap">
+                                              {filter}
+                                          </button>
+                                      ))}
+                                      <div className="ml-auto text-xs text-amber-400 font-mono flex items-center gap-1 bg-amber-950/30 px-3 py-1 rounded border border-amber-500/20">
+                                          <Coins className="w-3 h-3" /> {getGameDetails(subTabGame).currency.amount.toLocaleString()} G
+                                      </div>
+                                  </div>
+
+                                  {/* Items Grid - Removed Outer Box Styles */}
+                                  <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
+                                      <div className="grid grid-cols-5 gap-3">
+                                          {getGameDetails(subTabGame).items.map((item) => (
+                                              <div 
+                                                  key={item.id}
+                                                  onClick={() => setSelectedInventoryItem(item)}
+                                                  className={`
+                                                      aspect-square rounded-lg border-2 relative group cursor-pointer transition-all
+                                                      flex flex-col items-center justify-center bg-slate-900/80
+                                                      ${selectedInventoryItem?.id === item.id 
+                                                          ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)] scale-105 z-10' 
+                                                          : item.rarity === 'Legendary' ? 'border-orange-500/30 hover:border-orange-400'
+                                                          : item.rarity === 'Epic' ? 'border-purple-500/30 hover:border-purple-400'
+                                                          : item.rarity === 'Rare' ? 'border-blue-500/30 hover:border-blue-400'
+                                                          : 'border-slate-700 hover:border-slate-500'
+                                                      }
+                                                  `}
+                                              >
+                                                  <SwordsIcon className={`w-8 h-8 ${
+                                                      item.rarity === 'Legendary' ? 'text-orange-400' :
+                                                      item.rarity === 'Epic' ? 'text-purple-400' :
+                                                      item.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-500'
+                                                  }`} />
+                                                  
+                                                  <div className="absolute top-1 left-1 text-[9px] font-mono text-slate-500">
+                                                      Lv.{item.level}
+                                                  </div>
+
+                                                  <div className="absolute bottom-1 right-1">
+                                                      {item.demand === "High" || item.demand === "Very High" ? (
+                                                          <TrendingUp className="w-3 h-3 text-green-500" />
+                                                      ) : null}
+                                                  </div>
+                                              </div>
+                                          ))}
+                                          {[...Array(20 - getGameDetails(subTabGame).items.length)].map((_, i) => (
+                                              <div key={`empty-${i}`} className="aspect-square rounded-lg border border-white/5 bg-slate-900/20 flex items-center justify-center opacity-30">
+                                                  <div className="w-2 h-2 rounded-full bg-slate-800" />
+                                              </div>
+                                          ))}
+                                      </div>
+                                  </div>
+                              </div>
+
+                              <div className="w-1/3 bg-slate-900/80 rounded-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">
+                                  {selectedInventoryItem ? (
+                                      <>
+                                          <div className="h-48 relative bg-gradient-to-b from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden group">
+                                              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                                              <SwordsIcon className={`w-24 h-24 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 ${
+                                                  selectedInventoryItem.rarity === 'Legendary' ? 'text-orange-500' :
+                                                  selectedInventoryItem.rarity === 'Epic' ? 'text-purple-500' :
+                                                  selectedInventoryItem.rarity === 'Rare' ? 'text-blue-500' : 'text-slate-400'
+                                              }`} />
+                                              
+                                              <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
+                                                  <Badge className={`
+                                                      ${selectedInventoryItem.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' :
+                                                      selectedInventoryItem.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
+                                                      selectedInventoryItem.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-slate-700 text-slate-300'}
+                                                  `}>
+                                                      {selectedInventoryItem.rarity}
+                                                  </Badge>
+                                              </div>
+                                          </div>
+
+                                          <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto">
+                                              <div>
+                                                  <h3 className="text-xl font-bold text-white leading-tight">{selectedInventoryItem.name}</h3>
+                                                  <p className="text-xs text-slate-400 mt-1">{selectedInventoryItem.type} • Item Level {selectedInventoryItem.level}</p>
+                                              </div>
+
+                                              <div className="text-sm text-slate-300 italic border-l-2 border-white/10 pl-3 py-1">
+                                                  "{selectedInventoryItem.description}"
+                                              </div>
+
+                                              <div className="grid grid-cols-2 gap-2">
+                                                  <div className="bg-slate-950/50 p-2 rounded border border-white/5">
+                                                      <div className="text-[10px] text-slate-500 uppercase">Power</div>
+                                                      <div className="text-lg font-mono text-white">{selectedInventoryItem.power}</div>
+                                                  </div>
+                                                  <div className="bg-slate-950/50 p-2 rounded border border-white/5">
+                                                      <div className="text-[10px] text-slate-500 uppercase">Weight</div>
+                                                      <div className="text-lg font-mono text-white">2.5kg</div>
+                                                  </div>
+                                              </div>
+
+                                              <div className="mt-auto bg-cyan-950/20 rounded-xl p-4 border border-cyan-500/20">
+                                                  <div className="flex items-center justify-between mb-3">
+                                                      <div className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1">
+                                                          <TrendingUp className="w-3 h-3" /> Market Value
+                                                      </div>
+                                                      <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
+                                                          {selectedInventoryItem.demand} Demand
+                                                      </Badge>
+                                                  </div>
+                                                  
+                                                  <div className="flex items-end justify-between mb-4">
+                                                      <div>
+                                                          <div className="text-[10px] text-slate-400">Average Price</div>
+                                                          <div className="text-2xl font-black text-white flex items-center gap-1">
+                                                              <Coins className="w-4 h-4 text-amber-400" /> {selectedInventoryItem.marketPrice}
+                                                          </div>
+                                                      </div>
+                                                      <div className="text-right">
+                                                          <div className="text-[10px] text-slate-400">Last Sold</div>
+                                                          <div className="text-xs text-white">2 mins ago</div>
+                                                      </div>
+                                                  </div>
+
+                                                  <div className="grid grid-cols-3 gap-2">
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('trade'); setShowTradeModal(true); }}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <ArrowLeftRight className="w-3 h-3 mr-1" /> Trade
+                                                      </Button>
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('sale'); setShowTradeModal(true); }}
+                                                        className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <DollarSign className="w-3 h-3 mr-1" /> Sell
+                                                      </Button>
+                                                      <Button 
+                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('bid'); setShowTradeModal(true); }}
+                                                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-1"
+                                                      >
+                                                          <Gavel className="w-3 h-3 mr-1" /> Bid
+                                                      </Button>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </>
+                                  ) : (
+                                      <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
+                                          <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 animate-pulse">
+                                              <Info className="w-8 h-8 opacity-50" />
+                                          </div>
+                                          <h4 className="text-lg font-bold text-slate-400 mb-1">Item Inspector</h4>
+                                          <p className="text-xs">Select an item from your inventory to view details, market analytics, and listing options.</p>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+              </TabsContent>
+           </div>
+        </div>
       </Tabs>
 
       <InternalTradePostModal
