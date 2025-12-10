@@ -27,6 +27,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import PinGamesContent from '../components/dashboard/PinGamesContent';
+import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1202,10 +1203,7 @@ export default function LunaTemplate() {
                       </AnimatePresence>
                     )}
                     {blankPageTab === 'streaming' && (
-                      <div className="text-white">
-                        <h3 className="text-2xl font-semibold mb-4 text-white/90">Streaming</h3>
-                        <p className="text-white/60 text-lg">Streaming content will appear here</p>
-                      </div>
+                      <StreamingDiscovery />
                     )}
                     {blankPageTab === 'social' && (
                       <div className="text-white">
