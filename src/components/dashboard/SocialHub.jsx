@@ -18,38 +18,21 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import SmartContract from './SmartContract';
 
-// Mock Data
-const mockPosts = [
-  {
-    id: 1,
-    user: { name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', level: 45 },
-    aiCommentary: { 
-      message: 'I learned the boss attack pattern at 32% health. New "Evasion Algorithm" acquired.', 
-      ability: 'Evasion Algorithm',
-      skill_upgrades: ['Combat Prowess +3', 'Pattern Recognition +5'],
-      summary: 'Epic takedown of the raid boss using advanced evasion tactics.',
-      narrative_elements: ['The Hero\'s Journey', 'Overcoming Impossible Odds']
-    },
-    playerPost: { text: 'Finally beat the raid boss!', video: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop' },
-    likes: 127,
-    comments: 23,
-    timestamp: '2 hours ago'
-  },
-  {
-    id: 2,
-    user: { name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', level: 38 },
-    aiCommentary: { 
-      message: 'Auto-inventory management upgraded. Resource efficiency +25%.', 
-      ability: 'Smart Inventory',
-      skill_upgrades: ['Resource Management +4', 'Efficiency +2'],
-      summary: 'Streamlined inventory system for maximum looting potential.',
-      narrative_elements: ['Technological Advancement', 'Preparation for War']
-    },
-    playerPost: { text: 'My Eve just evolved to Level 50 Intelligence. She can now auto-manage my inventory in RPGs!', video: null },
-    likes: 89,
-    comments: 15,
-    timestamp: '4 hours ago'
-  }
+// Mock Friends List
+const mockFriends = [
+  { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
+  { id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
+  { id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
+  { id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
+  { id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }
+];
+
+// Mock Live Activities
+const mockLiveActivities = [
+  { id: 1, user: 'Shadow_Striker', action: 'defeated', target: 'Raid Boss', game: 'Elden Ring', time: '2 min ago', icon: Trophy },
+  { id: 2, user: 'CyberVixen', action: 'started streaming', target: 'Cyberpunk 2088', time: '5 min ago', icon: Video },
+  { id: 3, user: 'GhostReaper', action: 'completed', target: 'Weekly Challenge', game: 'Destiny 2', time: '10 min ago', icon: CheckCircle },
+  { id: 4, user: 'NovaStar', action: 'unlocked', target: 'Legendary Skin', game: 'Valorant', time: '15 min ago', icon: Award }
 ];
 
 const mockContracts = [
@@ -64,6 +47,51 @@ const mockAbilities = [
   { id: 3, name: 'Auto-Looting Script', game: 'Diablo', rarity: 'Legendary', icon: '💎', tradeable: true, value: 8 },
   { id: 4, name: 'Stealth Pathfinding', game: 'Assassins Creed', rarity: 'Epic', icon: '🥷', tradeable: true, value: 6 }
 ];
+
+// Comment Section Component
+const CommentSection = ({ postId, comments, onAddComment }) => {
+  const [newComment, setNewComment] = useState('');
+
+  const handleSubmit = () => {
+    if (!newComment.trim()) return;
+    onAddComment({ content: newComment });
+    setNewComment('');
+  };
+
+  return (
+    <div className="space-y-3">
+      {comments && comments.length > 0 && (
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {comments.map((comment) => (
+            <div key={comment.id} className="flex gap-2">
+              <img 
+                src={`https://i.pravatar.cc/150?u=${comment.user_id}`} 
+                alt="User" 
+                className="w-8 h-8 rounded-full"
+              />
+              <div className="flex-1 bg-slate-700/30 rounded-lg p-2">
+                <p className="text-white font-semibold text-xs">{comment.created_by}</p>
+                <p className="text-white/80 text-sm">{comment.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Write a comment..."
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+          className="flex-1 bg-slate-700/50 border-slate-600 text-sm"
+        />
+        <Button size="sm" onClick={handleSubmit}>
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 // Components
 const DualPost = ({ post, onLike, onFollow, onUnfollow, currentUser, isFollowing }) => {
@@ -331,12 +359,10 @@ const AbilityCard = ({ ability }) => {
 export default function SocialHub() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('feed');
   const [newPost, setNewPost] = useState('');
   const [showContract, setShowContract] = useState(false);
-  const [momentumStatus, setMomentumStatus] = useState('In the Zone');
-  const [isEconomyOpen, setIsEconomyOpen] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
 
   // 1. Fetch Social Feed
   const { data: feedData, isLoading: isFeedLoading } = useQuery({
@@ -482,134 +508,158 @@ export default function SocialHub() {
   };
 
   return (
-    <div className="h-full flex gap-4 relative">
-      {/* LEFT COLUMN - Navigation */}
-      <div className="w-64 space-y-3 flex-shrink-0">
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-700/50">
-            <div className="relative">
+    <div className="h-full flex gap-6 p-6">
+      {/* LEFT SIDEBAR - User Profile & Friends */}
+      <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
+        {/* User Profile Card */}
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6">
+          <div className="text-center mb-4">
+            <div className="relative inline-block mb-3">
               <img 
                 src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
                 alt="Profile" 
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
               />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-slate-900">
-                 {user?.level || 1}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 rounded-full px-3 py-1 text-xs font-bold text-white">
+                Level {user?.level || 1}
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center">
-                  <p className="text-white font-semibold truncate">{user?.username || 'Player'}</p>
-                  <span className="text-xs text-slate-400">Lvl {user?.level || 1}</span>
-              </div>
-              
-              {/* XP Bar */}
-              <div className="w-full bg-slate-700/50 h-2 rounded-full mt-2 overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-full rounded-full" 
-                    style={{ width: `${Math.min(100, ((user?.xp || 0) % 100))}%` }} // Simplified progress visual
-                  />
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                  <span>{user?.xp || 0} XP</span>
-                  <span>Next Lvl</span>
-              </div>
+            <h2 className="text-xl font-bold text-white">{user?.username || 'Player'}</h2>
+            <p className="text-slate-400 text-sm">Gameverse Explorer</p>
+          </div>
+
+          {/* XP Progress */}
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-slate-400 mb-1">
+              <span>{user?.xp || 0} XP</span>
+              <span>Next Level</span>
+            </div>
+            <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all" 
+                style={{ width: `${Math.min(100, ((user?.xp || 0) % 100))}%` }}
+              />
             </div>
           </div>
-          
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-700/30 rounded-lg">
+            <div className="text-center">
+              <p className="text-white font-bold text-lg">245</p>
+              <p className="text-slate-400 text-xs">Friends</p>
+            </div>
+            <div className="text-center border-x border-slate-600">
+              <p className="text-white font-bold text-lg">1.2K</p>
+              <p className="text-slate-400 text-xs">Posts</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white font-bold text-lg">89</p>
+              <p className="text-slate-400 text-xs">Games</p>
+            </div>
+          </div>
+
+          {/* Badges */}
           {user?.badges && user.badges.length > 0 && (
-            <div className="flex gap-1 flex-wrap mt-2 px-1">
-                {user.badges.map(b => (
-                    <span key={b} title={b} className="text-lg cursor-help">
-                        {b === 'storyteller' ? '📖' : b === 'novice_gamer' ? '🎮' : '🏅'}
-                    </span>
-                ))}
+            <div className="flex gap-2 justify-center flex-wrap mb-4">
+              {user.badges.map(b => (
+                <span key={b} title={b} className="text-2xl cursor-help">
+                  {b === 'storyteller' ? '📖' : b === 'novice_gamer' ? '🎮' : '🏅'}
+                </span>
+              ))}
             </div>
           )}
 
-          <nav className="space-y-2">
-            <Button
-              variant={activeTab === 'feed' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('feed')}
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Life Feed
-            </Button>
-            <Button
-              variant={activeTab === 'holodeck' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('holodeck')}
-            >
-              <Video className="w-4 h-4 mr-2" />
-              The Holodeck
-            </Button>
-            <Button
-              variant={activeTab === 'groups' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('groups')}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Guilds & Teams
-            </Button>
-            <Button
-              variant={activeTab === 'live' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => setActiveTab('live')}
-            >
-              <Radio className="w-4 h-4 mr-2" />
-              Live Activities
-            </Button>
-          </nav>
+          <Button className="w-full bg-blue-600 hover:bg-blue-700">
+            <User className="w-4 h-4 mr-2" />
+            View Full Profile
+          </Button>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
-          <h3 className="text-white font-semibold mb-3">Quick Actions</h3>
+        {/* Friends List */}
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-400" />
+            Friends
+          </h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {mockFriends.map(friend => (
+              <div key={friend.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/30 transition-colors cursor-pointer">
+                <div className="relative">
+                  <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full" />
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-800 ${
+                    friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">{friend.name}</p>
+                  {friend.game ? (
+                    <p className="text-blue-400 text-xs truncate">{friend.game}</p>
+                  ) : (
+                    <p className="text-slate-500 text-xs">Offline</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Live Activities */}
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+            <Radio className="w-5 h-5 text-green-400" />
+            Live Activities
+          </h3>
           <div className="space-y-2">
-            <Button size="sm" className="w-full justify-start" variant="outline">
-              <PlayCircle className="w-4 h-4 mr-2" />
-              Start Stream
-            </Button>
-            <Button size="sm" className="w-full justify-start" variant="outline">
-              <HandshakeIcon className="w-4 h-4 mr-2" />
-              Post Contract
-            </Button>
-            <Button size="sm" className="w-full justify-start" variant="outline">
-              <ArrowLeftRight className="w-4 h-4 mr-2" />
-              Trade Ability
-            </Button>
+            {mockLiveActivities.map(activity => (
+              <div key={activity.id} className="flex items-start gap-2 p-2 bg-slate-700/20 rounded-lg">
+                <activity.icon className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs">
+                    <span className="font-semibold">{activity.user}</span> {activity.action}{' '}
+                    <span className="text-blue-400">{activity.target}</span>
+                    {activity.game && <span className="text-slate-400"> in {activity.game}</span>}
+                  </p>
+                  <p className="text-slate-500 text-[10px]">{activity.time}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* MIDDLE COLUMN - The Feed */}
-      <div className="flex-1 overflow-y-auto pr-2">
-        {activeTab === 'feed' && (
-          <>
-            {/* Post Creator */}
-            <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 mb-4">
-              <div className="flex items-start gap-3 mb-3">
-                <img 
-                  src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
-                  alt="You" 
-                  className="w-10 h-10 rounded-full"
-                />
-                <Input
-                  placeholder="Share your victory, ask for help, or post a clip..."
-                  value={newPost}
-                  onChange={(e) => setNewPost(e.target.value)}
-                  className="flex-1 bg-slate-700/50 border-slate-600"
-                />
-              </div>
+      {/* CENTER COLUMN - For You Feed */}
+      <div className="flex-1 overflow-y-auto space-y-4">
+        {/* Post Creator */}
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+          <div className="flex items-start gap-3 mb-4">
+            <img 
+              src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
+              alt="You" 
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <Input
+                placeholder="What's on your mind, Gamer?"
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+                className="bg-slate-700/50 border-slate-600 mb-3"
+              />
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline">
-                  <Film className="w-4 h-4 mr-1" />
-                  Video
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMedia('video')}
+                >
+                  <Video className="w-4 h-4 mr-1" />
+                  Live Video
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMedia('photo')}
+                >
                   <Image className="w-4 h-4 mr-1" />
-                  Image
+                  Photo
                 </Button>
                 <Button 
                   size="sm" 
@@ -623,168 +673,55 @@ export default function SocialHub() {
                       Analyzing...
                     </>
                   ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-1" />
-                      Post & Analyze
-                    </>
+                    'Post'
                   )}
                 </Button>
               </div>
             </div>
-
-            {/* Feed */}
-            <div className="space-y-4">
-              {isFeedLoading ? (
-                 <div className="text-center py-10 text-slate-400">Loading feed...</div>
-              ) : feedData && feedData.length > 0 ? (
-                 feedData.map((post) => (
-                    <DualPost 
-                        key={post.id} 
-                        post={post} 
-                        currentUser={user}
-                        onLike={(p) => likeMutation.mutate(p)}
-                        onFollow={(id) => followMutation.mutate(id)}
-                        onUnfollow={(id) => unfollowMutation.mutate(id)}
-                        isFollowing={followingIds.includes(post.user_id)}
-                    />
-                 ))
-              ) : (
-                 <div className="text-center py-10 text-slate-400">No memories found. Be the first to post!</div>
-              )}
-            </div>
-          </>
-        )}
-
-        {activeTab === 'holodeck' && (
-          <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-6">
-            <h2 className="text-2xl font-black text-white mb-4">The Holodeck</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-left"
-              >
-                <Monitor className="w-8 h-8 text-white mb-3" />
-                <h3 className="text-white font-bold mb-1">Screen Share</h3>
-                <p className="text-blue-200 text-sm">Over-the-shoulder view with friends</p>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 text-left"
-              >
-                <Gamepad2 className="w-8 h-8 text-white mb-3" />
-                <h3 className="text-white font-bold mb-1">Co-Pilot Mode</h3>
-                <p className="text-purple-200 text-sm">Let friends control your game</p>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 text-left"
-              >
-                <Target className="w-8 h-8 text-white mb-3" />
-                <h3 className="text-white font-bold mb-1">War Room</h3>
-                <p className="text-green-200 text-sm">Group planning with strategy board</p>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl p-6 text-left"
-              >
-                <Video className="w-8 h-8 text-white mb-3" />
-                <h3 className="text-white font-bold mb-1">Video Chat</h3>
-                <p className="text-orange-200 text-sm">Face-to-face with party</p>
-              </motion.button>
-            </div>
           </div>
-        )}
-
-        {activeTab === 'groups' && (
-          <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-6">
-            <h2 className="text-2xl font-black text-white mb-4">Your Guilds & Teams</h2>
-            <p className="text-slate-400">Guild system coming soon...</p>
-          </div>
-        )}
-
-        {activeTab === 'live' && (
-          <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-6">
-            <h2 className="text-2xl font-black text-white mb-4">Live Activities</h2>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <div>
-                    <p className="text-white font-semibold">Shadow_Striker</p>
-                    <p className="text-slate-400 text-sm">streaming Cyberpunk 2088</p>
-                  </div>
-                </div>
-                <Badge className="bg-orange-500/20 text-orange-400">In the Zone</Badge>
-                <Button size="sm" className="ml-auto">Watch</Button>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                  <div>
-                    <p className="text-white font-semibold">CyberVixen</p>
-                    <p className="text-slate-400 text-sm">in menu</p>
-                  </div>
-                </div>
-                <Badge className="bg-blue-500/20 text-blue-400">Looting</Badge>
-                <Button size="sm" variant="outline">Invite</Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Toggle Button for Economy Sidebar */}
-      <div className="absolute right-0 top-0 z-10">
-        {!isEconomyOpen && (
-          <Button
-            onClick={() => setIsEconomyOpen(true)}
-            className="bg-white/10 text-white hover:bg-blue-600 backdrop-blur-sm border border-white/10"
-            size="sm"
-          >
-            <HandshakeIcon className="w-4 h-4 mr-2" />
-            Economy
-          </Button>
-        )}
-      </div>
-
-      {/* RIGHT COLUMN - The Economy */}
-      <motion.div 
-        initial={{ width: 384, opacity: 1 }}
-        animate={{ 
-          width: isEconomyOpen ? 384 : 0,
-          opacity: isEconomyOpen ? 1 : 0,
-          display: isEconomyOpen ? 'block' : 'none'
-        }}
-        className="space-y-4 flex-shrink-0 overflow-hidden"
-      >
-        <div className="flex justify-end">
-           <Button
-            onClick={() => setIsEconomyOpen(false)}
-            className="bg-white/10 text-white hover:bg-blue-600 backdrop-blur-sm border border-white/10 w-full mb-2"
-            size="sm"
-          >
-            Hide Economy <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
         </div>
 
+        {/* Feed Posts */}
+        <div className="space-y-4">
+          {isFeedLoading ? (
+            <div className="text-center py-16 text-slate-400">
+              <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+              Loading your feed...
+            </div>
+          ) : feedData && feedData.length > 0 ? (
+            feedData.map((post) => (
+              <DualPost 
+                key={post.id} 
+                post={post} 
+                currentUser={user}
+                onLike={(p) => likeMutation.mutate(p)}
+                onFollow={(id) => followMutation.mutate(id)}
+                onUnfollow={(id) => unfollowMutation.mutate(id)}
+                isFollowing={followingIds.includes(post.user_id)}
+              />
+            ))
+          ) : (
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-16 text-center">
+              <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-white font-bold text-xl mb-2">Welcome to the Gameverse!</h3>
+              <p className="text-slate-400">No posts yet. Be the first to share your gaming journey!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT SIDEBAR - Active Contracts */}
+      <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
         {/* Active Contracts */}
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold flex items-center gap-2">
               <HandshakeIcon className="w-5 h-5 text-blue-400" />
               Active Contracts
             </h3>
-            <Badge className="bg-blue-600/30 text-blue-400">3 Active</Badge>
+            <Badge className="bg-blue-600/30 text-blue-400">3</Badge>
           </div>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-3">
             {mockContracts.map((contract) => (
               <ContractCard 
                 key={contract.id} 
@@ -793,44 +730,51 @@ export default function SocialHub() {
               />
             ))}
           </div>
+          <Button size="sm" className="w-full mt-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300">
+            View All Contracts
+          </Button>
         </div>
 
         {/* The Vault - Tradeable Abilities */}
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold flex items-center gap-2">
               <Package className="w-5 h-5 text-purple-400" />
               The Vault
             </h3>
-            <Button size="sm" className="bg-white/10 text-white hover:bg-blue-600 border-white/10 backdrop-blur-sm">
-              View All
-            </Button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {mockAbilities.map((ability) => (
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {mockAbilities.slice(0, 4).map((ability) => (
               <AbilityCard key={ability.id} ability={ability} />
             ))}
           </div>
+          <Button size="sm" className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300">
+            Trade Items
+          </Button>
         </div>
 
         {/* Marketplace Hot Trades */}
-        <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
           <h3 className="text-white font-bold flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-green-400" />
             Hot Trades
           </h3>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
+            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
               <span className="text-slate-300">Stealth Pathfinding</span>
               <span className="text-green-400 font-bold">↑ 6 Tokens</span>
             </div>
-            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
+            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
               <span className="text-slate-300">Auto-Looting Script</span>
               <span className="text-red-400 font-bold">↓ 8 Tokens</span>
             </div>
+            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
+              <span className="text-slate-300">Combat Prowess</span>
+              <span className="text-green-400 font-bold">↑ 4 Tokens</span>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Smart Contract Modal */}
       {showContract && (
