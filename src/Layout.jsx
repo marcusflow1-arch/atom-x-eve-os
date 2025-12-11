@@ -503,10 +503,6 @@ function LayoutContent({ children, currentPageName }) {
               </button>
             )}
 
-            <span className="text-white/90 font-bold text-sm tracking-wide drop-shadow-md ml-16">
-              Atom Marcus Luna Dashboard Page Line Level 1
-            </span>
-
             {/* Minimized Experience Bar - Dashboard & Luna Template */}
             {mode === 'ai' && (location.pathname === '/' || location.pathname.toLowerCase().endsWith('/dashboard') || location.pathname.toLowerCase().includes('/lunatemplate')) && (
               <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5 shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
