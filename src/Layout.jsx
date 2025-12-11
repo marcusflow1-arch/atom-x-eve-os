@@ -482,12 +482,8 @@ function LayoutContent({ children, currentPageName }) {
         if (headerConfig.hidden) return null;
 
         const DOCK_ITEMS = [
-          { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
           { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
-          { id: 'library', label: 'Library', icon: Library, route: 'Library' },
-          { id: 'ainews', label: 'AI News', icon: Bot, route: 'AINews' },
-          { id: 'seasonalpass', label: 'Seasonal Pass', icon: Crown, route: 'SeasonalPass' },
         ];
 
         return (
@@ -500,15 +496,12 @@ function LayoutContent({ children, currentPageName }) {
               >
                 <div className="relative">
                   <button
-                    onClick={() => setDrawerOpen(true)}
+                    onClick={() => setSocialHubOpen(true)}
                     className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
                     style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+                    title="AI Home"
                   >
-                    <div className="flex flex-col gap-1">
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                    </div>
+                    <Bot className="w-5 h-5 text-white/80" />
                   </button>
 
                   {/* Hovering Dock Items */}
@@ -562,28 +555,7 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex items-center gap-6 mt-1 pl-1">
 
 
-                {/* Dock Items */}
-                {headerConfig.showDock && mode === 'ai' && (
-                   <div className="flex items-center gap-2">
-                       {DOCK_ITEMS.map(item => (
-                           <Link 
-                             key={item.id} 
-                             to={createPageUrl(item.route)}
-                             className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
-                             title={item.label}
-                           >
-                               <item.icon className="w-4 h-4" />
-                           </Link>
-                       ))}
-                       <button
-                         onClick={() => setSocialHubOpen(true)}
-                         className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
-                         title="Social Hub"
-                       >
-                         <TrendingUp className="w-4 h-4" />
-                       </button>
-                   </div>
-                )}
+
               </div>
             )}
           </div>
