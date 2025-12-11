@@ -490,23 +490,22 @@ function LayoutContent({ children, currentPageName }) {
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
             {headerConfig.showMenu && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setDrawerOpen(true)}
-                  className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-                  style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-                >
-                  <div className="flex flex-col gap-1">
-                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                  </div>
-                </button>
-                <span className="text-white/90 font-bold text-sm tracking-wide drop-shadow-md">
-                  Atom Marcus Luna Dashboard Page Line Level 1
-                </span>
-              </div>
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+                style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                </div>
+              </button>
             )}
+
+            <span className="text-white/90 font-bold text-sm tracking-wide drop-shadow-md ml-16">
+              Atom Marcus Luna Dashboard Page Line Level 1
+            </span>
 
             {/* Minimized Experience Bar - Dashboard & Luna Template */}
             {mode === 'ai' && (location.pathname === '/' || location.pathname.toLowerCase().endsWith('/dashboard') || location.pathname.toLowerCase().includes('/lunatemplate')) && (
