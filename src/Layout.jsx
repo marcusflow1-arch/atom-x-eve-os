@@ -481,70 +481,26 @@ function LayoutContent({ children, currentPageName }) {
         if (headerConfig.hidden) return null;
 
         const DOCK_ITEMS = [
+
           { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
           { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
-          { id: 'library', label: 'Library', icon: Library, route: 'Library' },
-          { id: 'store', label: 'Store', icon: ShoppingBag, route: 'Store' },
         ];
-
-        const [showDockMenu, setShowDockMenu] = React.useState(false);
 
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
             {headerConfig.showMenu && (
-              <div 
-                className="flex items-center gap-3 group"
-                onMouseEnter={() => setShowDockMenu(true)}
-                onMouseLeave={() => setShowDockMenu(false)}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+                style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
               >
-                <div className="relative">
-                  <button
-                    onClick={() => setDrawerOpen(true)}
-                    className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-                    style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                    </div>
-                  </button>
-
-                  {/* Hovering Dock Items */}
-                  <AnimatePresence>
-                    {showDockMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 mt-2 flex flex-col gap-2 pt-2"
-                      >
-                        {DOCK_ITEMS.map((item, index) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                          >
-                            <Link
-                              to={createPageUrl(item.route)}
-                              className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.15] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 hover:border-white/30 group/item"
-                              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-                              title={item.label}
-                            >
-                              <item.icon className="w-5 h-5 text-white/70 group-hover/item:text-white transition-colors" />
-                            </Link>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <div className="flex flex-col gap-1">
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
                 </div>
-                <span className="text-white/90 font-bold text-sm tracking-wide drop-shadow-md">
-                  Atom Marcus Luna Dashboard Page Line Level 1
-                </span>
-              </div>
+              </button>
             )}
 
             {/* Minimized Experience Bar - Dashboard & Luna Template */}
