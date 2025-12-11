@@ -834,3 +834,164 @@ export default function SocialHub() {
     </div>
   );
 }
+
+// Marketplace View Component
+const MarketplaceView = ({ user }) => {
+  const [category, setCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedListing, setSelectedListing] = useState(null);
+
+  const categories = [
+    { id: 'all', name: 'All Items', icon: LayoutGrid },
+    { id: 'abilities', name: 'Abilities', icon: Zap },
+    { id: 'equipment', name: 'Equipment', icon: Shield },
+    { id: 'companions', name: 'Companions', icon: Users },
+    { id: 'tech', name: 'Gaming Tech', icon: Gamepad2 }
+  ];
+
+  const mockListings = [
+    { id: 1, seller: 'GhostReaper', title: 'Legendary Sniper Scope', category: 'equipment', price: 150, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=300&fit=crop', condition: 'Like New', game: 'Call of Duty' },
+    { id: 2, seller: 'CyberVixen', title: 'Auto-Loot Algorithm', category: 'abilities', price: 200, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=300&fit=crop', rarity: 'Epic', game: 'MMORPGs' },
+    { id: 3, seller: 'IronFist', title: 'Gaming PC RTX 4090', category: 'tech', price: 2500, image: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=300&h=300&fit=crop', condition: 'Excellent' },
+    { id: 4, seller: 'NovaStar', title: 'Stealth Companion Bot', category: 'companions', price: 180, image: 'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=300&h=300&fit=crop', rarity: 'Rare', game: 'Cyberpunk 2088' }
+  ];
+
+  const filteredListings = mockListings.filter(listing => 
+    (category === 'all' || listing.category === category) &&
+    (searchQuery === '' || listing.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  return (
+    <div className="flex-1 flex gap-6 overflow-hidden">
+      {/* Left - Categories & Filters */}
+      <div className="w-64 space-y-4 flex-shrink-0">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3">Categories</h3>
+          <div className="space-y-2">
+            {categories.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategory(cat.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                    category === cat.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm font-semibold">{cat.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+          <h3 className="text-white font-bold mb-3">Selling?</h3>
+          <Button className="w-full bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Listing
+          </Button>
+        </div>
+      </div>
+
+      {/* Center - Listings Grid */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mb-4">
+          <Input
+            placeholder="Search marketplace..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-slate-800/60 border-slate-700/50"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredListings.map(listing => (
+            <motion.div
+              key={listing.id}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setSelectedListing(listing)}
+              className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden cursor-pointer"
+            >
+              <img src={listing.image} alt={listing.title} className="w-full h-48 object-cover" />
+              <div className="p-4">
+                <h4 className="text-white font-bold mb-1">{listing.title}</h4>
+                <p className="text-slate-400 text-sm mb-2">by {listing.seller}</p>
+                {listing.game && (
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs mb-2">
+                    {listing.game}
+                  </Badge>
+                )}
+                {listing.rarity && (
+                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs mb-2 ml-1">
+                    {listing.rarity}
+                  </Badge>
+                )}
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-green-400 font-bold text-lg">${listing.price}</span>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    View
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right - Listing Detail / Chat */}
+      <AnimatePresence>
+        {selectedListing && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            className="w-96 bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 flex-shrink-0"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg">Listing Details</h3>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedListing(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <img src={selectedListing.image} alt={selectedListing.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+            
+            <h4 className="text-white font-bold text-xl mb-2">{selectedListing.title}</h4>
+            <p className="text-slate-400 mb-4">Seller: {selectedListing.seller}</p>
+            
+            {selectedListing.condition && (
+              <div className="mb-2">
+                <span className="text-slate-400 text-sm">Condition: </span>
+                <span className="text-white font-semibold">{selectedListing.condition}</span>
+              </div>
+            )}
+            
+            <div className="text-green-400 font-bold text-2xl mb-4">${selectedListing.price}</div>
+
+            <div className="space-y-2">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Message Seller
+              </Button>
+              <Button className="w-full bg-green-600 hover:bg-green-700">
+                Make Offer
+              </Button>
+            </div>
+
+            <div className="mt-6">
+              <h5 className="text-white font-semibold mb-3">Quick Chat</h5>
+              <div className="bg-slate-900/40 rounded-lg p-3 h-48 overflow-y-auto mb-3">
+                <p className="text-slate-400 text-sm text-center">Start a conversation with the seller</p>
+              </div>
+              <Input placeholder="Type a message..." className="bg-slate-900/40 border-slate-700/50" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
