@@ -67,6 +67,7 @@ export default function StreamWatch() {
   const [hypeTrainLevel, setHypeTrainLevel] = useState(2);
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [chatRules, setChatRules] = useState(DEFAULT_CHAT_RULES);
+  const [showChannelPoints, setShowChannelPoints] = useState(false);
 
   const handleSendMessage = () => {
     if (chatMessage.trim()) {
@@ -401,35 +402,6 @@ export default function StreamWatch() {
               <p className="text-white/60 text-xs">Next level: 15 more subs or 50 bits!</p>
             </motion.div>
 
-            {/* Channel Points & Rewards */}
-            <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold text-sm">Channel Points</h3>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  <span className="text-white font-bold">{channelPoints.toLocaleString()}</span>
-                </div>
-              </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {CHANNEL_REWARDS.map(reward => (
-                  <button
-                    key={reward.id}
-                    className="w-full bg-slate-700/50 hover:bg-slate-700/70 rounded-lg p-3 text-left transition-all border border-white/10 hover:border-white/20"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <reward.icon className={`w-4 h-4 text-${reward.color}-400`} />
-                        <span className="text-white text-xs font-semibold">{reward.name}</span>
-                      </div>
-                      <Badge className={`bg-${reward.color}-500/20 text-${reward.color}-300 border-${reward.color}-500/30 text-xs`}>
-                        {reward.cost}
-                      </Badge>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Chat */}
             <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden flex flex-col" style={{ height: '500px' }}>
               <div className="p-4 border-b border-white/10 flex items-center justify-between">
@@ -463,6 +435,61 @@ export default function StreamWatch() {
               {/* Chat Input */}
               <div className="p-4 border-t border-white/10">
                 <div className="flex gap-2">
+                  <div className="relative">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => setShowChannelPoints(!showChannelPoints)}
+                      className="hover:bg-slate-700/50"
+                    >
+                      <Zap className="w-4 h-4 text-yellow-400" />
+                    </Button>
+                    
+                    {/* Channel Points Popover */}
+                    <AnimatePresence>
+                      {showChannelPoints && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute bottom-full left-0 mb-2 w-80 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 z-50"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                              <Zap className="w-4 h-4 text-yellow-400" />
+                              Channel Points
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-bold">{channelPoints.toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {CHANNEL_REWARDS.map(reward => (
+                              <button
+                                key={reward.id}
+                                className="w-full bg-slate-700/50 hover:bg-slate-700/70 rounded-lg p-3 text-left transition-all border border-white/10 hover:border-white/20"
+                                onClick={() => {
+                                  setChannelPoints(prev => Math.max(0, prev - reward.cost));
+                                  setShowChannelPoints(false);
+                                }}
+                                disabled={channelPoints < reward.cost}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <reward.icon className={`w-4 h-4 text-${reward.color}-400`} />
+                                    <span className="text-white text-xs font-semibold">{reward.name}</span>
+                                  </div>
+                                  <Badge className={`bg-${reward.color}-500/20 text-${reward.color}-300 border-${reward.color}-500/30 text-xs`}>
+                                    {reward.cost}
+                                  </Badge>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <input
                     type="text"
                     value={chatMessage}

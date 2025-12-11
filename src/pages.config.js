@@ -35,6 +35,7 @@ import Clan from './pages/Clan';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamWatch from './pages/StreamWatch';
+import SocialFeed from './pages/SocialFeed';
 import __Layout from './Layout.jsx';
 
 
@@ -76,6 +77,7 @@ export const PAGES = {
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamWatch": StreamWatch,
+    "SocialFeed": SocialFeed,
 }
 
 export const pagesConfig = {

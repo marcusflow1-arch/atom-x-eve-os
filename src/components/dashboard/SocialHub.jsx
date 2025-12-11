@@ -363,6 +363,7 @@ export default function SocialHub() {
   const [showContract, setShowContract] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [activeView, setActiveView] = useState('feed'); // 'feed' or 'marketplace'
 
   // 1. Fetch Social Feed
   const { data: feedData, isLoading: isFeedLoading } = useQuery({
@@ -508,9 +509,39 @@ export default function SocialHub() {
   };
 
   return (
-    <div className="h-full flex gap-6 p-6">
-      {/* LEFT SIDEBAR - User Profile & Friends */}
-      <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
+    <div className="h-full flex flex-col">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center gap-4 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border-b border-slate-700/50">
+        <button
+          onClick={() => setActiveView('feed')}
+          className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+            activeView === 'feed'
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4 inline mr-2" />
+          Feed
+        </button>
+        <button
+          onClick={() => setActiveView('marketplace')}
+          className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+            activeView === 'marketplace'
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4 inline mr-2" />
+          Marketplace
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+        {activeView === 'feed' ? (
+          <>
+            {/* LEFT SIDEBAR - User Profile & Friends */}
+            <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
         {/* User Profile Card */}
         <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6">
           <div className="text-center mb-4">
