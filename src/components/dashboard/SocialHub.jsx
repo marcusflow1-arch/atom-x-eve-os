@@ -6,7 +6,7 @@ import {
   Send, Image, Film, Plus, Search, Filter, TrendingUp, Target, Zap,
   Shield, Sword, Package, ArrowLeftRight, CheckCircle, AlertCircle,
   Eye, Award, PlayCircle, User, Bot, Calendar, DollarSign, HandshakeIcon,
-  ChevronRight, ChevronLeft
+  ChevronRight, ChevronLeft, LayoutGrid, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -806,8 +806,11 @@ export default function SocialHub() {
           </div>
         </div>
       </div>
-
-        </div>
+          </>
+        ) : (
+          /* MARKETPLACE VIEW */
+          <MarketplaceView user={user} />
+        )}
       </div>
       
       {/* Smart Contract Modal */}
