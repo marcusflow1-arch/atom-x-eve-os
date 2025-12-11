@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
+import { 
   Circle, X, ArrowLeft, Settings,
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather } from
-'lucide-react';
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import InventoryPanel from '../components/profile/InventoryPanel';
@@ -32,52 +32,52 @@ import SocialHub from '../components/dashboard/SocialHub';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
-{
-  id: 'skill-tree',
-  label: 'Skill Tree',
-  icon: Layers,
-  color: 'from-purple-500 to-pink-500',
-  image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
-  description: 'View & Unlock Abilities'
-},
-{
-  id: 'battle',
-  label: 'Battle Mode',
-  icon: Swords,
-  color: 'from-red-500 to-orange-500',
-  route: 'Challenges',
-  image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
-  description: 'Enter Combat Arena'
-},
+  { 
+    id: 'skill-tree', 
+    label: 'Skill Tree', 
+    icon: Layers, 
+    color: 'from-purple-500 to-pink-500', 
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
+    description: 'View & Unlock Abilities'
+  },
+  { 
+    id: 'battle', 
+    label: 'Battle Mode', 
+    icon: Swords, 
+    color: 'from-red-500 to-orange-500', 
+    route: 'Challenges',
+    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+    description: 'Enter Combat Arena'
+  },
 
-{
-  id: 'story',
-  label: 'AI Story',
-  icon: BookOpen,
-  color: 'from-indigo-500 to-purple-500',
-  image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
-  description: 'Continue Your Journey'
-},
-{
-  id: 'home',
-  label: 'AI Home',
-  icon: Home,
-  color: 'from-green-500 to-emerald-500',
-  route: 'Dashboard',
-  image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
-  description: 'Personal Space'
-},
+  { 
+    id: 'story', 
+    label: 'AI Story', 
+    icon: BookOpen, 
+    color: 'from-indigo-500 to-purple-500', 
+    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
+    description: 'Continue Your Journey'
+  },
+  { 
+    id: 'home', 
+    label: 'AI Home', 
+    icon: Home, 
+    color: 'from-green-500 to-emerald-500', 
+    route: 'Dashboard',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
+    description: 'Personal Space'
+  },
 
-{
-  id: 'games',
-  label: 'PINGAMES',
-  icon: Gamepad2,
-  color: 'from-cyan-500 to-blue-500',
-  route: 'Library',
-  image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
-  description: 'Your Game Library'
-}];
-
+  { 
+    id: 'games', 
+    label: 'PINGAMES', 
+    icon: Gamepad2, 
+    color: 'from-cyan-500 to-blue-500', 
+    route: 'Library',
+    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
+    description: 'Your Game Library'
+  },
+];
 
 // Expanded Grid View Component
 const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
@@ -110,7 +110,7 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
   const handleDragEnd = (result) => {
     const { source, destination, type } = result;
-
+    
     if (!destination) return;
 
     // Handle Row Reordering
@@ -126,47 +126,47 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
     if (type === 'ITEM') {
       const sourceRowIndex = parseInt(source.droppableId.split('-')[1]);
       const destRowIndex = parseInt(destination.droppableId.split('-')[1]);
-
-      const newRows = Array.from(rows).map((row) => [...row]); // Deep copy
-
+      
+      const newRows = Array.from(rows).map(row => [...row]); // Deep copy
+      
       if (destRowIndex < newRows.length) {
-        const sourceItem = newRows[sourceRowIndex][source.index];
-
-        // Check if dropping on an existing item to swap
-        if (destination.index < newRows[destRowIndex].length) {
-          const targetItem = newRows[destRowIndex][destination.index];
-
-          // SWAP
-          newRows[sourceRowIndex][source.index] = targetItem;
-          newRows[destRowIndex][destination.index] = sourceItem;
-        } else {
-          // Append if moving to empty space (rare in grid but possible at end)
-          newRows[sourceRowIndex].splice(source.index, 1);
-          newRows[destRowIndex].splice(destination.index, 0, sourceItem);
-        }
-        setRows(newRows);
+         const sourceItem = newRows[sourceRowIndex][source.index];
+         
+         // Check if dropping on an existing item to swap
+         if (destination.index < newRows[destRowIndex].length) {
+             const targetItem = newRows[destRowIndex][destination.index];
+             
+             // SWAP
+             newRows[sourceRowIndex][source.index] = targetItem;
+             newRows[destRowIndex][destination.index] = sourceItem;
+         } else {
+             // Append if moving to empty space (rare in grid but possible at end)
+             newRows[sourceRowIndex].splice(source.index, 1);
+             newRows[destRowIndex].splice(destination.index, 0, sourceItem);
+         }
+         setRows(newRows);
       }
     }
   };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full h-full flex flex-col">
-
+        className="w-full h-full flex flex-col"
+      >
         {/* Header / Toolbar */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">
             {genre} Inventory
           </h2>
           
-          <button
+          <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 group">
-
+            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 group"
+          >
             <X className="w-5 h-5 text-white/60 group-hover:text-white" />
           </button>
         </div>
@@ -174,50 +174,50 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
         {/* Rows Content */}
         <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
           <Droppable droppableId="all-rows" type="ROW">
-            {(provided) =>
-            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-6">
-                {rows.map((row, rowIndex) =>
-              <Draggable key={`row-${rowIndex}`} draggableId={`row-${rowIndex}`} index={rowIndex}>
-                    {(providedRow) =>
-                <div
-                  ref={providedRow.innerRef}
-                  {...providedRow.draggableProps}
-                  className="flex items-center gap-4 py-2">
-
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-6">
+                {rows.map((row, rowIndex) => (
+                  <Draggable key={`row-${rowIndex}`} draggableId={`row-${rowIndex}`} index={rowIndex}>
+                    {(providedRow) => (
+                      <div 
+                        ref={providedRow.innerRef} 
+                        {...providedRow.draggableProps} 
+                        className="flex items-center gap-4 py-2"
+                      >
                         {/* Left Control Circle */}
-                        <div
-                    {...providedRow.dragHandleProps}
-                    className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10">
-
-                          <ArrowUp
-                      className="w-3 h-3 text-white/50 hover:text-white mb-0.5 cursor-pointer"
-                      onClick={(e) => {e.stopPropagation();moveRow(rowIndex, -1);}} />
-
+                        <div 
+                          {...providedRow.dragHandleProps}
+                          className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10"
+                        >
+                          <ArrowUp 
+                            className="w-3 h-3 text-white/50 hover:text-white mb-0.5 cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, -1); }}
+                          />
                           <div className="w-1 h-1 rounded-full bg-white/30 group-hover:bg-blue-400 mb-0.5" />
-                          <ArrowDown
-                      className="w-3 h-3 text-white/50 hover:text-white cursor-pointer"
-                      onClick={(e) => {e.stopPropagation();moveRow(rowIndex, 1);}} />
-
+                          <ArrowDown 
+                            className="w-3 h-3 text-white/50 hover:text-white cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); moveRow(rowIndex, 1); }}
+                          />
                         </div>
 
                         {/* Items Row */}
                         <Droppable droppableId={`row-${rowIndex}`} type="ITEM" direction="horizontal">
-                          {(providedItems) =>
-                    <div
-                      ref={providedItems.innerRef}
-                      {...providedItems.droppableProps}
-                      className="flex-1 grid grid-cols-8 gap-4">
-
-                              {row.map((item, itemIndex) =>
-                      <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
-                                  {(providedItem) =>
-                        <div
-                          ref={providedItem.innerRef}
-                          {...providedItem.draggableProps}
-                          {...providedItem.dragHandleProps}
-                          className="aspect-[3/4]"
-                          onClick={() => onCardClick(item)}>
-
+                          {(providedItems) => (
+                            <div 
+                              ref={providedItems.innerRef} 
+                              {...providedItems.droppableProps} 
+                              className="flex-1 grid grid-cols-8 gap-4"
+                            >
+                              {row.map((item, itemIndex) => (
+                                <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
+                                  {(providedItem) => (
+                                    <div
+                                      ref={providedItem.innerRef}
+                                      {...providedItem.draggableProps}
+                                      {...providedItem.dragHandleProps}
+                                      className="aspect-[3/4]"
+                                      onClick={() => onCardClick(item)}
+                                    >
                                       <ShinyCard>
                                         <div className="absolute inset-0 flex items-center justify-center">
                                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center font-mono text-sm text-white/40">
@@ -229,33 +229,33 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
                                         </div>
                                       </ShinyCard>
                                     </div>
-                        }
+                                  )}
                                 </Draggable>
-                      )}
+                              ))}
                               {providedItems.placeholder}
                             </div>
-                    }
+                          )}
                         </Droppable>
 
                         {/* Right Control Circle */}
-                        <div
-                    {...providedRow.dragHandleProps}
-                    className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10">
-
+                        <div 
+                          {...providedRow.dragHandleProps}
+                          className="flex-shrink-0 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group shadow-lg z-10"
+                        >
                            <GripVertical className="w-4 h-4 text-white/50 group-hover:text-white" />
                         </div>
                       </div>
-                }
+                    )}
                   </Draggable>
-              )}
+                ))}
                 {provided.placeholder}
               </div>
-            }
+            )}
           </Droppable>
         </div>
       </motion.div>
-    </DragDropContext>);
-
+    </DragDropContext>
+  );
 };
 
 export default function LunaTemplate() {
@@ -281,7 +281,7 @@ export default function LunaTemplate() {
   const angleStep = 360 / itemCount;
 
   const getItemPosition = (index) => {
-    const angle = (index - activeIndex) * angleStep * (Math.PI / 180);
+    const angle = ((index - activeIndex) * angleStep) * (Math.PI / 180);
     const radius = 350;
     const x = Math.sin(angle) * radius;
     const y = Math.cos(angle) * radius;
@@ -300,72 +300,72 @@ export default function LunaTemplate() {
     return (
       <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
         <UserInterfaceView />
-      </div>);
-
+      </div>
+    );
   }
 
   return (
-
-    <div
-      className="min-h-screen text-white p-8 overflow-hidden relative"
-      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}>
-
+    
+      <div 
+        className="min-h-screen text-white p-8 overflow-hidden relative"
+        style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+      >
         {/* Circle Icon Button */}
         <button
-        onClick={() => setDrawerOpen(true)} className="bg-white/[0.05] my-3 px-3 rounded-full fixed top-16 left-8 z-40 w-11 h-11 backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          onClick={() => setDrawerOpen(true)}
+          className="fixed top-24 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
           <Circle className="w-5 h-5 text-white/80" />
         </button>
 
         {/* World Events Button */}
         <button
-        onClick={() => navigate(createPageUrl('WorldEvents'))}
-        className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          onClick={() => navigate(createPageUrl('WorldEvents'))}
+          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
           <Globe className="w-5 h-5 text-white/80" />
         </button>
 
         {/* Pin Games Button */}
         <button
-        onClick={() => setShowPinGames(true)}
-        className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(147, 197, 253, 0.2)'
-        }}>
-
+          onClick={() => setShowPinGames(true)}
+          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(147, 197, 253, 0.2)'
+          }}
+        >
           <Gamepad2 className="w-5 h-5 text-blue-100 group-hover:text-cyan-200 transition-colors drop-shadow-[0_2px_8px_rgba(147,197,253,0.5)]" />
         </button>
 
         {/* Seasonal Pass Button */}
         <button
-        onClick={() => setShowSeasonalPass(true)}
-        className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          onClick={() => setShowSeasonalPass(true)}
+          className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
           <Crown className="w-5 h-5 text-white/80" />
         </button>
 
         {/* AI News Button */}
         <button
-        onClick={() => setShowAINews(true)}
-        className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          onClick={() => setShowAINews(true)}
+          className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
           <Radio className="w-5 h-5 text-white/80" />
         </button>
 
         {/* Blank Page Button */}
         <button
-        onClick={() => setShowBlankPage(true)}
-        className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          onClick={() => setShowBlankPage(true)}
+          className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
           <User className="w-5 h-5 text-white/80" />
         </button>
 
@@ -373,37 +373,37 @@ export default function LunaTemplate() {
 
         {/* Settings Gear Icon */}
         <motion.button
-        className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
-        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        onClick={() => setShowSettings(true)}
-        whileHover={{ scale: 1.1, rotate: 90 }}
-        whileTap={{ scale: 0.95 }}>
-
+          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          onClick={() => setShowSettings(true)}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <Settings className="w-6 h-6 text-white/80" />
         </motion.button>
 
         {/* Bottom Dock Menu */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-end justify-center gap-6 pointer-events-auto pb-4 overflow-x-auto w-full px-8 no-scrollbar">
-          {ORBITAL_ITEMS.filter((item) => ['home'].includes(item.id)).map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <motion.div
-              key={item.id}
-              className="flex-shrink-0 cursor-pointer"
-              onClick={() => setActiveDrawer(item)}
-              whileHover={{ y: -20, transition: { duration: 0.3 } }}
-              whileTap={{ scale: 0.95 }}>
-
+          {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
+            const Icon = item.icon;
+            
+            return (
+              <motion.div
+                key={item.id}
+                className="flex-shrink-0 cursor-pointer"
+                onClick={() => setActiveDrawer(item)}
+                whileHover={{ y: -20, transition: { duration: 0.3 } }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <div
-                className="w-[140px] h-[105px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-3 border border-white/10 hover:border-white/30"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-                }}>
-
+                  className="w-[140px] h-[105px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-3 border border-white/10 hover:border-white/30"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                  }}
+                >
                   {/* Icon Badge */}
                   <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-2 bg-opacity-80 backdrop-blur-sm`}>
                     <Icon className="w-4 h-4 text-white" />
@@ -415,80 +415,80 @@ export default function LunaTemplate() {
                     <p className="text-white/60 text-[10px] leading-tight line-clamp-2">{item.description}</p>
                   </div>
                 </div>
-              </motion.div>);
-
-        })}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Universal Slide-Out Drawer */}
         <AnimatePresence>
-          {activeDrawer &&
-        <>
+          {activeDrawer && (
+            <>
               <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-            onClick={() => setActiveDrawer(null)} />
-
-              <motion.div
-            initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-            animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-            exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
-            ['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
-            'inset-0' :
-            'left-0 rounded-3xl'}`
-            }
-            style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? {
-              WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-            } : {
-              top: '80px',
-              bottom: '48px',
-              width: '28vw',
-              WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-            }}>
-
-                {/* Header - Hidden for full screen apps that have their own header */}
-                {!['skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) &&
-            <div className="p-6 flex items-center justify-between">
-                    <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
-                    <button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
                 onClick={() => setActiveDrawer(null)}
-                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
-
+              />
+              <motion.div
+                initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+                animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+                exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${
+                  ['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id)
+                    ? 'inset-0' 
+                    : 'left-0 rounded-3xl'
+                }`}
+                style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { 
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+                } : { 
+                  top: '80px',
+                  bottom: '48px',
+                  width: '28vw',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+                }}
+              >
+                {/* Header - Hidden for full screen apps that have their own header */}
+                {!['skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) && (
+                  <div className="p-6 flex items-center justify-between">
+                    <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
+                    <button 
+                      onClick={() => setActiveDrawer(null)}
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                    >
                       <X className="w-4 h-4 text-white/60" />
                     </button>
                   </div>
-            }
+                )}
 
                 {/* Close Button Overlay for Full Screen Apps (Story has its own internal close button) */}
-                {['battle', 'home'].includes(activeDrawer.id) &&
-            <button
-              onClick={() => setActiveDrawer(null)}
-              className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
+                {['battle', 'home'].includes(activeDrawer.id) && (
+                  <button 
+                    onClick={() => setActiveDrawer(null)}
+                    className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+                  >
                     <X className="w-5 h-5" />
                   </button>
-            }
+                )}
 
                 {/* Content Area */}
                 <div className={`flex-1 overflow-y-auto ${activeDrawer.id === 'skill-tree' ? '' : 'p-6'}`}>
-                  {activeDrawer.id === 'loadout' ?
-              <LoadoutPanel /> :
-              activeDrawer.id === 'settings' ?
-              <SettingsPanel /> :
-              activeDrawer.id === 'skill-tree' ?
-              <GenreMastery onClose={() => setActiveDrawer(null)} /> :
-              activeDrawer.id === 'battle' ?
-              <BattleModeOverlay onClose={() => setActiveDrawer(null)} /> :
-              activeDrawer.id === 'home' ?
-              <AIHomeOverlay onClose={() => setActiveDrawer(null)} /> :
-              activeDrawer.id === 'story' ?
-              <AIStoryOverlay onClose={() => setActiveDrawer(null)} /> :
-              activeDrawer.id === 'games' ?
-              <div className="space-y-6">
+                  {activeDrawer.id === 'loadout' ? (
+                    <LoadoutPanel />
+                  ) : activeDrawer.id === 'settings' ? (
+                    <SettingsPanel />
+                  ) : activeDrawer.id === 'skill-tree' ? (
+                    <GenreMastery onClose={() => setActiveDrawer(null)} />
+                  ) : activeDrawer.id === 'battle' ? (
+                    <BattleModeOverlay onClose={() => setActiveDrawer(null)} />
+                  ) : activeDrawer.id === 'home' ? (
+                    <AIHomeOverlay onClose={() => setActiveDrawer(null)} />
+                  ) : activeDrawer.id === 'story' ? (
+                    <AIStoryOverlay onClose={() => setActiveDrawer(null)} />
+                  ) : activeDrawer.id === 'games' ? (
+                    <div className="space-y-6">
                       {/* Pinned Games Header */}
                       <div className="flex items-center justify-between">
                         <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Pinned Games</h3>
@@ -498,23 +498,23 @@ export default function LunaTemplate() {
                       {/* Pinned Games Grid */}
                       <div className="grid grid-cols-7 gap-3">
                         {Array.from({ length: 70 }, (_, i) => {
-                    const games = [
-                    { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
-                    { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
-                    { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
-                    { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' }];
-
-                    const game = games[i % games.length];
-                    return { ...game, index: i };
-                  }).map((game, index) =>
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(index * 0.02, 1) }}
-                    onClick={() => setSelectedGame(game)}
-                    className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all">
-
+                          const games = [
+                            { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
+                            { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
+                            { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
+                            { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' },
+                          ];
+                          const game = games[i % games.length];
+                          return { ...game, index: i };
+                        }).map((game, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: Math.min(index * 0.02, 1) }}
+                            onClick={() => setSelectedGame(game)}
+                            className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all"
+                          >
                             {/* Game Image */}
                             <img src={game.image} alt={game.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             
@@ -524,8 +524,8 @@ export default function LunaTemplate() {
                             {/* Status Badge */}
                             <div className="absolute top-1 right-1">
                               <div className={`w-2 h-2 rounded-full ${
-                      game.status === 'Playing' ? 'bg-green-400' : 'bg-blue-400'}`
-                      } />
+                                game.status === 'Playing' ? 'bg-green-400' : 'bg-blue-400'
+                              }`} />
                             </div>
 
                             {/* Game Info - Only on hover */}
@@ -534,62 +534,62 @@ export default function LunaTemplate() {
                               <h4 className="text-white font-bold text-[10px] mb-1 truncate">{game.title}</h4>
                             </div>
                           </motion.div>
-                  )}
+                        ))}
                       </div>
 
                       {/* Add More Games */}
                       <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2">
-
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2"
+                      >
                         <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                           <Gamepad2 className="w-6 h-6" />
                         </div>
                         <span className="text-sm font-semibold">Pin More Games</span>
                       </motion.button>
-                    </div> :
-
-              <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
-              }
+                    </div>
+                  ) : (
+                    <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
+                  )}
                 </div>
               </motion.div>
             </>
-        }
+          )}
         </AnimatePresence>
 
         {/* Game Detail Drawer - Slides from Right */}
         <AnimatePresence>
-          {selectedGame &&
-        <>
+          {selectedGame && (
+            <>
               <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setSelectedGame(null)} />
-
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                onClick={() => setSelectedGame(null)}
+              />
               <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-            style={{
-              top: '80px',
-              bottom: '48px',
-              width: '35vw',
-              WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-            }}>
-
+                initial={{ x: '100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '100%', opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+                style={{ 
+                  top: '80px',
+                  bottom: '48px',
+                  width: '35vw',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)' 
+                }}
+              >
                 {/* Header */}
                 <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
                   <h2 className="text-white font-bold text-xl tracking-wider uppercase">Game Details</h2>
-                  <button
-                onClick={() => setSelectedGame(null)}
-                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
-
+                  <button 
+                    onClick={() => setSelectedGame(null)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                  >
                     <X className="w-4 h-4 text-white/60" />
                   </button>
                 </div>
@@ -650,8 +650,8 @@ export default function LunaTemplate() {
                   <div className="space-y-3">
                     <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Recent Achievements</h4>
                     <div className="space-y-2">
-                      {[1, 2, 3].map((i) =>
-                  <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
                             <Trophy className="w-5 h-5 text-white" />
                           </div>
@@ -660,7 +660,7 @@ export default function LunaTemplate() {
                             <p className="text-white/40 text-xs">Unlocked today</p>
                           </div>
                         </div>
-                  )}
+                      ))}
                     </div>
                   </div>
 
@@ -671,65 +671,65 @@ export default function LunaTemplate() {
                 </div>
               </motion.div>
             </>
-        }
+          )}
         </AnimatePresence>
 
         {/* Back to Loadout X Button (Only visible when Inventory is open) */}
         <AnimatePresence>
-          {showInventory &&
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          onClick={() => setShowInventory(false)}
-          className="fixed top-40 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}>
-
+          {showInventory && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={() => setShowInventory(false)}
+              className="fixed top-40 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+            >
               <X className="w-5 h-5 text-white/80" />
               </motion.button>
-        }
+              )}
               </AnimatePresence> */
               }
 
               {/* UI Toggle Side Bar */}
               <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 h-64 flex items-center justify-center">
-                <button
-          onClick={() => setUiVisible(!uiVisible)}
-          className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-48 ${
-          uiVisible ?
-          'bg-white/10 hover:bg-white/30 hover:w-1.5' :
-          'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'}`
-          } />
-
+                <button 
+                  onClick={() => setUiVisible(!uiVisible)}
+                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-48 ${
+                    uiVisible 
+                      ? 'bg-white/10 hover:bg-white/30 hover:w-1.5' 
+                      : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
+                  }`}
+                />
               </div>
 
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
               <AnimatePresence>
-              {uiVisible &&
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full">
-
+              {uiVisible && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full"
+                >
                 <AnimatePresence mode="wait">
-                  {expandedGenre ?
-              <ExpandedGenreView
-                genre={expandedGenre}
-                onClose={() => setExpandedGenre(null)}
-                onCardClick={setSelectedCardForUpgrade} /> :
-
-              !showInventory ?
-              <motion.div
-                key="boxes"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex justify-between gap-12">
-
+                  {expandedGenre ? (
+                    <ExpandedGenreView 
+                      genre={expandedGenre} 
+                      onClose={() => setExpandedGenre(null)} 
+                      onCardClick={setSelectedCardForUpgrade}
+                    />
+                  ) : !showInventory ? (
+                    <motion.div 
+                      key="boxes"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex justify-between gap-12"
+                    >
                     <div className="flex flex-col items-start gap-12">
                       {/* Weapons Section */}
                       <div className="flex flex-col items-start">
@@ -746,16 +746,16 @@ export default function LunaTemplate() {
 
                         {/* Top Row: 5 Boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map((i) =>
-                      <div key={`top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                      )}
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
 
                         {/* Bottom Row: 5 Boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map((i) =>
-                      <div key={`bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                      )}
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
                       </div>
 
@@ -764,9 +764,9 @@ export default function LunaTemplate() {
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Artifacts</h2>
 
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map((i) =>
-                      <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                      )}
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
                       </div>
 
@@ -775,9 +775,9 @@ export default function LunaTemplate() {
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Relics</h2>
 
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map((i) =>
-                      <div key={`relic-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                      )}
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`relic-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
                       </div>
 
@@ -786,9 +786,9 @@ export default function LunaTemplate() {
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Aspect</h2>
 
                         <div className="flex gap-4">
-                          {[1, 2, 3].map((i) =>
-                      <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                      )}
+                          {[1, 2, 3].map(i => (
+                            <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -799,70 +799,70 @@ export default function LunaTemplate() {
                       <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                     </div>
 
-                  </motion.div> :
-
-              <motion.div
+                  </motion.div>
+            ) : (
+              <motion.div 
                 key="inventory"
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
-                className="w-full max-w-5xl">
-
-                <InventoryPanel
-                  inventory={inventoryData}
-                  capacity={profileData.inventoryCapacity}
-                  profile={profileData}
-                  onClose={() => setShowInventory(false)} />
-
+                className="w-full max-w-5xl"
+              >
+                <InventoryPanel 
+                  inventory={inventoryData} 
+                  capacity={profileData.inventoryCapacity} 
+                  profile={profileData} 
+                  onClose={() => setShowInventory(false)}
+                />
               </motion.div>
-              }
+            )}
           </AnimatePresence>
           </motion.div>
-          }
+        )}
         </AnimatePresence>
         </div>
 
       {/* Blank Drawer */}
       <AnimatePresence>
-        {drawerOpen &&
-        <>
+        {drawerOpen && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setDrawerOpen(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setDrawerOpen(false)}
+            />
             <motion.div
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl border-r border-white/10"
-            style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl border-r border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
               <div className="p-6 flex justify-end">
-                  <button
-                onClick={() => setDrawerOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
-
+                  <button 
+                    onClick={() => setDrawerOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                  >
                     <X className="w-4 h-4 text-white/60" />
                   </button>
               </div>
               {/* Menu Content Area */}
               <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                {ORBITAL_ITEMS.filter((item) => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      setActiveDrawer(item);
-                    }}
-                    className="w-full p-4 transition-all group flex items-center gap-4 hover:scale-105">
-
+                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        setActiveDrawer(item);
+                      }}
+                      className="w-full p-4 transition-all group flex items-center gap-4 hover:scale-105"
+                    >
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
                         <Icon className="w-6 h-6 text-white" />
                       </div>
@@ -871,115 +871,115 @@ export default function LunaTemplate() {
                         <p className="text-white/40 text-xs">{item.description}</p>
                         <div className="absolute -bottom-2 left-0 h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full" />
                       </div>
-                    </button>);
-
-              })}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
       {/* Settings Overlay */}
       <AnimatePresence>
-        {showSettings &&
-        <>
+        {showSettings && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setShowSettings(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSettings(false)}
+            />
             <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-            style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
               <div className="flex-1 overflow-y-auto">
                 <SettingsPanel />
               </div>
               
-              <button
-              onClick={() => setShowSettings(false)}
-              className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
       {/* AI News Overlay */}
       <AnimatePresence>
-        {showAINews &&
-        <>
+        {showAINews && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setShowAINews(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowAINews(false)}
+            />
             <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-            style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
               <div className="flex-1 overflow-y-auto">
                 <AINewsContent />
               </div>
               
-              <button
-              onClick={() => setShowAINews(false)}
-              className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
+              <button 
+                onClick={() => setShowAINews(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
       {/* Seasonal Pass Overlay */}
       <AnimatePresence>
-        {showSeasonalPass &&
-        <>
+        {showSeasonalPass && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setShowSeasonalPass(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSeasonalPass(false)}
+            />
             <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-            style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
               <div className="flex-1 overflow-y-auto">
                 <SeasonalPassContent />
               </div>
               
-              <button
-              onClick={() => setShowSeasonalPass(false)}
-              className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
+              <button 
+                onClick={() => setShowSeasonalPass(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
 
@@ -988,77 +988,77 @@ export default function LunaTemplate() {
 
       {/* Pin Games Overlay */}
       <AnimatePresence>
-        {showPinGames &&
-        <>
+        {showPinGames && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setShowPinGames(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowPinGames(false)}
+            />
             <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 flex flex-col p-8"
-            style={{
-              background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
-              backdropFilter: 'blur(16px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-              boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.05)'
-            }}>
-
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-50 flex flex-col p-8"
+              style={{ 
+                background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
+                backdropFilter: 'blur(16px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+                boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.05)',
+              }}
+            >
               <div className="flex-1 overflow-hidden">
                 <PinGamesContent />
               </div>
               
-              <button
-              onClick={() => setShowPinGames(false)}
-              className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
+              <button 
+                onClick={() => setShowPinGames(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
-        {selectedCardForUpgrade &&
-        <CardEnhancementOverlay
-          card={selectedCardForUpgrade}
-          onClose={() => setSelectedCardForUpgrade(null)} />
-
-        }
+        {selectedCardForUpgrade && (
+          <CardEnhancementOverlay 
+            card={selectedCardForUpgrade} 
+            onClose={() => setSelectedCardForUpgrade(null)} 
+          />
+        )}
       </AnimatePresence>
 
       {/* Blank Page Overlay */}
       <AnimatePresence>
-        {showBlankPage &&
-        <>
+        {showBlankPage && (
+          <>
             <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={() => setShowBlankPage(false)} />
-
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowBlankPage(false)}
+            />
             <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 flex flex-col p-8"
-            style={{
-              background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(59, 130, 246, 0.15)'
-            }}>
-
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-50 flex flex-col p-8"
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(59, 130, 246, 0.15)'
+              }}
+            >
               {/* Header with Tabs */}
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-6">
@@ -1066,60 +1066,60 @@ export default function LunaTemplate() {
                   <div className="h-8 w-px bg-white/20" />
                   <div className="flex gap-3">
                     <button
-                    onClick={() => setBlankPageTab('entertainment')}
-                    className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    blankPageTab === 'entertainment' ?
-                    'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                    'text-white/60 hover:text-white'}`
-                    }
-                    style={blankPageTab === 'entertainment' ? {
-                      background: 'rgba(59, 130, 246, 0.3)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(147, 197, 253, 0.3)'
-                    } : {}}>
-
+                      onClick={() => setBlankPageTab('entertainment')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+                        blankPageTab === 'entertainment'
+                          ? 'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                      style={blankPageTab === 'entertainment' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}
+                    >
                       Entertainment
                     </button>
                     <button
-                    onClick={() => setBlankPageTab('streaming')}
-                    className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    blankPageTab === 'streaming' ?
-                    'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                    'text-white/60 hover:text-white'}`
-                    }
-                    style={blankPageTab === 'streaming' ? {
-                      background: 'rgba(59, 130, 246, 0.3)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(147, 197, 253, 0.3)'
-                    } : {}}>
-
+                      onClick={() => setBlankPageTab('streaming')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+                        blankPageTab === 'streaming'
+                          ? 'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                      style={blankPageTab === 'streaming' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}
+                    >
                       Streaming
                     </button>
                     <button
-                    onClick={() => setBlankPageTab('social')}
-                    className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
-                    blankPageTab === 'social' ?
-                    'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                    'text-white/60 hover:text-white'}`
-                    }
-                    style={blankPageTab === 'social' ? {
-                      background: 'rgba(59, 130, 246, 0.3)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(147, 197, 253, 0.3)'
-                    } : {}}>
-
+                      onClick={() => setBlankPageTab('social')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+                        blankPageTab === 'social'
+                          ? 'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]'
+                          : 'text-white/60 hover:text-white'
+                      }`}
+                      style={blankPageTab === 'social' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}
+                    >
                       Social Hub
                     </button>
                   </div>
                 </div>
                 
-                <button
-                onClick={() => setShowBlankPage(false)}
-                className="text-white/60 hover:text-white transition-colors">
-
+                <button 
+                  onClick={() => setShowBlankPage(false)}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
                   <X className="w-8 h-8" />
                 </button>
               </div>
@@ -1128,69 +1128,69 @@ export default function LunaTemplate() {
               <div className="flex-1 overflow-hidden">
                 <AnimatePresence mode="wait">
                   <motion.div
-                  key={blankPageTab}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="h-full overflow-y-auto">
-
-                    {blankPageTab === 'entertainment' &&
-                  <AnimatePresence mode="wait">
-                        {!selectedStreamingService ?
-                    <motion.div
-                      key="service-grid"
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.4 }}
-                      className="flex flex-wrap gap-4">
-
-                            {[
-                      { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
-                      { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)', topText: 'Disney', bottomText: '+' },
-                      { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)', topText: 'HBO', bottomText: 'Max' },
-                      { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)', topText: 'Prime', bottomText: 'Video' },
-                      { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)', topText: 'Hulu', bottomText: '' },
-                      { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)', topText: 'Apple', bottomText: 'TV+' },
-                      { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)', topText: 'Paramount', bottomText: '+' },
-                      { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)', topText: 'Peacock', bottomText: '' }].
-                      map((service, idx) => {
-                        const Icon = service.icon;
-                        return (
+                    key={blankPageTab}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full overflow-y-auto"
+                  >
+                    {blankPageTab === 'entertainment' && (
+                      <AnimatePresence mode="wait">
+                        {!selectedStreamingService ? (
                           <motion.div
-                            key={service.name}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.05 }}
-                            onClick={() => setSelectedStreamingService(service.name)}
-                            className="w-20 h-20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform p-1"
-                            style={{
-                              background: `linear-gradient(135deg, ${service.color} 0%, rgba(147, 197, 253, 0.15) 100%)`,
-                              backdropFilter: 'blur(20px)',
-                              WebkitBackdropFilter: 'blur(20px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            }}>
-
+                            key="service-grid"
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4 }}
+                            className="flex flex-wrap gap-4"
+                          >
+                            {[
+                              { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
+                              { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)', topText: 'Disney', bottomText: '+' },
+                              { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)', topText: 'HBO', bottomText: 'Max' },
+                              { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)', topText: 'Prime', bottomText: 'Video' },
+                              { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)', topText: 'Hulu', bottomText: '' },
+                              { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)', topText: 'Apple', bottomText: 'TV+' },
+                              { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)', topText: 'Paramount', bottomText: '+' },
+                              { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)', topText: 'Peacock', bottomText: '' }
+                            ].map((service, idx) => {
+                              const Icon = service.icon;
+                              return (
+                                <motion.div
+                                  key={service.name}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: idx * 0.05 }}
+                                  onClick={() => setSelectedStreamingService(service.name)}
+                                  className="w-20 h-20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform p-1"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${service.color} 0%, rgba(147, 197, 253, 0.15) 100%)`,
+                                    backdropFilter: 'blur(20px)',
+                                    WebkitBackdropFilter: 'blur(20px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                  }}
+                                >
                                   <span className="text-white/90 text-[10px] font-semibold">{service.topText}</span>
                                   <Icon className="w-5 h-5 text-white/90 my-0.5" />
                                   {service.bottomText && <span className="text-white/90 text-[10px] font-semibold">{service.bottomText}</span>}
-                                </motion.div>);
-
-                      })}
-                          </motion.div> :
-
-                    <motion.div
-                      key="streaming-app"
-                      initial={{ opacity: 0, scale: 1.1 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                      className="fixed inset-0 flex items-center justify-center bg-black z-[100]">
-
+                                </motion.div>
+                              );
+                            })}
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="streaming-app"
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="fixed inset-0 flex items-center justify-center bg-black z-[100]"
+                          >
                             <button
-                        onClick={() => setSelectedStreamingService(null)}
-                        className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors">
-
+                              onClick={() => setSelectedStreamingService(null)}
+                              className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors"
+                            >
                               <X className="w-8 h-8" />
                             </button>
 
@@ -1200,29 +1200,29 @@ export default function LunaTemplate() {
                               <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
                             </div>
                           </motion.div>
-                    }
+                        )}
                       </AnimatePresence>
-                  }
-                    {blankPageTab === 'streaming' &&
-                  <StreamingDiscovery />
-                  }
-                    {blankPageTab === 'social' &&
-                  <SocialHub />
-                  }
+                    )}
+                    {blankPageTab === 'streaming' && (
+                      <StreamingDiscovery />
+                    )}
+                    {blankPageTab === 'social' && (
+                      <SocialHub />
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </div>
             </motion.div>
           </>
-        }
+        )}
       </AnimatePresence>
 
       {/* Floating Score Display */}
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl pointer-events-none">
-
+        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl pointer-events-none"
+      >
         <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
           <Trophy className="w-5 h-5 text-yellow-400" />
         </div>
@@ -1231,7 +1231,7 @@ export default function LunaTemplate() {
           <div className="text-xl font-black text-white leading-none">12,450</div>
         </div>
       </motion.div>
-      </div>);
-
-
+      </div>
+    
+  );
 }
