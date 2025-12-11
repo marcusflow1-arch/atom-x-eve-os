@@ -387,10 +387,11 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                 className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/5 rounded"
                               >
                                 <GripVertical className="w-3 h-3 text-white/30 hover:text-white/60" />
-                            </div>
-                          </div>
-                          
-                          <div className="relative min-h-[120px]">
+                                </div>
+                                </div>
+                                </div>
+
+                                <div className="relative min-h-[120px]">
                             <AnimatePresence mode="wait">
                               {viewMode === 'games' ? (
                                 <GamesCarousel 
