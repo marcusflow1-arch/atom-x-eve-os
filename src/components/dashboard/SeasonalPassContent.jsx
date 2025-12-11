@@ -410,12 +410,26 @@ const PreviewModal = ({ item, onClose }) => {
 };
 
 export default function SeasonalPassContent() {
-  const { user } = useAuth();
+  const { user, updateUserData } = useAuth();
   const [activeTrack, setActiveTrack] = useState('solo');
-  const [currentLevel, setCurrentLevel] = useState(15);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentXP, setCurrentXP] = useState(0);
   const [isPremiumOwned, setIsPremiumOwned] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [seasonLevels] = useState(generateSeasonLevels());
+
+  // Load user's season pass data from their profile
+  useEffect(() => {
+    if (user) {
+      setCurrentLevel(user.season_level || 1);
+      setCurrentXP(user.season_xp || 0);
+      setIsPremiumOwned(user.premium_pass || false);
+    }
+  }, [user]);
+
+  // Calculate XP needed for next level
+  const xpForNextLevel = currentLevel * 1000;
+  const xpProgress = (currentXP / xpForNextLevel) * 100;
   
   const carouselRef = useRef(null);
   const progressRef = useRef(null);
@@ -484,10 +498,14 @@ export default function SeasonalPassContent() {
                 }}
               >
                 <div className="text-xs text-slate-400 font-medium">Season XP</div>
-                <div className="text-xl font-bold text-white">125,430 / 150,000</div>
+                <div className="text-xl font-bold text-white">{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()}</div>
               </div>
               <Button 
-                onClick={() => setIsPremiumOwned(!isPremiumOwned)}
+                onClick={async () => {
+                  const newPremiumStatus = !isPremiumOwned;
+                  setIsPremiumOwned(newPremiumStatus);
+                  await updateUserData({ premium_pass: newPremiumStatus });
+                }}
                 style={{
                   background: isPremiumOwned 
                     ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(251, 146, 60, 0.18))'
@@ -523,7 +541,7 @@ export default function SeasonalPassContent() {
                 background: 'linear-gradient(90deg, rgba(96, 165, 250, 0.5), rgba(147, 197, 253, 0.5))',
               }}
               initial={{ width: 0 }}
-              animate={{ width: '83%' }}
+              animate={{ width: `${xpProgress}%` }}
               transition={{ duration: 1 }}
             />
           </div>
