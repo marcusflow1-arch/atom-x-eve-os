@@ -245,67 +245,66 @@ export default function CrossGameFusion() {
                   </motion.div>
                )}
 
-               {/* Slot 1 */}
-               <div className={`aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center mb-4 transition-all ${
-                  selectedCard1 ? 'bg-purple-500/20 border-purple-500/70' : 'border-white/20 bg-white/5 border-dashed'
-               }`}>
-                  {selectedCard1 ? (
-                     <>
-                        <Shield className="w-16 h-16 text-purple-300 mb-2" />
-                        <span className="font-bold text-white text-sm text-center px-2">{selectedCard1.name}</span>
-                        <Badge className="mt-2 bg-purple-500/20 text-purple-300 text-[10px]">{selectedCard1.ability}</Badge>
-                        <button onClick={() => { setSelectedCard1(null); setSelectedGame1(null); }} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
-                           Remove
-                        </button>
-                     </>
-                  ) : (
-                     <>
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                           <div className="text-2xl text-white/40">1</div>
-                        </div>
-                        <span className="text-white/40 text-xs">Select Game 1 Card</span>
-                     </>
-                  )}
-               </div>
-
-               {/* Plus Icon */}
-               <div className="flex justify-center mb-4">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                     <ArrowLeftRight className="w-4 h-4 text-white/60" />
+               {/* Horizontal Fusion Layout: Card + Card = */}
+               <div className="flex items-center justify-center gap-2 mb-6">
+                  {/* Slot 1 */}
+                  <div className={`w-28 aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                     selectedCard1 ? 'bg-purple-500/20 border-purple-500/70' : 'border-white/20 bg-white/5 border-dashed'
+                  }`}>
+                     {selectedCard1 ? (
+                        <>
+                           <Shield className="w-10 h-10 text-purple-300 mb-1" />
+                           <span className="font-bold text-white text-[9px] text-center px-1 line-clamp-2">{selectedCard1.name}</span>
+                           <button onClick={() => { setSelectedCard1(null); setSelectedGame1(null); }} className="mt-1 text-[8px] text-red-400 hover:text-red-300">
+                              Remove
+                           </button>
+                        </>
+                     ) : (
+                        <>
+                           <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-1">
+                              <div className="text-lg text-white/40">1</div>
+                           </div>
+                           <span className="text-white/40 text-[9px] text-center px-1">Card 1</span>
+                        </>
+                     )}
                   </div>
+
+                  {/* Plus Sign */}
+                  <div className="text-white/60 text-2xl font-bold">+</div>
+
+                  {/* Slot 2 */}
+                  <div className={`w-28 aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                     selectedCard2 ? 'bg-cyan-500/20 border-cyan-500/70' : 'border-white/20 bg-white/5 border-dashed'
+                  }`}>
+                     {selectedCard2 ? (
+                        <>
+                           <Shield className="w-10 h-10 text-cyan-300 mb-1" />
+                           <span className="font-bold text-white text-[9px] text-center px-1 line-clamp-2">{selectedCard2.name}</span>
+                           <button onClick={() => { setSelectedCard2(null); setSelectedGame2(null); }} className="mt-1 text-[8px] text-red-400 hover:text-red-300">
+                              Remove
+                           </button>
+                        </>
+                     ) : (
+                        <>
+                           <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-1">
+                              <div className="text-lg text-white/40">2</div>
+                           </div>
+                           <span className="text-white/40 text-[9px] text-center px-1">Card 2</span>
+                        </>
+                     )}
+                  </div>
+
+                  {/* Equals Sign */}
+                  <div className="text-white/60 text-2xl font-bold">=</div>
                </div>
 
-               {/* Slot 2 */}
-               <div className={`aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center mb-6 transition-all ${
-                  selectedCard2 ? 'bg-cyan-500/20 border-cyan-500/70' : 'border-white/20 bg-white/5 border-dashed'
-               }`}>
-                  {selectedCard2 ? (
-                     <>
-                        <Shield className="w-16 h-16 text-cyan-300 mb-2" />
-                        <span className="font-bold text-white text-sm text-center px-2">{selectedCard2.name}</span>
-                        <Badge className="mt-2 bg-cyan-500/20 text-cyan-300 text-[10px]">{selectedCard2.ability}</Badge>
-                        <button onClick={() => { setSelectedCard2(null); setSelectedGame2(null); }} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
-                           Remove
-                        </button>
-                     </>
-                  ) : (
-                     <>
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                           <div className="text-2xl text-white/40">2</div>
-                        </div>
-                        <span className="text-white/40 text-xs">Select Game 2 Card</span>
-                     </>
-                  )}
-               </div>
-
-               {/* Fusion Info */}
-               {selectedCard1 && selectedCard2 && (
-                  <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 mb-4 border border-white/10">
-                     <div className="text-xs font-bold text-white/80 uppercase mb-2">Fusion Result</div>
+               {/* Result Preview Info */}
+               {selectedCard1 && selectedCard2 && !fusedCard && (
+                  <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-3 mb-4 border border-white/10">
+                     <div className="text-xs font-bold text-white/80 uppercase mb-2">Fusion Preview</div>
                      <div className="text-white/60 text-xs space-y-1">
-                        <div>• Combined Abilities: {selectedCard1.ability} + {selectedCard2.ability}</div>
-                        <div>• Rarity: Hybrid {selectedCard1.rarity}</div>
-                        <div>• Type: Cross-Genre Weapon</div>
+                        <div>• {selectedCard1.ability} + {selectedCard2.ability}</div>
+                        <div>• Hybrid Rarity</div>
                      </div>
                   </div>
                )}
