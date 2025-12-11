@@ -807,6 +807,9 @@ export default function SocialHub() {
         </div>
       </div>
 
+        </div>
+      </div>
+      
       {/* Smart Contract Modal */}
       {showContract && (
         <SmartContract
