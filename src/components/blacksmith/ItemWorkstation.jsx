@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, Layers, Plus, Hexagon, ArrowRight, Shield } from 'lucide-react';
+import { X, Sparkles, Zap, Swords, Hammer, ArrowLeftRight, Layers, Plus, Hexagon, ArrowRight, Shield, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -16,8 +16,20 @@ export default function ItemWorkstation({ item, onClose }) {
   const [combineStage, setCombineStage] = useState(1); // CS 1-12
   const [enchantmentPercent, setEnchantmentPercent] = useState(0); // 0-120%
   const [equippedPerks, setEquippedPerks] = useState([]);
+  const [selectedPerks, setSelectedPerks] = useState([]); // Perks waiting to be applied
   const [enchantMode, setEnchantMode] = useState('perks'); // 'perks' or 'percentage'
   const [playerXP, setPlayerXP] = useState(5000); // Mock player XP
+  const [isAscended, setIsAscended] = useState(false);
+  
+  const getMaxLevel = (rarity) => {
+    if (['Common', 'Uncommon', 'Rare', 'Epic'].includes(rarity)) return 20;
+    if (['Legendary', 'Demigod'].includes(rarity)) return 30;
+    if (rarity === 'Mythical') return 35;
+    if (rarity === 'Chosen') return 40;
+    return 20;
+  };
+  
+  const maxLevel = getMaxLevel(item?.rarity);
 
   if (!item) return null;
 
@@ -45,6 +57,7 @@ export default function ItemWorkstation({ item, onClose }) {
     { id: 'enchant', label: 'Enchant', icon: Zap, color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/50' },
     { id: 'combine', label: 'Combine', icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
     { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
+    { id: 'ascend', label: 'Ascend', icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
   ];
 
   const availablePerks = [
@@ -107,18 +120,26 @@ export default function ItemWorkstation({ item, onClose }) {
     setFusionMaterial(null);
   };
 
-  const handleAddPerk = (perk) => {
-    const cost = 300;
+  const handleTogglePerk = (perk) => {
+    setSelectedPerks(prev => {
+      const exists = prev.find(p => p.id === perk.id);
+      if (exists) {
+        return prev.filter(p => p.id !== perk.id);
+      } else {
+        return [...prev, perk];
+      }
+    });
+  };
+
+  const handleApplyPerks = () => {
+    const cost = selectedPerks.length * 300;
     if (playerXP < cost) {
       alert('Not enough XP!');
       return;
     }
-    if (equippedPerks.find(p => p.id === perk.id)) {
-      alert('Perk already equipped!');
-      return;
-    }
     setPlayerXP(prev => prev - cost);
-    setEquippedPerks(prev => [...prev, perk]);
+    setEquippedPerks(prev => [...prev, ...selectedPerks]);
+    setSelectedPerks([]);
   };
 
   const handleEnchantPercent = () => {
@@ -133,6 +154,20 @@ export default function ItemWorkstation({ item, onClose }) {
     }
     setPlayerXP(prev => prev - cost);
     setEnchantmentPercent(prev => Math.min(prev + 10, 120));
+  };
+
+  const handleAscend = () => {
+    const cost = 5000;
+    if (playerXP < cost) {
+      alert('Not enough XP!');
+      return;
+    }
+    if (isAscended) {
+      alert('Card already ascended!');
+      return;
+    }
+    setPlayerXP(prev => prev - cost);
+    setIsAscended(true);
   };
 
   return (
@@ -187,23 +222,114 @@ export default function ItemWorkstation({ item, onClose }) {
                   )}
                 </div>
 
-                {/* Enchantment Sleeve Overlay (Animated from Bottom) */}
+                {/* Enchantment Sleeve Overlay - Liquid Glass Purplish Effect */}
                 <motion.div
-                  className="absolute inset-0 z-5 pointer-events-none"
+                  className="absolute inset-0 z-5 pointer-events-none rounded-2xl overflow-hidden"
                   style={{
-                    background: `linear-gradient(to top, ${rarityColors[item?.rarity]?.base || '#3b82f6'}CC 0%, ${rarityColors[item?.rarity]?.glow || '#60a5fa'}66 100%)`,
-                    height: `${enchantmentPercent}%`,
+                    height: `${(enchantmentPercent / 120) * 100}%`,
                     bottom: 0,
                     top: 'auto',
-                    boxShadow: enchantmentPercent === 120 ? `0 0 40px ${rarityColors[item?.rarity]?.glow || '#60a5fa'}` : 'none',
-                    filter: enchantmentPercent === 120 ? 'brightness(1.3)' : 'none'
                   }}
                   animate={{ 
-                    opacity: enchantmentPercent > 0 ? 0.7 : 0,
-                    scale: enchantmentPercent === 120 ? 1.02 : 1 
+                    opacity: enchantmentPercent > 0 ? 1 : 0,
                   }}
                   transition={{ duration: 0.5 }}
-                />
+                >
+                  {/* Liquid Glass Background */}
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(180deg, 
+                        rgba(168, 85, 247, ${enchantmentPercent / 120 * 0.8}) 0%, 
+                        rgba(147, 51, 234, ${enchantmentPercent / 120 * 0.6}) 50%, 
+                        rgba(126, 34, 206, ${enchantmentPercent / 120 * 0.9}) 100%)`,
+                      backdropFilter: 'blur(8px) saturate(150%)',
+                      WebkitBackdropFilter: 'blur(8px) saturate(150%)',
+                    }}
+                  />
+                  
+                  {/* Animated Liquid Waves */}
+                  <motion.div
+                    className="absolute inset-0 opacity-40"
+                    animate={{
+                      backgroundPosition: ['0% 0%', '100% 100%'],
+                    }}
+                    transition={{
+                      duration: 8,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                    style={{
+                      background: 'radial-gradient(circle at 20% 50%, rgba(192, 132, 252, 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.3) 0%, transparent 50%)',
+                      backgroundSize: '200% 200%',
+                    }}
+                  />
+
+                  {/* Glass Highlight */}
+                  <div 
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 60%)',
+                    }}
+                  />
+                </motion.div>
+
+                {/* Purple Aura Around Card */}
+                {enchantmentPercent > 0 && (
+                  <motion.div
+                    className="absolute -inset-2 z-0 rounded-3xl pointer-events-none"
+                    animate={{
+                      opacity: [0.3, 0.6, 0.3],
+                      scale: [1, 1.03, 1],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    style={{
+                      background: 'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.6) 0%, rgba(126, 34, 206, 0.3) 50%, transparent 70%)',
+                      filter: 'blur(15px)',
+                    }}
+                  />
+                )}
+
+                {/* God-like Aura for Ascended Cards */}
+                {isAscended && (
+                  <>
+                    <motion.div
+                      className="absolute -inset-4 z-0 rounded-3xl pointer-events-none"
+                      animate={{
+                        opacity: [0.4, 0.8, 0.4],
+                        scale: [1, 1.05, 1],
+                        rotate: [0, 5, 0],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      style={{
+                        background: 'radial-gradient(ellipse at center, rgba(251, 191, 36, 0.8) 0%, rgba(245, 158, 11, 0.5) 40%, rgba(234, 88, 12, 0.3) 70%, transparent 90%)',
+                        filter: 'blur(20px)',
+                      }}
+                    />
+                    <motion.div
+                      className="absolute -inset-1 z-1 rounded-2xl pointer-events-none"
+                      animate={{
+                        opacity: [0.6, 1, 0.6],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      style={{
+                        boxShadow: '0 0 40px rgba(251, 191, 36, 0.8), inset 0 0 20px rgba(251, 191, 36, 0.3)',
+                      }}
+                    />
+                  </>
+                )}
 
                 {/* Shine Effect */}
                 <motion.div 
@@ -264,7 +390,7 @@ export default function ItemWorkstation({ item, onClose }) {
             </div>
           </div>
 
-          <div className="mt-auto pt-6 grid grid-cols-3 gap-2 border-t border-white/5">
+          <div className="mt-auto pt-6 grid grid-cols-4 gap-2 border-t border-white/5">
             {actions.map((action) => (
               <button
                 key={action.id}
@@ -339,13 +465,13 @@ export default function ItemWorkstation({ item, onClose }) {
               <motion.div key="train" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
                 <div className="mb-8">
                    <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><Swords className="w-8 h-8 text-red-400"/> Training Grounds</h2>
-                   <p className="text-white/50">Gain experience to level up item stats.</p>
+                   <p className="text-white/50">Gain experience to level up (Max: Lv.{maxLevel})</p>
                 </div>
                 <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center">
                    <div className="w-full max-w-md space-y-8">
                       <div className="text-center">
                         <div className="text-6xl font-black text-white mb-2">{stats.level}</div>
-                        <div className="text-white/40 uppercase tracking-widest text-sm">Item Level</div>
+                        <div className="text-white/40 uppercase tracking-widest text-sm">Level {stats.level} / {maxLevel}</div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
@@ -356,9 +482,56 @@ export default function ItemWorkstation({ item, onClose }) {
                            <motion.div className="h-full bg-red-500" initial={{ width: 0 }} animate={{ width: `${(stats.xp / stats.xpToNext) * 100}%` }} />
                         </div>
                       </div>
-                      <Button onClick={handleTrain} className="w-full h-14 text-lg font-bold bg-red-600 hover:bg-red-700">
-                         <Swords className="w-5 h-5 mr-2" /> Train (+250 XP)
+                      <Button onClick={handleTrain} disabled={stats.level >= maxLevel} className="w-full h-14 text-lg font-bold bg-red-600 hover:bg-red-700">
+                         <Swords className="w-5 h-5 mr-2" /> Train (+250 XP) - Cost: 500 XP
                       </Button>
+                      {stats.level >= maxLevel && (
+                        <div className="text-center text-green-400 font-bold">⚡ MAX LEVEL REACHED ⚡</div>
+                      )}
+                   </div>
+                </div>
+              </motion.div>
+            ) : selectedAction === 'ascend' ? (
+              <motion.div key="ascend" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
+                <div className="mb-8">
+                   <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><Crown className="w-8 h-8 text-yellow-400"/> Ascension Altar</h2>
+                   <p className="text-white/50">Unlock divine power and gain +20% to all stats</p>
+                </div>
+                <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center">
+                   <div className="w-full max-w-md space-y-8 text-center">
+                      {!isAscended ? (
+                        <>
+                          <div className="text-6xl mb-4">⚜️</div>
+                          <div className="space-y-3">
+                            <h3 className="text-2xl font-bold text-white">Ascend to Godhood</h3>
+                            <p className="text-white/60">Unlock divine aura and increase all base stats by 20%</p>
+                            <div className="bg-black/20 rounded-xl p-4 border border-yellow-500/20">
+                              <h4 className="text-xs text-yellow-400 font-bold uppercase mb-2">Benefits</h4>
+                              <div className="space-y-1 text-sm text-white/70">
+                                <div>✓ +20% All Stats</div>
+                                <div>✓ Divine Aura Effect</div>
+                                <div>✓ Golden Glow</div>
+                              </div>
+                            </div>
+                          </div>
+                          <Button onClick={handleAscend} className="w-full h-16 text-lg font-bold bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600">
+                            <Crown className="w-6 h-6 mr-2" /> Ascend (5000 XP)
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-6xl mb-4 animate-pulse">👑</div>
+                          <div className="space-y-3">
+                            <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                              ASCENDED
+                            </h3>
+                            <p className="text-white/80 font-bold">This card has achieved divine status!</p>
+                            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl p-4 border border-yellow-500/30">
+                              <div className="text-white text-sm">All stats increased by 20%</div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                    </div>
                 </div>
               </motion.div>
@@ -466,30 +639,57 @@ export default function ItemWorkstation({ item, onClose }) {
                         <div className="grid grid-cols-2 gap-4">
                           {availablePerks.map(perk => {
                             const equipped = equippedPerks.find(p => p.id === perk.id);
+                            const selected = selectedPerks.find(p => p.id === perk.id);
                             return (
                               <button
                                 key={perk.id}
-                                onClick={() => handleAddPerk(perk)}
+                                onClick={() => handleTogglePerk(perk)}
                                 disabled={equipped}
                                 className={`p-4 rounded-xl border-2 transition-all ${
                                   equipped 
                                     ? 'bg-green-500/20 border-green-500/50 cursor-not-allowed' 
+                                    : selected
+                                    ? 'bg-purple-500/30 border-purple-500/70 shadow-lg shadow-purple-500/20'
                                     : 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10'
                                 }`}
                               >
                                 <div className="text-3xl mb-2">{perk.icon}</div>
                                 <div className="text-white font-bold text-sm">{perk.name}</div>
                                 <div className="text-white/40 text-xs">{perk.effect}</div>
-                                {!equipped && (
+                                {!equipped && !selected && (
                                   <div className="mt-2 text-[10px] text-yellow-400 flex items-center justify-center gap-1">
                                     <Sparkles className="w-3 h-3" /> 300 XP
                                   </div>
                                 )}
+                                {selected && <div className="mt-2 text-[10px] text-purple-300">⬤ Selected</div>}
                                 {equipped && <div className="mt-2 text-[10px] text-green-400">✓ Equipped</div>}
                               </button>
                             );
                           })}
                         </div>
+
+                        {/* Selected Perks to Apply */}
+                        {selectedPerks.length > 0 && (
+                          <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-white/80 text-sm font-bold">Selected Perks ({selectedPerks.length})</h4>
+                              <div className="text-yellow-400 text-xs font-bold flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" /> {selectedPerks.length * 300} XP
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {selectedPerks.map(perk => (
+                                <div key={perk.id} className="flex items-center gap-2 bg-purple-500/30 border border-purple-500/40 rounded-lg px-3 py-1.5">
+                                  <span className="text-lg">{perk.icon}</span>
+                                  <span className="text-white text-xs font-medium">{perk.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <Button onClick={handleApplyPerks} className="w-full bg-purple-600 hover:bg-purple-700">
+                              Apply {selectedPerks.length} Perk{selectedPerks.length > 1 ? 's' : ''} ({selectedPerks.length * 300} XP)
+                            </Button>
+                          </div>
+                        )}
 
                         {/* Equipped Perks */}
                         {equippedPerks.length > 0 && (
@@ -497,7 +697,7 @@ export default function ItemWorkstation({ item, onClose }) {
                             <h4 className="text-white/60 text-xs font-bold uppercase mb-3">Equipped Perks</h4>
                             <div className="flex flex-wrap gap-2">
                               {equippedPerks.map(perk => (
-                                <div key={perk.id} className="flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 rounded-lg px-3 py-1.5">
+                                <div key={perk.id} className="flex items-center gap-2 bg-green-500/20 border border-green-500/30 rounded-lg px-3 py-1.5">
                                   <span className="text-lg">{perk.icon}</span>
                                   <span className="text-white text-xs font-medium">{perk.name}</span>
                                 </div>
