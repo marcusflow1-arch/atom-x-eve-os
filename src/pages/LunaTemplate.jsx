@@ -259,6 +259,15 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
   );
 };
 
+// Mock Friends Data
+const mockFriends = [
+  { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
+  { id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
+  { id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
+  { id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
+  { id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }
+];
+
 export default function LunaTemplate() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
