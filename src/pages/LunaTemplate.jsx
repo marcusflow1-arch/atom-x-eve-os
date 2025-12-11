@@ -691,15 +691,22 @@ export default function LunaTemplate() {
               </AnimatePresence> */
               }
 
-              {/* UI Toggle Side Bar */}
-              <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 h-64 flex items-center justify-center">
+              {/* UI Toggle Side Bars */}
+              <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
+                {/* Hide UI Bar */}
                 <button 
                   onClick={() => setUiVisible(!uiVisible)}
-                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-48 ${
+                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-40 ${
                     uiVisible 
                       ? 'bg-white/10 hover:bg-white/30 hover:w-1.5' 
                       : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
                   }`}
+                />
+                
+                {/* Social Hub Bar */}
+                <button 
+                  onClick={() => setShowBlankPage(true)}
+                  className="w-1 h-32 rounded-full transition-all duration-500 hover:h-40 bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]"
                 />
               </div>
 
