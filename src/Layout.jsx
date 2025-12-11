@@ -82,6 +82,7 @@ function LayoutContent({ children, currentPageName }) {
   const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
+  const [showDockMenu, setShowDockMenu] = useState(false);
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
@@ -487,8 +488,6 @@ function LayoutContent({ children, currentPageName }) {
           { id: 'library', label: 'Library', icon: Library, route: 'Library' },
           { id: 'store', label: 'Store', icon: ShoppingBag, route: 'Store' },
         ];
-
-        const [showDockMenu, setShowDockMenu] = React.useState(false);
 
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
