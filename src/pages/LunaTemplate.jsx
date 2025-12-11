@@ -757,64 +757,59 @@ export default function LunaTemplate() {
                       transition={{ duration: 0.3 }}
                       className="flex justify-between gap-12"
                     >
-                    <div className="flex flex-col items-start gap-12">
-                      {/* Weapons Section */}
-                      <div className="flex flex-col items-start">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-white/50 text-left pl-1">Weapons</h2>
+                    <div className="flex flex-col items-start gap-8">
+                      {/* Weapons Section - 3 boxes */}
+                      <div className="flex flex-col items-center">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
                         <div className="flex gap-4">
+                          {[1, 2, 3].map(i => (
+                            <div key={`weapon-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Armor Section - Cross pattern: 1, then 3, then 3 */}
+                      <div className="flex flex-col items-center gap-4">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Armor</h2>
+                        
+                        {/* Top: 1 box centered */}
+                        <div className="flex justify-center">
                           <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                         </div>
-                      </div>
 
-                      {/* Equipment Section */}
-                      <div className="flex flex-col items-start gap-4">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Equipment</h2>
-
-                        {/* Top Row: 5 Boxes */}
+                        {/* Middle: 3 boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={`top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          {[1, 2, 3].map(i => (
+                            <div key={`armor-mid-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                           ))}
                         </div>
 
-                        {/* Bottom Row: 5 Boxes */}
+                        {/* Bottom: 3 boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={`bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          {[1, 2, 3].map(i => (
+                            <div key={`armor-bot-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Artifacts Section */}
-                      <div className="flex flex-col items-start gap-4">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Artifacts</h2>
-
+                      {/* Genre Mastery Section - 2 boxes */}
+                      <div className="flex flex-col items-center gap-4">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Genre Mastery</h2>
+                        
                         <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          {[1, 2].map(i => (
+                            <div key={`genre-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Relics Section */}
-                      <div className="flex flex-col items-start gap-4">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Relics</h2>
-
-                        <div className="flex gap-4">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={`relic-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Aspect Section */}
-                      <div className="flex flex-col items-start gap-4">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50 text-left pl-1">Aspect</h2>
+                      {/* Aspect Section - 3 circular boxes */}
+                      <div className="flex flex-col items-center gap-4">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Aspect</h2>
 
                         <div className="flex gap-4">
                           {[1, 2, 3].map(i => (
-                            <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                            <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                           ))}
                         </div>
                       </div>
