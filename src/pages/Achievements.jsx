@@ -9,8 +9,6 @@ import {
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
-import { Achievement } from '@/entities/Achievement';
-import { Game } from '@/entities/Game';
 import { allMockGames } from '../components/store/mockData';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
@@ -167,14 +165,16 @@ function AchievementsView({ onSwitchToForge }) {
       try {
         let games = [];
         try {
-          games = await Game.list();
+          const gamesResponse = await base44.entities.Game.list();
+          games = gamesResponse.data || gamesResponse;
         } catch (err) {
           console.error('Error fetching games:', err);
         }
 
         let achievements = [];
         try {
-          achievements = await Achievement.list();
+          const achievementsResponse = await base44.entities.Achievement.list();
+          achievements = achievementsResponse.data || achievementsResponse;
         } catch (err) {
           console.error('Error fetching achievements:', err);
         }

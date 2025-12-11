@@ -5,9 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export default function ItemWorkstation({ item, onClose }) {
-  const [selectedAction, setSelectedAction] = useState(null); // null = Overview
-  const [stats, setStats] = useState({ level: item?.level_requirement || 1, power: 150, xp: 0, xpToNext: 1000 });
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [stats, setStats] = useState({ 
+    level: item?.level_requirement || 1, 
+    power: 150, 
+    xp: 0, 
+    xpToNext: 1000 
+  });
   const [fusionMaterial, setFusionMaterial] = useState(null);
+
+  if (!item) return null;
 
   // Mock "Extra Items" for combination
   const extraItems = useMemo(() => {
