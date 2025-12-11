@@ -770,7 +770,11 @@ export default function LunaTemplate() {
 
                       {/* Armor Section - Cross pattern: 1, then 3, then 3 */}
                       <div className="flex flex-col items-center gap-4">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Armor</h2>
+                        <div className="flex items-center gap-4">
+                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
+                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                        </div>
                         
                         {/* Top: 1 box centered */}
                         <div className="flex justify-center">
@@ -810,6 +814,28 @@ export default function LunaTemplate() {
                         <div className="flex gap-4">
                           {[1, 2, 3].map(i => (
                             <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* AI Passives Section - 5 boxes */}
+                      <div className="flex flex-col items-center gap-4">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">AI Passives</h2>
+                        
+                        <div className="flex gap-4">
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`passive-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Artifacts Section - 5 boxes */}
+                      <div className="flex flex-col items-center gap-4">
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Artifacts</h2>
+                        
+                        <div className="flex gap-4">
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                           ))}
                         </div>
                       </div>
