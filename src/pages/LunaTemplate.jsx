@@ -30,7 +30,6 @@ import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
-import AIInformedView from '../components/dashboard/AIInformedView';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -278,7 +277,6 @@ export default function LunaTemplate() {
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [showAIInformed, setShowAIInformed] = useState(false);
   const { mode } = useDashboardMode();
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -724,35 +722,19 @@ export default function LunaTemplate() {
                       : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
                   }`}
                 />
-
-                {/* AI Informed UI Toggle Bar */}
+                
+                {/* Social Hub Bar */}
                 <button 
-                  onClick={() => setShowAIInformed(!showAIInformed)}
-                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-40 ${
-                    showAIInformed
-                      ? 'bg-blue-400/50 shadow-[0_0_15px_rgba(59,130,246,0.5)] w-1.5'
-                      : 'bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]'
-                  }`}
+                  onClick={() => setShowBlankPage(true)}
+                  className="w-1 h-32 rounded-full transition-all duration-500 hover:h-40 bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]"
                 />
               </div>
 
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
-              <AnimatePresence mode="wait">
-              {showAIInformed ? (
+              <AnimatePresence>
+              {uiVisible && (
                 <motion.div
-                  key="ai-informed"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full h-[calc(100vh-8rem)]"
-                >
-                  <AIInformedView />
-                </motion.div>
-              ) : uiVisible && (
-                <motion.div
-                  key="original"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
