@@ -766,7 +766,7 @@ export default function LunaTemplate() {
                         <div className="relative w-64 h-4 mb-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
                         <div className="flex gap-4">
@@ -788,7 +788,7 @@ export default function LunaTemplate() {
                         <div className="relative w-64 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
                         {/* Top: 1 box centered */}
@@ -819,7 +819,7 @@ export default function LunaTemplate() {
                         <div className="relative w-52 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
                         <div className="flex gap-4">
@@ -837,7 +837,7 @@ export default function LunaTemplate() {
                         <div className="relative w-64 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
 
                         <div className="flex gap-4">
@@ -855,7 +855,7 @@ export default function LunaTemplate() {
                         <div className="relative w-96 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-24 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
                         <div className="flex gap-4">
@@ -873,7 +873,7 @@ export default function LunaTemplate() {
                         <div className="relative w-96 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-24 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white/30 border border-white/40"></div>
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
                         <div className="flex gap-4">
