@@ -155,170 +155,164 @@ export default function CrossGameFusion() {
             </div>
 
             {/* RIGHT: Fusion Chamber */}
-            <div className="w-96 bg-white/5 rounded-2xl border border-white/10 p-6 flex flex-col">
-               <div className="text-center mb-6">
-                  <h3 className="text-2xl font-black text-white mb-1">Fusion Chamber</h3>
-                  <p className="text-white/40 text-xs">Merge abilities from 2 different games</p>
-               </div>
+            <div className="w-96 bg-white/5 rounded-2xl border border-white/10 p-8 flex flex-col items-center">
+               {/* Title */}
+               <h2 className="text-3xl font-black text-white mb-2">Fusion Chamber</h2>
+               <p className="text-white/50 text-sm mb-8 text-center">Merge two cards from other games to make one card</p>
 
-               {/* Fused Card Result */}
-               {fusedCard && (
-                  <motion.div
-                     initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                     animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                     transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                     className="mb-6"
-                  >
-                     <div className="text-xs font-bold text-green-400 text-center mb-2 uppercase tracking-wider flex items-center justify-center gap-2">
-                        <Sparkles className="w-4 h-4" /> Fusion Complete!
+               {/* Fusion Container Box */}
+               <div className="w-full bg-black/20 rounded-2xl border border-white/20 p-6 mb-6">
+                  {/* Top Row: Card1 + Card2 */}
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                     {/* Card Slot 1 */}
+                     <div className={`w-32 aspect-[3/4] rounded-lg border-2 flex flex-col items-center justify-center transition-all ${
+                        selectedCard1 ? 'bg-purple-500/20 border-purple-500/70' : 'border-white/30 bg-white/5 border-dashed'
+                     }`}>
+                        {selectedCard1 ? (
+                           <div className="relative w-full h-full">
+                              <img src={selectedCard1.image} alt="" className="w-full h-full object-cover rounded-lg" />
+                              <button onClick={() => { setSelectedCard1(null); setSelectedGame1(null); }} className="absolute top-1 right-1 w-5 h-5 bg-black/80 rounded-full flex items-center justify-center text-red-400 hover:text-red-300 text-xs">
+                                 ×
+                              </button>
+                           </div>
+                        ) : (
+                           <div className="text-center">
+                              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
+                                 <span className="text-xl text-white/40">1</span>
+                              </div>
+                              <span className="text-white/40 text-[10px]">Card 1</span>
+                           </div>
+                        )}
                      </div>
-                     
-                     {/* Stacked Cards Visual */}
-                     <div className="relative w-full aspect-[3/4] mb-4">
-                        {/* Back Card (Card 2) - Most Behind */}
-                        <div 
-                           className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 bg-slate-800 overflow-hidden"
-                           style={{ transform: 'translateX(20px) translateY(20px) scale(0.85)', zIndex: 1 }}
-                        >
-                           <img src={fusedCard.sourceCards[1].image} alt="" className="w-full h-full object-cover opacity-50" />
-                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                        </div>
 
-                        {/* Middle Card (Card 1) */}
-                        <div 
-                           className="absolute inset-0 rounded-xl border-2 border-purple-500/30 bg-slate-800 overflow-hidden"
-                           style={{ transform: 'translateX(10px) translateY(10px) scale(0.92)', zIndex: 2 }}
-                        >
-                           <img src={fusedCard.sourceCards[0].image} alt="" className="w-full h-full object-cover opacity-60" />
-                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                        </div>
+                     {/* Plus Sign */}
+                     <div className="text-white/60 text-3xl font-bold">+</div>
 
-                        {/* Front Card (New Fused Card) */}
-                        <div 
-                           className="absolute inset-0 rounded-xl border-4 border-gradient-to-r from-purple-500 to-cyan-500 bg-slate-900 overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.6)]"
-                           style={{ zIndex: 3 }}
+                     {/* Card Slot 2 */}
+                     <div className={`w-32 aspect-[3/4] rounded-lg border-2 flex flex-col items-center justify-center transition-all ${
+                        selectedCard2 ? 'bg-cyan-500/20 border-cyan-500/70' : 'border-white/30 bg-white/5 border-dashed'
+                     }`}>
+                        {selectedCard2 ? (
+                           <div className="relative w-full h-full">
+                              <img src={selectedCard2.image} alt="" className="w-full h-full object-cover rounded-lg" />
+                              <button onClick={() => { setSelectedCard2(null); setSelectedGame2(null); }} className="absolute top-1 right-1 w-5 h-5 bg-black/80 rounded-full flex items-center justify-center text-red-400 hover:text-red-300 text-xs">
+                                 ×
+                              </button>
+                           </div>
+                        ) : (
+                           <div className="text-center">
+                              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
+                                 <span className="text-xl text-white/40">2</span>
+                              </div>
+                              <span className="text-white/40 text-[10px]">Card 2</span>
+                           </div>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* Equals Sign */}
+                  <div className="flex justify-center mb-4">
+                     <div className="text-white/60 text-2xl font-bold">=</div>
+                  </div>
+
+                  {/* Result Box */}
+                  <div className="w-full">
+                     {fusedCard ? (
+                        <motion.div
+                           initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                           animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                           transition={{ type: 'spring', stiffness: 200, damping: 20 }}
                         >
-                           {/* Gradient Overlay */}
-                           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-cyan-500/20" />
-                           
-                           {/* Content */}
-                           <div className="relative z-10 h-full flex flex-col items-center justify-between p-4">
-                              <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-bold">
-                                 HYBRID
-                              </Badge>
-                              
-                              <div className="flex-1 flex items-center justify-center">
-                                 <div className="relative">
-                                    <Crown className="w-24 h-24 text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]" />
-                                    <motion.div
-                                       className="absolute inset-0"
-                                       animate={{ rotate: 360 }}
-                                       transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                                    >
-                                       <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-purple-400" />
-                                       <Sparkles className="absolute -bottom-2 -left-2 w-6 h-6 text-cyan-400" />
-                                    </motion.div>
+                           {/* Stacked Cards Visual */}
+                           <div className="relative w-full aspect-[3/4]">
+                              {/* Back Card (Card 2) - Most Behind */}
+                              <div 
+                                 className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 bg-slate-800 overflow-hidden"
+                                 style={{ transform: 'translateX(16px) translateY(16px) scale(0.88)', zIndex: 1 }}
+                              >
+                                 <img src={fusedCard.sourceCards[1].image} alt="" className="w-full h-full object-cover opacity-50" />
+                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                              </div>
+
+                              {/* Middle Card (Card 1) */}
+                              <div 
+                                 className="absolute inset-0 rounded-xl border-2 border-purple-500/30 bg-slate-800 overflow-hidden"
+                                 style={{ transform: 'translateX(8px) translateY(8px) scale(0.94)', zIndex: 2 }}
+                              >
+                                 <img src={fusedCard.sourceCards[0].image} alt="" className="w-full h-full object-cover opacity-60" />
+                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                              </div>
+
+                              {/* Front Card (New Fused Card) */}
+                              <div 
+                                 className="absolute inset-0 rounded-xl border-4 bg-slate-900 overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.6)]"
+                                 style={{ 
+                                    zIndex: 3,
+                                    borderImage: 'linear-gradient(135deg, rgb(168, 85, 247), rgb(6, 182, 212)) 1'
+                                 }}
+                              >
+                                 {/* Gradient Overlay */}
+                                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-cyan-500/20" />
+                                 
+                                 {/* Content */}
+                                 <div className="relative z-10 h-full flex flex-col items-center justify-between p-4">
+                                    <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-bold">
+                                       HYBRID
+                                    </Badge>
+                                    
+                                    <div className="flex-1 flex items-center justify-center">
+                                       <div className="relative">
+                                          <Crown className="w-20 h-20 text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]" />
+                                          <motion.div
+                                             className="absolute inset-0"
+                                             animate={{ rotate: 360 }}
+                                             transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                                          >
+                                             <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-purple-400" />
+                                             <Sparkles className="absolute -bottom-2 -left-2 w-5 h-5 text-cyan-400" />
+                                          </motion.div>
+                                       </div>
+                                    </div>
+                                    
+                                    <div className="text-center">
+                                       <h4 className="text-white font-black text-xs mb-1 leading-tight line-clamp-2">{fusedCard.name}</h4>
+                                       <div className="text-[9px] text-white/60 mb-1 line-clamp-1">{fusedCard.ability}</div>
+                                       <Badge className="bg-black/40 text-white/80 text-[8px]">Lv.{fusedCard.level}</Badge>
+                                    </div>
                                  </div>
                               </div>
-                              
-                              <div className="text-center">
-                                 <h4 className="text-white font-black text-sm mb-1 leading-tight">{fusedCard.name}</h4>
-                                 <div className="text-[10px] text-white/60 mb-2">{fusedCard.ability}</div>
-                                 <Badge className="bg-black/40 text-white/80 text-[9px]">Lv.{fusedCard.level}</Badge>
-                              </div>
                            </div>
+                        </motion.div>
+                     ) : (
+                        <div className="w-full aspect-[3/4] rounded-xl border-2 border-dashed border-white/30 bg-white/5 flex flex-col items-center justify-center">
+                           <Sparkles className="w-12 h-12 text-white/20 mb-2" />
+                           <span className="text-white/40 text-xs">Result Card</span>
                         </div>
-                     </div>
-
-                     <Button 
-                        onClick={() => {
-                           setFusedCard(null);
-                           setSelectedCard1(null);
-                           setSelectedCard2(null);
-                           setSelectedGame1(null);
-                           setSelectedGame2(null);
-                        }}
-                        className="w-full bg-green-600 hover:bg-green-700 h-12 font-bold"
-                     >
-                        Create New Fusion
-                     </Button>
-                  </motion.div>
-               )}
-
-               {/* Slot 1 */}
-               <div className={`aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center mb-4 transition-all ${
-                  selectedCard1 ? 'bg-purple-500/20 border-purple-500/70' : 'border-white/20 bg-white/5 border-dashed'
-               }`}>
-                  {selectedCard1 ? (
-                     <>
-                        <Shield className="w-16 h-16 text-purple-300 mb-2" />
-                        <span className="font-bold text-white text-sm text-center px-2">{selectedCard1.name}</span>
-                        <Badge className="mt-2 bg-purple-500/20 text-purple-300 text-[10px]">{selectedCard1.ability}</Badge>
-                        <button onClick={() => { setSelectedCard1(null); setSelectedGame1(null); }} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
-                           Remove
-                        </button>
-                     </>
-                  ) : (
-                     <>
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                           <div className="text-2xl text-white/40">1</div>
-                        </div>
-                        <span className="text-white/40 text-xs">Select Game 1 Card</span>
-                     </>
-                  )}
-               </div>
-
-               {/* Plus Icon */}
-               <div className="flex justify-center mb-4">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                     <ArrowLeftRight className="w-4 h-4 text-white/60" />
+                     )}
                   </div>
                </div>
-
-               {/* Slot 2 */}
-               <div className={`aspect-[3/4] rounded-xl border-2 flex flex-col items-center justify-center mb-6 transition-all ${
-                  selectedCard2 ? 'bg-cyan-500/20 border-cyan-500/70' : 'border-white/20 bg-white/5 border-dashed'
-               }`}>
-                  {selectedCard2 ? (
-                     <>
-                        <Shield className="w-16 h-16 text-cyan-300 mb-2" />
-                        <span className="font-bold text-white text-sm text-center px-2">{selectedCard2.name}</span>
-                        <Badge className="mt-2 bg-cyan-500/20 text-cyan-300 text-[10px]">{selectedCard2.ability}</Badge>
-                        <button onClick={() => { setSelectedCard2(null); setSelectedGame2(null); }} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
-                           Remove
-                        </button>
-                     </>
-                  ) : (
-                     <>
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                           <div className="text-2xl text-white/40">2</div>
-                        </div>
-                        <span className="text-white/40 text-xs">Select Game 2 Card</span>
-                     </>
-                  )}
-               </div>
-
-               {/* Fusion Info */}
-               {selectedCard1 && selectedCard2 && (
-                  <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 mb-4 border border-white/10">
-                     <div className="text-xs font-bold text-white/80 uppercase mb-2">Fusion Result</div>
-                     <div className="text-white/60 text-xs space-y-1">
-                        <div>• Combined Abilities: {selectedCard1.ability} + {selectedCard2.ability}</div>
-                        <div>• Rarity: Hybrid {selectedCard1.rarity}</div>
-                        <div>• Type: Cross-Genre Weapon</div>
-                     </div>
-                  </div>
-               )}
 
                {/* Fusion Button */}
-               {!fusedCard && (
+               {fusedCard ? (
+                  <Button 
+                     onClick={() => {
+                        setFusedCard(null);
+                        setSelectedCard1(null);
+                        setSelectedCard2(null);
+                        setSelectedGame1(null);
+                        setSelectedGame2(null);
+                     }}
+                     className="w-full bg-green-600 hover:bg-green-700 h-12 font-bold text-base"
+                  >
+                     Create New Fusion
+                  </Button>
+               ) : (
                   <Button 
                      onClick={handleFusion} 
                      disabled={!selectedCard1 || !selectedCard2}
-                     className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 h-14 text-lg font-bold"
+                     className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 h-14 text-lg font-black"
                   >
-                     <Flame className="w-5 h-5 mr-2" />
-                     Fuse Cards
+                     FUSION
                   </Button>
                )}
             </div>
