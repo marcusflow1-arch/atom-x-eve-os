@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Hammer, Trophy, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
   Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight,
-  ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X
+  ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X, Shuffle
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
 import ItemWorkstation from '../components/blacksmith/ItemWorkstation';
@@ -432,6 +432,7 @@ const rarityStyles = {
 
 export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [viewMode, setViewMode] = useState('forge'); 
@@ -650,13 +651,23 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                        <div className="flex flex-col h-full">
                            {/* Game Header Bar */}
                            <div className="h-16 flex items-center justify-between px-8 border-b border-white/10 shrink-0">
-                               <button 
-                                   onClick={() => setSelectedGame(null)} 
-                                   className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
-                               >
-                                   <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                   <span className="font-bold uppercase tracking-wider text-sm">Back to Games</span>
-                               </button>
+                               <div className="flex items-center gap-3">
+                                  <button 
+                                      onClick={() => setSelectedGame(null)} 
+                                      className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+                                  >
+                                      <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                      <span className="font-bold uppercase tracking-wider text-sm">Back to Games</span>
+                                  </button>
+
+                                  <button
+                                     onClick={() => navigate(createPageUrl('CrossGameFusion'))}
+                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                                  >
+                                     <Shuffle className="w-4 h-4" />
+                                     <span className="text-xs font-bold">Cross-Fusion</span>
+                                  </button>
+                               </div>
                                <Badge variant="outline" className="bg-blue-900/20 border-blue-500/30 text-blue-400">
                                    {selectedGame.title}
                                </Badge>
