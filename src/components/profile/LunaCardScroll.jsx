@@ -301,11 +301,22 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                           {...providedDrag.draggableProps}
                           className="relative group"
                         >
+                          {/* Centered Title with Decorative Lines */}
+                          <div className="flex flex-col items-center mb-4">
+                            <h3 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50 mb-3">
+                              {activeGame ? activeGame.title : genre}
+                            </h3>
+                            
+                            {/* Decorative Lines */}
+                            <div className="relative w-64 h-4 mb-2">
+                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
+                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
+                            </div>
+                          </div>
+
                           <div className="flex items-center justify-between mb-3 pl-1">
                             <div className="flex items-center gap-2 overflow-hidden">
-                              <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase whitespace-nowrap max-w-[120px] truncate">
-                                {activeGame ? activeGame.title : genre}
-                              </h3>
                               {activeGame && (
                                 <button 
                                   onClick={() => {
