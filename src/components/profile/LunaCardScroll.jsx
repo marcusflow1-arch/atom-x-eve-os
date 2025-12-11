@@ -390,6 +390,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                 </div>
                                 </div>
                                 </div>
+                                </div>
 
                                 <div className="relative min-h-[120px]">
                             <AnimatePresence mode="wait">
