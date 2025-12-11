@@ -310,16 +310,17 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* Top Right Circle Icons */}
-        <div className="fixed top-4 right-20 z-40 flex items-center gap-2">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-          >
-            <Circle className="w-5 h-5 text-white/80" />
-          </button>
+        {/* Circle Icon Below Menu Button */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="fixed top-16 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <Circle className="w-5 h-5 text-white/80" />
+        </button>
 
+        {/* Top Right Icons */}
+        <div className="fixed top-4 right-20 z-40 flex items-center gap-2">
           <button
             onClick={() => navigate(createPageUrl('WorldEvents'))}
             className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
