@@ -131,10 +131,10 @@ const ListItemCard = ({ item, onClick }) => {
             </div>
           )}
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-white">{item.price?.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-white">{(item.price || 0).toLocaleString()}</span>
             <span className="text-white/50 text-sm">AGP</span>
             {hasDiscount && (
-              <span className="text-white/40 text-sm line-through">List: {item.originalPrice?.toLocaleString()}</span>
+              <span className="text-white/40 text-sm line-through">List: {(item.originalPrice || 0).toLocaleString()}</span>
             )}
           </div>
         </div>
@@ -199,11 +199,11 @@ const ProductRow = ({ title, items, onItemClick }) => (
               <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-white font-bold">{item.price?.toLocaleString()}</span>
+              <span className="text-white font-bold">{(item.price || 0).toLocaleString()}</span>
               <span className="text-white/40 text-xs">AGP</span>
             </div>
             {hasDiscount && (
-              <span className="text-white/40 text-xs line-through">{item.originalPrice?.toLocaleString()}</span>
+              <span className="text-white/40 text-xs line-through">{(item.originalPrice || 0).toLocaleString()}</span>
             )}
           </div>
         );
@@ -466,10 +466,10 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
                 </div>
               )}
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white">{item.price?.toLocaleString()}</span>
+                <span className="text-3xl font-bold text-white">{(item.price || 0).toLocaleString()}</span>
                 <span className="text-white/50">AGP</span>
                 {hasDiscount && (
-                  <span className="text-white/40 text-sm line-through ml-2">List: {item.originalPrice?.toLocaleString()} AGP</span>
+                  <span className="text-white/40 text-sm line-through ml-2">List: {(item.originalPrice || 0).toLocaleString()} AGP</span>
                 )}
               </div>
               {item.prime && (
@@ -574,7 +574,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
     addToCart({
       id: item.id,
       title: item.name,
-      price: item.price,
+      price: item.price || 0,
       image: item.image,
       type: 'marketplace'
     });
@@ -585,7 +585,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
     addToCart({
       id: item.id,
       title: item.name,
-      price: item.price,
+      price: item.price || 0,
       image: item.image,
       type: 'marketplace'
     });
@@ -721,8 +721,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
                           <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                           <span className="text-white font-bold">{item.price?.toLocaleString()} AGP</span>
-                           <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
+                          <span className="text-white font-bold">{(item.price || 0).toLocaleString()} AGP</span>
+                          <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
                         </div>
                       </div>
                     );
