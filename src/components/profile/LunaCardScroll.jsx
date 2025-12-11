@@ -331,7 +331,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                               
                               {/* Control Icons on the Line */}
-                              <div className="absolute top-1/2 -translate-y-1/2 right-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute top-2 -translate-y-full right-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button 
                                   onClick={() => toggleViewMode(genre)}
                                   className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
@@ -359,7 +359,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
 
                               {/* Filter Control on the Line */}
                               {activeGame && (
-                                <div className="absolute top-1/2 -translate-y-1/2 left-0">
+                                <div className="absolute top-2 -translate-y-full left-0">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <button className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${activeFilters[genre] ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40 hover:text-white'}`}>
