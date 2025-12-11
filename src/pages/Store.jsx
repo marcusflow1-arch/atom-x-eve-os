@@ -10,7 +10,7 @@ import {
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
-import { aiGamesList, otherSampleGames } from '../components/store/mockData';
+import { aiGamesList, otherSampleGames, androidGames } from '../components/store/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -396,12 +396,13 @@ export default function Store() {
                 const fetchedGames = fetchedGamesResponse.data || fetchedGamesResponse;
                 const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
                     ...aiGamesList,
-                    ...otherSampleGames
+                    ...otherSampleGames,
+                    ...androidGames
                 ];
                 setGames(enhancedGames);
             } catch (error) {
                 console.error("Error fetching games:", error);
-                setGames([...aiGamesList, ...otherSampleGames]);
+                setGames([...aiGamesList, ...otherSampleGames, ...androidGames]);
             }
             setLoading(false);
         };
@@ -1084,15 +1085,29 @@ export default function Store() {
                                     <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
                                         <div className="flex items-center gap-2">
                                             <Gamepad2 className="w-4 h-4" />
+                                            <Smartphone className="w-3.5 h-3.5" />
                                             <span>Store</span>
                                         </div>
                                         <ChevronRight className="w-4 h-4" />
                                         <span className="text-white">{currentNavGenre.label}</span>
-                                        
+
+                                        {/* Android Filter Button */}
+                                        <button 
+                                            onClick={() => setShowAndroidOnly(!showAndroidOnly)}
+                                            className={`ml-2 p-1.5 rounded-lg border transition-all group ${
+                                                showAndroidOnly
+                                                    ? 'bg-green-500/20 border-green-400/50 text-green-300'
+                                                    : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/60 hover:text-white'
+                                            }`}
+                                            title="Android Games"
+                                        >
+                                            <Smartphone className="w-3.5 h-3.5" />
+                                        </button>
+
                                         {/* Classic UI Toggle Button */}
                                         <button 
                                             onClick={() => setViewMode('classic')}
-                                            className="ml-2 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all group"
+                                            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all group"
                                             title="Switch to Classic Grid View"
                                         >
                                             <LayoutGrid className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
