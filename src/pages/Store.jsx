@@ -655,10 +655,10 @@ export default function Store() {
                              </div>
 
                              {/* Balance */}
-                            <div className="flex items-center gap-1.5 text-white px-2">
-                              <span className="text-green-400 font-bold">$</span>
-                              <span className="font-bold text-sm">24.5k</span>
-                            </div>
+                             <div className="flex items-center gap-1.5 text-white px-2">
+                              <span className="text-green-400 font-bold text-xs">A.S.P.</span>
+                              <span className="font-bold text-sm">{user?.balance || 0}</span>
+                             </div>
 
                              {/* Cart */}
                             <Link to={createPageUrl('Cart')} className="relative text-white/70 hover:text-white transition-colors">
