@@ -5,7 +5,7 @@ import {
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2, LayoutGrid, MessageSquare, Flame, Check
+    X, Mic, MicOff, Loader2, LayoutGrid, MessageSquare, Flame, Check, Smartphone
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -380,6 +380,7 @@ export default function Store() {
     const [priceRange, setPriceRange] = useState([0, 100]);
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [minRating, setMinRating] = useState(0);
+    const [showAndroidOnly, setShowAndroidOnly] = useState(false);
 
     // Regular Voice Input for Store
     const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
@@ -413,6 +414,9 @@ export default function Store() {
         
         // Filter Games
         const filteredGames = games.filter(game => {
+            // Android Filter
+            if (showAndroidOnly && !game.platforms?.includes('Android') && !game.isMobile) return false;
+
             // Category Filter
             if (activeCategory === 'Trending Now' && (game.rating < 4.5 && game.reviews < 1000)) return false;
             if (activeCategory === 'New Releases' && game.original_year < 2024) return false;
@@ -895,7 +899,18 @@ export default function Store() {
                                 {/* RIGHT CONTENT AREA */}
                                 <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
                                     {/* Header Actions */}
-                                    <div className="flex items-center justify-end mb-8 sticky top-0 z-20 py-4">
+                                    <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
+                                        <button 
+                                            onClick={() => setShowAndroidOnly(!showAndroidOnly)}
+                                            className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${
+                                                showAndroidOnly
+                                                    ? 'bg-green-500/20 border-green-400/50 text-green-300 hover:bg-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.5)]'
+                                                    : 'bg-white/5 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80 hover:text-white'
+                                            }`}
+                                            title="Android Games"
+                                        >
+                                            <Smartphone className="w-6 h-6" />
+                                        </button>
                                         <button 
                                             onClick={() => setViewMode('cross')}
                                             className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 hover:border-white/30 flex items-center justify-center transition-all text-white/80 hover:text-white hover:scale-110 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]"
