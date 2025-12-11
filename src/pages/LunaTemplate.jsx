@@ -313,7 +313,7 @@ export default function LunaTemplate() {
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
         {/* Circle Icon Button with Hover Dropdown */}
-        <div className="fixed top-24 left-8 z-40 group">
+        <div className="fixed top-[4.75rem] left-4 z-40 group">
           <button
             onClick={() => setDrawerOpen(true)}
             className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
