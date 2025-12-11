@@ -209,88 +209,76 @@ export default function CrossGameFusion() {
                   </div>
 
                   {fusedCard && (
-                  <motion.div
-                     initial={{ scale: 0, opacity: 0 }}
-                     animate={{ scale: 1, opacity: 1 }}
-                     className="w-48 my-6"
-                  >
-                     {fusedCard ? (
-                        <motion.div
-                           initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                           animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                           transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                           className="w-[30%]"
-                        >
-                           {/* Stacked Cards Visual */}
-                           <div className="relative w-full aspect-[3/4]">
-                              {/* Back Card (Card 2) - Most Behind */}
-                              <div 
-                                 className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 bg-slate-800 overflow-hidden"
-                                 style={{ transform: 'translateX(16px) translateY(16px) scale(0.88)', zIndex: 1 }}
-                              >
-                                 <img src={fusedCard.sourceCards[1].image} alt="" className="w-full h-full object-cover opacity-50" />
-                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                              </div>
+                     <motion.div
+                        initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                        className="w-48 my-6"
+                     >
+                        {/* Stacked Cards Visual */}
+                        <div className="relative w-full aspect-[3/4]">
+                           {/* Back Card (Card 2) - Most Behind */}
+                           <div 
+                              className="absolute inset-0 rounded-xl border-2 border-cyan-500/30 bg-slate-800 overflow-hidden"
+                              style={{ transform: 'translateX(16px) translateY(16px) scale(0.88)', zIndex: 1 }}
+                           >
+                              <img src={fusedCard.sourceCards[1].image} alt="" className="w-full h-full object-cover opacity-50" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                           </div>
 
-                              {/* Middle Card (Card 1) */}
-                              <div 
-                                 className="absolute inset-0 rounded-xl border-2 border-purple-500/30 bg-slate-800 overflow-hidden"
-                                 style={{ transform: 'translateX(8px) translateY(8px) scale(0.94)', zIndex: 2 }}
-                              >
-                                 <img src={fusedCard.sourceCards[0].image} alt="" className="w-full h-full object-cover opacity-60" />
-                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                              </div>
+                           {/* Middle Card (Card 1) */}
+                           <div 
+                              className="absolute inset-0 rounded-xl border-2 border-purple-500/30 bg-slate-800 overflow-hidden"
+                              style={{ transform: 'translateX(8px) translateY(8px) scale(0.94)', zIndex: 2 }}
+                           >
+                              <img src={fusedCard.sourceCards[0].image} alt="" className="w-full h-full object-cover opacity-60" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                           </div>
 
-                              {/* Front Card (New Fused Card) */}
-                              <div 
-                                 className="absolute inset-0 rounded-xl border-4 bg-slate-900 overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.6)]"
-                                 style={{ 
-                                    zIndex: 3,
-                                    borderImage: 'linear-gradient(135deg, rgb(168, 85, 247), rgb(6, 182, 212)) 1'
-                                 }}
-                              >
-                                 {/* Gradient Overlay */}
-                                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-cyan-500/20" />
-                                 
-                                 {/* Content */}
-                                 <div className="relative z-10 h-full flex flex-col items-center justify-between p-4">
-                                    <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-bold">
-                                       HYBRID
-                                    </Badge>
-                                    
-                                    <div className="flex-1 flex items-center justify-center">
-                                       <div className="relative">
-                                          <Crown className="w-20 h-20 text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]" />
-                                          <motion.div
-                                             className="absolute inset-0"
-                                             animate={{ rotate: 360 }}
-                                             transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                                          >
-                                             <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-purple-400" />
-                                             <Sparkles className="absolute -bottom-2 -left-2 w-5 h-5 text-cyan-400" />
-                                          </motion.div>
-                                       </div>
+                           {/* Front Card (New Fused Card) */}
+                           <div 
+                              className="absolute inset-0 rounded-xl border-4 bg-slate-900 overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.6)]"
+                              style={{ 
+                                 zIndex: 3,
+                                 borderImage: 'linear-gradient(135deg, rgb(168, 85, 247), rgb(6, 182, 212)) 1'
+                              }}
+                           >
+                              {/* Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-cyan-500/20" />
+
+                              {/* Content */}
+                              <div className="relative z-10 h-full flex flex-col items-center justify-between p-4">
+                                 <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-bold">
+                                    HYBRID
+                                 </Badge>
+
+                                 <div className="flex-1 flex items-center justify-center">
+                                    <div className="relative">
+                                       <Crown className="w-16 h-16 text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]" />
+                                       <motion.div
+                                          className="absolute inset-0"
+                                          animate={{ rotate: 360 }}
+                                          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                                       >
+                                          <Sparkles className="absolute -top-2 -right-2 w-4 h-4 text-purple-400" />
+                                          <Sparkles className="absolute -bottom-2 -left-2 w-4 h-4 text-cyan-400" />
+                                       </motion.div>
                                     </div>
-                                    
-                                    <div className="text-center">
-                                       <h4 className="text-white font-black text-xs mb-1 leading-tight line-clamp-2">{fusedCard.name}</h4>
-                                       <div className="text-[9px] text-white/60 mb-1 line-clamp-1">{fusedCard.ability}</div>
-                                       <Badge className="bg-black/40 text-white/80 text-[8px]">Lv.{fusedCard.level}</Badge>
-                                    </div>
+                                 </div>
+
+                                 <div className="text-center">
+                                    <h4 className="text-white font-black text-xs mb-1 leading-tight line-clamp-2">{fusedCard.name}</h4>
+                                    <div className="text-[9px] text-white/60 mb-1 line-clamp-1">{fusedCard.ability}</div>
+                                    <Badge className="bg-black/40 text-white/80 text-[8px]">Lv.{fusedCard.level}</Badge>
                                  </div>
                               </div>
                            </div>
-                        </motion.div>
-                     ) : (
-                        <div className="w-[30%] aspect-[3/4] rounded-xl border-2 border-dashed border-white/30 bg-white/5 flex flex-col items-center justify-center">
-                           <Sparkles className="w-8 h-8 text-white/20 mb-1" />
-                           <span className="text-white/40 text-[9px]">Result</span>
                         </div>
                      </motion.div>
-                     )}
+                  )}
 
-                     {/* Fusion Button */}
-               {fusedCard ? (
+                  {/* Fusion Button */}
+                  {fusedCard ? (
                   <Button 
                      onClick={() => {
                         setFusedCard(null);
