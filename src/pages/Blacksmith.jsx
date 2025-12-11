@@ -530,8 +530,8 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                     onClick={onToggleView} 
                     className="cursor-pointer group"
                     title="Return to Achievements"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    animate={{ rotate: [-20, 20, -20] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400/30 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] group-hover:scale-110 transition-transform duration-300 group-hover:drop-shadow-[0_0_30px_rgba(250,204,21,1)]" />
                   </motion.div>
