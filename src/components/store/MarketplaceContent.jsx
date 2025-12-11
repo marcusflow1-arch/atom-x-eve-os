@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../CartContext';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ShinyCard from '@/components/shared/ShinyCard';
@@ -420,7 +422,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
 };
 
 // Item Detail Modal
-const ItemDetailModal = ({ item, isOpen, onClose }) => {
+const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
   if (!item) return null;
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
@@ -506,22 +508,13 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
 
             <div className="flex gap-3">
               <Button 
-                onClick={() => {
-                  // Add to cart logic here
-                  alert(`${item.name} added to cart!`);
-                  onClose();
-                }}
+                onClick={() => onAddToCart(item)}
                 className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full"
               >
                 Add to Cart
               </Button>
               <Button 
-                onClick={() => {
-                  // Buy now - add to cart and go to checkout
-                  alert(`Proceeding to checkout with ${item.name}`);
-                  onClose();
-                  window.location.href = '/Checkout';
-                }}
+                onClick={() => onBuyNow(item)}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full"
               >
                 Buy Now
@@ -536,7 +529,8 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
 
 export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
   const { user } = useAuth();
-  const { getCartCount } = useCart();
+  const { addToCart, getCartCount } = useCart();
+  const navigate = useNavigate();
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const searchTerm = propSearchTerm !== undefined ? propSearchTerm : internalSearchTerm;
   const [selectedItem, setSelectedItem] = useState(null);
@@ -575,6 +569,29 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
   const sponsoredItems = MARKETPLACE_ITEMS.filter(i => i.sponsored);
   const popularItems = [...MARKETPLACE_ITEMS].sort((a, b) => b.views - a.views);
+
+  const handleAddToCart = (item) => {
+    addToCart({
+      id: item.id,
+      title: item.name,
+      price: item.price,
+      image: item.image,
+      type: 'marketplace'
+    });
+    setSelectedItem(null);
+  };
+
+  const handleBuyNow = (item) => {
+    addToCart({
+      id: item.id,
+      title: item.name,
+      price: item.price,
+      image: item.image,
+      type: 'marketplace'
+    });
+    setSelectedItem(null);
+    navigate(createPageUrl('Checkout'));
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
@@ -727,7 +744,13 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
         </div>
       </div>
 
-      <ItemDetailModal item={selectedItem} isOpen={!!selectedItem} onClose={() => setSelectedItem(null)} />
+      <ItemDetailModal 
+        item={selectedItem} 
+        isOpen={!!selectedItem} 
+        onClose={() => setSelectedItem(null)}
+        onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
+      />
       </div>
     </div>
   );

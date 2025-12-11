@@ -324,13 +324,6 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
                           Purchase
                       </Button>
                   )}
-                  <Button size="lg" variant="outline">
-                    <Heart className="w-5 h-5 mr-2" />
-                    Wishlist
-                  </Button>
-                  <Button size="lg" variant="outline">
-                    <Share className="w-5 h-5" />
-                  </Button>
                 </div>
               </div>
             </div>
