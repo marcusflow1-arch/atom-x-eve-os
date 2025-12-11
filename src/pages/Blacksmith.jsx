@@ -686,15 +686,13 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                            <div
                                                key={item.id}
                                                onClick={() => {
-                                                   if (item.isUnlocked) {
-                                                       setSelectedItem(item);
-                                                       setShowWorkstation(true);
-                                                   }
+                                                   setSelectedItem(item);
+                                                   setShowWorkstation(true);
                                                }}
-                                               className={`flex items-center gap-3 p-2 rounded-xl transition-all ${
+                                               className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
                                                    item.isUnlocked 
-                                                       ? `cursor-pointer ${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
-                                                       : 'cursor-not-allowed opacity-40 grayscale border border-transparent'
+                                                       ? `${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
+                                                       : 'opacity-40 grayscale hover:opacity-60 border border-transparent'
                                                }`}
                                            >
                                                <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative`}>
