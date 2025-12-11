@@ -486,11 +486,8 @@ function LayoutContent({ children, currentPageName }) {
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
           { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
           { id: 'library', label: 'Library', icon: Library, route: 'Library' },
-          { id: 'store', label: 'Store', icon: ShoppingBag, route: 'Store' },
           { id: 'ainews', label: 'AI News', icon: Bot, route: 'AINews' },
-          { id: 'blacksmith', label: 'Blacksmith', icon: Hammer, route: 'Blacksmith' },
           { id: 'seasonalpass', label: 'Seasonal Pass', icon: Crown, route: 'SeasonalPass' },
-          { id: 'streaming', label: 'Streaming', icon: Radio, route: 'StreamingHub' },
         ];
 
         return (
