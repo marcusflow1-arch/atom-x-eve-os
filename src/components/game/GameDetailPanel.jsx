@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import * as THREE from 'three';
 import {
   ArrowLeft, Play, ShoppingCart, Heart, Share, Star, Trophy, Sword, Zap, Package,
@@ -161,6 +161,75 @@ const rarityColors = {
   Rare: 'text-blue-400 bg-blue-500/20',
   Epic: 'text-purple-400 bg-purple-500/20',
   Legendary: 'text-orange-400 bg-orange-500/20'
+};
+
+// Interactive Card with Tilt and Shine Effect
+const InteractiveCard = ({ children, delay = 0 }) => {
+  const cardRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const x = useMotionValue(0.5);
+  const y = useMotionValue(0.5);
+  
+  const rotateX = useTransform(y, [0, 1], [10, -10]);
+  const rotateY = useTransform(x, [0, 1], [-10, 10]);
+  
+  const shineX = useTransform(x, [0, 1], ['-100%', '200%']);
+  
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / rect.width;
+    const mouseY = (e.clientY - rect.top) / rect.height;
+    x.set(mouseX);
+    y.set(mouseY);
+  };
+  
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    x.set(0.5);
+    y.set(0.5);
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX: isHovered ? rotateX : 0,
+        rotateY: isHovered ? rotateY : 0,
+        transformStyle: 'preserve-3d',
+        perspective: 1000,
+      }}
+      className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/20"
+      whileHover={{ scale: 1.02 }}
+    >
+      {/* Shine Effect */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
+          x: shineX,
+        }}
+        initial={{ x: '-100%' }}
+        animate={{ x: isHovered ? '200%' : '-100%' }}
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
+      />
+      
+      {/* Glass Reflection */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
+        animate={{ opacity: isHovered ? 1 : 0.5 }}
+      />
+      
+      {children}
+    </motion.div>
+  );
 };
 
 export default function GameDetailPanel({ gameId, onClose, showBackButton = true, from = 'store' }) {
@@ -361,72 +430,104 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold mb-4">About This Game</h3>
-                  <p className="text-slate-300 leading-relaxed mb-6">{game.description}</p>
+                <div className="lg:col-span-2 space-y-8">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-4">About This Game</h3>
+                    <p className="text-slate-300 leading-relaxed mb-6">{game.description}</p>
+                  </div>
                   
-                  {/* Screenshots */}
-                  <h4 className="text-xl font-semibold mb-4">Screenshots</h4>
-                  <div className="space-y-4">
-                    <img
-                      src={game.screenshots?.[activeScreenshot] || game.cover}
-                      alt="Screenshot"
-                      className="w-full aspect-video object-cover rounded-lg"
-                    />
-                    <div className="grid grid-cols-4 gap-2">
-                      {game.screenshots?.map((screenshot, index) => (
-                        <img
-                          key={index}
-                          src={screenshot}
-                          alt={`Screenshot ${index + 1}`}
-                          className={`aspect-video object-cover rounded cursor-pointer transition-all ${
-                            activeScreenshot === index ? 'ring-2 ring-blue-500' : 'hover:opacity-80'
-                          }`}
-                          onClick={() => setActiveScreenshot(index)}
-                        />
-                      ))}
+                  {/* Video Trailer */}
+                  <div>
+                    <h4 className="text-xl font-semibold mb-4">Game Trailer</h4>
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
+                      <video 
+                        className="w-full h-full object-cover"
+                        controls
+                        poster={game.banner || game.cover_image}
+                      >
+                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                      </video>
+                    </div>
+                  </div>
+                  
+                  {/* Screenshots Gallery */}
+                  <div>
+                    <h4 className="text-xl font-semibold mb-4">Screenshots</h4>
+                    <div className="space-y-4">
+                      <img
+                        src={game.screenshots?.[activeScreenshot] || game.cover}
+                        alt="Screenshot"
+                        className="w-full aspect-video object-cover rounded-lg border border-white/10"
+                      />
+                      <div className="grid grid-cols-5 gap-3">
+                        {(game.screenshots || [game.cover, game.banner, game.cover, game.banner, game.cover]).map((screenshot, index) => (
+                          <img
+                            key={index}
+                            src={screenshot}
+                            alt={`Screenshot ${index + 1}`}
+                            className={`aspect-video object-cover rounded cursor-pointer transition-all border-2 ${
+                              activeScreenshot === index ? 'border-blue-500 scale-105' : 'border-white/10 hover:border-white/30 hover:scale-105'
+                            }`}
+                            onClick={() => setActiveScreenshot(index)}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-xl font-semibold mb-4">System Requirements</h4>
-                  <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
-                    <div>
-                      <Monitor className="w-4 h-4 inline mr-2" />
-                      <span className="text-slate-400">OS:</span> {game.requirements?.os}
-                    </div>
-                    <div>
-                      <Cpu className="w-4 h-4 inline mr-2" />
-                      <span className="text-slate-400">Processor:</span> {game.requirements?.processor}
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Memory:</span> {game.requirements?.memory}
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Graphics:</span> {game.requirements?.graphics}
-                    </div>
-                    <div>
-                      <HardDrive className="w-4 h-4 inline mr-2" />
-                      <span className="text-slate-400">Storage:</span> {game.requirements?.storage}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-xl font-semibold mb-4">System Requirements</h4>
+                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-3 border border-white/10">
+                      <div>
+                        <Monitor className="w-4 h-4 inline mr-2" />
+                        <span className="text-slate-400">OS:</span> {game.requirements?.os || 'Windows 10 64-bit'}
+                      </div>
+                      <div>
+                        <Cpu className="w-4 h-4 inline mr-2" />
+                        <span className="text-slate-400">Processor:</span> {game.requirements?.processor || 'Intel Core i5-7600K'}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Memory:</span> {game.requirements?.memory || '16 GB RAM'}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Graphics:</span> {game.requirements?.graphics || 'NVIDIA GTX 1060'}
+                      </div>
+                      <div>
+                        <HardDrive className="w-4 h-4 inline mr-2" />
+                        <span className="text-slate-400">Storage:</span> {game.requirements?.storage || '50 GB'}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div>
                     <h4 className="text-xl font-semibold mb-4">Game Info</h4>
-                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
+                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-3 border border-white/10">
                       <div>
-                        <span className="text-slate-400">Developer:</span> {game.developer}
+                        <span className="text-slate-400">Developer:</span> {game.developer || 'Game Studio'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Publisher:</span> {game.publisher}
+                        <span className="text-slate-400">Publisher:</span> {game.publisher || 'Publisher Inc'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Release Date:</span> {game.releaseDate}
+                        <span className="text-slate-400">Release Date:</span> {game.releaseDate || 'TBA'}
                       </div>
                       <div>
                         <span className="text-slate-400">Genre:</span> {game.genre}
                       </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-semibold mb-4">Features</h4>
+                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-2 border border-white/10">
+                      {['Single-player', 'Online Co-op', 'Steam Achievements', 'Cloud Saves', 'Controller Support'].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                          {feature}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -436,35 +537,71 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Achievements Tab */}
             <TabsContent value="achievements">
               <h3 className="text-2xl font-bold mb-6">Achievements & Rewards</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {game?.achievements?.map((achievement) => (
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex-1 bg-slate-800/50 rounded-lg p-4 border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-400 text-sm">Progress</span>
+                    <span className="text-white font-bold">{game?.achievements?.filter(a => a.unlocked).length || 0}/{game?.achievements?.length || 15}</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                      style={{ width: `${((game?.achievements?.filter(a => a.unlocked).length || 0) / (game?.achievements?.length || 15)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {(game?.achievements || [
+                  { id: 1, name: 'First Steps', description: 'Complete the tutorial', icon: '🎮', rarity: 'Common', points: 10, unlocked: true },
+                  { id: 2, name: 'Dragon Slayer', description: 'Defeat the Ancient Dragon', icon: '🐉', rarity: 'Legendary', points: 100, unlocked: false },
+                  { id: 3, name: 'Master Explorer', description: 'Discover all hidden locations', icon: '🗺️', rarity: 'Epic', points: 50, unlocked: true },
+                  { id: 4, name: 'Speed Runner', description: 'Complete game in under 5 hours', icon: '⚡', rarity: 'Rare', points: 75, unlocked: false },
+                  { id: 5, name: 'Collector', description: 'Find all collectibles', icon: '💎', rarity: 'Epic', points: 60, unlocked: false },
+                  { id: 6, name: 'Perfect Victory', description: 'Win without taking damage', icon: '🏆', rarity: 'Legendary', points: 100, unlocked: false },
+                  { id: 7, name: 'Social Butterfly', description: 'Complete 10 co-op missions', icon: '👥', rarity: 'Uncommon', points: 25, unlocked: true },
+                  { id: 8, name: 'Arsenal Master', description: 'Unlock all weapons', icon: '⚔️', rarity: 'Rare', points: 40, unlocked: false },
+                ]).map((achievement) => (
                   <motion.div
                     key={achievement.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`relative p-6 rounded-xl border-2 transition-all hover:scale-105 ${
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    whileHover={{ x: 4 }}
+                    className={`relative p-5 rounded-xl border transition-all ${
                       achievement.unlocked 
-                        ? 'bg-green-500/10 border-green-500/50' 
-                        : 'bg-slate-800/50 border-slate-700'
+                        ? 'bg-gradient-to-r from-green-500/10 to-transparent border-green-500/30' 
+                        : 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-4xl">{achievement.icon}</span>
-                        <div>
-                          <h4 className="font-bold text-lg">{achievement.name}</h4>
-                          <Badge className={`${rarityColors[achievement.rarity]}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl ${
+                        achievement.unlocked ? 'bg-slate-700' : 'bg-slate-800/50 grayscale opacity-60'
+                      }`}>
+                        {achievement.icon}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className={`font-bold text-lg ${achievement.unlocked ? 'text-white' : 'text-slate-400'}`}>
+                            {achievement.name}
+                          </h4>
+                          <Badge className={`${rarityColors[achievement.rarity]} text-xs`}>
                             {achievement.rarity}
                           </Badge>
+                          {achievement.unlocked && <Crown className="w-5 h-5 text-yellow-400" />}
+                        </div>
+                        <p className="text-slate-400 text-sm mb-2">{achievement.description}</p>
+                        <div className="flex items-center gap-4">
+                          <span className="text-yellow-400 font-bold text-sm">{achievement.points} XP</span>
+                          {!achievement.unlocked && (
+                            <span className="text-slate-500 text-xs">Locked</span>
+                          )}
                         </div>
                       </div>
-                      {achievement.unlocked && <Crown className="w-6 h-6 text-yellow-400" />}
-                    </div>
-                    <p className="text-slate-400 mb-4">{achievement.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-yellow-400 font-bold">{achievement.points} points</span>
-                      <Button size="sm" variant={achievement.unlocked ? 'secondary' : 'default'}>
-                        {achievement.unlocked ? 'Unlocked' : 'Track Progress'}
+
+                      <Button size="sm" variant={achievement.unlocked ? 'secondary' : 'outline'} disabled={achievement.unlocked}>
+                        {achievement.unlocked ? 'Unlocked' : 'Track'}
                       </Button>
                     </div>
                   </motion.div>
@@ -475,32 +612,41 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Equipment Tab */}
             <TabsContent value="equipment">
               <h3 className="text-2xl font-bold mb-6">Equipment & Gear</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {game?.equipment?.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.05, rotateY: 5 }}
-                    className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-blue-500/50 transition-all"
-                  >
-                    <div className="aspect-square bg-slate-900/50 rounded-lg mb-4 flex items-center justify-center">
-                      <Model3DViewer gameId={gameId} modelType="equipment" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {(game?.equipment || [
+                  { id: 1, name: 'Dragon Blade', type: 'Weapon', rarity: 'Legendary', description: 'A legendary sword forged from dragon scales', stats: { attack: 150, speed: 25 } },
+                  { id: 2, name: 'Shadow Armor', type: 'Chest', rarity: 'Epic', description: 'Armor that bends light around the wearer', stats: { defense: 120, stealth: 40 } },
+                  { id: 3, name: 'Phoenix Helm', type: 'Head', rarity: 'Rare', description: 'Grants fire resistance and health regeneration', stats: { defense: 80, health_regen: 15 } },
+                  { id: 4, name: 'Mystic Gauntlets', type: 'Hands', rarity: 'Epic', description: 'Enchanted gloves that amplify magic', stats: { magic_power: 100, mana: 50 } },
+                  { id: 5, name: 'Thunder Boots', type: 'Feet', rarity: 'Rare', description: 'Lightning-infused boots for incredible speed', stats: { speed: 60, agility: 35 } },
+                  { id: 6, name: 'Crystal Shield', type: 'Shield', rarity: 'Epic', description: 'Crystalline barrier that reflects magic', stats: { defense: 90, magic_resist: 45 } },
+                ]).map((item, index) => (
+                  <InteractiveCard key={item.id} delay={index * 0.05}>
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge className={`${rarityColors[item.rarity]} text-xs`}>
+                          {item.rarity}
+                        </Badge>
+                        <span className="text-slate-500 text-xs uppercase">{item.type}</span>
+                      </div>
+                      
+                      <div className="w-full aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-4 flex items-center justify-center border border-white/5">
+                        <Sword className="w-16 h-16 text-slate-600" />
+                      </div>
+                      
+                      <h4 className="font-bold text-white text-lg mb-2">{item.name}</h4>
+                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+                      
+                      <div className="space-y-2 pt-4 border-t border-white/5">
+                        {Object.entries(item.stats).map(([stat, value]) => (
+                          <div key={stat} className="flex justify-between text-sm">
+                            <span className="text-slate-400 capitalize">{stat.replace('_', ' ')}</span>
+                            <span className="text-green-400 font-bold">+{value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <h4 className="font-bold text-lg mb-2">{item.name}</h4>
-                    <Badge className={`${rarityColors[item.rarity]} mb-3`}>
-                      {item.rarity} {item.type}
-                    </Badge>
-                    <p className="text-slate-400 text-sm mb-4">{item.description}</p>
-                    <div className="space-y-2">
-                      {Object.entries(item.stats).map(([stat, value]) => (
-                        <div key={stat} className="flex justify-between">
-                          <span className="text-slate-400 capitalize">{stat.replace('_', ' ')}:</span>
-                          <span className="text-green-400 font-bold">+{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
+                  </InteractiveCard>
                 ))}
               </div>
             </TabsContent>
@@ -508,38 +654,39 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Abilities Tab */}
             <TabsContent value="abilities">
               <h3 className="text-2xl font-bold mb-6">Special Abilities</h3>
-              <div className="space-y-6">
-                {game?.abilities?.map((ability) => (
-                  <motion.div
-                    key={ability.id}
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-purple-500/50 transition-all"
-                  >
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      <div className="aspect-square bg-slate-900/50 rounded-lg flex items-center justify-center">
-                        <Model3DViewer gameId={gameId} modelType="ability" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(game?.abilities || [
+                  { id: 1, name: 'Inferno Strike', tier: 'Legendary', description: 'Unleash a devastating fire attack that burns enemies', cooldown: '45s', effect: 'Deals 500 fire damage in an area' },
+                  { id: 2, name: 'Time Warp', tier: 'Epic', description: 'Slow down time for all enemies around you', cooldown: '60s', effect: 'Slows enemies by 80% for 10s' },
+                  { id: 3, name: 'Shadow Step', tier: 'Rare', description: 'Teleport behind your target instantly', cooldown: '15s', effect: 'Instant teleport with 2s invulnerability' },
+                  { id: 4, name: 'Void Shield', tier: 'Epic', description: 'Create an impenetrable barrier of void energy', cooldown: '30s', effect: 'Blocks all damage for 5s' },
+                  { id: 5, name: 'Lightning Storm', tier: 'Legendary', description: 'Summon a storm of lightning bolts', cooldown: '90s', effect: '300 damage per second for 15s' },
+                  { id: 6, name: 'Healing Nova', tier: 'Rare', description: 'Restore health to you and nearby allies', cooldown: '25s', effect: 'Heals 200 HP in 10m radius' },
+                ]).map((ability, index) => (
+                  <InteractiveCard key={ability.id} delay={index * 0.05}>
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge className={`${rarityColors[ability.tier]} text-xs`}>
+                          {ability.tier}
+                        </Badge>
+                        <span className="text-purple-400 text-xs font-bold">{ability.cooldown}</span>
                       </div>
-                      <div className="lg:col-span-2">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="text-2xl font-bold">{ability.name}</h4>
-                            <Badge className={`${rarityColors[ability.tier]} mt-2`}>
-                              {ability.tier}
-                            </Badge>
-                          </div>
-                          <div className="text-right text-sm text-slate-400">
-                            <div>Cooldown: {ability.cooldown}</div>
-                          </div>
-                        </div>
-                        <p className="text-slate-300 mb-4 text-lg">{ability.description}</p>
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-5 h-5 text-blue-400" />
-                          <span className="text-blue-300 font-semibold">{ability.effect}</span>
+                      
+                      <div className="w-full aspect-square bg-gradient-to-br from-purple-900/30 to-slate-900 rounded-lg mb-4 flex items-center justify-center border border-purple-500/20">
+                        <Zap className="w-16 h-16 text-purple-500" />
+                      </div>
+                      
+                      <h4 className="font-bold text-white text-lg mb-2">{ability.name}</h4>
+                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{ability.description}</p>
+                      
+                      <div className="pt-4 border-t border-white/5">
+                        <div className="flex items-start gap-2">
+                          <Zap className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-blue-300 text-xs font-medium">{ability.effect}</p>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </InteractiveCard>
                 ))}
               </div>
             </TabsContent>
