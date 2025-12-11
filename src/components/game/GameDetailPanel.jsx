@@ -351,13 +351,11 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 mb-8">
+            <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 mb-8">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="achievements">Achievements</TabsTrigger>
               <TabsTrigger value="equipment">Equipment</TabsTrigger>
               <TabsTrigger value="abilities">Abilities</TabsTrigger>
-              <TabsTrigger value="loot">Loot Boxes</TabsTrigger>
-              <TabsTrigger value="stream">Stream Affiliate</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -546,56 +544,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
               </div>
             </TabsContent>
 
-            {/* Loot Boxes Tab */}
-            <TabsContent value="loot">
-              <h3 className="text-2xl font-bold mb-6">Loot Boxes & Rewards</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {game?.lootBoxes?.map((loot) => (
-                  <motion.div
-                    key={loot.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-gradient-to-br from-purple-900/30 to-slate-800/50 rounded-xl p-6 border border-purple-500/30"
-                  >
-                    <div className="flex items-center justify-between mb-6">
-                      <h4 className="text-xl font-bold">{loot.name}</h4>
-                      <div className="flex items-center gap-1">
-                        <Package className="w-6 h-6 text-yellow-400" />
-                        <span className="text-2xl font-bold text-yellow-400">{loot.price}</span>
-                        <span className="text-yellow-400">AGP</span>
-                      </div>
-                    </div>
-                    
-                    <div className="aspect-square bg-slate-900/50 rounded-lg mb-4 flex items-center justify-center">
-                      <Model3DViewer gameId={gameId} modelType="lootbox" />
-                    </div>
-                    
-                    <p className="text-slate-300 mb-6">{loot.contents}</p>
-                    
-                    <h5 className="font-semibold mb-3">Drop Rates:</h5>
-                    <div className="space-y-2 mb-6">
-                      {Object.entries(loot.dropRates).map(([rarity, rate]) => (
-                        <div key={rarity} className="flex justify-between">
-                          <span className={rarityColors[rarity]?.split(' ')[0]}>{rarity}:</span>
-                          <span className="font-semibold">{rate}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                      <Package className="w-4 h-4 mr-2" />
-                      Purchase Loot Box
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
 
-            {/* Stream Affiliate Tab */}
-            <TabsContent value="stream">
-              <StreamAffiliateTab gameId={game.id} onStreamToggle={handleStreamToggle} />
-            </TabsContent>
 
           </Tabs>
         </div>

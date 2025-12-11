@@ -351,6 +351,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
     { id: 'overview', label: 'Overview', icon: Eye },
     { id: 'community', label: 'Community', icon: Users },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
+    { id: 'streamer_affiliate', label: 'Streamer Affiliate', icon: Radio },
   ];
 
   return (
@@ -600,6 +601,19 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                   </div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'streamer_affiliate' && (
+            <motion.div 
+              key="streamer_affiliate"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col items-center justify-center h-64 text-white/30"
+            >
+              <Radio className="w-12 h-12 mb-4 opacity-50" />
+              <p>Streamer Affiliate content coming soon</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -927,8 +941,8 @@ export default function Library() {
 
                       {/* Clean Navigation Line */}
                       <div className="flex items-center gap-8 border-b border-white/10">
-                        {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements'].map((tab) => {
-                          const id = tab.toLowerCase();
+                        {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements', 'Streamer Affiliate'].map((tab) => {
+                          const id = tab.toLowerCase().replace(' ', '_');
                           return (
                             <button
                               key={id}
@@ -1058,10 +1072,10 @@ export default function Library() {
                           </motion.div>
                         )}
 
-                        {['streamers', 'guide', 'support'].includes(activeDetailTab) && (
+                        {['streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
                           <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
                              <Bot className="w-12 h-12 mb-4 opacity-50" />
-                             <p>Content for {activeDetailTab} coming soon.</p>
+                             <p>Content for {activeDetailTab.replace('_', ' ')} coming soon.</p>
                           </motion.div>
                         )}
                       </AnimatePresence>
