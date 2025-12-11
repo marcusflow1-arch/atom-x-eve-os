@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { itemData } from './mockData';
+import TradeItemModal from './TradeItemModal';
 
 // --- Components from TradingPostContent ---
 
@@ -58,6 +59,7 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
     const [subTabGame, setSubTabGame] = useState(null);
     const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [showTradeModal, setShowTradeModal] = useState(false);
 
     // Process inventory
     const processedInventory = useMemo(() => {
@@ -346,14 +348,15 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                         </div>
 
                                         {/* Action Footer */}
-                                        <div className="grid grid-cols-3 gap-2 mt-auto">
-                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
-                                                Trade
+                                        <div className="grid grid-cols-2 gap-2 mt-auto">
+                                            <Button 
+                                                onClick={() => setShowTradeModal(true)} 
+                                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-10 text-sm font-bold"
+                                            >
+                                                <ArrowLeftRight className="w-4 h-4 mr-1" />
+                                                List Item
                                             </Button>
-                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
-                                                Sell
-                                            </Button>
-                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-9 text-xs">
+                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-10 text-sm">
                                                 Equip
                                             </Button>
                                         </div>
@@ -372,6 +375,13 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                     </div>
                 )}
             </div>
+
+            {/* Trade Modal */}
+            <TradeItemModal
+                item={selectedInventoryItem}
+                isOpen={showTradeModal}
+                onClose={() => setShowTradeModal(false)}
+            />
         </div>
     );
 }
