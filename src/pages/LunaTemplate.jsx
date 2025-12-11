@@ -312,64 +312,76 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* Circle Icon Button */}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="fixed top-24 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        {/* Circle Icon Button with Hover Dropdown */}
+        <div 
+          className="fixed top-24 left-8 z-40 group"
+          onMouseEnter={() => {}}
         >
-          <Circle className="w-5 h-5 text-white/80" />
-        </button>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          >
+            <Circle className="w-5 h-5 text-white/80" />
+          </button>
 
-        {/* World Events Button */}
-        <button
-          onClick={() => navigate(createPageUrl('WorldEvents'))}
-          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <Globe className="w-5 h-5 text-white/80" />
-        </button>
+          {/* Dropdown Menu on Hover */}
+          <div className="absolute top-full left-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+            <div className="bg-white/[0.05] backdrop-blur-3xl rounded-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-2 space-y-2" style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+              
+              {/* World Events */}
+              <button
+                onClick={() => navigate(createPageUrl('WorldEvents'))}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all text-left border border-white/5 hover:border-white/20"
+              >
+                <Globe className="w-5 h-5 text-white/80 flex-shrink-0" />
+                <span className="text-white/90 text-sm font-medium">World Events</span>
+              </button>
 
-        {/* Pin Games Button */}
-        <button
-          onClick={() => setShowPinGames(true)}
-          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
-            backdropFilter: 'blur(40px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(147, 197, 253, 0.2)'
-          }}
-        >
-          <Gamepad2 className="w-5 h-5 text-blue-100 group-hover:text-cyan-200 transition-colors drop-shadow-[0_2px_8px_rgba(147,197,253,0.5)]" />
-        </button>
+              {/* Pin Games */}
+              <button
+                onClick={() => setShowPinGames(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left border border-white/20 hover:border-cyan-400/40"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)'
+                }}
+              >
+                <Gamepad2 className="w-5 h-5 text-blue-100 flex-shrink-0" />
+                <span className="text-white/90 text-sm font-medium">Pin Games</span>
+              </button>
 
-        {/* Seasonal Pass Button */}
-        <button
-          onClick={() => setShowSeasonalPass(true)}
-          className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <Crown className="w-5 h-5 text-white/80" />
-        </button>
+              {/* Seasonal Pass */}
+              <button
+                onClick={() => setShowSeasonalPass(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all text-left border border-white/5 hover:border-white/20"
+              >
+                <Crown className="w-5 h-5 text-white/80 flex-shrink-0" />
+                <span className="text-white/90 text-sm font-medium">Seasonal Pass</span>
+              </button>
 
-        {/* AI News Button */}
-        <button
-          onClick={() => setShowAINews(true)}
-          className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <Radio className="w-5 h-5 text-white/80" />
-        </button>
+              {/* AI News */}
+              <button
+                onClick={() => setShowAINews(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all text-left border border-white/5 hover:border-white/20"
+              >
+                <Radio className="w-5 h-5 text-white/80 flex-shrink-0" />
+                <span className="text-white/90 text-sm font-medium">AI News</span>
+              </button>
 
-        {/* Blank Page Button */}
-        <button
-          onClick={() => setShowBlankPage(true)}
-          className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <User className="w-5 h-5 text-white/80" />
-        </button>
+              {/* User Interface */}
+              <button
+                onClick={() => setShowBlankPage(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-all text-left border border-white/5 hover:border-white/20"
+              >
+                <User className="w-5 h-5 text-white/80 flex-shrink-0" />
+                <span className="text-white/90 text-sm font-medium">User Interface</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
 
 
 
