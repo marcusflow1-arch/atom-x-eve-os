@@ -440,10 +440,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showWorkstation, setShowWorkstation] = useState(false);
   
-  // Forge Mastery XP
-  const [forgeXP, setForgeXP] = useState(2450);
-  const [forgeLevel, setForgeLevel] = useState(18);
-  const maxXP = 5000;
+  // Forge Mastery XP - Based on User Data
+  const forgeXP = user?.forge_xp || 0;
+  const forgeLevel = user?.forge_level || 1;
+  const maxXP = forgeLevel * 1000;
   
   const getRank = (level) => {
     if (level <= 50) return 'Novice';
@@ -481,8 +481,16 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
     if (categoryFilter !== 'all') {
        items = items.filter(i => i.type === categoryFilter);
     }
+    
+    // Check if items are unlocked via achievements
+    const unlockedAchievements = user?.unlocked_achievements || [];
+    items = items.map(item => ({
+      ...item,
+      isUnlocked: unlockedAchievements.includes(item.id) || unlockedAchievements.some(ach => ach.includes(item.game_id))
+    }));
+    
     return items;
-  }, [categoryFilter, selectedGame, viewMode]);
+  }, [categoryFilter, selectedGame, viewMode, user]);
 
   // Auto-select first item when game changes
   useEffect(() => {
@@ -548,9 +556,9 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
           </div>
 
           <div className="flex gap-6 items-center">
-            {mockMaterials.slice(0, 2).map(mat => (
+            {(user?.materials || []).slice(0, 2).map(mat => (
               <div key={mat.id} className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
-                <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity].color.replace('text-', 'bg-')}`} />
+                <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity]?.color.replace('text-', 'bg-') || 'bg-slate-500'}`} />
                 <span className="text-slate-300 text-sm font-medium">{mat.name}</span>
                 <span className="text-white font-bold font-mono">{mat.quantity}</span>
               </div>
@@ -674,24 +682,31 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
 
                                    {/* List */}
                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                       {displayedItems.map(item => (
+                                       {displayedItems.length > 0 ? displayedItems.map(item => (
                                            <div
                                                key={item.id}
                                                onClick={() => {
-                                                   setSelectedItem(item);
-                                                   setShowWorkstation(true);
+                                                   if (item.isUnlocked) {
+                                                       setSelectedItem(item);
+                                                       setShowWorkstation(true);
+                                                   }
                                                }}
-                                               className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
-                                                   selectedItem?.id === item.id 
-                                                       ? 'bg-blue-600/10 border border-blue-500/30' 
-                                                       : 'hover:bg-white/5 border border-transparent'
+                                               className={`flex items-center gap-3 p-2 rounded-xl transition-all ${
+                                                   item.isUnlocked 
+                                                       ? `cursor-pointer ${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
+                                                       : 'cursor-not-allowed opacity-40 grayscale border border-transparent'
                                                }`}
                                            >
-                                               <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0`}>
+                                               <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative`}>
                                                    <img src={item.preview_image_url} className="w-full h-full object-cover" />
+                                                   {!item.isUnlocked && (
+                                                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                           <Layers className="w-4 h-4 text-white/30" />
+                                                       </div>
+                                                   )}
                                                </div>
                                                <div className="min-w-0">
-                                                   <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : 'text-slate-300'}`}>
+                                                   <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : item.isUnlocked ? 'text-slate-300' : 'text-slate-600'}`}>
                                                        {item.name}
                                                    </div>
                                                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
@@ -701,7 +716,13 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                    </div>
                                                </div>
                                            </div>
-                                       ))}
+                                       )) : (
+                                           <div className="text-center text-slate-500 text-sm py-8">
+                                               <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                               <p>No items found for this game.</p>
+                                               <p className="text-xs text-slate-600 mt-2">Unlock items through achievements!</p>
+                                           </div>
+                                       )}
                                    </div>
                                </div>
 
@@ -805,7 +826,19 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
               <div className="text-center">
                 <Package className="w-24 h-24 mx-auto mb-4 opacity-20" />
                 <h2 className="text-2xl font-bold text-slate-600">Materials Storage</h2>
-                <p>Manage your crafting resources here.</p>
+                {(user?.materials || []).length === 0 ? (
+                  <p className="text-slate-500 mt-2">No materials yet. Complete achievements to earn materials!</p>
+                ) : (
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    {(user.materials || []).map(mat => (
+                      <div key={mat.id} className="bg-slate-800/40 border border-white/10 rounded-xl p-4 text-center">
+                        <div className={`w-3 h-3 rounded-full ${rarityStyles[mat.rarity]?.color.replace('text-', 'bg-') || 'bg-slate-500'} mx-auto mb-2`} />
+                        <div className="text-white font-bold text-sm">{mat.name}</div>
+                        <div className="text-slate-400 text-xs">{mat.quantity}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
