@@ -505,10 +505,25 @@ const ItemDetailModal = ({ item, isOpen, onClose }) => {
             </div>
 
             <div className="flex gap-3">
-              <Button className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full">
+              <Button 
+                onClick={() => {
+                  // Add to cart logic here
+                  alert(`${item.name} added to cart!`);
+                  onClose();
+                }}
+                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full"
+              >
                 Add to Cart
               </Button>
-              <Button className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full">
+              <Button 
+                onClick={() => {
+                  // Buy now - add to cart and go to checkout
+                  alert(`Proceeding to checkout with ${item.name}`);
+                  onClose();
+                  window.location.href = '/Checkout';
+                }}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full"
+              >
                 Buy Now
               </Button>
             </div>
