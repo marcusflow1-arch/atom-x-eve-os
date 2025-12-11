@@ -776,13 +776,9 @@ export default function LunaTemplate() {
                         </div>
                       </div>
 
-                      {/* Armor Section - Cross pattern: 1, then 3, then 3 */}
+                      {/* Armor Section - 3x3 grid */}
                       <div className="flex flex-col items-center gap-4">
-                        <div className="flex items-center gap-4">
-                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
-                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                        </div>
+                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
                         
                         {/* Decorative Lines */}
                         <div className="relative w-64 h-4">
@@ -791,9 +787,11 @@ export default function LunaTemplate() {
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
                         
-                        {/* Top: 1 box centered */}
-                        <div className="flex justify-center">
-                          <div onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                        {/* Top: 3 boxes */}
+                        <div className="flex gap-4">
+                          {[1, 2, 3].map(i => (
+                            <div key={`armor-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          ))}
                         </div>
 
                         {/* Middle: 3 boxes */}
