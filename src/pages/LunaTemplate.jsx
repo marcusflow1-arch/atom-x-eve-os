@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Clock, Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -722,6 +722,106 @@ export default function LunaTemplate() {
                       : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
                   }`}
                 />
+                
+                {/* Friends & Schedule Panel - Shown when UI is hidden */}
+                <AnimatePresence>
+                  {!uiVisible && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 100 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 100 }}
+                      transition={{ duration: 0.5 }}
+                      className="fixed left-4 top-20 bottom-20 w-80 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl p-6 overflow-y-auto z-30"
+                      style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+                    >
+                      {/* Clock & Date */}
+                      <div className="mb-6 text-center">
+                        <div className="text-5xl font-bold text-white mb-2">
+                          {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div className="text-white/60 text-sm">
+                          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </div>
+                      </div>
+
+                      {/* Friends List */}
+                      <div className="mb-6">
+                        <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-blue-400" />
+                          Friends Online
+                        </h3>
+                        <div className="space-y-2">
+                          {[
+                            { name: 'Shadow_Striker', status: 'Playing Cyberpunk', online: true },
+                            { name: 'CyberVixen', status: 'In Menu', online: true },
+                            { name: 'GhostReaper', status: 'Away', online: false },
+                            { name: 'NovaStar', status: 'Streaming', online: true }
+                          ].map((friend, i) => (
+                            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                              <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
+                                <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${friend.online ? 'bg-green-400' : 'bg-gray-400'}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-semibold truncate">{friend.name}</p>
+                                <p className="text-white/50 text-xs truncate">{friend.status}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Calendar Events */}
+                      <div className="mb-6">
+                        <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                          <Calendar className="w-5 h-5 text-purple-400" />
+                          Upcoming Events
+                        </h3>
+                        <div className="space-y-2">
+                          {[
+                            { title: 'Raid Night', time: 'Today, 8:00 PM', with: 'Shadow_Striker' },
+                            { title: 'Tournament', time: 'Tomorrow, 3:00 PM', with: 'Team Alpha' },
+                            { title: 'Chill Session', time: 'Friday, 7:00 PM', with: 'CyberVixen' }
+                          ].map((event, i) => (
+                            <div key={i} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                              <p className="text-white text-sm font-semibold mb-1">{event.title}</p>
+                              <p className="text-white/50 text-xs">{event.time}</p>
+                              <p className="text-blue-400 text-xs mt-1">with {event.with}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* AI News & Updates */}
+                      <div>
+                        <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                          <Radio className="w-5 h-5 text-green-400" />
+                          Platform Updates
+                        </h3>
+                        <div className="space-y-2">
+                          {[
+                            { title: 'New Features Available', desc: 'Enhanced AI companion system is now live', type: 'feature' },
+                            { title: 'Desktop App Update', desc: 'Version 2.1.0 ready to install', type: 'update' },
+                            { title: 'Server Maintenance', desc: 'Scheduled for tonight 2AM-4AM EST', type: 'maintenance' }
+                          ].map((news, i) => (
+                            <div key={i} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                              <div className="flex items-start gap-2">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                                  news.type === 'feature' ? 'bg-green-400' : 
+                                  news.type === 'update' ? 'bg-blue-400' : 'bg-yellow-400'
+                                }`} />
+                                <div className="flex-1">
+                                  <p className="text-white text-sm font-semibold mb-1">{news.title}</p>
+                                  <p className="text-white/50 text-xs">{news.desc}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 
                 {/* Social Hub Bar */}
                 <button 
