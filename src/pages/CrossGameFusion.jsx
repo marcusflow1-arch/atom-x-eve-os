@@ -216,12 +216,13 @@ export default function CrossGameFusion() {
                   </div>
 
                   {/* Result Box */}
-                  <div className="w-full">
+                  <div className="w-full flex justify-center">
                      {fusedCard ? (
                         <motion.div
                            initial={{ scale: 0, rotate: -180, opacity: 0 }}
                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
                            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                           className="w-[30%]"
                         >
                            {/* Stacked Cards Visual */}
                            <div className="relative w-full aspect-[3/4]">
@@ -284,9 +285,9 @@ export default function CrossGameFusion() {
                            </div>
                         </motion.div>
                      ) : (
-                        <div className="w-full aspect-[3/4] rounded-xl border-2 border-dashed border-white/30 bg-white/5 flex flex-col items-center justify-center">
-                           <Sparkles className="w-12 h-12 text-white/20 mb-2" />
-                           <span className="text-white/40 text-xs">Result Card</span>
+                        <div className="w-[30%] aspect-[3/4] rounded-xl border-2 border-dashed border-white/30 bg-white/5 flex flex-col items-center justify-center">
+                           <Sparkles className="w-8 h-8 text-white/20 mb-1" />
+                           <span className="text-white/40 text-[9px]">Result</span>
                         </div>
                      )}
                   </div>
