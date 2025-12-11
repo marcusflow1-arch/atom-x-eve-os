@@ -301,96 +301,95 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                           {...providedDrag.draggableProps}
                           className="relative group"
                         >
-                          {/* Control Buttons at Top */}
-                          <div className="flex items-center justify-between mb-3 pl-1">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              {activeGame && (
-                                <button 
-                                  onClick={() => {
-                                    setSelectedGames(prev => ({ ...prev, [genre]: null }));
-                                    setViewModes(prev => ({ ...prev, [genre]: 'games' }));
-                                    setActiveFilters(prev => ({ ...prev, [genre]: null }));
-                                  }}
-                                  className="w-6 h-6 bg-white/10 rounded-full hover:bg-white/20 text-white/60 hover:text-white transition-colors flex items-center justify-center"
-                                  title="Back"
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Filter Controls (When Game Active) */}
-                            {activeGame && (
-                              <div className="flex items-center gap-1 mr-2">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${activeFilters[genre] ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40 hover:text-white'}`}>
-                                      {activeFilters[genre] ? (
-                                        (() => {
-                                          const Opt = FILTER_OPTIONS.find(o => o.id === activeFilters[genre]);
-                                          return Opt ? <Opt.icon className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;
-                                        })()
-                                      ) : (
-                                        <ChevronDown className="w-3 h-3" />
-                                      )}
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="bg-slate-900 border-white/10 text-white">
-                                    <DropdownMenuItem onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: null }))}>
-                                      All Items
-                                    </DropdownMenuItem>
-                                    {FILTER_OPTIONS.map(opt => (
-                                      <DropdownMenuItem 
-                                        key={opt.id}
-                                        onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: opt.id }))}
-                                        className="gap-2"
-                                      >
-                                        <opt.icon className="w-4 h-4" /> {opt.label}
-                                      </DropdownMenuItem>
-                                    ))}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Back Button (When Game Active) */}
+                          {activeGame && (
+                            <div className="flex items-center mb-2">
                               <button 
-                                onClick={() => toggleViewMode(genre)}
-                                className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
-                                title={viewMode === 'cards' ? "View Games" : "View Cards"}
+                                onClick={() => {
+                                  setSelectedGames(prev => ({ ...prev, [genre]: null }));
+                                  setViewModes(prev => ({ ...prev, [genre]: 'games' }));
+                                  setActiveFilters(prev => ({ ...prev, [genre]: null }));
+                                }}
+                                className="w-6 h-6 bg-white/10 rounded-full hover:bg-white/20 text-white/60 hover:text-white transition-colors flex items-center justify-center"
+                                title="Back"
                               >
-                                <Gamepad2 className="w-3 h-3" />
+                                <ChevronLeft className="w-4 h-4" />
                               </button>
-
-                              <button 
-                                onClick={() => onExpand && onExpand(genre)}
-                                className="text-white/40 hover:text-white transition-colors"
-                                title="Expand View"
-                              >
-                                <Maximize2 className="w-3 h-3" />
-                              </button>
-                              
-                              {/* Drag Handle */}
-                              <div 
-                                {...providedDrag.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/5 rounded"
-                              >
-                                <GripVertical className="w-3 h-3 text-white/30 hover:text-white/60" />
-                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Centered Title with Decorative Lines */}
-                          <div className="flex flex-col items-center mb-4">
-                            <h3 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50 mb-3">
+                          {/* Centered Title with Decorative Lines and Controls */}
+                          <div className="flex flex-col items-center mb-2">
+                            <h3 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50 mb-4">
                               {activeGame ? activeGame.title : genre}
                             </h3>
                             
-                            {/* Decorative Lines */}
-                            <div className="relative w-64 h-4 mb-2">
+                            {/* Decorative Lines with Controls */}
+                            <div className="relative w-full h-4">
                               <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
                               <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
                               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
+                              
+                              {/* Control Icons on the Line */}
+                              <div className="absolute top-1/2 -translate-y-1/2 right-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={() => toggleViewMode(genre)}
+                                  className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
+                                  title={viewMode === 'cards' ? "View Games" : "View Cards"}
+                                >
+                                  <Gamepad2 className="w-3 h-3" />
+                                </button>
+
+                                <button 
+                                  onClick={() => onExpand && onExpand(genre)}
+                                  className="text-white/40 hover:text-white transition-colors"
+                                  title="Expand View"
+                                >
+                                  <Maximize2 className="w-3 h-3" />
+                                </button>
+                                
+                                {/* Drag Handle */}
+                                <div 
+                                  {...providedDrag.dragHandleProps}
+                                  className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/5 rounded"
+                                >
+                                  <GripVertical className="w-3 h-3 text-white/30 hover:text-white/60" />
+                                </div>
+                              </div>
+
+                              {/* Filter Control on the Line */}
+                              {activeGame && (
+                                <div className="absolute top-1/2 -translate-y-1/2 left-0">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${activeFilters[genre] ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40 hover:text-white'}`}>
+                                        {activeFilters[genre] ? (
+                                          (() => {
+                                            const Opt = FILTER_OPTIONS.find(o => o.id === activeFilters[genre]);
+                                            return Opt ? <Opt.icon className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />;
+                                          })()
+                                        ) : (
+                                          <ChevronDown className="w-3 h-3" />
+                                        )}
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="bg-slate-900 border-white/10 text-white">
+                                      <DropdownMenuItem onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: null }))}>
+                                        All Items
+                                      </DropdownMenuItem>
+                                      {FILTER_OPTIONS.map(opt => (
+                                        <DropdownMenuItem 
+                                          key={opt.id}
+                                          onClick={() => setActiveFilters(prev => ({ ...prev, [genre]: opt.id }))}
+                                          className="gap-2"
+                                        >
+                                          <opt.icon className="w-4 h-4" /> {opt.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
