@@ -208,13 +208,12 @@ export default function CrossGameFusion() {
                      </div>
                   </div>
 
-                  {/* Equals Sign */}
-                  <div className="flex justify-center mb-4">
-                     <div className="text-white/60 text-2xl font-bold">=</div>
-                  </div>
-
-                  {/* Result Box */}
-                  <div className="w-full flex justify-center">
+                  {fusedCard && (
+                  <motion.div
+                     initial={{ scale: 0, opacity: 0 }}
+                     animate={{ scale: 1, opacity: 1 }}
+                     className="w-48 my-6"
+                  >
                      {fusedCard ? (
                         <motion.div
                            initial={{ scale: 0, rotate: -180, opacity: 0 }}
@@ -287,10 +286,10 @@ export default function CrossGameFusion() {
                            <Sparkles className="w-8 h-8 text-white/20 mb-1" />
                            <span className="text-white/40 text-[9px]">Result</span>
                         </div>
+                     </motion.div>
                      )}
-                  </div>
 
-               {/* Fusion Button */}
+                     {/* Fusion Button */}
                {fusedCard ? (
                   <Button 
                      onClick={() => {
