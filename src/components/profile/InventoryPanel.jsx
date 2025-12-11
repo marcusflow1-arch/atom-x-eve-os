@@ -348,15 +348,34 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                         </div>
 
                                         {/* Action Footer */}
-                                        <div className="grid grid-cols-2 gap-2 mt-auto">
+                                        <div className="grid grid-cols-3 gap-2 mt-auto">
+                                            <Button 
+                                                onClick={() => {
+                                                    // Trade with friends/guild - to be implemented
+                                                    alert('Trade with friends feature coming soon!');
+                                                }} 
+                                                variant="ghost"
+                                                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 h-10 text-xs font-bold"
+                                            >
+                                                <ArrowLeftRight className="w-3 h-3 mr-1" />
+                                                Trade
+                                            </Button>
                                             <Button 
                                                 onClick={() => setShowTradeModal(true)} 
-                                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-10 text-sm font-bold"
+                                                variant="ghost"
+                                                className="bg-green-500/10 hover:bg-green-500/20 text-green-300 border border-green-500/30 h-10 text-xs font-bold"
                                             >
-                                                <ArrowLeftRight className="w-4 h-4 mr-1" />
-                                                List Item
+                                                <DollarSign className="w-3 h-3 mr-1" />
+                                                Sell
                                             </Button>
-                                            <Button variant="ghost" className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-10 text-sm">
+                                            <Button 
+                                                onClick={() => {
+                                                    // Equip item logic
+                                                    alert(`${selectedInventoryItem.name} equipped to loadout!`);
+                                                }}
+                                                variant="ghost" 
+                                                className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-10 text-xs font-bold"
+                                            >
                                                 Equip
                                             </Button>
                                         </div>

@@ -1,4 +1,5 @@
 import { enhancedMockGameData } from './mockGameDetailData';
+import { googlePlayGames } from './androidGamesData';
 
 // Trending & Best Sellers 2024-2025
 export const trendingGames = [
@@ -475,7 +476,7 @@ const testGameAlphaData = {
 export const allMockGames = {
   ...enhancedMockGameData,
   'test_game_alpha': testGameAlphaData, // Add the test game to the global mock object
-  ...[...aiGamesList, ...otherSampleGames].reduce((acc, game) => {
+  ...[...aiGamesList, ...otherSampleGames, ...googlePlayGames].reduce((acc, game) => {
     // Merge with detailed data if it exists, otherwise use the basic data
     acc[game.id] = { ...game, ...(enhancedMockGameData[game.id] || {}) };
     return acc;
