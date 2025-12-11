@@ -33,13 +33,21 @@ export default function ItemWorkstation({ item, onClose }) {
 
   if (!item) return null;
 
-  // Mock "Extra Items" for combination
-  const extraItems = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => ({
-      id: `extra-${i}`,
-      name: `${item?.name || 'Item'} Duplicate`,
-      rarity: 'Common',
-      image: i % 2 === 0 ? item?.preview_image_url : null
+  // Inventory filter state
+  const [inventoryFilter, setInventoryFilter] = useState('all');
+  const [combineSlot1, setCombineSlot1] = useState(null);
+  const [combineSlot2, setCombineSlot2] = useState(null);
+
+  // Mock "Inventory Items" for the game
+  const inventoryItems = useMemo(() => {
+    return Array.from({ length: 18 }, (_, i) => ({
+      id: `card-${i}`,
+      name: i % 3 === 0 ? item?.name : `${item?.name || 'Item'} ${i + 1}`,
+      rarity: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'][i % 5],
+      type: i % 2 === 0 ? 'Weapon' : 'Armor',
+      image: item?.preview_image_url,
+      level: Math.floor(Math.random() * 20) + 1,
+      combineStage: Math.floor(Math.random() * 5) + 1
     }));
   }, [item]);
 
@@ -112,13 +120,21 @@ export default function ItemWorkstation({ item, onClose }) {
       alert('Max combine stage reached!');
       return;
     }
-    if (!fusionMaterial) {
-      alert('Select materials to combine!');
+    if (!combineSlot1 || !combineSlot2) {
+      alert('Select 2 cards to combine!');
       return;
     }
+    // Delete both cards and create stronger card
     setCombineStage(prev => prev + 1);
-    setFusionMaterial(null);
+    setCombineSlot1(null);
+    setCombineSlot2(null);
+    alert('Cards combined successfully! The two original cards have been consumed.');
   };
+
+  const filteredInventory = useMemo(() => {
+    if (inventoryFilter === 'all') return inventoryItems;
+    return inventoryItems.filter(item => item.type.toLowerCase() === inventoryFilter);
+  }, [inventoryItems, inventoryFilter]);
 
   const handleTogglePerk = (perk) => {
     setSelectedPerks(prev => {
@@ -537,72 +553,170 @@ export default function ItemWorkstation({ item, onClose }) {
               </motion.div>
             ) : selectedAction === 'combine' ? (
              <motion.div key="combine" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                <div className="mb-8">
-                   <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Combine Cards</h2>
-                   <p className="text-white/50">Combine duplicates to upgrade CS level (Max: CS 12)</p>
+                <div className="mb-6">
+                   <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Combine Station</h2>
+                   <p className="text-white/50">Drag 2 cards to combine them into a stronger card (Max: CS 12)</p>
                 </div>
-                <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 flex flex-col items-center p-8 gap-8">
-                   <div className="text-center mb-4">
-                     <div className="text-6xl font-black text-blue-400 mb-2">CS {combineStage}</div>
-                     <div className="text-white/40 text-sm">Current Stage: {combineStage}/12</div>
-                   </div>
 
-                   <div className="flex items-center gap-4 md:gap-8 w-full justify-center">
-                      <div className="w-32 md:w-40 aspect-[3/4] bg-white/10 rounded-xl border border-white/20 flex flex-col items-center justify-center p-2 text-center">
-                          <img src={item?.preview_image_url} className="w-16 h-16 rounded-full mb-2 object-cover opacity-50" />
-                          <span className="font-bold text-white text-xs md:text-sm">{item?.name}</span>
-                          <span className="text-[10px] text-white/50">Base Card</span>
+                {/* Split View */}
+                <div className="flex-1 flex gap-6 overflow-hidden">
+                   {/* LEFT: Inventory */}
+                   <div className="flex-1 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-4 overflow-hidden">
+                      {/* Filter Bar */}
+                      <div className="flex items-center gap-2 mb-4">
+                         <button onClick={() => setInventoryFilter('all')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${inventoryFilter === 'all' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-white/5 text-white/40 border border-white/10'}`}>
+                            All Items
+                         </button>
+                         <button onClick={() => setInventoryFilter('weapon')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${inventoryFilter === 'weapon' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-white/5 text-white/40 border border-white/10'}`}>
+                            Weapons
+                         </button>
+                         <button onClick={() => setInventoryFilter('armor')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${inventoryFilter === 'armor' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-white/5 text-white/40 border border-white/10'}`}>
+                            Armor
+                         </button>
+                         <div className="ml-auto text-xs text-white/40 font-mono">{filteredInventory.length} Cards</div>
                       </div>
-                      <Plus className="w-8 h-8 text-white/40" />
-                      <button onClick={() => setFusionMaterial(fusionMaterial ? null : {})} className={`w-32 md:w-40 aspect-[3/4] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all p-2 text-center ${fusionMaterial ? 'bg-blue-500/20 border-blue-500' : 'border-white/20 hover:border-white/40'}`}>
-                         {fusionMaterial ? (
-                             <>
-                               <Layers className="w-8 h-8 text-blue-300 mb-2" />
-                               <span className="font-bold text-blue-300 text-xs md:text-sm">Duplicate x3</span>
-                             </>
-                         ) : (
-                             <>
-                               <div className="text-white/40 text-xs mb-2">Select Materials</div>
-                               <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">{extraItems.length} Available</span>
-                             </>
-                         )}
-                      </button>
-                      <ArrowRight className="w-8 h-8 text-white/40" />
-                      <div className="w-32 md:w-40 aspect-[3/4] bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/50 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                         <Hexagon className="w-12 h-12 text-blue-300 mb-2" />
-                         <span className="font-bold text-white text-xs">CS {Math.min(combineStage + 1, 12)}</span>
+
+                      {/* Inventory Grid */}
+                      <div className="flex-1 overflow-y-auto custom-scrollbar">
+                         <div className="grid grid-cols-4 gap-3">
+                            {filteredInventory.map((card) => (
+                               <div 
+                                  key={card.id}
+                                  draggable
+                                  onDragStart={(e) => e.dataTransfer.setData('card', JSON.stringify(card))}
+                                  className={`aspect-square rounded-lg border-2 relative group cursor-grab active:cursor-grabbing transition-all hover:scale-105 ${
+                                     card.rarity === 'Legendary' ? 'border-orange-500/50 bg-orange-500/10' :
+                                     card.rarity === 'Epic' ? 'border-purple-500/50 bg-purple-500/10' :
+                                     card.rarity === 'Rare' ? 'border-blue-500/50 bg-blue-500/10' :
+                                     'border-slate-600 bg-slate-800/50'
+                                  } hover:shadow-lg`}
+                               >
+                                  {/* Card Visual */}
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
+                                     <Shield className={`w-8 h-8 mb-1 ${
+                                        card.rarity === 'Legendary' ? 'text-orange-400' :
+                                        card.rarity === 'Epic' ? 'text-purple-400' :
+                                        card.rarity === 'Rare' ? 'text-blue-400' : 'text-slate-400'
+                                     }`} />
+                                     <div className="text-[9px] font-mono text-white/60 text-center truncate w-full px-1">{card.name}</div>
+                                  </div>
+
+                                  {/* Level Badge */}
+                                  <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] font-bold text-white">
+                                     Lv.{card.level}
+                                  </div>
+
+                                  {/* CS Badge */}
+                                  <div className="absolute bottom-1 right-1 bg-blue-500/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] font-bold text-white">
+                                     CS{card.combineStage}
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
                       </div>
                    </div>
 
-                   {!fusionMaterial && (
-                       <div className="w-full mt-4">
-                           <h4 className="text-white/40 text-xs font-bold uppercase mb-3">Available Duplicates</h4>
-                           <div className="flex gap-2 overflow-x-auto pb-2">
-                               {extraItems.slice(0, 6).map((extra) => (
-                                   <button 
-                                       key={extra.id} 
-                                       onClick={() => setFusionMaterial(extra)}
-                                       className="flex-shrink-0 w-20 aspect-square bg-white/5 rounded-lg border border-white/10 hover:border-white/30 flex items-center justify-center overflow-hidden relative group"
-                                   >
-                                       <img src={extra.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40">
-                                           <Plus className="w-6 h-6 text-white" />
-                                       </div>
-                                   </button>
-                               ))}
-                           </div>
-                       </div>
-                   )}
+                   {/* RIGHT: Combine Area */}
+                   <div className="w-80 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-6">
+                      <div className="text-center mb-6">
+                         <div className="text-5xl font-black text-blue-400 mb-1">CS {combineStage}</div>
+                         <div className="text-white/40 text-xs">Current Stage: {combineStage}/12</div>
+                      </div>
 
-                </div>
-                <div className="mt-6 flex justify-center gap-4">
-                   <div className="text-sm text-white/40 flex items-center gap-2">
-                     <Sparkles className="w-4 h-4 text-yellow-400" />
-                     Cost: <span className="text-white font-bold">Free</span>
+                      {/* Drop Zones */}
+                      <div className="space-y-4 mb-6">
+                         {/* Slot 1 */}
+                         <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                               e.preventDefault();
+                               const card = JSON.parse(e.dataTransfer.getData('card'));
+                               setCombineSlot1(card);
+                            }}
+                            className={`aspect-[3/4] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
+                               combineSlot1 ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
+                            }`}
+                         >
+                            {combineSlot1 ? (
+                               <>
+                                  <Shield className="w-16 h-16 text-blue-300 mb-2" />
+                                  <span className="font-bold text-white text-sm text-center px-2">{combineSlot1.name}</span>
+                                  <span className="text-[10px] text-blue-300">CS{combineSlot1.combineStage} • Lv.{combineSlot1.level}</span>
+                                  <button onClick={() => setCombineSlot1(null)} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
+                                     Remove
+                                  </button>
+                               </>
+                            ) : (
+                               <>
+                                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                                     <div className="text-2xl text-white/40">1</div>
+                                  </div>
+                                  <span className="text-white/40 text-xs">Drag Card Here</span>
+                               </>
+                            )}
+                         </div>
+
+                         {/* Plus Icon */}
+                         <div className="flex justify-center">
+                            <Plus className="w-6 h-6 text-white/40" />
+                         </div>
+
+                         {/* Slot 2 */}
+                         <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                               e.preventDefault();
+                               const card = JSON.parse(e.dataTransfer.getData('card'));
+                               setCombineSlot2(card);
+                            }}
+                            className={`aspect-[3/4] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
+                               combineSlot2 ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
+                            }`}
+                         >
+                            {combineSlot2 ? (
+                               <>
+                                  <Shield className="w-16 h-16 text-blue-300 mb-2" />
+                                  <span className="font-bold text-white text-sm text-center px-2">{combineSlot2.name}</span>
+                                  <span className="text-[10px] text-blue-300">CS{combineSlot2.combineStage} • Lv.{combineSlot2.level}</span>
+                                  <button onClick={() => setCombineSlot2(null)} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
+                                     Remove
+                                  </button>
+                               </>
+                            ) : (
+                               <>
+                                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                                     <div className="text-2xl text-white/40">2</div>
+                                  </div>
+                                  <span className="text-white/40 text-xs">Drag Card Here</span>
+                               </>
+                            )}
+                         </div>
+                      </div>
+
+                      {/* Arrow & Result Preview */}
+                      <div className="flex items-center justify-center gap-3 mb-6">
+                         <ArrowRight className="w-6 h-6 text-white/40" />
+                         <div className="w-24 aspect-[3/4] bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/50 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                            <Hexagon className="w-10 h-10 text-blue-300 mb-1" />
+                            <span className="font-bold text-white text-xs">CS {Math.min(combineStage + 1, 12)}</span>
+                            <span className="text-[9px] text-white/50">New Card</span>
+                         </div>
+                      </div>
+
+                      {/* Combine Button */}
+                      <Button 
+                         onClick={handleCombine} 
+                         disabled={!combineSlot1 || !combineSlot2 || combineStage >= 12} 
+                         className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-bold"
+                      >
+                         <ArrowLeftRight className="w-5 h-5 mr-2" />
+                         Combine to CS {Math.min(combineStage + 1, 12)}
+                      </Button>
+
+                      {combineStage >= 12 && (
+                         <div className="text-center text-yellow-400 text-xs font-bold mt-3">⚡ MAX CS REACHED ⚡</div>
+                      )}
                    </div>
-                   <Button onClick={handleCombine} disabled={!fusionMaterial || combineStage >= 12} className="bg-blue-600 hover:bg-blue-700 max-w-sm h-12 text-lg">
-                     Combine to CS {Math.min(combineStage + 1, 12)}
-                   </Button>
                 </div>
              </motion.div>
             ) : selectedAction === 'enchant' ? (
