@@ -160,10 +160,8 @@ export default function CrossGameFusion() {
                <h2 className="text-3xl font-black text-white mb-2">Fusion Chamber</h2>
                <p className="text-white/50 text-sm mb-8 text-center">Merge two cards from other games to make one card</p>
 
-               {/* Fusion Container Box */}
-               <div className="w-full bg-black/20 rounded-2xl border border-white/20 p-6 mb-6">
-                  {/* Top Row: Card1 + Card2 */}
-                  <div className="flex items-center justify-center gap-4 mb-6">
+               {/* Top Row: Card1 + Card2 */}
+               <div className="flex items-center justify-center gap-4 mb-6">
                      {/* Card Slot 1 */}
                      <div className={`w-32 aspect-[3/4] rounded-lg border-2 flex flex-col items-center justify-center transition-all ${
                         selectedCard1 ? 'bg-purple-500/20 border-purple-500/70' : 'border-white/30 bg-white/5 border-dashed'
@@ -291,7 +289,6 @@ export default function CrossGameFusion() {
                         </div>
                      )}
                   </div>
-               </div>
 
                {/* Fusion Button */}
                {fusedCard ? (
