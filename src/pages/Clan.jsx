@@ -76,14 +76,14 @@ export default function ClanPage() {
 
     const activeChannel = channels?.find(c => c.id === selectedChannelId);
     
-    // Background style - Light & Aerial
+    // Background style - Darker Light Gray
     const bgStyle = {
-        backgroundColor: '#f8fafc', // slate-50
+        backgroundColor: '#d1d5db', // gray-300
         backgroundImage: `
-            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.1) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-            radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%)
+            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.04) 0px, transparent 50%)
         `,
     };
 

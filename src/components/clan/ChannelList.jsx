@@ -178,19 +178,7 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                 </div>
             </div>
 
-            {/* Bottom Panel */}
-            <div className="h-14 bg-white/50 backdrop-blur-md px-3 flex items-center gap-2 border-t border-slate-200/60 shadow-inner">
-                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 border border-white flex items-center justify-center shadow-md">
-                    <Crown className="w-4 h-4 text-white" />
-                 </div>
-                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-slate-800 truncate">Commander</div>
-                    <div className="text-[10px] text-green-600 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Online
-                    </div>
-                 </div>
-                 <Settings className="w-4 h-4 text-slate-400 hover:text-slate-800 cursor-pointer transition-colors" />
-            </div>
+
 
             {/* Create Channel Modal */}
             <Dialog open={isCreateChannelOpen} onOpenChange={setIsCreateChannelOpen}>
