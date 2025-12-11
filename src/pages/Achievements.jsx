@@ -121,40 +121,6 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
         }}
         className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
       />
-
-      {/* Animated Blue Light Corners */}
-      <motion.div
-        className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none"
-        animate={{
-          boxShadow: [
-            "0 0 0px rgba(59, 130, 246, 0)",
-            "0 0 20px rgba(59, 130, 246, 0.8)",
-            "0 0 0px rgba(59, 130, 246, 0)"
-          ]
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          borderLeft: "3px solid rgba(59, 130, 246, 0.6)",
-          borderBottom: "3px solid rgba(59, 130, 246, 0.6)",
-          borderBottomLeftRadius: "0.75rem"
-        }}
-      />
-      <motion.div
-        className="absolute top-0 right-0 w-16 h-16 pointer-events-none"
-        animate={{
-          boxShadow: [
-            "0 0 0px rgba(59, 130, 246, 0)",
-            "0 0 20px rgba(59, 130, 246, 0.8)",
-            "0 0 0px rgba(59, 130, 246, 0)"
-          ]
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        style={{
-          borderRight: "3px solid rgba(59, 130, 246, 0.6)",
-          borderTop: "3px solid rgba(59, 130, 246, 0.6)",
-          borderTopRightRadius: "0.75rem"
-        }}
-      />
     </motion.div>
   );
 };
@@ -355,20 +321,10 @@ function AchievementsView({ onSwitchToForge }) {
             <div className="flex items-center gap-3">
               <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-3">
                 Achievements
-                <motion.div 
+                <div 
                   onClick={onSwitchToForge}
                   className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
                   title="Go to Blacksmith Forge"
-                  animate={{
-                    rotate: [0, -25, 0],
-                    y: [0, 0, 8, 0]
-                  }}
-                  transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    repeatDelay: 1.5,
-                    ease: "easeInOut"
-                  }}
                 >
                   {/* Holographic Black Hammer */}
                   <div className="relative z-10">
@@ -376,7 +332,7 @@ function AchievementsView({ onSwitchToForge }) {
                     {/* Holographic Glitch/Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
                   </div>
-                </motion.div>
+                </div>
               </h1>
             </div>
 
