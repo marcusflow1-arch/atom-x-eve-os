@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
-import { Game } from '@/entities/Game';
 import { createPageUrl } from '@/utils';
 import { aiGamesList, otherSampleGames } from '../components/store/mockData';
 import { Badge } from '@/components/ui/badge';
@@ -392,7 +391,8 @@ export default function Store() {
     useEffect(() => {
         const fetchGames = async () => {
             try {
-                const fetchedGames = await Game.list();
+                const fetchedGamesResponse = await base44.entities.Game.list();
+                const fetchedGames = fetchedGamesResponse.data || fetchedGamesResponse;
                 const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
                     ...aiGamesList,
                     ...otherSampleGames

@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Post } from '@/entities/Post';
-import { Comment } from '@/entities/Comment';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import CreatePostForm from '../components/community/CreatePostForm';
 import PostCard from '../components/community/PostCard';
@@ -66,7 +64,8 @@ export default function CommunityPage() {
                 filter = {}; 
             }
 
-            const fetchedPosts = await Post.filter(filter, sort);
+            const fetchedPostsResponse = await base44.entities.Post.filter(filter, sort);
+            const fetchedPosts = fetchedPostsResponse.data || fetchedPostsResponse;
             
             let filtered = fetchedPosts;
 
@@ -92,7 +91,8 @@ export default function CommunityPage() {
 
     const fetchComments = useCallback(async (postId) => {
         if (!postId) return;
-        const fetchedComments = await Comment.filter({ post_id: postId }, '-score');
+        const fetchedCommentsResponse = await base44.entities.Comment.filter({ post_id: postId }, '-score');
+        const fetchedComments = fetchedCommentsResponse.data || fetchedCommentsResponse;
         setComments(fetchedComments);
     }, []);
 
@@ -121,7 +121,7 @@ export default function CommunityPage() {
             console.error("Moderation check failed", e);
         }
 
-        await Post.create(postData);
+        await base44.entities.Post.create(postData);
         setShowCreateForm(false);
         fetchPosts();
     };
@@ -132,7 +132,7 @@ export default function CommunityPage() {
             return;
         }
         const newScore = post.score + (voteType === 'up' ? 1 : -1);
-        await Post.update(post.id, { score: newScore });
+        await base44.entities.Post.update(post.id, { score: newScore });
         setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
         if (selectedPost?.id === post.id) {
             setSelectedPost(prev => ({...prev, score: newScore}));
@@ -413,8 +413,8 @@ export default function CommunityPage() {
                                                 postId={selectedPost.id}
                                                 comments={comments}
                                                 onAddComment={async (data) => {
-                                                    await Comment.create(data);
-                                                    fetchComments(selectedPost.id);
+                                                   await base44.entities.Comment.create(data);
+                                                   fetchComments(selectedPost.id);
                                                 }}
                                                 onVote={async () => fetchComments(selectedPost.id)}
                                             />
