@@ -121,6 +121,40 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
         }}
         className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
       />
+
+      {/* Animated Blue Light Corners */}
+      <motion.div
+        className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none"
+        animate={{
+          boxShadow: [
+            "0 0 0px rgba(59, 130, 246, 0)",
+            "0 0 20px rgba(59, 130, 246, 0.8)",
+            "0 0 0px rgba(59, 130, 246, 0)"
+          ]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          borderLeft: "3px solid rgba(59, 130, 246, 0.6)",
+          borderBottom: "3px solid rgba(59, 130, 246, 0.6)",
+          borderBottomLeftRadius: "0.75rem"
+        }}
+      />
+      <motion.div
+        className="absolute top-0 right-0 w-16 h-16 pointer-events-none"
+        animate={{
+          boxShadow: [
+            "0 0 0px rgba(59, 130, 246, 0)",
+            "0 0 20px rgba(59, 130, 246, 0.8)",
+            "0 0 0px rgba(59, 130, 246, 0)"
+          ]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        style={{
+          borderRight: "3px solid rgba(59, 130, 246, 0.6)",
+          borderTop: "3px solid rgba(59, 130, 246, 0.6)",
+          borderTopRightRadius: "0.75rem"
+        }}
+      />
     </motion.div>
   );
 };
