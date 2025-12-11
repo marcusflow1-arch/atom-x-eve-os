@@ -962,51 +962,51 @@ export default function LunaTemplate() {
                         </div>
                       </div>
 
-                      {/* AI Passives Section - 3 centered + 2 stacked right */}
+                      {/* AI Passives Section - 2 boxes on top, 3 centered below */}
                       <div className="flex flex-col items-center gap-4">
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">AI Passives</h2>
 
                         {/* Decorative Lines */}
-                        <div className="relative w-64 h-4">
+                        <div className="relative w-52 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
+                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
 
-                        <div className="flex gap-4 items-center">
+                        <div className="flex flex-col items-center gap-4">
                           <div className="flex gap-4">
-                            {[1, 2, 3].map(i => (
-                              <div key={`passive-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                            {[1, 2].map(i => (
+                              <div key={`passive-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                             ))}
                           </div>
-                          <div className="flex flex-col gap-4">
-                            {[4, 5].map(i => (
-                              <div key={`passive-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          <div className="flex gap-4">
+                            {[3, 4, 5].map(i => (
+                              <div key={`passive-bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                             ))}
                           </div>
                         </div>
                       </div>
 
-                      {/* Artifacts Section - 3 centered + 2 stacked right */}
+                      {/* Artifacts Section - 2 boxes on top, 3 centered below */}
                       <div className="flex flex-col items-center gap-4">
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Artifacts</h2>
 
                         {/* Decorative Lines */}
-                        <div className="relative w-64 h-4">
+                        <div className="relative w-52 h-4">
                           <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
+                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
                         </div>
 
-                        <div className="flex gap-4 items-center">
+                        <div className="flex flex-col items-center gap-4">
                           <div className="flex gap-4">
-                            {[1, 2, 3].map(i => (
-                              <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                            {[1, 2].map(i => (
+                              <div key={`artifact-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                             ))}
                           </div>
-                          <div className="flex flex-col gap-4">
-                            {[4, 5].map(i => (
-                              <div key={`artifact-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
+                          <div className="flex gap-4">
+                            {[3, 4, 5].map(i => (
+                              <div key={`artifact-bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
                             ))}
                           </div>
                         </div>
