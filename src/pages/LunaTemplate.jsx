@@ -28,6 +28,7 @@ import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
+import SocialHub from '../components/dashboard/SocialHub';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1206,10 +1207,7 @@ export default function LunaTemplate() {
                       <StreamingDiscovery />
                     )}
                     {blankPageTab === 'social' && (
-                      <div className="text-white">
-                        <h3 className="text-2xl font-semibold mb-4 text-white/90">Social Hub</h3>
-                        <p className="text-white/60 text-lg">Social Hub content will appear here</p>
-                      </div>
+                      <SocialHub />
                     )}
                   </motion.div>
                 </AnimatePresence>
