@@ -310,63 +310,40 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* Circle Icon Button */}
+        {/* User Icon Button */}
         <button
-          onClick={() => setDrawerOpen(true)}
-          className="fixed top-24 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          onClick={() => setShowBlankPage(true)}
+          className="fixed top-24 right-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
-          <Circle className="w-5 h-5 text-white/80" />
-        </button>
-
-        {/* World Events Button */}
-        <button
-          onClick={() => navigate(createPageUrl('WorldEvents'))}
-          className="fixed top-24 left-24 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <Globe className="w-5 h-5 text-white/80" />
-        </button>
-
-        {/* Pin Games Button */}
-        <button
-          onClick={() => setShowPinGames(true)}
-          className="fixed top-24 left-40 z-40 w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40 group"
-          style={{ 
-            background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
-            backdropFilter: 'blur(40px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(147, 197, 253, 0.2)'
-          }}
-        >
-          <Gamepad2 className="w-5 h-5 text-blue-100 group-hover:text-cyan-200 transition-colors drop-shadow-[0_2px_8px_rgba(147,197,253,0.5)]" />
-        </button>
-
-        {/* Seasonal Pass Button */}
-        <button
-          onClick={() => setShowSeasonalPass(true)}
-          className="fixed top-24 left-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-        >
-          <Crown className="w-5 h-5 text-white/80" />
+          <User className="w-5 h-5 text-white/80" />
         </button>
 
         {/* AI News Button */}
         <button
           onClick={() => setShowAINews(true)}
-          className="fixed top-24 left-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          className="fixed top-24 right-40 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
           <Radio className="w-5 h-5 text-white/80" />
         </button>
 
-        {/* Blank Page Button */}
+        {/* Seasonal Pass Button */}
         <button
-          onClick={() => setShowBlankPage(true)}
-          className="fixed top-24 left-[22rem] z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          onClick={() => setShowSeasonalPass(true)}
+          className="fixed top-24 right-56 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
           style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
         >
-          <User className="w-5 h-5 text-white/80" />
+          <Crown className="w-5 h-5 text-white/80" />
+        </button>
+
+        {/* World Events Button */}
+        <button
+          onClick={() => navigate(createPageUrl('WorldEvents'))}
+          className="fixed top-24 right-72 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+        >
+          <Globe className="w-5 h-5 text-white/80" />
         </button>
 
 
