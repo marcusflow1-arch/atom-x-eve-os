@@ -532,38 +532,6 @@ function LayoutContent({ children, currentPageName }) {
                 <span>Discord</span>
               </a>
             )}
-
-            {headerConfig.showModeToggle && (
-              <button
-                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all overflow-hidden"
-                onClick={toggleMode}
-                title="Toggle Interface Mode"
-              >
-                <AnimatePresence mode="wait">
-                  {mode === 'ai' ? (
-                    <motion.div
-                      key="user-icon"
-                      initial={{ opacity: 0, rotate: -90 }}
-                      animate={{ opacity: 1, rotate: 0 }}
-                      exit={{ opacity: 0, rotate: 90 }}
-                      className="flex items-center justify-center w-full h-full"
-                    >
-                      <User className="w-5 h-5" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="ai-icon"
-                      initial={{ opacity: 0, rotate: -90 }}
-                      animate={{ opacity: 1, rotate: 0 }}
-                      exit={{ opacity: 0, rotate: 90 }}
-                      className="flex items-center justify-center w-full h-full"
-                    >
-                      <Bot className="w-5 h-5" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-            )}
             </div>
 
             {/* Minimized Experience Bar - Dashboard & Luna Template */}
