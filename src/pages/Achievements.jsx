@@ -321,10 +321,20 @@ function AchievementsView({ onSwitchToForge }) {
             <div className="flex items-center gap-3">
               <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-3">
                 Achievements
-                <div 
+                <motion.div 
                   onClick={onSwitchToForge}
                   className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
                   title="Go to Blacksmith Forge"
+                  animate={{
+                    rotate: [0, -25, 0],
+                    y: [0, 0, 8, 0]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    repeatDelay: 1.5,
+                    ease: "easeInOut"
+                  }}
                 >
                   {/* Holographic Black Hammer */}
                   <div className="relative z-10">
@@ -332,7 +342,7 @@ function AchievementsView({ onSwitchToForge }) {
                     {/* Holographic Glitch/Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
                   </div>
-                </div>
+                </motion.div>
               </h1>
             </div>
 
