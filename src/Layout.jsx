@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-        LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target
+        LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp
       } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
@@ -17,6 +17,7 @@ import PWAManifest from './components/desktop/PWAManifest';
 import ServiceWorker from './components/desktop/ServiceWorker';
 import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
+import SocialHub from './components/dashboard/SocialHub';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -80,6 +81,7 @@ function LayoutContent({ children, currentPageName }) {
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [socialHubOpen, setSocialHubOpen] = useState(false);
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
@@ -564,6 +566,13 @@ function LayoutContent({ children, currentPageName }) {
                                <item.icon className="w-4 h-4" />
                            </Link>
                        ))}
+                       <button
+                         onClick={() => setSocialHubOpen(true)}
+                         className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                         title="Social Hub"
+                       >
+                         <TrendingUp className="w-4 h-4" />
+                       </button>
                    </div>
                 )}
               </div>
@@ -590,6 +599,41 @@ function LayoutContent({ children, currentPageName }) {
           onCancel={() => setShowSignUp(false)}
         />
       )}
+
+      {/* Social Hub Overlay */}
+      <AnimatePresence>
+        {socialHubOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+              onClick={() => setSocialHubOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-4 bg-slate-900/95 backdrop-blur-3xl border border-white/10 rounded-3xl z-[60] overflow-hidden shadow-2xl"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSocialHubOpen(false)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+
+              {/* Social Hub Content */}
+              <div className="w-full h-full overflow-hidden">
+                <SocialHub />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
