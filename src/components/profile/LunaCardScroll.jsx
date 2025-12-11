@@ -301,20 +301,11 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                           {...providedDrag.draggableProps}
                           className="relative group"
                         >
-                          <div className="flex flex-col items-center mb-3">
-                            <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase mb-2">
-                              {activeGame ? activeGame.title : genre}
-                            </h3>
-                            
-                            {/* Decorative Lines */}
-                            <div className="relative w-72 h-4 mb-3">
-                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between w-full pl-1">
-                              <div className="flex items-center gap-2 overflow-hidden">
+                          <div className="flex items-center justify-between mb-3 pl-1">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase whitespace-nowrap max-w-[120px] truncate">
+                                {activeGame ? activeGame.title : genre}
+                              </h3>
                               {activeGame && (
                                 <button 
                                   onClick={() => {
@@ -328,11 +319,11 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                   <ChevronLeft className="w-4 h-4" />
                                 </button>
                               )}
-                            </div>
+                              </div>
 
-                            {/* Filter Controls (When Game Active) */}
-                            {activeGame && (
-                              <div className="flex items-center gap-1">
+                              {/* Filter Controls (When Game Active) */}
+                              {activeGame && (
+                              <div className="flex items-center gap-1 mr-2">
                                   <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                           <button className={`w-6 h-6 flex items-center justify-center rounded-full transition-colors ${activeFilters[genre] ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40 hover:text-white'}`}>
@@ -362,9 +353,9 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                       </DropdownMenuContent>
                                   </DropdownMenu>
                               </div>
-                            )}
+                              )}
 
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button 
                                 onClick={() => toggleViewMode(genre)}
                                 className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
@@ -387,12 +378,11 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                                 className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/5 rounded"
                               >
                                 <GripVertical className="w-3 h-3 text-white/30 hover:text-white/60" />
-                                </div>
-                                </div>
-                                </div>
-                                </div>
-
-                                <div className="relative min-h-[120px]">
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="relative min-h-[120px]">
                             <AnimatePresence mode="wait">
                               {viewMode === 'games' ? (
                                 <GamesCarousel 
