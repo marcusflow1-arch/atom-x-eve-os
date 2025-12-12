@@ -48,29 +48,12 @@ function ErrorFallback() {
 }
 
 export default function Luna3DBackground() {
-  const [hasError, setHasError] = useState(false);
-
-  if (hasError) {
-    return <ErrorFallback />;
-  }
-
   return (
-    <div className="w-full h-full">
-      <Canvas onCreated={() => setHasError(false)} onError={() => setHasError(true)}>
-        <PerspectiveCamera makeDefault position={[0, 2, 5]} />
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={0.5} />
-        <Suspense fallback={null}>
-          <Model />
-        </Suspense>
-        <OrbitControls 
-          enableZoom={false} 
-          enablePan={false}
-          autoRotate
-          autoRotateSpeed={0.5}
-        />
-      </Canvas>
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="text-center text-white/40">
+        <Box className="w-8 h-8 mx-auto mb-2" />
+        <p className="text-xs">3D Model</p>
+      </div>
     </div>
   );
 }
