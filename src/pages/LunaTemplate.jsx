@@ -44,16 +44,16 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     containerRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
     // Rim light for Sketchfab-style edge lighting
-    const rimLight = new THREE.DirectionalLight(0xffffff, 3);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
     rimLight.position.set(0, 1, -1);
     scene.add(rimLight);
 
@@ -187,7 +187,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     };
   }, [modelUrl]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return <div ref={containerRef} className="w-full h-full bg-transparent" />;
 }
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
@@ -519,7 +519,7 @@ export default function LunaTemplate() {
       >
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30 bg-transparent">
             <TransparentModel3DViewer modelUrl={modelUrl} />
           </div>
         )}
