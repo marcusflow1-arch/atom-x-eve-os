@@ -18,10 +18,14 @@ function Model({ url, autoRotate = true }) {
             const materials = Array.isArray(child.material) ? child.material : [child.material];
             
             materials.forEach((mat) => {
-              // Remove problematic textures
-              ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'].forEach(prop => {
-                if (mat[prop] && (!mat[prop].source || !mat[prop].image)) {
-                  mat[prop] = null;
+              // Safely remove all textures to prevent source errors
+              ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
+                try {
+                  if (mat[prop]) {
+                    mat[prop] = null;
+                  }
+                } catch (e) {
+                  // Ignore texture removal errors
                 }
               });
             });
