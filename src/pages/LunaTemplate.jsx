@@ -1017,10 +1017,7 @@ export default function LunaTemplate() {
                     </div>
 
                     {/* Right Side Stats Panel */}
-                    <div className="flex-shrink-0 pt-6 flex flex-col gap-4">
-                      <div className="w-[280px] h-[280px] rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] overflow-hidden shadow-lg">
-                        <Luna3DBackground />
-                      </div>
+                    <div className="flex-shrink-0 pt-6 flex flex-col">
                       <LunaStatsPanel />
                       <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                     </div>
