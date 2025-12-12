@@ -853,45 +853,26 @@ export default function LunaTemplate() {
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
           
           {/* Decorative Lines */}
-          <div className="relative w-52 h-4">
+          <div className="relative w-[308px] h-4">
             <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
+            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
           </div>
 
-          {/* Skill Boxes */}
-          <div className="flex flex-col items-center gap-3">
-            {/* Top Row: 2 boxes */}
-            <div className="flex gap-3">
-              {[0, 1].map(i => (
-                <div 
-                  key={`skill-top-${i}`}
-                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
-                    activeSkills[i] 
-                      ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
-                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="text-white/60 text-xs font-bold">{i + 1}</span>
-                </div>
-              ))}
-            </div>
-            
-            {/* Bottom Row: 3 boxes */}
-            <div className="flex gap-3">
-              {[2, 3, 4].map(i => (
-                <div 
-                  key={`skill-bottom-${i}`}
-                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
-                    activeSkills[i] 
-                      ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
-                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="text-white/60 text-xs font-bold">{i + 1}</span>
-                </div>
-              ))}
-            </div>
+          {/* Skill Boxes - Single Row */}
+          <div className="flex gap-3">
+            {[0, 1, 2, 3, 4].map(i => (
+              <div 
+                key={`skill-${i}`}
+                className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                  activeSkills[i] 
+                    ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
+                    : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
+                }`}
+              >
+                <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+              </div>
+            ))}
           </div>
         </div>
 
