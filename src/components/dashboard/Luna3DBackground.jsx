@@ -4,7 +4,7 @@ import { useGLTF, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 
 function Model() {
   const modelRef = useRef();
-  const { scene } = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
+  const gltf = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
   
   useFrame((state) => {
     if (modelRef.current) {
@@ -12,7 +12,9 @@ function Model() {
     }
   });
   
-  return <primitive ref={modelRef} object={scene} scale={1.5} position={[0, 0, 0]} />;
+  if (!gltf || !gltf.scene) return null;
+  
+  return <primitive ref={modelRef} object={gltf.scene} scale={1.5} position={[0, 0, 0]} />;
 }
 
 export default function Luna3DBackground() {
