@@ -25,6 +25,8 @@ export default function Admin() {
   const [fetchingIGDB, setFetchingIGDB] = useState(false);
   const [showMissingImages, setShowMissingImages] = useState(false);
   const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
+  const [uploadingGLB, setUploadingGLB] = useState(false);
+  const [modelName, setModelName] = useState('');
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -76,6 +78,11 @@ export default function Admin() {
     queryFn: () => Game.list('-created_date'),
   });
 
+  const { data: models3D = [], isLoading: modelsLoading, refetch: refetchModels } = useQuery({
+    queryKey: ['models3D'],
+    queryFn: () => base44.entities.Model3D.list('-created_date'),
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.HeroBackground.create(data),
     onSuccess: () => {
@@ -105,6 +112,11 @@ export default function Admin() {
   const deleteGameMutation = useMutation({
     mutationFn: (id) => Game.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminGames'] }),
+  });
+
+  const deleteModelMutation = useMutation({
+    mutationFn: (id) => base44.entities.Model3D.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['models3D'] }),
   });
 
   const handleFileUpload = async (e) => {
@@ -876,6 +888,9 @@ export default function Admin() {
                     Upload and manage .GLB 3D model files
                   </p>
                 </div>
+                <Badge variant="outline" className="text-slate-400">
+                  {models3D.length} Models
+                </Badge>
               </div>
 
               {/* Upload GLB Section */}
@@ -883,51 +898,163 @@ export default function Admin() {
                 <h3 className="font-semibold mb-4">Upload GLB Model</h3>
                 <div className="flex flex-col gap-4">
                   <Input
-                    placeholder="Model Name (e.g., cp.google.com)"
+                    placeholder="Model Name (e.g., Character_Hero)"
+                    value={modelName}
+                    onChange={(e) => setModelName(e.target.value)}
                     className="bg-slate-900 border-slate-700"
-                    id="model-name"
                   />
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
                       accept=".glb,.gltf"
                       className="hidden"
-                      id="glb-upload"
+                      disabled={uploadingGLB}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         
-                        const modelName = document.getElementById('model-name').value || file.name;
+                        if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
+                          alert('Please upload a .glb or .gltf file');
+                          return;
+                        }
+
+                        if (!modelName.trim()) {
+                          alert('Please enter a model name');
+                          return;
+                        }
                         
+                        setUploadingGLB(true);
                         try {
                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                          alert(`Model "${modelName}" uploaded successfully!\nURL: ${file_url}`);
-                          document.getElementById('model-name').value = '';
+                          
+                          await base44.entities.Model3D.create({
+                            name: modelName,
+                            file_url: file_url,
+                            file_size: file.size,
+                            file_type: file.name.split('.').pop()
+                          });
+                          
+                          refetchModels();
+                          setModelName('');
                           e.target.value = '';
+                          alert(`Model "${modelName}" uploaded successfully!`);
                         } catch (error) {
                           console.error('Upload failed:', error);
                           alert('Upload failed. Please try again.');
+                        } finally {
+                          setUploadingGLB(false);
                         }
                       }}
                     />
-                    <Button className="bg-purple-600 hover:bg-purple-700 w-full" asChild>
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700 w-full" 
+                      disabled={uploadingGLB}
+                      asChild
+                    >
                       <span>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Select GLB File
+                        {uploadingGLB ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Select GLB File
+                          </>
+                        )}
                       </span>
                     </Button>
                   </label>
                 </div>
               </div>
 
+              {/* Models List */}
+              {modelsLoading ? (
+                <div className="text-center py-12 text-slate-500">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                  Loading models...
+                </div>
+              ) : models3D.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+                  <Upload className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>No 3D models uploaded yet</p>
+                  <p className="text-sm">Upload your first .glb file above</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {models3D.map((model) => (
+                      <motion.div
+                        key={model.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-purple-500/50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-white mb-1">{model.name}</h4>
+                            <div className="flex items-center gap-3 text-xs text-slate-400">
+                              <span className="uppercase">{model.file_type}</span>
+                              <span>•</span>
+                              <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                              <span>•</span>
+                              <span>{new Date(model.created_date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                              <code className="text-xs bg-slate-900 px-2 py-1 rounded text-purple-400 break-all flex-1">
+                                {model.file_url}
+                              </code>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(model.file_url);
+                                  alert('URL copied to clipboard!');
+                                }}
+                                className="flex-shrink-0"
+                              >
+                                Copy URL
+                              </Button>
+                            </div>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
+                            onClick={() => {
+                              if (confirm(`Delete "${model.name}"?`)) {
+                                deleteModelMutation.mutate(model.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
               {/* Info Panel */}
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-                <p className="text-blue-400 text-sm">
-                  <strong>Supported formats:</strong> .glb, .gltf
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mt-6">
+                <h4 className="text-blue-400 font-semibold mb-2 flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  Usage in Code
+                </h4>
+                <p className="text-blue-300/80 text-sm mb-3">
+                  Copy the URL and use it in your Three.js components:
                 </p>
-                <p className="text-blue-300/60 text-xs mt-2">
-                  Uploaded models will be stored in the cloud and can be used in your 3D scenes.
-                </p>
+                <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
+{`import { useGLTF } from '@react-three/drei'
+
+function Model() {
+  const { scene } = useGLTF('PASTE_URL_HERE')
+  return <primitive object={scene} />
+}`}
+                </code>
               </div>
             </section>
           </TabsContent>
