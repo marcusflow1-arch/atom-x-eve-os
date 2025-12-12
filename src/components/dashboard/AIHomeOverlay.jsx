@@ -2,15 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import ThreeModelViewer from './ThreeModelViewer';
 
 export default function AIHomeOverlay({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [iframeUrl, setIframeUrl] = useState(null);
+  const [olaModelUrl, setOlaModelUrl] = useState(null);
 
   useEffect(() => {
     loadTestBuild();
+    loadOlaModel();
   }, []);
+
+  const loadOlaModel = async () => {
+    try {
+      const models = await base44.entities.Model3D.filter({ name: 'OLA' });
+      if (models.length > 0) {
+        setOlaModelUrl(models[0].folder_url);
+      }
+    } catch (err) {
+      console.error('Failed to load OLA model:', err);
+    }
+  };
 
   const loadTestBuild = async () => {
     setLoading(true);
@@ -139,13 +153,22 @@ export default function AIHomeOverlay({ onClose }) {
       )}
       
       {iframeUrl && (
-        <iframe
-          src={iframeUrl}
-          className="w-full h-full border-none"
-          title="3D Web App"
-          allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; webgl"
-          style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
-        />
+        <>
+          <iframe
+            src={iframeUrl}
+            className="w-full h-full border-none"
+            title="3D Web App"
+            allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; webgl"
+            style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
+          />
+          
+          {/* Invisible box in center for OLA model */}
+          {olaModelUrl && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none z-[110]">
+              <ThreeModelViewer modelUrl={olaModelUrl} />
+            </div>
+          )}
+        </>
       )}
     </motion.div>
   );
