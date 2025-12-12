@@ -4,7 +4,8 @@ import {
   Search, ChevronRight, ChevronDown, Star, TrendingUp, Clock,
   Sparkles, DollarSign, Eye, Heart, ShoppingCart,
   Gamepad2, Package, Zap, Shield, X, Grid, List,
-  Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus
+  Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus,
+  ArrowUpDown, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
