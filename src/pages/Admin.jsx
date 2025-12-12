@@ -1425,10 +1425,55 @@ export default function Admin() {
 
 // Three.js Model Viewer Component
 function ModelViewer({ modelUrl }) {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [glbBlobUrl, setGlbBlobUrl] = React.useState(null);
   const canvasRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!canvasRef.current) return;
+    extractAndLoadModel();
+  }, [modelUrl]);
+
+  const extractAndLoadModel = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Import JSZip
+      const JSZip = (await import('jszip')).default;
+      
+      // Fetch and unzip
+      const response = await fetch(modelUrl);
+      const blob = await response.blob();
+      const zip = await JSZip.loadAsync(blob);
+      
+      // Find .glb file
+      let glbFile = null;
+      for (const [path, file] of Object.entries(zip.files)) {
+        if (path.toLowerCase().endsWith('.glb') && !file.dir) {
+          glbFile = file;
+          break;
+        }
+      }
+      
+      if (!glbFile) {
+        throw new Error('No .glb file found in ZIP');
+      }
+      
+      // Extract GLB
+      const glbBlob = await glbFile.async('blob');
+      const glbUrl = URL.createObjectURL(glbBlob);
+      setGlbBlobUrl(glbUrl);
+      
+    } catch (err) {
+      console.error('Failed to extract model:', err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!glbBlobUrl || !canvasRef.current) return;
 
     let scene, camera, renderer, model, controls;
 
@@ -1458,7 +1503,7 @@ function ModelViewer({ modelUrl }) {
 
       const loader = new GLTFLoader();
       try {
-        const gltf = await loader.loadAsync(modelUrl);
+        const gltf = await loader.loadAsync(glbBlobUrl);
         model = gltf.scene;
         
         const box = new THREE.Box3().setFromObject(model);
@@ -1471,8 +1516,11 @@ function ModelViewer({ modelUrl }) {
         model.position.sub(center.multiplyScalar(scale));
         
         scene.add(model);
+        setLoading(false);
       } catch (error) {
         console.error('Failed to load model:', error);
+        setError(error.message);
+        setLoading(false);
       }
 
       const animate = () => {
@@ -1497,7 +1545,32 @@ function ModelViewer({ modelUrl }) {
     };
 
     initScene();
-  }, [modelUrl]);
+  }, [glbBlobUrl]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Loading 3D model...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-red-500" />
+          </div>
+          <h4 className="text-white font-bold mb-2">Failed to Load Model</h4>
+          <p className="text-slate-400 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return <canvas ref={canvasRef} className="w-full h-full" />;
 }

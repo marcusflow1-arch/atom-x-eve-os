@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Folder, Loader2, X, Eye, Calendar } from 'lucide-react';
+import { Upload, Trash2, Play, Folder, Loader2, X, Eye, Calendar, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ export default function Admin3DApps() {
   const [uploading, setUploading] = useState(false);
   const [appName, setAppName] = useState('');
   const [selectedApp, setSelectedApp] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { data: webApps = [], isLoading } = useQuery({
     queryKey: ['webApps3D'],
@@ -25,10 +26,7 @@ export default function Admin3DApps() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['webApps3D'] }),
   });
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file) => {
     if (!file.name.endsWith('.zip')) {
       alert('Please upload a .zip file');
       return;
@@ -56,7 +54,6 @@ export default function Admin3DApps() {
       
       queryClient.invalidateQueries({ queryKey: ['webApps3D'] });
       setAppName('');
-      e.target.value = '';
       alert(`App "${appName}" uploaded successfully!`);
     } catch (error) {
       console.error('Upload failed:', error);
@@ -64,6 +61,33 @@ export default function Admin3DApps() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+    e.target.value = '';
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   if (user?.role !== 'admin') {
@@ -103,35 +127,52 @@ export default function Admin3DApps() {
               onChange={(e) => setAppName(e.target.value)}
               className="bg-slate-800 border-slate-700"
             />
-            <input
-              type="file"
-              accept=".zip,application/zip"
-              className="hidden"
-              id="webAppUpload"
-              disabled={uploading}
-              onChange={handleFileUpload}
-            />
-            <label htmlFor="webAppUpload" className="cursor-pointer">
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700 w-full" 
+            
+            {/* Drag & Drop Zone */}
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`
+                relative border-2 border-dashed rounded-xl p-8 transition-all
+                ${isDragging 
+                  ? 'border-blue-500 bg-blue-500/10' 
+                  : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                }
+                ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              `}
+              onClick={() => !uploading && document.getElementById('webAppUpload').click()}
+            >
+              <input
+                type="file"
+                accept=".zip,application/zip"
+                className="hidden"
+                id="webAppUpload"
                 disabled={uploading}
-                asChild
-              >
-                <span>
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Folder className="w-4 h-4 mr-2" />
-                      Select ZIP File (Max 500MB)
-                    </>
-                  )}
-                </span>
-              </Button>
-            </label>
+                onChange={handleFileUpload}
+              />
+              
+              <div className="text-center">
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+                    <p className="text-white font-semibold mb-1">Uploading...</p>
+                    <p className="text-slate-400 text-sm">Please wait</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                    <p className="text-white font-semibold mb-1">
+                      {isDragging ? 'Drop ZIP file here' : 'Drag & drop ZIP file here'}
+                    </p>
+                    <p className="text-slate-400 text-sm mb-3">or click to browse</p>
+                    <Badge variant="outline" className="text-slate-400">
+                      Max 500MB
+                    </Badge>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -328,9 +369,19 @@ function WebAppViewer({ app, onClose }) {
         className="fixed inset-4 md:inset-8 bg-slate-950 border border-slate-800 rounded-2xl z-[101] flex flex-col overflow-hidden"
       >
         <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-          <div>
-            <h3 className="text-white font-bold text-lg">{app.name}</h3>
-            <p className="text-slate-400 text-sm">3D Web App Viewer</p>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="text-slate-400 hover:text-white"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h3 className="text-white font-bold text-lg">{app.name}</h3>
+              <p className="text-slate-400 text-sm">3D Web App Viewer</p>
+            </div>
           </div>
           <Button
             onClick={onClose}
