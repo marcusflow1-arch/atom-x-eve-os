@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
 
@@ -52,12 +53,12 @@ function TransparentModel3DViewer({ modelUrl }) {
     let mixer = null;
     const clock = new THREE.Clock();
 
-    const loader = new GLTFLoader();
-    loader.load(
-      modelUrl,
-      (gltf) => {
-        const model = gltf.scene;
-        modelRef.current = model;
+    // Detect file type and use appropriate loader
+    const extension = modelUrl.split('.').pop().toLowerCase();
+    const isFBX = extension === 'fbx';
+
+    const processModel = (model, animations) => {
+      modelRef.current = model;
 
         model.traverse((node) => {
           if (node.isMesh || node.isSkinnedMesh) {
@@ -89,38 +90,100 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         });
 
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 2 / maxDim;
-        model.scale.multiplyScalar(scale);
-        model.position.sub(center.multiplyScalar(scale));
-        scene.add(model);
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2 / maxDim;
+      model.scale.multiplyScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      scene.add(model);
 
-        mixer = new THREE.AnimationMixer(model);
+      mixer = new THREE.AnimationMixer(model);
 
-        // Find and store animations
-        if (gltf.animations && gltf.animations.length > 0) {
-          gltf.animations.forEach((clip) => {
-            const action = mixer.clipAction(clip);
-            const name = clip.name.toLowerCase();
-            
-            if (name.includes('idle')) actionsRef.current.idle = action;
-            else if (name.includes('walk')) actionsRef.current.walk = action;
-            else if (name.includes('run')) actionsRef.current.run = action;
-            else if (name.includes('jump')) actionsRef.current.jump = action;
-            else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+      // Find and store animations
+      if (animations && animations.length > 0) {
+        animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          const name = clip.name.toLowerCase();
+          
+          if (name.includes('idle')) actionsRef.current.idle = action;
+          else if (name.includes('walk')) actionsRef.current.walk = action;
+          else if (name.includes('run')) actionsRef.current.run = action;
+          else if (name.includes('jump')) actionsRef.current.jump = action;
+          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+        });
+
+        // Default to idle or first animation
+        const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
+        idleAction.play();
+      }
+    };
+
+    if (isFBX) {
+      const loader = new FBXLoader();
+      loader.load(
+        modelUrl,
+        (fbx) => {
+          fbx.traverse((node) => {
+            if (node.isMesh || node.isSkinnedMesh) {
+              node.frustumCulled = false;
+              if (node.material) {
+                const applySide = (mat) => {
+                  mat.side = THREE.DoubleSide;
+                  mat.needsUpdate = true;
+                };
+                if (Array.isArray(node.material)) node.material.forEach(applySide);
+                else applySide(node.material);
+              }
+            }
           });
+          processModel(fbx, fbx.animations);
+        },
+        undefined,
+        (err) => console.error('Error loading FBX model:', err)
+      );
+    } else {
+      const loader = new GLTFLoader();
+      loader.load(
+        modelUrl,
+        (gltf) => {
+          const model = gltf.scene;
+          model.traverse((node) => {
+            if (node.isMesh || node.isSkinnedMesh) {
+              node.frustumCulled = false;
 
-          // Default to idle or first animation
-          const idleAction = actionsRef.current.idle || mixer.clipAction(gltf.animations[0]);
-          idleAction.play();
-        }
-      },
-      undefined,
-      (err) => console.error('Error loading model:', err)
-    );
+              if (node.geometry) {
+                try {
+                  node.geometry.computeBoundingBox();
+                  node.geometry.computeBoundingSphere();
+                } catch (e) {
+                  console.warn('Failed to compute bounds for', node.name, e);
+                }
+              }
+
+              if (node.material) {
+                const applySide = (mat) => {
+                  mat.side = THREE.DoubleSide;
+                  mat.needsUpdate = true;
+                };
+
+                if (Array.isArray(node.material)) node.material.forEach(applySide);
+                else applySide(node.material);
+              }
+
+              if (node.isSkinnedMesh) {
+                node.skeleton && node.skeleton.pose && node.skeleton.pose();
+                node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
+              }
+            }
+          });
+          processModel(model, gltf.animations);
+        },
+        undefined,
+        (err) => console.error('Error loading GLTF model:', err)
+      );
+    }
 
     // Keyboard Controls
     const handleKeyDown = (e) => {
