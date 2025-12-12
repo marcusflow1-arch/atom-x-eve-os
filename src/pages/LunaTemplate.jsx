@@ -32,7 +32,14 @@ function TransparentModel3DViewer({ modelUrl }) {
     const fetchAnimations = async () => {
       try {
         const anims = await base44.entities.AnimationFBX.list();
-        setAnimations(anims);
+        // Filter for specific animations we need
+        const mmaKick = anims.find(a => a.name.toLowerCase().includes('mma kick'));
+        const backflip = anims.find(a => a.name.toLowerCase().includes('backflip'));
+        const idle = anims.find(a => a.animation_type === 'idle');
+        const run = anims.find(a => a.animation_type === 'run');
+        const jump = anims.find(a => a.name.toLowerCase().includes('falling'));
+
+        setAnimations([idle, run, jump, mmaKick, backflip].filter(Boolean));
       } catch (error) {
         console.error('Failed to load animations:', error);
       }
@@ -140,12 +147,14 @@ function TransparentModel3DViewer({ modelUrl }) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
-          
+
           if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
           else if (name.includes('walk')) actionsRef.current.walk = action;
           else if (name.includes('run')) actionsRef.current.run = action;
           else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          else if (name.includes('mma kick')) actionsRef.current.mmaKick = action;
+          else if (name.includes('backflip')) actionsRef.current.backflip = action;
         });
 
         // Default to idle or first animation
@@ -187,15 +196,17 @@ function TransparentModel3DViewer({ modelUrl }) {
               (animFbx) => {
                 if (animFbx.animations && animFbx.animations.length > 0) {
                   animFbx.animations.forEach(clip => {
-                    // Rename clip based on animation type
+                    // Rename clip based on animation type or name
                     if (anim.animation_type === 'idle') clip.name = 'idle';
                     else if (anim.animation_type === 'run') clip.name = 'run';
                     else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                    else if (anim.name.toLowerCase().includes('mma kick')) clip.name = 'mma kick';
+                    else if (anim.name.toLowerCase().includes('backflip')) clip.name = 'backflip';
                     allClips.push(clip);
                   });
                 }
                 loadedCount++;
-                
+
                 // Process model after all animations loaded
                 if (loadedCount === animations.length) {
                   processModel(fbx, allClips);
@@ -259,13 +270,32 @@ function TransparentModel3DViewer({ modelUrl }) {
     // Keyboard Controls
     const handleKeyDown = (e) => {
       if (!controlsActive.current) return;
-      
+
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
       // Spacebar for jump
       if (key === ' ') {
         e.preventDefault();
+      }
+
+      // Skill animations on keys 1 and 2
+      if (key === '1' && actionsRef.current.mmaKick) {
+        // Play MMA Kick
+        Object.values(actionsRef.current).forEach(a => a.stop());
+        actionsRef.current.mmaKick.reset();
+        actionsRef.current.mmaKick.setLoop(THREE.LoopOnce);
+        actionsRef.current.mmaKick.clampWhenFinished = true;
+        actionsRef.current.mmaKick.play();
+      }
+
+      if (key === '2' && actionsRef.current.backflip) {
+        // Play Backflip to Uppercut
+        Object.values(actionsRef.current).forEach(a => a.stop());
+        actionsRef.current.backflip.reset();
+        actionsRef.current.backflip.setLoop(THREE.LoopOnce);
+        actionsRef.current.backflip.clampWhenFinished = true;
+        actionsRef.current.backflip.play();
       }
     };
 
