@@ -73,14 +73,28 @@ function TransparentModel3DViewer({ modelUrl }) {
     controls.dampingFactor = 0.05;
     controls.enabled = false;
 
-    // Click handler to activate controls
-    const handleCanvasClick = () => {
-      controlsActive.current = !controlsActive.current;
-      setIsActive(controlsActive.current);
-      if (controlsActive.current) {
-        renderer.domElement.style.cursor = 'none';
-      } else {
-        renderer.domElement.style.cursor = 'pointer';
+    // Raycaster for detecting clicks on model
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // Click handler to activate controls only when clicking model
+    const handleCanvasClick = (event) => {
+      if (!modelRef.current) return;
+
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(modelRef.current, true);
+
+      if (intersects.length > 0) {
+        controlsActive.current = !controlsActive.current;
+        setIsActive(controlsActive.current);
+        if (controlsActive.current) {
+          renderer.domElement.style.cursor = 'none';
+        } else {
+          renderer.domElement.style.cursor = 'pointer';
+        }
       }
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
@@ -398,7 +412,16 @@ function TransparentModel3DViewer({ modelUrl }) {
     };
   }, [modelUrl, animations]);
 
-  return <div ref={containerRef} className="fixed inset-0 pointer-events-none" />;
+  return (
+    <div className="fixed inset-0 pointer-events-none">
+      <div ref={containerRef} className="w-full h-full" />
+      {isActive && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-green-500/50 text-green-400 text-sm font-bold pointer-events-none z-50">
+          WASD to Move • SPACE to Jump • Click Model to Deactivate
+        </div>
+      )}
+    </div>
+  );
   }
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
