@@ -30,6 +30,7 @@ import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
+import ModelViewer3D from '../components/models/ModelViewer3D';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1011,6 +1012,37 @@ export default function LunaTemplate() {
                           </div>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Center - 3D Model Viewer Box */}
+                    <div className="flex-1 flex items-center justify-center px-12">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="w-[600px] h-[600px] rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden relative"
+                        style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+                      >
+                        {/* Title */}
+                        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+                          <h3 className="text-white/80 text-sm font-bold tracking-widest uppercase bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            Luna's 3D Scene
+                          </h3>
+                        </div>
+
+                        {/* 3D Model Viewer */}
+                        <ModelViewer3D 
+                          url="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3d8172a1e_scene.gltf"
+                          autoRotate={true}
+                          className="w-full h-full"
+                        />
+
+                        {/* Decorative Corner Elements */}
+                        <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-white/20 rounded-tl-3xl" />
+                        <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-white/20 rounded-tr-3xl" />
+                        <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-white/20 rounded-bl-3xl" />
+                        <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-white/20 rounded-br-3xl" />
+                      </motion.div>
                     </div>
 
                     {/* Right Side Stats Panel */}
