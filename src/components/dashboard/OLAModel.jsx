@@ -15,7 +15,7 @@ function Model() {
   const loadModel = async () => {
     try {
       // Fetch OLA model from database
-      const models = await base44.entities.Model3D.filter({ name: 'OLA' });
+      const models = await base44.entities.Model3D.filter({ name: 'ola' });
       
       if (models.length === 0) {
         setError('OLA model not found');
