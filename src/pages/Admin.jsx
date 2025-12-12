@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Tv, Folder, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,8 @@ export default function Admin() {
   const [modelName, setModelName] = useState('');
   const [uploadingLGApp, setUploadingLGApp] = useState(false);
   const [lgAppData, setLgAppData] = useState({ name: '', description: '', app_id: '' });
+  const [selectedLGApp, setSelectedLGApp] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -1027,6 +1029,15 @@ export default function Admin() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => setSelectedModel(model)}
+                                className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white"
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                Preview
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => {
                                   navigator.clipboard.writeText(model.file_url);
                                   alert('URL copied to clipboard!');
@@ -1120,15 +1131,15 @@ function Model() {
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
-                      accept=".zip,application/zip"
+                      accept=".zip,application/zip,.html,text/html"
                       className="hidden"
                       disabled={uploadingLGApp}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         
-                        if (!file.name.endsWith('.zip')) {
-                          alert('Please upload a .zip file containing your LG Web App');
+                        if (!file.name.endsWith('.zip') && !file.name.endsWith('.html')) {
+                          alert('Please upload a .zip file or .html file');
                           return;
                         }
 
@@ -1231,6 +1242,15 @@ function Model() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => setSelectedLGApp(app)}
+                                className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                Run App
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => window.open(app.app_folder_url, '_blank')}
                               >
                                 <ExternalLink className="w-3 h-3 mr-1" />
@@ -1273,30 +1293,190 @@ function Model() {
               <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 mt-6">
                 <h4 className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
                   <Terminal className="w-4 h-4" />
-                  LG WebOS App Structure
+                  Three.js / WebGL App Structure
                 </h4>
                 <p className="text-cyan-300/80 text-sm mb-3">
-                  Your .zip file should contain the following structure:
+                  Upload HTML files or .zip folders containing Three.js applications:
                 </p>
                 <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
-{`my-lg-app.zip
-├── index.html
-├── appinfo.json
-├── icon.png
+{`three-app.zip
+├── index.html (entry point)
 ├── js/
+│   ├── three.min.js
 │   └── main.js
-├── css/
-│   └── style.css
-└── assets/`}
+├── models/
+│   └── scene.glb
+└── textures/`}
                 </code>
                 <p className="text-cyan-300/80 text-xs mt-3">
-                  The appinfo.json file should contain your app metadata (id, version, title, etc.)
+                  Supports Three.js WebGL apps - uploaded apps can be run directly in the browser
                 </p>
               </div>
             </section>
           </TabsContent>
                     </Tabs>
       </div>
+
+      {/* LG App Runner Modal */}
+      <AnimatePresence>
+        {selectedLGApp && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
+              onClick={() => setSelectedLGApp(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-4 md:inset-8 bg-slate-900 border border-slate-700 rounded-2xl z-[101] flex flex-col overflow-hidden"
+            >
+              <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-bold text-lg">{selectedLGApp.name}</h3>
+                  <p className="text-slate-400 text-sm">{selectedLGApp.app_id}</p>
+                </div>
+                <Button
+                  onClick={() => setSelectedLGApp(null)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="flex-1 bg-black">
+                <iframe
+                  src={selectedLGApp.app_folder_url}
+                  className="w-full h-full"
+                  title={selectedLGApp.name}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* 3D Model Preview Modal */}
+      <AnimatePresence>
+        {selectedModel && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
+              onClick={() => setSelectedModel(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-4 md:inset-8 bg-slate-900 border border-slate-700 rounded-2xl z-[101] flex flex-col overflow-hidden"
+            >
+              <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-bold text-lg">{selectedModel.name}</h3>
+                  <p className="text-slate-400 text-sm">{selectedModel.file_type.toUpperCase()} Model Preview</p>
+                </div>
+                <Button
+                  onClick={() => setSelectedModel(null)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="flex-1 bg-gradient-to-br from-slate-900 to-black">
+                <ModelViewer modelUrl={selectedModel.file_url} />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
+}
+
+// Three.js Model Viewer Component
+function ModelViewer({ modelUrl }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!canvasRef.current) return;
+
+    let scene, camera, renderer, model, controls;
+
+    const initScene = async () => {
+      const THREE = await import('three');
+      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls');
+      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader');
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0f172a);
+
+      camera = new THREE.PerspectiveCamera(75, canvasRef.current.clientWidth / canvasRef.current.clientHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      const loader = new GLTFLoader();
+      try {
+        const gltf = await loader.loadAsync(modelUrl);
+        model = gltf.scene;
+        
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 3 / maxDim;
+        
+        model.scale.multiplyScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        
+        scene.add(model);
+      } catch (error) {
+        console.error('Failed to load model:', error);
+      }
+
+      const animate = () => {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      const handleResize = () => {
+        if (!canvasRef.current) return;
+        camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+      };
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        renderer.dispose();
+      };
+    };
+
+    initScene();
+  }, [modelUrl]);
+
+  return <canvas ref={canvasRef} className="w-full h-full" />;
 }
