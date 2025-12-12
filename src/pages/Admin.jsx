@@ -1117,16 +1117,15 @@ export default function Admin() {
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6 mt-6">
                 <h3 className="font-semibold mb-4">Upload LG Web App</h3>
                 <div className="space-y-4">
-                  <Textarea
-                    placeholder="App Name/Description (e.g., AI Assistant App)"
-                    value={lgAppData.description}
-                    onChange={(e) => setLgAppData({...lgAppData, description: e.target.value})}
+                  <Input
+                    placeholder="App Name (e.g., Three.js Game)"
+                    value={lgAppData.name}
+                    onChange={(e) => setLgAppData({...lgAppData, name: e.target.value})}
                     className="bg-slate-900 border-slate-700"
-                    rows={2}
                   />
                   <input
                     type="file"
-                    accept=".zip,application/zip,.html,text/html"
+                    accept=".zip,application/zip"
                     className="hidden"
                     id="lgAppUpload"
                     disabled={uploadingLGApp}
@@ -1134,13 +1133,13 @@ export default function Admin() {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       
-                      if (!file.name.endsWith('.zip') && !file.name.endsWith('.html')) {
-                        alert('Please upload a .zip file or .html file');
+                      if (!file.name.endsWith('.zip')) {
+                        alert('Please upload a .zip file');
                         return;
                       }
 
-                      if (!lgAppData.description.trim()) {
-                        alert('Please enter an app name/description');
+                      if (!lgAppData.name.trim()) {
+                        alert('Please enter an app name');
                         return;
                       }
                       
@@ -1150,15 +1149,15 @@ export default function Admin() {
                         const result = await base44.integrations.Core.UploadFile({ file });
                         console.log('Upload successful:', result);
                         
-                        // Auto-generate app ID from description
-                        const appId = 'com.atomeve.' + lgAppData.description
+                        // Auto-generate app ID from name
+                        const appId = 'com.atomeve.' + lgAppData.name
                           .toLowerCase()
                           .replace(/[^a-z0-9\s]/g, '')
                           .replace(/\s+/g, '.');
                         
                         await base44.entities.LGWebApp.create({
-                          name: lgAppData.description,
-                          description: lgAppData.description,
+                          name: lgAppData.name,
+                          description: lgAppData.name,
                           app_folder_url: result.file_url,
                           app_id: appId,
                           status: 'testing'
@@ -1167,7 +1166,7 @@ export default function Admin() {
                         refetchLGApps();
                         setLgAppData({ name: '', description: '', app_id: '' });
                         e.target.value = '';
-                        alert(`LG App "${lgAppData.description}" uploaded to Base44 successfully!`);
+                        alert(`LG App "${lgAppData.name}" uploaded successfully!`);
                       } catch (error) {
                         console.error('Upload failed:', error);
                         alert(`Upload failed: ${error.message}`);
