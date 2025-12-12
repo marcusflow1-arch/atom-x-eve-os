@@ -37,6 +37,7 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamWatch from './pages/StreamWatch';
 import SocialFeed from './pages/SocialFeed';
 import CrossGameFusion from './pages/CrossGameFusion';
+import Admin3DViewer from './pages/Admin3DViewer';
 import __Layout from './Layout.jsx';
 
 
@@ -80,6 +81,7 @@ export const PAGES = {
     "StreamWatch": StreamWatch,
     "SocialFeed": SocialFeed,
     "CrossGameFusion": CrossGameFusion,
+    "Admin3DViewer": Admin3DViewer,
 }
 
 export const pagesConfig = {
