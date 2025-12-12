@@ -1,6 +1,6 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Tv, Folder, ExternalLink } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -11,7 +11,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
-import AIWebApp from '../components/admin/AIWebApp';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -28,10 +27,6 @@ export default function Admin() {
   const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
   const [uploadingGLB, setUploadingGLB] = useState(false);
   const [modelName, setModelName] = useState('');
-  const [uploadingLGApp, setUploadingLGApp] = useState(false);
-  const [lgAppData, setLgAppData] = useState({ name: '', description: '', app_id: '' });
-  const [selectedLGApp, setSelectedLGApp] = useState(null);
-  const [selectedModel, setSelectedModel] = useState(null);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -88,11 +83,6 @@ export default function Admin() {
     queryFn: () => base44.entities.Model3D.list('-created_date'),
   });
 
-  const { data: lgWebApps = [], isLoading: lgAppsLoading, refetch: refetchLGApps } = useQuery({
-    queryKey: ['lgWebApps'],
-    queryFn: () => base44.entities.LGWebApp.list('-created_date'),
-  });
-
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.HeroBackground.create(data),
     onSuccess: () => {
@@ -127,16 +117,6 @@ export default function Admin() {
   const deleteModelMutation = useMutation({
     mutationFn: (id) => base44.entities.Model3D.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['models3D'] }),
-  });
-
-  const deleteLGAppMutation = useMutation({
-    mutationFn: (id) => base44.entities.LGWebApp.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lgWebApps'] }),
-  });
-
-  const updateLGAppMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.LGWebApp.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lgWebApps'] }),
   });
 
   const handleFileUpload = async (e) => {
@@ -450,8 +430,6 @@ export default function Admin() {
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
-            <TabsTrigger value="lgapps">LG Web Apps</TabsTrigger>
-            <TabsTrigger value="3dapps">3D Web Apps</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -917,7 +895,7 @@ export default function Admin() {
 
               {/* Upload GLB Section */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold mb-4">Upload 3D Model Folder</h3>
+                <h3 className="font-semibold mb-4">Upload GLB Model</h3>
                 <div className="flex flex-col gap-4">
                   <Input
                     placeholder="Model Name (e.g., Character_Hero)"
@@ -925,52 +903,49 @@ export default function Admin() {
                     onChange={(e) => setModelName(e.target.value)}
                     className="bg-slate-900 border-slate-700"
                   />
-                  <input
-                    type="file"
-                    accept=".zip,application/zip"
-                    className="hidden"
-                    id="modelUpload"
-                    disabled={uploadingGLB}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      
-                      if (!file.name.endsWith('.zip')) {
-                        alert('Please upload a .zip folder containing your GLB model and assets');
-                        return;
-                      }
+                  <label className="relative cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".glb,.gltf"
+                      className="hidden"
+                      disabled={uploadingGLB}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
+                          alert('Please upload a .glb or .gltf file');
+                          return;
+                        }
 
-                      if (!modelName.trim()) {
-                        alert('Please enter a model name');
-                        return;
-                      }
-                      
-                      setUploadingGLB(true);
-                      try {
-                        console.log('Uploading model to Base44:', file.name);
-                        const result = await base44.integrations.Core.UploadFile({ file });
-                        console.log('Upload successful:', result);
+                        if (!modelName.trim()) {
+                          alert('Please enter a model name');
+                          return;
+                        }
                         
-                        await base44.entities.Model3D.create({
-                          name: modelName,
-                          folder_url: result.file_url,
-                          file_size: file.size,
-                          main_file: 'model.glb'
-                        });
-                        
-                        refetchModels();
-                        setModelName('');
-                        e.target.value = '';
-                        alert(`Model folder "${modelName}" uploaded to Base44 successfully!`);
-                      } catch (error) {
-                        console.error('Upload failed:', error);
-                        alert(`Upload failed: ${error.message}`);
-                      } finally {
-                        setUploadingGLB(false);
-                      }
-                    }}
-                  />
-                  <label htmlFor="modelUpload" className="cursor-pointer">
+                        setUploadingGLB(true);
+                        try {
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          
+                          await base44.entities.Model3D.create({
+                            name: modelName,
+                            file_url: file_url,
+                            file_size: file.size,
+                            file_type: file.name.split('.').pop()
+                          });
+                          
+                          refetchModels();
+                          setModelName('');
+                          e.target.value = '';
+                          alert(`Model "${modelName}" uploaded successfully!`);
+                        } catch (error) {
+                          console.error('Upload failed:', error);
+                          alert('Upload failed. Please try again.');
+                        } finally {
+                          setUploadingGLB(false);
+                        }
+                      }}
+                    />
                     <Button 
                       className="bg-purple-600 hover:bg-purple-700 w-full" 
                       disabled={uploadingGLB}
@@ -984,8 +959,8 @@ export default function Admin() {
                           </>
                         ) : (
                           <>
-                            <Folder className="w-4 h-4 mr-2" />
-                            Select Model Folder (.zip)
+                            <Upload className="w-4 h-4 mr-2" />
+                            Select GLB File
                           </>
                         )}
                       </span>
@@ -1021,7 +996,7 @@ export default function Admin() {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-white mb-1">{model.name}</h4>
                             <div className="flex items-center gap-3 text-xs text-slate-400">
-                              <span className="uppercase">ZIP</span>
+                              <span className="uppercase">{model.file_type}</span>
                               <span>•</span>
                               <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
                               <span>•</span>
@@ -1029,22 +1004,13 @@ export default function Admin() {
                             </div>
                             <div className="mt-2 flex items-center gap-2">
                               <code className="text-xs bg-slate-900 px-2 py-1 rounded text-purple-400 break-all flex-1">
-                                {model.folder_url}
+                                {model.file_url}
                               </code>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => setSelectedModel(model)}
-                                className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white"
-                              >
-                                <Play className="w-3 h-3 mr-1" />
-                                Preview
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(model.folder_url);
+                                  navigator.clipboard.writeText(model.file_url);
                                   alert('URL copied to clipboard!');
                                 }}
                                 className="flex-shrink-0"
@@ -1076,501 +1042,24 @@ export default function Admin() {
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mt-6">
                 <h4 className="text-blue-400 font-semibold mb-2 flex items-center gap-2">
                   <Terminal className="w-4 h-4" />
-                  Model Folder Structure
+                  Usage in Code
                 </h4>
                 <p className="text-blue-300/80 text-sm mb-3">
-                  Your .zip should contain the GLB model and all assets:
+                  Copy the URL and use it in your Three.js components:
                 </p>
                 <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
-{`my-model.zip
-├── model.glb (main file)
-├── textures/
-│   ├── diffuse.png
-│   └── normal.png
-└── materials/`}
+{`import { useGLTF } from '@react-three/drei'
+
+function Model() {
+  const { scene } = useGLTF('PASTE_URL_HERE')
+  return <primitive object={scene} />
+}`}
                 </code>
               </div>
             </section>
           </TabsContent>
-
-          <TabsContent value="lgapps">
-            {/* LG Web Apps Section */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <Tv className="w-6 h-6 text-cyan-500" />
-                    LG Web Apps Manager
-                  </h2>
-                  <p className="text-slate-400 text-sm mt-1">
-                    Upload and host LG webOS applications
-                  </p>
-                </div>
-                <Badge variant="outline" className="text-slate-400">
-                  {lgWebApps.length} Apps
-                </Badge>
-              </div>
-
-              {/* AI App Generator */}
-              <AIWebApp />
-
-              {/* Upload LG App Section */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6 mt-6">
-                <h3 className="font-semibold mb-4">Upload LG Web App</h3>
-                <div className="space-y-4">
-                  <Input
-                    placeholder="App Name (e.g., Three.js Game)"
-                    value={lgAppData.name}
-                    onChange={(e) => setLgAppData({...lgAppData, name: e.target.value})}
-                    className="bg-slate-900 border-slate-700"
-                  />
-                  <input
-                    type="file"
-                    accept=".html,text/html"
-                    className="hidden"
-                    id="lgAppUpload"
-                    disabled={uploadingLGApp}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      
-                      if (!file.name.endsWith('.html')) {
-                        alert('Please upload an .html file');
-                        return;
-                      }
-
-                      if (!lgAppData.name.trim()) {
-                        alert('Please enter an app name');
-                        return;
-                      }
-                      
-                      setUploadingLGApp(true);
-                      try {
-                        console.log('Uploading file to Base44:', file.name);
-                        const result = await base44.integrations.Core.UploadFile({ file });
-                        console.log('Upload successful:', result);
-                        
-                        // Auto-generate app ID from name
-                        const appId = 'com.atomeve.' + lgAppData.name
-                          .toLowerCase()
-                          .replace(/[^a-z0-9\s]/g, '')
-                          .replace(/\s+/g, '.');
-                        
-                        await base44.entities.LGWebApp.create({
-                          name: lgAppData.name,
-                          description: lgAppData.name,
-                          app_folder_url: result.file_url,
-                          app_id: appId,
-                          status: 'testing'
-                        });
-                        
-                        refetchLGApps();
-                        setLgAppData({ name: '', description: '', app_id: '' });
-                        e.target.value = '';
-                        alert(`LG App "${lgAppData.name}" uploaded successfully!`);
-                      } catch (error) {
-                        console.error('Upload failed:', error);
-                        alert(`Upload failed: ${error.message}`);
-                      } finally {
-                        setUploadingLGApp(false);
-                      }
-                    }}
-                  />
-                  <label htmlFor="lgAppUpload" className="cursor-pointer">
-                    <Button 
-                      className="bg-cyan-600 hover:bg-cyan-700 w-full" 
-                      disabled={uploadingLGApp}
-                      asChild
-                    >
-                      <span>
-                        {uploadingLGApp ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload HTML File
-                          </>
-                        )}
-                      </span>
-                    </Button>
-                  </label>
-                </div>
-              </div>
-
-              {/* LG Apps List */}
-              {lgAppsLoading ? (
-                <div className="text-center py-12 text-slate-500">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                  Loading LG apps...
-                </div>
-              ) : lgWebApps.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-                  <Tv className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>No LG Web Apps uploaded yet</p>
-                  <p className="text-sm">Upload your first app folder above</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <AnimatePresence>
-                    {lgWebApps.map((app) => (
-                      <motion.div
-                        key={app.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-cyan-500/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-white">{app.name}</h4>
-                              <Badge className={
-                                app.status === 'active' ? 'bg-green-600' :
-                                app.status === 'testing' ? 'bg-yellow-600' :
-                                'bg-slate-600'
-                              }>
-                                {app.status}
-                              </Badge>
-                            </div>
-                            <p className="text-slate-400 text-sm mb-2">{app.description || 'No description'}</p>
-                            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
-                              <span>App ID: {app.app_id}</span>
-                              <span>•</span>
-                              <span>v{app.version || '1.0.0'}</span>
-                              <span>•</span>
-                              <span>{new Date(app.created_date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setSelectedLGApp(app)}
-                                className="bg-cyan-600 hover:bg-cyan-700 text-white"
-                              >
-                                <Play className="w-3 h-3 mr-1" />
-                                Run App
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => window.open(app.app_folder_url, '_blank')}
-                              >
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                Download
-                              </Button>
-                              <select
-                                value={app.status}
-                                onChange={(e) => updateLGAppMutation.mutate({
-                                  id: app.id,
-                                  data: { status: e.target.value }
-                                })}
-                                className="px-3 py-1 text-xs bg-slate-900 border border-slate-700 rounded text-white"
-                              >
-                                <option value="testing">Testing</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                              </select>
-                            </div>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
-                            onClick={() => {
-                              if (confirm(`Delete "${app.name}"?`)) {
-                                deleteLGAppMutation.mutate(app.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Info Panel */}
-              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 mt-6">
-                <h4 className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
-                  <Terminal className="w-4 h-4" />
-                  HTML Web App Format
-                </h4>
-                <p className="text-cyan-300/80 text-sm mb-3">
-                  Upload a single HTML file containing your Three.js / WebGL app:
-                </p>
-                <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
-{`<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-</head>
-<body>
-  <canvas id="canvas"></canvas>
-  <script>
-    // Your Three.js code here
-  </script>
-</body>
-</html>`}
-                </code>
-                <p className="text-cyan-300/80 text-xs mt-3">
-                  Use CDN links for libraries (Three.js, etc.) - uploaded apps run directly in browser
-                </p>
-              </div>
-            </section>
-          </TabsContent>
-
-          <TabsContent value="3dapps">
-            <div className="text-center py-12">
-              <p className="text-slate-400 mb-4">3D Web Apps management has been moved to its own dedicated page</p>
-              <Button
-                onClick={() => window.location.href = '/admin3dapps'}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Go to 3D Web Apps Manager
-              </Button>
-            </div>
-          </TabsContent>
-          </Tabs>
-          </div>
-
-      {/* LG App Runner Modal */}
-      <AnimatePresence>
-        {selectedLGApp && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-              onClick={() => setSelectedLGApp(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-8 bg-slate-900 border border-slate-700 rounded-2xl z-[101] flex flex-col overflow-hidden"
-            >
-              <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-bold text-lg">{selectedLGApp.name}</h3>
-                  <p className="text-slate-400 text-sm">{selectedLGApp.app_id}</p>
-                </div>
-                <Button
-                  onClick={() => setSelectedLGApp(null)}
-                  variant="ghost"
-                  size="icon"
-                  className="text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <div className="flex-1 bg-black">
-                <iframe
-                  src={selectedLGApp.app_folder_url}
-                  className="w-full h-full"
-                  title={selectedLGApp.name}
-                />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* 3D Model Preview Modal */}
-      <AnimatePresence>
-        {selectedModel && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-              onClick={() => setSelectedModel(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-8 bg-slate-900 border border-slate-700 rounded-2xl z-[101] flex flex-col overflow-hidden"
-            >
-              <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-bold text-lg">{selectedModel.name}</h3>
-                  <p className="text-slate-400 text-sm">3D Model Preview</p>
-                </div>
-                <Button
-                  onClick={() => setSelectedModel(null)}
-                  variant="ghost"
-                  size="icon"
-                  className="text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <div className="flex-1 bg-gradient-to-br from-slate-900 to-black">
-                <ModelViewer modelUrl={selectedModel.folder_url} />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                    </Tabs>
+      </div>
     </div>
   );
-}
-
-// Three.js Model Viewer Component
-function ModelViewer({ modelUrl }) {
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-  const [glbBlobUrl, setGlbBlobUrl] = React.useState(null);
-  const canvasRef = React.useRef(null);
-
-  React.useEffect(() => {
-    extractAndLoadModel();
-  }, [modelUrl]);
-
-  const extractAndLoadModel = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Import JSZip
-      const JSZip = (await import('jszip')).default;
-      
-      // Fetch and unzip
-      const response = await fetch(modelUrl);
-      const blob = await response.blob();
-      const zip = await JSZip.loadAsync(blob);
-      
-      // Find .glb file
-      let glbFile = null;
-      for (const [path, file] of Object.entries(zip.files)) {
-        if (path.toLowerCase().endsWith('.glb') && !file.dir) {
-          glbFile = file;
-          break;
-        }
-      }
-      
-      if (!glbFile) {
-        throw new Error('No .glb file found in ZIP');
-      }
-      
-      // Extract GLB
-      const glbBlob = await glbFile.async('blob');
-      const glbUrl = URL.createObjectURL(glbBlob);
-      setGlbBlobUrl(glbUrl);
-      
-    } catch (err) {
-      console.error('Failed to extract model:', err);
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    if (!glbBlobUrl || !canvasRef.current) return;
-
-    let scene, camera, renderer, model, controls;
-
-    const initScene = async () => {
-      const THREE = await import('three');
-      const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls');
-      const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader');
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0f172a);
-
-      camera = new THREE.PerspectiveCamera(75, canvasRef.current.clientWidth / canvasRef.current.clientHeight, 0.1, 1000);
-      camera.position.z = 5;
-
-      renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
-      renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-      directionalLight.position.set(5, 5, 5);
-      scene.add(directionalLight);
-
-      controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-
-      const loader = new GLTFLoader();
-      try {
-        const gltf = await loader.loadAsync(glbBlobUrl);
-        model = gltf.scene;
-        
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 3 / maxDim;
-        
-        model.scale.multiplyScalar(scale);
-        model.position.sub(center.multiplyScalar(scale));
-        
-        scene.add(model);
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to load model:', error);
-        setError(error.message);
-        setLoading(false);
-      }
-
-      const animate = () => {
-        requestAnimationFrame(animate);
-        controls.update();
-        renderer.render(scene, camera);
-      };
-      animate();
-
-      const handleResize = () => {
-        if (!canvasRef.current) return;
-        camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
-      };
-      window.addEventListener('resize', handleResize);
-
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        renderer.dispose();
-      };
-    };
-
-    initScene();
-  }, [glbBlobUrl]);
-
-  if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Loading 3D model...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <X className="w-8 h-8 text-red-500" />
-          </div>
-          <h4 className="text-white font-bold mb-2">Failed to Load Model</h4>
-          <p className="text-slate-400 text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <canvas ref={canvasRef} className="w-full h-full" />;
 }

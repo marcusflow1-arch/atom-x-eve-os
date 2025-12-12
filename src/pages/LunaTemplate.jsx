@@ -30,7 +30,6 @@ import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
-import SinesModel from '../components/dashboard/SinesModel';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -739,15 +738,6 @@ export default function LunaTemplate() {
                   className="w-1 h-32 rounded-full transition-all duration-500 hover:h-40 bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]"
                 />
               </div>
-
-              {/* 3D Model in Center - Temporarily Disabled Due to GLB Loading Error */}
-              {/* {uiVisible && !showInventory && !expandedGenre && (
-                <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-10">
-                  <div className="w-[600px] h-[600px] pointer-events-auto">
-                    <SinesModel />
-                  </div>
-                </div>
-              )} */}
 
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
