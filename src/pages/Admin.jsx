@@ -25,6 +25,8 @@ export default function Admin() {
   const [fetchingIGDB, setFetchingIGDB] = useState(false);
   const [showMissingImages, setShowMissingImages] = useState(false);
   const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
+  const [uploadingGLB, setUploadingGLB] = useState(false);
+  const [glbFile, setGlbFile] = useState(null);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -417,6 +419,7 @@ export default function Admin() {
           <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
+            <TabsTrigger value="3d-models">3D Models</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -860,6 +863,116 @@ export default function Admin() {
                     );
                     })()}
                     </section>
+                    </TabsContent>
+
+                    <TabsContent value="3d-models">
+                      {/* 3D Models Section */}
+                      <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                              <Upload className="w-6 h-6 text-purple-500" />
+                              3D Models (.glb)
+                            </h2>
+                            <p className="text-slate-400 text-sm mt-1">
+                              Upload and manage 3D model files for the platform
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Upload Section */}
+                        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+                          <h3 className="font-semibold mb-4">Upload .glb File</h3>
+                          <div className="flex flex-col gap-4">
+                            <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-purple-500/50 transition-colors">
+                              <label className="cursor-pointer block">
+                                <input
+                                  type="file"
+                                  accept=".glb"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    
+                                    if (!file.name.endsWith('.glb')) {
+                                      alert('Please upload a .glb file');
+                                      return;
+                                    }
+
+                                    setUploadingGLB(true);
+                                    try {
+                                      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                      alert(`Successfully uploaded!\n\nFile URL: ${file_url}\n\nYou can now use this URL in your 3D components.`);
+                                      setGlbFile(file_url);
+                                    } catch (error) {
+                                      console.error('Upload failed:', error);
+                                      alert('Upload failed. Please try again.');
+                                    } finally {
+                                      setUploadingGLB(false);
+                                    }
+                                  }}
+                                  className="hidden"
+                                  disabled={uploadingGLB}
+                                />
+                                {uploadingGLB ? (
+                                  <div className="flex flex-col items-center gap-3">
+                                    <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+                                    <p className="text-slate-300 font-medium">Uploading .glb file...</p>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center gap-3">
+                                    <Upload className="w-12 h-12 text-purple-500" />
+                                    <p className="text-slate-300 font-medium">Click to upload .glb file</p>
+                                    <p className="text-slate-500 text-sm">Supported format: .glb (Binary glTF)</p>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
+
+                            {glbFile && (
+                              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-green-400 font-semibold mb-2">Upload Successful!</p>
+                                    <p className="text-slate-300 text-sm mb-2">File URL:</p>
+                                    <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-green-400 break-all">
+                                      {glbFile}
+                                    </code>
+                                    <Button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(glbFile);
+                                        alert('URL copied to clipboard!');
+                                      }}
+                                      className="mt-3 bg-purple-600 hover:bg-purple-700"
+                                      size="sm"
+                                    >
+                                      Copy URL
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                              <h4 className="text-blue-400 font-semibold mb-2 flex items-center gap-2">
+                                <Terminal className="w-4 h-4" />
+                                Usage Instructions
+                              </h4>
+                              <p className="text-slate-300 text-sm mb-3">
+                                After uploading, use the file URL in your Three.js or React Three Fiber components:
+                              </p>
+                              <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
+{`import { useGLTF } from '@react-three/drei'
+
+function Model() {
+  const { scene } = useGLTF('YOUR_FILE_URL')
+  return <primitive object={scene} />
+}`}
+                              </code>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
                     </TabsContent>
                     </Tabs>
       </div>
