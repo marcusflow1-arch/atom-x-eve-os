@@ -30,6 +30,7 @@ import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
+import Luna3DBackground from '../components/dashboard/Luna3DBackground';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -321,6 +322,8 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
+        {/* 3D Model Background */}
+        <Luna3DBackground />
         {/* Circle Icon Button with Hover Dropdown */}
         <div className="fixed top-[4.75rem] left-4 z-40 group">
           <button
