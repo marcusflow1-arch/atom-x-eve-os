@@ -25,7 +25,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     scene.background = null; // Transparent background
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 2, 5);
+    camera.position.set(0, 1.5, 3);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
@@ -42,6 +42,10 @@ function TransparentModel3DViewer({ modelUrl }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.minDistance = 1;
+    controls.maxDistance = 10;
 
     let mixer = null;
     const clock = new THREE.Clock();
@@ -66,30 +70,70 @@ function TransparentModel3DViewer({ modelUrl }) {
       (gltf) => {
         const model = gltf.scene;
 
-        // Apply textures to materials
-        model.traverse((child) => {
-          if (child.isMesh && child.material) {
-            const materialName = child.material.name.toLowerCase();
+        // Traverse and apply fixes
+        model.traverse((node) => {
+          if (node.isMesh || node.isSkinnedMesh) {
+            // 1) Disable frustum culling for skinned/morph meshes (prevents wrong clipping)
+            node.frustumCulled = false;
 
-            if (materialName.includes('lian') || materialName.includes('body')) {
-              child.material.map = textures.lianBase;
-              child.material.normalMap = textures.lianNormal;
-            } else if (materialName.includes('qunzi') || materialName.includes('skirt')) {
-              child.material.map = textures.qunziBase;
-              child.material.normalMap = textures.qunziNormal;
-            } else if (materialName.includes('toufa') || materialName.includes('hair')) {
-              child.material.map = textures.touFaBase;
-              child.material.normalMap = textures.touFaNormal;
-            } else if (materialName.includes('weapon')) {
-              child.material.map = textures.weaponBase;
-              child.material.normalMap = textures.weaponNormal;
-            } else if (materialName.includes('head') || materialName.includes('face')) {
-              child.material.emissiveMap = textures.headEmissive;
-              child.material.emissive = new THREE.Color(0xffffff);
-              child.material.emissiveIntensity = 0.5;
+            // 2) Recompute geometry bounds (useful if export produced bad bounds)
+            if (node.geometry) {
+              try {
+                node.geometry.computeBoundingBox();
+                node.geometry.computeBoundingSphere();
+              } catch (e) {
+                console.warn('Failed to compute bounds for', node.name, e);
+              }
             }
 
-            child.material.needsUpdate = true;
+            // 3) Apply textures and ensure double sided for hair / thin planes
+            if (node.material) {
+              const applySide = (mat) => {
+                // Apply textures based on material name
+                const materialName = mat.name.toLowerCase();
+
+                if (materialName.includes('lian') || materialName.includes('body')) {
+                  mat.map = textures.lianBase;
+                  mat.normalMap = textures.lianNormal;
+                } else if (materialName.includes('qunzi') || materialName.includes('skirt')) {
+                  mat.map = textures.qunziBase;
+                  mat.normalMap = textures.qunziNormal;
+                } else if (materialName.includes('toufa') || materialName.includes('hair')) {
+                  mat.map = textures.touFaBase;
+                  mat.normalMap = textures.touFaNormal;
+                } else if (materialName.includes('weapon')) {
+                  mat.map = textures.weaponBase;
+                  mat.normalMap = textures.weaponNormal;
+                } else if (materialName.includes('head') || materialName.includes('face')) {
+                  mat.emissiveMap = textures.headEmissive;
+                  mat.emissive = new THREE.Color(0xffffff);
+                  mat.emissiveIntensity = 0.5;
+                }
+
+                // Set double side for all meshes (prevents disappearing faces)
+                mat.side = THREE.DoubleSide;
+                // If using alpha cutout, ensure alphaTest is set sensibly
+                if (mat.alphaTest === undefined && mat.map) mat.alphaTest = 0.5;
+                // Ensure texture encoding is correct
+                if (mat.map) mat.map.encoding = THREE.sRGBEncoding;
+
+                mat.needsUpdate = true;
+              };
+
+              if (Array.isArray(node.material)) node.material.forEach(applySide);
+              else applySide(node.material);
+            }
+
+            // 4) If skinned, make sure skeleton is up-to-date
+            if (node.isSkinnedMesh) {
+              node.skeleton && node.skeleton.pose && node.skeleton.pose();
+              node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
+            }
+          }
+
+          // Log missing textures (helps find 404s)
+          if (node.material && node.material.map && !node.material.map.image) {
+            console.warn('Potential missing texture for', node.name, node.material.map);
           }
         });
 
