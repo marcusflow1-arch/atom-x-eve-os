@@ -19,10 +19,20 @@ function Model({ url }) {
         try {
           // Traverse and fix materials
           gltf.scene.traverse((child) => {
-            if (child.isMesh && child.material) {
-              // Ensure material has proper properties
-              if (child.material.map && !child.material.map.source) {
-                child.material.map = null;
+            if (child.isMesh) {
+              if (child.material) {
+                // Handle array of materials
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                
+                materials.forEach((mat) => {
+                  // Remove all textures that might have undefined source
+                  const textureProps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap'];
+                  textureProps.forEach(prop => {
+                    if (mat[prop] && (!mat[prop].source || !mat[prop].image)) {
+                      mat[prop] = null;
+                    }
+                  });
+                });
               }
             }
           });
