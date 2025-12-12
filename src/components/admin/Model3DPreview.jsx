@@ -1,64 +1,50 @@
 import React, { Suspense, useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { Loader2, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 function Model({ url }) {
   const modelRef = useRef();
-  const [model, setModel] = useState(null);
+  const [scene, setScene] = useState(null);
   const [error, setError] = useState(false);
   
   React.useEffect(() => {
-    const loader = new GLTFLoader();
-    loader.load(
-      url,
-      (gltf) => {
-        try {
-          // Traverse and fix materials
-          gltf.scene.traverse((child) => {
-            if (child.isMesh) {
-              if (child.material) {
-                // Handle array of materials
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                
-                materials.forEach((mat) => {
-                  // Remove all textures that might have undefined source
-                  const textureProps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap'];
-                  textureProps.forEach(prop => {
-                    if (mat[prop] && (!mat[prop].source || !mat[prop].image)) {
-                      mat[prop] = null;
-                    }
-                  });
-                });
-              }
-            }
-          });
-          
-          // Center and scale the model
-          const box = new THREE.Box3().setFromObject(gltf.scene);
-          const center = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const scale = maxDim > 0 ? 2 / maxDim : 1;
-          
-          gltf.scene.scale.multiplyScalar(scale);
-          gltf.scene.position.sub(center.multiplyScalar(scale));
-          
-          setModel(gltf.scene);
-        } catch (err) {
-          console.error('Error processing model:', err);
-          setError(true);
-        }
-      },
-      undefined,
-      (err) => {
-        console.error('Error loading model:', err);
+    useGLTF.preload(url);
+    
+    useGLTF.load(url, (gltf) => {
+      try {
+        const clonedScene = gltf.scene.clone();
+        
+        // Replace materials with simple ones to avoid texture issues
+        clonedScene.traverse((child) => {
+          if (child.isMesh) {
+            const newMaterial = new THREE.MeshStandardMaterial({
+              color: child.material?.color || new THREE.Color(0x888888),
+              metalness: 0.3,
+              roughness: 0.7
+            });
+            child.material = newMaterial;
+          }
+        });
+        
+        // Center and scale
+        const box = new THREE.Box3().setFromObject(clonedScene);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = maxDim > 0 ? 2 / maxDim : 1;
+        
+        clonedScene.scale.multiplyScalar(scale);
+        clonedScene.position.sub(center.multiplyScalar(scale));
+        
+        setScene(clonedScene);
+      } catch (err) {
+        console.error('Error processing model:', err);
         setError(true);
       }
-    );
+    }, undefined, () => setError(true));
   }, [url]);
   
   useFrame(() => {
@@ -76,9 +62,9 @@ function Model({ url }) {
     );
   }
   
-  if (!model) return null;
+  if (!scene) return null;
   
-  return <primitive ref={modelRef} object={model} />;
+  return <primitive ref={modelRef} object={scene} />;
 }
 
 export default function Model3DPreview({ url, onClose }) {
