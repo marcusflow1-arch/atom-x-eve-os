@@ -374,8 +374,8 @@ export default function Admin() {
     if (!file) return;
 
     const fileType = file.name.split('.').pop().toLowerCase();
-    if (!['glb', 'gltf'].includes(fileType)) {
-      alert('Please upload a .glb or .gltf file');
+    if (!['glb', 'gltf', 'zip'].includes(fileType)) {
+      alert('Please upload a .glb, .gltf, or .zip file');
       return;
     }
 
@@ -388,11 +388,30 @@ export default function Admin() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
+      // Process ZIP if needed
+      let finalUrl = file_url;
+      let finalFileType = fileType;
+      
+      if (fileType === 'zip') {
+        const processResult = await base44.functions.invoke('processModelUpload', {
+          fileUrl: file_url,
+          fileName: file.name,
+          fileType: fileType
+        });
+        
+        if (!processResult.data.success) {
+          throw new Error(processResult.data.error || 'ZIP processing failed');
+        }
+        
+        finalUrl = processResult.data.modelUrl;
+        finalFileType = processResult.data.originalFileName.split('.').pop();
+      }
+      
       await base44.entities.Model3D.create({
         name: modelName,
-        file_url: file_url,
+        file_url: finalUrl,
         file_size: file.size,
-        file_type: fileType,
+        file_type: finalFileType,
         is_global: true
       });
       
@@ -961,7 +980,7 @@ export default function Admin() {
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
-                      accept=".glb,.gltf"
+                      accept=".glb,.gltf,.zip"
                       onChange={handleModelUpload}
                       disabled={uploadingGLB}
                       className="hidden"
@@ -989,7 +1008,7 @@ export default function Admin() {
                 </div>
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                   <p className="text-blue-300 text-sm">
-                    💡 Supported formats: .glb (binary), .gltf (JSON). Files stored with public URLs and correct MIME types.
+                    💡 Supported formats: .glb (binary), .gltf (JSON), .zip (auto-extracts models). Files stored with public URLs and correct MIME types.
                   </p>
                 </div>
               </div>
