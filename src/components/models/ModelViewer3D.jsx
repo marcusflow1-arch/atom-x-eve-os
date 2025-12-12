@@ -16,18 +16,24 @@ function Model({ url, autoRotate = true }) {
         clonedScene.traverse((child) => {
           if (child.isMesh && child.material) {
             const materials = Array.isArray(child.material) ? child.material : [child.material];
-            
+
             materials.forEach((mat) => {
-              // Safely remove all textures to prevent source errors
+              if (!mat) return;
+
+              // Safely dispose and remove all textures
               ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
                 try {
-                  if (mat[prop]) {
+                  if (mat[prop] && typeof mat[prop] === 'object') {
+                    if (mat[prop].dispose) mat[prop].dispose();
                     mat[prop] = null;
                   }
                 } catch (e) {
-                  // Ignore texture removal errors
+                  // Silently ignore texture errors
                 }
               });
+
+              // Ensure material updates
+              mat.needsUpdate = true;
             });
           }
         });
