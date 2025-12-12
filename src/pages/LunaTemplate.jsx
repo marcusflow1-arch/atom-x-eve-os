@@ -23,7 +23,9 @@ function TransparentModel3DViewer({ modelUrl }) {
   const keysPressed = useRef({});
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
+  const controlsActive = useRef(false);
   const [animations, setAnimations] = React.useState([]);
+  const [isActive, setIsActive] = React.useState(false);
 
   // Fetch animations for Y Bot
   useEffect(() => {
@@ -62,7 +64,20 @@ function TransparentModel3DViewer({ modelUrl }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enabled = false; // Disable orbit controls for WASD movement
+    controls.enabled = false;
+
+    // Click handler to activate controls
+    const handleCanvasClick = () => {
+      controlsActive.current = !controlsActive.current;
+      setIsActive(controlsActive.current);
+      if (controlsActive.current) {
+        renderer.domElement.style.cursor = 'none';
+      } else {
+        renderer.domElement.style.cursor = 'pointer';
+      }
+    };
+    renderer.domElement.addEventListener('click', handleCanvasClick);
+    renderer.domElement.style.cursor = 'pointer';
 
     let mixer = null;
     const clock = new THREE.Clock();
@@ -238,35 +253,51 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     // Keyboard Controls
     const handleKeyDown = (e) => {
+      if (!controlsActive.current) return;
+      
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
-      // Spacebar for sword swing
-      if (key === ' ' && actionsRef.current.swing && !actionsRef.current.swing.isRunning()) {
+      // Spacebar for jump
+      if (key === ' ') {
         e.preventDefault();
-        playAnimation('swing', false);
       }
     };
 
     const handleKeyUp = (e) => {
+      if (!controlsActive.current) return;
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
-    const playAnimation = (name, loop = true) => {
+    const setBaseAction = (name) => {
       const action = actionsRef.current[name];
       if (!action) return;
 
       // Stop all other animations
       Object.values(actionsRef.current).forEach(a => {
-        if (a !== action && a.isRunning()) {
+        if (a !== action) {
           a.fadeOut(0.2);
         }
       });
 
-      action.reset();
-      action.fadeIn(0.2);
-      action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce);
-      action.play();
+      if (!action.isRunning()) {
+        action.reset();
+        action.fadeIn(0.2);
+        action.setLoop(THREE.LoopRepeat);
+        action.play();
+      }
+    };
+
+    const mixAction = (name, fadeDuration, weight) => {
+      const action = actionsRef.current[name];
+      if (!action) return;
+
+      action.setEffectiveWeight(weight);
+      if (!action.isRunning()) {
+        action.reset();
+        action.fadeIn(fadeDuration);
+        action.play();
+      }
     };
 
     function animate() {
@@ -274,40 +305,27 @@ function TransparentModel3DViewer({ modelUrl }) {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
       
-      if (modelRef.current) {
-        const moveSpeed = keysPressed.current.shift ? 0.08 : 0.04; // Shift for running
-        let moving = false;
+      if (modelRef.current && controlsActive.current) {
+        const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
         // WASD movement
-        if (keysPressed.current.w) {
-          direction.z -= 1;
-          moving = true;
-        }
-        if (keysPressed.current.s) {
-          direction.z += 1;
-          moving = true;
-        }
-        if (keysPressed.current.a) {
-          direction.x -= 1;
-          moving = true;
-        }
-        if (keysPressed.current.d) {
-          direction.x += 1;
-          moving = true;
-        }
+        if (keysPressed.current.w) direction.z -= 1;
+        if (keysPressed.current.s) direction.z += 1;
+        if (keysPressed.current.a) direction.x -= 1;
+        if (keysPressed.current.d) direction.x += 1;
+
+        const dirLength = direction.length();
+        const grounded = !isJumpingRef.current && modelRef.current.position.y <= 0;
 
         // Jumping
-        if (keysPressed.current[' '] && !isJumpingRef.current) {
+        if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
           velocityRef.current.y = 0.15;
-          if (actionsRef.current.jump && !actionsRef.current.swing?.isRunning()) {
-            playAnimation('jump', false);
-          }
         }
 
         // Apply gravity
-        if (isJumpingRef.current) {
+        if (isJumpingRef.current || modelRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
           modelRef.current.position.y += velocityRef.current.y;
           
@@ -318,34 +336,43 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         }
 
-        // Move model
-        if (moving) {
-          direction.normalize();
-          modelRef.current.position.x += direction.x * moveSpeed;
-          modelRef.current.position.z += direction.z * moveSpeed;
+        // PlayerController Logic
+        if (grounded) {
+          // Idle is the grounded base animation
+          setBaseAction('idle');
 
-          // Rotate model to face movement direction
-          const angle = Math.atan2(direction.x, direction.z);
-          modelRef.current.rotation.y = angle;
+          if (dirLength > 0.01) {
+            direction.normalize();
+            const weight = Math.min(dirLength, 1);
+            
+            // Move model
+            modelRef.current.position.x += direction.x * moveSpeed;
+            modelRef.current.position.z += direction.z * moveSpeed;
 
-          // Play walk or run animation
-          if (!actionsRef.current.swing?.isRunning() && !isJumpingRef.current) {
-            const animName = keysPressed.current.shift ? 'run' : 'walk';
-            if (actionsRef.current[animName] && !actionsRef.current[animName].isRunning()) {
-              playAnimation(animName);
-            }
+            // Rotate model to face movement direction
+            const angle = Math.atan2(direction.x, direction.z);
+            modelRef.current.rotation.y = angle;
+
+            // Mix running animation
+            mixAction('run', 0.1, weight);
+          } else {
+            mixAction('idle', 0.1, 1);
           }
-        } else if (!isJumpingRef.current && !actionsRef.current.swing?.isRunning()) {
-          // Play idle if not moving and not in other animation
-          if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-            playAnimation('idle');
-          }
+        } else {
+          // Falling overrides everything when not grounded
+          setBaseAction('jump');
+          mixAction('jump', 0.1, 1);
         }
 
         // Keep camera following model
         camera.position.x = modelRef.current.position.x;
         camera.position.z = modelRef.current.position.z + 3;
         camera.lookAt(modelRef.current.position);
+      } else if (modelRef.current && !controlsActive.current) {
+        // When inactive, play idle animation
+        if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+          setBaseAction('idle');
+        }
       }
       
       renderer.render(scene, camera);
@@ -358,12 +385,27 @@ function TransparentModel3DViewer({ modelUrl }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      renderer.domElement.removeEventListener('click', handleCanvasClick);
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
   }, [modelUrl, animations]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return (
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="w-full h-full" />
+      {isActive && (
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-green-500/50 text-green-400 text-sm font-bold pointer-events-none">
+          CONTROLS ACTIVE • WASD to Move • SPACE to Jump • Click to Deactivate
+        </div>
+      )}
+      {!isActive && (
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/30 text-white/60 text-sm font-bold pointer-events-none">
+          Click Model to Activate Controls
+        </div>
+      )}
+    </div>
+  );
 }
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
