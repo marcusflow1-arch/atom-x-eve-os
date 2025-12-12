@@ -23,6 +23,20 @@ function TransparentModel3DViewer({ modelUrl }) {
   const keysPressed = useRef({});
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
+  const [animations, setAnimations] = React.useState([]);
+
+  // Fetch animations for Y Bot
+  useEffect(() => {
+    const fetchAnimations = async () => {
+      try {
+        const anims = await base44.entities.AnimationFBX.list();
+        setAnimations(anims);
+      } catch (error) {
+        console.error('Failed to load animations:', error);
+      }
+    };
+    fetchAnimations();
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
@@ -107,21 +121,25 @@ function TransparentModel3DViewer({ modelUrl }) {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
           
-          if (name.includes('idle')) actionsRef.current.idle = action;
+          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
           else if (name.includes('walk')) actionsRef.current.walk = action;
           else if (name.includes('run')) actionsRef.current.run = action;
-          else if (name.includes('jump')) actionsRef.current.jump = action;
+          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
         });
 
         // Default to idle or first animation
         const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
-        idleAction.play();
+        if (idleAction) {
+          idleAction.play();
+        }
       }
     };
 
     if (isFBX) {
       const loader = new FBXLoader();
+      
+      // Load main model
       loader.load(
         modelUrl,
         (fbx) => {
@@ -138,7 +156,40 @@ function TransparentModel3DViewer({ modelUrl }) {
               }
             }
           });
-          processModel(fbx, fbx.animations);
+
+          // Load external animations
+          const allClips = [...(fbx.animations || [])];
+          let loadedCount = 0;
+
+          animations.forEach((anim) => {
+            loader.load(
+              anim.file_url,
+              (animFbx) => {
+                if (animFbx.animations && animFbx.animations.length > 0) {
+                  animFbx.animations.forEach(clip => {
+                    // Rename clip based on animation type
+                    if (anim.animation_type === 'idle') clip.name = 'idle';
+                    else if (anim.animation_type === 'run') clip.name = 'run';
+                    else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                    allClips.push(clip);
+                  });
+                }
+                loadedCount++;
+                
+                // Process model after all animations loaded
+                if (loadedCount === animations.length) {
+                  processModel(fbx, allClips);
+                }
+              },
+              undefined,
+              (err) => console.error(`Error loading animation ${anim.name}:`, err)
+            );
+          });
+
+          // If no external animations, process immediately
+          if (animations.length === 0) {
+            processModel(fbx, allClips);
+          }
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
@@ -310,7 +361,7 @@ function TransparentModel3DViewer({ modelUrl }) {
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelUrl]);
+  }, [modelUrl, animations]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
@@ -594,11 +645,12 @@ export default function LunaTemplate() {
   const [modelUrl, setModelUrl] = useState(null);
   const { mode } = useDashboardMode();
 
-  // Fetch 3D Model
+  // Fetch 3D Model and Animations
   useEffect(() => {
-    const fetchModel = async () => {
+    const fetchModelAndAnimations = async () => {
       try {
-        const models = await base44.entities.Model3D.filter({ name: 'ws' });
+        // Fetch Y Bot FBX Model
+        const models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
         if (models.length > 0) {
           setModelUrl(models[0].file_url);
         }
@@ -606,7 +658,7 @@ export default function LunaTemplate() {
         console.error('Failed to load 3D model:', error);
       }
     };
-    fetchModel();
+    fetchModelAndAnimations();
   }, []);
 
   const itemCount = ORBITAL_ITEMS.length;
