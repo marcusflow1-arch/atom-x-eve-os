@@ -12,6 +12,10 @@ import { createPageUrl } from '@/utils';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { base44 } from '@/api/base44Client';
 
 // Transparent 3D Model Viewer
@@ -30,14 +34,29 @@ function TransparentModel3DViewer({ modelUrl }) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0); // Transparent clear color
+
+    // Sketchfab-quality rendering settings
+    renderer.physicallyCorrectLights = true;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
     containerRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
     scene.add(directionalLight);
+
+    // Rim light for Sketchfab-style edge lighting
+    const rimLight = new THREE.DirectionalLight(0xffffff, 3);
+    rimLight.position.set(0, 1, -1);
+    scene.add(rimLight);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -49,6 +68,35 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     let mixer = null;
     const clock = new THREE.Clock();
+
+    // Setup post-processing with bloom
+    const composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(containerRef.current.clientWidth, containerRef.current.clientHeight),
+      0.8, // strength
+      0.4, // radius
+      0.85 // threshold
+    );
+    composer.addPass(bloomPass);
+
+    // Load HDRI environment map
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+
+    new RGBELoader().load(
+      'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr',
+      (texture) => {
+        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+        scene.environment = envMap;
+        texture.dispose();
+        pmremGenerator.dispose();
+      },
+      undefined,
+      (err) => console.warn('HDRI loading failed, using default lighting:', err)
+    );
 
     const loader = new GLTFLoader();
     loader.load(
@@ -72,16 +120,25 @@ function TransparentModel3DViewer({ modelUrl }) {
               }
             }
 
-            // 3) Ensure double sided for hair / thin planes
+            // 3) Enhance materials for Sketchfab-quality rendering
             if (node.material) {
-              const applySide = (mat) => {
+              const enhanceMaterial = (mat) => {
                 // Set double side for all meshes (prevents disappearing faces)
                 mat.side = THREE.DoubleSide;
+
+                // Apply environment map intensity for reflections
+                mat.envMapIntensity = 1.5;
+
+                // Enhance emissive materials
+                if (mat.emissive && mat.emissive.r + mat.emissive.g + mat.emissive.b > 0) {
+                  mat.emissiveIntensity = 1.2;
+                }
+
                 mat.needsUpdate = true;
               };
 
-              if (Array.isArray(node.material)) node.material.forEach(applySide);
-              else applySide(node.material);
+              if (Array.isArray(node.material)) node.material.forEach(enhanceMaterial);
+              else enhanceMaterial(node.material);
             }
 
             // 4) If skinned, make sure skeleton is up-to-date
@@ -119,9 +176,9 @@ function TransparentModel3DViewer({ modelUrl }) {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      
+
       controls.update();
-      renderer.render(scene, camera);
+      composer.render();
     }
     animate();
 
