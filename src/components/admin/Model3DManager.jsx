@@ -7,32 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
-import { Suspense } from 'react';
-
-// 3D Model Viewer Component
-function Model3DViewer({ url }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={1} />;
-}
-
-function ModelPreview({ modelUrl }) {
-  return (
-    <div className="w-full h-64 bg-slate-900 rounded-lg overflow-hidden">
-      <Canvas camera={{ position: [0, 2, 5], fov: 50 }}>
-        <Suspense fallback={null}>
-          <ambientLight intensity={0.5} />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-          <pointLight position={[-10, -10, -10]} />
-          <Model3DViewer url={modelUrl} />
-          <OrbitControls enablePan enableZoom enableRotate />
-          <Environment preset="studio" />
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-}
 
 export default function Model3DManager() {
   const queryClient = useQueryClient();
@@ -306,12 +280,13 @@ export default function Model3DManager() {
                   </div>
                 </div>
 
-                {/* 3D Preview (if GLB/GLTF) */}
-                {(selectedModel.file_type === 'glb' || selectedModel.file_type === 'gltf') && (
-                  <div className="mb-6">
-                    <ModelPreview modelUrl={selectedModel.file_url} />
+                {/* 3D Preview Placeholder */}
+                <div className="mb-6 aspect-video bg-gradient-to-br from-purple-900/20 to-slate-900 rounded-lg flex items-center justify-center border border-slate-700">
+                  <div className="text-center">
+                    <Box className="w-16 h-16 text-purple-500/50 mx-auto mb-2" />
+                    <p className="text-slate-400 text-sm">3D Preview (Coming Soon)</p>
                   </div>
-                )}
+                </div>
 
                 {/* Model Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
