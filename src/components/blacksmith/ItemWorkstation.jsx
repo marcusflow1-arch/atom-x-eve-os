@@ -34,8 +34,19 @@ export default function ItemWorkstation({ item, onClose }) {
   if (!item) return null;
 
   // Combine state (two slots for same-game cards)
-  const [combineSlot1, setCombineSlot1] = useState(null);
-  const [combineSlot2, setCombineSlot2] = useState(null);
+  const [combineSlot, setCombineSlot] = useState(null);
+  const [combineQuantity, setCombineQuantity] = useState(1);
+  const [inventoryCards, setInventoryCards] = useState(() => 
+    Array.from({ length: 18 }, (_, i) => ({
+      id: `duplicate-${i}`,
+      name: item?.name,
+      rarity: item?.rarity,
+      type: item?.type,
+      image: item?.preview_image_url,
+      level: item?.level_requirement,
+      combineStage: 1
+    }))
+  );
 
   // Mock "Inventory Items" for the game
   const inventoryItems = useMemo(() => {
@@ -555,28 +566,40 @@ export default function ItemWorkstation({ item, onClose }) {
              <motion.div key="combine" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
                <div className="mb-6">
                   <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Combine Station</h2>
-                  <p className="text-white/50">Select two cards from your inventory to combine (Max: CS 12)</p>
+                  <p className="text-white/50">Select cards to combine. Each card increases CS by the selected quantity (Max: CS 12)</p>
                </div>
 
-               {/* Three-Box Layout */}
+               {/* Two-Box Layout */}
                <div className="flex-1 flex gap-6 overflow-hidden">
-                  {/* Left: Inventory Grid (12 cards with scroll) */}
+                  {/* Left: Inventory Grid */}
                   <div className="flex-1 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-4">
-                     <div className="text-xs font-bold text-blue-300 text-center mb-3 uppercase tracking-wider">Your Cards</div>
+                     <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs font-bold text-blue-300 uppercase tracking-wider">Your Cards</div>
+                        <div className="flex items-center gap-2">
+                           <button
+                              onClick={() => setCombineQuantity(prev => Math.max(1, prev - 1))}
+                              className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-sm font-bold transition-all"
+                           >
+                              −
+                           </button>
+                           <div className="text-lg font-black text-white w-8 text-center">{combineQuantity}</div>
+                           <button
+                              onClick={() => setCombineQuantity(prev => Math.min(12, prev + 1))}
+                              className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-sm font-bold transition-all"
+                           >
+                              +
+                           </button>
+                        </div>
+                     </div>
+
                      <div className="flex-1 overflow-y-auto custom-scrollbar">
                         <div className="grid grid-cols-3 gap-3">
-                           {inventoryItems.slice(0, 12).map((card, idx) => (
+                           {inventoryCards.map((card, idx) => (
                               <motion.div
                                  key={card.id}
                                  draggable
                                  onDragStart={(e) => e.dataTransfer.setData('card', JSON.stringify(card))}
-                                 onClick={() => {
-                                   if (!combineSlot1) {
-                                     setCombineSlot1(card);
-                                   } else if (!combineSlot2) {
-                                     setCombineSlot2(card);
-                                   }
-                                 }}
+                                 onClick={() => setCombineSlot(card)}
                                  whileHover={{ scale: 1.05 }}
                                  className="aspect-[3/4] rounded-lg border border-white/20 bg-slate-800 overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all relative group"
                               >
@@ -584,85 +607,63 @@ export default function ItemWorkstation({ item, onClose }) {
                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                                  <div className="absolute bottom-1 left-1 right-1">
                                     <div className="text-white text-[9px] font-bold truncate">{card.name}</div>
-                                    <div className="text-blue-300 text-[8px]">CS{card.combineStage} • Lv.{card.level}</div>
+                                    <div className="text-blue-300 text-[8px]">Duplicate</div>
                                  </div>
                               </motion.div>
                            ))}
                         </div>
                      </div>
+
+                     <div className="text-[10px] text-white/40 text-center mt-2">
+                        {inventoryCards.length} cards available • Qty: {combineQuantity}
+                     </div>
                   </div>
 
-                  {/* Right: Combine Slots (2 vertical slots) */}
-                  <div className="w-64 flex flex-col gap-4 bg-white/5 rounded-2xl border border-white/10 p-4">
-                     <div className="text-xs font-bold text-blue-300 text-center mb-2 uppercase tracking-wider">Combine Slots</div>
+                  {/* Right: Single Combine Slot */}
+                  <div className="w-64 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-4">
+                     <div className="text-xs font-bold text-blue-300 text-center mb-3 uppercase tracking-wider">Combine Slot</div>
 
-                     {/* Slot 1 */}
                      <div
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                            e.preventDefault();
                            const card = JSON.parse(e.dataTransfer.getData('card'));
-                           setCombineSlot1(card);
+                           setCombineSlot(card);
                         }}
                         className={`flex-1 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
-                           combineSlot1 ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
+                           combineSlot ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
                         }`}
                      >
-                        {combineSlot1 ? (
+                        {combineSlot ? (
                            <>
-                              <img src={combineSlot1.image} alt={combineSlot1.name} className="w-20 h-28 object-cover rounded-lg mb-2" />
-                              <span className="font-bold text-white text-[10px] text-center px-1 truncate w-full">{combineSlot1.name}</span>
-                              <span className="text-[8px] text-blue-300">CS{combineSlot1.combineStage}</span>
-                              <button onClick={() => setCombineSlot1(null)} className="mt-1 text-[9px] text-red-400 hover:text-red-300">
-                                 ✕
+                              <img src={combineSlot.image} alt={combineSlot.name} className="w-28 h-36 object-cover rounded-lg mb-3 shadow-lg" />
+                              <span className="font-bold text-white text-sm text-center px-2">{combineSlot.name}</span>
+                              <span className="text-[10px] text-blue-300 mt-1">Selected</span>
+                              <button onClick={() => setCombineSlot(null)} className="mt-2 text-[10px] text-red-400 hover:text-red-300 underline">
+                                 Remove
                               </button>
                            </>
                         ) : (
                            <>
-                              <Layers className="w-8 h-8 text-white/30 mb-1" />
-                              <span className="text-white/40 text-[10px]">Slot 1</span>
-                           </>
-                        )}
-                     </div>
-
-                     {/* Arrow Indicator */}
-                     <div className="flex justify-center">
-                        <ArrowRight className="w-5 h-5 text-white/40 rotate-90" />
-                     </div>
-
-                     {/* Slot 2 */}
-                     <div
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                           e.preventDefault();
-                           const card = JSON.parse(e.dataTransfer.getData('card'));
-                           setCombineSlot2(card);
-                        }}
-                        className={`flex-1 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
-                           combineSlot2 ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
-                        }`}
-                     >
-                        {combineSlot2 ? (
-                           <>
-                              <img src={combineSlot2.image} alt={combineSlot2.name} className="w-20 h-28 object-cover rounded-lg mb-2" />
-                              <span className="font-bold text-white text-[10px] text-center px-1 truncate w-full">{combineSlot2.name}</span>
-                              <span className="text-[8px] text-blue-300">CS{combineSlot2.combineStage}</span>
-                              <button onClick={() => setCombineSlot2(null)} className="mt-1 text-[9px] text-red-400 hover:text-red-300">
-                                 ✕
-                              </button>
-                           </>
-                        ) : (
-                           <>
-                              <Layers className="w-8 h-8 text-white/30 mb-1" />
-                              <span className="text-white/40 text-[10px]">Slot 2</span>
+                              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                                 <Layers className="w-10 h-10 text-white/40" />
+                              </div>
+                              <span className="text-white/40 text-sm">Click or Drag Card</span>
                            </>
                         )}
                      </div>
 
                      {/* Result Preview */}
-                     <div className="text-center mt-2 pt-3 border-t border-white/10">
-                        <div className="text-[10px] text-white/40 mb-2">Result</div>
-                        <div className="text-2xl font-black text-blue-400">CS {Math.min(combineStage + 1, 12)}</div>
+                     <div className="text-center mt-4 pt-4 border-t border-white/10">
+                        <div className="text-[10px] text-white/40 mb-2">Result After Combine</div>
+                        <div className="flex items-center justify-center gap-2">
+                           <div className="text-xl font-black text-white">CS {combineStage}</div>
+                           <ArrowRight className="w-4 h-4 text-white/40" />
+                           <div className="text-xl font-black text-blue-400">CS {Math.min(combineStage + combineQuantity, 12)}</div>
+                        </div>
+                        <div className="text-[9px] text-white/30 mt-1">
+                           +{combineQuantity} stage{combineQuantity > 1 ? 's' : ''}
+                        </div>
                      </div>
                   </div>
                </div>
@@ -671,24 +672,32 @@ export default function ItemWorkstation({ item, onClose }) {
                <div className="mt-6">
                   <Button 
                      onClick={() => {
-                       if (!combineSlot1 || !combineSlot2) {
-                         alert('Select two cards to combine!');
+                       if (!combineSlot) {
+                         alert('Select a card to combine!');
                          return;
                        }
-                       if (combineStage >= 12) {
-                         alert('Max combine stage reached!');
+                       if (inventoryCards.length < combineQuantity) {
+                         alert(`Not enough cards! You need ${combineQuantity} but only have ${inventoryCards.length}`);
                          return;
                        }
-                       setCombineStage(prev => Math.min(prev + 1, 12));
-                       setCombineSlot1(null);
-                       setCombineSlot2(null);
-                       alert('Successfully combined 2 cards!');
+                       if (combineStage + combineQuantity > 12) {
+                         alert('This would exceed max CS 12!');
+                         return;
+                       }
+
+                       // Remove cards from inventory
+                       setInventoryCards(prev => prev.slice(combineQuantity));
+
+                       // Increase CS
+                       setCombineStage(prev => Math.min(prev + combineQuantity, 12));
+                       setCombineSlot(null);
+                       alert(`Successfully combined ${combineQuantity} card${combineQuantity > 1 ? 's' : ''}! +${combineQuantity} CS`);
                      }} 
-                     disabled={!combineSlot1 || !combineSlot2 || combineStage >= 12} 
+                     disabled={!combineSlot || inventoryCards.length < combineQuantity || combineStage >= 12} 
                      className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-lg font-bold"
                   >
                      <ArrowLeftRight className="w-5 h-5 mr-2" />
-                     Combine Cards
+                     Combine {combineQuantity}x Card{combineQuantity > 1 ? 's' : ''}
                   </Button>
                   {combineStage >= 12 && (
                      <div className="text-center text-yellow-400 text-xs font-bold mt-3">⚡ MAX CS REACHED ⚡</div>
