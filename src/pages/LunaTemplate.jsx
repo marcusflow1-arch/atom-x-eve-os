@@ -47,7 +47,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.5, 3);
+    camera.position.set(0, 1.5, 5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
