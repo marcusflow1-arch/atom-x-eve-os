@@ -417,6 +417,7 @@ export default function Admin() {
           <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
+            <TabsTrigger value="models">3D Models</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -861,6 +862,75 @@ export default function Admin() {
                     })()}
                     </section>
                     </TabsContent>
+
+          <TabsContent value="models">
+            {/* 3D Models Section */}
+            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Upload className="w-6 h-6 text-purple-500" />
+                    3D Model Manager
+                  </h2>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Upload and manage .GLB 3D model files
+                  </p>
+                </div>
+              </div>
+
+              {/* Upload GLB Section */}
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
+                <h3 className="font-semibold mb-4">Upload GLB Model</h3>
+                <div className="flex flex-col gap-4">
+                  <Input
+                    placeholder="Model Name (e.g., cp.google.com)"
+                    className="bg-slate-900 border-slate-700"
+                    id="model-name"
+                  />
+                  <label className="relative cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".glb,.gltf"
+                      className="hidden"
+                      id="glb-upload"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        const modelName = document.getElementById('model-name').value || file.name;
+                        
+                        try {
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          alert(`Model "${modelName}" uploaded successfully!\nURL: ${file_url}`);
+                          document.getElementById('model-name').value = '';
+                          e.target.value = '';
+                        } catch (error) {
+                          console.error('Upload failed:', error);
+                          alert('Upload failed. Please try again.');
+                        }
+                      }}
+                    />
+                    <Button className="bg-purple-600 hover:bg-purple-700 w-full" asChild>
+                      <span>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Select GLB File
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+              </div>
+
+              {/* Info Panel */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <p className="text-blue-400 text-sm">
+                  <strong>Supported formats:</strong> .glb, .gltf
+                </p>
+                <p className="text-blue-300/60 text-xs mt-2">
+                  Uploaded models will be stored in the cloud and can be used in your 3D scenes.
+                </p>
+              </div>
+            </section>
+          </TabsContent>
                     </Tabs>
       </div>
     </div>
