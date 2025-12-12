@@ -9,45 +9,48 @@ function Model({ url, autoRotate = true }) {
   const [scene, setScene] = React.useState(null);
   
   React.useEffect(() => {
-    const loader = useGLTF.load(url, (gltf) => {
+    let mounted = true;
+
+    const loadModel = async () => {
       try {
+        const gltf = await new Promise((resolve, reject) => {
+          useGLTF.load(url, resolve, undefined, reject);
+        });
+
+        if (!mounted) return;
+
         const clonedScene = gltf.scene.clone();
 
+        // Strip all textures and replace with simple materials
         clonedScene.traverse((child) => {
           if (child.isMesh) {
-            // Completely replace material to avoid texture issues
             try {
-              const oldMaterial = child.material;
-              const color = oldMaterial?.color || new THREE.Color(0x888888);
+              const oldColor = child.material?.color?.clone() || new THREE.Color(0x888888);
 
-              // Dispose old materials and textures
-              if (oldMaterial) {
-                const materials = Array.isArray(oldMaterial) ? oldMaterial : [oldMaterial];
-                materials.forEach(mat => {
-                  if (mat) {
-                    ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
-                      try {
-                        if (mat[prop]?.dispose) mat[prop].dispose();
-                      } catch (e) {}
-                    });
-                    if (mat.dispose) mat.dispose();
+              // Dispose old material completely
+              if (child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach(m => {
+                  if (m?.dispose) {
+                    try { m.dispose(); } catch (e) {}
                   }
                 });
               }
 
-              // Create clean material without textures
+              // Create fresh material with no texture references
               child.material = new THREE.MeshStandardMaterial({
-                color: color,
+                color: oldColor,
                 metalness: 0.3,
-                roughness: 0.7,
-                flatShading: false
+                roughness: 0.7
               });
             } catch (e) {
-              console.warn('Material replacement error:', e);
+              // Fallback to gray material
+              child.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
             }
           }
         });
 
+        // Center and scale
         const box = new THREE.Box3().setFromObject(clonedScene);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -57,22 +60,27 @@ function Model({ url, autoRotate = true }) {
         clonedScene.scale.multiplyScalar(scale);
         clonedScene.position.sub(center.multiplyScalar(scale));
 
-        setScene(clonedScene);
+        if (mounted) {
+          setScene(clonedScene);
+        }
       } catch (err) {
-        console.error('Error loading model:', err);
+        console.error('Model load error:', err);
       }
-    }, undefined, (error) => {
-      console.error('GLTF loading error:', error);
-    });
+    };
+
+    loadModel();
 
     return () => {
+      mounted = false;
       if (scene) {
         scene.traverse((child) => {
-          if (child.geometry) child.geometry.dispose();
+          if (child.geometry?.dispose) child.geometry.dispose();
           if (child.material) {
-            const materials = Array.isArray(child.material) ? child.material : [child.material];
-            materials.forEach(mat => {
-              if (mat?.dispose) mat.dispose();
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(m => {
+              if (m?.dispose) {
+                try { m.dispose(); } catch (e) {}
+              }
             });
           }
         });
