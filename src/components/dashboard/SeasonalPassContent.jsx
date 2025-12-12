@@ -69,7 +69,8 @@ const limitedEditionCards = [
     description: 'Tactical combat drone with pack hunter AI',
     image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/8c415b4eb_bc6044b0f6806867e2f92d967579b4.png',
     season: 'Season 1',
-    track: 'solo'
+    track: 'solo',
+    isAnimated: true
   },
   {
     id: 6,
@@ -151,8 +152,86 @@ const LimitedEditionCard = ({ card, onClick }) => {
         }}
       />
       
+      {/* Animated Skybox Background for Mech Wolf */}
+      {card.isAnimated && (
+        <>
+          {/* Animated Starfield Skybox */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900">
+            {[...Array(30)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white rounded-full"
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  opacity: Math.random() * 0.7 + 0.3,
+                }}
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                  scale: [1, 1.5, 1],
+                }}
+                transition={{
+                  duration: Math.random() * 3 + 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Glowing Aura Layers */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.4) 0%, transparent 60%)',
+            }}
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.5, 0.8, 0.5],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+            }}
+          />
+          
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at center, rgba(147, 197, 253, 0.3) 0%, transparent 70%)',
+            }}
+            animate={{
+              scale: [1.2, 1, 1.2],
+              opacity: [0.4, 0.7, 0.4],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 0.5,
+            }}
+          />
+        </>
+      )}
+      
       {/* Card Image */}
-      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
+      <motion.img 
+        src={card.image} 
+        alt={card.name} 
+        className="relative w-full h-56 object-cover z-10"
+        animate={card.isAnimated ? {
+          y: [0, -10, 0],
+          filter: [
+            'drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))',
+            'drop-shadow(0 0 40px rgba(147, 197, 253, 0.8))',
+            'drop-shadow(0 0 20px rgba(59, 130, 246, 0.6))',
+          ],
+        } : {}}
+        transition={card.isAnimated ? {
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        } : {}}
+      />
       
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
