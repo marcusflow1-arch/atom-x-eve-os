@@ -20,9 +20,9 @@ export default function AIHomeOverlay({ onClose }) {
       </button>
 
       <iframe 
-        src="http://localhost:3110/"
+        src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/1d902378c_webpackconfig.zip"
         className="w-full h-full border-none"
-        title="Local Web App"
+        title="3D Viewer"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
       />
