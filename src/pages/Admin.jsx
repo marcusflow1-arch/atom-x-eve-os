@@ -915,7 +915,7 @@ export default function Admin() {
 
               {/* Upload GLB Section */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold mb-4">Upload GLB Model</h3>
+                <h3 className="font-semibold mb-4">Upload 3D Model Folder</h3>
                 <div className="flex flex-col gap-4">
                   <Input
                     placeholder="Model Name (e.g., Character_Hero)"
@@ -926,15 +926,15 @@ export default function Admin() {
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
-                      accept=".glb,.gltf"
+                      accept=".zip,application/zip"
                       className="hidden"
                       disabled={uploadingGLB}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         
-                        if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
-                          alert('Please upload a .glb or .gltf file');
+                        if (!file.name.endsWith('.zip')) {
+                          alert('Please upload a .zip folder containing your GLB model and assets');
                           return;
                         }
 
@@ -949,15 +949,15 @@ export default function Admin() {
                           
                           await base44.entities.Model3D.create({
                             name: modelName,
-                            file_url: file_url,
+                            folder_url: file_url,
                             file_size: file.size,
-                            file_type: file.name.split('.').pop()
+                            main_file: 'model.glb'
                           });
                           
                           refetchModels();
                           setModelName('');
                           e.target.value = '';
-                          alert(`Model "${modelName}" uploaded successfully!`);
+                          alert(`Model folder "${modelName}" uploaded successfully!`);
                         } catch (error) {
                           console.error('Upload failed:', error);
                           alert('Upload failed. Please try again.');
@@ -979,8 +979,8 @@ export default function Admin() {
                           </>
                         ) : (
                           <>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Select GLB File
+                            <Folder className="w-4 h-4 mr-2" />
+                            Select Model Folder (.zip)
                           </>
                         )}
                       </span>
@@ -1016,7 +1016,7 @@ export default function Admin() {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-white mb-1">{model.name}</h4>
                             <div className="flex items-center gap-3 text-xs text-slate-400">
-                              <span className="uppercase">{model.file_type}</span>
+                              <span className="uppercase">ZIP</span>
                               <span>•</span>
                               <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
                               <span>•</span>
@@ -1024,7 +1024,7 @@ export default function Admin() {
                             </div>
                             <div className="mt-2 flex items-center gap-2">
                               <code className="text-xs bg-slate-900 px-2 py-1 rounded text-purple-400 break-all flex-1">
-                                {model.file_url}
+                                {model.folder_url}
                               </code>
                               <Button
                                 size="sm"
@@ -1039,7 +1039,7 @@ export default function Admin() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(model.file_url);
+                                  navigator.clipboard.writeText(model.folder_url);
                                   alert('URL copied to clipboard!');
                                 }}
                                 className="flex-shrink-0"
@@ -1071,18 +1071,18 @@ export default function Admin() {
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mt-6">
                 <h4 className="text-blue-400 font-semibold mb-2 flex items-center gap-2">
                   <Terminal className="w-4 h-4" />
-                  Usage in Code
+                  Model Folder Structure
                 </h4>
                 <p className="text-blue-300/80 text-sm mb-3">
-                  Copy the URL and use it in your Three.js components:
+                  Your .zip should contain the GLB model and all assets:
                 </p>
                 <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
-{`import { useGLTF } from '@react-three/drei'
-
-function Model() {
-  const { scene } = useGLTF('PASTE_URL_HERE')
-  return <primitive object={scene} />
-}`}
+{`my-model.zip
+├── model.glb (main file)
+├── textures/
+│   ├── diffuse.png
+│   └── normal.png
+└── materials/`}
                 </code>
               </div>
             </section>
@@ -1392,7 +1392,7 @@ function Model() {
                 </Button>
               </div>
               <div className="flex-1 bg-gradient-to-br from-slate-900 to-black">
-                <ModelViewer modelUrl={selectedModel.file_url} />
+                <ModelViewer modelUrl={selectedModel.folder_url} />
               </div>
             </motion.div>
           </>
