@@ -49,22 +49,25 @@ function Model() {
       loader.load(
         url,
         (gltf) => {
-          // Ensure all materials are properly initialized
+          // Ensure all materials and textures are properly initialized
           gltf.scene.traverse((child) => {
             if (child.isMesh && child.material) {
-              // Fix any undefined material properties
-              if (child.material.map && !child.material.map.source) {
-                child.material.map = null;
-              }
-              if (child.material.normalMap && !child.material.normalMap.source) {
-                child.material.normalMap = null;
-              }
-              if (child.material.roughnessMap && !child.material.roughnessMap.source) {
-                child.material.roughnessMap = null;
-              }
-              if (child.material.metalnessMap && !child.material.metalnessMap.source) {
-                child.material.metalnessMap = null;
-              }
+              const mat = child.material;
+              // Check and fix all texture maps
+              const textureProps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap'];
+              
+              textureProps.forEach(prop => {
+                try {
+                  if (mat[prop] && (!mat[prop].source || mat[prop].source === undefined)) {
+                    mat[prop] = null;
+                  }
+                } catch (e) {
+                  mat[prop] = null;
+                }
+              });
+              
+              // Force material update
+              mat.needsUpdate = true;
             }
           });
           setScene(gltf.scene);
