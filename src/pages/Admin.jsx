@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Eye } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Eye, Box, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -30,6 +31,7 @@ export default function Admin() {
   const [modelName, setModelName] = useState('');
   const [previewModel, setPreviewModel] = useState(null);
   const [newModelGlobal, setNewModelGlobal] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -153,6 +155,52 @@ export default function Admin() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleModelUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileType = file.name.split('.').pop().toLowerCase();
+    if (!['glb', 'gltf'].includes(fileType)) {
+      alert('Please upload a .glb or .gltf file');
+      return;
+    }
+
+    if (!modelName.trim()) {
+      alert('Please enter a model name');
+      return;
+    }
+
+    setUploadingGLB(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      await base44.entities.Model3D.create({
+        name: modelName,
+        file_url: file_url,
+        file_size: file.size,
+        file_type: fileType,
+        is_global: newModelGlobal
+      });
+      
+      refetchModels();
+      setModelName('');
+      setNewModelGlobal(false);
+      e.target.value = ''; // Clear the file input
+      alert('Model uploaded successfully!');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setUploadingGLB(false);
+    }
+  };
+
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const toggleActive = (bg) => {
@@ -431,12 +479,13 @@ export default function Admin() {
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-black mb-2">Admin Panel</h1>
-        <p className="text-slate-400 mb-8">Manage hero backgrounds, games, and site content</p>
+        <p className="text-slate-400 mb-8">Manage hero backgrounds, games, 3D models, and site content</p>
 
         <Tabs defaultValue="backgrounds" className="space-y-6">
           <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
+            <TabsTrigger value="3dmodels">3D Models</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -880,8 +929,190 @@ export default function Admin() {
                     );
                     })()}
                     </section>
-                    </TabsContent>
-                    </Tabs>
+          </TabsContent>
+
+          <TabsContent value="3dmodels">
+            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Box className="w-6 h-6 text-purple-500" />
+                    3D Models
+                  </h2>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Upload and manage GLTF/GLB 3D model files
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-slate-400">
+                  {models3D.length} Model{models3D.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
+                <h3 className="font-semibold mb-4">Upload New 3D Model</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <Input
+                    placeholder="Model Name (e.g., Cyberpunk_Character)"
+                    value={modelName}
+                    onChange={(e) => setModelName(e.target.value)}
+                    className="bg-slate-900 border-slate-700 md:col-span-2"
+                  />
+                  <label className="relative cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".glb,.gltf"
+                      onChange={handleModelUpload}
+                      disabled={uploadingGLB}
+                      className="hidden"
+                    />
+                    <Button 
+                      className="bg-purple-600 hover:bg-purple-700 w-full" 
+                      disabled={uploadingGLB}
+                      asChild
+                    >
+                      <span>
+                        {uploadingGLB ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Select GLB/GLTF
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="globalModel"
+                    checked={newModelGlobal}
+                    onChange={(e) => setNewModelGlobal(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-700 bg-slate-900"
+                  />
+                  <label htmlFor="globalModel" className="text-sm text-slate-400">
+                    Make this model globally available across the app
+                  </label>
+                </div>
+              </div>
+
+              {modelsLoading ? (
+                <div className="text-center py-12 text-slate-500">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                  Loading models...
+                </div>
+              ) : models3D.length === 0 ? (
+                <div className="text-center py-16 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+                  <Box className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg font-semibold">No 3D models yet</p>
+                  <p className="text-sm">Upload your first GLTF or GLB file above</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {models3D.map((model) => (
+                      <motion.div
+                        key={model.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 hover:border-purple-500/50 transition-all"
+                      >
+                        <div className="flex flex-col lg:flex-row gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-bold text-lg text-white">{model.name}</h3>
+                              <Badge className="bg-purple-600 text-xs uppercase">
+                                {model.file_type}
+                              </Badge>
+                              {model.is_global && (
+                                <Badge className="bg-blue-600 text-xs">Global</Badge>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+                              <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                              <span>•</span>
+                              <span>{new Date(model.created_date).toLocaleString()}</span>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-xs text-slate-400 font-semibold">Public URL:</label>
+                              <div className="flex items-center gap-2">
+                                <code className="flex-1 text-xs bg-slate-900 px-3 py-2 rounded text-cyan-400 font-mono break-all border border-slate-700">
+                                  {model.file_url}
+                                </code>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => copyToClipboard(model.file_url, model.id)}
+                                  className="flex-shrink-0"
+                                >
+                                  {copiedId === model.id ? (
+                                    <>✓ Copied</>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-4 h-4 mr-1" />
+                                      Copy
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex lg:flex-col gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              className="bg-purple-600 hover:bg-purple-700 flex-1 lg:flex-none"
+                              onClick={() => setPreviewModel(model)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Preview
+                            </Button>
+                            
+                            <a
+                              href={model.file_url}
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </Button>
+                            </a>
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/30"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete "${model.name}"?`)) {
+                                  deleteModelMutation.mutate(model.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </section>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* 3D Model Preview Modal */}
