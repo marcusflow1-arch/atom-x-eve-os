@@ -16,6 +16,8 @@ import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay
 import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import BlacksmithPage from './Blacksmith';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
