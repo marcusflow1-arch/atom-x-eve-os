@@ -9,8 +9,173 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
-import Enhanced3DViewer from '../components/profile/Enhanced3DViewer';
+
+// Transparent 3D Model Viewer
+function TransparentModel3DViewer({ modelUrl }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !modelUrl) return;
+
+    const scene = new THREE.Scene();
+    scene.background = null; // Transparent background
+
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+    camera.position.set(0, 1.5, 3);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setClearColor(0x000000, 0); // Transparent clear color
+    containerRef.current.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.minDistance = 1;
+    controls.maxDistance = 10;
+
+    let mixer = null;
+    const clock = new THREE.Clock();
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load all textures
+    const textures = {
+      lianBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/ea83e0cbc_5354_Wish_Lian_ShowHigh001_baseColor.png'),
+      lianNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f72c601dd_5354_Wish_Lian_ShowHigh001_normal.png'),
+      qunziBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/234e5c970_5354_Wish_Qunzi_ShowHigh001_baseColor.png'),
+      qunziNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/59061869f_5354_Wish_Qunzi_ShowHigh001_normal.png'),
+      touFaBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0ad93f1ac_5354_Wish_TouFa_ShowHigh001_baseColor.png'),
+      touFaNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/2c92f5ca4_5354_Wish_TouFa_ShowHigh001_normal.png'),
+      weaponBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/935afbad1_5354_Wish_Weapon_ShowHigh001_baseColor.png'),
+      weaponNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f0226b6f6_5354_Wish_Weapon_ShowHigh001_normal.png'),
+      headEmissive: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/74852aed5_EF_Lxq_Lobby5354_Wish_Head001_emissive.png')
+    };
+
+    const loader = new GLTFLoader();
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+
+        // Traverse and apply fixes
+        model.traverse((node) => {
+          if (node.isMesh || node.isSkinnedMesh) {
+            // 1) Disable frustum culling for skinned/morph meshes (prevents wrong clipping)
+            node.frustumCulled = false;
+
+            // 2) Recompute geometry bounds (useful if export produced bad bounds)
+            if (node.geometry) {
+              try {
+                node.geometry.computeBoundingBox();
+                node.geometry.computeBoundingSphere();
+              } catch (e) {
+                console.warn('Failed to compute bounds for', node.name, e);
+              }
+            }
+
+            // 3) Apply textures and ensure double sided for hair / thin planes
+            if (node.material) {
+              const applySide = (mat) => {
+                // Apply textures based on material name
+                const materialName = mat.name.toLowerCase();
+
+                if (materialName.includes('lian') || materialName.includes('body')) {
+                  mat.map = textures.lianBase;
+                  mat.normalMap = textures.lianNormal;
+                } else if (materialName.includes('qunzi') || materialName.includes('skirt')) {
+                  mat.map = textures.qunziBase;
+                  mat.normalMap = textures.qunziNormal;
+                } else if (materialName.includes('toufa') || materialName.includes('hair')) {
+                  mat.map = textures.touFaBase;
+                  mat.normalMap = textures.touFaNormal;
+                } else if (materialName.includes('weapon')) {
+                  mat.map = textures.weaponBase;
+                  mat.normalMap = textures.weaponNormal;
+                } else if (materialName.includes('head') || materialName.includes('face')) {
+                  mat.emissiveMap = textures.headEmissive;
+                  mat.emissive = new THREE.Color(0xffffff);
+                  mat.emissiveIntensity = 0.5;
+                }
+
+                // Set double side for all meshes (prevents disappearing faces)
+                mat.side = THREE.DoubleSide;
+                // If using alpha cutout, ensure alphaTest is set sensibly
+                if (mat.alphaTest === undefined && mat.map) mat.alphaTest = 0.5;
+
+                mat.needsUpdate = true;
+              };
+
+              if (Array.isArray(node.material)) node.material.forEach(applySide);
+              else applySide(node.material);
+            }
+
+            // 4) If skinned, make sure skeleton is up-to-date
+            if (node.isSkinnedMesh) {
+              node.skeleton && node.skeleton.pose && node.skeleton.pose();
+              node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
+            }
+          }
+
+          // Log missing textures (helps find 404s)
+          if (node.material && node.material.map && !node.material.map.image) {
+            console.warn('Potential missing texture for', node.name, node.material.map);
+          }
+        });
+
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 2 / maxDim;
+        model.scale.multiplyScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        scene.add(model);
+
+        // Create the animation mixer
+        mixer = new THREE.AnimationMixer(model);
+
+        // If animations exist, play the first clip (usually Idle)
+        if (gltf.animations && gltf.animations.length > 0) {
+          const idleClip = gltf.animations[0];
+          const action = mixer.clipAction(idleClip);
+          action.play();
+        }
+      },
+      undefined,
+      (err) => console.error('Error loading model:', err)
+    );
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
+      
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    return () => {
+      renderer.dispose();
+      containerRef.current?.removeChild(renderer.domElement);
+    };
+  }, [modelUrl]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
+}
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
@@ -341,8 +506,8 @@ export default function LunaTemplate() {
       >
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30 bg-transparent">
-            <Enhanced3DViewer modelUrl={modelUrl} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
+            <TransparentModel3DViewer modelUrl={modelUrl} />
           </div>
         )}
         {/* Circle Icon Button with Hover Dropdown */}
