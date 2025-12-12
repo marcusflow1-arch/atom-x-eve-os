@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Circle, X, ArrowLeft, Settings,
@@ -9,6 +9,73 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { base44 } from '@/api/base44Client';
+
+// Transparent 3D Model Viewer
+function TransparentModel3DViewer({ modelUrl }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !modelUrl) return;
+
+    const scene = new THREE.Scene();
+    scene.background = null; // Transparent background
+
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+    camera.position.set(0, 2, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setClearColor(0x000000, 0); // Transparent clear color
+    containerRef.current.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    const loader = new GLTFLoader();
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 2 / maxDim;
+        model.scale.multiplyScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        scene.add(model);
+      },
+      undefined,
+      (err) => console.error('Error loading model:', err)
+    );
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    return () => {
+      renderer.dispose();
+      containerRef.current?.removeChild(renderer.domElement);
+    };
+  }, [modelUrl]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
+}
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
@@ -286,7 +353,23 @@ export default function LunaTemplate() {
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [modelUrl, setModelUrl] = useState(null);
   const { mode } = useDashboardMode();
+
+  // Fetch 3D Model
+  useEffect(() => {
+    const fetchModel = async () => {
+      try {
+        const models = await base44.entities.Model3D.filter({ name: 'ws' });
+        if (models.length > 0) {
+          setModelUrl(models[0].file_url);
+        }
+      } catch (error) {
+        console.error('Failed to load 3D model:', error);
+      }
+    };
+    fetchModel();
+  }, []);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -316,11 +399,17 @@ export default function LunaTemplate() {
   }
 
   return (
-    
+
       <div 
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
+        {/* 3D Model Background */}
+        {modelUrl && (
+          <div className="absolute inset-0 pointer-events-none opacity-30 z-0">
+            <TransparentModel3DViewer modelUrl={modelUrl} />
+          </div>
+        )}
         {/* Circle Icon Button with Hover Dropdown */}
         <div className="fixed top-[4.75rem] left-4 z-40 group">
           <button
