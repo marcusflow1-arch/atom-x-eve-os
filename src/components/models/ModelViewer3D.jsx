@@ -9,49 +9,75 @@ function Model({ url, autoRotate = true }) {
   const [scene, setScene] = React.useState(null);
   
   React.useEffect(() => {
-    useGLTF.load(url, (gltf) => {
+    const loader = useGLTF.load(url, (gltf) => {
       try {
         const clonedScene = gltf.scene.clone();
-        
+
         clonedScene.traverse((child) => {
-          if (child.isMesh && child.material) {
-            const materials = Array.isArray(child.material) ? child.material : [child.material];
+          if (child.isMesh) {
+            // Completely replace material to avoid texture issues
+            try {
+              const oldMaterial = child.material;
+              const color = oldMaterial?.color || new THREE.Color(0x888888);
 
-            materials.forEach((mat) => {
-              if (!mat) return;
-
-              // Safely dispose and remove all textures
-              ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
-                try {
-                  if (mat[prop] && typeof mat[prop] === 'object') {
-                    if (mat[prop].dispose) mat[prop].dispose();
-                    mat[prop] = null;
+              // Dispose old materials and textures
+              if (oldMaterial) {
+                const materials = Array.isArray(oldMaterial) ? oldMaterial : [oldMaterial];
+                materials.forEach(mat => {
+                  if (mat) {
+                    ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
+                      try {
+                        if (mat[prop]?.dispose) mat[prop].dispose();
+                      } catch (e) {}
+                    });
+                    if (mat.dispose) mat.dispose();
                   }
-                } catch (e) {
-                  // Silently ignore texture errors
-                }
-              });
+                });
+              }
 
-              // Ensure material updates
-              mat.needsUpdate = true;
-            });
+              // Create clean material without textures
+              child.material = new THREE.MeshStandardMaterial({
+                color: color,
+                metalness: 0.3,
+                roughness: 0.7,
+                flatShading: false
+              });
+            } catch (e) {
+              console.warn('Material replacement error:', e);
+            }
           }
         });
-        
+
         const box = new THREE.Box3().setFromObject(clonedScene);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = maxDim > 0 ? 2 / maxDim : 1;
-        
+
         clonedScene.scale.multiplyScalar(scale);
         clonedScene.position.sub(center.multiplyScalar(scale));
-        
+
         setScene(clonedScene);
       } catch (err) {
         console.error('Error loading model:', err);
       }
+    }, undefined, (error) => {
+      console.error('GLTF loading error:', error);
     });
+
+    return () => {
+      if (scene) {
+        scene.traverse((child) => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            materials.forEach(mat => {
+              if (mat?.dispose) mat.dispose();
+            });
+          }
+        });
+      }
+    };
   }, [url]);
   
   useFrame(() => {
