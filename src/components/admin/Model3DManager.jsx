@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, Eye, Loader2, Box, Plus, Search, Download, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,92 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+// 3D Model Viewer Component using Three.js directly
+function Model3DViewer({ modelUrl }) {
+  const containerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+    camera.position.set(0, 2, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    containerRef.current.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    const loader = new GLTFLoader();
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 2 / maxDim;
+        model.scale.multiplyScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        scene.add(model);
+        setLoading(false);
+      },
+      undefined,
+      (err) => {
+        console.error('Error loading model:', err);
+        setError('Failed to load model');
+        setLoading(false);
+      }
+    );
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    return () => {
+      renderer.dispose();
+      containerRef.current?.removeChild(renderer.domElement);
+    };
+  }, [modelUrl]);
+
+  return (
+    <div className="relative w-full h-64 bg-slate-900 rounded-lg overflow-hidden">
+      <div ref={containerRef} className="w-full h-full" />
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+        </div>
+      )}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Model3DManager() {
   const queryClient = useQueryClient();
@@ -280,13 +366,12 @@ export default function Model3DManager() {
                   </div>
                 </div>
 
-                {/* 3D Preview Placeholder */}
-                <div className="mb-6 aspect-video bg-gradient-to-br from-purple-900/20 to-slate-900 rounded-lg flex items-center justify-center border border-slate-700">
-                  <div className="text-center">
-                    <Box className="w-16 h-16 text-purple-500/50 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm">3D Preview (Coming Soon)</p>
+                {/* 3D Preview */}
+                {(selectedModel.file_type === 'glb' || selectedModel.file_type === 'gltf') && (
+                  <div className="mb-6">
+                    <Model3DViewer modelUrl={selectedModel.file_url} />
                   </div>
-                </div>
+                )}
 
                 {/* Model Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
