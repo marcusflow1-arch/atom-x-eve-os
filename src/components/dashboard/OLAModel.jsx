@@ -1,9 +1,19 @@
-import React, { Suspense, useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, PerspectiveCamera } from '@react-three/drei';
-import { Loader2 } from 'lucide-react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { Canvas, useLoader } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const OLA_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/41dc2dc89_sinestrea-wave-aov.zip';
+
+function LoadedModel({ url }) {
+  try {
+    const gltf = useLoader(GLTFLoader, url);
+    return <primitive object={gltf.scene} scale={1} />;
+  } catch (error) {
+    console.error('Error loading model:', error);
+    return null;
+  }
+}
 
 function Model() {
   const [glbUrl, setGlbUrl] = useState(null);
@@ -47,12 +57,6 @@ function Model() {
   }
 
   return <LoadedModel url={glbUrl} />;
-}
-
-function LoadedModel({ url }) {
-  const gltf = useGLTF(url);
-  if (!gltf || !gltf.scene) return null;
-  return <primitive object={gltf.scene} scale={1} />;
 }
 
 export default function OLAModel() {
