@@ -9,7 +9,6 @@ import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
-import { GlobalModelsProvider } from './components/models/GlobalModelsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -612,13 +611,11 @@ export default function Layout({ children, currentPageName }) {
     <ErrorBoundary>
       <AuthProvider>
         <DashboardModeProvider>
-          <GlobalModelsProvider>
-            <CartProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <LayoutContent children={children} currentPageName={currentPageName} />
-              </Suspense>
-            </CartProvider>
-          </GlobalModelsProvider>
+          <CartProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <LayoutContent children={children} currentPageName={currentPageName} />
+            </Suspense>
+          </CartProvider>
         </DashboardModeProvider>
       </AuthProvider>
     </ErrorBoundary>
