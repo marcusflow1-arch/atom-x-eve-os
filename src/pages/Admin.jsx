@@ -885,7 +885,7 @@ export default function Admin() {
                     3D Model Manager
                   </h2>
                   <p className="text-slate-400 text-sm mt-1">
-                    Upload and manage GLB and GLTF 3D model files
+                    Upload and manage GLB, GLTF, and ZIP 3D model files
                   </p>
                 </div>
                 <Badge variant="outline" className="text-slate-400">
@@ -893,9 +893,9 @@ export default function Admin() {
                 </Badge>
               </div>
 
-              {/* Upload GLB/GLTF Section */}
+              {/* Upload GLB/GLTF/ZIP Section */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold mb-4">Upload 3D Model (GLB or GLTF)</h3>
+                <h3 className="font-semibold mb-4">Upload 3D Model (GLB, GLTF, or ZIP)</h3>
                 <div className="flex flex-col gap-4">
                   <Input
                     placeholder="Model Name (e.g., Character_Hero)"
@@ -906,15 +906,15 @@ export default function Admin() {
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
-                      accept=".glb,.gltf"
+                      accept=".glb,.gltf,.zip"
                       className="hidden"
                       disabled={uploadingGLB}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         
-                        if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
-                          alert('Please upload a .glb or .gltf file');
+                        if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf') && !file.name.endsWith('.zip')) {
+                          alert('Please upload a .glb, .gltf, or .zip file');
                           return;
                         }
 
@@ -960,7 +960,7 @@ export default function Admin() {
                         ) : (
                           <>
                             <Upload className="w-4 h-4 mr-2" />
-                            Select GLB/GLTF File
+                            Select GLB/GLTF/ZIP File
                           </>
                         )}
                       </span>
@@ -979,7 +979,7 @@ export default function Admin() {
                 <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
                   <Upload className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>No 3D models uploaded yet</p>
-                  <p className="text-sm">Upload your first GLB or GLTF file above</p>
+                  <p className="text-sm">Upload your first GLB, GLTF, or ZIP file above</p>
                 </div>
               ) : (
                 <div className="space-y-3">
