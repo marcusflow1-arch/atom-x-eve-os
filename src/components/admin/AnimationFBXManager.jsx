@@ -17,8 +17,7 @@ export default function AnimationFBXManager() {
     description: '',
     animation_type: 'idle',
     is_loopable: true,
-    tags: '',
-    keybind: ''
+    tags: ''
   });
 
   const { data: animations = [], isLoading } = useQuery({
@@ -30,7 +29,7 @@ export default function AnimationFBXManager() {
     mutationFn: (data) => base44.entities.AnimationFBX.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['animationFBX'] });
-      setNewAnimation({ name: '', description: '', animation_type: 'idle', is_loopable: true, tags: '', keybind: '' });
+      setNewAnimation({ name: '', description: '', animation_type: 'idle', is_loopable: true, tags: '' });
     },
   });
 
@@ -58,8 +57,7 @@ export default function AnimationFBXManager() {
         file_url: file_url,
         animation_type: newAnimation.animation_type,
         is_loopable: newAnimation.is_loopable,
-        tags: newAnimation.tags ? newAnimation.tags.split(',').map(t => t.trim()) : [],
-        keybind: newAnimation.keybind || null
+        tags: newAnimation.tags ? newAnimation.tags.split(',').map(t => t.trim()) : []
       });
       
     } catch (error) {
@@ -144,13 +142,6 @@ export default function AnimationFBXManager() {
             onChange={(e) => setNewAnimation({ ...newAnimation, tags: e.target.value })}
             className="bg-slate-900 border-slate-700 flex-1"
           />
-          <Input
-            placeholder="Keybind (e.g., W, Space, 1)"
-            value={newAnimation.keybind}
-            onChange={(e) => setNewAnimation({ ...newAnimation, keybind: e.target.value.toUpperCase() })}
-            className="bg-slate-900 border-slate-700 w-48"
-            maxLength={10}
-          />
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-400">Loopable:</span>
             <Switch
@@ -226,17 +217,8 @@ export default function AnimationFBXManager() {
                     </Badge>
                   </div>
                   
-                  {/* Keybind Badge */}
-                  {anim.keybind && (
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="outline" className="bg-black/50 text-yellow-400 border-yellow-500/30 font-mono">
-                        {anim.keybind}
-                      </Badge>
-                    </div>
-                  )}
-                  
                   {/* Loopable Badge */}
-                  {anim.is_loopable && !anim.keybind && (
+                  {anim.is_loopable && (
                     <div className="absolute top-2 right-2">
                       <Badge variant="outline" className="bg-black/50 text-green-400 border-green-500/30">
                         Loop
@@ -250,16 +232,6 @@ export default function AnimationFBXManager() {
                   <h4 className="font-semibold truncate mb-1">{anim.name}</h4>
                   {anim.description && (
                     <p className="text-slate-400 text-xs mb-2 line-clamp-2">{anim.description}</p>
-                  )}
-                  
-                  {/* Keybind Info */}
-                  {anim.keybind && (
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="text-slate-400 text-xs">Keybind:</span>
-                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 font-mono text-xs">
-                        {anim.keybind}
-                      </Badge>
-                    </div>
                   )}
                   
                   {/* Tags */}

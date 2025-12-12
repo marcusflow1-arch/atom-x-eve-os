@@ -20,7 +20,6 @@ function TransparentModel3DViewer({ modelUrl }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const actionsRef = useRef({});
-  const animationKeybinds = useRef({}); // Maps keybind to animation action
   const keysPressed = useRef({});
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
@@ -136,30 +135,17 @@ function TransparentModel3DViewer({ modelUrl }) {
 
       mixer = new THREE.AnimationMixer(model);
 
-      // Find and store animations with keybind mapping
+      // Find and store animations
       if (animations && animations.length > 0) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
           
-          // Check if animation has a keybind - if so, skip automatic type assignment
-          const animData = animations.find(a => a.name === clip.name || clip.name.toLowerCase().includes(a.animation_type));
-          const hasKeybind = animData && animData.keybind;
-          
-          // Only store by type if no keybind (keybind animations are exclusive)
-          if (!hasKeybind) {
-            if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-            else if (name.includes('walk')) actionsRef.current.walk = action;
-            else if (name.includes('run')) actionsRef.current.run = action;
-            else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
-            else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
-          }
-          
-          // Map keybind to action if animation has keybind
-          if (hasKeybind) {
-            const keybind = animData.keybind.toUpperCase();
-            animationKeybinds.current[keybind] = { action, animData };
-          }
+          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
+          else if (name.includes('walk')) actionsRef.current.walk = action;
+          else if (name.includes('run')) actionsRef.current.run = action;
+          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
         });
 
         // Default to idle or first animation
@@ -205,9 +191,6 @@ function TransparentModel3DViewer({ modelUrl }) {
                     if (anim.animation_type === 'idle') clip.name = 'idle';
                     else if (anim.animation_type === 'run') clip.name = 'run';
                     else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    
-                    // Store animation data reference for keybind lookup
-                    clip.animationData = anim;
                     allClips.push(clip);
                   });
                 }
@@ -278,24 +261,7 @@ function TransparentModel3DViewer({ modelUrl }) {
       if (!controlsActive.current) return;
       
       const key = e.key.toLowerCase();
-      const upperKey = e.key.toUpperCase();
       keysPressed.current[key] = true;
-
-      // Check if this key has a keybind animation
-      if (animationKeybinds.current[upperKey]) {
-        const { action, animData } = animationKeybinds.current[upperKey];
-        if (action && !action.isRunning()) {
-          // Stop all other animations
-          Object.values(actionsRef.current).forEach(a => {
-            if (a !== action) a.fadeOut(0.2);
-          });
-          
-          action.reset();
-          action.fadeIn(0.2);
-          action.setLoop(animData.is_loopable ? THREE.LoopRepeat : THREE.LoopOnce);
-          action.play();
-        }
-      }
 
       // Spacebar for jump
       if (key === ' ') {
@@ -305,24 +271,7 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     const handleKeyUp = (e) => {
       if (!controlsActive.current) return;
-      const key = e.key.toLowerCase();
-      const upperKey = e.key.toUpperCase();
-      keysPressed.current[key] = false;
-
-      // Stop keybind animation when key is released
-      if (animationKeybinds.current[upperKey]) {
-        const { action } = animationKeybinds.current[upperKey];
-        if (action && action.isRunning()) {
-          action.fadeOut(0.2);
-          
-          // Return to idle
-          if (actionsRef.current.idle) {
-            actionsRef.current.idle.reset();
-            actionsRef.current.idle.fadeIn(0.2);
-            actionsRef.current.idle.play();
-          }
-        }
-      }
+      keysPressed.current[e.key.toLowerCase()] = false;
     };
 
     const setBaseAction = (name) => {
