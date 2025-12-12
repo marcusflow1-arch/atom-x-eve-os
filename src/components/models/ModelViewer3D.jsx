@@ -10,29 +10,37 @@ function Model({ url, autoRotate = true }) {
   
   React.useEffect(() => {
     useGLTF.load(url, (gltf) => {
-      const clonedScene = gltf.scene.clone();
-      
-      clonedScene.traverse((child) => {
-        if (child.isMesh) {
-          const newMaterial = new THREE.MeshStandardMaterial({
-            color: child.material?.color || new THREE.Color(0x888888),
-            metalness: 0.3,
-            roughness: 0.7
-          });
-          child.material = newMaterial;
-        }
-      });
-      
-      const box = new THREE.Box3().setFromObject(clonedScene);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = maxDim > 0 ? 2 / maxDim : 1;
-      
-      clonedScene.scale.multiplyScalar(scale);
-      clonedScene.position.sub(center.multiplyScalar(scale));
-      
-      setScene(clonedScene);
+      try {
+        const clonedScene = gltf.scene.clone();
+        
+        clonedScene.traverse((child) => {
+          if (child.isMesh && child.material) {
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            
+            materials.forEach((mat) => {
+              // Remove problematic textures
+              ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'].forEach(prop => {
+                if (mat[prop] && (!mat[prop].source || !mat[prop].image)) {
+                  mat[prop] = null;
+                }
+              });
+            });
+          }
+        });
+        
+        const box = new THREE.Box3().setFromObject(clonedScene);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = maxDim > 0 ? 2 / maxDim : 1;
+        
+        clonedScene.scale.multiplyScalar(scale);
+        clonedScene.position.sub(center.multiplyScalar(scale));
+        
+        setScene(clonedScene);
+      } catch (err) {
+        console.error('Error loading model:', err);
+      }
     });
   }, [url]);
   
