@@ -24,6 +24,7 @@ function TransparentModel3DViewer({ modelUrl }) {
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
   const controlsActive = useRef(false);
+  const skillPlaying = useRef(false);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
 
@@ -280,22 +281,12 @@ function TransparentModel3DViewer({ modelUrl }) {
       }
 
       // Skill animations on keys 1 and 2
-      if (key === '1' && actionsRef.current.mmaKick) {
-        // Play MMA Kick
-        Object.values(actionsRef.current).forEach(a => a.stop());
-        actionsRef.current.mmaKick.reset();
-        actionsRef.current.mmaKick.setLoop(THREE.LoopOnce);
-        actionsRef.current.mmaKick.clampWhenFinished = true;
-        actionsRef.current.mmaKick.play();
+      if (key === '1') {
+        playSkillAnimation('mmaKick');
       }
 
-      if (key === '2' && actionsRef.current.backflip) {
-        // Play Backflip to Uppercut
-        Object.values(actionsRef.current).forEach(a => a.stop());
-        actionsRef.current.backflip.reset();
-        actionsRef.current.backflip.setLoop(THREE.LoopOnce);
-        actionsRef.current.backflip.clampWhenFinished = true;
-        actionsRef.current.backflip.play();
+      if (key === '2') {
+        playSkillAnimation('backflip');
       }
     };
 
@@ -333,6 +324,27 @@ function TransparentModel3DViewer({ modelUrl }) {
         action.fadeIn(fadeDuration);
         action.play();
       }
+    };
+
+    const playSkillAnimation = (animName) => {
+      if (skillPlaying.current) return;
+      
+      const action = actionsRef.current[animName];
+      if (!action) return;
+
+      skillPlaying.current = true;
+
+      Object.values(actionsRef.current).forEach(a => a.stop());
+      action.reset();
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
+
+      const onFinish = () => {
+        skillPlaying.current = false;
+        mixer.removeEventListener('finished', onFinish);
+      };
+      mixer.addEventListener('finished', onFinish);
     };
 
     function animate() {
@@ -373,7 +385,9 @@ function TransparentModel3DViewer({ modelUrl }) {
         }
 
         // PlayerController Logic
-        if (grounded) {
+        if (skillPlaying.current) {
+          // Don't override skill animations
+        } else if (grounded) {
           if (isMoving) {
             direction.normalize();
             
