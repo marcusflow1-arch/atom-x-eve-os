@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
+import Model3DPreview from '../components/admin/Model3DPreview';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ export default function Admin() {
   const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
   const [uploadingGLB, setUploadingGLB] = useState(false);
   const [modelName, setModelName] = useState('');
+  const [previewModel, setPreviewModel] = useState(null);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -925,22 +927,38 @@ export default function Admin() {
                         
                         setUploadingGLB(true);
                         try {
+                          // First upload the file
                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
                           
-                          await base44.entities.Model3D.create({
+                          // Process the upload (extract ZIP if needed)
+                          const fileType = file.name.split('.').pop();
+                          const processResult = await base44.functions.invoke('processModelUpload', {
+                            fileUrl: file_url,
+                            fileName: file.name,
+                            fileType: fileType
+                          });
+                          
+                          if (!processResult.data.success) {
+                            throw new Error(processResult.data.error || 'Processing failed');
+                          }
+                          
+                          // Create the model record with the processed URL
+                          const newModel = await base44.entities.Model3D.create({
                             name: modelName,
-                            file_url: file_url,
+                            file_url: processResult.data.modelUrl,
                             file_size: file.size,
-                            file_type: file.name.split('.').pop()
+                            file_type: processResult.data.originalFileName.split('.').pop()
                           });
                           
                           refetchModels();
                           setModelName('');
                           e.target.value = '';
-                          alert(`Model "${modelName}" uploaded successfully!`);
+                          
+                          // Show preview
+                          setPreviewModel(newModel);
                         } catch (error) {
                           console.error('Upload failed:', error);
-                          alert('Upload failed. Please try again.');
+                          alert(`Upload failed: ${error.message}`);
                         } finally {
                           setUploadingGLB(false);
                         }
@@ -994,43 +1012,53 @@ export default function Admin() {
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-white mb-1">{model.name}</h4>
-                            <div className="flex items-center gap-3 text-xs text-slate-400">
-                              <span className="uppercase">{model.file_type}</span>
-                              <span>•</span>
-                              <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
-                              <span>•</span>
-                              <span>{new Date(model.created_date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="mt-2 flex items-center gap-2">
-                              <code className="text-xs bg-slate-900 px-2 py-1 rounded text-purple-400 break-all flex-1">
-                                {model.file_url}
-                              </code>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(model.file_url);
-                                  alert('URL copied to clipboard!');
-                                }}
-                                className="flex-shrink-0"
-                              >
-                                Copy URL
-                              </Button>
-                            </div>
+                           <h4 className="font-semibold text-white mb-1">{model.name}</h4>
+                           <div className="flex items-center gap-3 text-xs text-slate-400">
+                             <span className="uppercase">{model.file_type}</span>
+                             <span>•</span>
+                             <span>{(model.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                             <span>•</span>
+                             <span>{new Date(model.created_date).toLocaleDateString()}</span>
+                           </div>
+                           <div className="mt-2 flex items-center gap-2">
+                             <code className="text-xs bg-slate-900 px-2 py-1 rounded text-purple-400 break-all flex-1">
+                               {model.file_url}
+                             </code>
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               onClick={() => {
+                                 navigator.clipboard.writeText(model.file_url);
+                                 alert('URL copied to clipboard!');
+                               }}
+                               className="flex-shrink-0"
+                             >
+                               Copy URL
+                             </Button>
+                           </div>
                           </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
-                            onClick={() => {
-                              if (confirm(`Delete "${model.name}"?`)) {
-                                deleteModelMutation.mutate(model.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                           <Button
+                             size="icon"
+                             variant="outline"
+                             className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 flex-shrink-0"
+                             onClick={() => setPreviewModel(model)}
+                           >
+                             <Eye className="w-4 h-4" />
+                           </Button>
+                           <Button
+                             size="icon"
+                             variant="ghost"
+                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
+                             onClick={() => {
+                               if (confirm(`Delete "${model.name}"?`)) {
+                                 deleteModelMutation.mutate(model.id);
+                               }
+                             }}
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -1060,6 +1088,14 @@ function Model() {
           </TabsContent>
                     </Tabs>
       </div>
+
+      {/* 3D Model Preview Modal */}
+      {previewModel && (
+        <Model3DPreview 
+          url={previewModel.file_url} 
+          onClose={() => setPreviewModel(null)} 
+        />
+      )}
     </div>
   );
 }
