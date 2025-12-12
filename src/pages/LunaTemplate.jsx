@@ -16,7 +16,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl }) {
+function TransparentModel3DViewer({ modelUrl, onMount }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const actionsRef = useRef({});
@@ -36,17 +36,39 @@ function TransparentModel3DViewer({ modelUrl }) {
         // Filter for specific animations we need
         const mmaKick = anims.find(a => a.name.toLowerCase().includes('mma kick'));
         const backflip = anims.find(a => a.name.toLowerCase().includes('backflip'));
-        const idle = anims.find(a => a.animation_type === 'idle');
-        const run = anims.find(a => a.animation_type === 'run');
-        const jump = anims.find(a => a.name.toLowerCase().includes('falling'));
 
-        setAnimations([idle, run, jump, mmaKick, backflip].filter(Boolean));
+        setAnimations([mmaKick, backflip].filter(Boolean));
       } catch (error) {
         console.error('Failed to load animations:', error);
       }
     };
     fetchAnimations();
   }, []);
+
+  // Expose playSkill function to parent
+  useEffect(() => {
+    if (onMount) {
+      onMount({
+        playSkill: (skillIndex) => {
+          if (skillIndex === 0 && actionsRef.current.mmaKick && !isSkillPlayingRef.current) {
+            isSkillPlayingRef.current = true;
+            Object.values(actionsRef.current).forEach(a => a.stop());
+            actionsRef.current.mmaKick.reset();
+            actionsRef.current.mmaKick.setLoop(THREE.LoopOnce);
+            actionsRef.current.mmaKick.clampWhenFinished = true;
+            actionsRef.current.mmaKick.play();
+          } else if (skillIndex === 1 && actionsRef.current.backflip && !isSkillPlayingRef.current) {
+            isSkillPlayingRef.current = true;
+            Object.values(actionsRef.current).forEach(a => a.stop());
+            actionsRef.current.backflip.reset();
+            actionsRef.current.backflip.setLoop(THREE.LoopOnce);
+            actionsRef.current.backflip.clampWhenFinished = true;
+            actionsRef.current.backflip.play();
+          }
+        }
+      });
+    }
+  }, [onMount, animations]);
 
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
@@ -382,36 +404,17 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         }
 
-        // PlayerController Logic - Block movement animations during skills
-        if (!isSkillPlayingRef.current) {
-          if (grounded) {
-            if (isMoving) {
-              direction.normalize();
+        // Movement only (no automatic animations)
+        if (!isSkillPlayingRef.current && isMoving) {
+          direction.normalize();
 
-              // Move model
-              modelRef.current.position.x += direction.x * moveSpeed;
-              modelRef.current.position.z += direction.z * moveSpeed;
+          // Move model
+          modelRef.current.position.x += direction.x * moveSpeed;
+          modelRef.current.position.z += direction.z * moveSpeed;
 
-              // Rotate model to face movement direction
-              const angle = Math.atan2(direction.x, direction.z);
-              modelRef.current.rotation.y = angle;
-
-              // Play running animation
-              if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
-                setBaseAction('run');
-              }
-            } else {
-              // Play idle when stopped
-              if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-                setBaseAction('idle');
-              }
-            }
-          } else {
-            // Falling overrides everything when not grounded
-            if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
-              setBaseAction('jump');
-            }
-          }
+          // Rotate model to face movement direction
+          const angle = Math.atan2(direction.x, direction.z);
+          modelRef.current.rotation.y = angle;
         }
 
         // Keep camera following model
@@ -421,12 +424,7 @@ function TransparentModel3DViewer({ modelUrl }) {
         camera.position.z = modelRef.current.position.z + offset.z;
         controls.target.copy(modelRef.current.position);
         controls.update();
-      } else if (modelRef.current && !controlsActive.current) {
-        // When inactive, play idle animation
-        if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-          setBaseAction('idle');
         }
-      }
       
       renderer.render(scene, camera);
     }
@@ -726,6 +724,7 @@ export default function LunaTemplate() {
   const [showProfile, setShowProfile] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
+  const modelViewerRef = useRef(null);
   const { mode } = useDashboardMode();
 
   // Fetch 3D Model and Animations
@@ -798,7 +797,10 @@ export default function LunaTemplate() {
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
-            <TransparentModel3DViewer modelUrl={modelUrl} />
+            <TransparentModel3DViewer 
+              modelUrl={modelUrl} 
+              onMount={(api) => { modelViewerRef.current = api; }}
+            />
           </div>
         )}
         {/* Circle Icon Button with Hover Dropdown */}
@@ -907,6 +909,11 @@ export default function LunaTemplate() {
             {[0, 1, 2, 3, 4].map(i => (
               <div 
                 key={`skill-${i}`}
+                onClick={() => {
+                  if (modelViewerRef.current && i < 2) {
+                    modelViewerRef.current.playSkill(i);
+                  }
+                }}
                 className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
                   activeSkills[i] 
                     ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
