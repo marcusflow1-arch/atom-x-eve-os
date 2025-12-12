@@ -876,8 +876,8 @@ export default function LunaTemplate() {
           </div>
         </div>
 
-        {/* AI Home Button - Top Center */}
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
+        {/* AI Home Button - Below Skills */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
           {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
             const Icon = item.icon;
             
@@ -890,7 +890,7 @@ export default function LunaTemplate() {
                 whileTap={{ scale: 0.95 }}
               >
                 <div
-                  className="w-[84px] h-[63px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-2 border border-white/10 hover:border-white/30"
+                  className="w-[101px] h-[76px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-2 border border-white/10 hover:border-white/30"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(20px)',
@@ -899,14 +899,14 @@ export default function LunaTemplate() {
                   }}
                 >
                   {/* Icon Badge */}
-                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-1 bg-opacity-80 backdrop-blur-sm`}>
-                    <Icon className="w-3 h-3 text-white" />
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-1 bg-opacity-80 backdrop-blur-sm`}>
+                    <Icon className="w-4 h-4 text-white" />
                   </div>
 
                   {/* Card Content */}
                   <div>
-                    <h3 className="text-white font-bold text-[10px] mb-0.5 tracking-wide">{item.label}</h3>
-                    <p className="text-white/60 text-[8px] leading-tight line-clamp-1">{item.description}</p>
+                    <h3 className="text-white font-bold text-[11px] mb-0.5 tracking-wide">{item.label}</h3>
+                    <p className="text-white/60 text-[9px] leading-tight line-clamp-1">{item.description}</p>
                   </div>
                 </div>
               </motion.div>
