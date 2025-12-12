@@ -143,7 +143,8 @@ export default function AIHomeOverlay({ onClose }) {
           src={iframeUrl}
           className="w-full h-full border-none"
           title="3D Web App"
-          sandbox="allow-scripts allow-same-origin allow-pointer-lock"
+          allow="fullscreen; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; webgl"
+          style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
         />
       )}
     </motion.div>
