@@ -45,12 +45,54 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     let mixer = null;
     const clock = new THREE.Clock();
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load all textures
+    const textures = {
+      lianBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/ea83e0cbc_5354_Wish_Lian_ShowHigh001_baseColor.png'),
+      lianNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f72c601dd_5354_Wish_Lian_ShowHigh001_normal.png'),
+      qunziBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/234e5c970_5354_Wish_Qunzi_ShowHigh001_baseColor.png'),
+      qunziNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/59061869f_5354_Wish_Qunzi_ShowHigh001_normal.png'),
+      touFaBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0ad93f1ac_5354_Wish_TouFa_ShowHigh001_baseColor.png'),
+      touFaNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/2c92f5ca4_5354_Wish_TouFa_ShowHigh001_normal.png'),
+      weaponBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/935afbad1_5354_Wish_Weapon_ShowHigh001_baseColor.png'),
+      weaponNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f0226b6f6_5354_Wish_Weapon_ShowHigh001_normal.png'),
+      headEmissive: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/74852aed5_EF_Lxq_Lobby5354_Wish_Head001_emissive.png')
+    };
 
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
       (gltf) => {
         const model = gltf.scene;
+
+        // Apply textures to materials
+        model.traverse((child) => {
+          if (child.isMesh && child.material) {
+            const materialName = child.material.name.toLowerCase();
+
+            if (materialName.includes('lian') || materialName.includes('body')) {
+              child.material.map = textures.lianBase;
+              child.material.normalMap = textures.lianNormal;
+            } else if (materialName.includes('qunzi') || materialName.includes('skirt')) {
+              child.material.map = textures.qunziBase;
+              child.material.normalMap = textures.qunziNormal;
+            } else if (materialName.includes('toufa') || materialName.includes('hair')) {
+              child.material.map = textures.touFaBase;
+              child.material.normalMap = textures.touFaNormal;
+            } else if (materialName.includes('weapon')) {
+              child.material.map = textures.weaponBase;
+              child.material.normalMap = textures.weaponNormal;
+            } else if (materialName.includes('head') || materialName.includes('face')) {
+              child.material.emissiveMap = textures.headEmissive;
+              child.material.emissive = new THREE.Color(0xffffff);
+              child.material.emissiveIntensity = 0.5;
+            }
+
+            child.material.needsUpdate = true;
+          }
+        });
+
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -65,7 +107,7 @@ function TransparentModel3DViewer({ modelUrl }) {
 
         // If animations exist, play the first clip (usually Idle)
         if (gltf.animations && gltf.animations.length > 0) {
-          const idleClip = gltf.animations[0];  // 0 = Idle for most Sketchfab models
+          const idleClip = gltf.animations[0];
           const action = mixer.clipAction(idleClip);
           action.play();
         }
