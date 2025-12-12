@@ -924,49 +924,52 @@ export default function Admin() {
                     onChange={(e) => setModelName(e.target.value)}
                     className="bg-slate-900 border-slate-700"
                   />
-                  <label className="relative cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".zip,application/zip"
-                      className="hidden"
-                      disabled={uploadingGLB}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        
-                        if (!file.name.endsWith('.zip')) {
-                          alert('Please upload a .zip folder containing your GLB model and assets');
-                          return;
-                        }
+                  <input
+                    type="file"
+                    accept=".zip,application/zip"
+                    className="hidden"
+                    id="modelUpload"
+                    disabled={uploadingGLB}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      if (!file.name.endsWith('.zip')) {
+                        alert('Please upload a .zip folder containing your GLB model and assets');
+                        return;
+                      }
 
-                        if (!modelName.trim()) {
-                          alert('Please enter a model name');
-                          return;
-                        }
+                      if (!modelName.trim()) {
+                        alert('Please enter a model name');
+                        return;
+                      }
+                      
+                      setUploadingGLB(true);
+                      try {
+                        console.log('Uploading model to Base44:', file.name);
+                        const result = await base44.integrations.Core.UploadFile({ file });
+                        console.log('Upload successful:', result);
                         
-                        setUploadingGLB(true);
-                        try {
-                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                          
-                          await base44.entities.Model3D.create({
-                            name: modelName,
-                            folder_url: file_url,
-                            file_size: file.size,
-                            main_file: 'model.glb'
-                          });
-                          
-                          refetchModels();
-                          setModelName('');
-                          e.target.value = '';
-                          alert(`Model folder "${modelName}" uploaded successfully!`);
-                        } catch (error) {
-                          console.error('Upload failed:', error);
-                          alert('Upload failed. Please try again.');
-                        } finally {
-                          setUploadingGLB(false);
-                        }
-                      }}
-                    />
+                        await base44.entities.Model3D.create({
+                          name: modelName,
+                          folder_url: result.file_url,
+                          file_size: file.size,
+                          main_file: 'model.glb'
+                        });
+                        
+                        refetchModels();
+                        setModelName('');
+                        e.target.value = '';
+                        alert(`Model folder "${modelName}" uploaded to Base44 successfully!`);
+                      } catch (error) {
+                        console.error('Upload failed:', error);
+                        alert(`Upload failed: ${error.message}`);
+                      } finally {
+                        setUploadingGLB(false);
+                      }
+                    }}
+                  />
+                  <label htmlFor="modelUpload" className="cursor-pointer">
                     <Button 
                       className="bg-purple-600 hover:bg-purple-700 w-full" 
                       disabled={uploadingGLB}
@@ -1132,50 +1135,53 @@ export default function Admin() {
                     onChange={(e) => setLgAppData({...lgAppData, description: e.target.value})}
                     className="bg-slate-900 border-slate-700"
                   />
-                  <label className="relative cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".zip,application/zip,.html,text/html"
-                      className="hidden"
-                      disabled={uploadingLGApp}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        
-                        if (!file.name.endsWith('.zip') && !file.name.endsWith('.html')) {
-                          alert('Please upload a .zip file or .html file');
-                          return;
-                        }
+                  <input
+                    type="file"
+                    accept=".zip,application/zip,.html,text/html"
+                    className="hidden"
+                    id="lgAppUpload"
+                    disabled={uploadingLGApp}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      if (!file.name.endsWith('.zip') && !file.name.endsWith('.html')) {
+                        alert('Please upload a .zip file or .html file');
+                        return;
+                      }
 
-                        if (!lgAppData.name.trim() || !lgAppData.app_id.trim()) {
-                          alert('Please enter app name and app ID');
-                          return;
-                        }
+                      if (!lgAppData.name.trim() || !lgAppData.app_id.trim()) {
+                        alert('Please enter app name and app ID');
+                        return;
+                      }
+                      
+                      setUploadingLGApp(true);
+                      try {
+                        console.log('Uploading file to Base44:', file.name);
+                        const result = await base44.integrations.Core.UploadFile({ file });
+                        console.log('Upload successful:', result);
                         
-                        setUploadingLGApp(true);
-                        try {
-                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                          
-                          await base44.entities.LGWebApp.create({
-                            name: lgAppData.name,
-                            description: lgAppData.description,
-                            app_folder_url: file_url,
-                            app_id: lgAppData.app_id,
-                            status: 'testing'
-                          });
-                          
-                          refetchLGApps();
-                          setLgAppData({ name: '', description: '', app_id: '' });
-                          e.target.value = '';
-                          alert(`LG App "${lgAppData.name}" uploaded successfully!`);
-                        } catch (error) {
-                          console.error('Upload failed:', error);
-                          alert('Upload failed. Please try again.');
-                        } finally {
-                          setUploadingLGApp(false);
-                        }
-                      }}
-                    />
+                        await base44.entities.LGWebApp.create({
+                          name: lgAppData.name,
+                          description: lgAppData.description,
+                          app_folder_url: result.file_url,
+                          app_id: lgAppData.app_id,
+                          status: 'testing'
+                        });
+                        
+                        refetchLGApps();
+                        setLgAppData({ name: '', description: '', app_id: '' });
+                        e.target.value = '';
+                        alert(`LG App "${lgAppData.name}" uploaded to Base44 successfully!`);
+                      } catch (error) {
+                        console.error('Upload failed:', error);
+                        alert(`Upload failed: ${error.message}`);
+                      } finally {
+                        setUploadingLGApp(false);
+                      }
+                    }}
+                  />
+                  <label htmlFor="lgAppUpload" className="cursor-pointer">
                     <Button 
                       className="bg-cyan-600 hover:bg-cyan-700 w-full" 
                       disabled={uploadingLGApp}
