@@ -46,19 +46,12 @@ function TransparentModel3DViewer({ modelUrl }) {
     const scene = new THREE.Scene();
     scene.background = null;
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 1.5, 3);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
-    renderer.domElement.style.position = 'fixed';
-    renderer.domElement.style.top = '0';
-    renderer.domElement.style.left = '0';
-    renderer.domElement.style.width = '100vw';
-    renderer.domElement.style.height = '100vh';
-    renderer.domElement.style.pointerEvents = 'auto';
-    renderer.domElement.style.zIndex = '30';
     containerRef.current.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -73,28 +66,14 @@ function TransparentModel3DViewer({ modelUrl }) {
     controls.dampingFactor = 0.05;
     controls.enabled = false;
 
-    // Raycaster for detecting clicks on model
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    // Click handler to activate controls only when clicking model
-    const handleCanvasClick = (event) => {
-      if (!modelRef.current) return;
-
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObject(modelRef.current, true);
-
-      if (intersects.length > 0) {
-        controlsActive.current = !controlsActive.current;
-        setIsActive(controlsActive.current);
-        if (controlsActive.current) {
-          renderer.domElement.style.cursor = 'none';
-        } else {
-          renderer.domElement.style.cursor = 'pointer';
-        }
+    // Click handler to activate controls
+    const handleCanvasClick = () => {
+      controlsActive.current = !controlsActive.current;
+      setIsActive(controlsActive.current);
+      if (controlsActive.current) {
+        renderer.domElement.style.cursor = 'none';
+      } else {
+        renderer.domElement.style.cursor = 'pointer';
       }
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
@@ -413,16 +392,21 @@ function TransparentModel3DViewer({ modelUrl }) {
   }, [modelUrl, animations]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none">
+    <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
       {isActive && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-green-500/50 text-green-400 text-sm font-bold pointer-events-none z-50">
-          WASD to Move • SPACE to Jump • Click Model to Deactivate
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-green-500/50 text-green-400 text-sm font-bold pointer-events-none">
+          CONTROLS ACTIVE • WASD to Move • SPACE to Jump • Click to Deactivate
+        </div>
+      )}
+      {!isActive && (
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/30 text-white/60 text-sm font-bold pointer-events-none">
+          Click Model to Activate Controls
         </div>
       )}
     </div>
   );
-  }
+}
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
 import LunaCardScroll from '../components/profile/LunaCardScroll';
@@ -752,8 +736,12 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* 3D Model Viewer - Full Page */}
-        {modelUrl && <TransparentModel3DViewer modelUrl={modelUrl} />}
+        {/* 3D Model Viewer - Centered */}
+        {modelUrl && (
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
+            <TransparentModel3DViewer modelUrl={modelUrl} />
+          </div>
+        )}
         {/* Circle Icon Button with Hover Dropdown */}
         <div className="fixed top-[4.75rem] left-4 z-40 group">
           <button
