@@ -506,7 +506,7 @@ export default function LunaTemplate() {
       >
         {/* 3D Model Background */}
         {modelUrl && (
-          <div className="absolute inset-0 pointer-events-none opacity-30 z-0">
+          <div className="absolute inset-0 pointer-events-auto opacity-30 z-0">
             <TransparentModel3DViewer modelUrl={modelUrl} />
           </div>
         )}
