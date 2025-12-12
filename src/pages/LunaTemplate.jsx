@@ -58,7 +58,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     renderer.domElement.style.width = '100vw';
     renderer.domElement.style.height = '100vh';
     renderer.domElement.style.pointerEvents = 'auto';
-    renderer.domElement.style.zIndex = '5';
+    renderer.domElement.style.zIndex = '30';
     containerRef.current.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
