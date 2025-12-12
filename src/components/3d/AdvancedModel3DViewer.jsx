@@ -128,11 +128,11 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
         scene.add(model);
 
-        // Enable animation
+        // Create animation mixer but DO NOT auto-play
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(gltf.animations[0]);
-          action.play();
+          // Animations are available but NOT automatically playing
+          // They will only play when explicitly called via code
         }
       },
       undefined,
