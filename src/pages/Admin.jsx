@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Tv, Folder, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -27,6 +27,8 @@ export default function Admin() {
   const [gameSortBy, setGameSortBy] = useState('release_date'); // 'release_date', 'popularity', 'title'
   const [uploadingGLB, setUploadingGLB] = useState(false);
   const [modelName, setModelName] = useState('');
+  const [uploadingLGApp, setUploadingLGApp] = useState(false);
+  const [lgAppData, setLgAppData] = useState({ name: '', description: '', app_id: '' });
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -83,6 +85,11 @@ export default function Admin() {
     queryFn: () => base44.entities.Model3D.list('-created_date'),
   });
 
+  const { data: lgWebApps = [], isLoading: lgAppsLoading, refetch: refetchLGApps } = useQuery({
+    queryKey: ['lgWebApps'],
+    queryFn: () => base44.entities.LGWebApp.list('-created_date'),
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.HeroBackground.create(data),
     onSuccess: () => {
@@ -117,6 +124,16 @@ export default function Admin() {
   const deleteModelMutation = useMutation({
     mutationFn: (id) => base44.entities.Model3D.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['models3D'] }),
+  });
+
+  const deleteLGAppMutation = useMutation({
+    mutationFn: (id) => base44.entities.LGWebApp.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lgWebApps'] }),
+  });
+
+  const updateLGAppMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.LGWebApp.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lgWebApps'] }),
   });
 
   const handleFileUpload = async (e) => {
@@ -430,6 +447,7 @@ export default function Admin() {
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
+            <TabsTrigger value="lgapps">LG Web Apps</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -1055,6 +1073,225 @@ function Model() {
   return <primitive object={scene} />
 }`}
                 </code>
+              </div>
+            </section>
+          </TabsContent>
+
+          <TabsContent value="lgapps">
+            {/* LG Web Apps Section */}
+            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Tv className="w-6 h-6 text-cyan-500" />
+                    LG Web Apps Manager
+                  </h2>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Upload and host LG webOS applications
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-slate-400">
+                  {lgWebApps.length} Apps
+                </Badge>
+              </div>
+
+              {/* Upload LG App Section */}
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
+                <h3 className="font-semibold mb-4">Upload LG Web App</h3>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="App Name (e.g., My LG App)"
+                    value={lgAppData.name}
+                    onChange={(e) => setLgAppData({...lgAppData, name: e.target.value})}
+                    className="bg-slate-900 border-slate-700"
+                  />
+                  <Input
+                    placeholder="App ID (e.g., com.mycompany.myapp)"
+                    value={lgAppData.app_id}
+                    onChange={(e) => setLgAppData({...lgAppData, app_id: e.target.value})}
+                    className="bg-slate-900 border-slate-700"
+                  />
+                  <Textarea
+                    placeholder="App Description"
+                    value={lgAppData.description}
+                    onChange={(e) => setLgAppData({...lgAppData, description: e.target.value})}
+                    className="bg-slate-900 border-slate-700"
+                  />
+                  <label className="relative cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".zip,application/zip"
+                      className="hidden"
+                      disabled={uploadingLGApp}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        
+                        if (!file.name.endsWith('.zip')) {
+                          alert('Please upload a .zip file containing your LG Web App');
+                          return;
+                        }
+
+                        if (!lgAppData.name.trim() || !lgAppData.app_id.trim()) {
+                          alert('Please enter app name and app ID');
+                          return;
+                        }
+                        
+                        setUploadingLGApp(true);
+                        try {
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          
+                          await base44.entities.LGWebApp.create({
+                            name: lgAppData.name,
+                            description: lgAppData.description,
+                            app_folder_url: file_url,
+                            app_id: lgAppData.app_id,
+                            status: 'testing'
+                          });
+                          
+                          refetchLGApps();
+                          setLgAppData({ name: '', description: '', app_id: '' });
+                          e.target.value = '';
+                          alert(`LG App "${lgAppData.name}" uploaded successfully!`);
+                        } catch (error) {
+                          console.error('Upload failed:', error);
+                          alert('Upload failed. Please try again.');
+                        } finally {
+                          setUploadingLGApp(false);
+                        }
+                      }}
+                    />
+                    <Button 
+                      className="bg-cyan-600 hover:bg-cyan-700 w-full" 
+                      disabled={uploadingLGApp}
+                      asChild
+                    >
+                      <span>
+                        {uploadingLGApp ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Folder className="w-4 h-4 mr-2" />
+                            Select App Folder (.zip)
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+              </div>
+
+              {/* LG Apps List */}
+              {lgAppsLoading ? (
+                <div className="text-center py-12 text-slate-500">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                  Loading LG apps...
+                </div>
+              ) : lgWebApps.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
+                  <Tv className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>No LG Web Apps uploaded yet</p>
+                  <p className="text-sm">Upload your first app folder above</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {lgWebApps.map((app) => (
+                      <motion.div
+                        key={app.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-cyan-500/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-white">{app.name}</h4>
+                              <Badge className={
+                                app.status === 'active' ? 'bg-green-600' :
+                                app.status === 'testing' ? 'bg-yellow-600' :
+                                'bg-slate-600'
+                              }>
+                                {app.status}
+                              </Badge>
+                            </div>
+                            <p className="text-slate-400 text-sm mb-2">{app.description || 'No description'}</p>
+                            <div className="flex items-center gap-3 text-xs text-slate-400 mb-3">
+                              <span>App ID: {app.app_id}</span>
+                              <span>•</span>
+                              <span>v{app.version || '1.0.0'}</span>
+                              <span>•</span>
+                              <span>{new Date(app.created_date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(app.app_folder_url, '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Download
+                              </Button>
+                              <select
+                                value={app.status}
+                                onChange={(e) => updateLGAppMutation.mutate({
+                                  id: app.id,
+                                  data: { status: e.target.value }
+                                })}
+                                className="px-3 py-1 text-xs bg-slate-900 border border-slate-700 rounded text-white"
+                              >
+                                <option value="testing">Testing</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                              </select>
+                            </div>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
+                            onClick={() => {
+                              if (confirm(`Delete "${app.name}"?`)) {
+                                deleteLGAppMutation.mutate(app.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Info Panel */}
+              <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 mt-6">
+                <h4 className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  LG WebOS App Structure
+                </h4>
+                <p className="text-cyan-300/80 text-sm mb-3">
+                  Your .zip file should contain the following structure:
+                </p>
+                <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
+{`my-lg-app.zip
+├── index.html
+├── appinfo.json
+├── icon.png
+├── js/
+│   └── main.js
+├── css/
+│   └── style.css
+└── assets/`}
+                </code>
+                <p className="text-cyan-300/80 text-xs mt-3">
+                  The appinfo.json file should contain your app metadata (id, version, title, etc.)
+                </p>
               </div>
             </section>
           </TabsContent>
