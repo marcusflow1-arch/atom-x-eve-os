@@ -1,29 +1,18 @@
-import React, { Suspense, useState, useEffect, useRef } from 'react';
-import { Canvas, useLoader } from '@react-three/fiber';
+import React, { useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const OLA_MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/41dc2dc89_sinestrea-wave-aov.zip';
 
-function LoadedModel({ url }) {
-  try {
-    const gltf = useLoader(GLTFLoader, url);
-    return <primitive object={gltf.scene} scale={1} />;
-  } catch (error) {
-    console.error('Error loading model:', error);
-    return null;
-  }
-}
-
 function Model() {
-  const [glbUrl, setGlbUrl] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [scene, setScene] = useState(null);
 
   useEffect(() => {
-    extractGLB();
+    loadModel();
   }, []);
 
-  const extractGLB = async () => {
+  const loadModel = async () => {
     try {
       const JSZip = (await import('jszip')).default;
       const response = await fetch(OLA_MODEL_URL);
@@ -44,19 +33,19 @@ function Model() {
       
       const glbBlob = await glbFile.async('blob');
       const url = URL.createObjectURL(glbBlob);
-      setGlbUrl(url);
-      setLoading(false);
+      
+      const loader = new GLTFLoader();
+      loader.load(url, (gltf) => {
+        setScene(gltf.scene);
+      });
     } catch (error) {
-      console.error('Failed to extract GLB:', error);
-      setLoading(false);
+      console.error('Failed to load model:', error);
     }
   };
 
-  if (loading || !glbUrl) {
-    return null;
-  }
-
-  return <LoadedModel url={glbUrl} />;
+  if (!scene) return null;
+  
+  return <primitive object={scene} scale={1} />;
 }
 
 export default function OLAModel() {
