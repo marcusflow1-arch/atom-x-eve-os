@@ -189,11 +189,8 @@ function TransparentModel3DViewer({ modelUrl, onMount }) {
           else if (name.includes('backflip')) actionsRef.current.backflip = action;
         });
 
-        // Default to idle or first animation
-        const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
-        if (idleAction) {
-          idleAction.play();
-        }
+        // DO NOT auto-play any animation on load
+        // Animations will only play when explicitly triggered
       }
     };
 
@@ -311,24 +308,34 @@ function TransparentModel3DViewer({ modelUrl, onMount }) {
         e.preventDefault();
       }
 
+      // If a skill is already playing, DO NOTHING
+      if (isSkillPlayingRef.current) return;
+
       // Skill animations on keys 1 and 2
-      if (key === '1' && actionsRef.current.mmaKick && !isSkillPlayingRef.current) {
-        isSkillPlayingRef.current = true;
-        Object.values(actionsRef.current).forEach(a => a.stop());
-        actionsRef.current.mmaKick.reset();
-        actionsRef.current.mmaKick.setLoop(THREE.LoopOnce);
-        actionsRef.current.mmaKick.clampWhenFinished = true;
-        actionsRef.current.mmaKick.play();
+      if (key === '1' && actionsRef.current.mmaKick) {
+        startSkill('mmaKick');
       }
 
-      if (key === '2' && actionsRef.current.backflip && !isSkillPlayingRef.current) {
-        isSkillPlayingRef.current = true;
-        Object.values(actionsRef.current).forEach(a => a.stop());
-        actionsRef.current.backflip.reset();
-        actionsRef.current.backflip.setLoop(THREE.LoopOnce);
-        actionsRef.current.backflip.clampWhenFinished = true;
-        actionsRef.current.backflip.play();
+      if (key === '2' && actionsRef.current.backflip) {
+        startSkill('backflip');
       }
+    };
+
+    const startSkill = (animName) => {
+      const action = actionsRef.current[animName];
+      if (!action) return;
+
+      // Lock skill system
+      isSkillPlayingRef.current = true;
+
+      // Stop all animations
+      Object.values(actionsRef.current).forEach(a => a.stop());
+
+      // Set animation instantly
+      action.reset();
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
     };
 
     const handleKeyUp = (e) => {
@@ -373,6 +380,12 @@ function TransparentModel3DViewer({ modelUrl, onMount }) {
       if (mixer) mixer.update(delta);
       
       if (modelRef.current && controlsActive.current) {
+        // If a skill animation is running, ignore movement animations
+        if (isSkillPlayingRef.current) {
+          renderer.render(scene, camera);
+          return;
+        }
+
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
@@ -404,8 +417,28 @@ function TransparentModel3DViewer({ modelUrl, onMount }) {
           }
         }
 
-        // Movement only (no automatic animations)
-        if (!isSkillPlayingRef.current && isMoving) {
+        // ---- NORMAL MOVEMENT ANIMATIONS ----
+        if (grounded) {
+          if (dirLength > 0.01) {
+            // Running
+            if (actionsRef.current.run) {
+              setBaseAction('run');
+            }
+          } else {
+            // Idle
+            if (actionsRef.current.idle) {
+              setBaseAction('idle');
+            }
+          }
+        } else {
+          // Falling
+          if (actionsRef.current.jump) {
+            setBaseAction('jump');
+          }
+        }
+
+        // Movement only
+        if (isMoving) {
           direction.normalize();
 
           // Move model
