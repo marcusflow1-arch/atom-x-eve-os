@@ -142,16 +142,21 @@ function TransparentModel3DViewer({ modelUrl }) {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
           
-          // Store animation by type
-          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-          else if (name.includes('walk')) actionsRef.current.walk = action;
-          else if (name.includes('run')) actionsRef.current.run = action;
-          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
-          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          // Check if animation has a keybind - if so, skip automatic type assignment
+          const animData = animations.find(a => a.name === clip.name || clip.name.toLowerCase().includes(a.animation_type));
+          const hasKeybind = animData && animData.keybind;
+          
+          // Only store by type if no keybind (keybind animations are exclusive)
+          if (!hasKeybind) {
+            if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
+            else if (name.includes('walk')) actionsRef.current.walk = action;
+            else if (name.includes('run')) actionsRef.current.run = action;
+            else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+            else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          }
           
           // Map keybind to action if animation has keybind
-          const animData = animations.find(a => a.name === clip.name || clip.name.toLowerCase().includes(a.animation_type));
-          if (animData && animData.keybind) {
+          if (hasKeybind) {
             const keybind = animData.keybind.toUpperCase();
             animationKeybinds.current[keybind] = { action, animData };
           }
