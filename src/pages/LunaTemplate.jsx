@@ -146,7 +146,6 @@ function TransparentModel3DViewer({ modelUrl }) {
           else if (name.includes('run')) actionsRef.current.run = action;
           else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
-          else if (name.includes('kick')) actionsRef.current.kick = action;
         });
 
         // Default to idle or first animation
@@ -192,7 +191,6 @@ function TransparentModel3DViewer({ modelUrl }) {
                     if (anim.animation_type === 'idle') clip.name = 'idle';
                     else if (anim.animation_type === 'run') clip.name = 'run';
                     else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    else if (anim.name.toLowerCase().includes('kick 2')) clip.name = 'kick';
                     allClips.push(clip);
                   });
                 }
@@ -268,15 +266,6 @@ function TransparentModel3DViewer({ modelUrl }) {
       // Spacebar for jump
       if (key === ' ') {
         e.preventDefault();
-      }
-
-      // Q for Kick 2 animation
-      if (key === 'q' && actionsRef.current.kick) {
-        const kickAction = actionsRef.current.kick;
-        kickAction.reset();
-        kickAction.setLoop(THREE.LoopOnce);
-        kickAction.clampWhenFinished = true;
-        kickAction.play();
       }
     };
 
