@@ -24,7 +24,6 @@ function TransparentModel3DViewer({ modelUrl }) {
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
   const controlsActive = useRef(false);
-  const isSkillPlayingRef = useRef(false);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
 
@@ -95,14 +94,6 @@ function TransparentModel3DViewer({ modelUrl }) {
     let mixer = null;
     const clock = new THREE.Clock();
 
-    // Animation finish listener
-    const handleAnimationFinished = (e) => {
-      const clipName = e.action.getClip().name.toLowerCase();
-      if (clipName.includes('mma kick') || clipName.includes('backflip')) {
-        isSkillPlayingRef.current = false;
-      }
-    };
-
     // Detect file type and use appropriate loader
     const extension = modelUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
@@ -150,7 +141,6 @@ function TransparentModel3DViewer({ modelUrl }) {
       scene.add(model);
 
       mixer = new THREE.AnimationMixer(model);
-      mixer.addEventListener('finished', handleAnimationFinished);
 
       // Find and store animations
       if (animations && animations.length > 0) {
@@ -290,8 +280,8 @@ function TransparentModel3DViewer({ modelUrl }) {
       }
 
       // Skill animations on keys 1 and 2
-      if (key === '1' && actionsRef.current.mmaKick && !isSkillPlayingRef.current) {
-        isSkillPlayingRef.current = true;
+      if (key === '1' && actionsRef.current.mmaKick) {
+        // Play MMA Kick
         Object.values(actionsRef.current).forEach(a => a.stop());
         actionsRef.current.mmaKick.reset();
         actionsRef.current.mmaKick.setLoop(THREE.LoopOnce);
@@ -299,8 +289,8 @@ function TransparentModel3DViewer({ modelUrl }) {
         actionsRef.current.mmaKick.play();
       }
 
-      if (key === '2' && actionsRef.current.backflip && !isSkillPlayingRef.current) {
-        isSkillPlayingRef.current = true;
+      if (key === '2' && actionsRef.current.backflip) {
+        // Play Backflip to Uppercut
         Object.values(actionsRef.current).forEach(a => a.stop());
         actionsRef.current.backflip.reset();
         actionsRef.current.backflip.setLoop(THREE.LoopOnce);
@@ -382,35 +372,33 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         }
 
-        // PlayerController Logic - Block movement animations during skills
-        if (!isSkillPlayingRef.current) {
-          if (grounded) {
-            if (isMoving) {
-              direction.normalize();
+        // PlayerController Logic
+        if (grounded) {
+          if (isMoving) {
+            direction.normalize();
+            
+            // Move model
+            modelRef.current.position.x += direction.x * moveSpeed;
+            modelRef.current.position.z += direction.z * moveSpeed;
 
-              // Move model
-              modelRef.current.position.x += direction.x * moveSpeed;
-              modelRef.current.position.z += direction.z * moveSpeed;
+            // Rotate model to face movement direction
+            const angle = Math.atan2(direction.x, direction.z);
+            modelRef.current.rotation.y = angle;
 
-              // Rotate model to face movement direction
-              const angle = Math.atan2(direction.x, direction.z);
-              modelRef.current.rotation.y = angle;
-
-              // Play running animation
-              if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
-                setBaseAction('run');
-              }
-            } else {
-              // Play idle when stopped
-              if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-                setBaseAction('idle');
-              }
+            // Play running animation
+            if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
+              setBaseAction('run');
             }
           } else {
-            // Falling overrides everything when not grounded
-            if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
-              setBaseAction('jump');
+            // Play idle when stopped
+            if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+              setBaseAction('idle');
             }
+          }
+        } else {
+          // Falling overrides everything when not grounded
+          if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
+            setBaseAction('jump');
           }
         }
 
@@ -439,7 +427,6 @@ function TransparentModel3DViewer({ modelUrl }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       renderer.domElement.removeEventListener('click', handleCanvasClick);
-      if (mixer) mixer.removeEventListener('finished', handleAnimationFinished);
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
