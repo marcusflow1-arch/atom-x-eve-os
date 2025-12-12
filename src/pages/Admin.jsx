@@ -29,6 +29,7 @@ export default function Admin() {
   const [uploadingGLB, setUploadingGLB] = useState(false);
   const [modelName, setModelName] = useState('');
   const [previewModel, setPreviewModel] = useState(null);
+  const [newModelGlobal, setNewModelGlobal] = useState(false);
   
   // Poll for logs if a job is active
   const { data: agentLogs = [] } = useQuery({
@@ -96,6 +97,11 @@ export default function Admin() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.HeroBackground.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['heroBackgrounds'] }),
+  });
+
+  const updateModelMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Model3D.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['models3D'] }),
   });
 
   const deleteMutation = useMutation({
@@ -897,14 +903,26 @@ export default function Admin() {
 
               {/* Upload GLB/GLTF/ZIP Section */}
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold mb-4">Upload 3D Model (GLB, GLTF, or ZIP)</h3>
+                <h3 className="font-semibold mb-4 flex items-center justify-between">
+                  <span>Upload 3D Model (GLB, GLTF, or ZIP)</span>
+                  <Badge variant="outline" className="text-xs">Global models available app-wide</Badge>
+                </h3>
                 <div className="flex flex-col gap-4">
-                  <Input
-                    placeholder="Model Name (e.g., Character_Hero)"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                    className="bg-slate-900 border-slate-700"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Model Name (e.g., Character_Hero)"
+                      value={modelName}
+                      onChange={(e) => setModelName(e.target.value)}
+                      className="bg-slate-900 border-slate-700"
+                    />
+                    <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3">
+                      <span className="text-sm text-slate-400">Make Global:</span>
+                      <Switch
+                        checked={newModelGlobal}
+                        onCheckedChange={setNewModelGlobal}
+                      />
+                    </div>
+                  </div>
                   <label className="relative cursor-pointer">
                     <input
                       type="file"
@@ -947,11 +965,13 @@ export default function Admin() {
                             name: modelName,
                             file_url: processResult.data.modelUrl,
                             file_size: file.size,
-                            file_type: processResult.data.originalFileName.split('.').pop()
+                            file_type: processResult.data.originalFileName.split('.').pop(),
+                            is_global: newModelGlobal
                           });
                           
                           refetchModels();
                           setModelName('');
+                          setNewModelGlobal(false);
                           e.target.value = '';
                           
                           // Show preview
@@ -1012,7 +1032,12 @@ export default function Admin() {
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                           <h4 className="font-semibold text-white mb-1">{model.name}</h4>
+                           <div className="flex items-center gap-2 mb-1">
+                             <h4 className="font-semibold text-white">{model.name}</h4>
+                             {model.is_global && (
+                               <Badge className="bg-blue-600 text-xs">Global</Badge>
+                             )}
+                           </div>
                            <div className="flex items-center gap-3 text-xs text-slate-400">
                              <span className="uppercase">{model.file_type}</span>
                              <span>•</span>
@@ -1037,27 +1062,37 @@ export default function Admin() {
                              </Button>
                            </div>
                           </div>
-                          <div className="flex gap-2">
-                           <Button
-                             size="icon"
-                             variant="outline"
-                             className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 flex-shrink-0"
-                             onClick={() => setPreviewModel(model)}
-                           >
-                             <Eye className="w-4 h-4" />
-                           </Button>
-                           <Button
-                             size="icon"
-                             variant="ghost"
-                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
-                             onClick={() => {
-                               if (confirm(`Delete "${model.name}"?`)) {
-                                 deleteModelMutation.mutate(model.id);
-                               }
-                             }}
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </Button>
+                          <div className="flex gap-2 items-center">
+                            <div className="flex items-center gap-2 mr-2">
+                              <span className="text-xs text-slate-400">Global:</span>
+                              <Switch
+                                checked={model.is_global || false}
+                                onCheckedChange={(checked) => updateModelMutation.mutate({ 
+                                  id: model.id, 
+                                  data: { is_global: checked } 
+                                })}
+                              />
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 flex-shrink-0"
+                              onClick={() => setPreviewModel(model)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 flex-shrink-0"
+                              onClick={() => {
+                                if (confirm(`Delete "${model.name}"?`)) {
+                                  deleteModelMutation.mutate(model.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </motion.div>
