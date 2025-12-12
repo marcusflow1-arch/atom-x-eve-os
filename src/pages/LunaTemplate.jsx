@@ -24,7 +24,8 @@ function TransparentModel3DViewer({ modelUrl }) {
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
   const controlsActive = useRef(false);
-  const skillPlaying = useRef(false);
+  const exclusiveAction = useRef(null);
+  const mixerRef = useRef(null);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
 
@@ -34,13 +35,14 @@ function TransparentModel3DViewer({ modelUrl }) {
       try {
         const anims = await base44.entities.AnimationFBX.list();
         // Filter for specific animations we need
-        const mmaKick = anims.find(a => a.name.toLowerCase().includes('mma kick'));
-        const backflip = anims.find(a => a.name.toLowerCase().includes('backflip'));
+        const kick2 = anims.find(a => a.name.toLowerCase().includes('mma kick'));
+        const kick = anims.find(a => a.name.toLowerCase().includes('backflip'));
+        const up = anims.find(a => a.name.toLowerCase().includes('uppercut') || a.name.toLowerCase().includes('backflip to uppercut'));
         const idle = anims.find(a => a.animation_type === 'idle');
-        const run = anims.find(a => a.animation_type === 'run');
-        const jump = anims.find(a => a.name.toLowerCase().includes('falling'));
+        const running = anims.find(a => a.animation_type === 'run');
+        const falling = anims.find(a => a.name.toLowerCase().includes('falling'));
 
-        setAnimations([idle, run, jump, mmaKick, backflip].filter(Boolean));
+        setAnimations([idle, running, falling, kick2, kick, up].filter(Boolean));
       } catch (error) {
         console.error('Failed to load animations:', error);
       }
@@ -142,6 +144,7 @@ function TransparentModel3DViewer({ modelUrl }) {
       scene.add(model);
 
       mixer = new THREE.AnimationMixer(model);
+      mixerRef.current = mixer;
 
       // Find and store animations
       if (animations && animations.length > 0) {
@@ -150,12 +153,11 @@ function TransparentModel3DViewer({ modelUrl }) {
           const name = clip.name.toLowerCase();
 
           if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-          else if (name.includes('walk')) actionsRef.current.walk = action;
-          else if (name.includes('run')) actionsRef.current.run = action;
-          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
-          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
-          else if (name.includes('mma kick')) actionsRef.current.mmaKick = action;
-          else if (name.includes('backflip')) actionsRef.current.backflip = action;
+          else if (name.includes('running') || name.includes('run')) actionsRef.current.running = action;
+          else if (name.includes('falling') || name.includes('fall')) actionsRef.current.falling = action;
+          else if (name.includes('mma kick')) actionsRef.current.kick2 = action;
+          else if (name.includes('backflip')) actionsRef.current.kick = action;
+          else if (name.includes('uppercut')) actionsRef.current.up = action;
         });
 
         // Default to idle or first animation
@@ -280,13 +282,17 @@ function TransparentModel3DViewer({ modelUrl }) {
         e.preventDefault();
       }
 
-      // Skill animations on keys 1 and 2
-      if (key === '1') {
-        playSkillAnimation('mmaKick');
-      }
-
-      if (key === '2') {
-        playSkillAnimation('backflip');
+      // Exclusive skill animations on keys 1, 2, 3
+      if (!exclusiveAction.current) {
+        if (key === '1') {
+          startExclusiveAction('kick2');
+        }
+        else if (key === '2') {
+          startExclusiveAction('kick');
+        }
+        else if (key === '3') {
+          startExclusiveAction('up');
+        }
       }
     };
 
@@ -326,33 +332,45 @@ function TransparentModel3DViewer({ modelUrl }) {
       }
     };
 
-    const playSkillAnimation = (animName) => {
-      if (skillPlaying.current) return;
-      
-      const action = actionsRef.current[animName];
+    const startExclusiveAction = (actionName) => {
+      if (exclusiveAction.current) return;
+
+      const action = actionsRef.current[actionName];
       if (!action) return;
 
-      skillPlaying.current = true;
+      exclusiveAction.current = actionName;
 
+      // Stop all other animations and play exclusive
       Object.values(actionsRef.current).forEach(a => a.stop());
       action.reset();
       action.setLoop(THREE.LoopOnce);
       action.clampWhenFinished = true;
+      action.fadeIn(0.05);
       action.play();
 
-      const onFinish = () => {
-        skillPlaying.current = false;
-        mixer.removeEventListener('finished', onFinish);
+      const onFinish = (event) => {
+        // Only unlock if the animation that finished matches
+        if (event.action === action) {
+          exclusiveAction.current = null;
+          mixerRef.current.removeEventListener('finished', onFinish);
+        }
       };
-      mixer.addEventListener('finished', onFinish);
+      mixerRef.current.addEventListener('finished', onFinish);
     };
 
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      
+
       if (modelRef.current && controlsActive.current) {
+        // If an exclusive animation is running, skip all movement logic
+        if (exclusiveAction.current) {
+          renderer.render(scene, camera);
+          return;
+        }
+
+        // ---- NORMAL MOVEMENT LOGIC ----
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
@@ -376,7 +394,7 @@ function TransparentModel3DViewer({ modelUrl }) {
         if (isJumpingRef.current || modelRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
           modelRef.current.position.y += velocityRef.current.y;
-          
+
           if (modelRef.current.position.y <= 0) {
             modelRef.current.position.y = 0;
             isJumpingRef.current = false;
@@ -384,13 +402,13 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         }
 
-        // PlayerController Logic
-        if (skillPlaying.current) {
-          // Don't override skill animations
-        } else if (grounded) {
+        // Animation blending based on movement state
+        if (grounded) {
+          setBaseAction('idle');
+
           if (isMoving) {
             direction.normalize();
-            
+
             // Move model
             modelRef.current.position.x += direction.x * moveSpeed;
             modelRef.current.position.z += direction.z * moveSpeed;
@@ -399,21 +417,16 @@ function TransparentModel3DViewer({ modelUrl }) {
             const angle = Math.atan2(direction.x, direction.z);
             modelRef.current.rotation.y = angle;
 
-            // Play running animation
-            if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
-              setBaseAction('run');
-            }
+            // Blend to running
+            const weight = Math.min(dirLength, 1);
+            mixAction('running', 0.1, weight);
           } else {
-            // Play idle when stopped
-            if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-              setBaseAction('idle');
-            }
+            mixAction('idle', 0.1, 1);
           }
         } else {
-          // Falling overrides everything when not grounded
-          if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
-            setBaseAction('jump');
-          }
+          // Falling when not grounded
+          setBaseAction('falling');
+          mixAction('falling', 0.1, 1);
         }
 
         // Keep camera following model
@@ -429,7 +442,7 @@ function TransparentModel3DViewer({ modelUrl }) {
           setBaseAction('idle');
         }
       }
-      
+
       renderer.render(scene, camera);
     }
     animate();
