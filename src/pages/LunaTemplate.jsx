@@ -14,22 +14,27 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
 
-// Transparent 3D Model Viewer
+// Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl }) {
   const containerRef = useRef(null);
+  const modelRef = useRef(null);
+  const actionsRef = useRef({});
+  const keysPressed = useRef({});
+  const velocityRef = useRef(new THREE.Vector3());
+  const isJumpingRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
 
     const scene = new THREE.Scene();
-    scene.background = null; // Transparent background
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 1.5, 3);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // Enable alpha for transparency
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setClearColor(0x000000, 0); // Transparent clear color
+    renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -42,10 +47,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enableZoom = true;
-    controls.enablePan = true;
-    controls.minDistance = 1;
-    controls.maxDistance = 10;
+    controls.enabled = false; // Disable orbit controls for WASD movement
 
     let mixer = null;
     const clock = new THREE.Clock();
@@ -55,8 +57,8 @@ function TransparentModel3DViewer({ modelUrl }) {
       modelUrl,
       (gltf) => {
         const model = gltf.scene;
+        modelRef.current = model;
 
-        // Traverse and apply fixes
         model.traverse((node) => {
           if (node.isMesh || node.isSkinnedMesh) {
             node.frustumCulled = false;
@@ -96,31 +98,152 @@ function TransparentModel3DViewer({ modelUrl }) {
         model.position.sub(center.multiplyScalar(scale));
         scene.add(model);
 
-        // Create the animation mixer
         mixer = new THREE.AnimationMixer(model);
 
-        // If animations exist, play the first clip (usually Idle)
+        // Find and store animations
         if (gltf.animations && gltf.animations.length > 0) {
-          const idleClip = gltf.animations[0];
-          const action = mixer.clipAction(idleClip);
-          action.play();
+          gltf.animations.forEach((clip) => {
+            const action = mixer.clipAction(clip);
+            const name = clip.name.toLowerCase();
+            
+            if (name.includes('idle')) actionsRef.current.idle = action;
+            else if (name.includes('walk')) actionsRef.current.walk = action;
+            else if (name.includes('run')) actionsRef.current.run = action;
+            else if (name.includes('jump')) actionsRef.current.jump = action;
+            else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          });
+
+          // Default to idle or first animation
+          const idleAction = actionsRef.current.idle || mixer.clipAction(gltf.animations[0]);
+          idleAction.play();
         }
       },
       undefined,
       (err) => console.error('Error loading model:', err)
     );
 
+    // Keyboard Controls
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      keysPressed.current[key] = true;
+
+      // Spacebar for sword swing
+      if (key === ' ' && actionsRef.current.swing && !actionsRef.current.swing.isRunning()) {
+        e.preventDefault();
+        playAnimation('swing', false);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      keysPressed.current[e.key.toLowerCase()] = false;
+    };
+
+    const playAnimation = (name, loop = true) => {
+      const action = actionsRef.current[name];
+      if (!action) return;
+
+      // Stop all other animations
+      Object.values(actionsRef.current).forEach(a => {
+        if (a !== action && a.isRunning()) {
+          a.fadeOut(0.2);
+        }
+      });
+
+      action.reset();
+      action.fadeIn(0.2);
+      action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce);
+      action.play();
+    };
+
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
       
-      controls.update();
+      if (modelRef.current) {
+        const moveSpeed = keysPressed.current.shift ? 0.08 : 0.04; // Shift for running
+        let moving = false;
+        let direction = new THREE.Vector3();
+
+        // WASD movement
+        if (keysPressed.current.w) {
+          direction.z -= 1;
+          moving = true;
+        }
+        if (keysPressed.current.s) {
+          direction.z += 1;
+          moving = true;
+        }
+        if (keysPressed.current.a) {
+          direction.x -= 1;
+          moving = true;
+        }
+        if (keysPressed.current.d) {
+          direction.x += 1;
+          moving = true;
+        }
+
+        // Jumping
+        if (keysPressed.current[' '] && !isJumpingRef.current) {
+          isJumpingRef.current = true;
+          velocityRef.current.y = 0.15;
+          if (actionsRef.current.jump && !actionsRef.current.swing?.isRunning()) {
+            playAnimation('jump', false);
+          }
+        }
+
+        // Apply gravity
+        if (isJumpingRef.current) {
+          velocityRef.current.y -= 0.008;
+          modelRef.current.position.y += velocityRef.current.y;
+          
+          if (modelRef.current.position.y <= 0) {
+            modelRef.current.position.y = 0;
+            isJumpingRef.current = false;
+            velocityRef.current.y = 0;
+          }
+        }
+
+        // Move model
+        if (moving) {
+          direction.normalize();
+          modelRef.current.position.x += direction.x * moveSpeed;
+          modelRef.current.position.z += direction.z * moveSpeed;
+
+          // Rotate model to face movement direction
+          const angle = Math.atan2(direction.x, direction.z);
+          modelRef.current.rotation.y = angle;
+
+          // Play walk or run animation
+          if (!actionsRef.current.swing?.isRunning() && !isJumpingRef.current) {
+            const animName = keysPressed.current.shift ? 'run' : 'walk';
+            if (actionsRef.current[animName] && !actionsRef.current[animName].isRunning()) {
+              playAnimation(animName);
+            }
+          }
+        } else if (!isJumpingRef.current && !actionsRef.current.swing?.isRunning()) {
+          // Play idle if not moving and not in other animation
+          if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+            playAnimation('idle');
+          }
+        }
+
+        // Keep camera following model
+        camera.position.x = modelRef.current.position.x;
+        camera.position.z = modelRef.current.position.z + 3;
+        camera.lookAt(modelRef.current.position);
+      }
+      
       renderer.render(scene, camera);
     }
     animate();
 
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
