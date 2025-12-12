@@ -682,6 +682,7 @@ export default function LunaTemplate() {
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
+  const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const { mode } = useDashboardMode();
 
   // Fetch 3D Model and Animations
@@ -698,6 +699,24 @@ export default function LunaTemplate() {
       }
     };
     fetchModelAndAnimations();
+  }, []);
+
+  // Skill Keybinds (1-5 keys)
+  useEffect(() => {
+    const handleSkillKey = (e) => {
+      const key = e.key;
+      if (['1', '2', '3', '4', '5'].includes(key)) {
+        const index = parseInt(key) - 1;
+        setActiveSkills(prev => {
+          const newSkills = [...prev];
+          newSkills[index] = !newSkills[index];
+          return newSkills;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleSkillKey);
+    return () => window.removeEventListener('keydown', handleSkillKey);
   }, []);
 
   const itemCount = ORBITAL_ITEMS.length;
@@ -828,6 +847,53 @@ export default function LunaTemplate() {
         >
           <Settings className="w-6 h-6 text-white/80" />
         </motion.button>
+
+        {/* Skills Section Above Dock */}
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
+          <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
+          
+          {/* Decorative Lines */}
+          <div className="relative w-52 h-4">
+            <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
+            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
+          </div>
+
+          {/* Skill Boxes */}
+          <div className="flex flex-col items-center gap-3">
+            {/* Top Row: 2 boxes */}
+            <div className="flex gap-3">
+              {[0, 1].map(i => (
+                <div 
+                  key={`skill-top-${i}`}
+                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                    activeSkills[i] 
+                      ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
+                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Bottom Row: 3 boxes */}
+            <div className="flex gap-3">
+              {[2, 3, 4].map(i => (
+                <div 
+                  key={`skill-bottom-${i}`}
+                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                    activeSkills[i] 
+                      ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
+                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Bottom Dock Menu */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-end justify-center gap-6 pointer-events-auto pb-4 overflow-x-auto w-full px-8 no-scrollbar">
