@@ -6,6 +6,12 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass';
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
+import { ColorCorrectionShader } from 'three/examples/jsm/shaders/ColorCorrectionShader';
+import { VignetteShader } from 'three/examples/jsm/shaders/VignetteShader';
 
 export default function AdvancedModel3DViewer({ modelUrl }) {
   const canvasRef = useRef(null);
@@ -28,8 +34,10 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     // Advanced color and tone mapping
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.4;
     renderer.useLegacyLights = false;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Camera
     const camera = new THREE.PerspectiveCamera(
@@ -56,32 +64,70 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
       }
     );
 
-    // Lighting Setup
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    keyLight.position.set(1, 1, 1);
+    // Cinematic Lighting Setup
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    keyLight.position.set(2, 3, 2);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 50;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x88aaff, 1.2);
-    fillLight.position.set(-1, 0.5, -1);
+    const fillLight = new THREE.DirectionalLight(0x88bbff, 1.5);
+    fillLight.position.set(-2, 1, -1);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xffffff, 3.0);
-    rimLight.position.set(0, 2, -2);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 4.0);
+    rimLight.position.set(0, 3, -3);
     scene.add(rimLight);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const backLight = new THREE.DirectionalLight(0xffddaa, 2.0);
+    backLight.position.set(-1, 2, -2);
+    scene.add(backLight);
 
-    // Post-Processing (Bloom)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+    // Cinematic Post-Processing Pipeline
     const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
+    
+    // Base render
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
 
+    // SSAO (Screen Space Ambient Occlusion) - Sketchfab's signature look
+    const ssaoPass = new SSAOPass(scene, camera, canvas.clientWidth, canvas.clientHeight);
+    ssaoPass.kernelRadius = 16;
+    ssaoPass.minDistance = 0.001;
+    ssaoPass.maxDistance = 0.1;
+    ssaoPass.output = SSAOPass.OUTPUT.Default;
+    composer.addPass(ssaoPass);
+
+    // Bloom for glow/highlights
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
-      0.9,
-      0.6,
-      0.0
+      1.2,  // strength
+      0.8,  // radius
+      0.2   // threshold
     );
     composer.addPass(bloomPass);
+
+    // Color Correction
+    const colorCorrectionPass = new ShaderPass(ColorCorrectionShader);
+    colorCorrectionPass.uniforms['powRGB'].value = new THREE.Vector3(1.1, 1.1, 1.1);
+    colorCorrectionPass.uniforms['mulRGB'].value = new THREE.Vector3(1.05, 1.0, 0.98);
+    composer.addPass(colorCorrectionPass);
+
+    // Vignette
+    const vignettePass = new ShaderPass(VignetteShader);
+    vignettePass.uniforms['darkness'].value = 1.2;
+    vignettePass.uniforms['offset'].value = 0.95;
+    composer.addPass(vignettePass);
+
+    // FXAA (Anti-aliasing)
+    const fxaaPass = new ShaderPass(FXAAShader);
+    fxaaPass.uniforms['resolution'].value.set(1 / canvas.clientWidth, 1 / canvas.clientHeight);
+    composer.addPass(fxaaPass);
 
     // Load Model
     let mixer;
@@ -91,20 +137,49 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
       (gltf) => {
         const model = gltf.scene;
 
-        // Material fix for anime models
+        // Enhanced PBR Materials (Sketchfab style)
         model.traverse((node) => {
           if (node.isMesh || node.isSkinnedMesh) {
             node.frustumCulled = false;
+            node.castShadow = true;
+            node.receiveShadow = true;
+            
             if (node.material) {
-              const applyMaterial = (mat) => {
+              const applyPBRMaterial = (mat) => {
                 mat.side = THREE.DoubleSide;
-                mat.envMapIntensity = 1.5;
+                
+                // Enhanced PBR properties
+                mat.envMapIntensity = 2.0;
+                mat.metalness = mat.metalness || 0.1;
+                mat.roughness = mat.roughness || 0.6;
+                
+                // Better lighting response
+                if (!mat.metalnessMap && !mat.roughnessMap) {
+                  mat.metalness = 0.0;
+                  mat.roughness = 0.7;
+                }
+                
+                // Subsurface scattering approximation for skin/organic materials
+                if (mat.name && (mat.name.includes('skin') || mat.name.includes('face') || mat.name.includes('body'))) {
+                  mat.roughness = 0.5;
+                  mat.metalness = 0.0;
+                  mat.envMapIntensity = 0.8;
+                }
+                
+                // Enhanced reflections
+                if (mat.name && (mat.name.includes('metal') || mat.name.includes('armor'))) {
+                  mat.metalness = 0.9;
+                  mat.roughness = 0.2;
+                  mat.envMapIntensity = 3.0;
+                }
+                
                 mat.needsUpdate = true;
               };
+              
               if (Array.isArray(node.material)) {
-                node.material.forEach(applyMaterial);
+                node.material.forEach(applyPBRMaterial);
               } else {
-                applyMaterial(node.material);
+                applyPBRMaterial(node.material);
               }
             }
           }
@@ -149,10 +224,19 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
     // Resize Handling
     const handleResize = () => {
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      composer.setSize(canvas.clientWidth, canvas.clientHeight);
+      composer.setSize(width, height);
+      
+      // Update SSAO
+      ssaoPass.setSize(width, height);
+      
+      // Update FXAA resolution
+      fxaaPass.uniforms['resolution'].value.set(1 / width, 1 / height);
     };
 
     window.addEventListener('resize', handleResize);
