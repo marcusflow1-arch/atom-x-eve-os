@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
+import AIWebApp from '../components/admin/AIWebApp';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -1106,8 +1107,11 @@ export default function Admin() {
                 </Badge>
               </div>
 
+              {/* AI App Generator */}
+              <AIWebApp />
+
               {/* Upload LG App Section */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6 mt-6">
                 <h3 className="font-semibold mb-4">Upload LG Web App</h3>
                 <div className="space-y-4">
                   <Input
