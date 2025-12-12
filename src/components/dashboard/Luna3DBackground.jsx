@@ -1,11 +1,29 @@
-import React, { useRef, Suspense, useState, useEffect } from 'react';
+import React, { useRef, Suspense, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Loader2 } from 'lucide-react';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Loader2, Box } from 'lucide-react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 function Model() {
   const modelRef = useRef();
-  const gltf = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
+  const [model, setModel] = useState(null);
+  const [error, setError] = useState(false);
+  
+  React.useEffect(() => {
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb',
+      (gltf) => {
+        setModel(gltf.scene);
+      },
+      undefined,
+      (err) => {
+        console.error('Error loading model:', err);
+        setError(true);
+      }
+    );
+  }, []);
   
   useFrame(() => {
     if (modelRef.current) {
@@ -13,9 +31,9 @@ function Model() {
     }
   });
   
-  if (!gltf || !gltf.scene) return null;
+  if (error || !model) return null;
   
-  return <primitive ref={modelRef} object={gltf.scene} scale={1.5} position={[0, 0, 0]} />;
+  return <primitive ref={modelRef} object={model} scale={1.5} position={[0, 0, 0]} />;
 }
 
 function ErrorFallback() {
