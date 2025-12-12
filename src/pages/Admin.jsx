@@ -12,6 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import Model3DManager from '../components/admin/Model3DManager';
+import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -419,6 +420,7 @@ export default function Admin() {
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
+            <TabsTrigger value="animations">FBX Animations</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -866,6 +868,10 @@ export default function Admin() {
 
           <TabsContent value="models">
             <Model3DManager />
+          </TabsContent>
+
+          <TabsContent value="animations">
+            <AnimationFBXManager />
           </TabsContent>
                     </Tabs>
       </div>
