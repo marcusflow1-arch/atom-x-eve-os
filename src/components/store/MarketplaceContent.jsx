@@ -424,103 +424,292 @@ const FilterSidebar = ({ filters, setFilters }) => {
 
 // Item Detail Modal
 const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
+  const [activeTab, setActiveTab] = useState('details'); // 'details' or 'offers'
+  const [offerSort, setOfferSort] = useState('price-low'); // 'price-low', 'price-high', 'newest'
+  const [offerTypeFilter, setOfferTypeFilter] = useState('all'); // 'all', 'bid', 'trade', 'buyout'
+
   if (!item) return null;
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
 
+  // Mock multiple offers for the same item
+  const availableOffers = useMemo(() => {
+    if (!item) return [];
+    return [
+      { id: 'o1', seller: 'TopSeller', rating: 4.9, price: item.price, type: 'buyout', condition: 'New', stock: 5, createdAt: new Date('2025-01-10') },
+      { id: 'o2', seller: 'BargainDeals', rating: 4.5, price: item.price * 1.15, type: 'buyout', condition: 'Like New', stock: 2, createdAt: new Date('2025-01-09') },
+      { id: 'o3', seller: 'RareCollector', rating: 5.0, price: item.price * 0.9, type: 'bid', condition: 'New', stock: 1, createdAt: new Date('2025-01-12'), currentBid: item.price * 0.7 },
+      { id: 'o4', seller: 'TradeKing', rating: 4.7, price: item.price * 1.05, type: 'trade', condition: 'Mint', stock: 1, createdAt: new Date('2025-01-11'), wantedItems: ['Legendary Sword', 'Epic Shield'] },
+      { id: 'o5', seller: 'FastShipping', rating: 4.8, price: item.price * 0.95, type: 'buyout', condition: 'New', stock: 10, createdAt: new Date('2025-01-08') },
+    ];
+  }, [item]);
+
+  const filteredOffers = useMemo(() => {
+    let offers = [...availableOffers];
+    
+    // Filter by type
+    if (offerTypeFilter !== 'all') {
+      offers = offers.filter(o => o.type === offerTypeFilter);
+    }
+    
+    // Sort
+    if (offerSort === 'price-low') {
+      offers.sort((a, b) => a.price - b.price);
+    } else if (offerSort === 'price-high') {
+      offers.sort((a, b) => b.price - a.price);
+    } else if (offerSort === 'newest') {
+      offers.sort((a, b) => b.createdAt - a.createdAt);
+    }
+    
+    return offers;
+  }, [availableOffers, offerSort, offerTypeFilter]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/10 max-w-4xl text-white p-0 overflow-hidden">
-        <div className="flex flex-col md:flex-row">
+      <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/10 max-w-5xl text-white p-0 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[85vh]">
           <div className="md:w-[350px] flex-shrink-0 bg-slate-800 p-6">
             <img src={item.image} alt={item.name} className="w-full aspect-square object-cover rounded-lg" />
           </div>
 
-          <div className="flex-1 p-6 overflow-y-auto max-h-[80vh]">
-            <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 z-10">
               <X className="w-4 h-4" />
             </button>
 
-            <h1 className="text-xl font-bold text-white mb-2 pr-8">{item.name}</h1>
-            
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-blue-400 text-sm">Visit the {item.seller.name} Store</span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-orange-400 font-medium">{item.seller.rating}</span>
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-4 h-4 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
-                ))}
-              </div>
-              <span className="text-blue-400 text-sm">{item.reviews} ratings</span>
-              <span className="text-white/30">|</span>
-              <span className="text-white/50 text-sm">{item.seller.sales}+ bought in past month</span>
-            </div>
-
-            <div className="border-t border-b border-white/10 py-4 mb-4">
-              {hasDiscount && (
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className="bg-red-600 text-white text-sm border-none">-{Math.round((1 - item.price / item.originalPrice) * 100)}%</Badge>
-                  <span className="text-red-400 text-sm">Limited time deal</span>
-                </div>
-              )}
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white">{(item.price || 0).toLocaleString()}</span>
-                <span className="text-white/50">AGP</span>
-                {hasDiscount && (
-                  <span className="text-white/40 text-sm line-through ml-2">List: {(item.originalPrice || 0).toLocaleString()} AGP</span>
-                )}
-              </div>
-              {item.prime && (
-                <p className="text-sm mt-2">
-                  <span className="text-blue-400 flex items-center gap-1"><Truck className="w-4 h-4" /> Prime</span>
-                  <span className="text-green-400">FREE delivery Tomorrow</span>
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex gap-4 text-sm">
-                <span className="text-white/50 w-24">Rarity</span>
-                <Badge className={`${rarity.bg} ${rarity.text} border-none`}>{item.rarity}</Badge>
-              </div>
-              <div className="flex gap-4 text-sm">
-                <span className="text-white/50 w-24">Category</span>
-                <span className="text-white">{item.category}</span>
-              </div>
-              <div className="flex gap-4 text-sm">
-                <span className="text-white/50 w-24">Game</span>
-                <span className="text-white">{item.game}</span>
-              </div>
-              {item.stats && Object.entries(item.stats).map(([key, value]) => (
-                <div key={key} className="flex gap-4 text-sm">
-                  <span className="text-white/50 w-24">{key}</span>
-                  <span className="text-white">{value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-white font-bold mb-2">About this item</h3>
-              <p className="text-white/70 text-sm leading-relaxed">{item.description}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button 
-                onClick={() => onAddToCart(item)}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full"
+            {/* Tabs */}
+            <div className="flex gap-1 border-b border-white/10 px-6 pt-6">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-4 py-2 text-sm font-bold transition-all ${
+                  activeTab === 'details' 
+                    ? 'text-white border-b-2 border-blue-500' 
+                    : 'text-white/50 hover:text-white'
+                }`}
               >
-                Add to Cart
-              </Button>
-              <Button 
-                onClick={() => onBuyNow(item)}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full"
+                Details
+              </button>
+              <button
+                onClick={() => setActiveTab('offers')}
+                className={`px-4 py-2 text-sm font-bold transition-all ${
+                  activeTab === 'offers' 
+                    ? 'text-white border-b-2 border-blue-500' 
+                    : 'text-white/50 hover:text-white'
+                }`}
               >
-                Buy Now
-              </Button>
+                Available Offers ({availableOffers.length})
+              </button>
             </div>
+
+            {activeTab === 'details' ? (
+              <div className="flex-1 p-6 overflow-y-auto">
+                <h1 className="text-xl font-bold text-white mb-2 pr-8">{item.name}</h1>
+                
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-blue-400 text-sm">Visit the {item.seller.name} Store</span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-orange-400 font-medium">{item.seller.rating}</span>
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-4 h-4 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+                    ))}
+                  </div>
+                  <span className="text-blue-400 text-sm">{item.reviews} ratings</span>
+                  <span className="text-white/30">|</span>
+                  <span className="text-white/50 text-sm">{item.seller.sales}+ bought in past month</span>
+                </div>
+
+                <div className="border-t border-b border-white/10 py-4 mb-4">
+                  {hasDiscount && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className="bg-red-600 text-white text-sm border-none">-{Math.round((1 - item.price / item.originalPrice) * 100)}%</Badge>
+                      <span className="text-red-400 text-sm">Limited time deal</span>
+                    </div>
+                  )}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold text-white">{(item.price || 0).toLocaleString()}</span>
+                    <span className="text-white/50">AGP</span>
+                    {hasDiscount && (
+                      <span className="text-white/40 text-sm line-through ml-2">List: {(item.originalPrice || 0).toLocaleString()} AGP</span>
+                    )}
+                  </div>
+                  {item.prime && (
+                    <p className="text-sm mt-2">
+                      <span className="text-blue-400 flex items-center gap-1"><Truck className="w-4 h-4" /> Prime</span>
+                      <span className="text-green-400">FREE delivery Tomorrow</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-white/50 w-24">Rarity</span>
+                    <Badge className={`${rarity.bg} ${rarity.text} border-none`}>{item.rarity}</Badge>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-white/50 w-24">Category</span>
+                    <span className="text-white">{item.category}</span>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-white/50 w-24">Game</span>
+                    <span className="text-white">{item.game}</span>
+                  </div>
+                  {item.stats && Object.entries(item.stats).map(([key, value]) => (
+                    <div key={key} className="flex gap-4 text-sm">
+                      <span className="text-white/50 w-24">{key}</span>
+                      <span className="text-white">{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-white font-bold mb-2">About this item</h3>
+                  <p className="text-white/70 text-sm leading-relaxed">{item.description}</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => onAddToCart(item)}
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold h-11 rounded-full"
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button 
+                    onClick={() => onBuyNow(item)}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-full"
+                  >
+                    Buy Now
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Offer Filters */}
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10 bg-slate-800/30">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-white/50" />
+                    <span className="text-white/60 text-sm font-medium">Filter:</span>
+                  </div>
+                  
+                  {/* Type Filter */}
+                  <select
+                    value={offerTypeFilter}
+                    onChange={(e) => setOfferTypeFilter(e.target.value)}
+                    className="bg-slate-700 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="buyout">Buyout Only</option>
+                    <option value="bid">Bids Only</option>
+                    <option value="trade">Trades Only</option>
+                  </select>
+
+                  {/* Sort */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <ArrowUpDown className="w-4 h-4 text-white/50" />
+                    <span className="text-white/60 text-sm font-medium">Sort:</span>
+                  </div>
+                  <select
+                    value={offerSort}
+                    onChange={(e) => setOfferSort(e.target.value)}
+                    className="bg-slate-700 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                  >
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="newest">Newest First</option>
+                  </select>
+                </div>
+
+                {/* Offers List */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                  {filteredOffers.map((offer) => (
+                    <div 
+                      key={offer.id} 
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-white font-bold">{offer.seller}</span>
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 text-orange-400 fill-current" />
+                              <span className="text-white/70 text-xs">{offer.rating}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`text-[10px] px-2 py-0.5 ${
+                              offer.type === 'buyout' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                              offer.type === 'bid' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                              'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                            }`}>
+                              {offer.type === 'buyout' ? 'Buy Now' : offer.type === 'bid' ? 'Auction' : 'Trade'}
+                            </Badge>
+                            <span className="text-white/50 text-xs">{offer.condition}</span>
+                            <span className="text-white/40 text-xs">• Stock: {offer.stock}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {offer.type === 'bid' ? (
+                            <div>
+                              <div className="text-white/50 text-xs">Current Bid</div>
+                              <div className="text-xl font-bold text-blue-400">{Math.floor(offer.currentBid).toLocaleString()} AGP</div>
+                              <div className="text-white/40 text-xs">Buy Now: {Math.floor(offer.price).toLocaleString()} AGP</div>
+                            </div>
+                          ) : offer.type === 'trade' ? (
+                            <div>
+                              <div className="text-white/50 text-xs">Trade Value</div>
+                              <div className="text-xl font-bold text-purple-400">{Math.floor(offer.price).toLocaleString()} AGP</div>
+                            </div>
+                          ) : (
+                            <div className="text-2xl font-bold text-white">{Math.floor(offer.price).toLocaleString()} AGP</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {offer.type === 'trade' && offer.wantedItems && (
+                        <div className="mb-3 p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                          <div className="text-white/60 text-xs mb-1">Wants in Trade:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {offer.wantedItems.map((wanted, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[10px] border-purple-500/30 text-purple-300">
+                                {wanted}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          onClick={() => offer.type === 'buyout' ? onBuyNow({ ...item, price: offer.price, seller: { name: offer.seller } }) : null}
+                          className={`flex-1 h-9 text-sm font-bold rounded-lg ${
+                            offer.type === 'buyout' ? 'bg-orange-500 hover:bg-orange-600' :
+                            offer.type === 'bid' ? 'bg-blue-500 hover:bg-blue-600' :
+                            'bg-purple-500 hover:bg-purple-600'
+                          }`}
+                        >
+                          {offer.type === 'buyout' ? 'Buy Now' : offer.type === 'bid' ? 'Place Bid' : 'Propose Trade'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="h-9 px-4 text-sm border-white/20 hover:bg-white/10"
+                        >
+                          Contact
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {filteredOffers.length === 0 && (
+                    <div className="text-center py-12">
+                      <Package className="w-12 h-12 text-white/20 mx-auto mb-3" />
+                      <p className="text-white/50">No offers match your filters</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
