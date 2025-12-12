@@ -114,8 +114,6 @@ function TransparentModel3DViewer({ modelUrl }) {
                 mat.side = THREE.DoubleSide;
                 // If using alpha cutout, ensure alphaTest is set sensibly
                 if (mat.alphaTest === undefined && mat.map) mat.alphaTest = 0.5;
-                // Ensure texture encoding is correct
-                if (mat.map) mat.map.encoding = THREE.sRGBEncoding;
 
                 mat.needsUpdate = true;
               };
