@@ -9,83 +9,43 @@ function Model({ url, autoRotate = true }) {
   const [scene, setScene] = React.useState(null);
   
   React.useEffect(() => {
-    let mounted = true;
-
-    const loadModel = async () => {
+    useGLTF.load(url, (gltf) => {
       try {
-        const gltf = await new Promise((resolve, reject) => {
-          useGLTF.load(url, resolve, undefined, reject);
-        });
-
-        if (!mounted) return;
-
         const clonedScene = gltf.scene.clone();
-
-        // Strip all textures and replace with simple materials
+        
         clonedScene.traverse((child) => {
-          if (child.isMesh) {
-            try {
-              const oldColor = child.material?.color?.clone() || new THREE.Color(0x888888);
-
-              // Dispose old material completely
-              if (child.material) {
-                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                mats.forEach(m => {
-                  if (m?.dispose) {
-                    try { m.dispose(); } catch (e) {}
+          if (child.isMesh && child.material) {
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            
+            materials.forEach((mat) => {
+              // Safely remove all textures to prevent source errors
+              ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
+                try {
+                  if (mat[prop]) {
+                    mat[prop] = null;
                   }
-                });
-              }
-
-              // Create fresh material with no texture references
-              child.material = new THREE.MeshStandardMaterial({
-                color: oldColor,
-                metalness: 0.3,
-                roughness: 0.7
+                } catch (e) {
+                  // Ignore texture removal errors
+                }
               });
-            } catch (e) {
-              // Fallback to gray material
-              child.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
-            }
+            });
           }
         });
-
-        // Center and scale
+        
         const box = new THREE.Box3().setFromObject(clonedScene);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = maxDim > 0 ? 2 / maxDim : 1;
-
+        
         clonedScene.scale.multiplyScalar(scale);
         clonedScene.position.sub(center.multiplyScalar(scale));
-
-        if (mounted) {
-          setScene(clonedScene);
-        }
+        
+        setScene(clonedScene);
       } catch (err) {
-        console.error('Model load error:', err);
+        console.error('Error loading model:', err);
       }
-    };
-
-    loadModel();
-
-    return () => {
-      mounted = false;
-      if (scene) {
-        scene.traverse((child) => {
-          if (child.geometry?.dispose) child.geometry.dispose();
-          if (child.material) {
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach(m => {
-              if (m?.dispose) {
-                try { m.dispose(); } catch (e) {}
-              }
-            });
-          }
-        });
-      }
-    };
+    });
   }, [url]);
   
   useFrame(() => {

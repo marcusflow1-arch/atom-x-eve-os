@@ -11,75 +11,40 @@ function Model({ url }) {
   const [error, setError] = useState(false);
   
   React.useEffect(() => {
-    let mounted = true;
-
-    const loadModel = async () => {
+    useGLTF.preload(url);
+    
+    useGLTF.load(url, (gltf) => {
       try {
-        const gltf = await new Promise((resolve, reject) => {
-          useGLTF.load(url, resolve, undefined, reject);
-        });
-
-        if (!mounted) return;
-
         const clonedScene = gltf.scene.clone();
-
+        
         // Replace materials with simple ones to avoid texture issues
         clonedScene.traverse((child) => {
           if (child.isMesh) {
-            try {
-              // Safely dispose old material and textures
-              if (child.material) {
-                const oldMaterials = Array.isArray(child.material) ? child.material : [child.material];
-                oldMaterials.forEach(mat => {
-                  if (mat) {
-                    ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'displacementMap', 'alphaMap', 'lightMap', 'envMap'].forEach(prop => {
-                      try {
-                        if (mat[prop]?.dispose) mat[prop].dispose();
-                      } catch (e) {}
-                    });
-                    if (mat.dispose) mat.dispose();
-                  }
-                });
-              }
-
-              const newMaterial = new THREE.MeshStandardMaterial({
-                color: child.material?.color || new THREE.Color(0x888888),
-                metalness: 0.3,
-                roughness: 0.7
-              });
-              child.material = newMaterial;
-            } catch (e) {
-              console.warn('Material processing error:', e);
-            }
+            const newMaterial = new THREE.MeshStandardMaterial({
+              color: child.material?.color || new THREE.Color(0x888888),
+              metalness: 0.3,
+              roughness: 0.7
+            });
+            child.material = newMaterial;
           }
         });
-
+        
         // Center and scale
         const box = new THREE.Box3().setFromObject(clonedScene);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = maxDim > 0 ? 2 / maxDim : 1;
-
+        
         clonedScene.scale.multiplyScalar(scale);
         clonedScene.position.sub(center.multiplyScalar(scale));
-
-        if (mounted) {
-          setScene(clonedScene);
-        }
+        
+        setScene(clonedScene);
       } catch (err) {
-        console.error('Error loading model:', err);
-        if (mounted) {
-          setError(true);
-        }
+        console.error('Error processing model:', err);
+        setError(true);
       }
-    };
-
-    loadModel();
-
-    return () => {
-      mounted = false;
-    };
+    }, undefined, () => setError(true));
   }, [url]);
   
   useFrame(() => {
