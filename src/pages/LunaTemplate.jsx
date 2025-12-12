@@ -64,7 +64,12 @@ function TransparentModel3DViewer({ modelUrl }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enabled = false;
+    controls.enableZoom = true;
+    controls.enableRotate = false;
+    controls.enablePan = false;
+    controls.minDistance = 2;
+    controls.maxDistance = 10;
+    controls.enabled = true;
 
     // Click handler to activate controls
     const handleCanvasClick = () => {
@@ -368,9 +373,12 @@ function TransparentModel3DViewer({ modelUrl }) {
         }
 
         // Keep camera following model
-        camera.position.x = modelRef.current.position.x;
-        camera.position.z = modelRef.current.position.z + 3;
-        camera.lookAt(modelRef.current.position);
+        const offset = new THREE.Vector3(0, 1.5, 5);
+        camera.position.x = modelRef.current.position.x + offset.x;
+        camera.position.y = modelRef.current.position.y + offset.y;
+        camera.position.z = modelRef.current.position.z + offset.z;
+        controls.target.copy(modelRef.current.position);
+        controls.update();
       } else if (modelRef.current && !controlsActive.current) {
         // When inactive, play idle animation
         if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
