@@ -20,6 +20,19 @@ function Model({ url }) {
         // Replace materials with simple ones to avoid texture issues
         clonedScene.traverse((child) => {
           if (child.isMesh) {
+            // Safely dispose old material and textures
+            if (child.material) {
+              const oldMaterials = Array.isArray(child.material) ? child.material : [child.material];
+              oldMaterials.forEach(mat => {
+                if (mat) {
+                  ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'].forEach(prop => {
+                    if (mat[prop]?.dispose) mat[prop].dispose();
+                  });
+                  if (mat.dispose) mat.dispose();
+                }
+              });
+            }
+
             const newMaterial = new THREE.MeshStandardMaterial({
               color: child.material?.color || new THREE.Color(0x888888),
               metalness: 0.3,
