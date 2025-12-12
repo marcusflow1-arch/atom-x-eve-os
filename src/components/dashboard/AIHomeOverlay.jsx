@@ -162,9 +162,9 @@ export default function AIHomeOverlay({ onClose }) {
             style={{ width: '100%', height: '100%', border: 'none', overflow: 'hidden' }}
           />
           
-          {/* Invisible box in center for OLA model */}
+          {/* Center box with outline for OLA model */}
           {olaModelUrl && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none z-[110]">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 pointer-events-none z-[110] border-2 border-white/20 rounded-xl">
               <ThreeModelViewer modelUrl={olaModelUrl} />
             </div>
           )}
