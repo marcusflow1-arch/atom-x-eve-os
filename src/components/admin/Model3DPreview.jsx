@@ -16,17 +16,32 @@ function Model({ url }) {
     loader.load(
       url,
       (gltf) => {
-        // Center and scale the model
-        const box = new THREE.Box3().setFromObject(gltf.scene);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 2 / maxDim;
-        
-        gltf.scene.scale.multiplyScalar(scale);
-        gltf.scene.position.sub(center.multiplyScalar(scale));
-        
-        setModel(gltf.scene);
+        try {
+          // Traverse and fix materials
+          gltf.scene.traverse((child) => {
+            if (child.isMesh && child.material) {
+              // Ensure material has proper properties
+              if (child.material.map && !child.material.map.source) {
+                child.material.map = null;
+              }
+            }
+          });
+          
+          // Center and scale the model
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = maxDim > 0 ? 2 / maxDim : 1;
+          
+          gltf.scene.scale.multiplyScalar(scale);
+          gltf.scene.position.sub(center.multiplyScalar(scale));
+          
+          setModel(gltf.scene);
+        } catch (err) {
+          console.error('Error processing model:', err);
+          setError(true);
+        }
       },
       undefined,
       (err) => {
