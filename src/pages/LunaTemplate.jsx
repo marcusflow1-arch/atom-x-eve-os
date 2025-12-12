@@ -43,6 +43,9 @@ function TransparentModel3DViewer({ modelUrl }) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
+    let loadedModel = null;
+    let clock = new THREE.Clock();
+
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
@@ -56,6 +59,7 @@ function TransparentModel3DViewer({ modelUrl }) {
         model.scale.multiplyScalar(scale);
         model.position.sub(center.multiplyScalar(scale));
         scene.add(model);
+        loadedModel = model;
       },
       undefined,
       (err) => console.error('Error loading model:', err)
@@ -63,6 +67,24 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     function animate() {
       requestAnimationFrame(animate);
+      
+      // Idle animation with smooth floating and rotation
+      if (loadedModel) {
+        const time = clock.getElapsedTime();
+        
+        // Slow rotation
+        loadedModel.rotation.y = Math.sin(time * 0.3) * 0.2;
+        
+        // Floating up and down
+        loadedModel.position.y = Math.sin(time * 0.5) * 0.15;
+        
+        // Subtle side-to-side sway
+        loadedModel.position.x = Math.cos(time * 0.4) * 0.1;
+        
+        // Gentle tilt
+        loadedModel.rotation.x = Math.sin(time * 0.6) * 0.05;
+      }
+      
       controls.update();
       renderer.render(scene, camera);
     }
