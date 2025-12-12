@@ -14,6 +14,7 @@ import { Game } from '@/entities/Game';
 import Model3DManager from '../components/admin/Model3DManager';
 import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
+import Model3DScriptManager from '../components/admin/Model3DScriptManager';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -423,6 +424,7 @@ export default function Admin() {
             <TabsTrigger value="models">3D Models</TabsTrigger>
             <TabsTrigger value="animations">FBX Animations</TabsTrigger>
             <TabsTrigger value="fbx-models">FBX Models</TabsTrigger>
+            <TabsTrigger value="scripts">3D Scripts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -878,6 +880,10 @@ export default function Admin() {
 
           <TabsContent value="fbx-models">
             <ModelFBXManager />
+          </TabsContent>
+
+          <TabsContent value="scripts">
+            <Model3DScriptManager />
           </TabsContent>
                     </Tabs>
       </div>
