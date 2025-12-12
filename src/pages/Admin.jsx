@@ -1125,7 +1125,7 @@ export default function Admin() {
                   />
                   <input
                     type="file"
-                    accept=".zip,application/zip"
+                    accept=".html,text/html"
                     className="hidden"
                     id="lgAppUpload"
                     disabled={uploadingLGApp}
@@ -1133,8 +1133,8 @@ export default function Admin() {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       
-                      if (!file.name.endsWith('.zip')) {
-                        alert('Please upload a .zip file');
+                      if (!file.name.endsWith('.html')) {
+                        alert('Please upload an .html file');
                         return;
                       }
 
@@ -1189,8 +1189,8 @@ export default function Admin() {
                           </>
                         ) : (
                           <>
-                            <Folder className="w-4 h-4 mr-2" />
-                            Select App Folder (.zip)
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload HTML File
                           </>
                         )}
                       </span>
@@ -1297,23 +1297,27 @@ export default function Admin() {
               <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4 mt-6">
                 <h4 className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
                   <Terminal className="w-4 h-4" />
-                  Three.js / WebGL App Structure
+                  HTML Web App Format
                 </h4>
                 <p className="text-cyan-300/80 text-sm mb-3">
-                  Upload HTML files or .zip folders containing Three.js applications:
+                  Upload a single HTML file containing your Three.js / WebGL app:
                 </p>
                 <code className="block bg-slate-900 px-3 py-2 rounded text-xs text-cyan-400 font-mono whitespace-pre">
-{`three-app.zip
-├── index.html (entry point)
-├── js/
-│   ├── three.min.js
-│   └── main.js
-├── models/
-│   └── scene.glb
-└── textures/`}
+{`<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    // Your Three.js code here
+  </script>
+</body>
+</html>`}
                 </code>
                 <p className="text-cyan-300/80 text-xs mt-3">
-                  Supports Three.js WebGL apps - uploaded apps can be run directly in the browser
+                  Use CDN links for libraries (Three.js, etc.) - uploaded apps run directly in browser
                 </p>
               </div>
             </section>
