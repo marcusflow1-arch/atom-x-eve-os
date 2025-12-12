@@ -26,6 +26,7 @@ function TransparentModel3DViewer({ modelUrl }) {
   const controlsActive = useRef(false);
   const exclusiveAction = useRef(null);
   const mixerRef = useRef(null);
+  const animationFinishedCb = useRef(null);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
 
@@ -333,29 +334,31 @@ function TransparentModel3DViewer({ modelUrl }) {
     };
 
     const startExclusiveAction = (actionName) => {
+      if (!actionsRef.current[actionName]) return;
       if (exclusiveAction.current) return;
-
-      const action = actionsRef.current[actionName];
-      if (!action) return;
 
       exclusiveAction.current = actionName;
 
-      // Stop all other animations and play exclusive
-      Object.values(actionsRef.current).forEach(a => a.stop());
+      // Register finished callback once
+      if (!animationFinishedCb.current) {
+        animationFinishedCb.current = () => {
+          exclusiveAction.current = null;
+          // Restore idle when exclusive animation finishes
+          setBaseAction('idle');
+          mixAction('idle', 0.1, 1);
+        };
+        mixerRef.current.addEventListener('finished', animationFinishedCb.current);
+      }
+
+      const action = actionsRef.current[actionName];
       action.reset();
-      action.setLoop(THREE.LoopOnce);
+      action.setLoop(THREE.LoopOnce, 0);
       action.clampWhenFinished = true;
-      action.fadeIn(0.05);
       action.play();
 
-      const onFinish = (event) => {
-        // Only unlock if the animation that finished matches
-        if (event.action === action) {
-          exclusiveAction.current = null;
-          mixerRef.current.removeEventListener('finished', onFinish);
-        }
-      };
-      mixerRef.current.addEventListener('finished', onFinish);
+      // Set as base and mix
+      setBaseAction(actionName);
+      mixAction(actionName, 0.05, 1);
     };
 
     function animate() {
@@ -404,6 +407,7 @@ function TransparentModel3DViewer({ modelUrl }) {
 
         // Animation blending based on movement state
         if (grounded) {
+          // Use idle as base action
           setBaseAction('idle');
 
           if (isMoving) {
@@ -417,15 +421,14 @@ function TransparentModel3DViewer({ modelUrl }) {
             const angle = Math.atan2(direction.x, direction.z);
             modelRef.current.rotation.y = angle;
 
-            // Blend to running
+            // Blend in running based on movement magnitude
             const weight = Math.min(dirLength, 1);
             mixAction('running', 0.1, weight);
           } else {
             mixAction('idle', 0.1, 1);
           }
         } else {
-          // Falling when not grounded
-          setBaseAction('falling');
+          // In air, use falling action
           mixAction('falling', 0.1, 1);
         }
 
