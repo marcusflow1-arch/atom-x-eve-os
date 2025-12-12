@@ -5,22 +5,17 @@ import { Loader2 } from 'lucide-react';
 
 function Model() {
   const modelRef = useRef();
+  const gltf = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
   
-  try {
-    const { scene } = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
-    
-    useFrame(() => {
-      if (modelRef.current) {
-        modelRef.current.rotation.y += 0.002;
-      }
-    });
-    
-    if (!scene) return null;
-    
-    return <primitive ref={modelRef} object={scene} scale={1.5} position={[0, 0, 0]} />;
-  } catch (error) {
-    return null;
-  }
+  useFrame(() => {
+    if (modelRef.current) {
+      modelRef.current.rotation.y += 0.002;
+    }
+  });
+  
+  if (!gltf || !gltf.scene) return null;
+  
+  return <primitive ref={modelRef} object={gltf.scene} scale={1.5} position={[0, 0, 0]} />;
 }
 
 function ErrorFallback() {
