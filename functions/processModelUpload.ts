@@ -1,79 +1,69 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
-import JSZip from 'npm:jszip@3.10.1';
+import * as zip from "https://deno.land/x/zipjs@v2.7.34/index.js";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     
-    if (!user) {
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { fileUrl, fileName, fileType } = await req.json();
 
-    // If it's a ZIP file, extract and find the model
-    if (fileType === 'zip') {
-      // Fetch the ZIP file
-      const zipResponse = await fetch(fileUrl);
-      const zipBuffer = await zipResponse.arrayBuffer();
-      
-      // Load and extract ZIP
-      const zip = await JSZip.loadAsync(zipBuffer);
-      
-      // Find GLB or GLTF files
-      let modelFile = null;
-      let modelFileName = null;
-      
-      for (const [filename, file] of Object.entries(zip.files)) {
-        if (!file.dir && (filename.endsWith('.glb') || filename.endsWith('.gltf'))) {
-          modelFile = file;
-          modelFileName = filename;
-          break;
-        }
-      }
-      
-      if (!modelFile) {
-        return Response.json({ 
-          error: 'No GLB or GLTF file found in ZIP' 
-        }, { status: 400 });
-      }
-      
-      // Extract the model file
-      const modelBlob = await modelFile.async('blob');
-      const modelArrayBuffer = await modelBlob.arrayBuffer();
-      
-      // Convert to File object for upload
-      const modelFileObj = new File(
-        [modelArrayBuffer], 
-        modelFileName, 
-        { type: modelFileName.endsWith('.glb') ? 'model/gltf-binary' : 'model/gltf+json' }
-      );
-      
-      // Upload the extracted model
-      const { file_url: extractedUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ 
-        file: modelFileObj 
-      });
-      
-      return Response.json({
-        success: true,
-        modelUrl: extractedUrl,
-        originalFileName: modelFileName,
-        wasExtracted: true
-      });
-    } else {
-      // For GLB/GLTF files, just return the original URL
-      return Response.json({
-        success: true,
+    if (fileType !== 'zip') {
+      return Response.json({ 
+        success: true, 
         modelUrl: fileUrl,
-        originalFileName: fileName,
-        wasExtracted: false
+        originalFileName: fileName
       });
     }
+
+    // Download the ZIP file
+    const zipResponse = await fetch(fileUrl);
+    const zipBlob = await zipResponse.blob();
     
+    // Extract ZIP contents
+    const zipReader = new zip.ZipReader(new zip.BlobReader(zipBlob));
+    const entries = await zipReader.getEntries();
+    
+    // Find the first .glb or .gltf file
+    const modelEntry = entries.find(entry => 
+      !entry.directory && (entry.filename.endsWith('.glb') || entry.filename.endsWith('.gltf'))
+    );
+    
+    if (!modelEntry) {
+      await zipReader.close();
+      return Response.json({ 
+        success: false, 
+        error: 'No .glb or .gltf file found in ZIP' 
+      }, { status: 400 });
+    }
+
+    // Extract the model file
+    const modelBlob = await modelEntry.getData(new zip.BlobWriter());
+    const modelFile = new File([modelBlob], modelEntry.filename, {
+      type: modelEntry.filename.endsWith('.glb') ? 'model/gltf-binary' : 'model/gltf+json'
+    });
+    
+    await zipReader.close();
+
+    // Upload the extracted model
+    const { file_url: modelUrl } = await base44.integrations.Core.UploadFile({ 
+      file: modelFile 
+    });
+
+    return Response.json({
+      success: true,
+      modelUrl: modelUrl,
+      originalFileName: modelEntry.filename
+    });
+
   } catch (error) {
-    console.error('Model processing error:', error);
+    console.error('ZIP processing error:', error);
     return Response.json({ 
+      success: false, 
       error: error.message 
     }, { status: 500 });
   }
