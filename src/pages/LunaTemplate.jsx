@@ -43,8 +43,6 @@ function TransparentModel3DViewer({ modelUrl }) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    let loadedModel = null;
-
     const loader = new GLTFLoader();
     loader.load(
       modelUrl,
@@ -58,7 +56,6 @@ function TransparentModel3DViewer({ modelUrl }) {
         model.scale.multiplyScalar(scale);
         model.position.sub(center.multiplyScalar(scale));
         scene.add(model);
-        loadedModel = model;
       },
       undefined,
       (err) => console.error('Error loading model:', err)
@@ -66,12 +63,6 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     function animate() {
       requestAnimationFrame(animate);
-      
-      // Auto-rotate the model
-      if (loadedModel) {
-        loadedModel.rotation.y += 0.005;
-      }
-      
       controls.update();
       renderer.render(scene, camera);
     }
