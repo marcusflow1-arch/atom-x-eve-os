@@ -451,6 +451,7 @@ export default function Admin() {
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
             <TabsTrigger value="lgapps">LG Web Apps</TabsTrigger>
+            <TabsTrigger value="3dapps">3D Web Apps</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -1322,8 +1323,20 @@ export default function Admin() {
               </div>
             </section>
           </TabsContent>
-                    </Tabs>
-      </div>
+
+          <TabsContent value="3dapps">
+            <div className="text-center py-12">
+              <p className="text-slate-400 mb-4">3D Web Apps management has been moved to its own dedicated page</p>
+              <Button
+                onClick={() => window.location.href = '/admin3dapps'}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Go to 3D Web Apps Manager
+              </Button>
+            </div>
+          </TabsContent>
+          </Tabs>
+          </div>
 
       {/* LG App Runner Modal */}
       <AnimatePresence>
