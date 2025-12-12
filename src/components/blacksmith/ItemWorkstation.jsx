@@ -16,7 +16,7 @@ export default function ItemWorkstation({ item, onClose }) {
   const [combineStage, setCombineStage] = useState(1); // CS 1-12
   const [enchantmentPercent, setEnchantmentPercent] = useState(0); // 0-120%
   const [equippedPerks, setEquippedPerks] = useState([]);
-  const [selectedPerks, setSelectedPerks] = useState([]); // Perks waiting to be applied
+  const [selectedPerk, setSelectedPerk] = useState(null); // Single perk waiting to be applied
   const [enchantMode, setEnchantMode] = useState('perks'); // 'perks' or 'percentage'
   const [playerXP, setPlayerXP] = useState(5000); // Mock player XP
   const [isAscended, setIsAscended] = useState(false);
@@ -33,9 +33,8 @@ export default function ItemWorkstation({ item, onClose }) {
 
   if (!item) return null;
 
-  // Combine state
+  // Combine state (two slots for same-game cards)
   const [combineSlot, setCombineSlot] = useState(null);
-  const [combineQuantity, setCombineQuantity] = useState(2);
 
   // Mock "Inventory Items" for the game
   const inventoryItems = useMemo(() => {
@@ -131,25 +130,30 @@ export default function ItemWorkstation({ item, onClose }) {
   };
 
   const handleTogglePerk = (perk) => {
-    setSelectedPerks(prev => {
-      const exists = prev.find(p => p.id === perk.id);
-      if (exists) {
-        return prev.filter(p => p.id !== perk.id);
-      } else {
-        return [...prev, perk];
-      }
-    });
+    if (selectedPerk?.id === perk.id) {
+      setSelectedPerk(null);
+    } else {
+      setSelectedPerk(perk);
+    }
   };
 
-  const handleApplyPerks = () => {
-    const cost = selectedPerks.length * 300;
+  const handleApplyPerk = () => {
+    if (!selectedPerk) return;
+    
+    const cost = 300;
     if (playerXP < cost) {
       alert('Not enough XP!');
       return;
     }
     setPlayerXP(prev => prev - cost);
-    setEquippedPerks(prev => [...prev, ...selectedPerks]);
-    setSelectedPerks([]);
+    
+    // Replace existing perk or add new one (only one perk allowed)
+    setEquippedPerks([selectedPerk]);
+    setSelectedPerk(null);
+  };
+
+  const handleRemovePerk = () => {
+    setEquippedPerks([]);
   };
 
   const handleEnchantPercent = () => {
@@ -232,16 +236,17 @@ export default function ItemWorkstation({ item, onClose }) {
                   )}
                 </div>
 
-                {/* Enchantment Sleeve Overlay - Liquid Glass Purplish Effect */}
+                {/* Enchantment Sleeve Overlay - Behind Card Image */}
                 <motion.div
-                  className="absolute inset-0 z-5 pointer-events-none rounded-2xl overflow-hidden"
+                  className="absolute inset-0 z-0 pointer-events-none rounded-2xl overflow-hidden"
                   style={{
-                    height: `${(enchantmentPercent / 120) * 100}%`,
+                    height: `${(enchantmentPercent / 120) * 85}%`,
                     bottom: 0,
                     top: 'auto',
+                    transform: 'translateZ(-10px)',
                   }}
                   animate={{ 
-                    opacity: enchantmentPercent > 0 ? 1 : 0,
+                    opacity: enchantmentPercent > 0 ? 0.7 : 0,
                   }}
                   transition={{ duration: 0.5 }}
                 >
@@ -250,11 +255,11 @@ export default function ItemWorkstation({ item, onClose }) {
                     className="absolute inset-0"
                     style={{
                       background: `linear-gradient(180deg, 
-                        rgba(168, 85, 247, ${enchantmentPercent / 120 * 0.8}) 0%, 
-                        rgba(147, 51, 234, ${enchantmentPercent / 120 * 0.6}) 50%, 
-                        rgba(126, 34, 206, ${enchantmentPercent / 120 * 0.9}) 100%)`,
-                      backdropFilter: 'blur(8px) saturate(150%)',
-                      WebkitBackdropFilter: 'blur(8px) saturate(150%)',
+                        rgba(168, 85, 247, ${enchantmentPercent / 120 * 0.6}) 0%, 
+                        rgba(147, 51, 234, ${enchantmentPercent / 120 * 0.5}) 50%, 
+                        rgba(126, 34, 206, ${enchantmentPercent / 120 * 0.7}) 100%)`,
+                      backdropFilter: 'blur(12px) saturate(150%)',
+                      WebkitBackdropFilter: 'blur(12px) saturate(150%)',
                     }}
                   />
                   
@@ -547,103 +552,110 @@ export default function ItemWorkstation({ item, onClose }) {
               </motion.div>
             ) : selectedAction === 'combine' ? (
              <motion.div key="combine" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
-                <div className="mb-6">
-                   <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Combine Station</h2>
-                   <p className="text-white/50">Drag a card and set quantity to combine duplicates (Max: CS 12)</p>
-                </div>
+               <div className="mb-6">
+                  <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3"><ArrowLeftRight className="w-8 h-8 text-blue-400"/> Combine Station</h2>
+                  <p className="text-white/50">Select two cards from your inventory to combine (Max: CS 12)</p>
+               </div>
 
-                {/* Split View */}
-                <div className="flex-1 flex gap-6 overflow-hidden">
-                   {/* RIGHT: Combine Area */}
-                   <div className="w-96 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-6">
-                      <div className="text-center mb-6">
-                         <div className="text-5xl font-black text-blue-400 mb-1">CS {combineStage}</div>
-                         <div className="text-white/40 text-xs">Current Stage: {combineStage}/12</div>
-                      </div>
+               {/* Two-Box Layout */}
+               <div className="flex-1 flex gap-6 overflow-hidden">
+                  {/* Left: Card 1 */}
+                  <div className="flex-1 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-6">
+                     <div className="text-xs font-bold text-blue-300 text-center mb-4 uppercase tracking-wider">Card 1</div>
+                     <div
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                           e.preventDefault();
+                           const card = JSON.parse(e.dataTransfer.getData('card'));
+                           setCombineSlot(card);
+                        }}
+                        className={`flex-1 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
+                           combineSlot ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
+                        }`}
+                     >
+                        {combineSlot ? (
+                           <>
+                              <img src={combineSlot.image} alt={combineSlot.name} className="w-32 h-40 object-cover rounded-lg mb-3" />
+                              <span className="font-bold text-white text-sm text-center px-2">{combineSlot.name}</span>
+                              <span className="text-[10px] text-blue-300">CS{combineSlot.combineStage} • Lv.{combineSlot.level}</span>
+                              <button onClick={() => setCombineSlot(null)} className="mt-3 text-xs text-red-400 hover:text-red-300 underline">
+                                 Remove
+                              </button>
+                           </>
+                        ) : (
+                           <>
+                              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                                 <Layers className="w-8 h-8 text-white/40" />
+                              </div>
+                              <span className="text-white/40 text-sm">Drag Card Here</span>
+                           </>
+                        )}
+                     </div>
+                  </div>
 
-                      {/* Drop Zone */}
-                      <div className="mb-6">
-                         <div className="text-xs font-bold text-blue-300 text-center mb-2 uppercase tracking-wider">Combine</div>
-                         <div
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                               e.preventDefault();
-                               const card = JSON.parse(e.dataTransfer.getData('card'));
-                               setCombineSlot(card);
-                            }}
-                            className={`aspect-[3/4] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
-                               combineSlot ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
-                            }`}
-                         >
-                            {combineSlot ? (
-                               <>
-                                  <Shield className="w-20 h-20 text-blue-300 mb-2" />
-                                  <span className="font-bold text-white text-sm text-center px-2">{combineSlot.name}</span>
-                                  <span className="text-[10px] text-blue-300">CS{combineSlot.combineStage} • Lv.{combineSlot.level}</span>
-                                  <button onClick={() => setCombineSlot(null)} className="mt-2 text-[10px] text-red-400 hover:text-red-300">
-                                     Remove
-                                  </button>
-                               </>
-                            ) : (
-                               <>
-                                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
-                                     <Layers className="w-8 h-8 text-white/40" />
-                                  </div>
-                                  <span className="text-white/40 text-xs">Drag Card Here</span>
-                               </>
-                            )}
-                         </div>
-                      </div>
+                  {/* Right: Card 2 */}
+                  <div className="flex-1 flex flex-col bg-white/5 rounded-2xl border border-white/10 p-6">
+                     <div className="text-xs font-bold text-blue-300 text-center mb-4 uppercase tracking-wider">Card 2</div>
+                     <div
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                           e.preventDefault();
+                           const card = JSON.parse(e.dataTransfer.getData('card'));
+                           setFusionMaterial(card);
+                        }}
+                        className={`flex-1 rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${
+                           fusionMaterial ? 'bg-blue-500/20 border-blue-500/70' : 'border-white/20 hover:border-white/40 bg-white/5'
+                        }`}
+                     >
+                        {fusionMaterial ? (
+                           <>
+                              <img src={fusionMaterial.image} alt={fusionMaterial.name} className="w-32 h-40 object-cover rounded-lg mb-3" />
+                              <span className="font-bold text-white text-sm text-center px-2">{fusionMaterial.name}</span>
+                              <span className="text-[10px] text-blue-300">CS{fusionMaterial.combineStage} • Lv.{fusionMaterial.level}</span>
+                              <button onClick={() => setFusionMaterial(null)} className="mt-3 text-xs text-red-400 hover:text-red-300 underline">
+                                 Remove
+                              </button>
+                           </>
+                        ) : (
+                           <>
+                              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                                 <Layers className="w-8 h-8 text-white/40" />
+                              </div>
+                              <span className="text-white/40 text-sm">Drag Card Here</span>
+                           </>
+                        )}
+                     </div>
+                  </div>
+               </div>
 
-                      {/* Quantity Selector */}
-                      <div className="mb-6 bg-black/20 rounded-xl p-4 border border-white/5">
-                         <div className="text-xs font-bold text-white/60 uppercase mb-3 text-center">Combine Quantity</div>
-                         <div className="flex items-center justify-center gap-4">
-                            <button 
-                               onClick={() => setCombineQuantity(prev => Math.max(2, prev - 1))}
-                               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold text-xl transition-all"
-                            >
-                               −
-                            </button>
-                            <div className="text-4xl font-black text-white w-16 text-center">{combineQuantity}</div>
-                            <button 
-                               onClick={() => setCombineQuantity(prev => Math.min(12, prev + 1))}
-                               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold text-xl transition-all"
-                            >
-                               +
-                            </button>
-                         </div>
-                         <div className="text-center mt-2 text-[10px] text-white/40">
-                            Will consume {combineQuantity} cards
-                         </div>
-                      </div>
-
-                      {/* Result Preview */}
-                      <div className="flex items-center justify-center gap-3 mb-6">
-                         <ArrowRight className="w-6 h-6 text-white/40" />
-                         <div className="w-28 aspect-[3/4] bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/50 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                            <Hexagon className="w-12 h-12 text-blue-300 mb-1" />
-                            <span className="font-bold text-white text-sm">CS {Math.min(combineStage + combineQuantity, 12)}</span>
-                            <span className="text-[9px] text-white/50">Result</span>
-                         </div>
-                      </div>
-
-                      {/* Combine Button */}
-                      <Button 
-                         onClick={handleCombine} 
-                         disabled={!combineSlot || combineStage >= 12} 
-                         className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-bold"
-                      >
-                         <ArrowLeftRight className="w-5 h-5 mr-2" />
-                         Combine {combineQuantity}x Cards
-                      </Button>
-
-                      {combineStage >= 12 && (
-                         <div className="text-center text-yellow-400 text-xs font-bold mt-3">⚡ MAX CS REACHED ⚡</div>
-                      )}
-                   </div>
-                </div>
-             </motion.div>
+               {/* Combine Button */}
+               <div className="mt-6">
+                  <Button 
+                     onClick={() => {
+                       if (!combineSlot || !fusionMaterial) {
+                         alert('Select two cards to combine!');
+                         return;
+                       }
+                       if (combineStage >= 12) {
+                         alert('Max combine stage reached!');
+                         return;
+                       }
+                       setCombineStage(prev => Math.min(prev + 1, 12));
+                       setCombineSlot(null);
+                       setFusionMaterial(null);
+                       alert('Successfully combined 2 cards!');
+                     }} 
+                     disabled={!combineSlot || !fusionMaterial || combineStage >= 12} 
+                     className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-lg font-bold"
+                  >
+                     <ArrowLeftRight className="w-5 h-5 mr-2" />
+                     Combine Cards
+                  </Button>
+                  {combineStage >= 12 && (
+                     <div className="text-center text-yellow-400 text-xs font-bold mt-3">⚡ MAX CS REACHED ⚡</div>
+                  )}
+               </div>
+            </motion.div>
             ) : selectedAction === 'enchant' ? (
              <motion.div key="enchant" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="h-full flex flex-col">
                 <div className="mb-6">
@@ -674,19 +686,18 @@ export default function ItemWorkstation({ item, onClose }) {
                 <div className="flex-1 bg-white/5 rounded-3xl border border-white/10 p-8 overflow-y-auto">
                     {enchantMode === 'perks' ? (
                       <div className="space-y-4">
-                        <h3 className="text-white/60 text-sm font-bold uppercase mb-4">Available Perks</h3>
+                        <h3 className="text-white/60 text-sm font-bold uppercase mb-4">Available Perks (Select One)</h3>
                         <div className="grid grid-cols-2 gap-4">
                           {availablePerks.map(perk => {
                             const equipped = equippedPerks.find(p => p.id === perk.id);
-                            const selected = selectedPerks.find(p => p.id === perk.id);
+                            const selected = selectedPerk?.id === perk.id;
                             return (
                               <button
                                 key={perk.id}
                                 onClick={() => handleTogglePerk(perk)}
-                                disabled={equipped}
                                 className={`p-4 rounded-xl border-2 transition-all ${
                                   equipped 
-                                    ? 'bg-green-500/20 border-green-500/50 cursor-not-allowed' 
+                                    ? 'bg-green-500/20 border-green-500/50' 
                                     : selected
                                     ? 'bg-purple-500/30 border-purple-500/70 shadow-lg shadow-purple-500/20'
                                     : 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10'
@@ -707,40 +718,43 @@ export default function ItemWorkstation({ item, onClose }) {
                           })}
                         </div>
 
-                        {/* Selected Perks to Apply */}
-                        {selectedPerks.length > 0 && (
+                        {/* Selected Perk to Apply */}
+                        {selectedPerk && (
                           <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-white/80 text-sm font-bold">Selected Perks ({selectedPerks.length})</h4>
+                              <h4 className="text-white/80 text-sm font-bold">Selected Perk</h4>
                               <div className="text-yellow-400 text-xs font-bold flex items-center gap-1">
-                                <Sparkles className="w-3 h-3" /> {selectedPerks.length * 300} XP
+                                <Sparkles className="w-3 h-3" /> 300 XP
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                              {selectedPerks.map(perk => (
-                                <div key={perk.id} className="flex items-center gap-2 bg-purple-500/30 border border-purple-500/40 rounded-lg px-3 py-1.5">
-                                  <span className="text-lg">{perk.icon}</span>
-                                  <span className="text-white text-xs font-medium">{perk.name}</span>
-                                </div>
-                              ))}
+                            <div className="flex items-center gap-3 bg-purple-500/30 border border-purple-500/40 rounded-lg px-4 py-3 mb-3">
+                              <span className="text-2xl">{selectedPerk.icon}</span>
+                              <div>
+                                <div className="text-white text-sm font-bold">{selectedPerk.name}</div>
+                                <div className="text-white/60 text-xs">{selectedPerk.effect}</div>
+                              </div>
                             </div>
-                            <Button onClick={handleApplyPerks} className="w-full bg-purple-600 hover:bg-purple-700">
-                              Apply {selectedPerks.length} Perk{selectedPerks.length > 1 ? 's' : ''} ({selectedPerks.length * 300} XP)
+                            <Button onClick={handleApplyPerk} className="w-full bg-purple-600 hover:bg-purple-700">
+                              {equippedPerks.length > 0 ? 'Replace Perk (300 XP)' : 'Apply Perk (300 XP)'}
                             </Button>
                           </div>
                         )}
 
-                        {/* Equipped Perks */}
+                        {/* Equipped Perk */}
                         {equippedPerks.length > 0 && (
-                          <div className="mt-6 p-4 bg-black/20 rounded-xl">
-                            <h4 className="text-white/60 text-xs font-bold uppercase mb-3">Equipped Perks</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {equippedPerks.map(perk => (
-                                <div key={perk.id} className="flex items-center gap-2 bg-green-500/20 border border-green-500/30 rounded-lg px-3 py-1.5">
-                                  <span className="text-lg">{perk.icon}</span>
-                                  <span className="text-white text-xs font-medium">{perk.name}</span>
-                                </div>
-                              ))}
+                          <div className="mt-6 p-4 bg-black/20 rounded-xl border border-green-500/20">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-white/60 text-xs font-bold uppercase">Current Perk</h4>
+                              <button onClick={handleRemovePerk} className="text-xs text-red-400 hover:text-red-300 underline">
+                                Remove
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-3 bg-green-500/20 border border-green-500/30 rounded-lg px-4 py-3">
+                              <span className="text-2xl">{equippedPerks[0].icon}</span>
+                              <div>
+                                <div className="text-white text-sm font-bold">{equippedPerks[0].name}</div>
+                                <div className="text-white/60 text-xs">{equippedPerks[0].effect}</div>
+                              </div>
                             </div>
                           </div>
                         )}
