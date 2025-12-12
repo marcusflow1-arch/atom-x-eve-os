@@ -1390,7 +1390,7 @@ export default function Admin() {
               <div className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-white font-bold text-lg">{selectedModel.name}</h3>
-                  <p className="text-slate-400 text-sm">{selectedModel.file_type.toUpperCase()} Model Preview</p>
+                  <p className="text-slate-400 text-sm">3D Model Preview</p>
                 </div>
                 <Button
                   onClick={() => setSelectedModel(null)}
