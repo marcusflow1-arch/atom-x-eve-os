@@ -504,9 +504,9 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* 3D Model Viewer */}
+        {/* 3D Model Viewer - Centered */}
         {modelUrl && (
-          <div className="fixed top-32 right-32 w-[400px] h-[500px] pointer-events-auto z-30">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
             <TransparentModel3DViewer modelUrl={modelUrl} />
           </div>
         )}
