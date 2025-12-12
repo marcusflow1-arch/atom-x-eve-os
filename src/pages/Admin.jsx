@@ -13,6 +13,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import Model3DManager from '../components/admin/Model3DManager';
 import AnimationFBXManager from '../components/admin/AnimationFBXManager';
+import ModelFBXManager from '../components/admin/ModelFBXManager';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -421,6 +422,7 @@ export default function Admin() {
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
             <TabsTrigger value="models">3D Models</TabsTrigger>
             <TabsTrigger value="animations">FBX Animations</TabsTrigger>
+            <TabsTrigger value="fbx-models">FBX Models</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -872,6 +874,10 @@ export default function Admin() {
 
           <TabsContent value="animations">
             <AnimationFBXManager />
+          </TabsContent>
+
+          <TabsContent value="fbx-models">
+            <ModelFBXManager />
           </TabsContent>
                     </Tabs>
       </div>
