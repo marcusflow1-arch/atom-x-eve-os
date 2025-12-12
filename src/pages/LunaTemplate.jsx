@@ -37,7 +37,6 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     // Sketchfab-quality rendering settings
     renderer.physicallyCorrectLights = true;
-    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
     renderer.shadowMap.enabled = true;
