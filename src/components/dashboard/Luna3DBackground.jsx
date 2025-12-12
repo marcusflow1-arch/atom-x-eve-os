@@ -4,15 +4,25 @@ import { useGLTF, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 
 function Model() {
   const modelRef = useRef();
-  const { scene } = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
   
-  useFrame(() => {
-    if (modelRef.current) {
-      modelRef.current.rotation.y += 0.005;
+  try {
+    const gltf = useGLTF('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/33919fb7e_Sines.glb');
+    
+    useFrame(() => {
+      if (modelRef.current) {
+        modelRef.current.rotation.y += 0.005;
+      }
+    });
+    
+    if (!gltf || !gltf.scene) {
+      return null;
     }
-  });
-  
-  return <primitive ref={modelRef} object={scene} scale={1} position={[0, 0, 0]} />;
+    
+    return <primitive ref={modelRef} object={gltf.scene} scale={1} position={[0, 0, 0]} />;
+  } catch (error) {
+    console.error('Error loading 3D model:', error);
+    return null;
+  }
 }
 
 export default function Luna3DBackground() {
