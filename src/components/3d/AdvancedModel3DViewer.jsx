@@ -29,9 +29,7 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
-    // Physically correct lighting + Sketchfab tone mapping
-    renderer.physicallyCorrectLights = true;
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    // Physically correct lighting + tone mapping
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
 
