@@ -50,8 +50,9 @@ function Model() {
 }
 
 function LoadedModel({ url }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={1} />;
+  const gltf = useGLTF(url);
+  if (!gltf || !gltf.scene) return null;
+  return <primitive object={gltf.scene} scale={1} />;
 }
 
 export default function OLAModel() {
