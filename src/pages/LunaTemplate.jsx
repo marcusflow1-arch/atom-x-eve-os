@@ -316,6 +316,7 @@ function TransparentModel3DViewer({ modelUrl }) {
         if (keysPressed.current.d) direction.x += 1;
 
         const dirLength = direction.length();
+        const isMoving = dirLength > 0.01;
         const grounded = !isJumpingRef.current && modelRef.current.position.y <= 0;
 
         // Jumping
@@ -338,12 +339,8 @@ function TransparentModel3DViewer({ modelUrl }) {
 
         // PlayerController Logic
         if (grounded) {
-          // Idle is the grounded base animation
-          setBaseAction('idle');
-
-          if (dirLength > 0.01) {
+          if (isMoving) {
             direction.normalize();
-            const weight = Math.min(dirLength, 1);
             
             // Move model
             modelRef.current.position.x += direction.x * moveSpeed;
@@ -353,15 +350,21 @@ function TransparentModel3DViewer({ modelUrl }) {
             const angle = Math.atan2(direction.x, direction.z);
             modelRef.current.rotation.y = angle;
 
-            // Mix running animation
-            mixAction('run', 0.1, weight);
+            // Play running animation
+            if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
+              setBaseAction('run');
+            }
           } else {
-            mixAction('idle', 0.1, 1);
+            // Play idle when stopped
+            if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+              setBaseAction('idle');
+            }
           }
         } else {
           // Falling overrides everything when not grounded
-          setBaseAction('jump');
-          mixAction('jump', 0.1, 1);
+          if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
+            setBaseAction('jump');
+          }
         }
 
         // Keep camera following model
@@ -391,21 +394,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     };
   }, [modelUrl, animations]);
 
-  return (
-    <div className="relative w-full h-full">
-      <div ref={containerRef} className="w-full h-full" />
-      {isActive && (
-        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-green-500/50 text-green-400 text-sm font-bold pointer-events-none">
-          CONTROLS ACTIVE • WASD to Move • SPACE to Jump • Click to Deactivate
-        </div>
-      )}
-      {!isActive && (
-        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/30 text-white/60 text-sm font-bold pointer-events-none">
-          Click Model to Activate Controls
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={containerRef} className="w-full h-full" />;
 }
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
