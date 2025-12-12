@@ -24,9 +24,6 @@ function TransparentModel3DViewer({ modelUrl }) {
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
   const controlsActive = useRef(false);
-  const exclusiveAction = useRef(null);
-  const mixerRef = useRef(null);
-  const animationFinishedCb = useRef(null);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
 
@@ -35,15 +32,7 @@ function TransparentModel3DViewer({ modelUrl }) {
     const fetchAnimations = async () => {
       try {
         const anims = await base44.entities.AnimationFBX.list();
-        // Filter for specific animations we need
-        const kick2 = anims.find(a => a.name.toLowerCase().includes('mma kick'));
-        const kick = anims.find(a => a.name.toLowerCase().includes('backflip'));
-        const up = anims.find(a => a.name.toLowerCase().includes('uppercut') || a.name.toLowerCase().includes('backflip to uppercut'));
-        const idle = anims.find(a => a.animation_type === 'idle');
-        const running = anims.find(a => a.animation_type === 'run');
-        const falling = anims.find(a => a.name.toLowerCase().includes('falling'));
-
-        setAnimations([idle, running, falling, kick2, kick, up].filter(Boolean));
+        setAnimations(anims);
       } catch (error) {
         console.error('Failed to load animations:', error);
       }
@@ -145,20 +134,18 @@ function TransparentModel3DViewer({ modelUrl }) {
       scene.add(model);
 
       mixer = new THREE.AnimationMixer(model);
-      mixerRef.current = mixer;
 
       // Find and store animations
       if (animations && animations.length > 0) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
-
+          
           if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-          else if (name.includes('running') || name.includes('run')) actionsRef.current.running = action;
-          else if (name.includes('falling') || name.includes('fall')) actionsRef.current.falling = action;
-          else if (name.includes('mma kick')) actionsRef.current.kick2 = action;
-          else if (name.includes('backflip')) actionsRef.current.kick = action;
-          else if (name.includes('uppercut')) actionsRef.current.up = action;
+          else if (name.includes('walk')) actionsRef.current.walk = action;
+          else if (name.includes('run')) actionsRef.current.run = action;
+          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
         });
 
         // Default to idle or first animation
@@ -200,17 +187,15 @@ function TransparentModel3DViewer({ modelUrl }) {
               (animFbx) => {
                 if (animFbx.animations && animFbx.animations.length > 0) {
                   animFbx.animations.forEach(clip => {
-                    // Rename clip based on animation type or name
+                    // Rename clip based on animation type
                     if (anim.animation_type === 'idle') clip.name = 'idle';
                     else if (anim.animation_type === 'run') clip.name = 'run';
                     else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    else if (anim.name.toLowerCase().includes('mma kick')) clip.name = 'mma kick';
-                    else if (anim.name.toLowerCase().includes('backflip')) clip.name = 'backflip';
                     allClips.push(clip);
                   });
                 }
                 loadedCount++;
-
+                
                 // Process model after all animations loaded
                 if (loadedCount === animations.length) {
                   processModel(fbx, allClips);
@@ -274,26 +259,13 @@ function TransparentModel3DViewer({ modelUrl }) {
     // Keyboard Controls
     const handleKeyDown = (e) => {
       if (!controlsActive.current) return;
-
+      
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
       // Spacebar for jump
       if (key === ' ') {
         e.preventDefault();
-      }
-
-      // Exclusive skill animations on keys 1, 2, 3
-      if (!exclusiveAction.current) {
-        if (key === '1') {
-          startExclusiveAction('kick2');
-        }
-        else if (key === '2') {
-          startExclusiveAction('kick');
-        }
-        else if (key === '3') {
-          startExclusiveAction('up');
-        }
       }
     };
 
@@ -333,47 +305,12 @@ function TransparentModel3DViewer({ modelUrl }) {
       }
     };
 
-    const startExclusiveAction = (actionName) => {
-      if (!actionsRef.current[actionName]) return;
-      if (exclusiveAction.current) return;
-
-      exclusiveAction.current = actionName;
-
-      // Register finished callback once
-      if (!animationFinishedCb.current) {
-        animationFinishedCb.current = () => {
-          exclusiveAction.current = null;
-          // Restore idle when exclusive animation finishes
-          setBaseAction('idle');
-          mixAction('idle', 0.1, 1);
-        };
-        mixerRef.current.addEventListener('finished', animationFinishedCb.current);
-      }
-
-      const action = actionsRef.current[actionName];
-      action.reset();
-      action.setLoop(THREE.LoopOnce, 0);
-      action.clampWhenFinished = true;
-      action.play();
-
-      // Set as base and mix
-      setBaseAction(actionName);
-      mixAction(actionName, 0.05, 1);
-    };
-
     function animate() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-
+      
       if (modelRef.current && controlsActive.current) {
-        // If an exclusive animation is running, skip all movement logic
-        if (exclusiveAction.current) {
-          renderer.render(scene, camera);
-          return;
-        }
-
-        // ---- NORMAL MOVEMENT LOGIC ----
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
@@ -397,7 +334,7 @@ function TransparentModel3DViewer({ modelUrl }) {
         if (isJumpingRef.current || modelRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
           modelRef.current.position.y += velocityRef.current.y;
-
+          
           if (modelRef.current.position.y <= 0) {
             modelRef.current.position.y = 0;
             isJumpingRef.current = false;
@@ -405,14 +342,11 @@ function TransparentModel3DViewer({ modelUrl }) {
           }
         }
 
-        // Animation blending based on movement state
+        // PlayerController Logic
         if (grounded) {
-          // Use idle as base action
-          setBaseAction('idle');
-
           if (isMoving) {
             direction.normalize();
-
+            
             // Move model
             modelRef.current.position.x += direction.x * moveSpeed;
             modelRef.current.position.z += direction.z * moveSpeed;
@@ -421,15 +355,21 @@ function TransparentModel3DViewer({ modelUrl }) {
             const angle = Math.atan2(direction.x, direction.z);
             modelRef.current.rotation.y = angle;
 
-            // Blend in running based on movement magnitude
-            const weight = Math.min(dirLength, 1);
-            mixAction('running', 0.1, weight);
+            // Play running animation
+            if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
+              setBaseAction('run');
+            }
           } else {
-            mixAction('idle', 0.1, 1);
+            // Play idle when stopped
+            if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+              setBaseAction('idle');
+            }
           }
         } else {
-          // In air, use falling action
-          mixAction('falling', 0.1, 1);
+          // Falling overrides everything when not grounded
+          if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
+            setBaseAction('jump');
+          }
         }
 
         // Keep camera following model
@@ -445,7 +385,7 @@ function TransparentModel3DViewer({ modelUrl }) {
           setBaseAction('idle');
         }
       }
-
+      
       renderer.render(scene, camera);
     }
     animate();
