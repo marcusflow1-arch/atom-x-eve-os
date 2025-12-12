@@ -49,20 +49,6 @@ function TransparentModel3DViewer({ modelUrl }) {
 
     let mixer = null;
     const clock = new THREE.Clock();
-    const textureLoader = new THREE.TextureLoader();
-
-    // Load all textures
-    const textures = {
-      lianBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/ea83e0cbc_5354_Wish_Lian_ShowHigh001_baseColor.png'),
-      lianNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f72c601dd_5354_Wish_Lian_ShowHigh001_normal.png'),
-      qunziBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/234e5c970_5354_Wish_Qunzi_ShowHigh001_baseColor.png'),
-      qunziNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/59061869f_5354_Wish_Qunzi_ShowHigh001_normal.png'),
-      touFaBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0ad93f1ac_5354_Wish_TouFa_ShowHigh001_baseColor.png'),
-      touFaNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/2c92f5ca4_5354_Wish_TouFa_ShowHigh001_normal.png'),
-      weaponBase: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/935afbad1_5354_Wish_Weapon_ShowHigh001_baseColor.png'),
-      weaponNormal: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/f0226b6f6_5354_Wish_Weapon_ShowHigh001_normal.png'),
-      headEmissive: textureLoader.load('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/74852aed5_EF_Lxq_Lobby5354_Wish_Head001_emissive.png')
-    };
 
     const loader = new GLTFLoader();
     loader.load(
@@ -73,10 +59,8 @@ function TransparentModel3DViewer({ modelUrl }) {
         // Traverse and apply fixes
         model.traverse((node) => {
           if (node.isMesh || node.isSkinnedMesh) {
-            // 1) Disable frustum culling for skinned/morph meshes (prevents wrong clipping)
             node.frustumCulled = false;
 
-            // 2) Recompute geometry bounds (useful if export produced bad bounds)
             if (node.geometry) {
               try {
                 node.geometry.computeBoundingBox();
@@ -86,35 +70,9 @@ function TransparentModel3DViewer({ modelUrl }) {
               }
             }
 
-            // 3) Apply textures and ensure double sided for hair / thin planes
             if (node.material) {
               const applySide = (mat) => {
-                // Apply textures based on material name
-                const materialName = mat.name.toLowerCase();
-
-                if (materialName.includes('lian') || materialName.includes('body')) {
-                  mat.map = textures.lianBase;
-                  mat.normalMap = textures.lianNormal;
-                } else if (materialName.includes('qunzi') || materialName.includes('skirt')) {
-                  mat.map = textures.qunziBase;
-                  mat.normalMap = textures.qunziNormal;
-                } else if (materialName.includes('toufa') || materialName.includes('hair')) {
-                  mat.map = textures.touFaBase;
-                  mat.normalMap = textures.touFaNormal;
-                } else if (materialName.includes('weapon')) {
-                  mat.map = textures.weaponBase;
-                  mat.normalMap = textures.weaponNormal;
-                } else if (materialName.includes('head') || materialName.includes('face')) {
-                  mat.emissiveMap = textures.headEmissive;
-                  mat.emissive = new THREE.Color(0xffffff);
-                  mat.emissiveIntensity = 0.5;
-                }
-
-                // Set double side for all meshes (prevents disappearing faces)
                 mat.side = THREE.DoubleSide;
-                // If using alpha cutout, ensure alphaTest is set sensibly
-                if (mat.alphaTest === undefined && mat.map) mat.alphaTest = 0.5;
-
                 mat.needsUpdate = true;
               };
 
@@ -122,16 +80,10 @@ function TransparentModel3DViewer({ modelUrl }) {
               else applySide(node.material);
             }
 
-            // 4) If skinned, make sure skeleton is up-to-date
             if (node.isSkinnedMesh) {
               node.skeleton && node.skeleton.pose && node.skeleton.pose();
               node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
             }
-          }
-
-          // Log missing textures (helps find 404s)
-          if (node.material && node.material.map && !node.material.map.image) {
-            console.warn('Potential missing texture for', node.name, node.material.map);
           }
         });
 
