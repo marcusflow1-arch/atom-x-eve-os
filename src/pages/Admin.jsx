@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
+import Model3DManager from '../components/admin/Model3DManager';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -417,6 +418,7 @@ export default function Admin() {
           <TabsList className="bg-slate-900 border border-slate-800">
             <TabsTrigger value="backgrounds">Hero Backgrounds</TabsTrigger>
             <TabsTrigger value="games">Game Catalog</TabsTrigger>
+            <TabsTrigger value="models">3D Models</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -861,6 +863,10 @@ export default function Admin() {
                     })()}
                     </section>
                     </TabsContent>
+
+          <TabsContent value="models">
+            <Model3DManager />
+          </TabsContent>
                     </Tabs>
       </div>
     </div>
