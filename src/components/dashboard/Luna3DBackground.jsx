@@ -1,13 +1,12 @@
 import React from 'react';
-import { Box } from 'lucide-react';
+import ModelViewer3D from '../models/ModelViewer3D';
 
 export default function Luna3DBackground() {
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="text-center text-white/40">
-        <Box className="w-8 h-8 mx-auto mb-2" />
-        <p className="text-xs">3D Model</p>
-      </div>
-    </div>
+    <ModelViewer3D 
+      url="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/fa2f97252_scene.gltf"
+      className="w-full h-full"
+      autoRotate={true}
+    />
   );
 }
