@@ -52,7 +52,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           sword_of_the_abyss: "sword_attack"
         },
         skills: {
-          fire_slash: "fire_slash"
+          kick_ability: "kick"
         }
       };
     }
@@ -899,31 +899,32 @@ export default function LunaTemplate() {
   // Animation Event Trigger
   const [triggerAnimation, setTriggerAnimation] = useState(null);
 
-  // Skill Keybinds (1-5 keys) - Now trigger animations
+  // Skill Keybinds (1-5 keys) - Trigger skill animations via state
   useEffect(() => {
     const handleSkillKey = (e) => {
       const key = e.key;
       if (['1', '2', '3', '4', '5'].includes(key)) {
         const index = parseInt(key) - 1;
+
+        // Toggle active state
         setActiveSkills(prev => {
           const newSkills = [...prev];
           newSkills[index] = !newSkills[index];
           return newSkills;
         });
-        
-        // Map keys to animations
-        const animationMap = {
-          '1': 'swing',     // Sword swing/attack
-          '2': 'kick',      // Kick attack
-          '3': 'dance',     // Dance emote
-          '4': 'wave',      // Wave gesture
-          '5': 'jump'       // Jump ability
+
+        // Map keys to skill IDs
+        const skillMap = {
+          '1': 'kick_ability',
+          '2': null,
+          '3': null,
+          '4': null,
+          '5': null
         };
-        
-        const animName = animationMap[key];
-        if (animName) {
-          setTriggerAnimation(animName);
-          setTimeout(() => setTriggerAnimation(null), 1500);
+
+        const skillId = skillMap[key];
+        if (skillId && window.LUNA_ACTION_STATE) {
+          window.LUNA_ACTION_STATE.skill = skillId;
         }
       }
     };
