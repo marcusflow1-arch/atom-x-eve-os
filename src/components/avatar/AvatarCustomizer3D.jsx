@@ -9,46 +9,51 @@ import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
 function CustomModel({ modelUrl }) {
-  try {
-    const gltf = useLoader(GLTFLoader, modelUrl);
+  const [model, setModel] = React.useState(null);
+  
+  React.useEffect(() => {
+    const loader = new GLTFLoader();
     
-    React.useEffect(() => {
-      if (gltf?.scene) {
-        gltf.scene.traverse((child) => {
-          if (child.isMesh) {
-            child.frustumCulled = false;
-            if (child.material) {
-              // Handle both single materials and arrays
-              const materials = Array.isArray(child.material) ? child.material : [child.material];
-              materials.forEach(mat => {
-                if (mat) {
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        if (gltf?.scene) {
+          // Clean up materials and textures
+          gltf.scene.traverse((child) => {
+            if (child.isMesh) {
+              child.frustumCulled = false;
+              
+              if (child.material) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                
+                materials.forEach(mat => {
+                  if (!mat) return;
+                  
+                  // Clean up any textures without valid sources
+                  ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'bumpMap', 'displacementMap'].forEach(mapType => {
+                    if (mat[mapType] && (!mat[mapType].source || !mat[mapType].image)) {
+                      mat[mapType] = null;
+                    }
+                  });
+                  
                   mat.needsUpdate = true;
-                  // Fix potential texture source issues
-                  if (mat.map && !mat.map.source) {
-                    mat.map = null;
-                  }
-                  if (mat.normalMap && !mat.normalMap.source) {
-                    mat.normalMap = null;
-                  }
-                  if (mat.roughnessMap && !mat.roughnessMap.source) {
-                    mat.roughnessMap = null;
-                  }
-                  if (mat.metalnessMap && !mat.metalnessMap.source) {
-                    mat.metalnessMap = null;
-                  }
-                }
-              });
+                });
+              }
             }
-          }
-        });
+          });
+          
+          setModel(gltf.scene);
+        }
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading GLB:', error);
+        setModel(null);
       }
-    }, [gltf]);
-    
-    return gltf?.scene ? <primitive object={gltf.scene} scale={1} /> : null;
-  } catch (error) {
-    console.error('Error loading custom model:', error);
-    return null;
-  }
+    );
+  }, [modelUrl]);
+  
+  return model ? <primitive object={model} /> : null;
 }
 
 function ModelErrorBoundary({ children }) {
