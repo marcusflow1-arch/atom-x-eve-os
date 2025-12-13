@@ -1,6 +1,6 @@
 import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,10 @@ function Scene() {
         target={[0, 0.5, 0]}
       />
       
-      <Suspense fallback={null}>
-        <Environment preset="studio" />
-      </Suspense>
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-      <directionalLight position={[-5, 3, -5]} intensity={0.5} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+      <directionalLight position={[-5, 3, -5]} intensity={0.4} />
+      <pointLight position={[0, 2, 0]} intensity={0.3} />
       
       <Suspense fallback={null}>
         <AvatarModel />
