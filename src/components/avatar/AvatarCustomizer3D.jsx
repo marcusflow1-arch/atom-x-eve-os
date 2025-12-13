@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, ErrorBoundary } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,7 +21,7 @@ function Scene() {
       />
       
       <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 5, 5]} intensity={1.2} castShadow />
+      <directionalLight position={[5, 5, 5]} intensity={1.2} />
       <directionalLight position={[-5, 3, -5]} intensity={0.4} />
       <pointLight position={[0, 2, 0]} intensity={0.3} />
       
@@ -30,7 +30,7 @@ function Scene() {
       </Suspense>
       
       {/* Ground plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
         <planeGeometry args={[10, 10]} />
         <meshStandardMaterial color="#1a1a1a" metalness={0.1} roughness={0.9} />
       </mesh>
@@ -106,7 +106,17 @@ export default function AvatarCustomizer3D({ onClose }) {
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Suspense fallback={<LoadingFallback />}>
-          <Canvas shadows onError={(e) => { console.error('Canvas error:', e); setError(e); }}>
+          <Canvas
+            gl={{ 
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance"
+            }}
+            dpr={[1, 2]}
+            onCreated={({ gl }) => {
+              gl.setClearColor('#000000', 0);
+            }}
+          >
             <Scene />
           </Canvas>
         </Suspense>
