@@ -28,6 +28,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
   const [weaponAttached, setWeaponAttached] = React.useState(false);
+  const currentWeaponRef = useRef(null);
+  const currentBaseActionRef = useRef(null);
 
   // Fetch animations for Y Bot
   useEffect(() => {
@@ -164,20 +166,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
               weaponFbx.position.set(0, 0.1, 0);
               weaponFbx.rotation.set(Math.PI / 2, 0, 0);
 
-              // Equip animation
-              const startY = weaponFbx.position.y - 0.5;
-              weaponFbx.position.y = startY;
-              weaponFbx.visible = true;
-
-              const animateEquip = () => {
-                if (weaponFbx.position.y < 0.1) {
-                  weaponFbx.position.y += 0.02;
-                  requestAnimationFrame(animateEquip);
-                } else {
-                  setWeaponAttached(true);
-                }
-              };
-              animateEquip();
+              // Hidden by default - will be toggled by state
+              weaponFbx.visible = false;
+              setWeaponAttached(true);
             } else {
               // Fallback: attach to model root
               model.add(weaponFbx);
@@ -333,9 +324,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
+    // Safe base action setter - prevents animation spam
     const setBaseAction = (name) => {
+      if (currentBaseActionRef.current === name) return;
+      
       const action = actionsRef.current[name];
       if (!action) return;
+
+      currentBaseActionRef.current = name;
 
       // Stop all other animations
       Object.values(actionsRef.current).forEach(a => {
@@ -349,6 +345,28 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         action.fadeIn(0.2);
         action.setLoop(THREE.LoopRepeat);
         action.play();
+      }
+    };
+
+    // Weapon application logic
+    const applyWeapon = (weaponId) => {
+      // Hide sword by default
+      if (weaponRef.current) {
+        weaponRef.current.visible = false;
+      }
+
+      // Equip sword
+      if (weaponId === "sword_of_the_abyss" && weaponRef.current) {
+        weaponRef.current.visible = true;
+        // Switch to sword idle animation if available
+        if (actionsRef.current.swing) {
+          setBaseAction('swing');
+        }
+      }
+
+      // Unequip (fallback to normal idle)
+      if (!weaponId) {
+        setBaseAction('idle');
       }
     };
 
@@ -368,6 +386,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
+      
+      // UI → STATE → VIEWER BRIDGE
+      const state = window.LUNA_STATE;
+      if (state && state.equippedWeapon !== currentWeaponRef.current) {
+        applyWeapon(state.equippedWeapon);
+        currentWeaponRef.current = state.equippedWeapon;
+      }
       
       if (modelRef.current && controlsActive.current) {
         const moveSpeed = 0.04;
@@ -401,7 +426,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           }
         }
 
-        // PlayerController Logic
+        // PlayerController Logic with weapon awareness
         if (grounded) {
           if (isMoving) {
             direction.normalize();
@@ -419,10 +444,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
               setBaseAction('run');
             }
           } else {
-            // Play idle when stopped
-            if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-              setBaseAction('idle');
+            // If no weapon equipped, normal idle
+            if (!currentWeaponRef.current) {
+              if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+                setBaseAction('idle');
+              }
             }
+            // Weapon equipped: maintain sword idle unless moving
           }
         } else {
           // Falling overrides everything when not grounded
@@ -439,9 +467,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         controls.target.copy(modelRef.current.position);
         controls.update();
       } else if (modelRef.current && !controlsActive.current) {
-        // When inactive, play idle animation
-        if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-          setBaseAction('idle');
+        // When inactive, respect weapon state
+        if (!currentWeaponRef.current) {
+          if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
+            setBaseAction('idle');
+          }
         }
       }
       
@@ -860,6 +890,18 @@ export default function LunaTemplate() {
         ...prev,
         [clickedSlot]: item
       }));
+      
+      // Initialize global state bridge
+      window.LUNA_STATE = window.LUNA_STATE || {};
+      
+      // Update global state for weapon equips (weapon-1, weapon-2, weapon-3)
+      if (clickedSlot.startsWith('weapon-') && item.name === 'Blade of Abyss') {
+        window.LUNA_STATE.equippedWeapon = "sword_of_the_abyss";
+      } else if (clickedSlot.startsWith('weapon-')) {
+        // Other weapons or unequip
+        window.LUNA_STATE.equippedWeapon = null;
+      }
+      
       setShowInventory(false);
     }
   };
