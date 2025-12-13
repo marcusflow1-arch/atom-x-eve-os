@@ -146,10 +146,10 @@ function HandItem({ type }) {
 
 export default function AvatarModel() {
   const groupRef = useRef();
-  const equipped = useAvatarStore((state) => state.equipped);
+  const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
   
   useFrame((state) => {
-    if (groupRef.current) {
+    if (groupRef.current && state?.clock) {
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });

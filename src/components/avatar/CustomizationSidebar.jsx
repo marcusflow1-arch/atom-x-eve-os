@@ -40,7 +40,9 @@ const categories = {
 
 export default function CustomizationSidebar({ onClose }) {
   const [activeTab, setActiveTab] = useState('head');
-  const { equipped, equipItem, resetAll } = useAvatarStore();
+  const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
+  const equipItem = useAvatarStore((state) => state?.equipItem);
+  const resetAll = useAvatarStore((state) => state?.resetAll);
   
   return (
     <motion.div
