@@ -683,6 +683,8 @@ export default function LunaTemplate() {
   const [showProfile, setShowProfile] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
+  const [clickedSlot, setClickedSlot] = useState(null);
+  const [equippedItems, setEquippedItems] = useState({});
   const { mode } = useDashboardMode();
 
   // Fetch 3D Model and Animations
@@ -734,8 +736,19 @@ export default function LunaTemplate() {
     return { x, y, scale, opacity, zIndex };
   };
 
-  const handleBoxClick = () => {
+  const handleBoxClick = (slotId) => {
+    setClickedSlot(slotId);
     setShowInventory(true);
+  };
+
+  const handleEquipItem = (item) => {
+    if (clickedSlot && item) {
+      setEquippedItems(prev => ({
+        ...prev,
+        [clickedSlot]: item
+      }));
+      setShowInventory(false);
+    }
   };
 
   if (mode === 'user') {
@@ -1352,9 +1365,25 @@ export default function LunaTemplate() {
                         </div>
                         
                         <div className="flex gap-4">
-                          {[1, 2, 3].map(i => (
-                            <div key={`weapon-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2, 3].map(i => {
+                            const slotId = `weapon-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1371,23 +1400,71 @@ export default function LunaTemplate() {
                         
                         {/* Top: 3 boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3].map(i => (
-                            <div key={`armor-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2, 3].map(i => {
+                            const slotId = `armor-top-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {/* Middle: 3 boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3].map(i => (
-                            <div key={`armor-mid-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2, 3].map(i => {
+                            const slotId = `armor-mid-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {/* Bottom: 3 boxes */}
                         <div className="flex gap-4">
-                          {[1, 2, 3].map(i => (
-                            <div key={`armor-bot-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2, 3].map(i => {
+                            const slotId = `armor-bot-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1403,9 +1480,25 @@ export default function LunaTemplate() {
                         </div>
                         
                         <div className="flex gap-4">
-                          {[1, 2].map(i => (
-                            <div key={`genre-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2].map(i => {
+                            const slotId = `genre-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1421,9 +1514,25 @@ export default function LunaTemplate() {
                         </div>
 
                         <div className="flex gap-4">
-                          {[1, 2, 3].map(i => (
-                            <div key={`aspect-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                          ))}
+                          {[1, 2, 3].map(i => {
+                            const slotId = `aspect-${i}`;
+                            const equippedItem = equippedItems[slotId];
+                            return (
+                              <div 
+                                key={slotId} 
+                                onClick={() => handleBoxClick(slotId)} 
+                                className="w-20 h-20 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                              >
+                                {equippedItem && (
+                                  <img 
+                                    src={equippedItem.icon_url || equippedItem.icon} 
+                                    alt={equippedItem.name}
+                                    className="w-full h-full object-contain p-2"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -1440,14 +1549,46 @@ export default function LunaTemplate() {
 
                         <div className="flex flex-col items-center gap-4">
                           <div className="flex gap-4">
-                            {[1, 2].map(i => (
-                              <div key={`passive-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                            ))}
+                            {[1, 2].map(i => {
+                              const slotId = `passive-top-${i}`;
+                              const equippedItem = equippedItems[slotId];
+                              return (
+                                <div 
+                                  key={slotId} 
+                                  onClick={() => handleBoxClick(slotId)} 
+                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                >
+                                  {equippedItem && (
+                                    <img 
+                                      src={equippedItem.icon_url || equippedItem.icon} 
+                                      alt={equippedItem.name}
+                                      className="w-full h-full object-contain p-2"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                           <div className="flex gap-4">
-                            {[3, 4, 5].map(i => (
-                              <div key={`passive-bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                            ))}
+                            {[3, 4, 5].map(i => {
+                              const slotId = `passive-bottom-${i}`;
+                              const equippedItem = equippedItems[slotId];
+                              return (
+                                <div 
+                                  key={slotId} 
+                                  onClick={() => handleBoxClick(slotId)} 
+                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                >
+                                  {equippedItem && (
+                                    <img 
+                                      src={equippedItem.icon_url || equippedItem.icon} 
+                                      alt={equippedItem.name}
+                                      className="w-full h-full object-contain p-2"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -1465,14 +1606,46 @@ export default function LunaTemplate() {
 
                         <div className="flex flex-col items-center gap-4">
                           <div className="flex gap-4">
-                            {[1, 2].map(i => (
-                              <div key={`artifact-top-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                            ))}
+                            {[1, 2].map(i => {
+                              const slotId = `artifact-top-${i}`;
+                              const equippedItem = equippedItems[slotId];
+                              return (
+                                <div 
+                                  key={slotId} 
+                                  onClick={() => handleBoxClick(slotId)} 
+                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                >
+                                  {equippedItem && (
+                                    <img 
+                                      src={equippedItem.icon_url || equippedItem.icon} 
+                                      alt={equippedItem.name}
+                                      className="w-full h-full object-contain p-2"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                           <div className="flex gap-4">
-                            {[3, 4, 5].map(i => (
-                              <div key={`artifact-bottom-${i}`} onClick={handleBoxClick} className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer"></div>
-                            ))}
+                            {[3, 4, 5].map(i => {
+                              const slotId = `artifact-bottom-${i}`;
+                              const equippedItem = equippedItems[slotId];
+                              return (
+                                <div 
+                                  key={slotId} 
+                                  onClick={() => handleBoxClick(slotId)} 
+                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                >
+                                  {equippedItem && (
+                                    <img 
+                                      src={equippedItem.icon_url || equippedItem.icon} 
+                                      alt={equippedItem.name}
+                                      className="w-full h-full object-contain p-2"
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -1499,6 +1672,7 @@ export default function LunaTemplate() {
                   capacity={profileData.inventoryCapacity} 
                   profile={profileData} 
                   onClose={() => setShowInventory(false)}
+                  onEquip={handleEquipItem}
                 />
               </motion.div>
             )}

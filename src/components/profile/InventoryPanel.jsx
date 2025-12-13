@@ -54,7 +54,7 @@ const augmentItem = (item) => {
     return { ...details, ...item, game, genre };
 };
 
-export default function InventoryPanel({ inventory = [], capacity, profile, onClose }) {
+export default function InventoryPanel({ inventory = [], capacity, profile, onClose, onEquip }) {
     const [subTabGenre, setSubTabGenre] = useState(null);
     const [subTabGame, setSubTabGame] = useState(null);
     const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
@@ -370,8 +370,11 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                                             </Button>
                                             <Button 
                                                 onClick={() => {
-                                                    // Equip item logic
-                                                    alert(`${selectedInventoryItem.name} equipped to loadout!`);
+                                                    if (onEquip) {
+                                                        onEquip(selectedInventoryItem);
+                                                    } else {
+                                                        alert(`${selectedInventoryItem.name} equipped to loadout!`);
+                                                    }
                                                 }}
                                                 variant="ghost" 
                                                 className="bg-white/5 hover:bg-white/10 text-white border border-white/5 h-10 text-xs font-bold"
