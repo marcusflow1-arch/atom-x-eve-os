@@ -31,6 +31,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
 
+  // Initialize global state objects
+  useEffect(() => {
+    if (!window.LUNA_EQUIPMENT_STATE) {
+      window.LUNA_EQUIPMENT_STATE = { weapon: null };
+    }
+    if (!window.LUNA_ACTION_STATE) {
+      window.LUNA_ACTION_STATE = { attack: false, skill: null };
+    }
+    if (!window.LUNA_COOLDOWNS) {
+      window.LUNA_COOLDOWNS = {};
+    }
+    if (!window.LUNA_ANIMATION_BINDINGS) {
+      window.LUNA_ANIMATION_BINDINGS = {
+        idle: "idle",
+        weapon_idle: {
+          sword_of_the_abyss: "sort_afk"
+        },
+        weapon_attack: {
+          sword_of_the_abyss: "sword_attack"
+        },
+        skills: {
+          fire_slash: "fire_slash"
+        }
+      };
+    }
+  }, []);
+
   // Fetch animations for Y Bot
   useEffect(() => {
     const fetchAnimations = async () => {
@@ -98,7 +125,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     const processModel = (model, animations) => {
       modelRef.current = model;
 
+        // Find right hand bone
+        let rightHandBone = null;
         model.traverse((node) => {
+          if (node.isBone) {
+            const name = node.name.toLowerCase();
+            if (name.includes("righthand") || name.includes("hand_r") || name.includes("mixamorig_righthand")) {
+              rightHandBone = node;
+            }
+          }
+
           if (node.isMesh || node.isSkinnedMesh) {
             node.frustumCulled = false;
 
@@ -137,43 +173,25 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       model.position.sub(center.multiplyScalar(scale));
       scene.add(model);
 
-      // Load weapon model if provided
-      if (weaponModel) {
+      // Load weapon model if provided and right hand found
+      if (weaponModel && rightHandBone) {
         const weaponLoader = new FBXLoader();
         weaponLoader.load(
           weaponModel,
           (weaponFbx) => {
             weaponRef.current = weaponFbx;
-            weaponFbx.scale.multiplyScalar(0.01); // Scale weapon appropriately
-            
-            // Find right hand bone
-            let rightHandBone = null;
-            model.traverse((node) => {
-              if (node.isBone && (
-                node.name.toLowerCase().includes('righthand') || 
-                node.name.toLowerCase().includes('right_hand') ||
-                node.name.toLowerCase().includes('hand_r')
-              )) {
-                rightHandBone = node;
-              }
-            });
+            weaponFbx.scale.multiplyScalar(0.01);
 
-            if (rightHandBone) {
-              // Attach weapon to hand
-              rightHandBone.add(weaponFbx);
-              
-              // Position and rotate weapon in hand
-              weaponFbx.position.set(0, 0.1, 0);
-              weaponFbx.rotation.set(Math.PI / 2, 0, 0);
+            // Attach weapon to hand
+            rightHandBone.add(weaponFbx);
 
-              // Hidden by default - will be toggled by state
-              weaponFbx.visible = false;
-              setWeaponAttached(true);
-            } else {
-              // Fallback: attach to model root
-              model.add(weaponFbx);
-              weaponFbx.position.set(0.2, 1, 0.1);
-            }
+            // Position and rotate weapon in hand
+            weaponFbx.position.set(0, 0.1, 0);
+            weaponFbx.rotation.set(Math.PI / 2, 0, 0);
+
+            // Hidden by default - will be toggled by state
+            weaponFbx.visible = false;
+            setWeaponAttached(true);
           },
           undefined,
           (err) => console.error('Error loading weapon:', err)
@@ -324,10 +342,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
+    // Animation priority system
+    const animationLocked = { current: false };
+
     // Safe base action setter - prevents animation spam
-    const setBaseAction = (name) => {
-      if (currentBaseActionRef.current === name) return;
-      
+    const setBaseAction = (name, once = false) => {
+      if (animationLocked.current && !once) return;
+      if (currentBaseActionRef.current === name && !once) return;
+
       const action = actionsRef.current[name];
       if (!action) return;
 
@@ -340,34 +362,69 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         }
       });
 
-      if (!action.isRunning()) {
+      if (!action.isRunning() || once) {
         action.reset();
         action.fadeIn(0.2);
-        action.setLoop(THREE.LoopRepeat);
+        action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat);
+        action.clampWhenFinished = once;
         action.play();
+
+        if (once) {
+          animationLocked.current = true;
+          mixer.addEventListener('finished', function onFinish(e) {
+            if (e.action === action) {
+              animationLocked.current = false;
+              mixer.removeEventListener('finished', onFinish);
+            }
+          });
+        }
       }
     };
 
-    // Weapon application logic
-    const applyWeapon = (weaponId) => {
-      // Hide sword by default
-      if (weaponRef.current) {
-        weaponRef.current.visible = false;
+    // Resolve idle animation based on weapon state
+    const resolveIdle = () => {
+      const weapon = window.LUNA_EQUIPMENT_STATE?.weapon;
+      if (weapon && window.LUNA_ANIMATION_BINDINGS?.weapon_idle?.[weapon]) {
+        return window.LUNA_ANIMATION_BINDINGS.weapon_idle[weapon];
       }
+      return 'idle';
+    };
 
-      // Equip sword
-      if (weaponId === "sword_of_the_abyss" && weaponRef.current) {
-        weaponRef.current.visible = true;
-        // Switch to sword idle animation if available
-        if (actionsRef.current.swing) {
-          setBaseAction('swing');
-        }
-      }
+    // Handle attack trigger
+    const handleAttack = () => {
+      if (!window.LUNA_ACTION_STATE?.attack) return;
 
-      // Unequip (fallback to normal idle)
-      if (!weaponId) {
-        setBaseAction('idle');
-      }
+      const weapon = window.LUNA_EQUIPMENT_STATE?.weapon;
+      if (!weapon) return;
+
+      const anim = window.LUNA_ANIMATION_BINDINGS?.weapon_attack?.[weapon];
+      if (!anim || !actionsRef.current[anim]) return;
+
+      setBaseAction(anim, true);
+      window.LUNA_ACTION_STATE.attack = false;
+    };
+
+    // Handle skill trigger
+    const handleSkill = () => {
+      const skill = window.LUNA_ACTION_STATE?.skill;
+      if (!skill) return;
+
+      const now = Date.now();
+      if (now < (window.LUNA_COOLDOWNS?.[skill] || 0)) return;
+
+      const anim = window.LUNA_ANIMATION_BINDINGS?.skills?.[skill];
+      if (!anim || !actionsRef.current[anim]) return;
+
+      setBaseAction(anim, true);
+      window.LUNA_COOLDOWNS[skill] = now + 3000;
+      window.LUNA_ACTION_STATE.skill = null;
+    };
+
+    // Update weapon visibility
+    const updateWeaponVisual = () => {
+      if (!weaponRef.current) return;
+      const equipped = window.LUNA_EQUIPMENT_STATE?.weapon === "sword_of_the_abyss";
+      weaponRef.current.visible = equipped;
     };
 
     const mixAction = (name, fadeDuration, weight) => {
@@ -386,11 +443,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-      
+
+      // Update weapon visibility
+      updateWeaponVisual();
+
       // UI → STATE → VIEWER BRIDGE
       const state = window.LUNA_STATE;
       if (state && state.equippedWeapon !== currentWeaponRef.current) {
-        applyWeapon(state.equippedWeapon);
+        window.LUNA_EQUIPMENT_STATE.weapon = state.equippedWeapon;
         currentWeaponRef.current = state.equippedWeapon;
       }
       
@@ -426,11 +486,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           }
         }
 
-        // PlayerController Logic with weapon awareness
+        // Animation priority system
         if (grounded) {
-          if (isMoving) {
+          // Priority 1: Skill
+          if (window.LUNA_ACTION_STATE?.skill) {
+            handleSkill();
+          } 
+          // Priority 2: Attack
+          else if (window.LUNA_ACTION_STATE?.attack) {
+            handleAttack();
+          }
+          // Priority 3: Movement or Idle
+          else if (isMoving) {
             direction.normalize();
-            
+
             // Move model
             modelRef.current.position.x += direction.x * moveSpeed;
             modelRef.current.position.z += direction.z * moveSpeed;
@@ -440,21 +509,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
             modelRef.current.rotation.y = angle;
 
             // Play running animation
-            if (actionsRef.current.run && !actionsRef.current.run.isRunning()) {
+            if (!animationLocked.current) {
               setBaseAction('run');
             }
           } else {
-            // If no weapon equipped, normal idle
-            if (!currentWeaponRef.current) {
-              if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-                setBaseAction('idle');
-              }
+            // Idle state (weapon-aware)
+            if (!animationLocked.current) {
+              setBaseAction(resolveIdle());
             }
-            // Weapon equipped: maintain sword idle unless moving
           }
         } else {
           // Falling overrides everything when not grounded
-          if (actionsRef.current.jump && !actionsRef.current.jump.isRunning()) {
+          if (!animationLocked.current) {
             setBaseAction('jump');
           }
         }
@@ -466,14 +532,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         camera.position.z = modelRef.current.position.z + offset.z;
         controls.target.copy(modelRef.current.position);
         controls.update();
-      } else if (modelRef.current && !controlsActive.current) {
-        // When inactive, respect weapon state
-        if (!currentWeaponRef.current) {
-          if (actionsRef.current.idle && !actionsRef.current.idle.isRunning()) {
-            setBaseAction('idle');
-          }
+        } else if (modelRef.current && !controlsActive.current) {
+        // When inactive, check for actions or use idle
+        if (window.LUNA_ACTION_STATE?.skill) {
+          handleSkill();
+        } else if (window.LUNA_ACTION_STATE?.attack) {
+          handleAttack();
+        } else if (!animationLocked.current) {
+          setBaseAction(resolveIdle());
         }
-      }
+        }
       
       renderer.render(scene, camera);
     }
