@@ -196,12 +196,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
-          
+
           if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
           else if (name.includes('walk')) actionsRef.current.walk = action;
           else if (name.includes('run')) actionsRef.current.run = action;
           else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          else if (name.includes('kick')) actionsRef.current.kick = action;
+          else if (name.includes('dance')) actionsRef.current.dance = action;
+          else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
         });
 
         // Default to idle or first animation
@@ -810,17 +813,26 @@ export default function LunaTemplate() {
           return newSkills;
         });
         
-        // Trigger swing animation on key 1 if weapon is equipped
-        if (key === '1' && weaponModelUrl) {
-          setTriggerAnimation('swing');
-          setTimeout(() => setTriggerAnimation(null), 1000);
+        // Map keys to animations
+        const animationMap = {
+          '1': 'swing',     // Sword swing/attack
+          '2': 'kick',      // Kick attack
+          '3': 'dance',     // Dance emote
+          '4': 'wave',      // Wave gesture
+          '5': 'jump'       // Jump ability
+        };
+        
+        const animName = animationMap[key];
+        if (animName) {
+          setTriggerAnimation(animName);
+          setTimeout(() => setTriggerAnimation(null), 1500);
         }
       }
     };
 
     window.addEventListener('keydown', handleSkillKey);
     return () => window.removeEventListener('keydown', handleSkillKey);
-  }, [weaponModelUrl]);
+  }, []);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
