@@ -596,6 +596,8 @@ import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
 import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
+import CalendarOverlay from '../components/calendar/CalendarOverlay';
+import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -854,6 +856,10 @@ export default function LunaTemplate() {
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [userEvents, setUserEvents] = useState([]);
+  const [platformUpdates, setPlatformUpdates] = useState([]);
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
@@ -876,6 +882,24 @@ export default function LunaTemplate() {
     };
     fetchModelAndAnimations();
   }, []);
+
+  // Fetch User Events and Platform Updates
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const events = await base44.entities.UserEvent.filter({ user_id: user.id });
+        setUserEvents(events);
+        
+        const updates = await base44.entities.PlatformUpdate.filter({ published: true });
+        setPlatformUpdates(updates);
+      } catch (error) {
+        console.error('Failed to load events/updates:', error);
+      }
+    };
+    fetchData();
+  }, [user]);
 
   // Check if Blade of Abyss is equipped and load weapon model
   useEffect(() => {
@@ -1530,13 +1554,17 @@ export default function LunaTemplate() {
                   {/* Center - Calendar, Clock & Date */}
                   <div className="flex-1 flex flex-col gap-6">
                     {/* Clock & Date */}
-                    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+                    <div 
+                      onClick={() => setShowCalendar(true)}
+                      className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/[0.05] transition-colors"
+                    >
                       <div className="text-7xl font-bold text-white mb-2 font-mono">
                         {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       <div className="text-2xl text-white/60">
                         {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </div>
+                      <p className="text-xs text-white/40 mt-2">Click to open calendar</p>
                     </div>
 
                     {/* Calendar */}
@@ -1546,23 +1574,26 @@ export default function LunaTemplate() {
                         Upcoming Events
                       </h2>
                       <div className="space-y-3">
-                        {[
-                          { time: '2:00 PM', title: 'Raid with Shadow_Striker', game: 'Destiny 2' },
-                          { time: '5:30 PM', title: 'Tournament Match', game: 'League of Legends' },
-                          { time: '8:00 PM', title: 'Clan Meeting', game: 'World of Warcraft' }
-                        ].map((event, i) => (
-                          <div key={i} className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer">
+                        {userEvents.slice(0, 3).map((event, i) => (
+                          <div 
+                            key={i} 
+                            onClick={() => setShowCalendar(true)}
+                            className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer"
+                          >
                             <div className="flex items-center gap-3">
                               <div className="bg-purple-500/20 rounded-lg px-3 py-2 text-purple-300 font-bold text-sm">
-                                {event.time}
+                                {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
                               <div className="flex-1">
                                 <p className="text-white font-semibold">{event.title}</p>
-                                <p className="text-white/50 text-sm">{event.game}</p>
+                                {event.game && <p className="text-white/50 text-sm">{event.game}</p>}
                               </div>
                             </div>
                           </div>
                         ))}
+                        {userEvents.length === 0 && (
+                          <p className="text-white/40 text-sm text-center py-4">No upcoming events</p>
+                        )}
                       </div>
                     </div>
 
@@ -1573,23 +1604,26 @@ export default function LunaTemplate() {
                         Platform Updates
                       </h2>
                       <div className="space-y-3">
-                        {[
-                          { title: 'AdamXEve v2.5 Released', desc: 'New AI companion features and enhanced social hub', type: 'update' },
-                          { title: 'Desktop App Update Required', desc: 'Version 1.8.0 now available for download', type: 'required' },
-                          { title: 'New Tournament System', desc: 'Cross-game tournaments launching next week', type: 'feature' }
-                        ].map((news, i) => (
-                          <div key={i} className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${
-                            news.type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'
-                          }`}>
+                        {platformUpdates.slice(0, 3).map((update, i) => (
+                          <div 
+                            key={i} 
+                            onClick={() => setSelectedUpdate(update)}
+                            className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${
+                              update.update_type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'
+                            }`}
+                          >
                             <div className="flex items-start gap-3">
-                              <Bot className={`w-5 h-5 flex-shrink-0 mt-0.5 ${news.type === 'required' ? 'text-red-400' : 'text-green-400'}`} />
+                              <Bot className={`w-5 h-5 flex-shrink-0 mt-0.5 ${update.update_type === 'required' ? 'text-red-400' : 'text-green-400'}`} />
                               <div className="flex-1">
-                                <p className="text-white font-semibold mb-1">{news.title}</p>
-                                <p className="text-white/60 text-sm">{news.desc}</p>
+                                <p className="text-white font-semibold mb-1">{update.title}</p>
+                                <p className="text-white/60 text-sm">{update.description}</p>
                               </div>
                             </div>
                           </div>
                         ))}
+                        {platformUpdates.length === 0 && (
+                          <p className="text-white/40 text-sm text-center py-4">No updates available</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2379,6 +2413,26 @@ export default function LunaTemplate() {
             }}
             currentUserId={user?.id}
             onClose={() => setSelectedFriend(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Calendar Overlay */}
+      <AnimatePresence>
+        {showCalendar && (
+          <CalendarOverlay
+            currentUserId={user?.id}
+            onClose={() => setShowCalendar(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Platform Update Modal */}
+      <AnimatePresence>
+        {selectedUpdate && (
+          <PlatformUpdateModal
+            update={selectedUpdate}
+            onClose={() => setSelectedUpdate(null)}
           />
         )}
       </AnimatePresence>
