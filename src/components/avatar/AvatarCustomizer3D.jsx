@@ -9,22 +9,54 @@ import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
 function CustomModel({ modelUrl }) {
-  const gltf = useLoader(GLTFLoader, modelUrl);
-  
-  React.useEffect(() => {
-    if (gltf.scene) {
-      gltf.scene.traverse((child) => {
-        if (child.isMesh) {
-          child.frustumCulled = false;
-          if (child.material) {
-            child.material.needsUpdate = true;
+  try {
+    const gltf = useLoader(GLTFLoader, modelUrl);
+    
+    React.useEffect(() => {
+      if (gltf?.scene) {
+        gltf.scene.traverse((child) => {
+          if (child.isMesh) {
+            child.frustumCulled = false;
+            if (child.material) {
+              // Handle both single materials and arrays
+              const materials = Array.isArray(child.material) ? child.material : [child.material];
+              materials.forEach(mat => {
+                if (mat) {
+                  mat.needsUpdate = true;
+                  // Fix potential texture source issues
+                  if (mat.map && !mat.map.source) {
+                    mat.map = null;
+                  }
+                  if (mat.normalMap && !mat.normalMap.source) {
+                    mat.normalMap = null;
+                  }
+                  if (mat.roughnessMap && !mat.roughnessMap.source) {
+                    mat.roughnessMap = null;
+                  }
+                  if (mat.metalnessMap && !mat.metalnessMap.source) {
+                    mat.metalnessMap = null;
+                  }
+                }
+              });
+            }
           }
-        }
-      });
-    }
-  }, [gltf]);
-  
-  return gltf.scene ? <primitive object={gltf.scene} /> : null;
+        });
+      }
+    }, [gltf]);
+    
+    return gltf?.scene ? <primitive object={gltf.scene} scale={1} /> : null;
+  } catch (error) {
+    console.error('Error loading custom model:', error);
+    return null;
+  }
+}
+
+function ModelErrorBoundary({ children }) {
+  return (
+    <React.Suspense fallback={null}>
+      {children}
+    </React.Suspense>
+  );
 }
 
 function Scene({ customModelUrl }) {
@@ -45,13 +77,13 @@ function Scene({ customModelUrl }) {
       <directionalLight position={[-5, 3, -5]} intensity={0.4} />
       <pointLight position={[0, 2, 0]} intensity={0.3} />
       
-      <Suspense fallback={null}>
+      <ModelErrorBoundary>
         {customModelUrl ? (
           <CustomModel modelUrl={customModelUrl} />
         ) : (
           <AvatarModel />
         )}
-      </Suspense>
+      </ModelErrorBoundary>
       
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
