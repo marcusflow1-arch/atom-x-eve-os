@@ -18,6 +18,7 @@ import { base44 } from '@/api/base44Client';
 import BlacksmithPage from './Blacksmith';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import AvatarCustomizer3D from '../components/avatar/AvatarCustomizer3D';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -173,6 +174,7 @@ function AchievementsView({ onSwitchToForge }) {
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -380,6 +382,20 @@ function AchievementsView({ onSwitchToForge }) {
                     </div>
                   </motion.div>
                 </Link>
+                
+                {/* Avatar Customizer Button */}
+                <motion.button
+                  onClick={() => setShowAvatarCustomizer(true)}
+                  className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
+                  title="3D Avatar Customizer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="relative z-10">
+                    <User className="w-6 h-6 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-blue-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
+                  </div>
+                </motion.button>
               </h1>
             </div>
 
@@ -572,6 +588,13 @@ function AchievementsView({ onSwitchToForge }) {
           <div className="text-xl font-black text-white leading-none">{totalScore.toLocaleString()}</div>
         </div>
       </motion.div>
+
+      {/* 3D Avatar Customizer */}
+      <AnimatePresence>
+        {showAvatarCustomizer && (
+          <AvatarCustomizer3D onClose={() => setShowAvatarCustomizer(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
