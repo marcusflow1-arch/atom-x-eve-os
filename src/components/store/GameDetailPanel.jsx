@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, ShoppingCart, ThumbsUp, ThumbsDown, Package, BrainCircuit, Heart, Award, Shield, User, Info, Trophy, MessageSquare, BookOpen } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Post } from '@/entities/Post'; // Assuming Post entity is available
 import CreatePostForm from '../community/CreatePostForm'; // Import form
 
@@ -15,26 +14,99 @@ const categoryIcons = {
     ai_teacher: <Award className="w-4 h-4" />
 };
 
-const AchievementItem = ({ achievement }) => (
-    <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-        <div className="flex justify-between items-start">
-            <div>
-                <div className="flex items-center gap-2 mb-1">
-                    {categoryIcons[achievement.type]}
-                    <h4 className="font-bold text-white">{achievement.title}</h4>
-                </div>
-                <p className="text-sm text-slate-400">{achievement.description}</p>
-                <p className="text-xs text-slate-500 mt-1">Unlock: {achievement.unlockCondition}</p>
-            </div>
-            <Badge variant={achievement.status === 'unlocked' ? 'default' : 'secondary'} className={achievement.status === 'unlocked' ? 'bg-green-600' : ''}>
-                {achievement.status}
-            </Badge>
+const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [20, -20]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-20, 20]);
+
+  function handleMouseMove(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXPos = event.clientX - rect.left;
+    const mouseYPos = event.clientY - rect.top;
+    x.set(mouseXPos / width - 0.5);
+    y.set(mouseYPos / height - 0.5);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
+  const rarityColors = {
+    Common: "border-slate-600 shadow-slate-500/20",
+    Uncommon: "border-green-500 shadow-green-500/20",
+    Rare: "border-blue-500 shadow-blue-500/20",
+    Epic: "border-purple-500 shadow-purple-500/20",
+    Legendary: "border-orange-500 shadow-orange-500/20",
+    Mythical: "border-red-500 shadow-red-500/20",
+    Unique: "border-yellow-400 shadow-yellow-500/40",
+    Limitless: "border-pink-400 shadow-pink-500/40"
+  };
+
+  const rarityColor = rarityColors[achievement.rarity] || rarityColors.Common;
+
+  return (
+    <motion.div
+      onClick={() => onClick && onClick(achievement)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ 
+        rotateX, 
+        rotateY, 
+        transformStyle: "preserve-3d" 
+      }}
+      whileHover={{ scale: 1.05 }}
+      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
+    >
+      {/* Card Content */}
+      <div className="absolute inset-0 flex flex-col items-center p-4 transform-style-3d">
+        {/* Header */}
+        <div className="w-full flex justify-between items-start mb-2" style={{ transform: "translateZ(20px)" }}>
+          <Badge variant="outline" className="bg-black/50 border-white/10 text-[10px]">
+            {achievement.category || 'General'}
+          </Badge>
+          <div className="text-yellow-400 font-bold text-xs">{achievement.points} pts</div>
         </div>
-        <div className="mt-2 text-right">
-            <Button size="sm" variant="outline">Preview</Button>
+
+        {/* Icon / Image Area */}
+        <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(30px)" }}>
+          <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
+            {achievement.icon || '🏆'}
+          </div>
         </div>
-    </div>
-);
+
+        {/* Info */}
+        <div className="w-full text-center mt-auto" style={{ transform: "translateZ(25px)" }}>
+          <h3 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
+          <p className="text-slate-400 text-xs line-clamp-2">{achievement.description}</p>
+        </div>
+
+        {/* Rarity Label */}
+        <div className="mt-3 w-full border-t border-white/10 pt-2 flex justify-between items-center" style={{ transform: "translateZ(20px)" }}>
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
+            {achievement.rarity}
+          </span>
+          {isUnlocked && <Check className="w-4 h-4 text-green-400" />}
+        </div>
+      </div>
+
+      {/* Shine Effect */}
+      <motion.div 
+        style={{
+          opacity: useTransform(rotateX, (val) => Math.abs(val) / 30 + 0.1),
+          background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%)",
+          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
+        }}
+        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+      />
+    </motion.div>
+  );
+};
 
 const ReviewItem = ({ review }) => (
     <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
@@ -192,12 +264,22 @@ export default function GameDetailPanel({ game, onPurchase }) {
 
     // Content for the "Achievements" tab
     const AchievementsContent = () => (
-        <div className="p-4 overflow-y-auto h-full space-y-3">
-            <h3 className="text-xl font-bold mb-2">Unlockable Achievements</h3>
-            {(game.achievements && game.achievements.length > 0) ? 
-                game.achievements.map(ach => <AchievementItem key={ach.id} achievement={ach} />) :
+        <div className="p-4 overflow-y-auto h-full">
+            <h3 className="text-xl font-bold mb-4">Unlockable Achievements</h3>
+            {(game.achievements && game.achievements.length > 0) ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {game.achievements.map(ach => (
+                        <AchievementCard 
+                            key={ach.id} 
+                            achievement={ach} 
+                            isUnlocked={ach.status === 'unlocked'}
+                            onClick={(ach) => console.log('Achievement clicked:', ach)}
+                        />
+                    ))}
+                </div>
+            ) : (
                 <p className="text-slate-400">No achievements available for this game yet.</p>
-            }
+            )}
         </div>
     );
 
