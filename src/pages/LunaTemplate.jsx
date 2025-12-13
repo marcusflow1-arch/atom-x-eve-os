@@ -16,9 +16,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
+  const weaponRef = useRef(null);
   const actionsRef = useRef({});
   const keysPressed = useRef({});
   const velocityRef = useRef(new THREE.Vector3());
@@ -26,6 +27,7 @@ function TransparentModel3DViewer({ modelUrl }) {
   const controlsActive = useRef(false);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
+  const [weaponAttached, setWeaponAttached] = React.useState(false);
 
   // Fetch animations for Y Bot
   useEffect(() => {
@@ -132,6 +134,60 @@ function TransparentModel3DViewer({ modelUrl }) {
       model.scale.multiplyScalar(scale);
       model.position.sub(center.multiplyScalar(scale));
       scene.add(model);
+
+      // Load weapon model if provided
+      if (weaponModel) {
+        const weaponLoader = new FBXLoader();
+        weaponLoader.load(
+          weaponModel,
+          (weaponFbx) => {
+            weaponRef.current = weaponFbx;
+            weaponFbx.scale.multiplyScalar(0.01); // Scale weapon appropriately
+            
+            // Find right hand bone
+            let rightHandBone = null;
+            model.traverse((node) => {
+              if (node.isBone && (
+                node.name.toLowerCase().includes('righthand') || 
+                node.name.toLowerCase().includes('right_hand') ||
+                node.name.toLowerCase().includes('hand_r')
+              )) {
+                rightHandBone = node;
+              }
+            });
+
+            if (rightHandBone) {
+              // Attach weapon to hand
+              rightHandBone.add(weaponFbx);
+              
+              // Position and rotate weapon in hand
+              weaponFbx.position.set(0, 0.1, 0);
+              weaponFbx.rotation.set(Math.PI / 2, 0, 0);
+
+              // Equip animation
+              const startY = weaponFbx.position.y - 0.5;
+              weaponFbx.position.y = startY;
+              weaponFbx.visible = true;
+
+              const animateEquip = () => {
+                if (weaponFbx.position.y < 0.1) {
+                  weaponFbx.position.y += 0.02;
+                  requestAnimationFrame(animateEquip);
+                } else {
+                  setWeaponAttached(true);
+                }
+              };
+              animateEquip();
+            } else {
+              // Fallback: attach to model root
+              model.add(weaponFbx);
+              weaponFbx.position.set(0.2, 1, 0.1);
+            }
+          },
+          undefined,
+          (err) => console.error('Error loading weapon:', err)
+        );
+      }
 
       mixer = new THREE.AnimationMixer(model);
 
@@ -400,7 +456,7 @@ function TransparentModel3DViewer({ modelUrl }) {
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelUrl, animations]);
+  }, [modelUrl, weaponModel, animations]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
@@ -685,6 +741,7 @@ export default function LunaTemplate() {
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [equippedItems, setEquippedItems] = useState({});
+  const [weaponModelUrl, setWeaponModelUrl] = useState(null);
   const { mode } = useDashboardMode();
 
   // Fetch 3D Model and Animations
@@ -741,19 +798,23 @@ export default function LunaTemplate() {
     setShowInventory(true);
   };
 
-  const handleEquipItem = (item) => {
+  const handleEquipItem = async (item) => {
     if (clickedSlot && item) {
       setEquippedItems(prev => ({
         ...prev,
         [clickedSlot]: item
       }));
       
-      // If equipping to a weapon slot, load its 3D model
-      if (clickedSlot.startsWith('weapon-')) {
-        // Check if item has a model_url, otherwise use default
-        const model3DUrl = item.model_url || item.model3d_url;
-        if (model3DUrl) {
-          setModelUrl(model3DUrl);
+      // If equipping to weapon slot, load sword model
+      if (clickedSlot.startsWith('weapon-') && item.name === 'Blade of Abyss') {
+        try {
+          // Fetch the Blade of Abyss sword model
+          const swordModels = await base44.entities.ModelFBX.filter({ name: 'Blade of Abyss Sword' });
+          if (swordModels.length > 0) {
+            setWeaponModelUrl(swordModels[0].file_url);
+          }
+        } catch (error) {
+          console.error('Failed to load weapon model:', error);
         }
       }
       
@@ -778,7 +839,7 @@ export default function LunaTemplate() {
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
-            <TransparentModel3DViewer modelUrl={modelUrl} />
+            <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} />
           </div>
         )}
         {/* Circle Icon Button with Hover Dropdown */}
