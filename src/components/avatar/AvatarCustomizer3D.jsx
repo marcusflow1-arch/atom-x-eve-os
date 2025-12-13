@@ -11,7 +11,20 @@ import CustomizationSidebar from './CustomizationSidebar';
 function CustomModel({ modelUrl }) {
   const gltf = useLoader(GLTFLoader, modelUrl);
   
-  return <primitive object={gltf.scene} />;
+  React.useEffect(() => {
+    if (gltf.scene) {
+      gltf.scene.traverse((child) => {
+        if (child.isMesh) {
+          child.frustumCulled = false;
+          if (child.material) {
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+  }, [gltf]);
+  
+  return gltf.scene ? <primitive object={gltf.scene} /> : null;
 }
 
 function Scene({ customModelUrl }) {
@@ -69,8 +82,14 @@ export default function AvatarCustomizer3D({ onClose }) {
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
     if (file && file.name.endsWith('.glb')) {
-      const url = URL.createObjectURL(file);
-      setCustomModelUrl(url);
+      try {
+        const url = URL.createObjectURL(file);
+        setCustomModelUrl(url);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading file:', err);
+        setError('Failed to load model file');
+      }
     } else {
       alert('Please upload a .glb file');
     }
@@ -154,6 +173,10 @@ export default function AvatarCustomizer3D({ onClose }) {
             dpr={[1, 2]}
             onCreated={({ gl }) => {
               gl.setClearColor('#000000', 0);
+            }}
+            onError={(error) => {
+              console.error('Canvas error:', error);
+              setError('Failed to render 3D model');
             }}
           >
             <Scene customModelUrl={customModelUrl} />
