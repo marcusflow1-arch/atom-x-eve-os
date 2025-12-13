@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
@@ -36,8 +37,36 @@ function Scene() {
   );
 }
 
+function LoadingFallback() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="text-white/60 text-center">
+        <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-sm">Loading Avatar Studio...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function AvatarCustomizer3D({ onClose }) {
   const [showSidebar, setShowSidebar] = useState(true);
+  const [error, setError] = useState(null);
+  
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center"
+      >
+        <div className="text-center">
+          <p className="text-red-400 mb-4">Failed to load Avatar Studio</p>
+          <Button onClick={onClose} variant="outline">Close</Button>
+        </div>
+      </motion.div>
+    );
+  }
   
   return (
     <motion.div
@@ -75,9 +104,11 @@ export default function AvatarCustomizer3D({ onClose }) {
       
       {/* 3D Canvas */}
       <div className="absolute inset-0">
-        <Canvas shadows>
-          <Scene />
-        </Canvas>
+        <Suspense fallback={<LoadingFallback />}>
+          <Canvas shadows onError={(e) => { console.error('Canvas error:', e); setError(e); }}>
+            <Scene />
+          </Canvas>
+        </Suspense>
       </div>
       
       {/* Customization Sidebar */}
