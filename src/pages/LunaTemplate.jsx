@@ -593,6 +593,8 @@ import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
+import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
+import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -849,6 +851,7 @@ export default function LunaTemplate() {
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
   const [selectedStreamingService, setSelectedStreamingService] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
@@ -1487,30 +1490,37 @@ export default function LunaTemplate() {
                 >
                   {/* Friends List - Far Left */}
                   <div className="w-80 flex-shrink-0">
-                    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full">
-                      <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-blue-400" />
-                        Friends Online
-                      </h2>
-                      <div className="space-y-3">
-                        {mockFriends.map(friend => (
-                          <div key={friend.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-                            <div className="relative">
-                              <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full" />
-                              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${
-                                friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
-                              }`} />
+                    <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full flex flex-col">
+                      <FriendRequestsPanel currentUserId={user?.id} />
+                      <div className="mt-6 flex-1 overflow-y-auto">
+                        <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-blue-400" />
+                          Friends Online
+                        </h2>
+                        <div className="space-y-3">
+                          {mockFriends.map(friend => (
+                            <div 
+                              key={friend.id} 
+                              onClick={() => setSelectedFriend(friend)}
+                              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                            >
+                              <div className="relative">
+                                <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full" />
+                                <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${
+                                  friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                                }`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-semibold truncate">{friend.name}</p>
+                                {friend.game ? (
+                                  <p className="text-blue-400 text-xs truncate">{friend.game}</p>
+                                ) : (
+                                  <p className="text-slate-500 text-xs">Offline</p>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-semibold truncate">{friend.name}</p>
-                              {friend.game ? (
-                                <p className="text-blue-400 text-xs truncate">{friend.game}</p>
-                              ) : (
-                                <p className="text-slate-500 text-xs">Offline</p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2352,6 +2362,24 @@ export default function LunaTemplate() {
         isOpen={showProfile} 
         onClose={() => setShowProfile(false)} 
       />
+
+      {/* Friend Interaction Panel */}
+      <AnimatePresence>
+        {selectedFriend && (
+          <FriendInteractionPanel
+            friend={{
+              id: selectedFriend.id,
+              friend_id: selectedFriend.id,
+              friend_name: selectedFriend.name,
+              friend_avatar: selectedFriend.avatar,
+              status: selectedFriend.status,
+              current_game: selectedFriend.game
+            }}
+            currentUserId={user?.id}
+            onClose={() => setSelectedFriend(null)}
+          />
+        )}
+      </AnimatePresence>
       </div>
     
   );
