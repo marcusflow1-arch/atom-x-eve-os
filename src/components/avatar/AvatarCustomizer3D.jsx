@@ -9,51 +9,7 @@ import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
 function CustomModel({ modelUrl }) {
-  const [model, setModel] = React.useState(null);
-  
-  React.useEffect(() => {
-    const loader = new GLTFLoader();
-    
-    loader.load(
-      modelUrl,
-      (gltf) => {
-        if (gltf?.scene) {
-          // Clean up materials and textures
-          gltf.scene.traverse((child) => {
-            if (child.isMesh) {
-              child.frustumCulled = false;
-              
-              if (child.material) {
-                const materials = Array.isArray(child.material) ? child.material : [child.material];
-                
-                materials.forEach(mat => {
-                  if (!mat) return;
-                  
-                  // Clean up any textures without valid sources
-                  ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'bumpMap', 'displacementMap'].forEach(mapType => {
-                    if (mat[mapType] && (!mat[mapType].source || !mat[mapType].image)) {
-                      mat[mapType] = null;
-                    }
-                  });
-                  
-                  mat.needsUpdate = true;
-                });
-              }
-            }
-          });
-          
-          setModel(gltf.scene);
-        }
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading GLB:', error);
-        setModel(null);
-      }
-    );
-  }, [modelUrl]);
-  
-  return model ? <primitive object={model} /> : null;
+  return null; // Temporarily disabled due to texture loading issues
 }
 
 function ModelErrorBoundary({ children }) {
@@ -83,11 +39,7 @@ function Scene({ customModelUrl }) {
       <pointLight position={[0, 2, 0]} intensity={0.3} />
       
       <ModelErrorBoundary>
-        {customModelUrl ? (
-          <CustomModel modelUrl={customModelUrl} />
-        ) : (
-          <AvatarModel />
-        )}
+        <AvatarModel />
       </ModelErrorBoundary>
       
       {/* Ground plane */}
@@ -117,19 +69,8 @@ export default function AvatarCustomizer3D({ onClose }) {
   const fileInputRef = React.useRef(null);
 
   const handleFileUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (file && file.name.endsWith('.glb')) {
-      try {
-        const url = URL.createObjectURL(file);
-        setCustomModelUrl(url);
-        setError(null);
-      } catch (err) {
-        console.error('Error loading file:', err);
-        setError('Failed to load model file');
-      }
-    } else {
-      alert('Please upload a .glb file');
-    }
+    alert('Custom model upload is temporarily disabled due to texture compatibility issues. This feature will be re-enabled soon.');
+    event.target.value = '';
   };
   
   if (error) {
