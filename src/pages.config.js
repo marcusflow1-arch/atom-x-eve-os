@@ -3,7 +3,6 @@ import Blacksmith from './pages/Blacksmith';
 import AIConsole from './pages/AIConsole';
 import Library from './pages/Library';
 import AINews from './pages/AINews';
-import AIAchievements from './pages/AIAchievements';
 import Store from './pages/Store';
 import InstallApp from './pages/InstallApp';
 import Mailbox from './pages/Mailbox';
@@ -46,7 +45,6 @@ export const PAGES = {
     "AIConsole": AIConsole,
     "Library": Library,
     "AINews": AINews,
-    "AIAchievements": AIAchievements,
     "Store": Store,
     "InstallApp": InstallApp,
     "Mailbox": Mailbox,
