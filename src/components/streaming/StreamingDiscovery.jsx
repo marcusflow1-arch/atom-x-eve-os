@@ -164,11 +164,11 @@ const FilterSidebar = ({ filters, setFilters }) => {
     <div 
       className="w-[280px] flex-shrink-0 p-5 rounded-3xl h-fit max-h-[calc(100vh-200px)] overflow-y-auto"
       style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(15, 23, 42, 0.8) 100%)',
+        background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.2) 0%, rgba(100, 116, 139, 0.3) 50%, rgba(71, 85, 105, 0.2) 100%)',
         backdropFilter: 'blur(40px) saturate(180%)',
         WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+        border: '1px solid rgba(148, 163, 184, 0.25)',
+        boxShadow: '0 8px 32px rgba(71, 85, 105, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
       }}
     >
       <FilterSection title="Categories">
@@ -378,7 +378,11 @@ export default function StreamingDiscovery() {
           </h2>
           
           {/* Main Streamer Showcase */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden mb-6">
+          <div className="backdrop-blur-xl rounded-2xl overflow-hidden mb-6" style={{
+            background: 'rgba(71, 85, 105, 0.25)',
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+            boxShadow: '0 8px 32px rgba(71, 85, 105, 0.3)'
+          }}>
             <div className="flex flex-col lg:flex-row">
               {/* Left: Video/Images */}
               <div className="lg:w-[60%] p-6">
@@ -423,7 +427,11 @@ export default function StreamingDiscovery() {
               </div>
 
               {/* Right: Details */}
-              <div className="lg:w-[40%] p-6 bg-slate-800/40">
+              <div className="lg:w-[40%] p-6" style={{
+                background: 'rgba(71, 85, 105, 0.2)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)'
+              }}>
                 <AnimatePresence mode="wait">
                   {detailView === 'overview' ? (
                     <motion.div

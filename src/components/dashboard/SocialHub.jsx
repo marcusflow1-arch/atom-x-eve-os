@@ -509,16 +509,33 @@ export default function SocialHub() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" style={{
+      background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.15) 0%, rgba(100, 116, 139, 0.2) 100%)',
+      backdropFilter: 'blur(40px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(40px) saturate(180%)'
+    }}>
       {/* Top Navigation Bar */}
-      <div className="flex items-center gap-4 px-6 py-4 bg-slate-800/60 backdrop-blur-xl border-b border-slate-700/50">
+      <div className="flex items-center gap-4 px-6 py-4" style={{
+        background: 'rgba(71, 85, 105, 0.2)',
+        backdropFilter: 'blur(30px)',
+        WebkitBackdropFilter: 'blur(30px)',
+        borderBottom: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      }}>
         <button
           onClick={() => setActiveView('feed')}
           className={`px-6 py-2 rounded-lg font-semibold transition-all ${
             activeView === 'feed'
-              ? 'bg-blue-600 text-white'
-              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              ? 'text-white'
+              : 'text-slate-400 hover:text-white'
           }`}
+          style={activeView === 'feed' ? {
+            background: 'rgba(100, 116, 139, 0.5)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(148, 163, 184, 0.3)',
+            boxShadow: '0 4px 12px rgba(71, 85, 105, 0.4)'
+          } : {}}
         >
           <TrendingUp className="w-4 h-4 inline mr-2" />
           Feed
@@ -527,9 +544,16 @@ export default function SocialHub() {
           onClick={() => setActiveView('marketplace')}
           className={`px-6 py-2 rounded-lg font-semibold transition-all ${
             activeView === 'marketplace'
-              ? 'bg-blue-600 text-white'
-              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              ? 'text-white'
+              : 'text-slate-400 hover:text-white'
           }`}
+          style={activeView === 'marketplace' ? {
+            background: 'rgba(100, 116, 139, 0.5)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(148, 163, 184, 0.3)',
+            boxShadow: '0 4px 12px rgba(71, 85, 105, 0.4)'
+          } : {}}
         >
           <ShoppingBag className="w-4 h-4 inline mr-2" />
           Marketplace
@@ -543,7 +567,11 @@ export default function SocialHub() {
             {/* LEFT SIDEBAR - User Profile & Friends */}
             <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
         {/* User Profile Card */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6">
+        <div className="backdrop-blur-xl rounded-xl p-6" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <div className="text-center mb-4">
             <div className="relative inline-block mb-3">
               <img 
@@ -607,7 +635,11 @@ export default function SocialHub() {
         </div>
 
         {/* Friends List */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <h3 className="text-white font-bold mb-3 flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-400" />
             Friends
@@ -635,7 +667,11 @@ export default function SocialHub() {
         </div>
 
         {/* Live Activities */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <h3 className="text-white font-bold mb-3 flex items-center gap-2">
             <Radio className="w-5 h-5 text-green-400" />
             Live Activities
@@ -661,7 +697,11 @@ export default function SocialHub() {
       {/* CENTER COLUMN - For You Feed */}
       <div className="flex-1 overflow-y-auto space-y-4">
         {/* Post Creator */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <div className="flex items-start gap-3 mb-4">
             <img 
               src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
@@ -744,7 +784,11 @@ export default function SocialHub() {
       {/* RIGHT SIDEBAR - Active Contracts */}
       <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
         {/* Active Contracts */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold flex items-center gap-2">
               <HandshakeIcon className="w-5 h-5 text-blue-400" />
@@ -767,7 +811,11 @@ export default function SocialHub() {
         </div>
 
         {/* The Vault - Tradeable Abilities */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold flex items-center gap-2">
               <Package className="w-5 h-5 text-purple-400" />
@@ -785,7 +833,11 @@ export default function SocialHub() {
         </div>
 
         {/* Marketplace Hot Trades */}
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <h3 className="text-white font-bold flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-green-400" />
             Hot Trades
@@ -865,7 +917,11 @@ const MarketplaceView = ({ user }) => {
     <div className="flex-1 flex gap-6 overflow-hidden">
       {/* Left - Categories & Filters */}
       <div className="w-64 space-y-4 flex-shrink-0">
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <h3 className="text-white font-bold mb-3">Categories</h3>
           <div className="space-y-2">
             {categories.map(cat => {
@@ -888,7 +944,11 @@ const MarketplaceView = ({ user }) => {
           </div>
         </div>
 
-        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(71, 85, 105, 0.25)',
+          border: '1px solid rgba(148, 163, 184, 0.2)',
+          boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+        }}>
           <h3 className="text-white font-bold mb-3">Selling?</h3>
           <Button className="w-full bg-green-600 hover:bg-green-700">
             <Plus className="w-4 h-4 mr-2" />
@@ -914,7 +974,12 @@ const MarketplaceView = ({ user }) => {
               key={listing.id}
               whileHover={{ scale: 1.02 }}
               onClick={() => setSelectedListing(listing)}
-              className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden cursor-pointer"
+              className="backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer"
+              style={{
+                background: 'rgba(71, 85, 105, 0.25)',
+                border: '1px solid rgba(148, 163, 184, 0.2)',
+                boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+              }}
             >
               <img src={listing.image} alt={listing.title} className="w-full h-48 object-cover" />
               <div className="p-4">
@@ -949,7 +1014,12 @@ const MarketplaceView = ({ user }) => {
             initial={{ x: 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 300, opacity: 0 }}
-            className="w-96 bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 flex-shrink-0"
+            className="w-96 backdrop-blur-xl rounded-xl p-6 flex-shrink-0"
+            style={{
+              background: 'rgba(71, 85, 105, 0.25)',
+              border: '1px solid rgba(148, 163, 184, 0.2)',
+              boxShadow: '0 4px 16px rgba(71, 85, 105, 0.3)'
+            }}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg">Listing Details</h3>

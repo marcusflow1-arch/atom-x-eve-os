@@ -40,11 +40,20 @@ export default function UserInterfaceView({
   return (
     <div className="h-full flex flex-col gap-4">
       {/* Top Box: Section Selector */}
-      <div className="bg-slate-800/20 rounded-xl border border-slate-700/30 p-4">
+      <div className="rounded-xl p-4" style={{
+        background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.15) 0%, rgba(100, 116, 139, 0.25) 50%, rgba(71, 85, 105, 0.15) 100%)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(71, 85, 105, 0.3)'
+      }}>
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-bold text-white">User Interface</h2>
-          <div className="h-4 w-px bg-slate-700" />
-          <div className="flex gap-1.5 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
+          <div className="h-4 w-px" style={{ background: 'rgba(148, 163, 184, 0.3)' }} />
+          <div className="flex gap-1.5 p-1 rounded-lg" style={{
+            background: 'rgba(71, 85, 105, 0.3)',
+            border: '1px solid rgba(148, 163, 184, 0.2)'
+          }}>
             {features.map((feature, index) => (
               <motion.button
                 key={feature.id}
@@ -54,9 +63,18 @@ export default function UserInterfaceView({
                 onClick={() => setActiveFeature(feature.id)}
                 className={`flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium text-xs transition-all ${
                   activeFeature === feature.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700/50'
+                    ? 'text-white'
+                    : 'text-slate-300'
                 }`}
+                style={activeFeature === feature.id ? {
+                  background: 'rgba(100, 116, 139, 0.5)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(148, 163, 184, 0.3)',
+                  boxShadow: '0 4px 12px rgba(71, 85, 105, 0.4)'
+                } : {
+                  background: 'transparent'
+                }}
               >
                 <feature.icon className={`w-3.5 h-3.5 ${activeFeature === feature.id ? 'text-white' : 'text-slate-400'}`} />
                 <span>{feature.name}</span>
@@ -67,7 +85,13 @@ export default function UserInterfaceView({
       </div>
 
       {/* Bottom Box: Content Area */}
-      <div className="flex-1 overflow-hidden bg-slate-800/20 rounded-xl border border-slate-700/30">
+      <div className="flex-1 overflow-hidden rounded-xl" style={{
+        background: 'rgba(71, 85, 105, 0.15)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      }}>
         <motion.div
           key={activeFeature}
           initial={{ opacity: 0, y: 20 }}
