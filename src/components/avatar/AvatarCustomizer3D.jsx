@@ -74,9 +74,11 @@ export default function AvatarCustomizer3D({ onClose }) {
       </div>
       
       {/* 3D Canvas */}
-      <Canvas shadows>
-        <Scene />
-      </Canvas>
+      <div className="absolute inset-0">
+        <Canvas shadows>
+          <Scene />
+        </Canvas>
+      </div>
       
       {/* Customization Sidebar */}
       <AnimatePresence>
