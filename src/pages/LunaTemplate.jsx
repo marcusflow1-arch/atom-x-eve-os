@@ -880,7 +880,7 @@ export default function LunaTemplate() {
       >
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-20">
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
         )}
@@ -1465,7 +1465,7 @@ export default function LunaTemplate() {
                       transition={{ duration: 0.3 }}
                       className="flex justify-between gap-12"
                     >
-                    <div className="flex flex-col items-start gap-8">
+                    <div className="flex flex-col items-start gap-8 relative z-40">
                       {/* Weapons Section - 3 boxes */}
                       <div className="flex flex-col items-center">
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
@@ -1765,7 +1765,7 @@ export default function LunaTemplate() {
                     </div>
 
                     {/* Right Side Stats Panel */}
-                    <div className="flex-shrink-0 pt-6 flex flex-col">
+                    <div className="flex-shrink-0 pt-6 flex flex-col relative z-40">
                       <LunaStatsPanel />
                       <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                     </div>
