@@ -1099,18 +1099,48 @@ export default function LunaTemplate() {
 
           {/* Skill Boxes - Single Row */}
           <div className="flex gap-3">
-            {[0, 1, 2, 3, 4].map(i => (
-              <div 
-                key={`skill-${i}`}
-                className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
-                  activeSkills[i] 
-                    ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
-                    : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
-                }`}
-              >
-                <span className="text-white/60 text-xs font-bold">{i + 1}</span>
-              </div>
-            ))}
+            {[0, 1, 2, 3, 4].map(i => {
+              const skillMap = {
+                0: 'kick_ability',
+                1: null,
+                2: null,
+                3: null,
+                4: null
+              };
+
+              const handleSkillClick = () => {
+                const skillId = skillMap[i];
+                if (skillId && window.LUNA_ACTION_STATE) {
+                  window.LUNA_ACTION_STATE.skill = skillId;
+                  setActiveSkills(prev => {
+                    const newSkills = [...prev];
+                    newSkills[i] = true;
+                    setTimeout(() => {
+                      setActiveSkills(s => {
+                        const updated = [...s];
+                        updated[i] = false;
+                        return updated;
+                      });
+                    }, 1000);
+                    return newSkills;
+                  });
+                }
+              };
+
+              return (
+                <div 
+                  key={`skill-${i}`}
+                  onClick={handleSkillClick}
+                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                    activeSkills[i] 
+                      ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
+                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                </div>
+              );
+            })}
             </div>
             </div>
             )}
