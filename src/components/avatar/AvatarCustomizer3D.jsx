@@ -20,9 +20,12 @@ function Scene() {
         target={[0, 0.5, 0]}
       />
       
-      <Environment preset="studio" />
-      <ambientLight intensity={0.5} />
+      <Suspense fallback={null}>
+        <Environment preset="studio" />
+      </Suspense>
+      <ambientLight intensity={0.8} />
       <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
+      <directionalLight position={[-5, 3, -5]} intensity={0.5} />
       
       <Suspense fallback={null}>
         <AvatarModel />
