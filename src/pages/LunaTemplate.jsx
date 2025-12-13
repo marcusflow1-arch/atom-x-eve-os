@@ -595,6 +595,7 @@ import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
 import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
+import { useAuth } from '../components/auth/AuthContext';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -835,6 +836,7 @@ const mockFriends = [
 
 export default function LunaTemplate() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
