@@ -16,7 +16,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -456,7 +456,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel }) {
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelUrl, weaponModel, animations]);
+    }, [modelUrl, weaponModel, animations]);
+
+    // Trigger animation events from parent
+    useEffect(() => {
+    if (triggerAnimation && actionsRef.current[triggerAnimation]) {
+      const action = actionsRef.current[triggerAnimation];
+      action.reset();
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
+    }
+    }, [triggerAnimation]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
@@ -784,7 +795,10 @@ export default function LunaTemplate() {
     checkBladeEquipped();
   }, [equippedItems, weaponModelUrl]);
 
-  // Skill Keybinds (1-5 keys)
+  // Animation Event Trigger
+  const [triggerAnimation, setTriggerAnimation] = useState(null);
+
+  // Skill Keybinds (1-5 keys) - Now trigger animations
   useEffect(() => {
     const handleSkillKey = (e) => {
       const key = e.key;
@@ -795,12 +809,18 @@ export default function LunaTemplate() {
           newSkills[index] = !newSkills[index];
           return newSkills;
         });
+        
+        // Trigger swing animation on key 1 if weapon is equipped
+        if (key === '1' && weaponModelUrl) {
+          setTriggerAnimation('swing');
+          setTimeout(() => setTriggerAnimation(null), 1000);
+        }
       }
     };
 
     window.addEventListener('keydown', handleSkillKey);
     return () => window.removeEventListener('keydown', handleSkillKey);
-  }, []);
+  }, [weaponModelUrl]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -849,7 +869,7 @@ export default function LunaTemplate() {
         {/* 3D Model Viewer - Centered */}
         {modelUrl && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-30">
-            <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} />
+            <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
         )}
         {/* Circle Icon Button with Hover Dropdown */}
