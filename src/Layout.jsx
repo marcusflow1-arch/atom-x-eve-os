@@ -400,6 +400,25 @@ function LayoutContent({ children, currentPageName }) {
                       </Link>
                     );
                   })}
+
+                  {/* Admin Link - Only in Editor */}
+                  {(window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app')) && (
+                    <>
+                      <div className="my-2 border-t border-white/10" />
+                      <Link
+                        to={createPageUrl('Admin')}
+                        onClick={() => setDrawerOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          location.pathname === createPageUrl('Admin')
+                            ? 'bg-white/[0.1] text-white' 
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Admin</span>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
 
