@@ -747,6 +747,16 @@ export default function LunaTemplate() {
         ...prev,
         [clickedSlot]: item
       }));
+      
+      // If equipping to a weapon slot, load its 3D model
+      if (clickedSlot.startsWith('weapon-')) {
+        // Check if item has a model_url, otherwise use default
+        const model3DUrl = item.model_url || item.model3d_url;
+        if (model3DUrl) {
+          setModelUrl(model3DUrl);
+        }
+      }
+      
       setShowInventory(false);
     }
   };
