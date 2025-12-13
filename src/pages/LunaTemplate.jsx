@@ -1017,7 +1017,7 @@ export default function LunaTemplate() {
         </motion.button>
 
         {/* Skills Section Above Dock */}
-        {uiVisible && (
+        {uiVisible && !showInventory && (
         <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
           
