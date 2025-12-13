@@ -1,13 +1,20 @@
 import React, { Suspense, useState, ErrorBoundary } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, X } from 'lucide-react';
+import { User, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
-function Scene() {
+function CustomModel({ modelUrl }) {
+  const gltf = useLoader(GLTFLoader, modelUrl);
+  
+  return <primitive object={gltf.scene} />;
+}
+
+function Scene({ customModelUrl }) {
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 0.5, 3]} fov={50} />
@@ -26,7 +33,11 @@ function Scene() {
       <pointLight position={[0, 2, 0]} intensity={0.3} />
       
       <Suspense fallback={null}>
-        <AvatarModel />
+        {customModelUrl ? (
+          <CustomModel modelUrl={customModelUrl} />
+        ) : (
+          <AvatarModel />
+        )}
       </Suspense>
       
       {/* Ground plane */}
@@ -52,6 +63,18 @@ function LoadingFallback() {
 export default function AvatarCustomizer3D({ onClose }) {
   const [showSidebar, setShowSidebar] = useState(true);
   const [error, setError] = useState(null);
+  const [customModelUrl, setCustomModelUrl] = useState(null);
+  const fileInputRef = React.useRef(null);
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (file && file.name.endsWith('.glb')) {
+      const url = URL.createObjectURL(file);
+      setCustomModelUrl(url);
+    } else {
+      alert('Please upload a .glb file');
+    }
+  };
   
   if (error) {
     return (
@@ -86,6 +109,22 @@ export default function AvatarCustomizer3D({ onClose }) {
       >
         <X className="w-6 h-6 text-white" />
       </button>
+
+      {/* Upload Model Button */}
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="absolute top-8 left-24 z-50 w-12 h-12 rounded-full bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-md flex items-center justify-center transition-colors border border-blue-400/30"
+        title="Upload your own .glb model"
+      >
+        <Upload className="w-6 h-6 text-blue-300" />
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".glb"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
       
       {/* Toggle Sidebar Button */}
       {!showSidebar && (
@@ -117,7 +156,7 @@ export default function AvatarCustomizer3D({ onClose }) {
               gl.setClearColor('#000000', 0);
             }}
           >
-            <Scene />
+            <Scene customModelUrl={customModelUrl} />
           </Canvas>
         </Suspense>
       </div>
