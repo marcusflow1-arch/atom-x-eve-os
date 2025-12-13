@@ -760,6 +760,30 @@ export default function LunaTemplate() {
     fetchModelAndAnimations();
   }, []);
 
+  // Check if Blade of Abyss is equipped and load weapon model
+  useEffect(() => {
+    const checkBladeEquipped = async () => {
+      const hasBladeOfAbyss = Object.entries(equippedItems).some(
+        ([slotId, item]) => slotId.startsWith('weapon-') && item.name === 'Blade of Abyss'
+      );
+
+      if (hasBladeOfAbyss && !weaponModelUrl) {
+        try {
+          const swordModels = await base44.entities.ModelFBX.filter({ name: 'Blade of Abyss Sword' });
+          if (swordModels.length > 0) {
+            setWeaponModelUrl(swordModels[0].file_url);
+          }
+        } catch (error) {
+          console.error('Failed to load weapon model:', error);
+        }
+      } else if (!hasBladeOfAbyss && weaponModelUrl) {
+        setWeaponModelUrl(null);
+      }
+    };
+
+    checkBladeEquipped();
+  }, [equippedItems, weaponModelUrl]);
+
   // Skill Keybinds (1-5 keys)
   useEffect(() => {
     const handleSkillKey = (e) => {
@@ -798,26 +822,12 @@ export default function LunaTemplate() {
     setShowInventory(true);
   };
 
-  const handleEquipItem = async (item) => {
+  const handleEquipItem = (item) => {
     if (clickedSlot && item) {
       setEquippedItems(prev => ({
         ...prev,
         [clickedSlot]: item
       }));
-      
-      // If equipping to weapon slot, load sword model
-      if (clickedSlot.startsWith('weapon-') && item.name === 'Blade of Abyss') {
-        try {
-          // Fetch the Blade of Abyss sword model
-          const swordModels = await base44.entities.ModelFBX.filter({ name: 'Blade of Abyss Sword' });
-          if (swordModels.length > 0) {
-            setWeaponModelUrl(swordModels[0].file_url);
-          }
-        } catch (error) {
-          console.error('Failed to load weapon model:', error);
-        }
-      }
-      
       setShowInventory(false);
     }
   };
