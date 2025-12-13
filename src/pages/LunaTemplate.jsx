@@ -879,7 +879,7 @@ export default function LunaTemplate() {
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
         {/* 3D Model Viewer - Centered */}
-        {modelUrl && (
+        {modelUrl && uiVisible && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-20">
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
@@ -975,6 +975,7 @@ export default function LunaTemplate() {
         </motion.button>
 
         {/* Skills Section Above Dock */}
+        {uiVisible && (
         <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
           
@@ -999,8 +1000,9 @@ export default function LunaTemplate() {
                 <span className="text-white/60 text-xs font-bold">{i + 1}</span>
               </div>
             ))}
-          </div>
-        </div>
+            </div>
+            </div>
+            )}
 
         {/* AI Home Button - Below Skills */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
