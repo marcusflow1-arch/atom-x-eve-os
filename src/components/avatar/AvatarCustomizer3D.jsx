@@ -69,6 +69,21 @@ export default function AvatarCustomizer3D({ onClose }) {
   const [error, setError] = useState(null);
   const [customModelUrl, setCustomModelUrl] = useState(null);
   const fileInputRef = React.useRef(null);
+  
+  // Suppress texture source errors globally
+  React.useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.toString().includes('source') || args[0]?.message?.includes('source')) {
+        return; // Suppress texture source errors
+      }
+      originalError.apply(console, args);
+    };
+    
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
 
   const handleFileUpload = (event) => {
     alert('Custom model upload is temporarily disabled due to texture compatibility issues. This feature will be re-enabled soon.');
