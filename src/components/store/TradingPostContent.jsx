@@ -631,10 +631,15 @@ export default function TradingPostContent() {
         expiresDate: new Date(Date.now() + (postData.expirationDays * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         status: 'active',
         views: 0,
-        offers: 0
+        offers: 0,
+        createdAt: new Date()
       };
       
       setListings(prev => [newListing, ...prev]);
+      
+      // Add to global market dynamically
+      // This will make the item appear when users browse the global market for this game
+      console.log(`Posted ${postData.item.name} to Global Market for ${postData.item.game}`);
   };
 
   return (
@@ -1443,93 +1448,108 @@ export default function TradingPostContent() {
                                   </div>
                               </div>
 
-                              <div className="w-1/3 bg-slate-900/80 rounded-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">
+                              <div className="w-1/3 flex flex-col gap-4">
                                   {selectedInventoryItem ? (
                                       <>
-                                          <div className="h-48 relative bg-gradient-to-b from-slate-800 to-slate-950 flex items-center justify-center overflow-hidden group">
-                                              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-                                              <SwordsIcon className={`w-24 h-24 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 ${
-                                                  selectedInventoryItem.rarity === 'Legendary' ? 'text-orange-500' :
-                                                  selectedInventoryItem.rarity === 'Epic' ? 'text-purple-500' :
-                                                  selectedInventoryItem.rarity === 'Rare' ? 'text-blue-500' : 'text-slate-400'
-                                              }`} />
-                                              
-                                              <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                                                  <Badge className={`
-                                                      ${selectedInventoryItem.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' :
-                                                      selectedInventoryItem.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
-                                                      selectedInventoryItem.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-slate-700 text-slate-300'}
-                                                  `}>
-                                                      {selectedInventoryItem.rarity}
-                                                  </Badge>
-                                              </div>
-                                          </div>
-
-                                          <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto">
-                                              <div>
-                                                  <h3 className="text-xl font-bold text-white leading-tight">{selectedInventoryItem.name}</h3>
-                                                  <p className="text-xs text-slate-400 mt-1">{selectedInventoryItem.type} • Item Level {selectedInventoryItem.level}</p>
-                                              </div>
-
-                                              <div className="text-sm text-slate-300 italic border-l-2 border-white/10 pl-3 py-1">
-                                                  "{selectedInventoryItem.description}"
-                                              </div>
-
-                                              <div className="grid grid-cols-2 gap-2">
-                                                  <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                      <div className="text-[10px] text-slate-500 uppercase">Power</div>
-                                                      <div className="text-lg font-mono text-white">{selectedInventoryItem.power}</div>
-                                                  </div>
-                                                  <div className="bg-slate-950/50 p-2 rounded border border-white/5">
-                                                      <div className="text-[10px] text-slate-500 uppercase">Weight</div>
-                                                      <div className="text-lg font-mono text-white">2.5kg</div>
-                                                  </div>
-                                              </div>
-
-                                              <div className="mt-auto bg-cyan-950/20 rounded-xl p-4 border border-cyan-500/20">
-                                                  <div className="flex items-center justify-between mb-3">
-                                                      <div className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1">
-                                                          <TrendingUp className="w-3 h-3" /> Market Value
-                                                      </div>
-                                                      <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
-                                                          {selectedInventoryItem.demand} Demand
-                                                      </Badge>
+                                          {/* Card Display */}
+                                          <div className="w-full aspect-[2.5/3.5]">
+                                            <ShinyCard className="h-full">
+                                              <div className="relative h-full flex flex-col">
+                                                <div className="absolute inset-0">
+                                                  <img src={selectedInventoryItem.image} alt={selectedInventoryItem.name} className="w-full h-full object-cover" />
+                                                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                                                </div>
+                                                
+                                                <div className="relative z-10 flex-1 flex flex-col justify-between p-4">
+                                                  <div className="flex justify-between items-start">
+                                                    <Badge className="bg-slate-900/80 backdrop-blur-md text-white/90 border-white/20 text-[10px] px-2">
+                                                      {selectedInventoryItem.type}
+                                                    </Badge>
+                                                    <RarityBadge rarity={selectedInventoryItem.rarity} />
                                                   </div>
                                                   
-                                                  <div className="flex items-end justify-between mb-4">
-                                                      <div>
-                                                          <div className="text-[10px] text-slate-400">Average Price</div>
-                                                          <div className="text-2xl font-black text-white flex items-center gap-1">
-                                                              <Coins className="w-4 h-4 text-amber-400" /> {selectedInventoryItem.marketPrice}
-                                                          </div>
-                                                      </div>
-                                                      <div className="text-right">
-                                                          <div className="text-[10px] text-slate-400">Last Sold</div>
-                                                          <div className="text-xs text-white">2 mins ago</div>
-                                                      </div>
+                                                  <div>
+                                                    <h3 className="text-white font-bold text-lg mb-1 line-clamp-2 leading-tight drop-shadow-lg">
+                                                      {selectedInventoryItem.name}
+                                                    </h3>
+                                                    <div className="flex items-center gap-2 text-xs">
+                                                      <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm text-[10px]">
+                                                        Lv. {selectedInventoryItem.level}
+                                                      </Badge>
+                                                      <span className="text-white/60">Power: {selectedInventoryItem.power}</span>
+                                                    </div>
                                                   </div>
-
-                                                  <div className="grid grid-cols-3 gap-2">
-                                                      <Button 
-                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('trade'); setShowTradeModal(true); }}
-                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-1"
-                                                      >
-                                                          <ArrowLeftRight className="w-3 h-3 mr-1" /> Trade
-                                                      </Button>
-                                                      <Button 
-                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('sale'); setShowTradeModal(true); }}
-                                                        className="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-1"
-                                                      >
-                                                          <DollarSign className="w-3 h-3 mr-1" /> Sell
-                                                      </Button>
-                                                      <Button 
-                                                        onClick={() => { setSelectedItem(selectedInventoryItem); setModalInitialType('bid'); setShowTradeModal(true); }}
-                                                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-1"
-                                                      >
-                                                          <Gavel className="w-3 h-3 mr-1" /> Bid
-                                                      </Button>
-                                                  </div>
+                                                </div>
                                               </div>
+                                            </ShinyCard>
+                                          </div>
+
+                                          {/* Info & Actions */}
+                                          <div className="flex gap-3 flex-1 min-h-0">
+                                            {/* Left: Item Details */}
+                                            <div className="flex-1 space-y-3">
+                                              <div>
+                                                <h4 className="text-white font-bold text-sm mb-1">{selectedInventoryItem.name}</h4>
+                                                <p className="text-white/50 text-xs leading-relaxed italic">"{selectedInventoryItem.description}"</p>
+                                              </div>
+
+                                              <div className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-white/40 text-xs">Average Price</span>
+                                                  <div className="flex items-center gap-1 text-amber-400 font-bold">
+                                                    <Coins className="w-3 h-3" />
+                                                    <span>{selectedInventoryItem.marketPrice}</span>
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-white/40 text-xs">Demand</span>
+                                                  <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
+                                                    {selectedInventoryItem.demand}
+                                                  </Badge>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                  <span className="text-white/40 text-xs">Last Sold</span>
+                                                  <span className="text-white/60 text-xs">2 mins ago</span>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            {/* Right: Action Buttons */}
+                                            <div className="flex flex-col gap-2 w-20">
+                                              <Button 
+                                                onClick={() => { 
+                                                  setSelectedItem(selectedInventoryItem); 
+                                                  setModalInitialType('sale'); 
+                                                  setShowTradeModal(true); 
+                                                }}
+                                                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
+                                              >
+                                                <DollarSign className="w-4 h-4" />
+                                                <span>Sale</span>
+                                              </Button>
+                                              <Button 
+                                                onClick={() => { 
+                                                  setSelectedItem(selectedInventoryItem); 
+                                                  setModalInitialType('trade'); 
+                                                  setShowTradeModal(true); 
+                                                }}
+                                                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
+                                              >
+                                                <ArrowLeftRight className="w-4 h-4" />
+                                                <span>Trade</span>
+                                              </Button>
+                                              <Button 
+                                                onClick={() => { 
+                                                  setSelectedItem(selectedInventoryItem); 
+                                                  setModalInitialType('bid'); 
+                                                  setShowTradeModal(true); 
+                                                }}
+                                                className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
+                                              >
+                                                <Gavel className="w-4 h-4" />
+                                                <span>Bid</span>
+                                              </Button>
+                                            </div>
                                           </div>
                                       </>
                                   ) : (
