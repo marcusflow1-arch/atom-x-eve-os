@@ -13,6 +13,22 @@ function CustomModel({ modelUrl }) {
 }
 
 function ModelErrorBoundary({ children }) {
+  const [hasError, setHasError] = React.useState(false);
+  
+  React.useEffect(() => {
+    const handleError = (event) => {
+      if (event.message?.includes('source')) {
+        event.preventDefault();
+        setHasError(true);
+      }
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+  
+  if (hasError) return null;
+  
   return (
     <React.Suspense fallback={null}>
       {children}
