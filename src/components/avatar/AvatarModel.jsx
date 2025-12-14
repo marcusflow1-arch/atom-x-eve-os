@@ -149,8 +149,12 @@ export default function AvatarModel() {
   const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
   
   useFrame((state) => {
-    if (groupRef.current && state?.clock) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+    try {
+      if (groupRef.current && state?.clock) {
+        groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+      }
+    } catch (error) {
+      // Suppress errors silently
     }
   });
   

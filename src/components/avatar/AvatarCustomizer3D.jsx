@@ -13,25 +13,11 @@ function CustomModel({ modelUrl }) {
 }
 
 function ModelErrorBoundary({ children }) {
-  const [hasError, setHasError] = React.useState(false);
-  
-  React.useEffect(() => {
-    const handleError = (event) => {
-      if (event.message?.includes('source')) {
-        event.preventDefault();
-        setHasError(true);
-      }
-    };
-    
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-  
-  if (hasError) return null;
-  
   return (
     <React.Suspense fallback={null}>
-      {children}
+      <React.Fragment>
+        {children}
+      </React.Fragment>
     </React.Suspense>
   );
 }
@@ -158,24 +144,20 @@ export default function AvatarCustomizer3D({ onClose }) {
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Suspense fallback={<LoadingFallback />}>
-          <Canvas
-            gl={{ 
-              antialias: true,
-              alpha: true,
-              powerPreference: "high-performance"
-            }}
-            dpr={[1, 2]}
-            onCreated={({ gl }) => {
-              gl.setClearColor('#000000', 0);
-            }}
-            onError={(error) => {
-              console.error('Canvas error:', error);
-              setError('Failed to render 3D model');
-            }}
-          >
-            <Scene customModelUrl={customModelUrl} />
-          </Canvas>
-        </Suspense>
+            <Canvas
+              gl={{ 
+                antialias: true,
+                alpha: true,
+                powerPreference: "high-performance"
+              }}
+              dpr={[1, 2]}
+              onCreated={({ gl }) => {
+                gl.setClearColor('#000000', 0);
+              }}
+            >
+              <Scene customModelUrl={customModelUrl} />
+            </Canvas>
+          </Suspense>
       </div>
       
       {/* Customization Sidebar */}
