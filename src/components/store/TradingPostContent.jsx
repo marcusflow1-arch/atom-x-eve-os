@@ -22,6 +22,7 @@ import { aiGamesList, otherSampleGames } from './mockData';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import InventoryItemOverlay from './InventoryItemOverlay';
 
 // --- Liquid Glass Components (Reused) ---
 const LiquidCard = ({ children, className = "", onClick }) => (
@@ -463,6 +464,7 @@ export default function TradingPostContent() {
   }), []);
 
   const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
+  const [showInventoryOverlay, setShowInventoryOverlay] = useState(false);
 
   // Cross Interface State
   const [activeGenreIndex, setActiveGenreIndex] = useState(0);
@@ -1416,21 +1418,21 @@ export default function TradingPostContent() {
                                   <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
                                       <div className="grid grid-cols-5 gap-3">
                                           {getGameDetails(subTabGame).items.map((item) => (
-                                              <div 
-                                                  key={item.id}
-                                                  onClick={() => setSelectedInventoryItem(item)}
-                                                  className={`
-                                                      aspect-square rounded-lg border-2 relative group cursor-pointer transition-all
-                                                      flex flex-col items-center justify-center bg-slate-900/80
-                                                      ${selectedInventoryItem?.id === item.id 
-                                                          ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)] scale-105 z-10' 
-                                                          : item.rarity === 'Legendary' ? 'border-orange-500/30 hover:border-orange-400'
-                                                          : item.rarity === 'Epic' ? 'border-purple-500/30 hover:border-purple-400'
-                                                          : item.rarity === 'Rare' ? 'border-blue-500/30 hover:border-blue-400'
-                                                          : 'border-slate-700 hover:border-slate-500'
-                                                      }
-                                                  `}
-                                              >
+                                             <div 
+                                                 key={item.id}
+                                                 onClick={() => {
+                                                   setSelectedInventoryItem(item);
+                                                   setShowInventoryOverlay(true);
+                                                 }}
+                                                 className={`
+                                                     aspect-square rounded-lg border-2 relative group cursor-pointer transition-all
+                                                     flex flex-col items-center justify-center bg-slate-900/80
+                                                     ${item.rarity === 'Legendary' ? 'border-orange-500/30 hover:border-orange-400'
+                                                     : item.rarity === 'Epic' ? 'border-purple-500/30 hover:border-purple-400'
+                                                     : item.rarity === 'Rare' ? 'border-blue-500/30 hover:border-blue-400'
+                                                     : 'border-slate-700 hover:border-slate-500'}
+                                                 `}
+                                             >
                                                   <SwordsIcon className={`w-8 h-8 ${
                                                       item.rarity === 'Legendary' ? 'text-orange-400' :
                                                       item.rarity === 'Epic' ? 'text-purple-400' :
@@ -1456,139 +1458,6 @@ export default function TradingPostContent() {
                                       </div>
                                   </div>
                               </div>
-
-                              <div className="w-1/3 flex flex-col gap-4">
-                                  {selectedInventoryItem ? (
-                                      <>
-                                          {/* Card Display */}
-                                          <div className="w-full aspect-[2.5/3.5] relative">
-                                           {/* Price Stats - Top Corner */}
-                                           <div className="absolute -top-2 -left-2 z-20 space-y-1">
-                                             <div className="bg-purple-600/90 backdrop-blur-md px-2 py-1 rounded-lg border border-purple-400/30 shadow-lg">
-                                               <div className="text-[8px] text-purple-100 uppercase font-bold">Last Bid</div>
-                                               <div className="text-xs font-black text-white flex items-center gap-0.5">
-                                                 <Coins className="w-2.5 h-2.5" />
-                                                 {Math.floor(selectedInventoryItem.marketPrice * 0.8)}
-                                               </div>
-                                             </div>
-                                             <div className="bg-green-600/90 backdrop-blur-md px-2 py-1 rounded-lg border border-green-400/30 shadow-lg">
-                                               <div className="text-[8px] text-green-100 uppercase font-bold">Last Sold</div>
-                                               <div className="text-xs font-black text-white flex items-center gap-0.5">
-                                                 <Coins className="w-2.5 h-2.5" />
-                                                 {selectedInventoryItem.marketPrice}
-                                               </div>
-                                             </div>
-                                           </div>
-
-                                           <ShinyCard className="h-full">
-                                             <div className="relative h-full flex flex-col">
-                                               <div className="absolute inset-0">
-                                                 <img src={selectedInventoryItem.image} alt={selectedInventoryItem.name} className="w-full h-full object-cover" />
-                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                                               </div>
-
-                                               <div className="relative z-10 flex-1 flex flex-col justify-between p-4">
-                                                 <div className="flex justify-between items-start">
-                                                   <Badge className="bg-slate-900/80 backdrop-blur-md text-white/90 border-white/20 text-[10px] px-2">
-                                                     {selectedInventoryItem.type}
-                                                   </Badge>
-                                                   <RarityBadge rarity={selectedInventoryItem.rarity} />
-                                                 </div>
-
-                                                 <div>
-                                                   <h3 className="text-white font-bold text-lg mb-1 line-clamp-2 leading-tight drop-shadow-lg">
-                                                     {selectedInventoryItem.name}
-                                                   </h3>
-                                                   <div className="flex items-center gap-2 text-xs">
-                                                     <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm text-[10px]">
-                                                       Lv. {selectedInventoryItem.level}
-                                                     </Badge>
-                                                     <span className="text-white/60">Power: {selectedInventoryItem.power}</span>
-                                                   </div>
-                                                 </div>
-                                               </div>
-                                             </div>
-                                           </ShinyCard>
-                                          </div>
-
-                                          {/* Info & Actions */}
-                                          <div className="flex gap-3 flex-1 min-h-0">
-                                            {/* Left: Item Details */}
-                                            <div className="flex-1 space-y-3">
-                                              <div>
-                                                <h4 className="text-white font-bold text-sm mb-1">{selectedInventoryItem.name}</h4>
-                                                <p className="text-white/50 text-xs leading-relaxed italic">"{selectedInventoryItem.description}"</p>
-                                              </div>
-
-                                              <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                  <span className="text-white/40 text-xs">Average Price</span>
-                                                  <div className="flex items-center gap-1 text-amber-400 font-bold">
-                                                    <Coins className="w-3 h-3" />
-                                                    <span>{selectedInventoryItem.marketPrice}</span>
-                                                  </div>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                  <span className="text-white/40 text-xs">Demand</span>
-                                                  <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">
-                                                    {selectedInventoryItem.demand}
-                                                  </Badge>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                  <span className="text-white/40 text-xs">Last Sold</span>
-                                                  <span className="text-white/60 text-xs">2 mins ago</span>
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            {/* Right: Action Buttons */}
-                                            <div className="flex flex-col gap-2 w-20">
-                                              <Button 
-                                                onClick={() => { 
-                                                  setSelectedItem(selectedInventoryItem); 
-                                                  setModalInitialType('sale'); 
-                                                  setShowTradeModal(true); 
-                                                }}
-                                                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
-                                              >
-                                                <DollarSign className="w-4 h-4" />
-                                                <span>Sale</span>
-                                              </Button>
-                                              <Button 
-                                                onClick={() => { 
-                                                  setSelectedItem(selectedInventoryItem); 
-                                                  setModalInitialType('trade'); 
-                                                  setShowTradeModal(true); 
-                                                }}
-                                                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
-                                              >
-                                                <ArrowLeftRight className="w-4 h-4" />
-                                                <span>Trade</span>
-                                              </Button>
-                                              <Button 
-                                                onClick={() => { 
-                                                  setSelectedItem(selectedInventoryItem); 
-                                                  setModalInitialType('bid'); 
-                                                  setShowTradeModal(true); 
-                                                }}
-                                                className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex-col gap-0.5 p-1"
-                                              >
-                                                <Gavel className="w-4 h-4" />
-                                                <span>Bid</span>
-                                              </Button>
-                                            </div>
-                                          </div>
-                                      </>
-                                  ) : (
-                                      <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                                          <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 animate-pulse">
-                                              <Info className="w-8 h-8 opacity-50" />
-                                          </div>
-                                          <h4 className="text-lg font-bold text-slate-400 mb-1">Item Inspector</h4>
-                                          <p className="text-xs">Select an item from your inventory to view details, market analytics, and listing options.</p>
-                                      </div>
-                                  )}
-                              </div>
                           </div>
                         </div>
                       )}
@@ -1605,6 +1474,34 @@ export default function TradingPostContent() {
         onClose={() => { setShowTradeModal(false); setSelectedItem(null); }}
         onPost={handleTradePost}
       />
+
+      {/* Inventory Item Overlay */}
+      <AnimatePresence>
+        {showInventoryOverlay && selectedInventoryItem && (
+          <InventoryItemOverlay
+            item={selectedInventoryItem}
+            onClose={() => {
+              setShowInventoryOverlay(false);
+              setSelectedInventoryItem(null);
+            }}
+            onSale={(item) => {
+              setSelectedItem(item);
+              setModalInitialType('sale');
+              setShowTradeModal(true);
+            }}
+            onTrade={(item) => {
+              setSelectedItem(item);
+              setModalInitialType('trade');
+              setShowTradeModal(true);
+            }}
+            onBid={(item) => {
+              setSelectedItem(item);
+              setModalInitialType('bid');
+              setShowTradeModal(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
