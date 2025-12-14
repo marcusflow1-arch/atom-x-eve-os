@@ -148,6 +148,21 @@ export default function AvatarModel() {
   const groupRef = useRef();
   const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
   
+  // Global error suppression for texture errors
+  React.useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args) => {
+      const errorString = args[0]?.toString() || args[0]?.message || '';
+      if (errorString.includes('source') || errorString.includes('texture')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+  
   useFrame((state) => {
     try {
       if (groupRef.current && state?.clock) {

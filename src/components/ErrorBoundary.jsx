@@ -13,6 +13,12 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    // Suppress texture source errors
+    const errorString = error?.toString() || '';
+    if (errorString.includes('source') || errorString.includes('texture')) {
+      return; // Silently ignore texture errors
+    }
+    
     console.error('Error caught by boundary:', error, errorInfo);
     console.error('Error stack:', error.stack);
     console.error('Component stack:', errorInfo.componentStack);
