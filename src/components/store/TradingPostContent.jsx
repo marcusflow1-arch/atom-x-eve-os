@@ -20,6 +20,8 @@ import { useAuth } from '../auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { aiGamesList, otherSampleGames } from './mockData';
 import ShinyCard from '@/components/shared/ShinyCard';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // --- Liquid Glass Components (Reused) ---
 const LiquidCard = ({ children, className = "", onClick }) => (
@@ -398,6 +400,7 @@ const GalacticInventoryItem = ({ item, onClick }) => {
 
 export default function TradingPostContent() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState('board');
   const [inventory] = useState(userInventory);
@@ -409,6 +412,16 @@ export default function TradingPostContent() {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
+
+  // Fetch trade offers from backend
+  const { data: globalOffers } = useQuery({
+    queryKey: ['tradeOffers'],
+    queryFn: async () => {
+      const result = await base44.entities.TradeOffer.filter({ status: 'active' });
+      return result || [];
+    },
+    initialData: []
+  });
   
   // Filter State
   const [filters, setFilters] = useState({
@@ -617,30 +630,49 @@ export default function TradingPostContent() {
   }, [activeTab, crossData, activeGenreIndex, activeGameIndex, crossViewLevel, selectedListingGroup]);
 
 
-  const handleTradePost = (postData) => {
-    const newListing = {
-        id: `trade_${Date.now()}`,
-        item: postData.item,
-        owner: { name: user?.full_name || 'Player', avatar: user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face' },
-        type: postData.type,
-        description: postData.description,
-        seekingItems: postData.seekingItems,
-        minBid: postData.minBid,
-        buyoutPrice: postData.buyoutPrice,
-        price: postData.salePrice,
-        postedDate: new Date().toISOString().split('T')[0],
-        expiresDate: new Date(Date.now() + (postData.expirationDays * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
-        status: 'active',
-        views: 0,
-        offers: 0,
-        createdAt: new Date()
-      };
-      
-      setListings(prev => [newListing, ...prev]);
-      
-      // Add to global market dynamically
-      // This will make the item appear when users browse the global market for this game
-      console.log(`Posted ${postData.item.name} to Global Market for ${postData.item.game}`);
+  // Mutation to create trade offer
+  const createOfferMutation = useMutation({
+    mutationFn: async (offerData) => {
+      return await base44.entities.TradeOffer.create(offerData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tradeOffers']);
+      setShowTradeModal(false);
+      setSelectedItem(null);
+    }
+  });
+
+  const handleTradePost = async (postData) => {
+    const expiresAt = new Date(Date.now() + (postData.expirationDays * 24 * 60 * 60 * 1000)).toISOString();
+    
+    const offerData = {
+      trader_id: user?.id || 'anonymous',
+      trader_name: user?.full_name || user?.username || 'Player',
+      trader_avatar: user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop&crop=face',
+      item_name: postData.item.name,
+      item_type: postData.item.type,
+      item_rarity: postData.item.rarity,
+      item_image: postData.item.image,
+      item_description: postData.item.description,
+      item_level: postData.item.level,
+      item_power: postData.item.power,
+      game_name: postData.item.game,
+      game_genre: postData.item.genre || 'General',
+      offer_type: postData.type,
+      price: postData.salePrice || null,
+      current_bid: postData.minBid || null,
+      buyout_price: postData.buyoutPrice || null,
+      seeking_items: postData.seekingItems || [],
+      description: postData.description,
+      status: 'active',
+      expires_at: expiresAt,
+      last_bid_price: postData.item.marketPrice ? Math.floor(postData.item.marketPrice * 0.8) : null,
+      last_sale_price: postData.item.marketPrice || null,
+      views: 0,
+      offers_count: 0
+    };
+
+    createOfferMutation.mutate(offerData);
   };
 
   return (
@@ -903,66 +935,42 @@ export default function TradingPostContent() {
                                   return true;
                               }).map((item, i) => (
                                   <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
-                                      // Generate varied mock offers
-                                      const mockOffers = [
-                                         {
-                                             id: `offer_${item.id}_1`,
-                                             seller: { name: 'MarketBot', avatar: item.image, rating: 4.5 },
-                                             modes: ['sale'],
-                                             price: item.marketPrice,
-                                             description: 'Direct market listing. Fixed price.',
-                                             postedAt: '2 hours ago',
-                                             createdAt: new Date('2025-01-13')
-                                         },
-                                         {
-                                             id: `offer_${item.id}_2`,
-                                             seller: { name: 'TraderJoe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joe', rating: 4.9 },
-                                             modes: ['bid', 'trade'],
-                                             currentBid: Math.floor(item.marketPrice * 0.8),
-                                             buyoutPrice: Math.floor(item.marketPrice * 1.2),
-                                             price: Math.floor(item.marketPrice * 1.2),
-                                             seeking: ['Rare Crystal', 'Gold Bar'],
-                                             description: 'Open to trades or bids. No lowballs.',
-                                             postedAt: '5 hours ago',
-                                             endsAt: '2 days',
-                                             createdAt: new Date('2025-01-13T10:00:00')
-                                         },
-                                         {
-                                             id: `offer_${item.id}_3`,
-                                             seller: { name: 'EliteVendor', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elite', rating: 5.0 },
-                                             modes: ['sale', 'trade'],
-                                             price: Math.floor(item.marketPrice * 1.1),
-                                             seeking: ['Any Legendary'],
-                                             description: 'Selling or trading for legendary items.',
-                                             postedAt: '1 day ago',
-                                             createdAt: new Date('2025-01-12')
-                                         },
-                                         {
-                                             id: `offer_${item.id}_4`,
-                                             seller: { name: 'BidMaster', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bid', rating: 4.6 },
-                                             modes: ['bid'],
-                                             currentBid: Math.floor(item.marketPrice * 0.7),
-                                             buyoutPrice: Math.floor(item.marketPrice * 0.95),
-                                             price: Math.floor(item.marketPrice * 0.95),
-                                             description: 'Auction ending soon! Great deal.',
-                                             postedAt: '3 hours ago',
-                                             endsAt: '6 hours',
-                                             createdAt: new Date('2025-01-13T14:00:00')
-                                         },
-                                         {
-                                             id: `offer_${item.id}_5`,
-                                             seller: { name: 'TradeHub', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hub', rating: 4.8 },
-                                             modes: ['trade'],
-                                             price: item.marketPrice,
-                                             seeking: ['Epic Items', 'Rare Materials'],
-                                             description: 'Only interested in item trades.',
-                                             postedAt: '8 hours ago',
-                                             createdAt: new Date('2025-01-13T06:00:00')
-                                         }
-                                      ];
-                                      
-                                      // Filter and sort offers
-                                      let processedOffers = [...mockOffers];
+                                     // Get real offers from backend for this item and game
+                                     const realOffers = globalOffers.filter(offer => 
+                                       offer.item_name === item.name && offer.game_name === item.game
+                                     ).map(offer => ({
+                                       id: offer.id,
+                                       seller: { 
+                                         name: offer.trader_name, 
+                                         avatar: offer.trader_avatar, 
+                                         rating: 4.5 
+                                       },
+                                       modes: [offer.offer_type],
+                                       price: offer.price || offer.buyout_price || offer.current_bid,
+                                       currentBid: offer.current_bid,
+                                       buyoutPrice: offer.buyout_price,
+                                       seeking: offer.seeking_items,
+                                       description: offer.description,
+                                       postedAt: new Date(offer.created_date).toLocaleString(),
+                                       endsAt: offer.expires_at ? new Date(offer.expires_at).toLocaleDateString() : null,
+                                       createdAt: new Date(offer.created_date)
+                                     }));
+
+                                     // Fallback mock offers if no real offers exist
+                                     const mockOffers = realOffers.length > 0 ? realOffers : [
+                                        {
+                                            id: `offer_${item.id}_1`,
+                                            seller: { name: 'MarketBot', avatar: item.image, rating: 4.5 },
+                                            modes: ['sale'],
+                                            price: item.marketPrice,
+                                            description: 'Direct market listing. Fixed price.',
+                                            postedAt: '2 hours ago',
+                                            createdAt: new Date()
+                                        }
+                                     ];
+
+                                     // Filter and sort offers
+                                     let processedOffers = [...mockOffers];
 
                                       // Filter by type
                                       if (offerTypeFilter !== 'all') {
@@ -1453,36 +1461,54 @@ export default function TradingPostContent() {
                                   {selectedInventoryItem ? (
                                       <>
                                           {/* Card Display */}
-                                          <div className="w-full aspect-[2.5/3.5]">
-                                            <ShinyCard className="h-full">
-                                              <div className="relative h-full flex flex-col">
-                                                <div className="absolute inset-0">
-                                                  <img src={selectedInventoryItem.image} alt={selectedInventoryItem.name} className="w-full h-full object-cover" />
-                                                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                                                </div>
-                                                
-                                                <div className="relative z-10 flex-1 flex flex-col justify-between p-4">
-                                                  <div className="flex justify-between items-start">
-                                                    <Badge className="bg-slate-900/80 backdrop-blur-md text-white/90 border-white/20 text-[10px] px-2">
-                                                      {selectedInventoryItem.type}
-                                                    </Badge>
-                                                    <RarityBadge rarity={selectedInventoryItem.rarity} />
-                                                  </div>
-                                                  
-                                                  <div>
-                                                    <h3 className="text-white font-bold text-lg mb-1 line-clamp-2 leading-tight drop-shadow-lg">
-                                                      {selectedInventoryItem.name}
-                                                    </h3>
-                                                    <div className="flex items-center gap-2 text-xs">
-                                                      <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm text-[10px]">
-                                                        Lv. {selectedInventoryItem.level}
-                                                      </Badge>
-                                                      <span className="text-white/60">Power: {selectedInventoryItem.power}</span>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </ShinyCard>
+                                          <div className="w-full aspect-[2.5/3.5] relative">
+                                           {/* Price Stats - Top Corner */}
+                                           <div className="absolute -top-2 -left-2 z-20 space-y-1">
+                                             <div className="bg-purple-600/90 backdrop-blur-md px-2 py-1 rounded-lg border border-purple-400/30 shadow-lg">
+                                               <div className="text-[8px] text-purple-100 uppercase font-bold">Last Bid</div>
+                                               <div className="text-xs font-black text-white flex items-center gap-0.5">
+                                                 <Coins className="w-2.5 h-2.5" />
+                                                 {Math.floor(selectedInventoryItem.marketPrice * 0.8)}
+                                               </div>
+                                             </div>
+                                             <div className="bg-green-600/90 backdrop-blur-md px-2 py-1 rounded-lg border border-green-400/30 shadow-lg">
+                                               <div className="text-[8px] text-green-100 uppercase font-bold">Last Sold</div>
+                                               <div className="text-xs font-black text-white flex items-center gap-0.5">
+                                                 <Coins className="w-2.5 h-2.5" />
+                                                 {selectedInventoryItem.marketPrice}
+                                               </div>
+                                             </div>
+                                           </div>
+
+                                           <ShinyCard className="h-full">
+                                             <div className="relative h-full flex flex-col">
+                                               <div className="absolute inset-0">
+                                                 <img src={selectedInventoryItem.image} alt={selectedInventoryItem.name} className="w-full h-full object-cover" />
+                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                                               </div>
+
+                                               <div className="relative z-10 flex-1 flex flex-col justify-between p-4">
+                                                 <div className="flex justify-between items-start">
+                                                   <Badge className="bg-slate-900/80 backdrop-blur-md text-white/90 border-white/20 text-[10px] px-2">
+                                                     {selectedInventoryItem.type}
+                                                   </Badge>
+                                                   <RarityBadge rarity={selectedInventoryItem.rarity} />
+                                                 </div>
+
+                                                 <div>
+                                                   <h3 className="text-white font-bold text-lg mb-1 line-clamp-2 leading-tight drop-shadow-lg">
+                                                     {selectedInventoryItem.name}
+                                                   </h3>
+                                                   <div className="flex items-center gap-2 text-xs">
+                                                     <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm text-[10px]">
+                                                       Lv. {selectedInventoryItem.level}
+                                                     </Badge>
+                                                     <span className="text-white/60">Power: {selectedInventoryItem.power}</span>
+                                                   </div>
+                                                 </div>
+                                               </div>
+                                             </div>
+                                           </ShinyCard>
                                           </div>
 
                                           {/* Info & Actions */}
