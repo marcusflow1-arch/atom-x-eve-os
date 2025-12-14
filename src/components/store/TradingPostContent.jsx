@@ -5,7 +5,7 @@ import {
   Package, Star, Zap, Shield, Sword, Users, Bot, TrendingUp, Calendar, MessageSquare,
   Grid, List, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Tag, Gamepad2, Diamond, Heart, Share2, AlertCircle,
   CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info,
-  SlidersHorizontal, ScrollText, Database, Hammer, Crosshair
+  SlidersHorizontal, ScrollText, Database, Hammer, Crosshair, ArrowUpDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -406,6 +406,8 @@ export default function TradingPostContent() {
   const [modalInitialType, setModalInitialType] = useState('trade');
   const [selectedListingGroup, setSelectedListingGroup] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const [offerSort, setOfferSort] = useState('price-low');
+  const [offerTypeFilter, setOfferTypeFilter] = useState('all');
   
   // Filter State
   const [filters, setFilters] = useState({
@@ -897,39 +899,83 @@ export default function TradingPostContent() {
                                   <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
                                       // Generate varied mock offers
                                       const mockOffers = [
-                                          {
-                                              id: `offer_${item.id}_1`,
-                                              seller: { name: 'MarketBot', avatar: item.image, rating: 4.5 },
-                                              modes: ['sale'],
-                                              price: item.marketPrice,
-                                              description: 'Direct market listing. Fixed price.',
-                                              postedAt: '2 hours ago'
-                                          },
-                                          {
-                                              id: `offer_${item.id}_2`,
-                                              seller: { name: 'TraderJoe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joe', rating: 4.9 },
-                                              modes: ['bid', 'trade'],
-                                              currentBid: Math.floor(item.marketPrice * 0.8),
-                                              buyoutPrice: Math.floor(item.marketPrice * 1.2),
-                                              seeking: ['Rare Crystal', 'Gold Bar'],
-                                              description: 'Open to trades or bids. No lowballs.',
-                                              postedAt: '5 hours ago',
-                                              endsAt: '2 days'
-                                          },
-                                          {
-                                              id: `offer_${item.id}_3`,
-                                              seller: { name: 'EliteVendor', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elite', rating: 5.0 },
-                                              modes: ['sale', 'trade'],
-                                              price: Math.floor(item.marketPrice * 1.1),
-                                              seeking: ['Any Legendary'],
-                                              description: 'Selling or trading for legendary items.',
-                                              postedAt: '1 day ago'
-                                          }
+                                         {
+                                             id: `offer_${item.id}_1`,
+                                             seller: { name: 'MarketBot', avatar: item.image, rating: 4.5 },
+                                             modes: ['sale'],
+                                             price: item.marketPrice,
+                                             description: 'Direct market listing. Fixed price.',
+                                             postedAt: '2 hours ago',
+                                             createdAt: new Date('2025-01-13')
+                                         },
+                                         {
+                                             id: `offer_${item.id}_2`,
+                                             seller: { name: 'TraderJoe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joe', rating: 4.9 },
+                                             modes: ['bid', 'trade'],
+                                             currentBid: Math.floor(item.marketPrice * 0.8),
+                                             buyoutPrice: Math.floor(item.marketPrice * 1.2),
+                                             price: Math.floor(item.marketPrice * 1.2),
+                                             seeking: ['Rare Crystal', 'Gold Bar'],
+                                             description: 'Open to trades or bids. No lowballs.',
+                                             postedAt: '5 hours ago',
+                                             endsAt: '2 days',
+                                             createdAt: new Date('2025-01-13T10:00:00')
+                                         },
+                                         {
+                                             id: `offer_${item.id}_3`,
+                                             seller: { name: 'EliteVendor', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elite', rating: 5.0 },
+                                             modes: ['sale', 'trade'],
+                                             price: Math.floor(item.marketPrice * 1.1),
+                                             seeking: ['Any Legendary'],
+                                             description: 'Selling or trading for legendary items.',
+                                             postedAt: '1 day ago',
+                                             createdAt: new Date('2025-01-12')
+                                         },
+                                         {
+                                             id: `offer_${item.id}_4`,
+                                             seller: { name: 'BidMaster', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bid', rating: 4.6 },
+                                             modes: ['bid'],
+                                             currentBid: Math.floor(item.marketPrice * 0.7),
+                                             buyoutPrice: Math.floor(item.marketPrice * 0.95),
+                                             price: Math.floor(item.marketPrice * 0.95),
+                                             description: 'Auction ending soon! Great deal.',
+                                             postedAt: '3 hours ago',
+                                             endsAt: '6 hours',
+                                             createdAt: new Date('2025-01-13T14:00:00')
+                                         },
+                                         {
+                                             id: `offer_${item.id}_5`,
+                                             seller: { name: 'TradeHub', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hub', rating: 4.8 },
+                                             modes: ['trade'],
+                                             price: item.marketPrice,
+                                             seeking: ['Epic Items', 'Rare Materials'],
+                                             description: 'Only interested in item trades.',
+                                             postedAt: '8 hours ago',
+                                             createdAt: new Date('2025-01-13T06:00:00')
+                                         }
                                       ];
                                       
+                                      // Filter and sort offers
+                                      let processedOffers = [...mockOffers];
+
+                                      // Filter by type
+                                      if (offerTypeFilter !== 'all') {
+                                       processedOffers = processedOffers.filter(o => o.modes.includes(offerTypeFilter));
+                                      }
+
+                                      // Sort
+                                      if (offerSort === 'price-low') {
+                                       processedOffers.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
+                                      } else if (offerSort === 'price-high') {
+                                       processedOffers.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
+                                      } else if (offerSort === 'newest') {
+                                       processedOffers.sort((a, b) => b.createdAt - a.createdAt);
+                                      }
+
                                       const group = {
                                           item: item,
-                                          offers: mockOffers
+                                          offers: processedOffers,
+                                          allOffers: mockOffers // Store unfiltered for dynamic filtering
                                       };
                                       setSelectedListingGroup(group);
                                   }}>
@@ -1015,8 +1061,76 @@ export default function TradingPostContent() {
 
                       {/* Right: Offers List */}
                       <div className="flex-1 flex flex-col min-w-0">
-                        <h3 className="text-white font-bold text-lg mb-4">Available Offers</h3>
-                        
+                        {/* Filter & Sort Controls */}
+                        <div className="flex items-center gap-3 mb-4 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Filter className="w-4 h-4 text-white/50" />
+                            <span className="text-white/60 text-sm font-medium">Type:</span>
+                          </div>
+                          <select
+                            value={offerTypeFilter}
+                            onChange={(e) => {
+                              setOfferTypeFilter(e.target.value);
+                              // Re-filter current offers
+                              if (selectedListingGroup) {
+                                const allOffers = selectedListingGroup.allOffers || selectedListingGroup.offers;
+                                let filtered = [...allOffers];
+                                if (e.target.value !== 'all') {
+                                  filtered = filtered.filter(o => o.modes.includes(e.target.value));
+                                }
+                                // Apply sort
+                                if (offerSort === 'price-low') {
+                                  filtered.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
+                                } else if (offerSort === 'price-high') {
+                                  filtered.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
+                                } else if (offerSort === 'newest') {
+                                  filtered.sort((a, b) => b.createdAt - a.createdAt);
+                                }
+                                setSelectedListingGroup({ ...selectedListingGroup, allOffers: allOffers, offers: filtered });
+                              }
+                            }}
+                            className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                          >
+                            <option value="all">All</option>
+                            <option value="sale">Cash Buy</option>
+                            <option value="bid">Bid Buy</option>
+                            <option value="trade">Trade Offer</option>
+                          </select>
+
+                          <div className="flex items-center gap-2 ml-auto">
+                            <ArrowUpDown className="w-4 h-4 text-white/50" />
+                            <span className="text-white/60 text-sm font-medium">Sort:</span>
+                          </div>
+                          <select
+                            value={offerSort}
+                            onChange={(e) => {
+                              setOfferSort(e.target.value);
+                              // Re-sort current offers
+                              if (selectedListingGroup) {
+                                const allOffers = selectedListingGroup.allOffers || selectedListingGroup.offers;
+                                let filtered = [...allOffers];
+                                if (offerTypeFilter !== 'all') {
+                                  filtered = filtered.filter(o => o.modes.includes(offerTypeFilter));
+                                }
+                                // Apply new sort
+                                if (e.target.value === 'price-low') {
+                                  filtered.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
+                                } else if (e.target.value === 'price-high') {
+                                  filtered.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
+                                } else if (e.target.value === 'newest') {
+                                  filtered.sort((a, b) => b.createdAt - a.createdAt);
+                                }
+                                setSelectedListingGroup({ ...selectedListingGroup, allOffers: allOffers, offers: filtered });
+                              }
+                            }}
+                            className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                          >
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="newest">Newest First</option>
+                          </select>
+                        </div>
+
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                           {selectedListingGroup.offers.map((offer, idx) => (
                             <motion.div
