@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { aiGamesList, otherSampleGames } from './mockData';
+import ShinyCard from '@/components/shared/ShinyCard';
 
 // --- Liquid Glass Components (Reused) ---
 const LiquidCard = ({ children, className = "", onClick }) => (
