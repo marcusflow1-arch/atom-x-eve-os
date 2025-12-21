@@ -1096,7 +1096,7 @@ export default function LunaTemplate() {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="fixed top-20 left-8 right-8 bottom-8 z-30"
             >
-              <FocusModePanel />
+              <FocusModePanel onOpenForum={() => setShowForumOverlay(true)} />
             </motion.div>
           )}
         </AnimatePresence>
