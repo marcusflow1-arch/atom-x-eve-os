@@ -1219,59 +1219,22 @@ export default function LunaTemplate() {
             </div>
             )}
 
-        {/* AI Home Button - Below Skills - Contains Menu Options */}
+        {/* AI Home Button - Small Icon at Bottom Center */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
-          <motion.div
-            className="flex-shrink-0 cursor-pointer"
-            whileHover={{ y: -10, transition: { duration: 0.3 } }}
+          <motion.button
+            whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'home'))}
+            className="w-14 h-14 rounded-2xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+            }}
           >
-            <div
-              className="w-[320px] rounded-2xl overflow-hidden transition-all duration-500 p-4 border border-white/10 hover:border-white/30"
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                  <Home className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-sm tracking-wide">AI Home</h3>
-                  <p className="text-white/50 text-[10px]">Personal Space</p>
-                </div>
-              </div>
-
-              {/* Menu Options Grid */}
-              <div className="grid grid-cols-4 gap-2">
-                {ORBITAL_ITEMS.filter(item => ['skill-tree', 'battle', 'story', 'home'].includes(item.id)).map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.button
-                      key={item.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveDrawer(item);
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/20"
-                    >
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-white/70 text-[9px] font-medium text-center leading-tight">{item.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
+            <Home className="w-6 h-6 text-white" />
+          </motion.button>
         </div>
         )}
 
