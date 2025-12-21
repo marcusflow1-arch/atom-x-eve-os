@@ -541,12 +541,58 @@ const CardDetailContent = ({ card, onClose }) => {
   );
 };
 
-export default function DeveloperLimitedEdition() {
+// Shared state context for the component modes
+const SharedStateContext = React.createContext(null);
+
+// Wrapper to provide shared state
+export function DeveloperLimitedEditionProvider({ children }) {
   const [currentDeveloperIndex, setCurrentDeveloperIndex] = useState(0);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
-  const [direction, setDirection] = useState(0); // -1 for left, 1 for right
-  const [selectedCard, setSelectedCard] = useState(null); // For giant card display
+  const [direction, setDirection] = useState(0);
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
+  const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
+
+  // Auto-select first card on initial load
+  React.useEffect(() => {
+    if (currentGame?.limitedCards?.length > 0 && !selectedCard) {
+      setSelectedCard(currentGame.limitedCards[0]);
+    }
+  }, []);
+
+  const value = {
+    currentDeveloperIndex, setCurrentDeveloperIndex,
+    selectedGameIndex, setSelectedGameIndex,
+    direction, setDirection,
+    selectedCard, setSelectedCard,
+    currentDeveloper, currentGame,
+  };
+
+  return (
+    <SharedStateContext.Provider value={value}>
+      {children}
+    </SharedStateContext.Provider>
+  );
+}
+
+export default function DeveloperLimitedEdition({ mode }) {
+  // Local state for standalone usage (when no mode prop)
+  const [localCurrentDeveloperIndex, setLocalCurrentDeveloperIndex] = useState(0);
+  const [localSelectedGameIndex, setLocalSelectedGameIndex] = useState(0);
+  const [localDirection, setLocalDirection] = useState(0);
+  const [localSelectedCard, setLocalSelectedCard] = useState(null);
   const containerRef = useRef(null);
+
+  // Use local state for now (shared context can be added later if needed)
+  const currentDeveloperIndex = localCurrentDeveloperIndex;
+  const setCurrentDeveloperIndex = setLocalCurrentDeveloperIndex;
+  const selectedGameIndex = localSelectedGameIndex;
+  const setSelectedGameIndex = setLocalSelectedGameIndex;
+  const direction = localDirection;
+  const setDirection = setLocalDirection;
+  const selectedCard = localSelectedCard;
+  const setSelectedCard = setLocalSelectedCard;
 
   const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
   const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
