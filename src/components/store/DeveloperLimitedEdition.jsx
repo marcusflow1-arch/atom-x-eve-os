@@ -898,8 +898,14 @@ export default function DeveloperLimitedEdition({ mode }) {
 
       {/* Main Content Area */}
       <div className="flex gap-6">
-        {/* Left Side - Card Display (20% width) */}
-        <div className="w-[20%] flex-shrink-0 flex flex-col gap-4">
+        {/* Left Side - Card Display & Card Selector */}
+        <div className="w-[20%] flex-shrink-0 flex flex-col gap-3">
+          {/* Limited Edition Cards Label */}
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            Limited Edition Cards
+          </h4>
+
           {/* Card Display Box - Translucent */}
           <div 
             className="rounded-2xl p-4 flex items-center justify-center"
@@ -908,38 +914,99 @@ export default function DeveloperLimitedEdition({ mode }) {
               backdropFilter: 'blur(30px)',
               WebkitBackdropFilter: 'blur(30px)',
               border: '1px solid rgba(255,255,255,0.1)',
-              minHeight: '320px',
+              minHeight: '280px',
             }}
           >
             {selectedCard && <LargeCardDisplay card={selectedCard} />}
           </div>
+
+          {/* Card Selector with Arrows */}
+          <div className="flex items-center justify-center gap-2">
+            <button 
+              onClick={() => {
+                const cards = currentGame?.limitedCards || [];
+                if (cards.length === 0) return;
+                const currentIndex = cards.findIndex(c => c.id === selectedCard?.id);
+                const newIndex = currentIndex <= 0 ? cards.length - 1 : currentIndex - 1;
+                setSelectedCard(cards[newIndex]);
+              }}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/10"
+            >
+              <ChevronLeft className="w-4 h-4 text-white" />
+            </button>
+
+            {/* Small Card Previews */}
+            <div className="flex gap-2 overflow-hidden max-w-[140px]">
+              {currentGame?.limitedCards.slice(0, 3).map((card) => {
+                const rarity = rarityColors[card.rarity] || rarityColors.Common;
+                return (
+                  <motion.div
+                    key={card.id}
+                    onClick={() => handleCardClick(card)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`flex-shrink-0 w-10 h-14 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                      selectedCard?.id === card.id 
+                        ? `${rarity.border} shadow-[0_0_10px_rgba(59,130,246,0.5)]` 
+                        : 'border-white/10 hover:border-white/30'
+                    }`}
+                  >
+                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <button 
+              onClick={() => {
+                const cards = currentGame?.limitedCards || [];
+                if (cards.length === 0) return;
+                const currentIndex = cards.findIndex(c => c.id === selectedCard?.id);
+                const newIndex = currentIndex >= cards.length - 1 ? 0 : currentIndex + 1;
+                setSelectedCard(cards[newIndex]);
+              }}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/10"
+            >
+              <ChevronRight className="w-4 h-4 text-white" />
+            </button>
+          </div>
+
+          {/* Card Count */}
+          {currentGame?.limitedCards && currentGame.limitedCards.length > 0 && (
+            <p className="text-white/40 text-xs text-center">
+              {(currentGame.limitedCards.findIndex(c => c.id === selectedCard?.id) + 1)} / {currentGame.limitedCards.length} Cards
+            </p>
+          )}
         </div>
 
         {/* Vertical Divider */}
         <div className="w-px bg-white/20 self-stretch" />
 
-        {/* Middle - Card Details (appears when card is selected) */}
+        {/* Middle - Card Details (compact, pushed up) */}
         <div className="flex-1 min-w-0">
           {selectedCard ? (
             <div 
-              className="rounded-2xl p-6 h-full"
+              className="rounded-2xl p-4"
               style={{
                 background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.5) 100%)',
                 backdropFilter: 'blur(30px)',
                 WebkitBackdropFilter: 'blur(30px)',
                 border: '1px solid rgba(255,255,255,0.1)',
+                maxHeight: '420px',
+                overflowY: 'auto',
               }}
             >
-              <CardDetailPanel card={selectedCard} />
+              <CardDetailPanelCompact card={selectedCard} />
             </div>
           ) : (
             <div 
-              className="rounded-2xl p-6 h-full flex items-center justify-center"
+              className="rounded-2xl p-4 flex items-center justify-center"
               style={{
                 background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)',
                 backdropFilter: 'blur(30px)',
                 WebkitBackdropFilter: 'blur(30px)',
                 border: '1px solid rgba(255,255,255,0.08)',
+                height: '200px',
               }}
             >
               <p className="text-white/40 text-sm">Select a card to view details</p>
@@ -987,76 +1054,6 @@ export default function DeveloperLimitedEdition({ mode }) {
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Limited Edition Cards - Horizontal card display at bottom */}
-      <div 
-        className="mt-4 rounded-2xl p-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%)',
-          backdropFilter: 'blur(30px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
-        <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Sparkles className="w-3 h-3 text-amber-400" />
-          Limited Edition Cards for {currentGame?.title}
-        </h4>
-        <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {currentGame?.limitedCards.map((card) => {
-            const rarity = rarityColors[card.rarity] || rarityColors.Common;
-            return (
-              <motion.div
-                key={card.id}
-                onClick={() => handleCardClick(card)}
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-shrink-0 w-32 aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border-2 transition-all relative group ${
-                  selectedCard?.id === card.id 
-                    ? `${rarity.border} shadow-[0_0_20px_rgba(59,130,246,0.5)]` 
-                    : 'border-white/10 hover:border-white/30'
-                }`}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
-                }}
-              >
-                {/* Card Image */}
-                <div className="absolute inset-0">
-                  <img src={card.image} alt={card.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                </div>
-                
-                {/* Rarity Glow */}
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${
-                  card.rarity === 'Mythic' ? 'shadow-[inset_0_0_30px_rgba(239,68,68,0.3)]' :
-                  card.rarity === 'Legendary' ? 'shadow-[inset_0_0_30px_rgba(249,115,22,0.3)]' :
-                  card.rarity === 'Epic' ? 'shadow-[inset_0_0_30px_rgba(168,85,247,0.3)]' :
-                  'shadow-[inset_0_0_30px_rgba(59,130,246,0.3)]'
-                }`} />
-
-                {/* Card Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
-                  <Badge className={`${rarity.bg} ${rarity.text} border-none text-[8px] mb-1 w-full justify-center`}>
-                    {card.rarity}
-                  </Badge>
-                  <h5 className="text-white font-bold text-[10px] truncate text-center">{card.name}</h5>
-                  <p className="text-white/50 text-[8px] text-center">{card.type}</p>
-                </div>
-
-                {/* Corner decorations */}
-                <div className={`absolute top-1 left-1 w-2 h-2 border-t border-l ${rarity.border} opacity-50`} />
-                <div className={`absolute top-1 right-1 w-2 h-2 border-t border-r ${rarity.border} opacity-50`} />
-              </motion.div>
-            );
-          })}
-          
-          {(!currentGame?.limitedCards || currentGame.limitedCards.length === 0) && (
-            <div className="w-full py-6 text-center">
-              <p className="text-white/40 text-sm">No limited edition cards available for this game</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
