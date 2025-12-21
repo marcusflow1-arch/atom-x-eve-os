@@ -928,6 +928,9 @@ export default function DeveloperLimitedEdition({ mode }) {
           </div>
         </div>
 
+        {/* Vertical Divider */}
+        <div className="w-px bg-white/20 self-stretch" />
+
         {/* Right Side - Games & Cards (70% width) */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Games by Developer */}
