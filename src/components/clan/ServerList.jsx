@@ -21,22 +21,7 @@ export default function ServerList({ activeClanId, onSelectClan, onCreateClan })
   return (
     <div className="w-[84px] h-full flex flex-col items-center pb-4 pt-20 gap-3 bg-white/60 backdrop-blur-xl border-r border-slate-200/60 overflow-y-auto no-scrollbar z-20 shadow-lg">
       
-      {/* Home / Direct Messages */}
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-            <TooltipTrigger>
-                <div className="w-14 h-14 rounded-[28px] hover:rounded-[20px] bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg shadow-blue-500/30 transition-all duration-300 flex items-center justify-center cursor-pointer group relative overflow-hidden ring-2 ring-white ring-offset-2 ring-offset-slate-50">
-                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <img src="https://assets-global.website-files.com/6257adef93867e56f84d3092/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" className="w-8 h-8 invert brightness-0 transition-transform group-hover:scale-110 opacity-90" alt="Home" />
-                </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-slate-900 border-slate-700 text-white font-bold ml-2">
-                <p>Direct Messages</p>
-            </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <div className="w-10 h-[2px] bg-slate-200 rounded-full my-1" />
+      {/* Direct Messages removed as requested */}
 
       {memberships?.map(clan => (
           <div key={clan.id} className="relative group flex items-center justify-center w-full">

@@ -1,17 +1,63 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Coins, Gem, Archive, Search, Filter } from 'lucide-react';
+import { Coins, Gem, Archive, Search, Filter, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/components/auth/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
-export default function ClanVault() {
-    const vaultTabs = ["General", "Raid Supplies", "Crafting", "Officer's Cache"];
+export default function ClanVault({ clan }) {
+    const vaultTabs = ["General", "Raid Supplies", "Crafting", "Officer's Cache"]; // tabs remain visual only
+
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+
+    const { data: approved = [] } = useQuery({
+        queryKey: ['guildVaultApproved', clan?.id],
+        queryFn: async () => {
+            if (!clan?.id) return [];
+            return await base44.entities.GuildResource.filter({ guild_id: clan.id, status: 'approved' });
+        },
+        enabled: !!clan?.id
+    });
+
+    const { data: pending = [] } = useQuery({
+        queryKey: ['guildVaultPending', clan?.id],
+        queryFn: async () => {
+            if (!clan?.id) return [];
+            return await base44.entities.GuildResource.filter({ guild_id: clan.id, status: 'pending' });
+        },
+        enabled: !!clan?.id
+    });
+
+    const createResource = useMutation({
+        mutationFn: (payload) => base44.entities.GuildResource.create(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['guildVaultPending'] });
+        }
+    });
+
+    const updateResource = useMutation({
+        mutationFn: ({ id, data }) => base44.entities.GuildResource.update(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['guildVaultApproved'] });
+            queryClient.invalidateQueries({ queryKey: ['guildVaultPending'] });
+        }
+    });
+
+    const [openAdd, setOpenAdd] = React.useState(false);
+    const [newItem, setNewItem] = React.useState({ name: '', rarity: 'Common', quantity: 1, note: '' });
     const [activeTab, setActiveTab] = React.useState("General");
 
-    const items = Array.from({ length: 24 }).map((_, i) => ({
-        id: i,
-        name: `Ancient Artifact ${i + 1}`,
-        rarity: ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)],
-        quantity: Math.floor(Math.random() * 100) + 1,
+    const items = approved.map((r, i) => ({
+        id: r.id,
+        name: r.item_id || `Item ${i + 1}`,
+        rarity: 'Common',
+        quantity: r.amount || 1,
         icon: `https://api.dicebear.com/7.x/shapes/svg?seed=${i}`
     }));
 
@@ -32,6 +78,8 @@ export default function ClanVault() {
                     <p className="text-slate-500 mt-1">Manage communal resources and spoils of war.</p>
                 </div>
                 <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/40 shadow-sm">
+                    {/* Add to Vault */}
+                    <Button onClick={() => setOpenAdd(true)} className="bg-blue-600 hover:bg-blue-700 text-white">Add to Vault</Button>
                     <div className="flex items-center gap-2">
                         <Coins className="w-5 h-5 text-amber-500" />
                         <span className="font-mono font-bold text-slate-700 text-lg">1,240,500</span>
@@ -76,6 +124,29 @@ export default function ClanVault() {
                         </button>
                     </div>
                 </div>
+
+                {/* Pending Approvals */}
+                {pending.length > 0 && (
+                  <div className="px-6 pt-4">
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                      <h3 className="font-bold text-amber-700 mb-2 text-sm">Pending Member Deposits</h3>
+                      <div className="space-y-2">
+                        {pending.map((p) => (
+                          <div key={p.id} className="flex items-center justify-between bg-white rounded-lg border border-amber-100 px-3 py-2">
+                            <div className="text-sm text-slate-700">
+                              <span className="font-semibold">{p.item_id || 'Item'}</span>
+                              <span className="text-slate-400"> × {p.amount || 1}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => updateResource.mutate({ id: p.id, data: { status: 'approved', approved_by: user?.id, approved_at: new Date().toISOString() } })}>Accept</Button>
+                              <Button size="sm" variant="outline" onClick={() => updateResource.mutate({ id: p.id, data: { status: 'rejected', approved_by: user?.id, approved_at: new Date().toISOString() } })}>Reject</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Grid */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -126,6 +197,62 @@ export default function ClanVault() {
                     </div>
                 </div>
             </div>
+
+            {/* Add to Vault Dialog */}
+            <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+              <DialogContent className="bg-white">
+                <DialogHeader>
+                  <DialogTitle>Add Item to Guild Vault</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Item Name</label>
+                    <Input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} placeholder="e.g. Ancient Artifact" />
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Rarity</label>
+                      <Select value={newItem.rarity} onValueChange={(v) => setNewItem({ ...newItem, rarity: v })}>
+                        <SelectTrigger><SelectValue placeholder="Select rarity" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Common">Common</SelectItem>
+                          <SelectItem value="Rare">Rare</SelectItem>
+                          <SelectItem value="Epic">Epic</SelectItem>
+                          <SelectItem value="Legendary">Legendary</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-32">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Quantity</label>
+                      <Input type="number" min={1} value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value || '1', 10) })} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Note (optional)</label>
+                    <Input value={newItem.note} onChange={(e) => setNewItem({ ...newItem, note: e.target.value })} placeholder="e.g. For raid supplies" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenAdd(false)}>Cancel</Button>
+                  <Button
+                    onClick={() => {
+                      if (!clan?.id || !user?.id || !newItem.name) return;
+                      createResource.mutate({
+                        guild_id: clan.id,
+                        contributor_id: user.id,
+                        resource_type: 'item',
+                        item_id: newItem.name,
+                        amount: newItem.quantity,
+                        note: newItem.note,
+                        status: 'pending'
+                      });
+                      setOpenAdd(false);
+                      setNewItem({ name: '', rarity: 'Common', quantity: 1, note: '' });
+                    }}
+                  >Submit</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
         </div>
     );
 }

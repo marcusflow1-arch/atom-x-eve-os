@@ -176,7 +176,7 @@ export default function ClanPage() {
                 {selectedChannelId === 'overview' && activeClan ? (
                     <ClanDashboard clan={activeClan} events={events} />
                 ) : selectedChannelId === 'vault' && activeClan ? (
-                    <ClanVault />
+                    <ClanVault clan={activeClan} />
                 ) : activeClan && activeChannel ? (
                     <div className="flex flex-1 min-w-0">
                         <ChatArea channel={activeChannel} clan={activeClan} />
