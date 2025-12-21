@@ -1509,10 +1509,11 @@ export default function LunaTemplate() {
                   }`}
                 />
                 
-                {/* Social Hub Bar */}
+                {/* UI Hide/Show Bar (repurposed) */}
                 <button 
-                  onClick={() => setShowBlankPage(true)}
+                  onClick={() => setUiVisible(v => !v)}
                   className="w-1 h-32 rounded-full transition-all duration-500 hover:h-40 bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]"
+                  title={uiVisible ? 'Hide UI' : 'Show UI'}
                 />
               </div>
 
