@@ -1488,7 +1488,7 @@ export default function LunaTemplate() {
 
               {/* Main Content Area */}
               {uiVisible && (
-              <div className="w-full mt-24 px-12 relative" style={{ display: uiVisible ? 'block' : 'none' }}>
+              <div className="w-full mt-0 px-12 relative" style={{ display: uiVisible ? 'block' : 'none' }}>
               <AnimatePresence mode="wait">
               {false && (
                 <motion.div
