@@ -17,6 +17,7 @@ import { createPageUrl } from '@/utils';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ShinyCard from '@/components/shared/ShinyCard';
+import DeveloperLimitedEdition from './DeveloperLimitedEdition';
 
 // Enhanced Mock Data
 const MARKETPLACE_ITEMS = [
