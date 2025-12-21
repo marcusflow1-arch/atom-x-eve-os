@@ -851,7 +851,7 @@ export default function LunaTemplate() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [uiVisible, setUiVisible] = useState(true);
+  const [uiVisible, setUiVisible] = useState(false);
   const [selectedCardForUpgrade, setSelectedCardForUpgrade] = useState(null);
   const [showBlankPage, setShowBlankPage] = useState(false);
   const [blankPageTab, setBlankPageTab] = useState('entertainment');
