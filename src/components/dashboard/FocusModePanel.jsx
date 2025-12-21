@@ -778,9 +778,12 @@ export default function FocusModePanel() {
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - New Content Cards REMOVED (saved for later) */}
+          {/* Content Area - Library Games by Genre */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Placeholder - New Content UI will be restored here */}
+            <LibraryContentArea 
+              onSelectGame={setSelectedCard}
+              selectedGame={selectedCard}
+            />
           </div>
         </div>
       </div>
