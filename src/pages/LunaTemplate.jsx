@@ -7,7 +7,7 @@ import {
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
   Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -868,14 +868,6 @@ export default function LunaTemplate() {
   const [weaponModelUrl, setWeaponModelUrl] = useState(null);
   const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   const { mode } = useDashboardMode();
-  const location = useLocation();
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const open = urlParams.get('open');
-    if (open === 'settings') setShowSettings(true);
-    if (open === 'profile') setShowProfile(true);
-  }, [location.search]);
 
   // Fetch 3D Model and Animations
   useEffect(() => {
@@ -1048,8 +1040,39 @@ export default function LunaTemplate() {
 
 
 
+        {/* Avatar Customizer Button */}
+        <motion.button
+          className="absolute top-4 right-36 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          onClick={() => setShowAvatarCustomizer(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          title="3D Avatar Customizer"
+        >
+          <User className="w-6 h-6 text-white" />
+        </motion.button>
 
+        {/* Profile Circle Icon */}
+        <motion.button
+          className="absolute top-4 right-20 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          onClick={() => setShowProfile(true)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <User className="w-6 h-6 text-white" />
+        </motion.button>
 
+        {/* Settings Gear Icon */}
+        <motion.button
+          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
+          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+          onClick={() => setShowSettings(true)}
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Settings className="w-6 h-6 text-white/80" />
+        </motion.button>
 
         {/* Skills Section Above Dock */}
         {uiVisible && !showInventory && (
