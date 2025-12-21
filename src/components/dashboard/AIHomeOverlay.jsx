@@ -1,8 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, X, Sparkles, Gamepad2, Trophy, Target } from 'lucide-react';
+import { Home, X, Layers, Swords, BookOpen } from 'lucide-react';
 
-export default function AIHomeOverlay({ onClose }) {
+// Menu items for AI Home
+const AI_HOME_ITEMS = [
+  { 
+    id: 'skill-tree', 
+    label: 'Skill Tree', 
+    icon: Layers, 
+    color: 'from-purple-500 to-pink-500', 
+    description: 'View & Unlock Abilities'
+  },
+  { 
+    id: 'battle', 
+    label: 'Battle Mode', 
+    icon: Swords, 
+    color: 'from-red-500 to-orange-500', 
+    description: 'Enter Combat Arena'
+  },
+  { 
+    id: 'story', 
+    label: 'AI Story', 
+    icon: BookOpen, 
+    color: 'from-indigo-500 to-purple-500', 
+    description: 'Continue Your Journey'
+  },
+  { 
+    id: 'home', 
+    label: 'AI Home', 
+    icon: Home, 
+    color: 'from-green-500 to-emerald-500', 
+    description: 'Personal Space'
+  },
+];
+
+export default function AIHomeOverlay({ onClose, onSelectItem }) {
+  const [hoveredItem, setHoveredItem] = useState(null);
+
+  const handleItemClick = (item) => {
+    if (onSelectItem) {
+      onSelectItem(item);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -27,97 +67,93 @@ export default function AIHomeOverlay({ onClose }) {
         </button>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 w-full h-full relative pt-24 px-8 pb-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          {/* Welcome Section */}
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Welcome to Your Personal Space</h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
-              Your AI companion's home base. Manage your progression, view stats, and customize your experience.
-            </p>
-          </div>
+      {/* Content Area - 4 Menu Boxes */}
+      <div className="flex-1 w-full h-full flex items-center justify-center px-8 pb-8 pt-24">
+        <div className="grid grid-cols-2 gap-8 max-w-3xl w-full">
+          {AI_HOME_ITEMS.map((item, index) => {
+            const Icon = item.icon;
+            const isHovered = hoveredItem === item.id;
+            
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+                onClick={() => handleItemClick(item)}
+                className="relative cursor-pointer group"
+              >
+                <motion.div
+                  animate={{ 
+                    scale: isHovered ? 1.02 : 1,
+                    y: isHovered ? -5 : 0
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="relative aspect-[4/3] rounded-3xl overflow-hidden"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: isHovered 
+                      ? '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(100, 150, 255, 0.15)' 
+                      : '0 10px 30px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  {/* Gradient Background */}
+                  <div 
+                    className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-10 group-hover:opacity-20 transition-opacity duration-500`}
+                  />
+                  
+                  {/* Animated Border Glow */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-3xl pointer-events-none"
+                    animate={{ 
+                      boxShadow: isHovered 
+                        ? `inset 0 0 0 2px rgba(255, 255, 255, 0.2)` 
+                        : 'inset 0 0 0 1px rgba(255, 255, 255, 0.05)'
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-white/60 text-sm">AI Level</p>
-                  <p className="text-2xl font-bold text-white">24</p>
-                </div>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: '68%' }} />
-              </div>
-              <p className="text-white/40 text-xs mt-2">3,200 / 4,700 XP to next level</p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                  <Gamepad2 className="w-6 h-6 text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-white/60 text-sm">Games Played</p>
-                  <p className="text-2xl font-bold text-white">12</p>
-                </div>
-              </div>
-              <p className="text-white/40 text-sm">142 hours total playtime</p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-white/60 text-sm">Achievements</p>
-                  <p className="text-2xl font-bold text-white">87</p>
-                </div>
-              </div>
-              <p className="text-white/40 text-sm">15 legendary unlocked</p>
-            </div>
-          </div>
-
-          {/* AI Personality Traits */}
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 mb-8">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Target className="w-5 h-5 text-green-400" />
-              AI Personality Traits
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { trait: 'Aggressive', value: 72, color: 'from-red-500 to-orange-500' },
-                { trait: 'Strategic', value: 85, color: 'from-blue-500 to-cyan-500' },
-                { trait: 'Explorative', value: 63, color: 'from-green-500 to-emerald-500' },
-                { trait: 'Social', value: 41, color: 'from-purple-500 to-pink-500' },
-              ].map((item) => (
-                <div key={item.trait} className="bg-white/5 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-white/80 text-sm font-medium">{item.trait}</span>
-                    <span className="text-white/60 text-xs">{item.value}%</span>
+                  {/* Content */}
+                  <div className="relative h-full flex flex-col items-center justify-center p-8">
+                    {/* Icon */}
+                    <motion.div
+                      animate={{ scale: isHovered ? 1.1 : 1 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                      className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-6 shadow-2xl`}
+                    >
+                      <Icon className="w-10 h-10 text-white" />
+                    </motion.div>
+                    
+                    {/* Label */}
+                    <h3 className="text-2xl font-bold text-white mb-2 text-center">
+                      {item.label}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-white/50 text-sm text-center">
+                      {item.description}
+                    </p>
                   </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full bg-gradient-to-r ${item.color} rounded-full`} 
-                      style={{ width: `${item.value}%` }} 
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Coming Soon */}
-          <div className="text-center py-12 border-2 border-dashed border-white/20 rounded-2xl">
-            <Sparkles className="w-12 h-12 text-white/30 mx-auto mb-4" />
-            <p className="text-white/40 text-lg">More features coming soon...</p>
-            <p className="text-white/30 text-sm mt-2">AI customization, memory viewer, and more</p>
-          </div>
+                  {/* Hover Shine Effect */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    animate={{
+                      background: isHovered 
+                        ? 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)'
+                        : 'transparent'
+                    }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </motion.div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </motion.div>
