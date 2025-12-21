@@ -509,18 +509,38 @@ function LayoutContent({ children, currentPageName }) {
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
             {headerConfig.showMenu && (
-              <button
-                onClick={() => setDrawerOpen(true)}
-                className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-                style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                  <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                </div>
-              </button>
-            )}
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => setDrawerOpen(true)}
+                                    className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+                                    style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+                                  >
+                                    <div className="flex flex-col gap-1">
+                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                    </div>
+                                  </button>
+
+                                  {p.includes('/lunatemplate') && (
+                                    <div className="hidden sm:flex items-center gap-2 ml-1">
+                                      <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">
+                                        Atom X Eve Dashboard page
+                                      </span>
+                                      <div className="h-6 w-px bg-white/20 mx-2" />
+                                      <Link to={createPageUrl('Blacksmith')} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
+                                        <Hammer className="w-4 h-4" />
+                                        <span>Blacksmith</span>
+                                      </Link>
+                                      <div className="h-6 w-px bg-white/20 mx-2" />
+                                      <Link to={createPageUrl('SeasonalPass')} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
+                                        <Crown className="w-4 h-4" />
+                                        <span>Season Pass</span>
+                                      </Link>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
