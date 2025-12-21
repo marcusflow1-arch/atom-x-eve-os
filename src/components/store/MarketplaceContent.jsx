@@ -812,16 +812,19 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
       <div className="px-2 pb-6">
         {/* Main Layout */}
-        <div className="flex gap-6">
-          {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <FilterSidebar filters={filters} setFilters={setFilters} />
-          </aside>
+        <div className="flex flex-col gap-6">
+          {/* Developer Limited Edition Section - Full Width */}
+          <DeveloperLimitedEdition />
 
-          {/* Results */}
-          <div className="flex-1 min-w-0">
-            {/* Developer Limited Edition Section - Full Width */}
-            <DeveloperLimitedEdition />
+          {/* Bottom Section: Sidebar + Results */}
+          <div className="flex gap-6">
+            {/* Sidebar */}
+            <aside className="hidden lg:block">
+              <FilterSidebar filters={filters} setFilters={setFilters} />
+            </aside>
+
+            {/* Results */}
+            <div className="flex-1 min-w-0">
             {/* Results Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
@@ -919,6 +922,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
             {/* Customers frequently viewed */}
             <ProductRow title="Customers frequently viewed" items={popularItems} onItemClick={setSelectedItem} />
+            </div>
           </div>
         </div>
 

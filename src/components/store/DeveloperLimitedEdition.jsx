@@ -898,8 +898,8 @@ export default function DeveloperLimitedEdition({ mode }) {
 
       {/* Main Content Area */}
       <div className="flex gap-6">
-        {/* Left Side - Card Display & Info (30% width) */}
-        <div className="w-[30%] flex-shrink-0 flex flex-col gap-4">
+        {/* Left Side - Card Display & Info (20% width - moved further left) */}
+        <div className="w-[20%] flex-shrink-0 flex flex-col gap-4">
           {/* Card Display Box - Translucent */}
           <div 
             className="rounded-2xl p-4 flex items-center justify-center"
@@ -931,7 +931,7 @@ export default function DeveloperLimitedEdition({ mode }) {
         {/* Vertical Divider */}
         <div className="w-px bg-white/20 self-stretch" />
 
-        {/* Right Side - Games & Cards (70% width) */}
+        {/* Right Side - Games & Cards (80% width - more space for developer info) */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Games by Developer */}
           <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
