@@ -680,7 +680,13 @@ export default function DeveloperLimitedEdition() {
                 setDirection(index > currentDeveloperIndex ? 1 : -1);
                 setCurrentDeveloperIndex(index);
                 setSelectedGameIndex(0);
-                setSelectedCard(null);
+                // Auto-select first card of first game of selected developer
+                const newDev = DEVELOPERS[index];
+                if (newDev?.games[0]?.limitedCards?.length > 0) {
+                  setSelectedCard(newDev.games[0].limitedCards[0]);
+                } else {
+                  setSelectedCard(null);
+                }
               }}
               className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                 index === currentDeveloperIndex 
