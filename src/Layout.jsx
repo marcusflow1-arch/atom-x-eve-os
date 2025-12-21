@@ -653,7 +653,7 @@ function LayoutContent({ children, currentPageName }) {
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(`${location.pathname}?panel=profile`)}
+            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')}
             title="Profile"
           >
             <User className="w-6 h-6 text-white" />
@@ -663,7 +663,7 @@ function LayoutContent({ children, currentPageName }) {
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(`${location.pathname}?panel=settings`)}
+            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
             title="Settings"
           >
             <Settings className="w-6 h-6 text-white/80" />
