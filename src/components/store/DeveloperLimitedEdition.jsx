@@ -1285,3 +1285,97 @@ function CardDetailPanel({ card }) {
     </div>
   );
 }
+
+// Compact Card Detail Panel (for middle section - compressed)
+function CardDetailPanelCompact({ card }) {
+  const rarity = rarityColors[card.rarity] || rarityColors.Common;
+  
+  const cardStats = {
+    Power: 50 + (card.id * 7) % 50,
+    Defense: 30 + (card.id * 11) % 40,
+    Speed: 20 + (card.id * 13) % 30,
+    Synergy: 15 + (card.id * 5) % 35,
+    Durability: 40 + (card.id * 9) % 40,
+  };
+
+  const abilities = [
+    { name: 'Primary Effect', description: `Enhances ${card.type.toLowerCase()} capabilities by ${20 + (card.id * 3) % 30}%` },
+    { name: 'Passive Bonus', description: `Grants bonus experience in related genre activities` },
+  ];
+
+  const lore = `This ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension.`;
+
+  return (
+    <div className="flex flex-col gap-4" style={{ scrollbarWidth: 'none' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white mb-1">{card.name}</h2>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{card.type}</Badge>
+            <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px]`}>{card.rarity}</Badge>
+            <span className="text-amber-400/80 text-[10px]">{card.tag}</span>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-white/40 text-[10px]">Card ID</p>
+          <p className="text-white font-mono text-sm">#{String(card.id).padStart(4, '0')}</p>
+        </div>
+      </div>
+
+      {/* Stats Grid - Compact */}
+      <div>
+        <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+          <Star className="w-3 h-3 text-yellow-400" />
+          Statistics
+        </h3>
+        <div className="grid grid-cols-5 gap-2">
+          {Object.entries(cardStats).map(([key, value]) => (
+            <div key={key} className="bg-black/30 p-2 rounded-lg border border-white/5 text-center">
+              <div className="text-[8px] text-slate-400 uppercase">{key}</div>
+              <div className="text-lg font-bold text-white">{value}</div>
+              <div className="w-full h-0.5 bg-white/10 rounded-full mt-1 overflow-hidden">
+                <div 
+                  className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${value}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Abilities - Compact */}
+      <div>
+        <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-purple-400" />
+          Abilities
+        </h3>
+        <div className="space-y-1.5">
+          {abilities.map((ability, index) => (
+            <div key={index} className="bg-black/20 p-2 rounded-lg border border-white/5 flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-semibold text-xs">{ability.name}</h4>
+                <p className="text-white/60 text-[10px] truncate">{ability.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lore - Compact */}
+      <div>
+        <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+          <ScrollText className="w-3 h-3 text-cyan-400" />
+          Lore
+        </h3>
+        <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+          <p className="text-slate-300 text-xs italic leading-relaxed">{lore}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
