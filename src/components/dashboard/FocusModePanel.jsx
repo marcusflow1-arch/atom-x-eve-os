@@ -273,7 +273,8 @@ export default function FocusModePanel() {
   const scrollRef = useRef(null);
 
   return (
-    <div className="h-full flex">
+    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex min-h-full">
       {/* Left Side - Viewer Adjacent Content */}
       <div className="flex flex-col gap-4 mr-6">
         {/* Time & Date */}
