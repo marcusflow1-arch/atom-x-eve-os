@@ -982,31 +982,28 @@ export default function DeveloperLimitedEdition({ mode }) {
         {/* Vertical Divider */}
         <div className="w-px bg-white/20 self-stretch" />
 
-        {/* Middle - Card Details (compact, pushed up) */}
-        <div className="flex-1 min-w-0">
+        {/* Middle - Card Details (full height, fills space between lines) */}
+        <div className="flex-1 min-w-0 self-stretch">
           {selectedCard ? (
             <div 
-              className="rounded-2xl p-4"
+              className="rounded-2xl p-4 h-full overflow-y-auto"
               style={{
                 background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.5) 100%)',
                 backdropFilter: 'blur(30px)',
                 WebkitBackdropFilter: 'blur(30px)',
                 border: '1px solid rgba(255,255,255,0.1)',
-                maxHeight: '420px',
-                overflowY: 'auto',
               }}
             >
               <CardDetailPanelCompact card={selectedCard} />
             </div>
           ) : (
             <div 
-              className="rounded-2xl p-4 flex items-center justify-center"
+              className="rounded-2xl p-4 h-full flex items-center justify-center"
               style={{
                 background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)',
                 backdropFilter: 'blur(30px)',
                 WebkitBackdropFilter: 'blur(30px)',
                 border: '1px solid rgba(255,255,255,0.08)',
-                height: '200px',
               }}
             >
               <p className="text-white/40 text-sm">Select a card to view details</p>
