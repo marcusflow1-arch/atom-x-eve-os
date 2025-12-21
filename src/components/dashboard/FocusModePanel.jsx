@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
-  Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X
+  Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
+  Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { allMockGames } from '../store/mockData';
 
 
 // Mock pinned games
