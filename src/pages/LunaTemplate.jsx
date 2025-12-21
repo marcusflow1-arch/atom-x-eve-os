@@ -1495,8 +1495,7 @@ export default function LunaTemplate() {
               <X className="w-5 h-5 text-white/80" />
               </motion.button>
               )}
-              </AnimatePresence> */
-              }
+              </AnimatePresence>
 
               {/* UI Toggle Side Bars */}
               <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
