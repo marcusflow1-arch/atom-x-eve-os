@@ -708,7 +708,7 @@ function GameBoxes() {
   );
 }
 
-// Game filter list for New Content
+// Game filter list for New Content (SAVED FOR LATER)
 const gameFilterList = [
   { id: 'all', name: 'All Games', icon: '🎮' },
   { id: 'elden-ring', name: 'Elden Ring', icon: '⚔️' },
@@ -721,6 +721,300 @@ const gameFilterList = [
   { id: 'final-fantasy', name: 'Final Fantasy', icon: '✨' },
   { id: 'dark-souls', name: 'Dark Souls', icon: '🔥' },
 ];
+
+// Library Game Card Component
+function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.02 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={onClick}
+      className={`relative flex-shrink-0 w-32 cursor-pointer group ${isSelected ? 'ring-2 ring-cyan-400 rounded-xl' : ''}`}
+    >
+      <div 
+        className="relative aspect-[3/4] rounded-xl overflow-hidden"
+        style={{
+          boxShadow: isHovered 
+            ? '0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(100,150,255,0.2)' 
+            : '0 8px 20px rgba(0,0,0,0.3)',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <img 
+          src={game.cover_image || game.cover} 
+          alt={game.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80" />
+        
+        {/* Hover Play Button */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            >
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                onClick={(e) => { e.stopPropagation(); onPlay?.(game); }}
+                className="w-12 h-12 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-xl"
+              >
+                <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Game Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <h3 className="text-white font-bold text-xs truncate drop-shadow-lg">{game.title}</h3>
+          <div className="flex items-center gap-2 text-[9px] text-white/50 mt-0.5">
+            <div className="flex items-center gap-0.5">
+              <Clock className="w-2.5 h-2.5" />
+              <span>12h</span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <Trophy className="w-2.5 h-2.5" />
+              <span>8/15</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Genre Row Component with horizontal scroll and arrows
+function GenreRow({ genre, games, onSelectGame, selectedGame, onPlayGame }) {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener('scroll', checkScroll);
+      return () => ref.removeEventListener('scroll', checkScroll);
+    }
+  }, [games]);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  if (!games || games.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+          <Gamepad2 className="w-4 h-4 text-cyan-400" />
+          {genre}
+          <span className="text-white/40 font-normal text-xs ml-2">({games.length})</span>
+        </h3>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              canScrollLeft ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/5 text-white/20 cursor-not-allowed'
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              canScrollRight ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/5 text-white/20 cursor-not-allowed'
+            }`}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      
+      <div 
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {games.map((game, idx) => (
+          <LibraryGameCard
+            key={game.id || idx}
+            game={game}
+            isSelected={selectedGame?.id === game.id}
+            onClick={() => onSelectGame(game)}
+            onPlay={onPlayGame}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Game Detail Panel for selected game
+function GameDetailPanel({ game, onClose }) {
+  if (!game) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="bg-white/[0.03] rounded-xl border border-white/10 p-4 mb-4"
+    >
+      <div className="flex gap-4">
+        <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0">
+          <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <h2 className="text-white font-bold text-lg">{game.title}</h2>
+              <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+            >
+              <X className="w-3 h-3 text-white/60" />
+            </button>
+          </div>
+          <p className="text-white/60 text-xs mb-3 line-clamp-2">
+            {game.description || 'An epic adventure awaits in this groundbreaking title.'}
+          </p>
+          <div className="flex items-center gap-4 text-xs text-white/50 mb-3">
+            <div className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-blue-400" />
+              <span>12.5h played</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Trophy className="w-3 h-3 text-yellow-400" />
+              <span>8/15 achievements</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 transition-colors">
+              <Play className="w-3 h-3 fill-current" />
+              Play
+            </button>
+            <button className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-lg text-xs font-medium hover:bg-white/20 transition-colors border border-white/10">
+              <Radio className="w-3 h-3" />
+              Stream
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Library Content Area Component
+function LibraryContentArea({ onSelectGame, selectedGame }) {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [ownedGames, setOwnedGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      let userGames = [];
+      const testGameAlpha = allMockGames['test_game_alpha'];
+
+      if (isAuthenticated) {
+        const allGamesFromDb = await base44.entities.Game.list();
+        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+        const ownedIds = user?.purchased_items || [];
+        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
+        if (testGameAlpha) userGames.unshift(testGameAlpha);
+      } else {
+        if (testGameAlpha) userGames.push(testGameAlpha);
+        // Add some mock games for demo
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
+      }
+      
+      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+      setLoading(false);
+    };
+
+    fetchGames();
+  }, [user, isAuthenticated]);
+
+  const gamesByGenre = useMemo(() => {
+    return ownedGames.reduce((acc, game) => {
+      const g = game.genre || 'Uncategorized';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(game);
+      return acc;
+    }, {});
+  }, [ownedGames]);
+
+  const handlePlayGame = (game) => {
+    // Navigate to library with game selected
+    navigate(createPageUrl('Library') + `?game=${game.id}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      {/* Selected Game Detail */}
+      <AnimatePresence>
+        {selectedGame && (
+          <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Genre Rows */}
+      {Object.entries(gamesByGenre).map(([genre, games]) => (
+        <GenreRow
+          key={genre}
+          genre={genre}
+          games={games}
+          onSelectGame={onSelectGame}
+          selectedGame={selectedGame}
+          onPlayGame={handlePlayGame}
+        />
+      ))}
+
+      {Object.keys(gamesByGenre).length === 0 && (
+        <div className="flex flex-col items-center justify-center h-48 text-white/30">
+          <LibraryIcon className="w-12 h-12 mb-4 opacity-50" />
+          <p>No games in your library yet</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Main Export
 export default function FocusModePanel() {
