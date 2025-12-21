@@ -719,7 +719,7 @@ const gameFilterList = [
 ];
 
 // Main Export
-export default function FocusModePanel() {
+export default function FocusModePanel({ onOpenForum }) {
   const [selectedCard, setSelectedCard] = useState(upcomingCards[0]);
   const [selectedGameFilter, setSelectedGameFilter] = useState('all');
   const [showCalendarModal, setShowCalendarModal] = useState(false);
