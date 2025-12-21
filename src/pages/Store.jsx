@@ -1026,19 +1026,19 @@ export default function Store() {
                                                     <span className="text-white/20 text-sm ml-auto">{genre.items.length} titles</span>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                                <div className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                                                     {genre.items.map((game, itemIdx) => {
                                                         const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
                                                         return (
                                                             <motion.div
                                                                 key={game.id}
-                                                                whileHover={{ y: -5, scale: 1.02 }}
+                                                                whileHover={{ y: -4, scale: 1.02 }}
                                                                 onMouseEnter={() => {
                                                                     setHoveredGame(game);
                                                                 }}
                                                                 onMouseLeave={() => setHoveredGame(null)}
                                                                 className={`
-                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
+                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-lg overflow-hidden cursor-pointer shadow-lg transition-all max-w-[140px]
                                                                     ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
                                                                 `}
                                                                 onClick={() => handleNavigateToGame(game.id)}
