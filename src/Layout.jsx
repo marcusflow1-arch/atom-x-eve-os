@@ -387,34 +387,44 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex-1 overflow-y-auto p-4">
                 <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
                 <div className="space-y-1">
-                                        {(() => {
-                                          const LIB_PATH = createPageUrl('Library');
-                                          const ACH_PATH = createPageUrl('Achievements');
-                                          const links = [
-                                            { name: 'Library', path: LIB_PATH, icon: Library },
-                                            { name: 'Achievements', path: ACH_PATH, icon: Trophy }
-                                          ];
-                                          return links.map((item) => {
-                                            const isActive = location.pathname === item.path;
-                                            const Icon = item.icon;
-                                            return (
-                                              <Link
-                                                key={item.name}
-                                                to={item.path}
-                                                onClick={() => setDrawerOpen(false)}
-                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                                                  isActive 
-                                                    ? 'bg-white/[0.1] text-white' 
-                                                    : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
-                                                }`}
-                                              >
-                                                <Icon className="w-5 h-5" />
-                                                <span className="font-medium">{item.name}</span>
-                                              </Link>
-                                            );
-                                          });
-                                        })()}
-                                      </div>
+                  {allNavItems.map((item) => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setDrawerOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          isActive 
+                            ? 'bg-white/[0.1] text-white' 
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+
+                  {/* Admin Link - Only in Editor */}
+                  {(window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app')) && (
+                    <>
+                      <div className="my-2 border-t border-white/10" />
+                      <Link
+                        to={createPageUrl('Admin')}
+                        onClick={() => setDrawerOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          location.pathname === createPageUrl('Admin')
+                            ? 'bg-white/[0.1] text-white' 
+                            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Admin</span>
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Drawer Footer */}
