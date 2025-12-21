@@ -932,6 +932,127 @@ function GameDetailPanel({ game, onClose }) {
   );
 }
 
+// Library Games Section (Bottom) - with clickable title to Store
+function LibraryGamesSection() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [games, setGames] = useState([]);
+  const [currentGenreIndex, setCurrentGenreIndex] = useState(0);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      let userGames = [];
+      const testGameAlpha = allMockGames['test_game_alpha'];
+
+      if (isAuthenticated) {
+        const allGamesFromDb = await base44.entities.Game.list();
+        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+        const ownedIds = user?.purchased_items || [];
+        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
+        if (testGameAlpha) userGames.unshift(testGameAlpha);
+      } else {
+        if (testGameAlpha) userGames.push(testGameAlpha);
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 8)];
+      }
+      
+      setGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+    };
+    fetchGames();
+  }, [user, isAuthenticated]);
+
+  const gamesByGenre = useMemo(() => {
+    return games.reduce((acc, game) => {
+      const g = game.genre || 'Uncategorized';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(game);
+      return acc;
+    }, {});
+  }, [games]);
+
+  const genres = Object.keys(gamesByGenre);
+  const currentGenre = genres[currentGenreIndex] || '';
+  const currentGames = gamesByGenre[currentGenre] || [];
+
+  const nextGenre = () => {
+    setCurrentGenreIndex((prev) => (prev + 1) % genres.length);
+  };
+
+  const prevGenre = () => {
+    setCurrentGenreIndex((prev) => (prev - 1 + genres.length) % genres.length);
+  };
+
+  const handleLibraryClick = () => {
+    navigate(createPageUrl('Store'));
+  };
+
+  return (
+    <div>
+      {/* Clickable Title - Transitions to Store */}
+      <div className="flex items-center justify-between mb-2">
+        <button 
+          onClick={handleLibraryClick}
+          className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
+        >
+          <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+          Library Games
+          <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+        </button>
+        
+        {genres.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-white/40 text-xs">{currentGenre}</span>
+            <button
+              onClick={prevGenre}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <ChevronLeft className="w-3 h-3 text-white" />
+            </button>
+            <button
+              onClick={nextGenre}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <ChevronRight className="w-3 h-3 text-white" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Games Row */}
+      <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+        {currentGames.map((game, index) => (
+          <motion.div
+            key={game.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.05 }}
+            className="flex-shrink-0 w-20 group cursor-pointer"
+            onClick={() => navigate(createPageUrl('Library') + `?game=${game.id}`)}
+          >
+            <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all">
+              <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-8 h-8 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                  <Play className="w-4 h-4 text-white ml-0.5" />
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                <p className="text-white font-bold text-[10px] truncate">{game.title}</p>
+                <p className="text-white/40 text-[8px] capitalize truncate">{game.genre}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+        {currentGames.length === 0 && (
+          <div className="flex items-center justify-center w-full h-20 text-white/30 text-xs">
+            No games in this genre
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Library Content Area Component
 function LibraryContentArea({ onSelectGame, selectedGame }) {
   const { user, isAuthenticated } = useAuth();
