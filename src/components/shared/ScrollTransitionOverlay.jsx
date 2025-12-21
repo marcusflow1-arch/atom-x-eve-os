@@ -1,14 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function ScrollTransitionOverlay({ direction = 'up', duration = 0.6, topOffset = 0, onComplete }) {
+export default function ScrollTransitionOverlay({ mode = 'slide', direction = 'up', duration = 0.6, topOffset = 0, onComplete }) {
   const initialY = direction === 'up' ? '100%' : '-100%';
   const animateY = '0%';
+  const variants = mode === 'fade'
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 } }
+    : { initial: { y: initialY }, animate: { y: animateY } };
 
   return (
     <motion.div
-      initial={{ y: initialY }}
-      animate={{ y: animateY }}
+      initial={variants.initial}
+      animate={variants.animate}
       transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
       onAnimationComplete={() => onComplete && onComplete()}
       className="fixed z-[100] overflow-hidden"
