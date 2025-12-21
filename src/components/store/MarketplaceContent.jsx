@@ -811,11 +811,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
       </div>
 
       <div className="px-2 pb-6">
-        {/* Developer Limited Edition Section - Full Width */}
-        <DeveloperLimitedEdition />
-
-        {/* Results Section - Sidebar + Results */}
-        <div className="flex gap-6 mt-8">
+        {/* Main Layout */}
+        <div className="flex gap-6">
           {/* Sidebar */}
           <aside className="hidden lg:block">
             <FilterSidebar filters={filters} setFilters={setFilters} />
@@ -823,6 +820,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
           {/* Results */}
           <div className="flex-1 min-w-0">
+            {/* Developer Limited Edition Section - Full Width */}
+            <DeveloperLimitedEdition />
             {/* Results Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">

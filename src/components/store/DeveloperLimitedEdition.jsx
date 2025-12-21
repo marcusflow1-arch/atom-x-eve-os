@@ -897,81 +897,99 @@ export default function DeveloperLimitedEdition({ mode }) {
       </div>
 
       {/* Main Content Area */}
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={`${currentDeveloper.id}-${selectedGameIndex}`}
-          custom={direction}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="flex gap-6"
-        >
-          {/* Left - Game Display Box (transforms to card detail when card selected) */}
+      <div className="flex gap-6">
+        {/* Left Side - Card Display & Info (30% width) */}
+        <div className="w-[30%] flex-shrink-0 flex flex-col gap-4">
+          {/* Card Display Box - Translucent */}
           <div 
-            className="flex-1 rounded-2xl overflow-hidden relative"
+            className="rounded-2xl p-4 flex items-center justify-center"
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              background: 'rgba(15, 23, 42, 0.4)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
               border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-              minHeight: '420px',
+              minHeight: '320px',
             }}
           >
-            <AnimatePresence mode="wait">
-              {selectedCard ? (
-                /* Card Detail View - replaces game content */
-                <CardDetailContent 
-                  key="card-detail"
-                  card={selectedCard} 
-                  onClose={handleCloseCardDetail}
-                />
-              ) : (
-                /* Game Info View - default */
-                <motion.div
-                  key="game-info"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  {/* Game Cover */}
-                  <div className="relative h-64 overflow-hidden">
-                    <img 
-                      src={currentGame?.cover} 
-                      alt={currentGame?.title} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
-                    
-                    {/* Game Info Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Developer Limited Edition Rewards
-                        </Badge>
-                      </div>
-                      <h3 className="text-2xl font-bold text-white mb-2">{currentGame?.title}</h3>
-                      <div className="flex items-center gap-3 text-sm text-white/60">
-                        <span>{currentGame?.genre}</span>
-                        <span>•</span>
-                        <span>{currentGame?.year}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Game Description */}
-                  <div className="p-6">
-                    <p className="text-white/70 text-sm leading-relaxed">{currentGame?.description}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {selectedCard && <LargeCardDisplay card={selectedCard} />}
           </div>
 
-        </motion.div>
-      </AnimatePresence>
+          {/* Card Info Box - Separate */}
+          <div 
+            className="rounded-2xl p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {selectedCard && <CardInfoPanel card={selectedCard} />}
+          </div>
+        </div>
+
+        {/* Right Side - Games & Cards (70% width) */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Games by Developer */}
+          <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
+            {currentDeveloper.games.map((game, index) => (
+              <button
+                key={game.id}
+                onClick={() => handleSelectGame(index)}
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-xl border transition-all ${
+                  index === selectedGameIndex 
+                    ? 'bg-white/[0.15] border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                    : 'bg-white/[0.05] hover:bg-white/[0.08] border-white/10 hover:border-white/20'
+                }`}
+                style={{
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                }}
+              >
+                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                  <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="text-left">
+                  <h4 className="text-white font-semibold text-sm whitespace-nowrap">{game.title}</h4>
+                  <p className="text-[10px] text-amber-400/80">{game.limitedCards?.length || 0} Cards</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Limited Edition Cards - Horizontal */}
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {currentGame?.limitedCards.map((card) => {
+              const rarity = rarityColors[card.rarity] || rarityColors.Common;
+              return (
+                <motion.div
+                  key={card.id}
+                  onClick={() => handleCardClick(card)}
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex-shrink-0 w-24 aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative group ${
+                    selectedCard?.id === card.id 
+                      ? `${rarity.border} shadow-[0_0_15px_rgba(59,130,246,0.5)]` 
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <div className="absolute inset-0">
+                    <img src={card.image} alt={card.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                  </div>
+                  
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5 z-10">
+                    <Badge className={`${rarity.bg} ${rarity.text} border-none text-[7px] mb-0.5 w-full justify-center`}>
+                      {card.rarity}
+                    </Badge>
+                    <h5 className="text-white font-bold text-[8px] truncate text-center">{card.name}</h5>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Games by Developer - Horizontal at bottom above cards */}
       <div className="mt-4 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
