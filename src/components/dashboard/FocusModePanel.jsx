@@ -1033,11 +1033,10 @@ function LibraryGamesSection({ activeGenre, gamesByGenre }) {
 function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
-  const [isScrolling, setIsScrolling] = useState(false);
 
   // Handle vertical scroll to change active genre
   const handleScroll = () => {
-    if (!scrollRef.current || isScrolling) return;
+    if (!scrollRef.current) return;
     
     const container = scrollRef.current;
     const containerRect = container.getBoundingClientRect();
@@ -1065,17 +1064,6 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
     }
   };
 
-  // Smooth scroll to genre when clicked
-  const scrollToGenre = (genre) => {
-    const el = genreRefs.current[genre];
-    if (el && scrollRef.current) {
-      setIsScrolling(true);
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      onGenreChange(genre);
-      setTimeout(() => setIsScrolling(false), 500);
-    }
-  };
-
   return (
     <div className="flex flex-col h-full">
       <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -1086,61 +1074,35 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto space-y-2 pr-2"
+        className="flex-1 overflow-y-auto space-y-4 pr-2 py-8"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {genres.map((genre, index) => (
           <motion.div
             key={genre}
             ref={(el) => genreRefs.current[genre] = el}
-            onClick={() => scrollToGenre(genre)}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            className={`relative p-3 rounded-xl cursor-pointer transition-all duration-300 ${
-              activeGenre === genre
-                ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.2)]'
-                : 'bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20'
-            }`}
+            className="relative py-2"
           >
-            <div className="flex items-center justify-between">
-              <span className={`font-medium text-sm capitalize ${
-                activeGenre === genre ? 'text-cyan-300' : 'text-white/70'
-              }`}>
-                {genre}
-              </span>
-              {activeGenre === genre && (
-                <motion.div
-                  layoutId="activeGenreIndicator"
-                  className="w-2 h-2 rounded-full bg-cyan-400"
-                />
-              )}
-            </div>
+            <span className={`font-semibold text-base capitalize transition-all duration-300 ${
+              activeGenre === genre 
+                ? 'text-cyan-300 text-lg' 
+                : 'text-white/40'
+            }`}>
+              {genre}
+            </span>
             
             {/* Active indicator line */}
             {activeGenre === genre && (
               <motion.div
                 layoutId="genreActiveLine"
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-full"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-1 h-4 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
               />
             )}
           </motion.div>
         ))}
-      </div>
-      
-      {/* Scroll hint */}
-      <div className="mt-3 text-center">
-        <p className="text-white/20 text-[10px]">Scroll to browse genres</p>
-        <div className="flex justify-center mt-1 gap-1">
-          {[0,1,2].map(i => (
-            <motion.div
-              key={i}
-              className="w-1 h-1 rounded-full bg-white/30"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ delay: i * 0.2, duration: 1.5, repeat: Infinity }}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
