@@ -153,6 +153,14 @@ export default function CommunityPage() {
             className="min-h-screen text-white p-8 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
+            {/* Close Button - Top Right */}
+            <button
+                onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all hover:scale-110"
+            >
+                <X className="w-6 h-6" />
+            </button>
+
             {/* Ambient Background */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
