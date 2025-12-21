@@ -622,16 +622,6 @@ export default function Store() {
                     {/* Sub-Page Links */}
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => { setStoreMode('store'); setStoreSubView('games'); }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                          storeMode === 'store' && storeSubView === 'games'
-                            ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                            : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        Store
-                      </button>
-                      <button
                         onClick={() => { setStoreMode('store'); setStoreSubView('library'); }}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
                           storeMode === 'store' && storeSubView === 'library'
@@ -650,26 +640,6 @@ export default function Store() {
                         }`}
                       >
                         Achievements
-                      </button>
-                      <button 
-                          onClick={() => setStoreMode('marketplace')}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              storeMode === 'marketplace' 
-                                  ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                          }`}
-                      >
-                          Marketplace
-                      </button>
-                      <button 
-                          onClick={() => setStoreMode('trading')}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              storeMode === 'trading' 
-                                  ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                          }`}
-                      >
-                          Trading Post
                       </button>
                     </div>
                 </div>
