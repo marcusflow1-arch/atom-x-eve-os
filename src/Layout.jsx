@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, Suspense } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
               LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp
             } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
+import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
@@ -77,6 +78,9 @@ const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showRouteTransition, setShowRouteTransition] = useState(false);
+  const [pendingRoute, setPendingRoute] = useState(null);
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
@@ -528,15 +532,23 @@ function LayoutContent({ children, currentPageName }) {
                                         Atom X Eve Dashboard page
                                       </span>
                                       <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <Link to={createPageUrl('Blacksmith')} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
+                                      <button onClick={() => { setPendingRoute(createPageUrl('Blacksmith')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
                                         <Hammer className="w-4 h-4" />
                                         <span>Blacksmith</span>
-                                      </Link>
+                                      </button>
                                       <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <Link to={createPageUrl('SeasonalPass')} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
+                                      <button onClick={() => { setPendingRoute(createPageUrl('SeasonalPass')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
                                         <Crown className="w-4 h-4" />
                                         <span>Season Pass</span>
-                                      </Link>
+                                      </button>
+                                    </div>
+                                  )}
+
+                                  {(p.includes('/blacksmith') || p.includes('/seasonalpass')) && (
+                                    <div className="hidden sm:flex items-center gap-2 ml-1">
+                                      <button onClick={() => { setPendingRoute(createPageUrl('LunaTemplate')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
+                                        <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                                      </button>
                                     </div>
                                   )}
                                 </div>
