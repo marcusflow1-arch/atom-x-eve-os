@@ -532,7 +532,7 @@ function LayoutContent({ children, currentPageName }) {
                                       <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">Atom X Eve Dashboard page</span>
                                       <div className="h-6 w-px bg-white/20" />
                                       <button
-                                        onClick={() => { setPendingRoute(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith')); setShowRouteTransition(true); }}
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
                                       >
                                         {location.pathname.toLowerCase().includes('/blacksmith') ? (
@@ -546,7 +546,7 @@ function LayoutContent({ children, currentPageName }) {
                                       </button>
                                       <div className="h-6 w-px bg-white/20" />
                                       <button
-                                        onClick={() => { setPendingRoute(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass')); setShowRouteTransition(true); }}
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
                                       >
                                         {location.pathname.toLowerCase().includes('/seasonalpass') ? (
@@ -601,7 +601,20 @@ function LayoutContent({ children, currentPageName }) {
         <div className="page-container">
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
-              {children}
+              {showLunaHeaderBar ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                children
+              )}
             </Suspense>
           </ErrorBoundary>
         </div>

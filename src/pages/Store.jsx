@@ -617,23 +617,33 @@ export default function Store() {
 
                     {/* Sub-Page Links */}
                     <div className="flex items-center gap-2">
-                        <button 
+                        <div className="relative inline-block">
+                          <button 
                             onClick={() => {
-                                if (storeMode !== 'store') {
-                                  setStoreMode('store');
-                                  setStoreSubView('games');
-                                } else {
-                                  setStoreSubView(prev => prev === 'games' ? 'library' : 'games');
-                                }
-                              }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                                storeMode === 'store' 
-                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                    : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                              if (storeMode !== 'store') {
+                                setStoreMode('store');
+                                setStoreSubView('games');
+                              } else {
+                                setStoreSubView(prev => prev === 'games' ? 'library' : 'games');
+                              }
+                            }}
+                            className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              storeMode === 'store' 
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
-                        >
+                          >
                             {storeSubView === 'games' ? 'Store' : 'Games'}
-                        </button>
+                          </button>
+                          {storeMode === 'store' && (
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/5 border-white/10 text-white/30 backdrop-blur-md z-0 flex items-center justify-center"
+                            >
+                              <span className="text-sm font-medium">{storeSubView === 'games' ? 'Games' : 'Store'}</span>
+                            </div>
+                          )}
+                        </div>
                         <button 
                             onClick={() => setStoreMode('marketplace')}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
