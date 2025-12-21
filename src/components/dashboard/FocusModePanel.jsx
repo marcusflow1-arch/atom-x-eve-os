@@ -883,11 +883,6 @@ function GameDetailPanel({ game, onClose }) {
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'discussion', label: 'Discussion' },
-    { id: 'streamers', label: 'Streamers' },
-    { id: 'guide', label: 'Guide' },
-    { id: 'support', label: 'Support' },
-    { id: 'achievements', label: 'Achievements' },
     { id: 'affiliate', label: 'Affiliate' },
   ];
 
@@ -1360,7 +1355,7 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
   }
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex h-full">
       {/* Genre Selector (Vertical scroll controls Library) */}
       <div className="w-48 flex-shrink-0">
         <GenreSelectorArea 
@@ -1371,11 +1366,8 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
         />
       </div>
       
-      {/* Vertical Divider */}
-      <div className="w-px bg-white/10 self-stretch" />
-      
-      {/* Selected Game Detail - Shows when game is clicked */}
-      <div className="flex-1 overflow-hidden">
+      {/* Selected Game Detail - Shows when game is clicked (no divider) */}
+      <div className="flex-1 overflow-hidden pl-4">
         <AnimatePresence mode="wait">
           {selectedGame ? (
             <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
