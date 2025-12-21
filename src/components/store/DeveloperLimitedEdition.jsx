@@ -551,16 +551,39 @@ export default function DeveloperLimitedEdition() {
   const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
   const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
 
+  // Auto-select first card on initial load
+  React.useEffect(() => {
+    if (currentGame?.limitedCards?.length > 0 && !selectedCard) {
+      setSelectedCard(currentGame.limitedCards[0]);
+    }
+  }, []);
+
   const handlePrevDeveloper = () => {
     setDirection(-1);
-    setCurrentDeveloperIndex((prev) => (prev === 0 ? DEVELOPERS.length - 1 : prev - 1));
+    const newIndex = currentDeveloperIndex === 0 ? DEVELOPERS.length - 1 : currentDeveloperIndex - 1;
+    setCurrentDeveloperIndex(newIndex);
     setSelectedGameIndex(0);
+    // Auto-select first card of first game of new developer
+    const newDev = DEVELOPERS[newIndex];
+    if (newDev?.games[0]?.limitedCards?.length > 0) {
+      setSelectedCard(newDev.games[0].limitedCards[0]);
+    } else {
+      setSelectedCard(null);
+    }
   };
 
   const handleNextDeveloper = () => {
     setDirection(1);
-    setCurrentDeveloperIndex((prev) => (prev === DEVELOPERS.length - 1 ? 0 : prev + 1));
+    const newIndex = currentDeveloperIndex === DEVELOPERS.length - 1 ? 0 : currentDeveloperIndex + 1;
+    setCurrentDeveloperIndex(newIndex);
     setSelectedGameIndex(0);
+    // Auto-select first card of first game of new developer
+    const newDev = DEVELOPERS[newIndex];
+    if (newDev?.games[0]?.limitedCards?.length > 0) {
+      setSelectedCard(newDev.games[0].limitedCards[0]);
+    } else {
+      setSelectedCard(null);
+    }
   };
 
   const handleSelectGame = (index) => {
