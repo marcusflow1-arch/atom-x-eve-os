@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, ShoppingCart, Heart, Star, Sword, Zap,
-  ThumbsUp, ThumbsDown, Clock, Gift, Plus, Flag, X, Bot
+  ThumbsUp, ThumbsDown, Clock, Gift, Plus, Flag, X, Bot, Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '../CartContext';
 import { useAuth } from '../auth/AuthContext';
 import { Game } from '@/entities/Game';
+import { GameReview } from '@/entities/GameReview';
 import { allMockGames } from '../store/mockData';
 import { enhancedMockGameData as legacyEnhancedMockData } from '../store/mockGameDetailData';
 
@@ -28,10 +29,10 @@ const mockDLCs = [
   { id: 3, name: 'Soundtrack Collection', price: 4.99, image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300', discount: 0 },
 ];
 
-const mockReviews = [
-  { id: 1, user: 'DragonSlayer99', avatar: 'https://i.pravatar.cc/40?img=1', rating: 'positive', hours: 156, date: '2024-12-15', helpful: 234, notHelpful: 12, content: 'Absolutely phenomenal game! The story kept me hooked from start to finish. The combat system is fluid and rewarding.' },
-  { id: 2, user: 'CasualGamer42', avatar: 'https://i.pravatar.cc/40?img=2', rating: 'positive', hours: 45, date: '2024-12-10', helpful: 89, notHelpful: 5, content: 'Great game overall. Some minor bugs here and there but nothing game-breaking.' },
-  { id: 3, user: 'ProReviewer', avatar: 'https://i.pravatar.cc/40?img=3', rating: 'negative', hours: 12, date: '2024-12-08', helpful: 45, notHelpful: 78, content: 'Not my cup of tea. The difficulty spikes are frustrating.' },
+const fallbackReviews = [
+  { id: 1, username: 'DragonSlayer99', avatar_url: 'https://i.pravatar.cc/40?img=1', rating: 'positive', hours_played: 156, created_date: '2024-12-15', helpful_count: 234, not_helpful_count: 12, content: 'Absolutely phenomenal game! The story kept me hooked from start to finish. The combat system is fluid and rewarding.' },
+  { id: 2, username: 'CasualGamer42', avatar_url: 'https://i.pravatar.cc/40?img=2', rating: 'positive', hours_played: 45, created_date: '2024-12-10', helpful_count: 89, not_helpful_count: 5, content: 'Great game overall. Some minor bugs here and there but nothing game-breaking.' },
+  { id: 3, username: 'ProReviewer', avatar_url: 'https://i.pravatar.cc/40?img=3', rating: 'negative', hours_played: 12, created_date: '2024-12-08', helpful_count: 45, not_helpful_count: 78, content: 'Not my cup of tea. The difficulty spikes are frustrating.' },
 ];
 
 // Liquid Glass Card Component
@@ -367,13 +368,113 @@ function SteamReviewCard({ review }) {
   );
 }
 
+// Write Review Form
+function WriteReviewForm({ gameId, onSubmit, onCancel }) {
+  const { user } = useAuth();
+  const [rating, setRating] = useState('positive');
+  const [content, setContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!content.trim() || !user) return;
+    
+    setSubmitting(true);
+    try {
+      await GameReview.create({
+        game_id: gameId,
+        user_id: user.id,
+        username: user.username || user.full_name || user.email?.split('@')[0],
+        avatar_url: user.avatar_url,
+        rating,
+        content: content.trim(),
+        hours_played: 0 // Could be calculated from playtime tracking
+      });
+      onSubmit();
+    } catch (error) {
+      console.error('Failed to submit review:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div 
+      className="mb-6 rounded-xl overflow-hidden p-5"
+      style={{
+        background: 'linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(59,130,246,0.05) 100%)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        border: '1px solid rgba(34,211,238,0.2)',
+      }}
+    >
+      <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+        ✍️ Write Your Review
+      </h3>
+      
+      {/* Rating Selection */}
+      <div className="flex gap-3 mb-4">
+        <button
+          onClick={() => setRating('positive')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all ${
+            rating === 'positive'
+              ? 'bg-emerald-500/30 border-2 border-emerald-400 text-emerald-300'
+              : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'
+          }`}
+        >
+          <ThumbsUp className="w-5 h-5" />
+          Recommend
+        </button>
+        <button
+          onClick={() => setRating('negative')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all ${
+            rating === 'negative'
+              ? 'bg-red-500/30 border-2 border-red-400 text-red-300'
+              : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10'
+          }`}
+        >
+          <ThumbsDown className="w-5 h-5" />
+          Not Recommend
+        </button>
+      </div>
+
+      {/* Review Text */}
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Share your experience with this game..."
+        className="w-full h-32 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 resize-none mb-4"
+      />
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={!content.trim() || submitting}
+          className="px-6 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 text-white font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Send className="w-4 h-4" />
+          {submitting ? 'Submitting...' : 'Submit Review'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Steam-style Reviews Section with Liquid Glass
-function ReviewsSection({ reviews }) {
+function ReviewsSection({ reviews, gameId, onReviewSubmit }) {
+  const { isAuthenticated } = useAuth();
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('helpful');
+  const [showWriteReview, setShowWriteReview] = useState(false);
   const positiveCount = reviews.filter(r => r.rating === 'positive').length;
   const negativeCount = reviews.length - positiveCount;
-  const positivePercent = Math.round((positiveCount / reviews.length) * 100);
+  const positivePercent = reviews.length > 0 ? Math.round((positiveCount / reviews.length) * 100) : 0;
   const filteredReviews = filter === 'all' ? reviews : reviews.filter(r => r.rating === filter);
 
   const getReviewLabel = (percent) => {
@@ -525,20 +626,43 @@ function ReviewsSection({ reviews }) {
           </div>
 
           {/* Write Review CTA */}
-          <button 
-            className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all hover:scale-[1.02]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(34,211,238,0.3) 0%, rgba(59,130,246,0.3) 100%)',
-              border: '1px solid rgba(34,211,238,0.4)',
-              boxShadow: '0 4px 20px rgba(34,211,238,0.2)'
-            }}
-          >
-            ✍️ Write a Review
-          </button>
+          {isAuthenticated && (
+            <button 
+              onClick={() => setShowWriteReview(true)}
+              className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, rgba(34,211,238,0.3) 0%, rgba(59,130,246,0.3) 100%)',
+                border: '1px solid rgba(34,211,238,0.4)',
+                boxShadow: '0 4px 20px rgba(34,211,238,0.2)'
+              }}
+            >
+              ✍️ Write a Review
+            </button>
+          )}
         </div>
 
         {/* Right Column - Reviews List */}
         <div className="flex-1">
+          {/* Write Review Form */}
+          <AnimatePresence>
+            {showWriteReview && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <WriteReviewForm 
+                  gameId={gameId}
+                  onSubmit={() => {
+                    setShowWriteReview(false);
+                    if (onReviewSubmit) onReviewSubmit();
+                  }}
+                  onCancel={() => setShowWriteReview(false)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Reviews Header */}
           <div 
             className="flex items-center justify-between mb-4 p-4 rounded-xl"
