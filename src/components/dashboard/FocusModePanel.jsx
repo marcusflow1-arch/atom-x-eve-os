@@ -1241,15 +1241,56 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
 
 // Main Export
 export default function FocusModePanel() {
-  const [selectedCard, setSelectedCard] = useState(upcomingCards[0]);
-  const [selectedGameFilter, setSelectedGameFilter] = useState('all');
+  const { user, isAuthenticated } = useAuth();
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [activeGenre, setActiveGenre] = useState(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [calendarEvents, setCalendarEvents] = useState([
     { id: 1, title: 'Guild Raid Night', type: 'event', time: '20:00', date: new Date().toISOString() },
     { id: 2, title: 'Complete daily quests', type: 'goal', time: '', date: new Date().toISOString() },
   ]);
-  const scrollRef = useRef(null);
+  const [ownedGames, setOwnedGames] = useState([]);
+
+  // Fetch games for bottom Library section
+  useEffect(() => {
+    const fetchGames = async () => {
+      let userGames = [];
+      const testGameAlpha = allMockGames['test_game_alpha'];
+
+      if (isAuthenticated) {
+        const allGamesFromDb = await base44.entities.Game.list();
+        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+        const ownedIds = user?.purchased_items || [];
+        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
+        if (testGameAlpha) userGames.unshift(testGameAlpha);
+      } else {
+        if (testGameAlpha) userGames.push(testGameAlpha);
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
+      }
+      
+      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+    };
+    fetchGames();
+  }, [user, isAuthenticated]);
+
+  // Compute games by genre for bottom section
+  const gamesByGenre = useMemo(() => {
+    return ownedGames.reduce((acc, game) => {
+      const g = game.genre || 'Uncategorized';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(game);
+      return acc;
+    }, {});
+  }, [ownedGames]);
+
+  // Set initial genre
+  useEffect(() => {
+    const genres = Object.keys(gamesByGenre);
+    if (genres.length > 0 && !activeGenre) {
+      setActiveGenre(genres[0]);
+    }
+  }, [gamesByGenre, activeGenre]);
 
   const handleCalendarDayClick = (date) => {
     setSelectedCalendarDate(date);
@@ -1264,46 +1305,36 @@ export default function FocusModePanel() {
     setCalendarEvents(calendarEvents.filter(e => e.id !== eventId));
   };
 
-  // Filter cards based on selected game
-  const filteredCards = selectedGameFilter === 'all' 
-    ? upcomingCards 
-    : upcomingCards.filter(card => {
-        const gameMap = {
-          'elden-ring': 'Elden Ring',
-          'cyberpunk': 'Cyberpunk 2088',
-          'baldurs-gate': "Baldur's Gate 3",
-          'neon-legends': 'Neon Legends',
-          'dragon-age': 'Dragon Age',
-          'shadow-realm': 'Shadow Realm',
-        };
-        return card.game.toLowerCase().includes(gameMap[selectedGameFilter]?.toLowerCase() || '');
-      });
-
   return (
     <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* Top Section - New Content (right of 3D viewer) */}
+      {/* Top Section - Genre Selector + Game Details (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
         {/* Left side - placeholder for 3D viewer area */}
         <div className="w-[300px] flex-shrink-0">
           {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
         </div>
 
-        {/* Right of 3D Viewer - New Content */}
+        {/* Right of 3D Viewer - Genre Selector + Content */}
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Library Games by Genre */}
+          {/* Content Area - Genre list controls bottom Library */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <LibraryContentArea 
-              onSelectGame={setSelectedCard}
-              selectedGame={selectedCard}
+              onSelectGame={setSelectedGame}
+              selectedGame={selectedGame}
+              activeGenre={activeGenre}
+              onGenreChange={setActiveGenre}
             />
           </div>
         </div>
       </div>
+
+      {/* Horizontal Divider */}
+      <div className="h-px bg-white/10 my-4" />
 
       {/* Calendar Modal */}
       <AnimatePresence>
@@ -1319,8 +1350,8 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Time, Goals, and Library Games */}
-      <div className="flex gap-6 mt-6 pt-4 border-t border-white/10">
+      {/* Bottom Section - Time, Goals, and Library Games (receives activeGenre from scroll) */}
+      <div className="flex gap-6 pt-4">
         {/* Time & Date with Mini Calendar */}
         <div className="flex-shrink-0">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
@@ -1331,9 +1362,12 @@ export default function FocusModePanel() {
           <GoalsPanel />
         </div>
 
-        {/* Library Games - Clickable title transitions to Store */}
+        {/* Library Games - Populated by active genre from top-right scroll */}
         <div className="flex-1 min-w-0">
-          <LibraryGamesSection />
+          <LibraryGamesSection 
+            activeGenre={activeGenre}
+            gamesByGenre={gamesByGenre}
+          />
         </div>
       </div>
     </div>
