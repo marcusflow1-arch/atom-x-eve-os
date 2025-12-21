@@ -877,56 +877,199 @@ function GenreRow({ genre, games, onSelectGame, selectedGame, onPlayGame }) {
 
 // Game Detail Panel for selected game
 function GameDetailPanel({ game, onClose }) {
+  const [activeTab, setActiveTab] = useState('overview');
+  
   if (!game) return null;
+
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'discussion', label: 'Discussion' },
+    { id: 'streamers', label: 'Streamers' },
+    { id: 'guide', label: 'Guide' },
+    { id: 'support', label: 'Support' },
+    { id: 'achievements', label: 'Achievements' },
+    { id: 'affiliate', label: 'Affiliate' },
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="bg-white/[0.03] rounded-xl border border-white/10 p-4 mb-4"
+      className="h-full flex flex-col"
     >
-      <div className="flex gap-4">
-        <div className="w-24 h-32 rounded-lg overflow-hidden flex-shrink-0">
+      {/* Game Header */}
+      <div className="flex gap-3 mb-3">
+        <div className="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
           <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-white font-bold text-lg">{game.title}</h2>
-              <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+              <h2 className="text-white font-bold text-base leading-tight">{game.title}</h2>
+              <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
             </div>
             <button 
               onClick={onClose}
-              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+              className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
             >
-              <X className="w-3 h-3 text-white/60" />
+              <X className="w-2.5 h-2.5 text-white/60" />
             </button>
           </div>
-          <p className="text-white/60 text-xs mb-3 line-clamp-2">
-            {game.description || 'An epic adventure awaits in this groundbreaking title.'}
-          </p>
-          <div className="flex items-center gap-4 text-xs text-white/50 mb-3">
+          
+          {/* Stats */}
+          <div className="flex items-center gap-3 text-[10px] text-white/50 mt-1.5">
             <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-blue-400" />
-              <span>12.5h played</span>
+              <Clock className="w-2.5 h-2.5 text-blue-400" />
+              <span>12.5h</span>
             </div>
             <div className="flex items-center gap-1">
-              <Trophy className="w-3 h-3 text-yellow-400" />
-              <span>8/15 achievements</span>
+              <Trophy className="w-2.5 h-2.5 text-yellow-400" />
+              <span>8/15</span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button className="flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 transition-colors">
-              <Play className="w-3 h-3 fill-current" />
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-2">
+            <button className="flex items-center gap-1 px-3 py-1.5 bg-white text-black rounded-md text-[10px] font-bold hover:bg-white/90 transition-colors">
+              <Play className="w-2.5 h-2.5 fill-current" />
               Play
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-lg text-xs font-medium hover:bg-white/20 transition-colors border border-white/10">
-              <Radio className="w-3 h-3" />
+            <button className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/20 text-purple-300 rounded-md text-[10px] font-medium hover:bg-purple-500/30 transition-colors border border-purple-500/30">
+              <Radio className="w-2.5 h-2.5" />
               Stream
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 mb-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-2 py-1 rounded-md text-[9px] font-medium whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? 'bg-white/10 text-white border border-white/15'
+                : 'text-white/40 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-3"
+            >
+              <div>
+                <h3 className="text-white font-semibold text-xs mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  About
+                </h3>
+                <p className="text-white/50 text-[10px] leading-relaxed">
+                  {game.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets.'}
+                </p>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { icon: Clock, value: '12.5h', label: 'Played', color: 'text-blue-400' },
+                  { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
+                  { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
+                ].map((stat, i) => (
+                  <div key={i} className="text-center p-2 bg-white/[0.03] rounded-lg border border-white/5">
+                    <stat.icon className={`w-3 h-3 ${stat.color} mx-auto mb-1`} />
+                    <p className="text-white font-bold text-xs">{stat.value}</p>
+                    <p className="text-white/30 text-[8px]">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'discussion' && (
+            <motion.div
+              key="discussion"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-2"
+            >
+              {[
+                { title: 'Best build for endgame?', replies: 45, user: 'DragonSlayer' },
+                { title: 'Hidden easter eggs found!', replies: 23, user: 'MysticMage' },
+                { title: 'Looking for raid group', replies: 12, user: 'ShadowNinja' },
+              ].map((topic, i) => (
+                <div key={i} className="p-2 bg-white/[0.03] rounded-lg border border-white/5 cursor-pointer hover:bg-white/[0.06] transition-colors">
+                  <h4 className="text-white text-[10px] font-medium mb-0.5">{topic.title}</h4>
+                  <p className="text-white/30 text-[8px]">by {topic.user} • {topic.replies} replies</p>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === 'achievements' && (
+            <motion.div
+              key="achievements"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-2"
+            >
+              {[
+                { name: 'Dragon Slayer', icon: '🐉', progress: 100, rarity: 'Legendary' },
+                { name: 'Master Thief', icon: '💰', progress: 75, rarity: 'Epic' },
+                { name: 'Arena Champion', icon: '⚔️', progress: 50, rarity: 'Rare' },
+                { name: 'Explorer', icon: '🗺️', progress: 30, rarity: 'Common' },
+              ].map((ach, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 bg-white/[0.03] rounded-lg border border-white/5">
+                  <span className="text-lg">{ach.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white text-[10px] font-medium">{ach.name}</span>
+                      <span className={`text-[8px] px-1.5 py-0.5 rounded ${
+                        ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400' :
+                        ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
+                        ach.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-white/10 text-white/50'
+                      }`}>{ach.rarity}</span>
+                    </div>
+                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                        style={{ width: `${ach.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {['streamers', 'guide', 'support', 'affiliate'].includes(activeTab) && (
+            <motion.div
+              key="placeholder"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center h-24 text-white/20"
+            >
+              <Eye className="w-6 h-6 mb-2 opacity-50" />
+              <p className="text-[10px] capitalize">{activeTab} coming soon</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
