@@ -1029,8 +1029,125 @@ function LibraryGamesSection({ activeGenre, gamesByGenre }) {
   );
 }
 
-// Library Content Area Component
-function LibraryContentArea({ onSelectGame, selectedGame }) {
+// Genre Selector (Top-Right, Vertical Scroll) - Controls bottom Library
+function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
+  const scrollRef = useRef(null);
+  const genreRefs = useRef({});
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  // Handle vertical scroll to change active genre
+  const handleScroll = () => {
+    if (!scrollRef.current || isScrolling) return;
+    
+    const container = scrollRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.top + containerRect.height / 2;
+    
+    let closestGenre = genres[0];
+    let closestDistance = Infinity;
+    
+    genres.forEach((genre) => {
+      const el = genreRefs.current[genre];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const elCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(elCenter - containerCenter);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestGenre = genre;
+        }
+      }
+    });
+    
+    if (closestGenre !== activeGenre) {
+      onGenreChange(closestGenre);
+    }
+  };
+
+  // Smooth scroll to genre when clicked
+  const scrollToGenre = (genre) => {
+    const el = genreRefs.current[genre];
+    if (el && scrollRef.current) {
+      setIsScrolling(true);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      onGenreChange(genre);
+      setTimeout(() => setIsScrolling(false), 500);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+        <Gamepad2 className="w-3 h-3 text-cyan-400" />
+        Genres
+      </h3>
+      
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto space-y-2 pr-2"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {genres.map((genre, index) => (
+          <motion.div
+            key={genre}
+            ref={(el) => genreRefs.current[genre] = el}
+            onClick={() => scrollToGenre(genre)}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className={`relative p-3 rounded-xl cursor-pointer transition-all duration-300 ${
+              activeGenre === genre
+                ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.2)]'
+                : 'bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-white/20'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`font-medium text-sm capitalize ${
+                activeGenre === genre ? 'text-cyan-300' : 'text-white/70'
+              }`}>
+                {genre}
+              </span>
+              {activeGenre === genre && (
+                <motion.div
+                  layoutId="activeGenreIndicator"
+                  className="w-2 h-2 rounded-full bg-cyan-400"
+                />
+              )}
+            </div>
+            
+            {/* Active indicator line */}
+            {activeGenre === genre && (
+              <motion.div
+                layoutId="genreActiveLine"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-full"
+              />
+            )}
+          </motion.div>
+        ))}
+      </div>
+      
+      {/* Scroll hint */}
+      <div className="mt-3 text-center">
+        <p className="text-white/20 text-[10px]">Scroll to browse genres</p>
+        <div className="flex justify-center mt-1 gap-1">
+          {[0,1,2].map(i => (
+            <motion.div
+              key={i}
+              className="w-1 h-1 rounded-full bg-white/30"
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ delay: i * 0.2, duration: 1.5, repeat: Infinity }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Library Content Area Component - Now receives activeGenre from parent
+function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreChange }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [ownedGames, setOwnedGames] = useState([]);
@@ -1049,7 +1166,6 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
         if (testGameAlpha) userGames.unshift(testGameAlpha);
       } else {
         if (testGameAlpha) userGames.push(testGameAlpha);
-        // Add some mock games for demo
         userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
       }
       
@@ -1069,10 +1185,14 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
     }, {});
   }, [ownedGames]);
 
-  const handlePlayGame = (game) => {
-    // Navigate to library with game selected
-    navigate(createPageUrl('Library') + `?game=${game.id}`);
-  };
+  const genres = Object.keys(gamesByGenre);
+
+  // Set initial active genre
+  useEffect(() => {
+    if (genres.length > 0 && !activeGenre) {
+      onGenreChange(genres[0]);
+    }
+  }, [genres, activeGenre, onGenreChange]);
 
   if (loading) {
     return (
@@ -1083,32 +1203,38 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      {/* Selected Game Detail */}
-      <AnimatePresence>
-        {selectedGame && (
-          <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Genre Rows */}
-      {Object.entries(gamesByGenre).map(([genre, games]) => (
-        <GenreRow
-          key={genre}
-          genre={genre}
-          games={games}
-          onSelectGame={onSelectGame}
-          selectedGame={selectedGame}
-          onPlayGame={handlePlayGame}
+    <div className="flex h-full gap-4">
+      {/* Genre Selector (Vertical scroll controls Library) */}
+      <div className="w-40 flex-shrink-0">
+        <GenreSelectorArea 
+          genres={genres}
+          activeGenre={activeGenre}
+          onGenreChange={onGenreChange}
         />
-      ))}
-
-      {Object.keys(gamesByGenre).length === 0 && (
-        <div className="flex flex-col items-center justify-center h-48 text-white/30">
-          <LibraryIcon className="w-12 h-12 mb-4 opacity-50" />
-          <p>No games in your library yet</p>
-        </div>
-      )}
+      </div>
+      
+      {/* Vertical Divider */}
+      <div className="w-px bg-white/10 self-stretch" />
+      
+      {/* Selected Game Detail - Shows when game is clicked */}
+      <div className="flex-1 overflow-hidden">
+        <AnimatePresence mode="wait">
+          {selectedGame ? (
+            <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex flex-col items-center justify-center text-white/30"
+            >
+              <Eye className="w-10 h-10 mb-3 opacity-50" />
+              <p className="text-sm">Click a game below to view details</p>
+              <p className="text-xs text-white/20 mt-1">Scroll genres on the left</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
