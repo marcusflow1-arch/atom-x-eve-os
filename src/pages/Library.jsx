@@ -1131,7 +1131,6 @@ export default function Library({ onSwitchToStore }) {
               </div>
           </div>
         ) : (
-          {/* List View */}
           <div className="flex gap-6">
             {/* Left Sidebar - Game List */}
             <div className="w-80 flex-shrink-0">
