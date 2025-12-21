@@ -2479,6 +2479,44 @@ export default function LunaTemplate() {
         )}
       </AnimatePresence>
 
+      {/* Forum Overlay - Same style as Settings */}
+      <AnimatePresence>
+        {showForumOverlay && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowForumOverlay(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-hidden">
+                <CommunityPage />
+              </div>
+              
+              <button 
+                onClick={() => setShowForumOverlay(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[60] text-white/40 text-sm">
+                Press ESC to close
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       </div>
     
   );
