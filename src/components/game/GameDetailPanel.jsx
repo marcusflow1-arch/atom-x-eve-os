@@ -367,10 +367,10 @@ function SteamReviewCard({ review }) {
   );
 }
 
-// Steam-style Reviews Section
+// Steam-style Reviews Section with Liquid Glass
 function ReviewsSection({ reviews }) {
   const [filter, setFilter] = useState('all');
-  const [displayType, setDisplayType] = useState('summary');
+  const [sortBy, setSortBy] = useState('helpful');
   const positiveCount = reviews.filter(r => r.rating === 'positive').length;
   const negativeCount = reviews.length - positiveCount;
   const positivePercent = Math.round((positiveCount / reviews.length) * 100);
@@ -385,131 +385,207 @@ function ReviewsSection({ reviews }) {
     return 'Very Negative';
   };
 
+  const getLabelColor = (percent) => {
+    if (percent >= 70) return 'text-emerald-400';
+    if (percent >= 40) return 'text-amber-400';
+    return 'text-red-400';
+  };
+
   return (
     <div>
       {/* Section Header */}
-      <h2 className="text-lg font-bold text-white mb-4 uppercase tracking-wide">Customer Reviews</h2>
+      <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+        <Star className="w-5 h-5 text-amber-400" />
+        Customer Reviews
+      </h2>
       
       <div className="flex gap-6">
         {/* Left Column - Review Summary */}
-        <div className="w-[300px] flex-shrink-0 space-y-4">
-          {/* Overall Reviews Box */}
-          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
-            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Overall Reviews</h3>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-cyan-400 font-bold text-lg">{getReviewLabel(positivePercent)}</span>
-            </div>
-            <p className="text-xs text-slate-500">({reviews.length.toLocaleString()} reviews)</p>
-          </div>
-
-          {/* Recent Reviews Box */}
-          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
-            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Recent Reviews</h3>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-cyan-400 font-bold text-lg">{getReviewLabel(positivePercent)}</span>
-            </div>
-            <p className="text-xs text-slate-500">(2,909 reviews)</p>
-          </div>
-
-          {/* Review Breakdown */}
-          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
-            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Review Breakdown</h3>
-            
-            {/* Positive Bar */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-cyan-400 flex items-center gap-1">
-                  <ThumbsUp className="w-3 h-3" /> Positive
-                </span>
-                <span className="text-slate-400">{positiveCount}</span>
+        <div className="w-[280px] flex-shrink-0 space-y-4">
+          {/* Overall Score Card */}
+          <div 
+            className="rounded-xl overflow-hidden p-5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+            }}
+          >
+            <div className="text-center mb-4">
+              <div className="text-5xl font-bold text-white mb-1">{positivePercent}%</div>
+              <div className={`text-lg font-semibold ${getLabelColor(positivePercent)}`}>
+                {getReviewLabel(positivePercent)}
               </div>
-              <div className="h-3 bg-slate-700 rounded overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400" 
-                  style={{ width: `${positivePercent}%` }} 
-                />
-              </div>
+              <p className="text-xs text-slate-500 mt-1">{reviews.length.toLocaleString()} total reviews</p>
             </div>
 
-            {/* Negative Bar */}
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-red-400 flex items-center gap-1">
-                  <ThumbsDown className="w-3 h-3" /> Negative
-                </span>
-                <span className="text-slate-400">{negativeCount}</span>
+            {/* Visual Breakdown */}
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-emerald-400 flex items-center gap-1.5 font-medium">
+                    <ThumbsUp className="w-3.5 h-3.5" /> Positive
+                  </span>
+                  <span className="text-white">{positiveCount}</span>
+                </div>
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500" 
+                    style={{ width: `${positivePercent}%` }} 
+                  />
+                </div>
               </div>
-              <div className="h-3 bg-slate-700 rounded overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-red-500 to-red-400" 
-                  style={{ width: `${100 - positivePercent}%` }} 
-                />
+
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-red-400 flex items-center gap-1.5 font-medium">
+                    <ThumbsDown className="w-3.5 h-3.5" /> Negative
+                  </span>
+                  <span className="text-white">{negativeCount}</span>
+                </div>
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-500" 
+                    style={{ width: `${100 - positivePercent}%` }} 
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Filter Options */}
-          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
-            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Display As</h3>
-            <div className="flex gap-2 mb-4">
-              {['summary', 'helpful', 'recent', 'funny'].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setDisplayType(type)}
-                  className={`px-2 py-1 rounded text-[10px] capitalize transition-colors ${
-                    displayType === type 
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
-                      : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-
-            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Filter</h3>
-            <div className="space-y-2">
+          {/* Filter Card */}
+          <div 
+            className="rounded-xl overflow-hidden p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <h3 className="text-xs text-white font-semibold uppercase tracking-wider mb-3">Filter Reviews</h3>
+            <div className="space-y-1.5">
               {[
-                { key: 'all', label: 'All Reviews' },
-                { key: 'positive', label: 'Positive Only' },
-                { key: 'negative', label: 'Negative Only' },
+                { key: 'all', label: 'All Reviews', icon: '📋' },
+                { key: 'positive', label: 'Positive', icon: '👍' },
+                { key: 'negative', label: 'Negative', icon: '👎' },
               ].map((f) => (
                 <button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
-                  className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-all ${
                     filter === f.key 
-                      ? 'bg-cyan-500/20 text-cyan-400' 
-                      : 'bg-slate-700/30 text-slate-400 hover:bg-slate-600/30'
+                      ? 'bg-white/15 text-white border border-white/20' 
+                      : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-transparent'
                   }`}
                 >
-                  {f.label}
+                  <span>{f.icon}</span>
+                  <span>{f.label}</span>
+                  {filter === f.key && (
+                    <div className="ml-auto w-2 h-2 rounded-full bg-cyan-400" />
+                  )}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Sort Card */}
+          <div 
+            className="rounded-xl overflow-hidden p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <h3 className="text-xs text-white font-semibold uppercase tracking-wider mb-3">Sort By</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'helpful', label: 'Most Helpful' },
+                { key: 'recent', label: 'Recent' },
+                { key: 'funny', label: 'Funny' },
+                { key: 'playtime', label: 'Playtime' },
+              ].map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => setSortBy(s.key)}
+                  className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                    sortBy === s.key 
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
+                      : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-transparent'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Write Review CTA */}
+          <button 
+            className="w-full py-3 rounded-xl text-sm font-medium text-white transition-all hover:scale-[1.02]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(34,211,238,0.3) 0%, rgba(59,130,246,0.3) 100%)',
+              border: '1px solid rgba(34,211,238,0.4)',
+              boxShadow: '0 4px 20px rgba(34,211,238,0.2)'
+            }}
+          >
+            ✍️ Write a Review
+          </button>
         </div>
 
         {/* Right Column - Reviews List */}
         <div className="flex-1">
-          <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-lg p-5 border border-white/5">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-              <h3 className="text-sm font-medium text-white">
-                Showing {filteredReviews.length} reviews
+          {/* Reviews Header */}
+          <div 
+            className="flex items-center justify-between mb-4 p-4 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <h3 className="text-white font-medium">
+                {filteredReviews.length} Reviews
               </h3>
-              <select className="bg-slate-700/50 border border-white/10 rounded px-2 py-1 text-xs text-slate-300">
-                <option>Most Helpful</option>
-                <option>Recent</option>
-                <option>Funny</option>
+              <span className="text-slate-500">•</span>
+              <span className="text-sm text-slate-400">
+                {filter === 'all' ? 'Showing all' : filter === 'positive' ? 'Positive only' : 'Negative only'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Language:</span>
+              <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500/50">
+                <option>All Languages</option>
+                <option>English</option>
+                <option>Spanish</option>
+                <option>French</option>
               </select>
             </div>
-
-            <div>
-              {filteredReviews.map((review) => (
-                <SteamReviewCard key={review.id} review={review} />
-              ))}
-            </div>
           </div>
+
+          {/* Reviews */}
+          <div>
+            {filteredReviews.map((review) => (
+              <SteamReviewCard key={review.id} review={review} />
+            ))}
+          </div>
+
+          {/* Load More */}
+          <button 
+            className="w-full py-3 mt-4 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-all"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            Load More Reviews
+          </button>
         </div>
       </div>
     </div>
