@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-        LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp
-      } from 'lucide-react';
+              LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp
+            } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import { CartProvider } from './components/CartContext';
