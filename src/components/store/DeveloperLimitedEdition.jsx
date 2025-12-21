@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ShinyCard from '@/components/shared/ShinyCard';
 
