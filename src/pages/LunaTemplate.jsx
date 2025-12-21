@@ -1052,27 +1052,9 @@ export default function LunaTemplate() {
           <User className="w-6 h-6 text-white" />
         </motion.button>
 
-        {/* Profile Circle Icon */}
-        <motion.button
-          className="absolute top-4 right-20 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-          onClick={() => setShowProfile(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <User className="w-6 h-6 text-white" />
-        </motion.button>
 
-        {/* Settings Gear Icon */}
-        <motion.button
-          className="absolute top-4 right-4 z-40 w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-          onClick={() => setShowSettings(true)}
-          whileHover={{ scale: 1.1, rotate: 90 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Settings className="w-6 h-6 text-white/80" />
-        </motion.button>
+
+
 
         {/* Skills Section Above Dock */}
         {uiVisible && !showInventory && (
