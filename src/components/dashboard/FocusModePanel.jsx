@@ -773,14 +773,14 @@ export default function FocusModePanel({ onOpenForum }) {
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Game Filter Sidebar */}
           <div className="w-32 flex-shrink-0 flex flex-col">
-            {/* New Content Button with Shadow Effect - Opens Forum Overlay */}
+            {/* Foreign Page Button with Shadow Effect - Opens Forum Overlay */}
             <div className="relative inline-block mb-3">
               <button 
                 onClick={() => onOpenForum && onOpenForum()}
                 className="relative z-10 flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:bg-white/25"
               >
                 <Sparkles className="w-4 h-4 text-amber-400" />
-                <span className="font-bold">New Content</span>
+                <span className="font-bold">Foreign Page</span>
               </button>
               {/* Shadow Button Behind */}
               <div
@@ -789,29 +789,6 @@ export default function FocusModePanel({ onOpenForum }) {
               >
                 <Sparkles className="w-4 h-4 text-amber-400/50" />
                 <span className="text-sm font-medium">Forum</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-              <div className="space-y-1">
-                {gameFilterList.map((game) => (
-                  <button
-                    key={game.id}
-                    onClick={() => {
-                      setSelectedGameFilter(game.id);
-                      setSelectedCard(null);
-                    }}
-                    className={`w-full flex flex-col items-center py-2 px-2 rounded-lg transition-all text-center ${
-                      selectedGameFilter === game.id
-                        ? 'bg-white/10 border border-cyan-400/50'
-                        : 'hover:bg-white/5 border border-transparent'
-                    }`}
-                  >
-                    <span className="text-lg mb-1">{game.icon}</span>
-                    <span className={`text-[10px] leading-tight ${selectedGameFilter === game.id ? 'text-white' : 'text-white/60'}`}>
-                      {game.name}
-                    </span>
-                  </button>
-                ))}
               </div>
             </div>
           </div>
@@ -826,6 +803,29 @@ export default function FocusModePanel({ onOpenForum }) {
               ref={scrollRef}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
+              {/* Game Filter Row - Horizontal above card info */}
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                {gameFilterList.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => {
+                      setSelectedGameFilter(game.id);
+                      setSelectedCard(null);
+                    }}
+                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+                      selectedGameFilter === game.id
+                        ? 'bg-white/15 border border-cyan-400/50'
+                        : 'bg-white/5 hover:bg-white/10 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-sm">{game.icon}</span>
+                    <span className={`text-xs whitespace-nowrap ${selectedGameFilter === game.id ? 'text-white' : 'text-white/60'}`}>
+                      {game.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               {/* Selected Card Preview */}
               {selectedCard && (
                 <div className="flex gap-4 mb-4 p-4 bg-white/[0.03] rounded-xl border border-white/10">
