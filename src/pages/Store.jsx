@@ -638,9 +638,9 @@ export default function Store() {
                           {storeMode === 'store' && (
                             <div
                               aria-hidden
-                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/5 border-white/10 text-white/30 backdrop-blur-md z-0 flex items-center justify-center"
+                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
                             >
-                              <span className="text-sm font-medium">{storeSubView === 'games' ? 'Games' : 'Store'}</span>
+                              <span className="text-sm font-medium">Library</span>
                             </div>
                           )}
                         </div>
