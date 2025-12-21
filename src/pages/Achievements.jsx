@@ -375,7 +375,7 @@ function AchievementsView({ onExitToLibrary }) {
                 </Link>
               )}
               <h1 className="text-2xl font-black tracking-tighter text-white">
-                Achievements
+                Adam X Eve — Achievements
               </h1>
             </div>
 
@@ -575,8 +575,16 @@ function AchievementsView({ onExitToLibrary }) {
 
 export default function Achievements({ onExitToLibrary }) {
   return (
-    <div className="h-screen w-full overflow-hidden">
-      <AchievementsView onExitToLibrary={onExitToLibrary} />
+    <div className="h-screen w-full overflow-hidden relative">
+      {/* Top Options Bar to match Store */}
+      <div className="fixed top-0 left-0 right-0 z-20 h-20 flex items-center gap-3 px-8 bg-white/[0.06] backdrop-blur-xl border-b border-white/10">
+        <a href={createPageUrl('Store?mode=store&sub=achievements')} className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">Games</a>
+        <a href={createPageUrl('Store?mode=marketplace')} className="px-4 py-2 rounded-full text-sm font-medium bg-transparent border border-transparent text-white/60 hover:text-white hover:bg-white/5 transition-all">Marketplace</a>
+        <a href={createPageUrl('Store?mode=trading')} className="px-4 py-2 rounded-full text-sm font-medium bg-transparent border border-transparent text-white/60 hover:text-white hover:bg-white/5 transition-all">Trading Post</a>
+      </div>
+      <div className="pt-20 h-full">
+        <AchievementsView onExitToLibrary={onExitToLibrary} />
+      </div>
     </div>
   );
 }

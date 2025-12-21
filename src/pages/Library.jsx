@@ -772,7 +772,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
               >
                 <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                <span>Achievements</span>
+                <span>Adam X Eve — Achievements</span>
               </button>
             </div>
 
@@ -789,7 +789,13 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
       </div>
 
-      <div className="relative z-10 px-8 py-8">
+      {/* Top Options Bar to match Store */}
+      <div className="fixed top-0 left-0 right-0 z-20 h-20 flex items-center gap-3 px-8 bg-white/[0.06] backdrop-blur-xl border-b border-white/10">
+        <Link to={createPageUrl('Store?mode=store&sub=games')} className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">Games</Link>
+        <Link to={createPageUrl('Store?mode=marketplace')} className="px-4 py-2 rounded-full text-sm font-medium bg-transparent border border-transparent text-white/60 hover:text-white hover:bg-white/5 transition-all">Marketplace</Link>
+        <Link to={createPageUrl('Store?mode=trading')} className="px-4 py-2 rounded-full text-sm font-medium bg-transparent border border-transparent text-white/60 hover:text-white hover:bg-white/5 transition-all">Trading Post</Link>
+      </div>
+      <div className="relative z-10 px-8 py-8 pt-24">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
