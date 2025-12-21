@@ -1266,43 +1266,60 @@ export default function LunaTemplate() {
             </div>
             )}
 
-        {/* AI Home Button - Below Skills */}
+        {/* AI Home Button - Below Skills - Contains Menu Options */}
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
-            {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
-              const Icon = item.icon;
-              
-              return (
-                <motion.div
-                  key={item.id}
-                  className="flex-shrink-0 cursor-pointer"
-                  onClick={() => setActiveDrawer(item)}
-                  whileHover={{ y: -10, transition: { duration: 0.3 } }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div
-                    className="w-[101px] h-[76px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-2 border border-white/10 hover:border-white/30"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                    }}
-                  >
-                    {/* Icon Badge */}
-                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-1 bg-opacity-80 backdrop-blur-sm`}>
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
+          <motion.div
+            className="flex-shrink-0 cursor-pointer"
+            whileHover={{ y: -10, transition: { duration: 0.3 } }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'home'))}
+          >
+            <div
+              className="w-[320px] rounded-2xl overflow-hidden transition-all duration-500 p-4 border border-white/10 hover:border-white/30"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                  <Home className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm tracking-wide">AI Home</h3>
+                  <p className="text-white/50 text-[10px]">Personal Space</p>
+                </div>
+              </div>
 
-                    {/* Card Content */}
-                    <div>
-                      <h3 className="text-white font-bold text-[11px] mb-0.5 tracking-wide">{item.label}</h3>
-                      <p className="text-white/60 text-[9px] leading-tight line-clamp-1">{item.description}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+              {/* Menu Options Grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {ORBITAL_ITEMS.filter(item => ['skill-tree', 'battle', 'story', 'home'].includes(item.id)).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.button
+                      key={item.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveDrawer(item);
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-white/20"
+                    >
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-white/70 text-[9px] font-medium text-center leading-tight">{item.label}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        </div>
         )}
 
         {/* Universal Slide-Out Drawer */}
