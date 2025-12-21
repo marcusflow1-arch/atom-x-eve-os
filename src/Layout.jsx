@@ -662,7 +662,7 @@ function LayoutContent({ children, currentPageName }) {
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={location.pathname}
-                    className="pt-20"
+                    className="pt-[5.25rem]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
