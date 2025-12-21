@@ -21,6 +21,7 @@ import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
+import Library from './Library';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -355,6 +356,7 @@ export default function Store() {
     
     // Store Mode State
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
+    const [storeSubView, setStoreSubView] = useState('games'); // 'games' | 'library'
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -608,14 +610,21 @@ export default function Store() {
                     {/* Sub-Page Links */}
                     <div className="flex items-center gap-2">
                         <button 
-                            onClick={() => setStoreMode('store')}
+                            onClick={() => {
+                                if (storeMode !== 'store') {
+                                  setStoreMode('store');
+                                  setStoreSubView('games');
+                                } else {
+                                  setStoreSubView(prev => prev === 'games' ? 'library' : 'games');
+                                }
+                              }}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
                                 storeMode === 'store' 
                                     ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
                                     : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
                         >
-                            Store
+                            Games
                         </button>
                         <button 
                             onClick={() => setStoreMode('marketplace')}
@@ -774,7 +783,17 @@ export default function Store() {
 
             {/* MAIN CONTENT AREA */}
             <AnimatePresence mode="wait">
-                {storeMode === 'store' ? (
+                {storeMode === 'store' && storeSubView === 'library' ? (
+                    <motion.div
+                        key="embedded-library"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="w-full h-full pt-20 overflow-hidden"
+                    >
+                        <Library onSwitchToStore={() => setStoreSubView('games')} />
+                    </motion.div>
+                ) : storeMode === 'store' ? (
                     viewMode === 'classic' ? (
                          // CLASSIC GRID VIEW
                         <motion.div

@@ -4,6 +4,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
+import Achievements from './Achievements';
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -622,7 +623,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
   );
 };
 
-export default function Library() {
+export default function Library({ onSwitchToStore }) {
   const { user, isAuthenticated } = useAuth();
   const [ownedGames, setOwnedGames] = useState([]);
   const [favoriteGames, setFavoriteGames] = useState([]);
@@ -630,6 +631,7 @@ export default function Library() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
+  const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [selectedGame, setSelectedGame] = useState(null);
   const [showRecentlyAchieved, setShowRecentlyAchieved] = useState(false);
@@ -753,6 +755,28 @@ export default function Library() {
       className="min-h-screen text-white"
       style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
     >
+      {/* Achievements Overlay-style Transition */}
+      <AnimatePresence>
+        {embeddedView === 'achievements' && (
+          <motion.div
+            key="library-achievements"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl"
+          >
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+              <Button variant="outline" onClick={() => setEmbeddedView('library')} className="border-white/20 text-white/80 hover:bg-white/10">Back to Library</Button>
+              {onSwitchToStore && (
+                <Button variant="outline" onClick={() => onSwitchToStore()} className="border-white/20 text-white/80 hover:bg-white/10">Store</Button>
+              )}
+            </div>
+            <div className="w-full h-full overflow-hidden">
+              <Achievements />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Ambient Glow Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
@@ -779,6 +803,27 @@ export default function Library() {
               <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
                 <Mic className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Transitional Buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (onSwitchToStore) onSwitchToStore();
+                  else window.location.href = createPageUrl('Store');
+                }}
+                className="border-white/20 text-white/80 hover:bg-white/10"
+              >
+                Store
+              </Button>
+              <Button
+                variant={embeddedView === 'achievements' ? 'default' : 'outline'}
+                onClick={() => setEmbeddedView(prev => prev === 'achievements' ? 'library' : 'achievements')}
+                className={embeddedView === 'achievements' ? 'bg-blue-600 hover:bg-blue-700' : 'border-white/20 text-white/80 hover:bg-white/10'}
+              >
+                Achievements
+              </Button>
             </div>
 
             {/* View Toggle */}
