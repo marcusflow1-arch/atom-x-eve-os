@@ -232,103 +232,224 @@ function DLCSection({ dlcs }) {
   );
 }
 
-// Review Card
-function ReviewCard({ review }) {
+// Steam-style Review Card
+function SteamReviewCard({ review }) {
   const [helpfulVoted, setHelpfulVoted] = useState(null);
 
   return (
-    <LiquidGlassCard className="p-3">
-      <div className="flex items-start gap-3 mb-2">
-        <img src={review.avatar} alt={review.user} className="w-8 h-8 rounded" />
+    <div className="border-b border-white/5 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+      {/* User Info Row */}
+      <div className="flex items-start gap-3 mb-3">
+        <img src={review.avatar} alt={review.user} className="w-9 h-9 rounded" />
         <div className="flex-1">
-          <p className="text-cyan-400 font-medium text-xs">{review.user}</p>
-          <div className="flex items-center gap-2 text-[10px] text-slate-500">
-            <Clock className="w-2.5 h-2.5" />
-            <span>{review.hours} hrs</span>
+          <p className="text-cyan-400 text-sm font-medium hover:underline cursor-pointer">{review.user}</p>
+          <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5">
+            <span>{review.hours} hrs on record</span>
           </div>
-        </div>
-        <div className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] ${
-          review.rating === 'positive' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-red-500/20 text-red-400'
-        }`}>
-          {review.rating === 'positive' ? <ThumbsUp className="w-3 h-3" /> : <ThumbsDown className="w-3 h-3" />}
-          <span>{review.rating === 'positive' ? 'Recommended' : 'Not Recommended'}</span>
         </div>
       </div>
 
-      <p className="text-xs text-slate-300 leading-relaxed mb-3">{review.content}</p>
+      {/* Recommendation Badge */}
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-10 h-10 rounded flex items-center justify-center ${
+          review.rating === 'positive' ? 'bg-cyan-500/20' : 'bg-red-500/20'
+        }`}>
+          {review.rating === 'positive' 
+            ? <ThumbsUp className="w-5 h-5 text-cyan-400" /> 
+            : <ThumbsDown className="w-5 h-5 text-red-400" />
+          }
+        </div>
+        <div>
+          <p className={`text-sm font-medium ${review.rating === 'positive' ? 'text-cyan-400' : 'text-red-400'}`}>
+            {review.rating === 'positive' ? 'Recommended' : 'Not Recommended'}
+          </p>
+          <p className="text-[11px] text-slate-500">Posted: {review.date}</p>
+        </div>
+      </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-white/10">
-        <span className="text-[10px] text-slate-500">Helpful?</span>
-        <div className="flex items-center gap-1">
+      {/* Review Content */}
+      <p className="text-[13px] text-slate-300 leading-relaxed mb-4">{review.content}</p>
+
+      {/* Helpful Section */}
+      <div className="flex items-center gap-4">
+        <span className="text-[11px] text-slate-500">
+          {review.helpful} people found this review helpful
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-500">Was this review helpful?</span>
           <button 
             onClick={() => setHelpfulVoted('yes')}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors ${
-              helpfulVoted === 'yes' ? 'bg-cyan-500/30 text-cyan-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            className={`px-3 py-1 rounded text-[11px] transition-colors ${
+              helpfulVoted === 'yes' 
+                ? 'bg-cyan-500/30 text-cyan-400 border border-cyan-500/50' 
+                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
             }`}
           >
-            <ThumbsUp className="w-2.5 h-2.5" />
             Yes
           </button>
           <button 
             onClick={() => setHelpfulVoted('no')}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors ${
-              helpfulVoted === 'no' ? 'bg-red-500/30 text-red-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            className={`px-3 py-1 rounded text-[11px] transition-colors ${
+              helpfulVoted === 'no' 
+                ? 'bg-red-500/30 text-red-400 border border-red-500/50' 
+                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
             }`}
           >
-            <ThumbsDown className="w-2.5 h-2.5" />
             No
+          </button>
+          <button className="px-3 py-1 rounded text-[11px] bg-slate-700/50 text-slate-400 hover:bg-slate-600/50">
+            😄 Funny
           </button>
         </div>
       </div>
-    </LiquidGlassCard>
+    </div>
   );
 }
 
-// Reviews Section
+// Steam-style Reviews Section
 function ReviewsSection({ reviews }) {
   const [filter, setFilter] = useState('all');
+  const [displayType, setDisplayType] = useState('summary');
   const positiveCount = reviews.filter(r => r.rating === 'positive').length;
+  const negativeCount = reviews.length - positiveCount;
   const positivePercent = Math.round((positiveCount / reviews.length) * 100);
   const filteredReviews = filter === 'all' ? reviews : reviews.filter(r => r.rating === filter);
 
-  return (
-    <div className="space-y-3">
-      <LiquidGlassCard className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-white">User Reviews</h3>
-          <div className="flex gap-1">
-            {['all', 'positive', 'negative'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${
-                  filter === f ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                }`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-400">{positivePercent}%</div>
-            <div className="text-[10px] text-slate-500">Positive</div>
-          </div>
-          <div className="flex-1">
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-1">
-              <div className="h-full bg-cyan-500" style={{ width: `${positivePercent}%` }} />
-            </div>
-            <p className="text-xs text-cyan-400">Very Positive</p>
-          </div>
-        </div>
-      </LiquidGlassCard>
+  const getReviewLabel = (percent) => {
+    if (percent >= 95) return 'Overwhelmingly Positive';
+    if (percent >= 80) return 'Very Positive';
+    if (percent >= 70) return 'Mostly Positive';
+    if (percent >= 40) return 'Mixed';
+    if (percent >= 20) return 'Mostly Negative';
+    return 'Very Negative';
+  };
 
-      <div className="space-y-2">
-        {filteredReviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
+  return (
+    <div>
+      {/* Section Header */}
+      <h2 className="text-lg font-bold text-white mb-4 uppercase tracking-wide">Customer Reviews</h2>
+      
+      <div className="flex gap-6">
+        {/* Left Column - Review Summary */}
+        <div className="w-[300px] flex-shrink-0 space-y-4">
+          {/* Overall Reviews Box */}
+          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
+            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Overall Reviews</h3>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-cyan-400 font-bold text-lg">{getReviewLabel(positivePercent)}</span>
+            </div>
+            <p className="text-xs text-slate-500">({reviews.length.toLocaleString()} reviews)</p>
+          </div>
+
+          {/* Recent Reviews Box */}
+          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
+            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Recent Reviews</h3>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-cyan-400 font-bold text-lg">{getReviewLabel(positivePercent)}</span>
+            </div>
+            <p className="text-xs text-slate-500">(2,909 reviews)</p>
+          </div>
+
+          {/* Review Breakdown */}
+          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
+            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Review Breakdown</h3>
+            
+            {/* Positive Bar */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-cyan-400 flex items-center gap-1">
+                  <ThumbsUp className="w-3 h-3" /> Positive
+                </span>
+                <span className="text-slate-400">{positiveCount}</span>
+              </div>
+              <div className="h-3 bg-slate-700 rounded overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400" 
+                  style={{ width: `${positivePercent}%` }} 
+                />
+              </div>
+            </div>
+
+            {/* Negative Bar */}
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-red-400 flex items-center gap-1">
+                  <ThumbsDown className="w-3 h-3" /> Negative
+                </span>
+                <span className="text-slate-400">{negativeCount}</span>
+              </div>
+              <div className="h-3 bg-slate-700 rounded overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-red-500 to-red-400" 
+                  style={{ width: `${100 - positivePercent}%` }} 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Options */}
+          <div className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 rounded-lg p-4 border border-white/5">
+            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Display As</h3>
+            <div className="flex gap-2 mb-4">
+              {['summary', 'helpful', 'recent', 'funny'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setDisplayType(type)}
+                  className={`px-2 py-1 rounded text-[10px] capitalize transition-colors ${
+                    displayType === type 
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
+                      : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+
+            <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-3">Filter</h3>
+            <div className="space-y-2">
+              {[
+                { key: 'all', label: 'All Reviews' },
+                { key: 'positive', label: 'Positive Only' },
+                { key: 'negative', label: 'Negative Only' },
+              ].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                    filter === f.key 
+                      ? 'bg-cyan-500/20 text-cyan-400' 
+                      : 'bg-slate-700/30 text-slate-400 hover:bg-slate-600/30'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Reviews List */}
+        <div className="flex-1">
+          <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-lg p-5 border border-white/5">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+              <h3 className="text-sm font-medium text-white">
+                Showing {filteredReviews.length} reviews
+              </h3>
+              <select className="bg-slate-700/50 border border-white/10 rounded px-2 py-1 text-xs text-slate-300">
+                <option>Most Helpful</option>
+                <option>Recent</option>
+                <option>Funny</option>
+              </select>
+            </div>
+
+            <div>
+              {filteredReviews.map((review) => (
+                <SteamReviewCard key={review.id} review={review} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
