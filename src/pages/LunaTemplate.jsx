@@ -1923,8 +1923,8 @@ export default function LunaTemplate() {
                     </div>
 
                   </motion.div>
-            ) : null}
-            {showInventory && uiVisible && (
+            ) : null)}
+                         {showInventory && uiVisible && (
               <motion.div 
                 key="inventory"
                 initial={{ opacity: 0, x: -50 }}
