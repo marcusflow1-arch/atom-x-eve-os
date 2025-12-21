@@ -609,7 +609,11 @@ export default function Store() {
 
                     {/* Title */}
                     <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                        {storeMode === 'store' && storeSubView === 'library' ? 'Atom x eve library page' : 'Atom X Eve Store Page'}
+                        {storeMode === 'store' && storeSubView === 'library'
+                          ? 'Atom x eve library page'
+                          : storeMode === 'store' && storeSubView === 'achievements'
+                          ? 'Achievements'
+                          : 'Atom X Eve Store Page'}
                     </span>
 
                     {/* Divider */}
@@ -617,53 +621,56 @@ export default function Store() {
 
                     {/* Sub-Page Links */}
                     <div className="flex items-center gap-2">
-                        <div className="relative inline-block">
-                          <button 
-                            onClick={() => {
-                              if (storeMode !== 'store') {
-                                setStoreMode('store');
-                                setStoreSubView('games');
-                              } else {
-                                setStoreSubView(prev => prev === 'games' ? 'library' : 'games');
-                              }
-                            }}
-                            className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              storeMode === 'store' 
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            {storeSubView === 'games' ? 'Store' : 'Games'}
-                          </button>
-                          {storeMode === 'store' && (
-                            <div
-                              aria-hidden
-                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
-                            >
-                              <span className="text-sm font-medium">Library</span>
-                            </div>
-                          )}
-                        </div>
-                        <button 
-                            onClick={() => setStoreMode('marketplace')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                                storeMode === 'marketplace' 
-                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                    : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                        >
-                            Marketplace
-                        </button>
-                        <button 
-                            onClick={() => setStoreMode('trading')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                                storeMode === 'trading' 
-                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
-                                    : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                        >
-                            Trading Post
-                        </button>
+                      <button
+                        onClick={() => { setStoreMode('store'); setStoreSubView('games'); }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                          storeMode === 'store' && storeSubView === 'games'
+                            ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                            : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        Store
+                      </button>
+                      <button
+                        onClick={() => { setStoreMode('store'); setStoreSubView('library'); }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                          storeMode === 'store' && storeSubView === 'library'
+                            ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                            : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        Library
+                      </button>
+                      <button
+                        onClick={() => { setStoreMode('store'); setStoreSubView('achievements'); }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                          storeMode === 'store' && storeSubView === 'achievements'
+                            ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                            : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        Achievements
+                      </button>
+                      <button 
+                          onClick={() => setStoreMode('marketplace')}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              storeMode === 'marketplace' 
+                                  ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
+                                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                          }`}
+                      >
+                          Marketplace
+                      </button>
+                      <button 
+                          onClick={() => setStoreMode('trading')}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              storeMode === 'trading' 
+                                  ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
+                                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                          }`}
+                      >
+                          Trading Post
+                      </button>
                     </div>
                 </div>
 
@@ -782,7 +789,7 @@ export default function Store() {
                         >
                             <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">Navigation</h2>
                             <div className="space-y-1">
-                                {ALL_NAV_ITEMS.map((page) => (
+                                {ALL_NAV_ITEMS.filter(page => page.name !== 'Library' && page.name !== 'Achievements').map((page) => (
                                     <Link
                                         key={page.name}
                                         to={page.path}
