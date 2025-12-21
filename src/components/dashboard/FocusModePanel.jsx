@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, Clock, Target, ChevronLeft, ChevronRight,
+  Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
-  Play, Sparkles, Trophy, Crown, Eye, Check, Trash2
+  Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -181,8 +181,382 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
   );
 }
 
+// Mini Calendar Component
+function MiniCalendar({ onDayClick, events }) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const today = new Date();
+  
+  const getDaysInMonth = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const hasEvent = (day) => {
+    if (!day || !events) return false;
+    const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
+    return events.some(e => new Date(e.date).toDateString() === dateStr);
+  };
+
+  const isToday = (day) => {
+    if (!day) return false;
+    return today.getDate() === day && 
+           today.getMonth() === currentDate.getMonth() && 
+           today.getFullYear() === currentDate.getFullYear();
+  };
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
+
+  return (
+    <div className="mt-3">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between mb-2">
+        <button 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+          className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+        >
+          <ChevronLeft className="w-3 h-3 text-white/60" />
+        </button>
+        <span className="text-xs text-white/80 font-medium">
+          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+        </span>
+        <button 
+          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+          className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+        >
+          <ChevronRight className="w-3 h-3 text-white/60" />
+        </button>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
+        {dayNames.map((day, i) => (
+          <div key={i} className="text-center text-[8px] text-white/40 font-medium py-0.5">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Days Grid */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {getDaysInMonth().map((day, index) => (
+          <div
+            key={index}
+            onClick={() => day && onDayClick(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
+            className={`aspect-square flex items-center justify-center text-[10px] rounded transition-all relative ${
+              day
+                ? isToday(day)
+                  ? 'bg-cyan-500 text-white font-bold cursor-pointer'
+                  : 'text-white/70 hover:bg-white/10 cursor-pointer'
+                : ''
+            }`}
+          >
+            {day}
+            {hasEvent(day) && (
+              <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-400" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Calendar Modal Component
+function CalendarModal({ isOpen, onClose, selectedDate, events, onAddEvent, onDeleteEvent }) {
+  const [viewDate, setViewDate] = useState(selectedDate || new Date());
+  const [selectedDay, setSelectedDay] = useState(selectedDate);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: '', type: 'event', time: '' });
+
+  useEffect(() => {
+    if (selectedDate) {
+      setViewDate(selectedDate);
+      setSelectedDay(selectedDate);
+    }
+  }, [selectedDate]);
+
+  if (!isOpen) return null;
+
+  const getDaysInMonth = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const getEventsForDay = (day) => {
+    if (!day || !events) return [];
+    const dateStr = new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toDateString();
+    return events.filter(e => new Date(e.date).toDateString() === dateStr);
+  };
+
+  const isToday = (day) => {
+    if (!day) return false;
+    const today = new Date();
+    return today.getDate() === day && 
+           today.getMonth() === viewDate.getMonth() && 
+           today.getFullYear() === viewDate.getFullYear();
+  };
+
+  const isSelected = (day) => {
+    if (!day || !selectedDay) return false;
+    return selectedDay.getDate() === day && 
+           selectedDay.getMonth() === viewDate.getMonth() && 
+           selectedDay.getFullYear() === viewDate.getFullYear();
+  };
+
+  const handleAddEvent = () => {
+    if (!newEvent.title.trim() || !selectedDay) return;
+    onAddEvent({
+      id: Date.now(),
+      title: newEvent.title,
+      type: newEvent.type,
+      time: newEvent.time,
+      date: selectedDay.toISOString()
+    });
+    setNewEvent({ title: '', type: 'event', time: '' });
+    setShowAddForm(false);
+  };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const selectedDayEvents = selectedDay ? getEventsForDay(selectedDay.getDate()) : [];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl rounded-3xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+        }}
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="w-6 h-6 text-cyan-400" />
+            <h2 className="text-2xl font-bold text-white">Calendar</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-xl text-cyan-300 text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Event
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5 text-white/60" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex">
+          {/* Calendar Grid */}
+          <div className="flex-1 p-6">
+            {/* Month Navigation */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              <h3 className="text-xl font-bold text-white">
+                {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
+              </h3>
+              <button
+                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {dayNames.map(day => (
+                <div key={day} className="text-center text-xs font-bold text-white/40 uppercase py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {getDaysInMonth().map((day, index) => {
+                const dayEvents = getEventsForDay(day);
+                return (
+                  <div
+                    key={index}
+                    onClick={() => day && setSelectedDay(new Date(viewDate.getFullYear(), viewDate.getMonth(), day))}
+                    className={`aspect-square rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center relative ${
+                      day
+                        ? isSelected(day)
+                          ? 'border-cyan-400 bg-cyan-500/20'
+                          : isToday(day)
+                          ? 'border-amber-400 bg-amber-500/20'
+                          : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        : 'border-transparent'
+                    }`}
+                  >
+                    {day && (
+                      <>
+                        <span className="text-white text-sm font-semibold">{day}</span>
+                        {dayEvents.length > 0 && (
+                          <div className="flex gap-0.5 mt-1">
+                            {dayEvents.slice(0, 3).map((_, i) => (
+                              <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Events Sidebar */}
+          <div className="w-72 border-l border-white/10 p-6 bg-black/20">
+            <h4 className="text-white font-bold mb-4">
+              {selectedDay ? selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Select a day'}
+            </h4>
+
+            {/* Add Event Form */}
+            <AnimatePresence>
+              {showAddForm && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 space-y-3"
+                >
+                  <input
+                    type="text"
+                    placeholder="Event title..."
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-400"
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={newEvent.type}
+                      onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400"
+                    >
+                      <option value="event">Event</option>
+                      <option value="goal">Goal</option>
+                      <option value="reminder">Reminder</option>
+                    </select>
+                    <input
+                      type="time"
+                      value={newEvent.time}
+                      onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                      className="w-24 px-2 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowAddForm(false)}
+                      className="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddEvent}
+                      className="flex-1 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white text-sm transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Events List */}
+            <div className="space-y-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+              {selectedDayEvents.length > 0 ? (
+                selectedDayEvents.map((event) => (
+                  <div 
+                    key={event.id} 
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 group"
+                  >
+                    <div className={`w-2 h-2 rounded-full ${
+                      event.type === 'goal' ? 'bg-amber-400' : event.type === 'reminder' ? 'bg-purple-400' : 'bg-cyan-400'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{event.title}</p>
+                      {event.time && <p className="text-white/40 text-xs">{event.time}</p>}
+                    </div>
+                    <button
+                      onClick={() => onDeleteEvent(event.id)}
+                      className="w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/40 text-sm text-center py-4">No events for this day</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // Time & Date Component
-function TimeDisplay() {
+function TimeDisplay({ onCalendarClick, events }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -198,43 +572,106 @@ function TimeDisplay() {
       <div className="text-sm text-white/60">
         {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
       </div>
+      <MiniCalendar onDayClick={onCalendarClick} events={events} />
     </div>
   );
 }
 
 // Goals Component
-function GoalsPanel() {
+function GoalsPanel({ onAddGoal }) {
   const [goals, setGoals] = useState([
     { id: 1, text: 'Complete 5 achievements', completed: true },
     { id: 2, text: 'Reach RPG level 20', completed: false },
     { id: 3, text: 'Win 5 battles', completed: false },
   ]);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [newGoalText, setNewGoalText] = useState('');
 
   const toggleGoal = (id) => {
     setGoals(goals.map(g => g.id === id ? { ...g, completed: !g.completed } : g));
   };
 
+  const addGoal = () => {
+    if (!newGoalText.trim()) return;
+    setGoals([...goals, { id: Date.now(), text: newGoalText, completed: false }]);
+    setNewGoalText('');
+    setShowAddGoal(false);
+  };
+
+  const deleteGoal = (id) => {
+    setGoals(goals.filter(g => g.id !== id));
+  };
+
   return (
     <div className="space-y-2">
-      <h3 className="text-white font-bold text-sm flex items-center gap-2">
-        <Target className="w-4 h-4 text-cyan-400" />
-        Today's Goals
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-white font-bold text-sm flex items-center gap-2">
+          <Target className="w-4 h-4 text-cyan-400" />
+          Today's Goals
+        </h3>
+        <button
+          onClick={() => setShowAddGoal(!showAddGoal)}
+          className="w-5 h-5 rounded-full bg-white/10 hover:bg-cyan-500/30 flex items-center justify-center transition-colors"
+        >
+          <Plus className="w-3 h-3 text-white/60" />
+        </button>
+      </div>
+
+      {/* Add Goal Form */}
+      <AnimatePresence>
+        {showAddGoal && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              placeholder="New goal..."
+              value={newGoalText}
+              onChange={(e) => setNewGoalText(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addGoal()}
+              className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-white/40 focus:outline-none focus:border-cyan-400"
+            />
+            <button
+              onClick={addGoal}
+              className="px-2 py-1 bg-cyan-500/30 hover:bg-cyan-500/50 rounded-lg text-cyan-300 text-xs transition-colors"
+            >
+              Add
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="space-y-1.5">
         {goals.map((goal) => (
           <div 
             key={goal.id}
-            onClick={() => toggleGoal(goal.id)}
-            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all text-xs ${
+            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all text-xs group ${
               goal.completed ? 'bg-green-500/10 text-white/50' : 'bg-white/5 text-white hover:bg-white/10'
             }`}
           >
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-              goal.completed ? 'bg-green-500 border-green-500' : 'border-white/30'
-            }`}>
+            <div 
+              onClick={() => toggleGoal(goal.id)}
+              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                goal.completed ? 'bg-green-500 border-green-500' : 'border-white/30'
+              }`}
+            >
               {goal.completed && <Check className="w-2.5 h-2.5 text-white" />}
             </div>
-            <span className={goal.completed ? 'line-through' : ''}>{goal.text}</span>
+            <span 
+              onClick={() => toggleGoal(goal.id)}
+              className={`flex-1 ${goal.completed ? 'line-through' : ''}`}
+            >
+              {goal.text}
+            </span>
+            <button
+              onClick={() => deleteGoal(goal.id)}
+              className="w-4 h-4 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="w-2.5 h-2.5 text-red-400" />
+            </button>
           </div>
         ))}
       </div>
@@ -284,7 +721,26 @@ const gameFilterList = [
 export default function FocusModePanel() {
   const [selectedCard, setSelectedCard] = useState(upcomingCards[0]);
   const [selectedGameFilter, setSelectedGameFilter] = useState('all');
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [calendarEvents, setCalendarEvents] = useState([
+    { id: 1, title: 'Guild Raid Night', type: 'event', time: '20:00', date: new Date().toISOString() },
+    { id: 2, title: 'Complete daily quests', type: 'goal', time: '', date: new Date().toISOString() },
+  ]);
   const scrollRef = useRef(null);
+
+  const handleCalendarDayClick = (date) => {
+    setSelectedCalendarDate(date);
+    setShowCalendarModal(true);
+  };
+
+  const handleAddEvent = (event) => {
+    setCalendarEvents([...calendarEvents, event]);
+  };
+
+  const handleDeleteEvent = (eventId) => {
+    setCalendarEvents(calendarEvents.filter(e => e.id !== eventId));
+  };
 
   // Filter cards based on selected game
   const filteredCards = selectedGameFilter === 'all' 
@@ -409,11 +865,25 @@ export default function FocusModePanel() {
         </div>
       </div>
 
+      {/* Calendar Modal */}
+      <AnimatePresence>
+        {showCalendarModal && (
+          <CalendarModal
+            isOpen={showCalendarModal}
+            onClose={() => setShowCalendarModal(false)}
+            selectedDate={selectedCalendarDate}
+            events={calendarEvents}
+            onAddEvent={handleAddEvent}
+            onDeleteEvent={handleDeleteEvent}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Bottom Section - Time, Goals, and Pinned Games */}
       <div className="flex gap-6 mt-6 pt-4 border-t border-white/10">
-        {/* Time & Date */}
+        {/* Time & Date with Mini Calendar */}
         <div className="flex-shrink-0">
-          <TimeDisplay />
+          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
         </div>
 
         {/* Goals */}
