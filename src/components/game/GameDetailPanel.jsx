@@ -654,7 +654,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Abilities Tab */}
             <TabsContent value="abilities">
               <h3 className="text-2xl font-bold mb-6">Special Abilities</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {(game?.abilities || [
                   { id: 1, name: 'Inferno Strike', tier: 'Legendary', description: 'Unleash a devastating fire attack that burns enemies', cooldown: '45s', effect: 'Deals 500 fire damage in an area' },
                   { id: 2, name: 'Time Warp', tier: 'Epic', description: 'Slow down time for all enemies around you', cooldown: '60s', effect: 'Slows enemies by 80% for 10s' },
@@ -664,25 +664,25 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
                   { id: 6, name: 'Healing Nova', tier: 'Rare', description: 'Restore health to you and nearby allies', cooldown: '25s', effect: 'Heals 200 HP in 10m radius' },
                 ]).map((ability, index) => (
                   <InteractiveCard key={ability.id} delay={index * 0.05}>
-                    <div className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge className={`${rarityColors[ability.tier]} text-xs`}>
+                    <div className="p-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Badge className={`${rarityColors[ability.tier]} text-[9px] px-1.5 py-0.5`}>
                           {ability.tier}
                         </Badge>
-                        <span className="text-purple-400 text-xs font-bold">{ability.cooldown}</span>
+                        <span className="text-purple-400 text-[8px] font-bold">{ability.cooldown}</span>
                       </div>
                       
-                      <div className="w-full aspect-square bg-gradient-to-br from-purple-900/30 to-slate-900 rounded-lg mb-4 flex items-center justify-center border border-purple-500/20">
-                        <Zap className="w-16 h-16 text-purple-500" />
+                      <div className="w-full aspect-square bg-gradient-to-br from-purple-900/30 to-slate-900 rounded-md mb-2 flex items-center justify-center border border-purple-500/20">
+                        <Zap className="w-7 h-7 text-purple-500" />
                       </div>
                       
-                      <h4 className="font-bold text-white text-lg mb-2">{ability.name}</h4>
-                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{ability.description}</p>
+                      <h4 className="font-bold text-white text-[11px] mb-1 truncate">{ability.name}</h4>
+                      <p className="text-slate-400 text-[9px] mb-2 line-clamp-2">{ability.description}</p>
                       
-                      <div className="pt-4 border-t border-white/5">
-                        <div className="flex items-start gap-2">
-                          <Zap className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <p className="text-blue-300 text-xs font-medium">{ability.effect}</p>
+                      <div className="pt-2 border-t border-white/5">
+                        <div className="flex items-start gap-1">
+                          <Zap className="w-2.5 h-2.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-blue-300 text-[8px] font-medium line-clamp-2">{ability.effect}</p>
                         </div>
                       </div>
                     </div>
