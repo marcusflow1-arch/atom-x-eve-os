@@ -1147,52 +1147,7 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
 }
 
 // Library Content Area Component - Now receives activeGenre from parent
-function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreChange }) {
-  const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [ownedGames, setOwnedGames] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchGames = async () => {
-      let userGames = [];
-      const testGameAlpha = allMockGames['test_game_alpha'];
-
-      if (isAuthenticated) {
-        const allGamesFromDb = await base44.entities.Game.list();
-        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
-        const ownedIds = user?.purchased_items || [];
-        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
-        if (testGameAlpha) userGames.unshift(testGameAlpha);
-      } else {
-        if (testGameAlpha) userGames.push(testGameAlpha);
-        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
-      }
-      
-      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
-      setLoading(false);
-    };
-
-    fetchGames();
-  }, [user, isAuthenticated]);
-
-  const gamesByGenre = useMemo(() => {
-    return ownedGames.reduce((acc, game) => {
-      const g = game.genre || 'Uncategorized';
-      if (!acc[g]) acc[g] = [];
-      acc[g].push(game);
-      return acc;
-    }, {});
-  }, [ownedGames]);
-
-  const genres = Object.keys(gamesByGenre);
-
-  // Set initial active genre
-  useEffect(() => {
-    if (genres.length > 0 && !activeGenre) {
-      onGenreChange(genres[0]);
-    }
-  }, [genres, activeGenre, onGenreChange]);
+function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreChange, gamesByGenre, loading }) {
 
   if (loading) {
     return (
@@ -1205,11 +1160,12 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
   return (
     <div className="flex h-full gap-4">
       {/* Genre Selector (Vertical scroll controls Library) */}
-      <div className="w-40 flex-shrink-0">
+      <div className="w-48 flex-shrink-0">
         <GenreSelectorArea 
-          genres={genres}
+          genres={Object.keys(gamesByGenre)}
           activeGenre={activeGenre}
           onGenreChange={onGenreChange}
+          gamesByGenre={gamesByGenre}
         />
       </div>
       
@@ -1230,7 +1186,6 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
             >
               <Eye className="w-10 h-10 mb-3 opacity-50" />
               <p className="text-sm">Click a game below to view details</p>
-              <p className="text-xs text-white/20 mt-1">Scroll genres on the left</p>
             </motion.div>
           )}
         </AnimatePresence>
