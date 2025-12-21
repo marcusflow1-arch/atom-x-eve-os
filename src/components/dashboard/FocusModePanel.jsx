@@ -772,22 +772,22 @@ export default function FocusModePanel() {
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Game Filter Sidebar */}
           <div className="w-32 flex-shrink-0 flex flex-col">
-            {/* New Content Button with Shadow Effect */}
+            {/* New Content Button with Shadow Effect - Opens Community/Forum */}
             <div className="relative inline-block mb-3">
-              <button 
-                onClick={() => setShowNewContentOverlay(true)}
+              <a 
+                href={createPageUrl('Community')}
                 className="relative z-10 flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:bg-white/25"
               >
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="font-bold">New Content</span>
-              </button>
+              </a>
               {/* Shadow Button Behind */}
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-3 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4 text-amber-400/50" />
-                <span className="text-sm font-medium">Explore</span>
+                <span className="text-sm font-medium">Forum</span>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
