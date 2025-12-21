@@ -811,20 +811,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
       </div>
 
       <div className="px-2 pb-6">
-        {/* Limited Time Rewards */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-            <Sparkles className="w-6 h-6 text-blue-500" />
-            Limited Edition Rewards
-          </h2>
-        </div>
-        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollBehavior: 'smooth' }}>
-          {LIMITED_REWARDS.map((card) => (
-            <LimitedEditionCard key={card.id} card={card} />
-          ))}
-        </div>
-      </div>
+        {/* Developer Limited Edition Section */}
+        <DeveloperLimitedEdition />
 
       <div className="flex gap-6">
         {/* Sidebar */}
