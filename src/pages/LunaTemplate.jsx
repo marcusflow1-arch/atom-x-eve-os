@@ -1522,7 +1522,7 @@ export default function LunaTemplate() {
               {/* Main Content Area */}
               <div className="w-full mt-24 px-12 relative">
               <AnimatePresence mode="wait">
-              {!uiVisible && (
+              {false && (
                 <motion.div
                   key="hidden-ui"
                   initial={{ opacity: 0 }}
