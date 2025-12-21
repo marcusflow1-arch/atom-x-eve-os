@@ -625,7 +625,7 @@ export default function Store() {
                                     : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
                         >
-                            {storeSubView === 'library' ? 'Store' : 'Games'}
+                            {storeSubView === 'games' ? 'Store' : 'Games'}
                         </button>
                         <button 
                             onClick={() => setStoreMode('marketplace')}
