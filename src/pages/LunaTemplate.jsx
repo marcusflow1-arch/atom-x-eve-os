@@ -988,16 +988,19 @@ export default function LunaTemplate() {
     return () => window.removeEventListener('keydown', handleSkillKey);
     }, []);
 
-    // Hotkey to toggle UI (I key)
+    // Hotkey to toggle UI (I key) and close overlays (ESC)
     useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'i' || e.key === 'I') {
         setUiVisible((v) => !v);
       }
+      if (e.key === 'Escape') {
+        if (showForumOverlay) setShowForumOverlay(false);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    }, []);
+    }, [showForumOverlay]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
