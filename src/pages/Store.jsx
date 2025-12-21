@@ -1050,18 +1050,18 @@ export default function Store() {
                                                                 />
                                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
                                                                 
-                                                                <div className="absolute top-2 right-2">
-                                                                    <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
+                                                                <div className="absolute top-1.5 right-1.5">
+                                                                    <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-[10px] px-1.5 py-0.5">
                                                                         ${game.price}
                                                                     </Badge>
                                                                 </div>
 
-                                                                <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                                    <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
-                                                                    <div className="flex items-center justify-between text-xs text-white/50">
+                                                                <div className="absolute bottom-0 left-0 right-0 p-2">
+                                                                    <h4 className="text-white font-bold text-[11px] truncate mb-0.5">{game.title}</h4>
+                                                                    <div className="flex items-center justify-between text-[9px] text-white/50">
                                                                         <span>{game.genre}</span>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                                                        <div className="flex items-center gap-0.5">
+                                                                            <Star className="w-2.5 h-2.5 text-yellow-500 fill-current" />
                                                                             <span>{game.rating || 4.5}</span>
                                                                         </div>
                                                                     </div>
