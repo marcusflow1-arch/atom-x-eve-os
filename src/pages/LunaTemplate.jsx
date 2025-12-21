@@ -599,6 +599,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import CalendarOverlay from '../components/calendar/CalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
+import CommunityPage from './Community';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
