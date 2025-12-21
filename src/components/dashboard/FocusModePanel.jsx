@@ -266,137 +266,199 @@ function GameBoxes() {
   );
 }
 
+// Game filter list for New Content
+const gameFilterList = [
+  { id: 'all', name: 'All Games', icon: '🎮' },
+  { id: 'elden-ring', name: 'Elden Ring', icon: '⚔️' },
+  { id: 'cyberpunk', name: 'Cyberpunk 2088', icon: '🌃' },
+  { id: 'baldurs-gate', name: "Baldur's Gate 3", icon: '🧙' },
+  { id: 'neon-legends', name: 'Neon Legends', icon: '⚡' },
+  { id: 'dragon-age', name: 'Dragon Age', icon: '🐉' },
+  { id: 'shadow-realm', name: 'Shadow Realm', icon: '👁️' },
+  { id: 'stellar-odyssey', name: 'Stellar Odyssey', icon: '🚀' },
+  { id: 'final-fantasy', name: 'Final Fantasy', icon: '✨' },
+  { id: 'dark-souls', name: 'Dark Souls', icon: '🔥' },
+];
+
 // Main Export
 export default function FocusModePanel() {
   const [selectedCard, setSelectedCard] = useState(upcomingCards[0]);
+  const [selectedGameFilter, setSelectedGameFilter] = useState('all');
   const scrollRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('pinned'); // Keep for potential future use
+
+  // Filter cards based on selected game
+  const filteredCards = selectedGameFilter === 'all' 
+    ? upcomingCards 
+    : upcomingCards.filter(card => {
+        const gameMap = {
+          'elden-ring': 'Elden Ring',
+          'cyberpunk': 'Cyberpunk 2088',
+          'baldurs-gate': "Baldur's Gate 3",
+          'neon-legends': 'Neon Legends',
+          'dragon-age': 'Dragon Age',
+          'shadow-realm': 'Shadow Realm',
+        };
+        return card.game.toLowerCase().includes(gameMap[selectedGameFilter]?.toLowerCase() || '');
+      });
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
-      <div className="flex flex-col min-h-full focus-panel-scroll transform scale-[0.85] origin-top-left w-[118%]">
+      
+      {/* Top Section - New Content (right of 3D viewer) */}
+      <div className="flex gap-6 flex-1 min-h-0">
+        {/* Left side - placeholder for 3D viewer area */}
+        <div className="w-[300px] flex-shrink-0">
+          {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
+        </div>
 
-        {/* Top Section - 3D Viewer Area with Pinned Games to the right */}
-        <div className="flex gap-6 mb-6">
-          {/* Placeholder for 3D viewer area (viewer is positioned fixed in parent) */}
-          <div className="w-[300px] h-[300px] flex-shrink-0">
-            {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
-          </div>
-
-          {/* Right of 3D Viewer - Time, Date, Goals, and Game Boxes */}
-          <div className="flex gap-6 flex-1">
-            {/* Time & Date + Goals Column */}
-            <div className="flex flex-col gap-4">
-              <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl p-4">
-                <TimeDisplay />
-              </div>
-              <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl p-4">
-                <GoalsPanel />
+        {/* Right of 3D Viewer - New Content */}
+        <div className="flex-1 flex gap-4 min-h-0">
+          {/* Game Filter Sidebar */}
+          <div className="w-32 flex-shrink-0 flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <h3 className="text-white font-bold text-sm">New Content</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+              <div className="space-y-1">
+                {gameFilterList.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => {
+                      setSelectedGameFilter(game.id);
+                      setSelectedCard(null);
+                    }}
+                    className={`w-full flex flex-col items-center py-2 px-2 rounded-lg transition-all text-center ${
+                      selectedGameFilter === game.id
+                        ? 'bg-white/10 border border-cyan-400/50'
+                        : 'hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-lg mb-1">{game.icon}</span>
+                    <span className={`text-[10px] leading-tight ${selectedGameFilter === game.id ? 'text-white' : 'text-white/60'}`}>
+                      {game.name}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
+          </div>
 
-            {/* Pinned Games - Horizontal scroll */}
-            <div className="flex-1">
-              <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl p-4">
-                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-                  <Pin className="w-4 h-4 text-cyan-400" />
-                  Pinned Games
-                </h3>
-                <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                  {pinnedGames.map((game, index) => (
-                    <motion.div
-                      key={game.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="flex-shrink-0 w-28 group cursor-pointer"
-                    >
-                      <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all">
-                        <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-10 h-10 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                            <Play className="w-5 h-5 text-white ml-0.5" />
-                          </div>
+          {/* Vertical Divider */}
+          <div className="w-px bg-white/10 self-stretch" />
+
+          {/* Content Area */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div 
+              className="flex-1 overflow-y-auto pr-2"
+              ref={scrollRef}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {/* Selected Card Preview */}
+              {selectedCard && (
+                <div className="flex gap-4 mb-4 p-4 bg-white/[0.03] rounded-xl border border-white/10">
+                  <AchievementStyleCard card={selectedCard} isSelected={true} size="large" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-xl font-bold text-white">{selectedCard.name}</h2>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${rarityStyles[selectedCard.rarity].text} bg-white/10`}>
+                        {selectedCard.rarity}
+                      </span>
+                    </div>
+                    <p className="text-white/40 text-sm mb-2">{selectedCard.type} • {selectedCard.game}</p>
+                    <p className="text-white/70 text-sm leading-relaxed mb-3">{selectedCard.description}</p>
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {Object.entries(selectedCard.stats).map(([key, value]) => (
+                        <div key={key} className="bg-white/5 rounded-lg p-2 border border-white/10">
+                          <p className="text-white/40 text-xs">{key}</p>
+                          <p className="text-white font-bold text-sm">{value}</p>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <p className="text-white font-bold text-xs truncate">{game.title}</p>
-                          <div className="h-1 bg-white/20 rounded-full overflow-hidden mt-1">
-                            <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${game.progress}%` }} />
-                          </div>
-                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <p className="text-white/50 text-xs">How to Unlock</p>
                       </div>
-                    </motion.div>
-                  ))}
-                  {/* Add Game */}
-                  <div className="flex-shrink-0 w-28">
-                    <div className="aspect-[3/4] rounded-lg border border-dashed border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                      <Plus className="w-6 h-6 text-white/40" />
-                      <p className="text-white/40 text-xs mt-1">Add</p>
+                      <p className="text-white text-sm">{selectedCard.unlockCondition}</p>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Cards Grid */}
+              <div className="flex flex-wrap gap-3">
+                {filteredCards.map((card) => (
+                  <AchievementStyleCard
+                    key={card.id}
+                    card={card}
+                    isSelected={selectedCard?.id === card.id}
+                    onClick={() => setSelectedCard(card)}
+                    size="normal"
+                  />
+                ))}
+                {filteredCards.length === 0 && (
+                  <div className="w-full py-8 text-center text-white/40">
+                    <p>No new content for this game yet</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Section - New Content */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <h3 className="text-white font-bold text-sm">New Content</h3>
-          </div>
+      {/* Bottom Section - Time, Goals, and Pinned Games */}
+      <div className="flex gap-6 mt-6 pt-4 border-t border-white/10">
+        {/* Time & Date */}
+        <div className="flex-shrink-0">
+          <TimeDisplay />
+        </div>
 
-          <div 
-            className="overflow-y-auto pr-2"
-            ref={scrollRef}
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {/* Selected Card Preview */}
-            {selectedCard && (
-              <div className="flex gap-4 mb-4 p-4 bg-white/[0.03] rounded-xl border border-white/10">
-                <AchievementStyleCard card={selectedCard} isSelected={true} size="large" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-xl font-bold text-white">{selectedCard.name}</h2>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${rarityStyles[selectedCard.rarity].text} bg-white/10`}>
-                      {selectedCard.rarity}
-                    </span>
-                  </div>
-                  <p className="text-white/40 text-sm mb-2">{selectedCard.type} • {selectedCard.game}</p>
-                  <p className="text-white/70 text-sm leading-relaxed mb-3">{selectedCard.description}</p>
-                  <div className="grid grid-cols-3 gap-3 mb-3">
-                    {Object.entries(selectedCard.stats).map(([key, value]) => (
-                      <div key={key} className="bg-white/5 rounded-lg p-2 border border-white/10">
-                        <p className="text-white/40 text-xs">{key}</p>
-                        <p className="text-white font-bold text-sm">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Trophy className="w-4 h-4 text-amber-400" />
-                      <p className="text-white/50 text-xs">How to Unlock</p>
+        {/* Goals */}
+        <div className="flex-shrink-0 w-48">
+          <GoalsPanel />
+        </div>
+
+        {/* Pinned Games - Horizontal scroll */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
+            <Pin className="w-4 h-4 text-cyan-400" />
+            Pinned Games
+          </h3>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {pinnedGames.map((game, index) => (
+              <motion.div
+                key={game.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0 w-20 group cursor-pointer"
+              >
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all">
+                  <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-white ml-0.5" />
                     </div>
-                    <p className="text-white text-sm">{selectedCard.unlockCondition}</p>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                    <p className="text-white font-bold text-[10px] truncate">{game.title}</p>
+                    <div className="h-0.5 bg-white/20 rounded-full overflow-hidden mt-0.5">
+                      <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${game.progress}%` }} />
+                    </div>
                   </div>
                 </div>
+              </motion.div>
+            ))}
+            {/* Add Game */}
+            <div className="flex-shrink-0 w-20">
+              <div className="aspect-[3/4] rounded-lg border border-dashed border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                <Plus className="w-5 h-5 text-white/40" />
+                <p className="text-white/40 text-[10px] mt-1">Add</p>
               </div>
-            )}
-
-            {/* Cards Grid */}
-            <div className="flex flex-wrap gap-3">
-              {upcomingCards.map((card) => (
-                <AchievementStyleCard
-                  key={card.id}
-                  card={card}
-                  isSelected={selectedCard?.id === card.id}
-                  onClick={() => setSelectedCard(card)}
-                  size="normal"
-                />
-              ))}
             </div>
           </div>
         </div>
