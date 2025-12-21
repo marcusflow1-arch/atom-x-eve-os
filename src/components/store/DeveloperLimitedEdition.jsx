@@ -753,7 +753,7 @@ export default function DeveloperLimitedEdition() {
               Limited Edition Cards
             </h4>
             
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
               {currentGame?.limitedCards.map((card) => (
                 <LimitedEditionCardSmall 
                   key={card.id} 
@@ -772,6 +772,48 @@ export default function DeveloperLimitedEdition() {
           </div>
         </motion.div>
       </AnimatePresence>
+
+      {/* Other Games by Developer - Moved outside main box */}
+      {currentDeveloper.games.length > 1 && (
+        <div 
+          className="mt-4 rounded-2xl p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%)',
+            backdropFilter: 'blur(30px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">
+            Other Games by {currentDeveloper.name}
+          </h4>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {currentDeveloper.games.map((game, index) => (
+              <button
+                key={game.id}
+                onClick={() => handleSelectGame(index)}
+                className={`flex-shrink-0 w-28 rounded-lg overflow-hidden border-2 transition-all ${
+                  index === selectedGameIndex 
+                    ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]' 
+                    : 'border-transparent hover:border-white/30'
+                }`}
+              >
+                <div className="relative aspect-video">
+                  <img 
+                    src={game.cover} 
+                    alt={game.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40" />
+                </div>
+                <div className="p-1.5 bg-slate-900/80">
+                  <p className="text-[10px] text-white font-medium truncate">{game.title}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
