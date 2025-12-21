@@ -30,37 +30,53 @@ const RARITY_STYLES = {
   }
 };
 
-export default function DigitalAchievementCard({ title, icon = '🏆', rarity = 'Rare', unlocked = false, xp = 0, onClick }) {
+export default function DigitalAchievementCard({ title, icon = '🏆', rarity = 'Rare', unlocked = false, xp = 0, onClick, size = 'normal' }) {
   const style = RARITY_STYLES[rarity] || RARITY_STYLES.Rare;
+  
+  // Small size is 30% of normal (70% reduction)
+  const isSmall = size === 'small';
 
   return (
-    <div className={`relative ${style.glow}`}>
-      {unlocked && (
+    <div className={`relative ${isSmall ? 'shadow-[0_0_10px_rgba(0,0,0,0.2)]' : style.glow}`}>
+      {unlocked && !isSmall && (
         <div className="absolute -top-2 -right-2 z-10">
           <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-500/20 text-green-300 border border-green-500/30 uppercase tracking-wider">Unlocked</span>
         </div>
       )}
-      <div className={`rounded-2xl ring-2 ${style.ring} ring-offset-0 ring-offset-slate-900/0`}>
-        <ShinyCard onClick={onClick}>
-          <div className="absolute inset-0 p-3 flex flex-col">
-            <div className="flex items-center justify-between">
-              <Badge variant="outline" className={`border ${style.badge} px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold`}>{rarity}</Badge>
-              <span className="text-[10px] text-white/50 font-mono">{xp} XP</span>
-            </div>
+      {unlocked && isSmall && (
+        <div className="absolute -top-1 -right-1 z-10">
+          <span className="px-1 py-0.5 text-[6px] font-bold rounded-full bg-green-500/20 text-green-300 border border-green-500/30 uppercase tracking-wider">✓</span>
+        </div>
+      )}
+      <div className={`${isSmall ? 'rounded-lg ring-1' : 'rounded-2xl ring-2'} ${style.ring} ring-offset-0 ring-offset-slate-900/0`}>
+        <div 
+          onClick={onClick}
+          className={`relative ${isSmall ? 'w-16 h-20' : 'aspect-[3/4]'} rounded-${isSmall ? 'lg' : 'xl'} bg-slate-900/40 backdrop-blur-md border border-white/10 overflow-hidden cursor-pointer group shadow-lg transition-all hover:scale-105`}
+        >
+          <div className={`absolute inset-0 ${isSmall ? 'p-1' : 'p-3'} flex flex-col`}>
+            {!isSmall && (
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className={`border ${style.badge} px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold`}>{rarity}</Badge>
+                <span className="text-[10px] text-white/50 font-mono">{xp} XP</span>
+              </div>
+            )}
 
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-5xl drop-shadow-md select-none">
+              <div className={`${isSmall ? 'text-xl' : 'text-5xl'} drop-shadow-md select-none`}>
                 {icon}
               </div>
             </div>
 
             <div className="mt-auto">
-              <h4 className="text-white font-bold text-sm line-clamp-2 text-center px-2">
+              <h4 className={`text-white font-bold ${isSmall ? 'text-[8px] line-clamp-1' : 'text-sm line-clamp-2'} text-center ${isSmall ? 'px-0.5' : 'px-2'}`}>
                 {title}
               </h4>
             </div>
           </div>
-        </ShinyCard>
+          
+          {/* Shine effect on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        </div>
       </div>
     </div>
   );
