@@ -598,7 +598,6 @@ import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
 import CalendarOverlay from '../components/calendar/CalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
-import AvatarCustomizer3D from '../components/avatar/AvatarCustomizer3D';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1051,17 +1050,6 @@ export default function LunaTemplate() {
 
 
 
-        {/* Avatar Customizer Button */}
-        <motion.button
-          className="absolute top-4 right-36 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
-          style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-          onClick={() => setShowAvatarCustomizer(true)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          title="3D Avatar Customizer"
-        >
-          <User className="w-6 h-6 text-white" />
-        </motion.button>
 
 
 
