@@ -635,7 +635,7 @@ function LayoutContent({ children, currentPageName }) {
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               {showLunaHeaderBar ? (
-                <div className="pt-24">
+                <div className="pt-[81px]">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={location.pathname}
