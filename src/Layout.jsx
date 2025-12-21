@@ -654,8 +654,6 @@ function LayoutContent({ children, currentPageName }) {
       <AnimatePresence>
         {showRouteTransition && (
           <ScrollTransitionOverlay
-            mode="fade"
-            topOffset={0}
             onComplete={() => {
               const to = pendingRoute;
               setShowRouteTransition(false);
