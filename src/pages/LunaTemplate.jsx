@@ -863,6 +863,7 @@ export default function LunaTemplate() {
   const [selectedUpdate, setSelectedUpdate] = useState(null);
   const [userEvents, setUserEvents] = useState([]);
   const [platformUpdates, setPlatformUpdates] = useState([]);
+  const [showForumOverlay, setShowForumOverlay] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
