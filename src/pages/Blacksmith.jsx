@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Hammer, Trophy, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
+  Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
   Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight,
   ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X, Shuffle
 } from 'lucide-react';
@@ -525,16 +525,6 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
               <h1 className="ml-4 text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
-                <Link to={createPageUrl('Achievements')}>
-                  <motion.div 
-                    className="cursor-pointer group"
-                    title="Go to Achievements"
-                    animate={{ rotateY: [0, 20, 0, -20, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <Trophy className="w-8 h-8 text-yellow-400 fill-yellow-400/30 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] group-hover:scale-110 transition-transform duration-300 group-hover:drop-shadow-[0_0_30px_rgba(250,204,21,1)]" />
-                  </motion.div>
-                </Link>
                 Blacksmith Forge
               </h1>
             </div>
