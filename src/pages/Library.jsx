@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
+import DigitalAchievementCard from '@/components/achievements/DigitalAchievementCard';
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -1087,26 +1088,30 @@ export default function Library({ onSwitchToStore }) {
                         )}
                         
                         {activeDetailTab === 'achievements' && (
-                          <motion.div key="achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 gap-4">
-                             {[
-                                { title: 'First Blood', desc: 'Get your first kill', xp: 500, unlocked: true },
-                                { title: 'Master Explorer', desc: 'Discover all locations', xp: 1000, unlocked: false },
-                                { title: 'Speed Demon', desc: 'Complete level 1 in under 5 mins', xp: 750, unlocked: true },
-                                { title: 'Collector', desc: 'Find all hidden items', xp: 2000, unlocked: false },
-                             ].map((ach, i) => (
-                                <div key={i} className={`p-4 rounded-xl border ${ach.unlocked ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5 border-white/10'} flex items-center gap-4`}>
-                                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${ach.unlocked ? 'bg-blue-500/20' : 'bg-white/5 grayscale'}`}>
-                                      🏆
-                                   </div>
-                                   <div>
-                                      <h4 className={`font-bold ${ach.unlocked ? 'text-white' : 'text-white/50'}`}>{ach.title}</h4>
-                                      <p className="text-xs text-white/40">{ach.desc}</p>
-                                   </div>
-                                   <div className="ml-auto text-xs font-bold text-white/30">{ach.xp} XP</div>
-                                </div>
-                             ))}
+                          <motion.div 
+                            key="achievements" 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, y: -10 }}
+                            className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5"
+                          >
+                            {[
+                              { title: 'First Blood', desc: 'Get your first kill', xp: 500, unlocked: true },
+                              { title: 'Master Explorer', desc: 'Discover all locations', xp: 1000, unlocked: false },
+                              { title: 'Speed Demon', desc: 'Complete level 1 in under 5 mins', xp: 750, unlocked: true },
+                              { title: 'Collector', desc: 'Find all hidden items', xp: 2000, unlocked: false },
+                            ].map((ach, i) => (
+                              <DigitalAchievementCard 
+                                key={i}
+                                title={ach.title}
+                                icon="🏆"
+                                rarity={ach.unlocked ? 'Legendary' : 'Epic'}
+                                unlocked={ach.unlocked}
+                                xp={ach.xp}
+                              />
+                            ))}
                           </motion.div>
-                        )}
+                        )
 
                         {['streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
                           <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
