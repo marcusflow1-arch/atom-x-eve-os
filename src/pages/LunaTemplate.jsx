@@ -598,6 +598,7 @@ import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
 import CalendarOverlay from '../components/calendar/CalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
+import FocusModePanel from '../components/dashboard/FocusModePanel';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1052,12 +1053,33 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
-        {/* 3D Model Viewer - Centered */}
+        {/* 3D Model Viewer - Positioned based on UI visibility */}
         {modelUrl && (
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-20">
+          <div 
+            className={`fixed pointer-events-auto z-20 transition-all duration-500 ease-in-out ${
+              uiVisible 
+                ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px]' 
+                : 'top-1/2 left-[20%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[600px]'
+            }`}
+          >
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
         )}
+
+        {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
+        <AnimatePresence>
+          {!uiVisible && (
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="fixed top-24 right-8 bottom-8 w-[480px] z-30"
+            >
+              <FocusModePanel />
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Circle Icon Button (no hover menu) */}
         <div className="fixed top-[4.75rem] left-4 z-40">
           <button
