@@ -2163,10 +2163,19 @@ export default function LunaTemplate() {
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
         {selectedCardForUpgrade && (
-          <CardEnhancementOverlay 
-            card={selectedCardForUpgrade} 
-            onClose={() => setSelectedCardForUpgrade(null)} 
-          />
+        <CardEnhancementOverlay 
+          card={selectedCardForUpgrade} 
+          onClose={() => setSelectedCardForUpgrade(null)} 
+        />
+        )}
+
+        {/* Hotbar Hint Toast */}
+        {uiVisible && (
+        <div className="fixed bottom-52 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <div className="px-3 py-1.5 rounded-full text-[11px] font-medium text-white/80 bg-black/40 border border-white/10 backdrop-blur-md">
+            Drag a card from the genre row into a skill slot to assign it
+          </div>
+        </div>
         )}
       </AnimatePresence>
 
