@@ -774,88 +774,9 @@ export default function FocusModePanel() {
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area */}
+          {/* Content Area - New Content Cards REMOVED (saved for later) */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div 
-              className="flex-1 overflow-y-auto pr-2"
-              ref={scrollRef}
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {/* Game Filter Row - Horizontal above card info */}
-              <div className="flex gap-3 mb-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                {gameFilterList.map((game) => (
-                  <button
-                    key={game.id}
-                    onClick={() => {
-                      setSelectedGameFilter(game.id);
-                      setSelectedCard(null);
-                    }}
-                    className="flex-shrink-0 flex flex-col items-center gap-1"
-                  >
-                    <span className={`text-[10px] whitespace-nowrap ${selectedGameFilter === game.id ? 'text-white' : 'text-white/50'}`}>
-                      {game.name}
-                    </span>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                      selectedGameFilter === game.id
-                        ? 'bg-white/15 border border-cyan-400/50'
-                        : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                    }`}>
-                      <span className="text-lg">{game.icon}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Selected Card Preview */}
-              {selectedCard && (
-                <div className="flex gap-4 mb-4 p-4 bg-white/[0.03] rounded-xl border border-white/10">
-                  <AchievementStyleCard card={selectedCard} isSelected={true} size="large" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-xl font-bold text-white">{selectedCard.name}</h2>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${rarityStyles[selectedCard.rarity].text} bg-white/10`}>
-                        {selectedCard.rarity}
-                      </span>
-                    </div>
-                    <p className="text-white/40 text-sm mb-2">{selectedCard.type} • {selectedCard.game}</p>
-                    <p className="text-white/70 text-sm leading-relaxed mb-3">{selectedCard.description}</p>
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      {Object.entries(selectedCard.stats).map(([key, value]) => (
-                        <div key={key} className="bg-white/5 rounded-lg p-2 border border-white/10">
-                          <p className="text-white/40 text-xs">{key}</p>
-                          <p className="text-white font-bold text-sm">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                      <div className="flex items-center gap-1 mb-1">
-                        <Trophy className="w-4 h-4 text-amber-400" />
-                        <p className="text-white/50 text-xs">How to Unlock</p>
-                      </div>
-                      <p className="text-white text-sm">{selectedCard.unlockCondition}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Cards Grid */}
-              <div className="flex flex-wrap gap-3">
-                {filteredCards.map((card) => (
-                  <AchievementStyleCard
-                    key={card.id}
-                    card={card}
-                    isSelected={selectedCard?.id === card.id}
-                    onClick={() => setSelectedCard(card)}
-                    size="normal"
-                  />
-                ))}
-                {filteredCards.length === 0 && (
-                  <div className="w-full py-8 text-center text-white/40">
-                    <p>No new content for this game yet</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Placeholder - New Content UI will be restored here */}
           </div>
         </div>
       </div>
