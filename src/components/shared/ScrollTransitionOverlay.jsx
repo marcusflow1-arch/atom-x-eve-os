@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function ScrollTransitionOverlay({ direction = 'up', duration = 0.6, onComplete }) {
+export default function ScrollTransitionOverlay({ direction = 'up', duration = 0.6, topOffset = 0, onComplete }) {
   const initialY = direction === 'up' ? '100%' : '-100%';
   const animateY = '0%';
 
@@ -11,7 +11,8 @@ export default function ScrollTransitionOverlay({ direction = 'up', duration = 0
       animate={{ y: animateY }}
       transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
       onAnimationComplete={() => onComplete && onComplete()}
-      className="fixed inset-0 z-[100] overflow-hidden"
+      className="fixed z-[100] overflow-hidden"
+      style={{ top: topOffset, left: 0, right: 0, bottom: 0 }}
     >
       {/* Background base */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900 to-black" />

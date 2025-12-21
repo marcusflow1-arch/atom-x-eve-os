@@ -81,6 +81,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
+  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
@@ -526,45 +527,46 @@ function LayoutContent({ children, currentPageName }) {
                                     </div>
                                   </button>
 
-                                  {(p.includes('/lunatemplate') || p.includes('/blacksmith') || p.includes('/seasonalpass')) && (
-                                    <div className="hidden sm:flex items-center gap-2 ml-1">
-                                      <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">
-                                        Atom X Eve Dashboard page
-                                      </span>
-                                      <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <button
-                                        onClick={() => { setPendingRoute(createPageUrl(p.includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith')); setShowRouteTransition(true); }}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {p.includes('/blacksmith') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Hammer className="w-4 h-4" />
-                                            <span>Blacksmith</span>
-                                          </>
-                                        )}
-                                      </button>
-                                      <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <button
-                                        onClick={() => { setPendingRoute(createPageUrl(p.includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass')); setShowRouteTransition(true); }}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {p.includes('/seasonalpass') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Crown className="w-4 h-4" />
-                                            <span>Season Pass</span>
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                  )}
+
 
 
                                 </div>
                               )}
+
+            {/* Luna Header Bar (fixed) */}
+            {showLunaHeaderBar && (
+              <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[min(1200px,calc(100%-2rem))] rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/10 px-4 py-3 flex items-center justify-center gap-4">
+                <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">Atom X Eve Dashboard page</span>
+                <div className="h-6 w-px bg-white/20" />
+                <button
+                  onClick={() => { setPendingRoute(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith')); setShowRouteTransition(true); }}
+                  className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                >
+                  {location.pathname.toLowerCase().includes('/blacksmith') ? (
+                    <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                  ) : (
+                    <>
+                      <Hammer className="w-4 h-4" />
+                      <span>Blacksmith</span>
+                    </>
+                  )}
+                </button>
+                <div className="h-6 w-px bg-white/20" />
+                <button
+                  onClick={() => { setPendingRoute(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass')); setShowRouteTransition(true); }}
+                  className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                >
+                  {location.pathname.toLowerCase().includes('/seasonalpass') ? (
+                    <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                  ) : (
+                    <>
+                      <Crown className="w-4 h-4" />
+                      <span>Season Pass</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
@@ -656,12 +658,16 @@ function LayoutContent({ children, currentPageName }) {
       {/* Route Transition Overlay */}
       <AnimatePresence>
         {showRouteTransition && (
-          <ScrollTransitionOverlay direction="up" onComplete={() => {
-            const to = pendingRoute;
-            setShowRouteTransition(false);
-            setPendingRoute(null);
-            if (to) navigate(to);
-          }} />
+          <ScrollTransitionOverlay
+            direction="up"
+            topOffset={showLunaHeaderBar ? 84 : 0}
+            onComplete={() => {
+              const to = pendingRoute;
+              setShowRouteTransition(false);
+              setPendingRoute(null);
+              if (to) navigate(to);
+            }}
+          />
         )}
       </AnimatePresence>
     </div>
