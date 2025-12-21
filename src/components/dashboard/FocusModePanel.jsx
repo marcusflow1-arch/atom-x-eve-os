@@ -708,174 +708,19 @@ function GameBoxes() {
   );
 }
 
-// Genre list for scrollable selector
-const GENRE_LIST = [
+// Game filter list for New Content (SAVED FOR LATER)
+const gameFilterList = [
   { id: 'all', name: 'All Games', icon: '🎮' },
-  { id: 'rpg', name: 'RPG', icon: '⚔️' },
-  { id: 'mmorpg', name: 'MMORPG', icon: '🌍' },
-  { id: 'fantasy', name: 'Fantasy', icon: '🧙' },
-  { id: 'sci-fi', name: 'Sci-Fi', icon: '🚀' },
-  { id: 'action', name: 'Action', icon: '💥' },
-  { id: 'adventure', name: 'Adventure', icon: '🗺️' },
-  { id: 'horror', name: 'Horror', icon: '👻' },
-  { id: 'simulation', name: 'Simulation', icon: '🎯' },
-  { id: 'strategy', name: 'Strategy', icon: '♟️' },
-  { id: 'racing', name: 'Racing', icon: '🏎️' },
-  { id: 'sports', name: 'Sports', icon: '⚽' },
-  { id: 'fighting', name: 'Fighting', icon: '🥊' },
-  { id: 'shooter', name: 'Shooter', icon: '🔫' },
-  { id: 'puzzle', name: 'Puzzle', icon: '🧩' },
+  { id: 'elden-ring', name: 'Elden Ring', icon: '⚔️' },
+  { id: 'cyberpunk', name: 'Cyberpunk 2088', icon: '🌃' },
+  { id: 'baldurs-gate', name: "Baldur's Gate 3", icon: '🧙' },
+  { id: 'neon-legends', name: 'Neon Legends', icon: '⚡' },
+  { id: 'dragon-age', name: 'Dragon Age', icon: '🐉' },
+  { id: 'shadow-realm', name: 'Shadow Realm', icon: '👁️' },
+  { id: 'stellar-odyssey', name: 'Stellar Odyssey', icon: '🚀' },
+  { id: 'final-fantasy', name: 'Final Fantasy', icon: '✨' },
+  { id: 'dark-souls', name: 'Dark Souls', icon: '🔥' },
 ];
-
-// Scrollable Genre Selector Component
-function GenreScrollSelector({ selectedGenre, onSelectGenre, genres }) {
-  const scrollRef = useRef(null);
-
-  return (
-    <div 
-      ref={scrollRef}
-      className="h-full overflow-y-auto pr-2"
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-    >
-      <div className="space-y-1">
-        {genres.map((genre, index) => (
-          <motion.button
-            key={genre.id}
-            onClick={() => onSelectGenre(genre.id)}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.03 }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
-              selectedGenre === genre.id
-                ? 'bg-cyan-500/20 border border-cyan-400/40 text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                : 'bg-white/[0.03] border border-white/5 text-white/60 hover:bg-white/[0.06] hover:text-white hover:border-white/10'
-            }`}
-          >
-            <span className="text-lg">{genre.icon}</span>
-            <span className="text-sm font-medium truncate">{genre.name}</span>
-            {selectedGenre === genre.id && (
-              <motion.div 
-                layoutId="genreIndicator"
-                className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400"
-              />
-            )}
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Empty Game Box Placeholder with liquid glass effect
-function EmptyGameBox() {
-  return (
-    <div 
-      className="aspect-[3/4] rounded-xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.2)',
-      }}
-    >
-      <div className="w-full h-full flex items-center justify-center">
-        <Gamepad2 className="w-6 h-6 text-white/10" />
-      </div>
-    </div>
-  );
-}
-
-// Game Box Component for grid
-function GameGridBox({ game, onClick }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  if (!game) return <EmptyGameBox />;
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      onClick={() => onClick?.(game)}
-      className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer relative"
-      style={{
-        boxShadow: isHovered 
-          ? '0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(6,182,212,0.15)' 
-          : '0 4px 15px rgba(0,0,0,0.3)',
-        transition: 'box-shadow 0.3s ease',
-      }}
-    >
-      <img 
-        src={game.cover_image || game.cover} 
-        alt={game.title}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-      
-      {/* Hover overlay */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center"
-            >
-              <Play className="w-4 h-4 text-black fill-black ml-0.5" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Game title */}
-      <div className="absolute bottom-0 left-0 right-0 p-2">
-        <p className="text-white font-bold text-[10px] truncate drop-shadow-lg">{game.title}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-// Library Games Grid (7 columns x 3 rows)
-function LibraryGamesGrid({ games, onSelectGame }) {
-  const navigate = useNavigate();
-  const COLS = 7;
-  const ROWS = 3;
-  const totalSlots = COLS * ROWS;
-
-  // Fill grid with games, pad with nulls for empty slots
-  const gridItems = [...games.slice(0, totalSlots)];
-  while (gridItems.length < totalSlots) {
-    gridItems.push(null);
-  }
-
-  const handleGameClick = (game) => {
-    if (game) {
-      navigate(createPageUrl('Library') + `?game=${game.id}`);
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-7 gap-3">
-      {gridItems.map((game, index) => (
-        <motion.div
-          key={game?.id || `empty-${index}`}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.02 }}
-        >
-          <GameGridBox game={game} onClick={handleGameClick} />
-        </motion.div>
-      ))}
-    </div>
-  );
-}
 
 // Library Game Card Component
 function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
@@ -1208,13 +1053,12 @@ function LibraryGamesSection() {
   );
 }
 
-// Library Content Area Component - Now with genre selector and grid
+// Library Content Area Component
 function LibraryContentArea({ onSelectGame, selectedGame }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedGenre, setSelectedGenre] = useState('all');
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -1230,7 +1074,7 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
       } else {
         if (testGameAlpha) userGames.push(testGameAlpha);
         // Add some mock games for demo
-        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 15)];
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
@@ -1240,15 +1084,19 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
     fetchGames();
   }, [user, isAuthenticated]);
 
-  // Filter games by selected genre
-  const filteredGames = useMemo(() => {
-    if (selectedGenre === 'all') return ownedGames;
-    return ownedGames.filter(game => {
-      const gameGenre = (game.genre || '').toLowerCase();
-      return gameGenre.includes(selectedGenre.toLowerCase()) || 
-             selectedGenre.toLowerCase().includes(gameGenre);
-    });
-  }, [ownedGames, selectedGenre]);
+  const gamesByGenre = useMemo(() => {
+    return ownedGames.reduce((acc, game) => {
+      const g = game.genre || 'Uncategorized';
+      if (!acc[g]) acc[g] = [];
+      acc[g].push(game);
+      return acc;
+    }, {});
+  }, [ownedGames]);
+
+  const handlePlayGame = (game) => {
+    // Navigate to library with game selected
+    navigate(createPageUrl('Library') + `?game=${game.id}`);
+  };
 
   if (loading) {
     return (
@@ -1259,45 +1107,32 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
   }
 
   return (
-    <div className="flex h-full gap-4">
-      {/* Genre Selector Box (Left side, scrollable) */}
-      <div 
-        className="w-44 flex-shrink-0 rounded-2xl p-3 h-full"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.3)',
-        }}
-      >
-        <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-3 px-1">Genres</h4>
-        <GenreScrollSelector 
-          selectedGenre={selectedGenre}
-          onSelectGenre={setSelectedGenre}
-          genres={GENRE_LIST}
+    <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      {/* Selected Game Detail */}
+      <AnimatePresence>
+        {selectedGame && (
+          <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Genre Rows */}
+      {Object.entries(gamesByGenre).map(([genre, games]) => (
+        <GenreRow
+          key={genre}
+          genre={genre}
+          games={games}
+          onSelectGame={onSelectGame}
+          selectedGame={selectedGame}
+          onPlayGame={handlePlayGame}
         />
-      </div>
+      ))}
 
-      {/* Games Grid Area (Right side) */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <LibraryIcon className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-white font-bold text-sm">Library Games</h3>
-            <span className="text-white/30 text-xs">
-              {selectedGenre === 'all' ? 'All' : GENRE_LIST.find(g => g.id === selectedGenre)?.name}
-            </span>
-          </div>
-          <span className="text-white/40 text-xs">{filteredGames.length} games</span>
+      {Object.keys(gamesByGenre).length === 0 && (
+        <div className="flex flex-col items-center justify-center h-48 text-white/30">
+          <LibraryIcon className="w-12 h-12 mb-4 opacity-50" />
+          <p>No games in your library yet</p>
         </div>
-
-        {/* Games Grid */}
-        <div className="flex-1 overflow-hidden">
-          <LibraryGamesGrid games={filteredGames} onSelectGame={onSelectGame} />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
