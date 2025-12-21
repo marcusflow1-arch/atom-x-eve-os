@@ -266,6 +266,17 @@ function SteamReviewCard({ review }) {
     setReactions(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Handle both old and new review format
+  const username = review.username || review.user;
+  const avatarUrl = review.avatar_url || review.avatar || `https://i.pravatar.cc/40?u=${username}`;
+  const hoursPlayed = review.hours_played || review.hours || 0;
+  const helpfulCount = review.helpful_count || review.helpful || 0;
+  const notHelpfulCount = review.not_helpful_count || review.notHelpful || 0;
+  const funnyCount = review.funny_count || 0;
+  const insightfulCount = review.insightful_count || 0;
+  const agreeCount = review.agree_count || 0;
+  const reviewDate = review.created_date || review.date;
+
   return (
     <div 
       className="mb-4 rounded-xl overflow-hidden"
@@ -280,10 +291,10 @@ function SteamReviewCard({ review }) {
       <div className="p-4">
         {/* User Info & Recommendation */}
         <div className="flex items-start gap-3 mb-4">
-          <img src={review.avatar} alt={review.user} className="w-11 h-11 rounded-lg ring-2 ring-white/10" />
+          <img src={avatarUrl} alt={username} className="w-11 h-11 rounded-lg ring-2 ring-white/10" />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-white font-medium hover:text-cyan-400 cursor-pointer transition-colors">{review.user}</p>
+              <p className="text-white font-medium hover:text-cyan-400 cursor-pointer transition-colors">{username}</p>
               <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                 review.rating === 'positive' 
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
@@ -296,10 +307,10 @@ function SteamReviewCard({ review }) {
             <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {review.hours} hrs played
+                {hoursPlayed} hrs played
               </span>
               <span>•</span>
-              <span>{review.date}</span>
+              <span>{typeof reviewDate === 'string' ? new Date(reviewDate).toLocaleDateString() : reviewDate}</span>
             </div>
           </div>
         </div>
@@ -313,34 +324,34 @@ function SteamReviewCard({ review }) {
             <ReactionButton 
               emoji="👍" 
               label="Helpful" 
-              count={review.helpful + (reactions.helpful ? 1 : 0)}
+              count={helpfulCount + (reactions.helpful ? 1 : 0)}
               isActive={reactions.helpful}
               onClick={() => toggleReaction('helpful')}
             />
             <ReactionButton 
               emoji="👎" 
-              count={review.notHelpful + (reactions.notHelpful ? 1 : 0)}
+              count={notHelpfulCount + (reactions.notHelpful ? 1 : 0)}
               isActive={reactions.notHelpful}
               onClick={() => toggleReaction('notHelpful')}
             />
             <ReactionButton 
               emoji="😂" 
               label="Funny"
-              count={reactions.funny ? 1 : 0}
+              count={funnyCount + (reactions.funny ? 1 : 0)}
               isActive={reactions.funny}
               onClick={() => toggleReaction('funny')}
             />
             <ReactionButton 
               emoji="💡" 
               label="Insightful"
-              count={reactions.insightful ? 1 : 0}
+              count={insightfulCount + (reactions.insightful ? 1 : 0)}
               isActive={reactions.insightful}
               onClick={() => toggleReaction('insightful')}
             />
             <ReactionButton 
               emoji="🤝" 
               label="Agree"
-              count={reactions.agree ? 1 : 0}
+              count={agreeCount + (reactions.agree ? 1 : 0)}
               isActive={reactions.agree}
               onClick={() => toggleReaction('agree')}
             />
@@ -952,7 +963,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
       {/* User Reviews Section - Full Width at Bottom */}
       <div className="max-w-7xl mx-auto px-6 pb-8">
         <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mb-6" />
-        <ReviewsSection reviews={mockReviews} />
+        <ReviewsSection reviews={fallbackReviews} gameId={gameId} />
       </div>
     </div>
   );
