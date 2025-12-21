@@ -2062,62 +2062,7 @@ export default function LunaTemplate() {
         </div>
         )}
 
-      {/* Blank Drawer */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setDrawerOpen(false)}
-            />
-            <motion.div
-              initial={{ x: -320, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -320, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl border-r border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
-            >
-              <div className="p-6 flex justify-end">
-                  <button 
-                    onClick={() => setDrawerOpen(false)}
-                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                  >
-                    <X className="w-4 h-4 text-white/60" />
-                  </button>
-              </div>
-              {/* Menu Content Area */}
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-                {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setDrawerOpen(false);
-                        setActiveDrawer(item);
-                      }}
-                      className="w-full p-4 transition-all group flex items-center gap-4 hover:scale-105"
-                    >
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="text-left relative">
-                        <h3 className="text-white font-bold text-lg">{item.label}</h3>
-                        <p className="text-white/40 text-xs">{item.description}</p>
-                        <div className="absolute -bottom-2 left-0 h-0.5 bg-blue-500 transition-all duration-300 w-0 group-hover:w-full" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+
 
       {/* Settings Overlay */}
       <AnimatePresence>
