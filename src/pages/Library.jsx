@@ -777,7 +777,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
             </div>
 
             <div className="w-full h-full overflow-hidden">
-              <Achievements />
+              <Achievements onExitToLibrary={() => setEmbeddedView('library')} />
             </div>
           </motion.div>
         )}
