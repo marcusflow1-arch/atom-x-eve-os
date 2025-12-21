@@ -1198,7 +1198,7 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
 export default function FocusModePanel() {
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
-  const [activeGenre, setActiveGenre] = useState(null);
+  const [activeGenre, setActiveGenre] = useState('Action');
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [calendarEvents, setCalendarEvents] = useState([
@@ -1206,6 +1206,7 @@ export default function FocusModePanel() {
     { id: 2, title: 'Complete daily quests', type: 'goal', time: '', date: new Date().toISOString() },
   ]);
   const [ownedGames, setOwnedGames] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch games for bottom Library section
   useEffect(() => {
@@ -1221,31 +1222,38 @@ export default function FocusModePanel() {
         if (testGameAlpha) userGames.unshift(testGameAlpha);
       } else {
         if (testGameAlpha) userGames.push(testGameAlpha);
-        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 20)];
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+      setLoading(false);
     };
     fetchGames();
   }, [user, isAuthenticated]);
 
-  // Compute games by genre for bottom section
+  // Compute games by genre - map to ALL_GENRES
   const gamesByGenre = useMemo(() => {
-    return ownedGames.reduce((acc, game) => {
-      const g = game.genre || 'Uncategorized';
-      if (!acc[g]) acc[g] = [];
-      acc[g].push(game);
-      return acc;
-    }, {});
+    const result = {};
+    // Initialize all genres
+    ALL_GENRES.forEach(g => result[g] = []);
+    
+    // Map games to genres
+    ownedGames.forEach(game => {
+      const gameGenre = game.genre || 'Action';
+      // Try to match to our genre list
+      const matchedGenre = ALL_GENRES.find(g => 
+        g.toLowerCase() === gameGenre.toLowerCase() ||
+        g.toLowerCase().includes(gameGenre.toLowerCase()) ||
+        gameGenre.toLowerCase().includes(g.toLowerCase().split(' ')[0])
+      ) || 'Action';
+      
+      if (result[matchedGenre]) {
+        result[matchedGenre].push(game);
+      }
+    });
+    
+    return result;
   }, [ownedGames]);
-
-  // Set initial genre
-  useEffect(() => {
-    const genres = Object.keys(gamesByGenre);
-    if (genres.length > 0 && !activeGenre) {
-      setActiveGenre(genres[0]);
-    }
-  }, [gamesByGenre, activeGenre]);
 
   const handleCalendarDayClick = (date) => {
     setSelectedCalendarDate(date);
@@ -1283,6 +1291,8 @@ export default function FocusModePanel() {
               selectedGame={selectedGame}
               activeGenre={activeGenre}
               onGenreChange={setActiveGenre}
+              gamesByGenre={gamesByGenre}
+              loading={loading}
             />
           </div>
         </div>
