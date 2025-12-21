@@ -350,14 +350,10 @@ export default function FocusModePanel() {
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div 
-              className="flex-1 overflow-y-auto pr-2"
-              ref={scrollRef}
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {/* Selected Card Preview */}
-              {selectedCard && (
-                <div className="flex gap-4 mb-4 p-4 bg-white/[0.03] rounded-xl border border-white/10">
+            {/* Fixed Card Detail Box - Always Visible */}
+            <div className="flex gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/10 mb-4 flex-shrink-0">
+              {selectedCard ? (
+                <>
                   <AchievementStyleCard card={selectedCard} isSelected={true} size="large" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -384,10 +380,20 @@ export default function FocusModePanel() {
                       <p className="text-white text-sm">{selectedCard.unlockCondition}</p>
                     </div>
                   </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center py-8 text-white/40">
+                  <p>Select a card below to view details</p>
                 </div>
               )}
+            </div>
 
-              {/* Cards Grid */}
+            {/* Scrollable Cards Grid Below */}
+            <div 
+              className="flex-1 overflow-y-auto pr-2"
+              ref={scrollRef}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               <div className="flex flex-wrap gap-3">
                 {filteredCards.map((card) => (
                   <AchievementStyleCard
