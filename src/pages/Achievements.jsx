@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Trophy, Hammer, Search, Filter, Mic, Volume2, ChevronRight,
+  Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, User
+  ChevronDown, Mic as MicIcon
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -15,10 +15,6 @@ import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
-import BlacksmithPage from './Blacksmith';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import AvatarCustomizer3D from '../components/avatar/AvatarCustomizer3D';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -162,7 +158,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
   );
 };
 
-function AchievementsView({ onSwitchToForge }) {
+function AchievementsView() {
   const { user, isAuthenticated, updateUserData } = useAuth();
   const [allGames, setAllGames] = useState([]);
   const [localAchievements, setLocalAchievements] = useState({});
@@ -174,7 +170,6 @@ function AchievementsView({ onSwitchToForge }) {
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
-  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -357,45 +352,8 @@ function AchievementsView({ onSwitchToForge }) {
             
             {/* Header */}
             <div className="flex items-center gap-3">
-              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white flex items-center gap-3">
+              <h1 className="ml-16 text-2xl font-black tracking-tighter text-white">
                 Achievements
-                <Link to={createPageUrl('Blacksmith')}>
-                  <motion.div 
-                    className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
-                    title="Go to Blacksmith Forge"
-                    animate={{
-                      rotate: [0, -25, 0],
-                      y: [0, 0, 8, 0]
-                    }}
-                    transition={{
-                      duration: 0.8,
-                      repeat: Infinity,
-                      repeatDelay: 1.5,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    {/* Holographic Black Hammer */}
-                    <div className="relative z-10">
-                      <Hammer className="w-6 h-6 text-black fill-black/80 drop-shadow-[0_0_2px_rgba(255,255,255,0.5)] group-hover:scale-110 transition-transform duration-300" />
-                      {/* Holographic Glitch/Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
-                    </div>
-                  </motion.div>
-                </Link>
-                
-                {/* Avatar Customizer Button */}
-                <motion.button
-                  onClick={() => setShowAvatarCustomizer(true)}
-                  className="ml-2 cursor-pointer group relative w-8 h-8 flex items-center justify-center"
-                  title="3D Avatar Customizer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="relative z-10">
-                    <User className="w-6 h-6 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] group-hover:scale-110 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-blue-500/20 blur-md opacity-50 group-hover:opacity-100 transition-opacity rounded-full animate-pulse" />
-                  </div>
-                </motion.button>
               </h1>
             </div>
 
@@ -589,12 +547,6 @@ function AchievementsView({ onSwitchToForge }) {
         </div>
       </motion.div>
 
-      {/* 3D Avatar Customizer */}
-      <AnimatePresence>
-        {showAvatarCustomizer && (
-          <AvatarCustomizer3D onClose={() => setShowAvatarCustomizer(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
