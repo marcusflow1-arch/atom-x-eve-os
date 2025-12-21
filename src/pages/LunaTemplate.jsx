@@ -1978,7 +1978,7 @@ export default function LunaTemplate() {
 
                   </motion.div>
             ) : null}
-            {!uiVisible && !showInventory ? null : (
+            {showInventory && uiVisible && (
               <motion.div 
                 key="inventory"
                 initial={{ opacity: 0, x: -50 }}
