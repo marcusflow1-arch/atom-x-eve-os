@@ -898,7 +898,7 @@ export default function DeveloperLimitedEdition({ mode }) {
 
       {/* Main Content Area */}
       <div className="flex gap-6">
-        {/* Left Side - Card Display & Info (20% width - moved further left) */}
+        {/* Left Side - Card Display (20% width) */}
         <div className="w-[20%] flex-shrink-0 flex flex-col gap-4">
           {/* Card Display Box - Translucent */}
           <div 
@@ -913,25 +913,12 @@ export default function DeveloperLimitedEdition({ mode }) {
           >
             {selectedCard && <LargeCardDisplay card={selectedCard} />}
           </div>
-
-          {/* Card Info Box - Separate */}
-          <div 
-            className="rounded-2xl p-4"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)',
-              backdropFilter: 'blur(30px)',
-              WebkitBackdropFilter: 'blur(30px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            {selectedCard && <CardInfoPanel card={selectedCard} />}
-          </div>
         </div>
 
         {/* Vertical Divider */}
         <div className="w-px bg-white/20 self-stretch" />
 
-        {/* Right Side - Games & Cards (80% width - more space for developer info) */}
+        {/* Middle - Games & Cards */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Games by Developer */}
           <div className="flex gap-3 overflow-x-auto pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
@@ -990,6 +977,24 @@ export default function DeveloperLimitedEdition({ mode }) {
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Vertical Divider - Right */}
+        <div className="w-px bg-white/20 self-stretch" />
+
+        {/* Right Side - Card Info Panel (vertical, far right) */}
+        <div className="w-[220px] flex-shrink-0">
+          <div 
+            className="rounded-2xl p-4 h-full"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {selectedCard && <CardInfoPanel card={selectedCard} />}
           </div>
         </div>
       </div>
