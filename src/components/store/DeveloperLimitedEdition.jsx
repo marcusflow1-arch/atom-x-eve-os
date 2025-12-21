@@ -788,7 +788,12 @@ export default function DeveloperLimitedEdition() {
             
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
               {currentGame?.limitedCards.map((card) => (
-                <LimitedEditionCardSmall key={card.id} card={card} />
+                <LimitedEditionCardSmall 
+                  key={card.id} 
+                  card={card} 
+                  onClick={handleCardClick}
+                  isSelected={selectedCard?.id === card.id}
+                />
               ))}
               
               {(!currentGame?.limitedCards || currentGame.limitedCards.length === 0) && (
