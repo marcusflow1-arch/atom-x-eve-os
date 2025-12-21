@@ -624,9 +624,33 @@ function LayoutContent({ children, currentPageName }) {
         );
       })()}
 
-      {/* Divider below header for Luna pages */}
+      {/* Divider and right controls for Luna pages */}
       {showLunaHeaderBar && (
-        <div className="fixed left-0 right-0 top-20 z-30 border-t border-white/15 pointer-events-none" id="luna-divider" />
+        <>
+          <div className="fixed top-4 right-4 z-40 flex items-center gap-3">
+            <motion.button
+              whileHover={{ scale: 1.06, rotate: 90 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(createPageUrl('LunaTemplate?open=settings'))}
+              className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10 text-white"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              title="Settings"
+            >
+              <Settings className="w-6 h-6 text-white/80" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(createPageUrl('LunaTemplate?open=profile'))}
+              className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              title="Profile"
+            >
+              <User className="w-6 h-6 text-white" />
+            </motion.button>
+          </div>
+          <div className="fixed left-0 right-0 top-20 z-30 border-t border-white/15 pointer-events-none" id="luna-divider" />
+        </>
       )}
 
       {/* Main Content with Error Boundary */}
