@@ -1096,7 +1096,7 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Time, Goals, and Pinned Games */}
+      {/* Bottom Section - Time, Goals, and Library Games */}
       <div className="flex gap-6 mt-6 pt-4 border-t border-white/10">
         {/* Time & Date with Mini Calendar */}
         <div className="flex-shrink-0">
@@ -1108,46 +1108,9 @@ export default function FocusModePanel() {
           <GoalsPanel />
         </div>
 
-        {/* Pinned Games - Horizontal scroll */}
+        {/* Library Games - Clickable title transitions to Store */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-bold text-sm mb-2 flex items-center gap-2">
-            <Pin className="w-4 h-4 text-cyan-400" />
-            Pinned Games
-          </h3>
-          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-            {pinnedGames.map((game, index) => (
-              <motion.div
-                key={game.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0 w-20 group cursor-pointer"
-              >
-                <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all">
-                  <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white ml-0.5" />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                    <p className="text-white font-bold text-[10px] truncate">{game.title}</p>
-                    <div className="h-0.5 bg-white/20 rounded-full overflow-hidden mt-0.5">
-                      <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${game.progress}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-            {/* Add Game */}
-            <div className="flex-shrink-0 w-20">
-              <div className="aspect-[3/4] rounded-lg border border-dashed border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
-                <Plus className="w-5 h-5 text-white/40" />
-                <p className="text-white/40 text-[10px] mt-1">Add</p>
-              </div>
-            </div>
-          </div>
+          <LibraryGamesSection />
         </div>
       </div>
     </div>
