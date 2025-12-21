@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import * as THREE from 'three';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Play, ShoppingCart, Heart, Share, Star, Trophy, Sword, Zap, Package,
-  Monitor, Gamepad, Cpu, HardDrive, Download, Eye, Users, MessageSquare, Crown, Bot, X
+  Monitor, Gamepad, Cpu, HardDrive, Download, Eye, Users, MessageSquare, Crown, Bot, X,
+  ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Clock, Calendar, Tag, Gift, Plus, Flag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,147 +13,6 @@ import { useAuth } from '../auth/AuthContext';
 import { Game } from '@/entities/Game';
 import { allMockGames } from '../store/mockData';
 import { enhancedMockGameData as legacyEnhancedMockData } from '../store/mockGameDetailData';
-import StreamAffiliateTab from '../gamedetail/StreamAffiliateTab';
-import PlayerStatsPanel from '../gamedetail/PlayerStatsPanel';
-
-// 3D Model Viewer Component
-const Model3DViewer = ({ gameId, modelType }) => {
-  const mountRef = React.useRef(null);
-  const rendererRef = React.useRef(null);
-  const frameRef = React.useRef(null);
-  const mouseRef = React.useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    const currentMount = mountRef.current;
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, currentMount.clientWidth / currentMount.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    
-    renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0x000000, 0);
-    currentMount.appendChild(renderer.domElement);
-
-    rendererRef.current = renderer;
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-
-    let model;
-    let initialCameraZ = 5;
-
-    // Determine model based on modelType or gameId
-    if (modelType === 'equipment') {
-      const equipmentGroup = new THREE.Group();
-      const body = new THREE.BoxGeometry(1.2, 1.5, 0.5);
-      const shoulder = new THREE.SphereGeometry(0.6, 16, 16);
-      const material = new THREE.MeshPhongMaterial({ color: 0x808080 });
-      
-      const bodyMesh = new THREE.Mesh(body, material);
-      const leftShoulder = new THREE.Mesh(shoulder, material);
-      leftShoulder.position.set(-0.8, 0.5, 0);
-      const rightShoulder = new THREE.Mesh(shoulder, material);
-      rightShoulder.position.set(0.8, 0.5, 0);
-
-      equipmentGroup.add(bodyMesh, leftShoulder, rightShoulder);
-      model = equipmentGroup;
-      initialCameraZ = 4;
-    } else if (modelType === 'ability') {
-      const sphere = new THREE.SphereGeometry(1, 32, 32);
-      const material = new THREE.MeshPhongMaterial({ 
-        color: 0x00ffff, 
-        emissive: 0x00ffff, 
-        emissiveIntensity: 0.5,
-        transparent: true,
-        opacity: 0.7 
-      });
-      model = new THREE.Mesh(sphere, material);
-      initialCameraZ = 3;
-    } else if (modelType === 'lootbox') {
-      const chestGroup = new THREE.Group();
-      const base = new THREE.BoxGeometry(2, 1.5, 1.5);
-      const lid = new THREE.BoxGeometry(2.1, 0.5, 1.6);
-      const material = new THREE.MeshPhongMaterial({ color: 0x8b4513 });
-      const accentMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-
-      const baseMesh = new THREE.Mesh(base, material);
-      const lidMesh = new THREE.Mesh(lid, accentMaterial);
-      lidMesh.position.y = 1;
-
-      chestGroup.add(baseMesh, lidMesh);
-      model = chestGroup;
-      initialCameraZ = 4;
-    } else {
-      const geometry = new THREE.BoxGeometry(2, 2, 2);
-      const material = new THREE.MeshPhongMaterial({ color: 0x3b82f6 });
-      model = new THREE.Mesh(geometry, material);
-      initialCameraZ = 5;
-    }
-    
-    scene.add(model);
-    camera.position.z = initialCameraZ;
-
-    // Mouse interaction
-    const onMouseMove = (event) => {
-      const rect = currentMount.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    };
-
-    currentMount.addEventListener('mousemove', onMouseMove);
-
-    // Animation loop
-    const animate = () => {
-      frameRef.current = requestAnimationFrame(animate);
-      
-      if (model) {
-        model.rotation.y += (mouseRef.current.x * 0.5 - model.rotation.y) * 0.05;
-        model.rotation.x += (-mouseRef.current.y * 0.5 - model.rotation.x) * 0.05;
-        model.rotation.y += 0.005;
-      }
-      
-      renderer.render(scene, camera);
-    };
-    
-    animate();
-
-    // Handle resize
-    const handleResize = () => {
-      if (currentMount && renderer && camera) {
-        camera.aspect = currentMount.clientWidth / currentMount.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      currentMount.removeEventListener('mousemove', onMouseMove);
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-      if (currentMount && renderer.domElement) {
-        currentMount.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, [gameId, modelType]);
-
-  return (
-    <div ref={mountRef} className="w-full h-full relative" />
-  );
-};
 
 const rarityColors = {
   Common: 'text-gray-400 bg-gray-500/20',
@@ -163,74 +22,390 @@ const rarityColors = {
   Legendary: 'text-orange-400 bg-orange-500/20'
 };
 
-// Interactive Card with Tilt and Shine Effect
-const InteractiveCard = ({ children, delay = 0 }) => {
-  const cardRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
+// Mock DLC Data
+const mockDLCs = [
+  { id: 1, name: 'Expansion Pack: Shadow Realm', price: 19.99, image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=300', discount: 0 },
+  { id: 2, name: 'Character Pack: Elite Warriors', price: 9.99, image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300', discount: 25 },
+  { id: 3, name: 'Soundtrack Collection', price: 4.99, image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300', discount: 0 },
+  { id: 4, name: 'Cosmetic Bundle: Neon Dreams', price: 14.99, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300', discount: 50 },
+];
+
+// Mock Reviews Data
+const mockReviews = [
+  { id: 1, user: 'DragonSlayer99', avatar: 'https://i.pravatar.cc/40?img=1', rating: 'positive', hours: 156, date: '2024-12-15', helpful: 234, notHelpful: 12, content: 'Absolutely phenomenal game! The story kept me hooked from start to finish. The combat system is fluid and rewarding. Graphics are stunning and the soundtrack is incredible. Highly recommend to anyone who loves action RPGs.' },
+  { id: 2, user: 'CasualGamer42', avatar: 'https://i.pravatar.cc/40?img=2', rating: 'positive', hours: 45, date: '2024-12-10', helpful: 89, notHelpful: 5, content: 'Great game overall. Some minor bugs here and there but nothing game-breaking. The developers are actively patching issues which is refreshing to see.' },
+  { id: 3, user: 'ProReviewer', avatar: 'https://i.pravatar.cc/40?img=3', rating: 'negative', hours: 12, date: '2024-12-08', helpful: 45, notHelpful: 78, content: 'Not my cup of tea. The difficulty spikes are frustrating and the tutorial doesn\'t explain mechanics well. Maybe it gets better later but I couldn\'t get into it.' },
+  { id: 4, user: 'NightOwlGaming', avatar: 'https://i.pravatar.cc/40?img=4', rating: 'positive', hours: 89, date: '2024-12-05', helpful: 156, notHelpful: 8, content: 'One of the best games I\'ve played this year. The world-building is exceptional and there\'s so much content to explore. Worth every penny!' },
+  { id: 5, user: 'SpeedRunner_X', avatar: 'https://i.pravatar.cc/40?img=5', rating: 'positive', hours: 312, date: '2024-11-28', helpful: 67, notHelpful: 3, content: 'Perfect for speedrunning! Tight controls, consistent mechanics, and interesting routing options. The community is also super welcoming.' },
+];
+
+// Media Gallery Component (Steam-style)
+function MediaGallery({ game }) {
+  const [activeMedia, setActiveMedia] = useState(0);
+  const [isVideo, setIsVideo] = useState(true);
   
-  const x = useMotionValue(0.5);
-  const y = useMotionValue(0.5);
-  
-  const rotateX = useTransform(y, [0, 1], [10, -10]);
-  const rotateY = useTransform(x, [0, 1], [-10, 10]);
-  
-  const shineX = useTransform(x, [0, 1], ['-100%', '200%']);
-  
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / rect.width;
-    const mouseY = (e.clientY - rect.top) / rect.height;
-    x.set(mouseX);
-    y.set(mouseY);
-  };
-  
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    x.set(0.5);
-    y.set(0.5);
-  };
+  const media = [
+    { type: 'video', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', thumbnail: game.banner || game.cover_image },
+    ...(game.screenshots || [game.cover, game.banner, game.cover, game.banner]).map(s => ({ type: 'image', src: s, thumbnail: s }))
+  ];
 
   return (
-    <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX: isHovered ? rotateX : 0,
-        rotateY: isHovered ? rotateY : 0,
-        transformStyle: 'preserve-3d',
-        perspective: 1000,
-      }}
-      className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/20"
-      whileHover={{ scale: 1.02 }}
-    >
-      {/* Shine Effect */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)',
-          x: shineX,
-        }}
-        initial={{ x: '-100%' }}
-        animate={{ x: isHovered ? '200%' : '-100%' }}
-        transition={{ duration: 0.6, ease: 'easeInOut' }}
-      />
-      
-      {/* Glass Reflection */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
-        animate={{ opacity: isHovered ? 1 : 0.5 }}
-      />
-      
-      {children}
-    </motion.div>
+    <div className="space-y-2">
+      {/* Main Display */}
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-white/10">
+        {media[activeMedia]?.type === 'video' ? (
+          <video 
+            className="w-full h-full object-cover"
+            controls
+            autoPlay
+            muted
+            poster={game.banner || game.cover_image}
+          >
+            <source src={media[activeMedia].src} type="video/mp4" />
+          </video>
+        ) : (
+          <img 
+            src={media[activeMedia]?.src} 
+            alt="Screenshot"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* Thumbnail Strip */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {media.map((item, index) => (
+          <button
+            key={index}
+            onClick={() => setActiveMedia(index)}
+            className={`relative flex-shrink-0 w-28 h-16 rounded overflow-hidden border-2 transition-all ${
+              activeMedia === index ? 'border-white' : 'border-transparent hover:border-white/50'
+            }`}
+          >
+            <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            {item.type === 'video' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <Play className="w-4 h-4 text-white fill-white" />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
   );
-};
+}
+
+// Game Info Sidebar (Steam-style right panel)
+function GameInfoSidebar({ game, gameIsOwned, onPurchase, isAuthenticated }) {
+  return (
+    <div className="space-y-4">
+      {/* Cover Image */}
+      <img 
+        src={game.cover_image || game.cover} 
+        alt={game.title}
+        className="w-full aspect-[2/3] object-cover rounded-lg border border-white/10"
+      />
+
+      {/* Description */}
+      <p className="text-sm text-slate-300 leading-relaxed line-clamp-4">
+        {game.description}
+      </p>
+
+      {/* Quick Info */}
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-slate-500">REVIEWS:</span>
+          <span className="text-blue-400">Very Positive (2,847)</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">RELEASE DATE:</span>
+          <span className="text-slate-300">{game.releaseDate || 'Dec 15, 2024'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">DEVELOPER:</span>
+          <span className="text-blue-400 hover:underline cursor-pointer">{game.developer || 'Game Studio'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500">PUBLISHER:</span>
+          <span className="text-blue-400 hover:underline cursor-pointer">{game.publisher || 'Publisher Inc'}</span>
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-1.5">
+        {['Action', 'RPG', 'Open World', 'Story Rich', 'Multiplayer'].map((tag, i) => (
+          <span key={i} className="px-2 py-1 bg-white/10 rounded text-xs text-slate-300 hover:bg-white/20 cursor-pointer transition-colors">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Purchase Section */}
+      <div className="bg-slate-800/80 rounded-lg p-4 border border-white/10">
+        <p className="text-sm text-slate-400 mb-2">Buy {game.title}</p>
+        <div className="flex items-center justify-between mb-3">
+          {game.originalPrice && (
+            <Badge className="bg-green-600 text-white">-{Math.round((1 - game.price / game.originalPrice) * 100)}%</Badge>
+          )}
+          <div className="text-right">
+            {game.originalPrice && (
+              <span className="text-slate-500 line-through text-sm mr-2">${game.originalPrice}</span>
+            )}
+            <span className="text-2xl font-bold text-white">${game.price}</span>
+          </div>
+        </div>
+        
+        {gameIsOwned ? (
+          <Button className="w-full bg-green-600 hover:bg-green-700">
+            <Play className="w-4 h-4 mr-2" />
+            Play Now
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <Button onClick={onPurchase} className="w-full bg-green-600 hover:bg-green-700">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Add to Cart
+            </Button>
+            <Button variant="outline" className="w-full border-white/20 hover:bg-white/10">
+              <Heart className="w-4 h-4 mr-2" />
+              Add to Wishlist
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// DLC Section Component
+function DLCSection({ dlcs }) {
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <Gift className="w-5 h-5 text-blue-400" />
+        Downloadable Content
+      </h3>
+      <div className="space-y-2">
+        {dlcs.map((dlc) => (
+          <div key={dlc.id} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg hover:bg-slate-900/80 transition-colors cursor-pointer">
+            <img src={dlc.image} alt={dlc.name} className="w-20 h-12 object-cover rounded" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-white font-medium truncate">{dlc.name}</p>
+            </div>
+            <div className="text-right">
+              {dlc.discount > 0 && (
+                <Badge className="bg-green-600 text-white text-xs mb-1">-{dlc.discount}%</Badge>
+              )}
+              <p className="text-white font-bold">
+                ${dlc.discount > 0 ? (dlc.price * (1 - dlc.discount / 100)).toFixed(2) : dlc.price}
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="border-white/20 hover:bg-white/10">
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Review Card Component
+function ReviewCard({ review }) {
+  const [helpfulVoted, setHelpfulVoted] = useState(null);
+
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+      <div className="flex items-start gap-3 mb-3">
+        <img src={review.avatar} alt={review.user} className="w-10 h-10 rounded" />
+        <div className="flex-1">
+          <p className="text-blue-400 font-medium text-sm">{review.user}</p>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Clock className="w-3 h-3" />
+            <span>{review.hours} hrs on record</span>
+          </div>
+        </div>
+        <div className={`flex items-center gap-1 px-2 py-1 rounded ${
+          review.rating === 'positive' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'
+        }`}>
+          {review.rating === 'positive' ? (
+            <ThumbsUp className="w-4 h-4" />
+          ) : (
+            <ThumbsDown className="w-4 h-4" />
+          )}
+          <span className="text-xs font-medium capitalize">{review.rating === 'positive' ? 'Recommended' : 'Not Recommended'}</span>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 mb-2">POSTED: {review.date}</p>
+      <p className="text-sm text-slate-300 leading-relaxed mb-4">{review.content}</p>
+
+      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+        <span className="text-xs text-slate-500">Was this review helpful?</span>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setHelpfulVoted('yes')}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+              helpfulVoted === 'yes' ? 'bg-blue-500/30 text-blue-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            <ThumbsUp className="w-3 h-3" />
+            Yes ({review.helpful + (helpfulVoted === 'yes' ? 1 : 0)})
+          </button>
+          <button 
+            onClick={() => setHelpfulVoted('no')}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+              helpfulVoted === 'no' ? 'bg-red-500/30 text-red-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            <ThumbsDown className="w-3 h-3" />
+            No ({review.notHelpful + (helpfulVoted === 'no' ? 1 : 0)})
+          </button>
+          <button className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-white/5 text-slate-400 hover:bg-white/10">
+            <Flag className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reviews Section Component
+function ReviewsSection({ reviews }) {
+  const [filter, setFilter] = useState('all');
+  const [showWriteReview, setShowWriteReview] = useState(false);
+
+  const positiveCount = reviews.filter(r => r.rating === 'positive').length;
+  const positivePercent = Math.round((positiveCount / reviews.length) * 100);
+
+  const filteredReviews = filter === 'all' 
+    ? reviews 
+    : reviews.filter(r => r.rating === filter);
+
+  return (
+    <div className="space-y-4">
+      {/* Review Summary */}
+      <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-blue-400" />
+          User Reviews
+        </h3>
+        
+        <div className="flex items-center gap-6 mb-4">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-400">{positivePercent}%</div>
+            <div className="text-xs text-slate-500">Positive</div>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500" style={{ width: `${positivePercent}%` }} />
+              </div>
+              <span className="text-xs text-slate-400">{reviews.length} reviews</span>
+            </div>
+            <p className="text-sm text-blue-400 font-medium">Very Positive</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            onClick={() => setShowWriteReview(!showWriteReview)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Write a Review
+          </Button>
+          <div className="flex gap-1 ml-auto">
+            {['all', 'positive', 'negative'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  filter === f 
+                    ? 'bg-blue-500/20 text-blue-400' 
+                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                {f === 'all' ? 'All' : f === 'positive' ? 'Positive' : 'Negative'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Write Review Form */}
+      <AnimatePresence>
+        {showWriteReview && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-slate-800/50 rounded-lg p-4 border border-white/10"
+          >
+            <h4 className="text-white font-medium mb-3">Write Your Review</h4>
+            <div className="flex gap-3 mb-3">
+              <button className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-400 hover:bg-blue-500/30 transition-colors">
+                <ThumbsUp className="w-4 h-4" />
+                Recommended
+              </button>
+              <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:bg-white/10 transition-colors">
+                <ThumbsDown className="w-4 h-4" />
+                Not Recommended
+              </button>
+            </div>
+            <textarea 
+              placeholder="Write your review here..."
+              className="w-full h-32 bg-slate-900/50 border border-white/10 rounded-lg p-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <Button variant="outline" size="sm" onClick={() => setShowWriteReview(false)}>Cancel</Button>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Submit Review</Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reviews List */}
+      <div className="space-y-3">
+        {filteredReviews.map((review) => (
+          <ReviewCard key={review.id} review={review} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// System Requirements Component
+function SystemRequirements({ game }) {
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+      <h3 className="text-lg font-bold text-white mb-4">System Requirements</h3>
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <h4 className="text-sm font-bold text-slate-400 mb-3">MINIMUM:</h4>
+          <div className="space-y-2 text-sm">
+            <div><span className="text-slate-500">OS:</span> <span className="text-slate-300">Windows 10 64-bit</span></div>
+            <div><span className="text-slate-500">Processor:</span> <span className="text-slate-300">Intel Core i5-4460</span></div>
+            <div><span className="text-slate-500">Memory:</span> <span className="text-slate-300">8 GB RAM</span></div>
+            <div><span className="text-slate-500">Graphics:</span> <span className="text-slate-300">NVIDIA GTX 960</span></div>
+            <div><span className="text-slate-500">Storage:</span> <span className="text-slate-300">50 GB available</span></div>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-slate-400 mb-3">RECOMMENDED:</h4>
+          <div className="space-y-2 text-sm">
+            <div><span className="text-slate-500">OS:</span> <span className="text-slate-300">Windows 10/11 64-bit</span></div>
+            <div><span className="text-slate-500">Processor:</span> <span className="text-slate-300">Intel Core i7-8700K</span></div>
+            <div><span className="text-slate-500">Memory:</span> <span className="text-slate-300">16 GB RAM</span></div>
+            <div><span className="text-slate-500">Graphics:</span> <span className="text-slate-300">NVIDIA RTX 3070</span></div>
+            <div><span className="text-slate-500">Storage:</span> <span className="text-slate-300">50 GB SSD</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function GameDetailPanel({ gameId, onClose, showBackButton = true, from = 'store' }) {
   const { addToCart, isPurchased } = useCart();
@@ -238,8 +413,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
   
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeScreenshot, setActiveScreenshot] = useState(0);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('about');
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -282,25 +456,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
     }
   };
 
-  const handleStreamToggle = (isStreaming) => {
-    if (isStreaming) {
-      localStorage.setItem('streaming_game_id', game.id);
-    } else {
-      localStorage.removeItem('streaming_game_id');
-    }
-    window.dispatchEvent(new Event('storage'));
-  };
-
   const gameIsOwned = game?.id ? isPurchased(game.id) : false;
-  const [isInstalled, setIsInstalled] = useState(false);
-
-  useEffect(() => {
-    if (gameIsOwned) {
-        setIsInstalled(true); 
-    } else {
-        setIsInstalled(false);
-    }
-  }, [gameIsOwned]);
 
   if (loading) {
     return (
@@ -326,374 +482,152 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
   }
 
   return (
-    <div className="h-full bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white overflow-y-auto">
-      {/* Header Section */}
-      <div className="relative">
-        {/* Banner Image */}
-        <div className="h-96 relative overflow-hidden">
-          <img
-            src={game.banner || game.cover_image || game.cover}
-            alt={game.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-        </div>
-
-        {/* Game Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-grow">
-                <h1 className="text-5xl font-black mb-2">{game.title}</h1>
-                <p className="text-xl text-blue-300 mb-4">{game.tagline}</p>
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-yellow-400" />
-                    <span>{game.rating} ({game.reviewCount?.toLocaleString()} reviews)</span>
-                  </div>
-                  <span>{game.developer}</span>
-                  <span>{game.genre}</span>
-                  {game.aiEnhanced && (
-                    <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50">
-                      <Bot className="w-3 h-3 mr-1" />
-                      AI Enhanced
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 ml-8">
-                <div className="text-right mb-2">
-                  {!gameIsOwned && (
-                    <>
-                      <span className="text-3xl font-bold text-green-400">${game.price}</span>
-                      {game.originalPrice && (
-                        <span className="text-slate-500 line-through text-lg ml-2">${game.originalPrice}</span>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  {gameIsOwned ? (
-                      isInstalled ? (
-                          <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                              <Play className="w-5 h-5 mr-2" />
-                              Play
-                          </Button>
-                      ) : (
-                          <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                              <Download className="w-5 h-5 mr-2" />
-                              Download
-                          </Button>
-                      )
-                  ) : (
-                      <Button size="lg" onClick={handlePurchase} className="bg-blue-600 hover:bg-blue-700">
-                          <ShoppingCart className="w-5 h-5 mr-2" />
-                          Purchase
-                      </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <div className="h-full bg-gradient-to-b from-slate-900 via-slate-900 to-black text-white overflow-y-auto">
+      {/* Header Banner */}
+      <div className="relative h-80 overflow-hidden">
+        <img
+          src={game.banner || game.cover_image || game.cover}
+          alt={game.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+        
         {/* Close Button */}
         {showBackButton && onClose && (
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm flex items-center justify-center transition-all text-white/80 hover:text-white z-10"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm flex items-center justify-center transition-all text-white/80 hover:text-white z-10"
           >
             <X className="w-5 h-5" />
           </button>
         )}
+
+        {/* Title Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-4xl font-black text-white mb-2">{game.title}</h1>
+            <div className="flex items-center gap-4 text-sm text-slate-300">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                <span>{game.rating || '4.8'}</span>
+              </div>
+              <span>{game.developer || 'Game Studio'}</span>
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
+                {game.genre}
+              </Badge>
+              {game.aiEnhanced && (
+                <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50">
+                  <Bot className="w-3 h-3 mr-1" />
+                  AI Enhanced
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Enhanced Tabbed Content */}
-      <div className="p-8">
-        <div className="max-w-6xl mx-auto">
-          {from === 'library' && game && (
-            <div className="mb-8">
-              <PlayerStatsPanel game={game} />
+      {/* Main Content - Steam Layout */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="flex gap-6">
+          {/* Left Column - Media & Content */}
+          <div className="flex-1 space-y-6">
+            {/* Media Gallery */}
+            <MediaGallery game={game} />
+
+            {/* Description */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+              <h3 className="text-lg font-bold text-white mb-3">About This Game</h3>
+              <p className="text-slate-300 leading-relaxed">{game.description}</p>
             </div>
-          )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 mb-8">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="achievements">Achievements</TabsTrigger>
-              <TabsTrigger value="equipment">Equipment</TabsTrigger>
-              <TabsTrigger value="abilities">Abilities</TabsTrigger>
-            </TabsList>
+            {/* DLC Section */}
+            <DLCSection dlcs={mockDLCs} />
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-4">About This Game</h3>
-                    <p className="text-slate-300 leading-relaxed mb-6">{game.description}</p>
-                  </div>
-                  
-                  {/* Video Trailer */}
-                  <div>
-                    <h4 className="text-xl font-semibold mb-4">Game Trailer</h4>
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
-                      <video 
-                        className="w-full h-full object-cover"
-                        controls
-                        poster={game.banner || game.cover_image}
-                      >
-                        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-                      </video>
-                    </div>
-                  </div>
-                  
-                  {/* Screenshots Gallery */}
-                  <div>
-                    <h4 className="text-xl font-semibold mb-4">Screenshots</h4>
-                    <div className="space-y-4">
-                      <img
-                        src={game.screenshots?.[activeScreenshot] || game.cover}
-                        alt="Screenshot"
-                        className="w-full aspect-video object-cover rounded-lg border border-white/10"
-                      />
-                      <div className="grid grid-cols-5 gap-3">
-                        {(game.screenshots || [game.cover, game.banner, game.cover, game.banner, game.cover]).map((screenshot, index) => (
-                          <img
-                            key={index}
-                            src={screenshot}
-                            alt={`Screenshot ${index + 1}`}
-                            className={`aspect-video object-cover rounded cursor-pointer transition-all border-2 ${
-                              activeScreenshot === index ? 'border-blue-500 scale-105' : 'border-white/10 hover:border-white/30 hover:scale-105'
-                            }`}
-                            onClick={() => setActiveScreenshot(index)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* System Requirements */}
+            <SystemRequirements game={game} />
 
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xl font-semibold mb-4">System Requirements</h4>
-                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-3 border border-white/10">
-                      <div>
-                        <Monitor className="w-4 h-4 inline mr-2" />
-                        <span className="text-slate-400">OS:</span> {game.requirements?.os || 'Windows 10 64-bit'}
-                      </div>
-                      <div>
-                        <Cpu className="w-4 h-4 inline mr-2" />
-                        <span className="text-slate-400">Processor:</span> {game.requirements?.processor || 'Intel Core i5-7600K'}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Memory:</span> {game.requirements?.memory || '16 GB RAM'}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Graphics:</span> {game.requirements?.graphics || 'NVIDIA GTX 1060'}
-                      </div>
-                      <div>
-                        <HardDrive className="w-4 h-4 inline mr-2" />
-                        <span className="text-slate-400">Storage:</span> {game.requirements?.storage || '50 GB'}
-                      </div>
-                    </div>
-                  </div>
+            {/* Reviews Section */}
+            <ReviewsSection reviews={mockReviews} />
 
-                  <div>
-                    <h4 className="text-xl font-semibold mb-4">Game Info</h4>
-                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-3 border border-white/10">
-                      <div>
-                        <span className="text-slate-400">Developer:</span> {game.developer || 'Game Studio'}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Publisher:</span> {game.publisher || 'Publisher Inc'}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Release Date:</span> {game.releaseDate || 'TBA'}
-                      </div>
-                      <div>
-                        <span className="text-slate-400">Genre:</span> {game.genre}
-                      </div>
-                    </div>
-                  </div>
+            {/* Tabs for Equipment/Abilities (Atom x Eve specific) */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-white/10">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-900/50 mb-4">
+                  <TabsTrigger value="about">Features</TabsTrigger>
+                  <TabsTrigger value="equipment">Equipment</TabsTrigger>
+                  <TabsTrigger value="abilities">Abilities</TabsTrigger>
+                </TabsList>
 
-                  <div>
-                    <h4 className="text-xl font-semibold mb-4">Features</h4>
-                    <div className="bg-slate-800/50 rounded-lg p-4 space-y-2 border border-white/10">
-                      {['Single-player', 'Online Co-op', 'Steam Achievements', 'Cloud Saves', 'Controller Support'].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                          {feature}
+                <TabsContent value="about" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['Single-player', 'Online Co-op', 'Steam Achievements', 'Cloud Saves', 'Controller Support', 'AI Companion'].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="equipment">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {[
+                      { id: 1, name: 'Dragon Blade', type: 'Weapon', rarity: 'Legendary' },
+                      { id: 2, name: 'Shadow Armor', type: 'Chest', rarity: 'Epic' },
+                      { id: 3, name: 'Phoenix Helm', type: 'Head', rarity: 'Rare' },
+                      { id: 4, name: 'Mystic Gauntlets', type: 'Hands', rarity: 'Epic' },
+                      { id: 5, name: 'Thunder Boots', type: 'Feet', rarity: 'Rare' },
+                      { id: 6, name: 'Crystal Shield', type: 'Shield', rarity: 'Epic' },
+                    ].map((item) => (
+                      <div key={item.id} className="bg-slate-900/50 rounded-lg p-2 border border-white/5 hover:border-white/20 transition-colors cursor-pointer">
+                        <div className="w-full aspect-square bg-slate-800 rounded-md mb-1.5 flex items-center justify-center">
+                          <Sword className="w-6 h-6 text-slate-600" />
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Achievements Tab */}
-            <TabsContent value="achievements">
-              <h3 className="text-2xl font-bold mb-6">Achievements & Rewards</h3>
-              <div className="mb-6 flex items-center gap-4">
-                <div className="flex-1 bg-slate-800/50 rounded-lg p-4 border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400 text-sm">Progress</span>
-                    <span className="text-white font-bold">{game?.achievements?.filter(a => a.unlocked).length || 0}/{game?.achievements?.length || 15}</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
-                      style={{ width: `${((game?.achievements?.filter(a => a.unlocked).length || 0) / (game?.achievements?.length || 15)) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                {(game?.achievements || [
-                  { id: 1, name: 'First Steps', description: 'Complete the tutorial', icon: '🎮', rarity: 'Common', points: 10, unlocked: true },
-                  { id: 2, name: 'Dragon Slayer', description: 'Defeat the Ancient Dragon', icon: '🐉', rarity: 'Legendary', points: 100, unlocked: false },
-                  { id: 3, name: 'Master Explorer', description: 'Discover all hidden locations', icon: '🗺️', rarity: 'Epic', points: 50, unlocked: true },
-                  { id: 4, name: 'Speed Runner', description: 'Complete game in under 5 hours', icon: '⚡', rarity: 'Rare', points: 75, unlocked: false },
-                  { id: 5, name: 'Collector', description: 'Find all collectibles', icon: '💎', rarity: 'Epic', points: 60, unlocked: false },
-                  { id: 6, name: 'Perfect Victory', description: 'Win without taking damage', icon: '🏆', rarity: 'Legendary', points: 100, unlocked: false },
-                  { id: 7, name: 'Social Butterfly', description: 'Complete 10 co-op missions', icon: '👥', rarity: 'Uncommon', points: 25, unlocked: true },
-                  { id: 8, name: 'Arsenal Master', description: 'Unlock all weapons', icon: '⚔️', rarity: 'Rare', points: 40, unlocked: false },
-                ]).map((achievement) => (
-                  <motion.div
-                    key={achievement.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    whileHover={{ x: 4 }}
-                    className={`relative p-5 rounded-xl border transition-all ${
-                      achievement.unlocked 
-                        ? 'bg-gradient-to-r from-green-500/10 to-transparent border-green-500/30' 
-                        : 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl ${
-                        achievement.unlocked ? 'bg-slate-700' : 'bg-slate-800/50 grayscale opacity-60'
-                      }`}>
-                        {achievement.icon}
+                        <p className="text-[10px] text-white font-medium truncate">{item.name}</p>
+                        <Badge className={`${rarityColors[item.rarity]} text-[8px] px-1 py-0`}>{item.rarity}</Badge>
                       </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className={`font-bold text-lg ${achievement.unlocked ? 'text-white' : 'text-slate-400'}`}>
-                            {achievement.name}
-                          </h4>
-                          <Badge className={`${rarityColors[achievement.rarity]} text-xs`}>
-                            {achievement.rarity}
-                          </Badge>
-                          {achievement.unlocked && <Crown className="w-5 h-5 text-yellow-400" />}
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="abilities">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {[
+                      { id: 1, name: 'Inferno Strike', tier: 'Legendary', cooldown: '45s' },
+                      { id: 2, name: 'Time Warp', tier: 'Epic', cooldown: '60s' },
+                      { id: 3, name: 'Shadow Step', tier: 'Rare', cooldown: '15s' },
+                      { id: 4, name: 'Void Shield', tier: 'Epic', cooldown: '30s' },
+                      { id: 5, name: 'Lightning Storm', tier: 'Legendary', cooldown: '90s' },
+                      { id: 6, name: 'Healing Nova', tier: 'Rare', cooldown: '25s' },
+                    ].map((ability) => (
+                      <div key={ability.id} className="bg-slate-900/50 rounded-lg p-2 border border-purple-500/10 hover:border-purple-500/30 transition-colors cursor-pointer">
+                        <div className="w-full aspect-square bg-purple-900/20 rounded-md mb-1.5 flex items-center justify-center">
+                          <Zap className="w-6 h-6 text-purple-500" />
                         </div>
-                        <p className="text-slate-400 text-sm mb-2">{achievement.description}</p>
-                        <div className="flex items-center gap-4">
-                          <span className="text-yellow-400 font-bold text-sm">{achievement.points} XP</span>
-                          {!achievement.unlocked && (
-                            <span className="text-slate-500 text-xs">Locked</span>
-                          )}
+                        <p className="text-[10px] text-white font-medium truncate">{ability.name}</p>
+                        <div className="flex items-center justify-between">
+                          <Badge className={`${rarityColors[ability.tier]} text-[8px] px-1 py-0`}>{ability.tier}</Badge>
+                          <span className="text-[8px] text-purple-400">{ability.cooldown}</span>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
 
-                      <Button size="sm" variant={achievement.unlocked ? 'secondary' : 'outline'} disabled={achievement.unlocked}>
-                        {achievement.unlocked ? 'Unlocked' : 'Track'}
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Equipment Tab */}
-            <TabsContent value="equipment">
-              <h3 className="text-2xl font-bold mb-6">Equipment & Gear</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {(game?.equipment || [
-                  { id: 1, name: 'Dragon Blade', type: 'Weapon', rarity: 'Legendary', description: 'A legendary sword forged from dragon scales', stats: { attack: 150, speed: 25 } },
-                  { id: 2, name: 'Shadow Armor', type: 'Chest', rarity: 'Epic', description: 'Armor that bends light around the wearer', stats: { defense: 120, stealth: 40 } },
-                  { id: 3, name: 'Phoenix Helm', type: 'Head', rarity: 'Rare', description: 'Grants fire resistance and health regeneration', stats: { defense: 80, health_regen: 15 } },
-                  { id: 4, name: 'Mystic Gauntlets', type: 'Hands', rarity: 'Epic', description: 'Enchanted gloves that amplify magic', stats: { magic_power: 100, mana: 50 } },
-                  { id: 5, name: 'Thunder Boots', type: 'Feet', rarity: 'Rare', description: 'Lightning-infused boots for incredible speed', stats: { speed: 60, agility: 35 } },
-                  { id: 6, name: 'Crystal Shield', type: 'Shield', rarity: 'Epic', description: 'Crystalline barrier that reflects magic', stats: { defense: 90, magic_resist: 45 } },
-                ]).map((item, index) => (
-                  <InteractiveCard key={item.id} delay={index * 0.05}>
-                    <div className="p-2">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <Badge className={`${rarityColors[item.rarity]} text-[9px] px-1.5 py-0.5`}>
-                          {item.rarity}
-                        </Badge>
-                        <span className="text-slate-500 text-[8px] uppercase">{item.type}</span>
-                      </div>
-                      
-                      <div className="w-full aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-md mb-2 flex items-center justify-center border border-white/5">
-                        <Sword className="w-7 h-7 text-slate-600" />
-                      </div>
-                      
-                      <h4 className="font-bold text-white text-[11px] mb-1 truncate">{item.name}</h4>
-                      <p className="text-slate-400 text-[9px] mb-2 line-clamp-2">{item.description}</p>
-                      
-                      <div className="space-y-1 pt-2 border-t border-white/5">
-                        {Object.entries(item.stats).map(([stat, value]) => (
-                          <div key={stat} className="flex justify-between text-[9px]">
-                            <span className="text-slate-400 capitalize">{stat.replace('_', ' ')}</span>
-                            <span className="text-green-400 font-bold">+{value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </InteractiveCard>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Abilities Tab */}
-            <TabsContent value="abilities">
-              <h3 className="text-2xl font-bold mb-6">Special Abilities</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {(game?.abilities || [
-                  { id: 1, name: 'Inferno Strike', tier: 'Legendary', description: 'Unleash a devastating fire attack that burns enemies', cooldown: '45s', effect: 'Deals 500 fire damage in an area' },
-                  { id: 2, name: 'Time Warp', tier: 'Epic', description: 'Slow down time for all enemies around you', cooldown: '60s', effect: 'Slows enemies by 80% for 10s' },
-                  { id: 3, name: 'Shadow Step', tier: 'Rare', description: 'Teleport behind your target instantly', cooldown: '15s', effect: 'Instant teleport with 2s invulnerability' },
-                  { id: 4, name: 'Void Shield', tier: 'Epic', description: 'Create an impenetrable barrier of void energy', cooldown: '30s', effect: 'Blocks all damage for 5s' },
-                  { id: 5, name: 'Lightning Storm', tier: 'Legendary', description: 'Summon a storm of lightning bolts', cooldown: '90s', effect: '300 damage per second for 15s' },
-                  { id: 6, name: 'Healing Nova', tier: 'Rare', description: 'Restore health to you and nearby allies', cooldown: '25s', effect: 'Heals 200 HP in 10m radius' },
-                ]).map((ability, index) => (
-                  <InteractiveCard key={ability.id} delay={index * 0.05}>
-                    <div className="p-2">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <Badge className={`${rarityColors[ability.tier]} text-[9px] px-1.5 py-0.5`}>
-                          {ability.tier}
-                        </Badge>
-                        <span className="text-purple-400 text-[8px] font-bold">{ability.cooldown}</span>
-                      </div>
-                      
-                      <div className="w-full aspect-square bg-gradient-to-br from-purple-900/30 to-slate-900 rounded-md mb-2 flex items-center justify-center border border-purple-500/20">
-                        <Zap className="w-7 h-7 text-purple-500" />
-                      </div>
-                      
-                      <h4 className="font-bold text-white text-[11px] mb-1 truncate">{ability.name}</h4>
-                      <p className="text-slate-400 text-[9px] mb-2 line-clamp-2">{ability.description}</p>
-                      
-                      <div className="pt-2 border-t border-white/5">
-                        <div className="flex items-start gap-1">
-                          <Zap className="w-2.5 h-2.5 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <p className="text-blue-300 text-[8px] font-medium line-clamp-2">{ability.effect}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </InteractiveCard>
-                ))}
-              </div>
-            </TabsContent>
-
-
-
-          </Tabs>
+          {/* Right Column - Game Info Sidebar */}
+          <div className="w-80 flex-shrink-0">
+            <div className="sticky top-4">
+              <GameInfoSidebar 
+                game={game} 
+                gameIsOwned={gameIsOwned} 
+                onPurchase={handlePurchase}
+                isAuthenticated={isAuthenticated}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
