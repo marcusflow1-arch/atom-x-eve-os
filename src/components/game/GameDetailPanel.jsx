@@ -107,8 +107,46 @@ function MediaGallery({ game }) {
   );
 }
 
+// Purchase Box Component (separate for top placement)
+function PurchaseBox({ game, gameIsOwned, onPurchase }) {
+  return (
+    <LiquidGlassCard className="p-4 mb-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {game.originalPrice && (
+            <Badge className="bg-green-600 text-white text-xs">-{Math.round((1 - game.price / game.originalPrice) * 100)}%</Badge>
+          )}
+          <div>
+            {game.originalPrice && (
+              <span className="text-slate-500 line-through text-sm mr-2">${game.originalPrice}</span>
+            )}
+            <span className="text-xl font-bold text-white">${game.price}</span>
+          </div>
+        </div>
+        
+        {gameIsOwned ? (
+          <Button className="bg-green-600 hover:bg-green-700 h-9 px-6">
+            <Play className="w-4 h-4 mr-2" />
+            Play Now
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button onClick={onPurchase} className="bg-green-600 hover:bg-green-700 h-9 px-6">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Add to Cart
+            </Button>
+            <Button variant="outline" className="border-white/20 hover:bg-white/10 h-9 px-4">
+              <Heart className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </LiquidGlassCard>
+  );
+}
+
 // Game Info Sidebar
-function GameInfoSidebar({ game, gameIsOwned, onPurchase }) {
+function GameInfoSidebar({ game }) {
   return (
     <div className="space-y-4">
       {/* Cover Image */}
@@ -160,40 +198,6 @@ function GameInfoSidebar({ game, gameIsOwned, onPurchase }) {
           ))}
         </div>
       </div>
-
-      {/* Purchase Section */}
-      <LiquidGlassCard className="p-4">
-        <p className="text-xs text-slate-400 mb-2">Buy {game.title}</p>
-        <div className="flex items-center justify-between mb-3">
-          {game.originalPrice && (
-            <Badge className="bg-green-600 text-white text-xs">-{Math.round((1 - game.price / game.originalPrice) * 100)}%</Badge>
-          )}
-          <div className="text-right flex-1">
-            {game.originalPrice && (
-              <span className="text-slate-500 line-through text-sm mr-2">${game.originalPrice}</span>
-            )}
-            <span className="text-xl font-bold text-white">${game.price}</span>
-          </div>
-        </div>
-        
-        {gameIsOwned ? (
-          <Button className="w-full bg-green-600 hover:bg-green-700 h-9">
-            <Play className="w-4 h-4 mr-2" />
-            Play Now
-          </Button>
-        ) : (
-          <div className="space-y-2">
-            <Button onClick={onPurchase} className="w-full bg-green-600 hover:bg-green-700 h-9">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Add to Cart
-            </Button>
-            <Button variant="outline" className="w-full border-white/20 hover:bg-white/10 h-8 text-xs">
-              <Heart className="w-3 h-3 mr-2" />
-              Add to Wishlist
-            </Button>
-          </div>
-        )}
-      </LiquidGlassCard>
     </div>
   );
 }
