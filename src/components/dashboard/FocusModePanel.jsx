@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
+import { createPageUrl } from '@/utils';
 
 // Mock pinned games
 const pinnedGames = [
