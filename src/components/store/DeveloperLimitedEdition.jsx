@@ -775,6 +775,33 @@ export default function DeveloperLimitedEdition() {
         </motion.div>
       </AnimatePresence>
 
+      {/* Games by Developer - Horizontal at bottom above cards */}
+      <div className="mt-4 flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+        {currentDeveloper.games.map((game, index) => (
+          <button
+            key={game.id}
+            onClick={() => handleSelectGame(index)}
+            className={`flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-xl border transition-all ${
+              index === selectedGameIndex 
+                ? 'bg-white/[0.15] border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                : 'bg-white/[0.05] hover:bg-white/[0.08] border-white/10 hover:border-white/20'
+            }`}
+            style={{
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            }}
+          >
+            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+              <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
+            </div>
+            <div className="text-left">
+              <h4 className="text-white font-semibold text-sm whitespace-nowrap">{game.title}</h4>
+              <p className="text-[10px] text-amber-400/80">{game.limitedCards?.length || 0} Cards</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
       {/* Limited Edition Cards - Horizontal card display at bottom */}
       <div 
         className="mt-4 rounded-2xl p-4"
