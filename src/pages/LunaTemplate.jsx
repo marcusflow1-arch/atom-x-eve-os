@@ -1519,7 +1519,7 @@ export default function LunaTemplate() {
 
               {/* Main Content Area */}
               {uiVisible && (
-              <div className="w-full mt-24 px-12 relative">
+              <div className="w-full mt-24 px-12 relative" style={{ display: uiVisible ? 'block' : 'none' }}>
               <AnimatePresence mode="wait">
               {false && (
                 <motion.div
@@ -2402,7 +2402,7 @@ export default function LunaTemplate() {
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl pointer-events-none"
+        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl pointer-events-none" style={{ display: uiVisible ? 'flex' : 'none' }}
       >
         <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
           <Trophy className="w-5 h-5 text-yellow-400" />
