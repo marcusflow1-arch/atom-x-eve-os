@@ -624,6 +624,35 @@ function LayoutContent({ children, currentPageName }) {
         );
       })()}
 
+      {showLunaHeaderBar && (
+        <div className="fixed left-0 right-0 top-20 h-px bg-white/20 z-30 pointer-events-none" />
+      )}
+
+      {showLunaHeaderBar && (
+        <div className="fixed top-4 right-4 z-40 flex items-center gap-4">
+          <motion.button
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
+            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(createPageUrl('PlayerProfile'))}
+            title="Profile"
+          >
+            <User className="w-6 h-6 text-white" />
+          </motion.button>
+          <motion.button
+            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(createPageUrl('Admin'))}
+            title="Settings"
+          >
+            <Settings className="w-6 h-6 text-white/80" />
+          </motion.button>
+        </div>
+      )}
+
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
         <div className="page-container">

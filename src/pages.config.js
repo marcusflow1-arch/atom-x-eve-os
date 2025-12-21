@@ -5,13 +5,11 @@ import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AvatarStudio from './pages/AvatarStudio';
-import Blacksmith from './pages/Blacksmith';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
-import Entertainment from './pages/Entertainment';
 import Events from './pages/Events';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
@@ -21,13 +19,11 @@ import Home from './pages/Home';
 import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
 import Library from './pages/Library';
-import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
-import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
 import Storyline from './pages/Storyline';
@@ -37,6 +33,10 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
+import Blacksmith from './pages/Blacksmith';
+import Entertainment from './pages/Entertainment';
+import SeasonalPass from './pages/SeasonalPass';
+import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -48,13 +48,11 @@ export const PAGES = {
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AvatarStudio": AvatarStudio,
-    "Blacksmith": Blacksmith,
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
-    "Entertainment": Entertainment,
     "Events": Events,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
@@ -64,13 +62,11 @@ export const PAGES = {
     "Ideals": Ideals,
     "InstallApp": InstallApp,
     "Library": Library,
-    "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
-    "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
     "Store": Store,
     "Storyline": Storyline,
@@ -80,6 +76,10 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
+    "Blacksmith": Blacksmith,
+    "Entertainment": Entertainment,
+    "SeasonalPass": SeasonalPass,
+    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {
