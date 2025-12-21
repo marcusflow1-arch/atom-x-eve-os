@@ -652,6 +652,18 @@ function LayoutContent({ children, currentPageName }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Route Transition Overlay */}
+      <AnimatePresence>
+        {showRouteTransition && (
+          <ScrollTransitionOverlay direction="up" onComplete={() => {
+            const to = pendingRoute;
+            setShowRouteTransition(false);
+            setPendingRoute(null);
+            if (to) navigate(to);
+          }} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
