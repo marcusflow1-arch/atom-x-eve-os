@@ -1208,11 +1208,11 @@ export default function Store() {
                                     </div>
 
                                     {/* HORIZONTAL AXIS (Games) */}
-                                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+                                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-64 z-10 flex items-center pointer-events-none">
                                         <motion.div 
-                                            className="flex items-center gap-8 pl-64 pointer-events-auto"
+                                            className="flex items-center gap-6 pl-64 pointer-events-auto"
                                             animate={{ 
-                                                x: -activeGameIndex * (280 + 32)
+                                                x: -activeGameIndex * (196 + 24)
                                             }}
                                             transition={{ type: "spring", stiffness: 250, damping: 25 }}
                                         >
@@ -1232,7 +1232,7 @@ export default function Store() {
                                                             y: isActive ? 0 : 20
                                                         }}
                                                         className={`
-                                                            w-[280px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                                                            w-[196px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                                                             border transition-all duration-300 shadow-2xl
                                                             ${isActive 
                                                                 ? 'border-white/40 shadow-blue-500/20' 
