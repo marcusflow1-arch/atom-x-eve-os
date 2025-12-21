@@ -660,6 +660,7 @@ export default function DeveloperLimitedEdition() {
                 setDirection(index > currentDeveloperIndex ? 1 : -1);
                 setCurrentDeveloperIndex(index);
                 setSelectedGameIndex(0);
+                setSelectedCard(null);
               }}
               className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                 index === currentDeveloperIndex 
@@ -670,6 +671,16 @@ export default function DeveloperLimitedEdition() {
           ))}
         </div>
       </div>
+
+      {/* Giant Card Detail Panel - Shows below developer header when card is selected */}
+      <AnimatePresence>
+        {selectedCard && (
+          <CardDetailPanel 
+            card={selectedCard} 
+            onClose={handleCloseCardDetail}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Main Content Area */}
       <AnimatePresence mode="wait" custom={direction}>
