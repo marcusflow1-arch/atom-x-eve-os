@@ -773,15 +773,15 @@ export default function FocusModePanel() {
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Game Filter Sidebar */}
           <div className="w-32 flex-shrink-0 flex flex-col">
-            {/* New Content Button with Shadow Effect - Opens Community/Forum */}
+            {/* New Content Button with Shadow Effect - Opens Forum Overlay */}
             <div className="relative inline-block mb-3">
-              <a 
-                href={createPageUrl('Community')}
+              <button 
+                onClick={() => onOpenForum && onOpenForum()}
                 className="relative z-10 flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:bg-white/25"
               >
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="font-bold">New Content</span>
-              </a>
+              </button>
               {/* Shadow Button Behind */}
               <div
                 aria-hidden
