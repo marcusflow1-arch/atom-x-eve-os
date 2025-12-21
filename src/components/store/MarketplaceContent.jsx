@@ -811,117 +811,147 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
       </div>
 
       <div className="px-2 pb-6">
-        {/* Developer Limited Edition Section */}
-        <DeveloperLimitedEdition />
+        {/* Main Layout: Sidebar + Content (Card Detail + Games) */}
+        <div className="flex gap-6">
+          {/* Sidebar */}
+          <aside className="hidden lg:block">
+            <FilterSidebar filters={filters} setFilters={setFilters} />
+          </aside>
 
-      <div className="flex gap-6">
-        {/* Sidebar */}
-        <aside className="hidden lg:block">
-          <FilterSidebar filters={filters} setFilters={setFilters} />
-        </aside>
-
-        {/* Results */}
-        <div className="flex-1 min-w-0">
-          {/* Results Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <p className="text-white/50 text-sm">
-                {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
-              </p>
-              {/* Search Bar - Removed as it's now in the header */}
+          {/* Center Content - Card Detail Box (reduced 70%, card increased 50%) */}
+          <div className="w-[30%] flex-shrink-0 flex flex-col gap-4">
+            {/* Card Display Box - Translucent */}
+            <div 
+              className="rounded-2xl p-4 flex items-center justify-center"
+              style={{
+                background: 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                minHeight: '280px',
+              }}
+            >
+              <DeveloperLimitedEdition mode="card-only" />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
-                  <List className="w-4 h-4" />
-                </button>
-                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`}>
-                  <Grid className="w-4 h-4" />
-                </button>
+
+            {/* Card Info Box - Separate */}
+            <div 
+              className="rounded-2xl p-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)',
+                backdropFilter: 'blur(30px)',
+                WebkitBackdropFilter: 'blur(30px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <DeveloperLimitedEdition mode="info-only" />
+            </div>
+          </div>
+
+          {/* Right Side - Games Display */}
+          <div className="flex-1 min-w-0 flex flex-col">
+            {/* Developer Selector & Games */}
+            <DeveloperLimitedEdition mode="games-only" />
+
+            {/* Results Header */}
+            <div className="flex items-center justify-between mb-4 mt-6">
+              <div className="flex items-center gap-4">
+                <p className="text-white/50 text-sm">
+                  {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
+                </p>
               </div>
-              <select
-                value={filters.genre}
-                onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
-                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-              >
-                <option value="All Genres">All Genres</option>
-                <option value="Action">Action</option>
-                <option value="RPG">RPG</option>
-                <option value="Shooter">Shooter</option>
-                <option value="Strategy">Strategy</option>
-                <option value="Adventure">Adventure</option>
-                <option value="Sports">Sports</option>
-                <option value="Racing">Racing</option>
-                <option value="Simulation">Simulation</option>
-                <option value="Horror">Horror</option>
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-              >
-                <option value="featured">Sort by: Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="reviews">Avg. Customer Review</option>
-              </select>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+                  <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`}>
+                    <Grid className="w-4 h-4" />
+                  </button>
+                </div>
+                <select
+                  value={filters.genre}
+                  onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
+                  className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                >
+                  <option value="All Genres">All Genres</option>
+                  <option value="Action">Action</option>
+                  <option value="RPG">RPG</option>
+                  <option value="Shooter">Shooter</option>
+                  <option value="Strategy">Strategy</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Racing">Racing</option>
+                  <option value="Simulation">Simulation</option>
+                  <option value="Horror">Horror</option>
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
+                >
+                  <option value="featured">Sort by: Featured</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="reviews">Avg. Customer Review</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* Results */}
-          <div className="mb-8">
-            <h2 className="text-white font-bold mb-4">Results</h2>
-            <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
-            
-            {/* Inner Scroll Container for Results */}
-            <div className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-1">
-              {viewMode === 'list' ? (
-                <div className="space-y-2 p-2">
-                  {filteredItems.map(item => (
-                    <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
-                  {filteredItems.map(item => {
-                    const rarity = rarityStyles[item.rarity];
-                    return (
-                      <div 
-                        key={item.id} 
-                        onClick={() => setSelectedItem(item)}
-                        className="cursor-pointer hover:scale-[1.02] transition-all bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/10 shadow-lg"
-                      >
-                        <div className="aspect-square bg-slate-800/50 rounded-xl overflow-hidden mb-3">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            {/* Results */}
+            <div className="mb-8">
+              <h2 className="text-white font-bold mb-4">Results</h2>
+              <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
+              
+              {/* Inner Scroll Container for Results */}
+              <div className="h-[500px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-1">
+                {viewMode === 'list' ? (
+                  <div className="space-y-2 p-2">
+                    {filteredItems.map(item => (
+                      <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                    {filteredItems.map(item => {
+                      const rarity = rarityStyles[item.rarity];
+                      return (
+                        <div 
+                          key={item.id} 
+                          onClick={() => setSelectedItem(item)}
+                          className="cursor-pointer hover:scale-[1.02] transition-all bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/10 shadow-lg"
+                        >
+                          <div className="aspect-square bg-slate-800/50 rounded-xl overflow-hidden mb-3">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
+                          <h3 className="text-blue-300 text-sm font-medium line-clamp-2 mb-2">{item.name}</h3>
+                          <div className="flex items-center mb-2">
+                            {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
+                            <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-white font-bold">{(item.price || 0).toLocaleString()} AGP</span>
+                            <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
+                          </div>
                         </div>
-                        <h3 className="text-blue-300 text-sm font-medium line-clamp-2 mb-2">{item.name}</h3>
-                        <div className="flex items-center mb-2">
-                          {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
-                          <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white font-bold">{(item.price || 0).toLocaleString()} AGP</span>
-                          <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
 
-              {filteredItems.length === 0 && (
-                <div className="text-center py-16">
-                  <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/50">No items found matching your criteria</p>
-                </div>
-              )}
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-16">
+                    <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                    <p className="text-white/50">No items found matching your criteria</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Customers frequently viewed */}
-          <ProductRow title="Customers frequently viewed" items={popularItems} onItemClick={setSelectedItem} />
+            {/* Customers frequently viewed */}
+            <ProductRow title="Customers frequently viewed" items={popularItems} onItemClick={setSelectedItem} />
+          </div>
         </div>
-      </div>
 
       <ItemDetailModal 
         item={selectedItem} 
