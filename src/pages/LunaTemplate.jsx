@@ -842,7 +842,6 @@ export default function LunaTemplate() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
