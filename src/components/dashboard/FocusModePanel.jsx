@@ -727,19 +727,7 @@ export default function FocusModePanel() {
     { id: 1, title: 'Guild Raid Night', type: 'event', time: '20:00', date: new Date().toISOString() },
     { id: 2, title: 'Complete daily quests', type: 'goal', time: '', date: new Date().toISOString() },
   ]);
-  const [showNewContentOverlay, setShowNewContentOverlay] = useState(false);
   const scrollRef = useRef(null);
-
-  // Keyboard shortcut to close overlay (Escape key)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && showNewContentOverlay) {
-        setShowNewContentOverlay(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showNewContentOverlay]);
 
   const handleCalendarDayClick = (date) => {
     setSelectedCalendarDate(date);
