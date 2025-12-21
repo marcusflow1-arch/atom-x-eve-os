@@ -16,6 +16,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 
 export default function CommunityPage() {
+    const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
