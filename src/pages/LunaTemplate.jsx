@@ -1021,7 +1021,7 @@ export default function LunaTemplate() {
         style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
       >
         {/* 3D Model Viewer - Centered */}
-        {modelUrl && uiVisible && (
+        {modelUrl && (
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] pointer-events-auto z-20">
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
@@ -1130,7 +1130,7 @@ export default function LunaTemplate() {
 
         {/* Skills Section Above Dock */}
         {uiVisible && !showInventory && (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto" aria-hidden={!uiVisible}>
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
           
           {/* Decorative Lines */}
@@ -1189,42 +1189,44 @@ export default function LunaTemplate() {
             )}
 
         {/* AI Home Button - Below Skills */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
-          {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
-            const Icon = item.icon;
-            
-            return (
-              <motion.div
-                key={item.id}
-                className="flex-shrink-0 cursor-pointer"
-                onClick={() => setActiveDrawer(item)}
-                whileHover={{ y: -10, transition: { duration: 0.3 } }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div
-                  className="w-[101px] h-[76px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-2 border border-white/10 hover:border-white/30"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                  }}
+        {uiVisible && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
+            {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
+              const Icon = item.icon;
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  className="flex-shrink-0 cursor-pointer"
+                  onClick={() => setActiveDrawer(item)}
+                  whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {/* Icon Badge */}
-                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-1 bg-opacity-80 backdrop-blur-sm`}>
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
+                  <div
+                    className="w-[101px] h-[76px] rounded-xl overflow-hidden transition-all duration-500 flex flex-col items-center justify-center text-center p-2 border border-white/10 hover:border-white/30"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                    }}
+                  >
+                    {/* Icon Badge */}
+                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg mb-1 bg-opacity-80 backdrop-blur-sm`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
 
-                  {/* Card Content */}
-                  <div>
-                    <h3 className="text-white font-bold text-[11px] mb-0.5 tracking-wide">{item.label}</h3>
-                    <p className="text-white/60 text-[9px] leading-tight line-clamp-1">{item.description}</p>
+                    {/* Card Content */}
+                    <div>
+                      <h3 className="text-white font-bold text-[11px] mb-0.5 tracking-wide">{item.label}</h3>
+                      <p className="text-white/60 text-[9px] leading-tight line-clamp-1">{item.description}</p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Universal Slide-Out Drawer */}
         <AnimatePresence>
@@ -1660,7 +1662,7 @@ export default function LunaTemplate() {
                       onClose={() => setExpandedGenre(null)} 
                       onCardClick={setSelectedCardForUpgrade}
                     />
-                  ) : !showInventory ? (
+                  ) : (!showInventory ? (
                     <motion.div 
                       key="boxes"
                       initial={{ opacity: 0 }}
@@ -1975,7 +1977,8 @@ export default function LunaTemplate() {
                     </div>
 
                   </motion.div>
-            ) : (
+            ) : null}
+            {!uiVisible && !showInventory ? null : (
               <motion.div 
                 key="inventory"
                 initial={{ opacity: 0, x: -50 }}

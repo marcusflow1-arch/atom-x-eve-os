@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
+import Entertainment from './pages/Entertainment';
 import Events from './pages/Events';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
@@ -36,7 +37,6 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Entertainment from './pages/Entertainment';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +54,7 @@ export const PAGES = {
     "Clan": Clan,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
+    "Entertainment": Entertainment,
     "Events": Events,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
@@ -79,7 +80,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Entertainment": Entertainment,
 }
 
 export const pagesConfig = {
