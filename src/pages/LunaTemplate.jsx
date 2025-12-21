@@ -7,7 +7,7 @@ import {
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
   Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -838,6 +838,7 @@ const mockFriends = [
 
 export default function LunaTemplate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -883,6 +884,14 @@ export default function LunaTemplate() {
     };
     fetchModelAndAnimations();
   }, []);
+
+  // Open overlays based on URL panel param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const panel = params.get('panel');
+    setShowSettings(panel === 'settings');
+    setShowProfile(panel === 'profile');
+  }, [location.search]);
 
   // Fetch User Events and Platform Updates
   useEffect(() => {

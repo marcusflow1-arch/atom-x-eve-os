@@ -625,7 +625,10 @@ function LayoutContent({ children, currentPageName }) {
       })()}
 
       {showLunaHeaderBar && (
-        <div className="fixed left-0 right-0 top-20 h-px bg-white/20 z-30 pointer-events-none" />
+        <>
+          <div className="fixed inset-x-0 top-0 h-20 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 z-20 pointer-events-none" />
+          <div className="fixed left-0 right-0 top-20 h-px bg-white/20 z-30 pointer-events-none" />
+        </>
       )}
 
       {showLunaHeaderBar && (
@@ -635,7 +638,7 @@ function LayoutContent({ children, currentPageName }) {
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('PlayerProfile'))}
+            onClick={() => navigate(`${location.pathname}?panel=profile`)}
             title="Profile"
           >
             <User className="w-6 h-6 text-white" />
@@ -645,7 +648,7 @@ function LayoutContent({ children, currentPageName }) {
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('Admin'))}
+            onClick={() => navigate(`${location.pathname}?panel=settings`)}
             title="Settings"
           >
             <Settings className="w-6 h-6 text-white/80" />
