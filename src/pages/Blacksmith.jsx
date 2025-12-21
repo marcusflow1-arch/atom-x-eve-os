@@ -511,7 +511,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
       </div>
 
       <motion.div 
-        className="relative z-10 flex flex-col h-full p-6 md:p-8"
+        className="relative z-10 flex flex-col h-full pt-0 px-6 md:px-8 pb-6 md:pb-8"
         animate={{ 
             scale: showWorkstation ? 0.95 : 1, 
             opacity: showWorkstation ? 0.5 : 1,
