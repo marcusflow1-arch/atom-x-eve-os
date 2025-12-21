@@ -2397,6 +2397,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Floating Score Display */}
+      {uiVisible && (
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -2410,6 +2411,7 @@ export default function LunaTemplate() {
           <div className="text-xl font-black text-white leading-none">12,450</div>
         </div>
       </motion.div>
+      )}
 
       {/* User Profile Overlay */}
       <UserProfileOverlay 
