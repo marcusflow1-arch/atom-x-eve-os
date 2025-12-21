@@ -554,6 +554,7 @@ export default function DeveloperLimitedEdition() {
   const [currentDeveloperIndex, setCurrentDeveloperIndex] = useState(0);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [direction, setDirection] = useState(0); // -1 for left, 1 for right
+  const [selectedCard, setSelectedCard] = useState(null); // For giant card display
   const containerRef = useRef(null);
 
   const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
