@@ -386,7 +386,7 @@ export default function FocusModePanel() {
                 exit={{ opacity: 0, x: 20 }}
                 className="h-full overflow-y-auto pr-2"
                 ref={scrollRef}
-                style={{ scrollbarWidth: 'thin' }}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {/* Selected Card Preview */}
                 {selectedCard && (
