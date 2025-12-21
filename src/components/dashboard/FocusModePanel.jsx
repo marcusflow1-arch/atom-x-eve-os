@@ -933,7 +933,7 @@ function GameDetailPanel({ game, onClose }) {
 }
 
 // Library Games Section (Bottom) - receives genre from scroll context
-function LibraryGamesSection({ activeGenre, gamesByGenre }) {
+function LibraryGamesSection({ activeGenre, gamesByGenre, onSelectGame, selectedGame }) {
   const navigate = useNavigate();
   const libraryScrollRef = useRef(null);
   
@@ -988,32 +988,39 @@ function LibraryGamesSection({ activeGenre, gamesByGenre }) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <AnimatePresence mode="popLayout">
-          {currentGames.map((game, index) => (
-            <motion.div
-              key={game.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ delay: index * 0.03, duration: 0.3 }}
-              className="flex-shrink-0 w-20 group cursor-pointer"
-              onClick={() => navigate(createPageUrl('Library') + `?game=${game.id}`)}
-            >
-              <div className="relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-                <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-8 h-8 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                    <Play className="w-4 h-4 text-white ml-0.5" />
+          {currentGames.map((game, index) => {
+            const isSelected = selectedGame?.id === game.id;
+            return (
+              <motion.div
+                key={game.id}
+                layout
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                transition={{ delay: index * 0.03, duration: 0.3 }}
+                className="flex-shrink-0 w-20 group cursor-pointer"
+                onClick={() => onSelectGame(game)}
+              >
+                <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
+                  isSelected 
+                    ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
+                    : 'border-white/10 hover:border-cyan-400/50'
+                }`}>
+                  <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-white ml-0.5" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                    <p className="text-white font-bold text-[10px] truncate">{game.title}</p>
+                    <p className="text-white/40 text-[8px] capitalize truncate">{game.genre}</p>
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                  <p className="text-white font-bold text-[10px] truncate">{game.title}</p>
-                  <p className="text-white/40 text-[8px] capitalize truncate">{game.genre}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
         {currentGames.length === 0 && (
           <motion.div 
