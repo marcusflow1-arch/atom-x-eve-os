@@ -1029,10 +1029,32 @@ function LibraryGamesSection({ activeGenre, gamesByGenre }) {
   );
 }
 
+// All available genres (master list)
+const ALL_GENRES = [
+  'Action',
+  'Adventure', 
+  'RPG',
+  'First-Person Shooter',
+  'Third-Person Shooter',
+  'Fighting',
+  'Racing',
+  'Sports',
+  'Strategy',
+  'Simulation',
+  'Horror',
+  'Puzzle',
+  'Platformer',
+  'Open World',
+  'MMO'
+];
+
 // Genre Selector (Top-Right, Vertical Scroll) - Controls bottom Library
-function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
+function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
+
+  // Use all genres, showing which ones have games
+  const displayGenres = ALL_GENRES;
 
   // Handle vertical scroll to change active genre
   const handleScroll = () => {
@@ -1042,10 +1064,10 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
     const containerRect = container.getBoundingClientRect();
     const containerCenter = containerRect.top + containerRect.height / 2;
     
-    let closestGenre = genres[0];
+    let closestGenre = displayGenres[0];
     let closestDistance = Infinity;
     
-    genres.forEach((genre) => {
+    displayGenres.forEach((genre) => {
       const el = genreRefs.current[genre];
       if (el) {
         const rect = el.getBoundingClientRect();
@@ -1074,35 +1096,51 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange }) {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto space-y-4 pr-2 py-8"
+        className="flex-1 overflow-y-auto space-y-1 pr-2 py-12"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {genres.map((genre, index) => (
-          <motion.div
-            key={genre}
-            ref={(el) => genreRefs.current[genre] = el}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="relative py-2"
-          >
-            <span className={`font-semibold text-base capitalize transition-all duration-300 ${
-              activeGenre === genre 
-                ? 'text-cyan-300 text-lg' 
-                : 'text-white/40'
-            }`}>
-              {genre}
-            </span>
-            
-            {/* Active indicator line */}
-            {activeGenre === genre && (
-              <motion.div
-                layoutId="genreActiveLine"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 w-1 h-4 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
-              />
-            )}
-          </motion.div>
-        ))}
+        {displayGenres.map((genre, index) => {
+          const hasGames = gamesByGenre[genre]?.length > 0;
+          const isActive = activeGenre === genre;
+          
+          return (
+            <motion.div
+              key={genre}
+              ref={(el) => genreRefs.current[genre] = el}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className="relative py-3 pl-3"
+            >
+              <span className={`font-semibold transition-all duration-300 ${
+                isActive 
+                  ? 'text-cyan-300 text-xl' 
+                  : hasGames
+                    ? 'text-white/50 text-sm'
+                    : 'text-white/20 text-sm'
+              }`}>
+                {genre}
+              </span>
+              
+              {/* Game count badge */}
+              {hasGames && (
+                <span className={`ml-2 text-xs transition-all duration-300 ${
+                  isActive ? 'text-cyan-400' : 'text-white/30'
+                }`}>
+                  ({gamesByGenre[genre].length})
+                </span>
+              )}
+              
+              {/* Active indicator line */}
+              {isActive && (
+                <motion.div
+                  layoutId="genreActiveLine"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
+                />
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
