@@ -574,6 +574,15 @@ export default function DeveloperLimitedEdition() {
 
   const handleSelectGame = (index) => {
     setSelectedGameIndex(index);
+    setSelectedCard(null); // Clear selected card when game changes
+  };
+
+  const handleCardClick = (card) => {
+    setSelectedCard(card);
+  };
+
+  const handleCloseCardDetail = () => {
+    setSelectedCard(null);
   };
 
   // Animation variants for liquid glass slide
