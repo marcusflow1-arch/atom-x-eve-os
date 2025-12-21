@@ -1026,19 +1026,19 @@ export default function Store() {
                                                     <span className="text-white/20 text-sm ml-auto">{genre.items.length} titles</span>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                                                     {genre.items.map((game, itemIdx) => {
                                                         const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
                                                         return (
                                                             <motion.div
                                                                 key={game.id}
-                                                                whileHover={{ y: -4, scale: 1.02 }}
+                                                                whileHover={{ y: -5, scale: 1.02 }}
                                                                 onMouseEnter={() => {
                                                                     setHoveredGame(game);
                                                                 }}
                                                                 onMouseLeave={() => setHoveredGame(null)}
                                                                 className={`
-                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-lg overflow-hidden cursor-pointer shadow-lg transition-all max-w-[140px]
+                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
                                                                     ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
                                                                 `}
                                                                 onClick={() => handleNavigateToGame(game.id)}
@@ -1050,18 +1050,18 @@ export default function Store() {
                                                                 />
                                                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
                                                                 
-                                                                <div className="absolute top-1.5 right-1.5">
-                                                                    <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-[10px] px-1.5 py-0.5">
+                                                                <div className="absolute top-2 right-2">
+                                                                    <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
                                                                         ${game.price}
                                                                     </Badge>
                                                                 </div>
 
-                                                                <div className="absolute bottom-0 left-0 right-0 p-2">
-                                                                    <h4 className="text-white font-bold text-[11px] truncate mb-0.5">{game.title}</h4>
-                                                                    <div className="flex items-center justify-between text-[9px] text-white/50">
+                                                                <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                                    <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
+                                                                    <div className="flex items-center justify-between text-xs text-white/50">
                                                                         <span>{game.genre}</span>
-                                                                        <div className="flex items-center gap-0.5">
-                                                                            <Star className="w-2.5 h-2.5 text-yellow-500 fill-current" />
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
                                                                             <span>{game.rating || 4.5}</span>
                                                                         </div>
                                                                     </div>
@@ -1208,11 +1208,11 @@ export default function Store() {
                                     </div>
 
                                     {/* HORIZONTAL AXIS (Games) */}
-                                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-64 z-10 flex items-center pointer-events-none">
+                                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
                                         <motion.div 
-                                            className="flex items-center gap-6 pl-64 pointer-events-auto"
+                                            className="flex items-center gap-8 pl-64 pointer-events-auto"
                                             animate={{ 
-                                                x: -activeGameIndex * (196 + 24)
+                                                x: -activeGameIndex * (280 + 32)
                                             }}
                                             transition={{ type: "spring", stiffness: 250, damping: 25 }}
                                         >
@@ -1232,7 +1232,7 @@ export default function Store() {
                                                             y: isActive ? 0 : 20
                                                         }}
                                                         className={`
-                                                            w-[196px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                                                            w-[280px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                                                             border transition-all duration-300 shadow-2xl
                                                             ${isActive 
                                                                 ? 'border-white/40 shadow-blue-500/20' 
