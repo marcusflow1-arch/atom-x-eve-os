@@ -1339,7 +1339,10 @@ export default function LunaTemplate() {
                   ) : activeDrawer.id === 'battle' ? (
                     <BattleModeOverlay onClose={() => setActiveDrawer(null)} />
                   ) : activeDrawer.id === 'home' ? (
-                    <AIHomeOverlay onClose={() => setActiveDrawer(null)} />
+                    <AIHomeOverlay 
+                      onClose={() => setActiveDrawer(null)} 
+                      onSelectItem={(item) => setActiveDrawer(item)}
+                    />
                   ) : activeDrawer.id === 'story' ? (
                     <AIStoryOverlay onClose={() => setActiveDrawer(null)} />
                   ) : activeDrawer.id === 'games' ? (
