@@ -631,7 +631,7 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
-        <div className="page-container">
+        <div className="page-container" style={{ paddingTop: showLunaHeaderBar ? 0 : undefined }}>
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               {showLunaHeaderBar ? (
