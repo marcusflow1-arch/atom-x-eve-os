@@ -1202,37 +1202,87 @@ const ALL_GENRES = [
 function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
+  const scrollTimeoutRef = useRef(null);
+  const isScrollingRef = useRef(false);
 
   // Use all genres, showing which ones have games
   const displayGenres = ALL_GENRES;
 
-  // Handle vertical scroll to change active genre
+  // Debounced scroll handler - slower and more controlled
   const handleScroll = () => {
     if (!scrollRef.current) return;
     
-    const container = scrollRef.current;
-    const containerRect = container.getBoundingClientRect();
-    const containerCenter = containerRect.top + containerRect.height / 2;
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     
-    let closestGenre = displayGenres[0];
-    let closestDistance = Infinity;
+    isScrollingRef.current = true;
     
-    displayGenres.forEach((genre) => {
-      const el = genreRefs.current[genre];
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const elCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(elCenter - containerCenter);
-        
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestGenre = genre;
+    // Debounce the genre change - wait 150ms after scroll stops
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (!scrollRef.current) return;
+      
+      const container = scrollRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const containerCenter = containerRect.top + containerRect.height / 2;
+      
+      let closestGenre = displayGenres[0];
+      let closestDistance = Infinity;
+      
+      displayGenres.forEach((genre) => {
+        const el = genreRefs.current[genre];
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const elCenter = rect.top + rect.height / 2;
+          const distance = Math.abs(elCenter - containerCenter);
+          
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestGenre = genre;
+          }
         }
+      });
+      
+      if (closestGenre !== activeGenre) {
+        onGenreChange(closestGenre);
       }
-    });
+      
+      isScrollingRef.current = false;
+    }, 150);
+  };
+
+  // Handle wheel event to slow down scrolling
+  const handleWheel = (e) => {
+    if (!scrollRef.current) return;
     
-    if (closestGenre !== activeGenre) {
-      onGenreChange(closestGenre);
+    e.preventDefault();
+    
+    // Slow down scroll speed significantly (divide by 3)
+    const scrollAmount = e.deltaY / 3;
+    
+    scrollRef.current.scrollBy({
+      top: scrollAmount,
+      behavior: 'auto'
+    });
+  };
+
+  // Click to select genre directly
+  const handleGenreClick = (genre) => {
+    onGenreChange(genre);
+    
+    // Scroll the clicked genre into center view
+    const el = genreRefs.current[genre];
+    if (el && scrollRef.current) {
+      const container = scrollRef.current;
+      const containerHeight = container.clientHeight;
+      const elTop = el.offsetTop;
+      const elHeight = el.clientHeight;
+      
+      container.scrollTo({
+        top: elTop - (containerHeight / 2) + (elHeight / 2),
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -1246,6 +1296,7 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
+        onWheel={handleWheel}
         className="flex-1 overflow-y-auto space-y-1 pr-2 py-12"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
@@ -1260,7 +1311,8 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
-              className="relative py-3 pl-3"
+              onClick={() => handleGenreClick(genre)}
+              className="relative py-4 pl-3 cursor-pointer hover:bg-white/5 rounded-lg transition-colors"
             >
               <span className={`font-semibold transition-all duration-300 ${
                 isActive 
