@@ -81,7 +81,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass'].some(s => location.pathname.toLowerCase().includes(s));
+  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
@@ -555,6 +555,34 @@ function LayoutContent({ children, currentPageName }) {
                                           <>
                                             <Crown className="w-4 h-4" />
                                             <span>Season Pass</span>
+                                          </>
+                                        )}
+                                      </button>
+                                      <div className="h-6 w-px bg-white/20" />
+                                      <button
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
+                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                                      >
+                                        {location.pathname.toLowerCase().includes('/entertainment') ? (
+                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                                        ) : (
+                                          <>
+                                            <Clapperboard className="w-4 h-4" />
+                                            <span>Entertainment</span>
+                                          </>
+                                        )}
+                                      </button>
+                                      <div className="h-6 w-px bg-white/20" />
+                                      <button
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                                      >
+                                        {location.pathname.toLowerCase().includes('/clan') ? (
+                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                                        ) : (
+                                          <>
+                                            <Users className="w-4 h-4" />
+                                            <span>Clan</span>
                                           </>
                                         )}
                                       </button>
