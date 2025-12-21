@@ -804,7 +804,7 @@ export default function FocusModePanel({ onOpenForum }) {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {/* Game Filter Row - Horizontal above card info */}
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-3 mb-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                 {gameFilterList.map((game) => (
                   <button
                     key={game.id}
@@ -812,16 +812,18 @@ export default function FocusModePanel({ onOpenForum }) {
                       setSelectedGameFilter(game.id);
                       setSelectedCard(null);
                     }}
-                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
-                      selectedGameFilter === game.id
-                        ? 'bg-white/15 border border-cyan-400/50'
-                        : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                    }`}
+                    className="flex-shrink-0 flex flex-col items-center gap-1"
                   >
-                    <span className="text-sm">{game.icon}</span>
-                    <span className={`text-xs whitespace-nowrap ${selectedGameFilter === game.id ? 'text-white' : 'text-white/60'}`}>
+                    <span className={`text-[10px] whitespace-nowrap ${selectedGameFilter === game.id ? 'text-white' : 'text-white/50'}`}>
                       {game.name}
                     </span>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                      selectedGameFilter === game.id
+                        ? 'bg-white/15 border border-cyan-400/50'
+                        : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                    }`}>
+                      <span className="text-lg">{game.icon}</span>
+                    </div>
                   </button>
                 ))}
               </div>
