@@ -565,7 +565,13 @@ export default function DeveloperLimitedEdition() {
 
   const handleSelectGame = (index) => {
     setSelectedGameIndex(index);
-    setSelectedCard(null); // Clear selected card when game changes
+    // Auto-select the first card when selecting a game
+    const game = currentDeveloper.games[index];
+    if (game?.limitedCards?.length > 0) {
+      setSelectedCard(game.limitedCards[0]);
+    } else {
+      setSelectedCard(null);
+    }
   };
 
   const handleCardClick = (card) => {
