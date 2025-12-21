@@ -663,16 +663,6 @@ export default function DeveloperLimitedEdition() {
         </div>
       </div>
 
-      {/* Giant Card Detail Panel - Shows below developer header when card is selected */}
-      <AnimatePresence>
-        {selectedCard && (
-          <CardDetailPanel 
-            card={selectedCard} 
-            onClose={handleCloseCardDetail}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Main Content Area */}
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
@@ -684,81 +674,67 @@ export default function DeveloperLimitedEdition() {
           transition={{ duration: 0.3 }}
           className="flex gap-6"
         >
-          {/* Left - Game Display Box */}
+          {/* Left - Game Display Box (transforms to card detail when card selected) */}
           <div 
-            className="flex-1 rounded-2xl overflow-hidden"
+            className="flex-1 rounded-2xl overflow-hidden relative"
             style={{
               background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%)',
               backdropFilter: 'blur(40px) saturate(180%)',
               WebkitBackdropFilter: 'blur(40px) saturate(180%)',
               border: '1px solid rgba(255,255,255,0.1)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              minHeight: '420px',
             }}
           >
-            {/* Game Cover */}
-            <div className="relative h-64 overflow-hidden">
-              <img 
-                src={currentGame?.cover} 
-                alt={currentGame?.title} 
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
-              
-              {/* Game Info Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Developer Limited Edition Rewards
-                  </Badge>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{currentGame?.title}</h3>
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span>{currentGame?.genre}</span>
-                  <span>•</span>
-                  <span>{currentGame?.year}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Game Description */}
-            <div className="p-6">
-              <p className="text-white/70 text-sm leading-relaxed mb-6">{currentGame?.description}</p>
-              
-              {/* Other Games by Developer */}
-              {currentDeveloper.games.length > 1 && (
-                <div>
-                  <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">
-                    Other Games by {currentDeveloper.name}
-                  </h4>
-                  <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                    {currentDeveloper.games.map((game, index) => (
-                      <button
-                        key={game.id}
-                        onClick={() => handleSelectGame(index)}
-                        className={`flex-shrink-0 w-24 rounded-lg overflow-hidden border-2 transition-all ${
-                          index === selectedGameIndex 
-                            ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]' 
-                            : 'border-transparent hover:border-white/30'
-                        }`}
-                      >
-                        <div className="relative aspect-video">
-                          <img 
-                            src={game.cover} 
-                            alt={game.title} 
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/40" />
-                        </div>
-                        <div className="p-1.5 bg-slate-900/80">
-                          <p className="text-[10px] text-white font-medium truncate">{game.title}</p>
-                        </div>
-                      </button>
-                    ))}
+            <AnimatePresence mode="wait">
+              {selectedCard ? (
+                /* Card Detail View - replaces game content */
+                <CardDetailContent 
+                  key="card-detail"
+                  card={selectedCard} 
+                  onClose={handleCloseCardDetail}
+                />
+              ) : (
+                /* Game Info View - default */
+                <motion.div
+                  key="game-info"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {/* Game Cover */}
+                  <div className="relative h-64 overflow-hidden">
+                    <img 
+                      src={currentGame?.cover} 
+                      alt={currentGame?.title} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+                    
+                    {/* Game Info Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Developer Limited Edition Rewards
+                        </Badge>
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-2">{currentGame?.title}</h3>
+                      <div className="flex items-center gap-3 text-sm text-white/60">
+                        <span>{currentGame?.genre}</span>
+                        <span>•</span>
+                        <span>{currentGame?.year}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Game Description */}
+                  <div className="p-6">
+                    <p className="text-white/70 text-sm leading-relaxed">{currentGame?.description}</p>
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
 
           {/* Right - Limited Edition Cards Panel */}
