@@ -772,6 +772,147 @@ export default function FocusModePanel() {
   return (
     <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
+
+      {/* New Content Overlay */}
+      <AnimatePresence>
+        {showNewContentOverlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            onClick={() => setShowNewContentOverlay(false)}
+          >
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 95, 0.8) 50%, rgba(15, 23, 42, 0.85) 100%)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)'
+              }}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-5xl max-h-[85vh] mx-4 rounded-3xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+              }}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-2xl font-bold text-white">New Content</h2>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-white/40 text-sm">Press ESC to close</span>
+                  <button 
+                    onClick={() => setShowNewContentOverlay(false)}
+                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white/60" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(85vh-100px)]" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-6">
+                  {/* Game Filter Sidebar */}
+                  <div className="w-40 flex-shrink-0">
+                    <h4 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Filter by Game</h4>
+                    <div className="space-y-1">
+                      {gameFilterList.map((game) => (
+                        <button
+                          key={game.id}
+                          onClick={() => {
+                            setSelectedGameFilter(game.id);
+                            setSelectedCard(null);
+                          }}
+                          className={`w-full flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all text-left ${
+                            selectedGameFilter === game.id
+                              ? 'bg-white/10 border border-cyan-400/50'
+                              : 'hover:bg-white/5 border border-transparent'
+                          }`}
+                        >
+                          <span className="text-xl">{game.icon}</span>
+                          <span className={`text-sm ${selectedGameFilter === game.id ? 'text-white font-medium' : 'text-white/60'}`}>
+                            {game.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cards Area */}
+                  <div className="flex-1">
+                    {/* Selected Card Preview */}
+                    {selectedCard && (
+                      <div className="flex gap-4 mb-6 p-4 bg-white/[0.03] rounded-xl border border-white/10">
+                        <AchievementStyleCard card={selectedCard} isSelected={true} size="large" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-xl font-bold text-white">{selectedCard.name}</h2>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${rarityStyles[selectedCard.rarity].text} bg-white/10`}>
+                              {selectedCard.rarity}
+                            </span>
+                          </div>
+                          <p className="text-white/40 text-sm mb-2">{selectedCard.type} • {selectedCard.game}</p>
+                          <p className="text-white/70 text-sm leading-relaxed mb-3">{selectedCard.description}</p>
+                          <div className="grid grid-cols-3 gap-3 mb-3">
+                            {Object.entries(selectedCard.stats).map(([key, value]) => (
+                              <div key={key} className="bg-white/5 rounded-lg p-2 border border-white/10">
+                                <p className="text-white/40 text-xs">{key}</p>
+                                <p className="text-white font-bold text-sm">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Trophy className="w-4 h-4 text-amber-400" />
+                              <p className="text-white/50 text-xs">How to Unlock</p>
+                            </div>
+                            <p className="text-white text-sm">{selectedCard.unlockCondition}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Cards Grid */}
+                    <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+                      {filteredCards.map((card) => (
+                        <AchievementStyleCard
+                          key={card.id}
+                          card={card}
+                          isSelected={selectedCard?.id === card.id}
+                          onClick={() => setSelectedCard(card)}
+                          size="normal"
+                        />
+                      ))}
+                      {filteredCards.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-white/40">
+                          <Sparkles className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                          <p>No new content for this game yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Top Section - New Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
