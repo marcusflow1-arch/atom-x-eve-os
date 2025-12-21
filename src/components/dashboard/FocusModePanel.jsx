@@ -1339,6 +1339,8 @@ export default function FocusModePanel() {
           <LibraryGamesSection 
             activeGenre={activeGenre}
             gamesByGenre={gamesByGenre}
+            onSelectGame={setSelectedGame}
+            selectedGame={selectedGame}
           />
         </div>
       </div>
