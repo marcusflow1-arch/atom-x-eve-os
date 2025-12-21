@@ -1103,16 +1103,53 @@ export default function LunaTemplate() {
             </motion.div>
           )}
         </AnimatePresence>
-        {/* Circle Icon Button (no hover menu) */}
-        <div className="fixed top-[4.75rem] left-4 z-40">
+        {/* Grid Menu Button with Hover Dropdown */}
+        <div className="fixed top-[4.75rem] right-4 z-40 group">
           <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+            className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
           >
-            <Circle className="w-5 h-5 text-white/80" />
+            {/* 2x2 Grid of small squares */}
+            <div className="grid grid-cols-2 gap-1">
+              <div className="w-2 h-2 bg-white/70 rounded-sm"></div>
+              <div className="w-2 h-2 bg-white/70 rounded-sm"></div>
+              <div className="w-2 h-2 bg-white/70 rounded-sm"></div>
+              <div className="w-2 h-2 bg-white/70 rounded-sm"></div>
+            </div>
           </button>
 
+          {/* Dropdown Menu on Hover */}
+          <div className="absolute top-full right-0 mt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100">
+            <div 
+              className="rounded-2xl p-3 space-y-1"
+              style={{
+                background: 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(40px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              }}
+            >
+              {ORBITAL_ITEMS.filter(item => ['story', 'battle', 'skill-tree', 'home'].includes(item.id)).map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveDrawer(item)}
+                    className="w-full p-3 rounded-xl transition-all flex items-center gap-3 hover:bg-white/10 group/item"
+                  >
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left flex-1">
+                      <h3 className="text-white font-semibold text-sm">{item.label}</h3>
+                      <p className="text-white/40 text-xs">{item.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
 
