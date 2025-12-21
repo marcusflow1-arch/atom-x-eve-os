@@ -598,7 +598,7 @@ import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
 import CalendarOverlay from '../components/calendar/CalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
-import FocusModePanel from '../components/dashboard/FocusModePanel';
+import FocusModePanel, { PinnedGamesPanel, FeedUpdatesPanel } from '../components/dashboard/FocusModePanel';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -1066,18 +1066,35 @@ export default function LunaTemplate() {
           </div>
         )}
 
-        {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
+        {/* Focus Mode - Shows when UI is hidden (I key) */}
         <AnimatePresence>
           {!uiVisible && (
-            <motion.div
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 100 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="fixed top-24 right-8 bottom-8 w-[480px] z-30"
-            >
-              <FocusModePanel />
-            </motion.div>
+            <>
+              {/* Pinned Games Panel - Under 3D Viewer on Left */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="fixed left-8 bottom-8 w-[320px] z-30"
+                style={{ top: 'calc(50% + 180px)' }}
+              >
+                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-4 h-[320px] overflow-hidden">
+                  <PinnedGamesPanel />
+                </div>
+              </motion.div>
+
+              {/* Feed Updates Panel - Right Side */}
+              <motion.div
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="fixed top-24 right-8 bottom-8 w-[400px] z-30"
+              >
+                <FeedUpdatesPanel />
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
         {/* Circle Icon Button (no hover menu) */}
