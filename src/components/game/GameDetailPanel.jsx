@@ -549,22 +549,23 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
 
             {/* System Requirements */}
             <SystemRequirements />
-
-            {/* Reviews */}
-            <ReviewsSection reviews={mockReviews} />
           </div>
 
           {/* Right Column - Game Info Sidebar */}
           <div className="w-[300px] flex-shrink-0">
-            <div className="sticky top-4">
-              <GameInfoSidebar 
-                game={game} 
-                gameIsOwned={gameIsOwned} 
-                onPurchase={handlePurchase}
-              />
-            </div>
+            <GameInfoSidebar 
+              game={game} 
+              gameIsOwned={gameIsOwned} 
+              onPurchase={handlePurchase}
+            />
           </div>
         </div>
+      </div>
+
+      {/* User Reviews Section - Full Width at Bottom */}
+      <div className="max-w-7xl mx-auto px-6 pb-8">
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mb-6" />
+        <ReviewsSection reviews={mockReviews} />
       </div>
     </div>
   );
