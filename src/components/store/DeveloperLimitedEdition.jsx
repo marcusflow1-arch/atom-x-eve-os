@@ -368,8 +368,8 @@ const LimitedEditionCardSmall = ({ card, onClick, isSelected }) => {
   );
 };
 
-// Giant Card Detail Panel - Achievement Page Style
-const CardDetailPanel = ({ card, onClose }) => {
+// Card Detail Content - Renders INSIDE the main game box (replaces game info)
+const CardDetailContent = ({ card, onClose }) => {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
@@ -393,26 +393,19 @@ const CardDetailPanel = ({ card, onClose }) => {
 
   const rarity = rarityColors[card.rarity] || rarityColors.Common;
 
-  // Mock stats for the card
+  // Generate consistent stats based on card id
   const cardStats = {
-    Power: Math.floor(Math.random() * 50) + 50,
-    Defense: Math.floor(Math.random() * 40) + 30,
-    Speed: Math.floor(Math.random() * 30) + 20,
+    Power: 50 + (card.id * 7) % 50,
+    Defense: 30 + (card.id * 11) % 40,
+    Speed: 20 + (card.id * 13) % 30,
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="relative w-full rounded-2xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="h-full p-6 flex gap-6"
     >
       {/* Close Button */}
       <button 
@@ -422,124 +415,122 @@ const CardDetailPanel = ({ card, onClose }) => {
         <X className="w-5 h-5" />
       </button>
 
-      <div className="flex gap-8 p-8">
-        {/* Left: Interactive Card Display */}
-        <div className="flex-shrink-0 flex flex-col items-center">
-          {/* Interactive Liquid Glass Card Container */}
-          <div 
-            className="relative group perspective-1000 w-[200px] aspect-[2.5/3.5]"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
+      {/* Left: Interactive Card Display */}
+      <div className="flex-shrink-0 flex flex-col items-center justify-center">
+        {/* Interactive Liquid Glass Card Container */}
+        <div 
+          className="relative group perspective-1000 w-[180px] aspect-[2.5/3.5]"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <motion.div
+            className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border-2 bg-slate-900"
+            style={{
+              rotateX,
+              rotateY,
+              transformStyle: "preserve-3d",
+              borderColor: card.rarity === 'Mythic' ? 'rgba(239,68,68,0.5)' : 
+                           card.rarity === 'Legendary' ? 'rgba(249,115,22,0.5)' : 
+                           card.rarity === 'Epic' ? 'rgba(168,85,247,0.5)' : 'rgba(59,130,246,0.5)',
+              boxShadow: `0 0 40px ${
+                card.rarity === 'Mythic' ? 'rgba(239,68,68,0.4)' : 
+                card.rarity === 'Legendary' ? 'rgba(249,115,22,0.4)' : 
+                card.rarity === 'Epic' ? 'rgba(168,85,247,0.4)' : 'rgba(59,130,246,0.4)'
+              }`
+            }}
           >
-            <motion.div
-              className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border-2 bg-slate-900"
-              style={{
-                rotateX,
-                rotateY,
-                transformStyle: "preserve-3d",
-                borderColor: card.rarity === 'Mythic' ? 'rgba(239,68,68,0.5)' : 
-                             card.rarity === 'Legendary' ? 'rgba(249,115,22,0.5)' : 
-                             card.rarity === 'Epic' ? 'rgba(168,85,247,0.5)' : 'rgba(59,130,246,0.5)',
-                boxShadow: `0 0 40px ${
-                  card.rarity === 'Mythic' ? 'rgba(239,68,68,0.4)' : 
-                  card.rarity === 'Legendary' ? 'rgba(249,115,22,0.4)' : 
-                  card.rarity === 'Epic' ? 'rgba(168,85,247,0.4)' : 'rgba(59,130,246,0.4)'
-                }`
-              }}
-            >
-              {/* Card Content Layer */}
-              <div className="absolute inset-0 z-0" style={{ transform: "translateZ(0)" }}>
-                <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-              </div>
-
-              {/* Interactive Shine Layer */}
-              <motion.div 
-                className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
-                style={{
-                  background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
-                }}
-              />
-
-              {/* Glossy Overlay */}
-              <div className="absolute inset-0 z-10 bg-gradient-to-tr from-white/10 via-transparent to-black/30 pointer-events-none" />
-
-              {/* Rarity Badge on Card */}
-              <div className="absolute bottom-3 left-3 right-3 z-30">
-                <Badge className={`${rarity.bg} ${rarity.text} border-none text-xs w-full justify-center shadow-lg backdrop-blur-md`}>
-                  {card.rarity}
-                </Badge>
-              </div>
-            </motion.div>
-            
-            {/* Floor Reflection */}
-            <div className="absolute -bottom-8 left-2 right-2 h-4 bg-black/40 blur-xl rounded-full" />
-          </div>
-
-          {/* Card Name & Type under the card */}
-          <div className="mt-6 text-center">
-            <h3 className="text-xl font-bold text-white mb-2">{card.name}</h3>
-            <div className="flex items-center justify-center gap-2">
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">{card.type}</Badge>
-              <Badge className={`${rarity.bg} ${rarity.text} border-none text-xs`}>{card.rarity}</Badge>
+            {/* Card Content Layer */}
+            <div className="absolute inset-0 z-0" style={{ transform: "translateZ(0)" }}>
+              <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
             </div>
-            <p className="text-amber-400/80 text-sm mt-2">{card.tag}</p>
-          </div>
+
+            {/* Interactive Shine Layer */}
+            <motion.div 
+              className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
+              style={{
+                background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
+              }}
+            />
+
+            {/* Glossy Overlay */}
+            <div className="absolute inset-0 z-10 bg-gradient-to-tr from-white/10 via-transparent to-black/30 pointer-events-none" />
+
+            {/* Rarity Badge on Card */}
+            <div className="absolute bottom-2 left-2 right-2 z-30">
+              <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md`}>
+                {card.rarity}
+              </Badge>
+            </div>
+          </motion.div>
+          
+          {/* Floor Reflection */}
+          <div className="absolute -bottom-6 left-2 right-2 h-3 bg-black/40 blur-lg rounded-full" />
         </div>
 
-        {/* Right: Card Information & Stats */}
-        <div className="flex-1 flex flex-col">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <ScrollText className="w-5 h-5 text-cyan-400" />
-              Card Record
-            </h3>
-            <p className="text-white/40 text-sm">Detailed information about this card</p>
+        {/* Card Name & Type under the card */}
+        <div className="mt-5 text-center">
+          <h3 className="text-lg font-bold text-white mb-1">{card.name}</h3>
+          <div className="flex items-center justify-center gap-2">
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{card.type}</Badge>
+            <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px]`}>{card.rarity}</Badge>
           </div>
+          <p className="text-amber-400/80 text-xs mt-1">{card.tag}</p>
+        </div>
+      </div>
 
-          <div className="flex-1 bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl p-5 border border-white/10">
-            <div className="space-y-5">
-              {/* Description */}
-              <div>
-                <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Description</label>
-                <p className="text-slate-300 leading-relaxed italic text-sm">
-                  "A powerful {card.type.toLowerCase()} card from the {card.tag.includes('Developer') ? 'developer' : 'store'} limited edition collection. 
-                  This rare item grants its holder unique abilities and bonuses in compatible games."
-                </p>
+      {/* Right: Card Information & Stats */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="mb-3">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <ScrollText className="w-4 h-4 text-cyan-400" />
+            Card Record
+          </h3>
+          <p className="text-white/40 text-xs">Detailed information about this card</p>
+        </div>
+
+        <div className="flex-1 bg-gradient-to-br from-slate-800/30 to-slate-900/30 rounded-xl p-4 border border-white/5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="space-y-4">
+            {/* Description */}
+            <div>
+              <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Description</label>
+              <p className="text-slate-300 leading-relaxed italic text-xs">
+                "A powerful {card.type.toLowerCase()} card from the {card.tag.includes('Developer') ? 'developer' : 'store'} limited edition collection. 
+                This rare item grants its holder unique abilities and bonuses."
+              </p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="pt-3 border-t border-white/10">
+              <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-2">Stats</label>
+              <div className="grid grid-cols-3 gap-2">
+                {Object.entries(cardStats).map(([key, value]) => (
+                  <div key={key} className="bg-black/30 p-2 rounded-lg border border-white/5 text-center">
+                    <div className="text-[10px] text-slate-400 uppercase tracking-wide">{key}</div>
+                    <div className="text-xl font-bold text-white">{value}</div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              {/* Stats Grid */}
-              <div className="pt-4 border-t border-white/10">
-                <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Stats</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {Object.entries(cardStats).map(([key, value]) => (
-                    <div key={key} className="bg-black/30 p-3 rounded-lg border border-white/5 text-center">
-                      <div className="text-xs text-slate-400 uppercase tracking-wide">{key}</div>
-                      <div className="text-2xl font-bold text-white mt-1">{value}</div>
-                    </div>
-                  ))}
+            {/* Card Details */}
+            <div className="pt-3 border-t border-white/10">
+              <label className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-2">Card Details</label>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
+                  <span className="text-slate-400">Card ID</span>
+                  <span className="text-white font-mono">#{card.id}</span>
                 </div>
-              </div>
-
-              {/* Card Details */}
-              <div className="pt-4 border-t border-white/10">
-                <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Card Details</label>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-slate-400">Card ID</span>
-                    <span className="text-white font-mono">#{card.id}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-slate-400">Type</span>
-                    <span className="text-white">{card.type}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-slate-400">Rarity</span>
-                    <span className={rarity.text}>{card.rarity}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-400">Edition</span>
-                    <span className="text-amber-400">{card.tag}</span>
-                  </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
+                  <span className="text-slate-400">Type</span>
+                  <span className="text-white">{card.type}</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
+                  <span className="text-slate-400">Rarity</span>
+                  <span className={rarity.text}>{card.rarity}</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5">
+                  <span className="text-slate-400">Edition</span>
+                  <span className="text-amber-400">{card.tag}</span>
                 </div>
               </div>
             </div>
