@@ -232,74 +232,135 @@ function DLCSection({ dlcs }) {
   );
 }
 
-// Steam-style Review Card
+// Reaction Button Component
+function ReactionButton({ emoji, label, count, isActive, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
+        isActive 
+          ? 'bg-white/20 text-white border border-white/30 shadow-[0_0_10px_rgba(255,255,255,0.1)]' 
+          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-transparent'
+      }`}
+    >
+      <span>{emoji}</span>
+      {label && <span>{label}</span>}
+      {count > 0 && <span className="text-white/60">{count}</span>}
+    </button>
+  );
+}
+
+// Steam-style Review Card with Liquid Glass
 function SteamReviewCard({ review }) {
-  const [helpfulVoted, setHelpfulVoted] = useState(null);
+  const [reactions, setReactions] = useState({
+    helpful: false,
+    notHelpful: false,
+    funny: false,
+    insightful: false,
+    agree: false,
+    award: false
+  });
+
+  const toggleReaction = (key) => {
+    setReactions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
-    <div className="border-b border-white/5 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-      {/* User Info Row */}
-      <div className="flex items-start gap-3 mb-3">
-        <img src={review.avatar} alt={review.user} className="w-9 h-9 rounded" />
-        <div className="flex-1">
-          <p className="text-cyan-400 text-sm font-medium hover:underline cursor-pointer">{review.user}</p>
-          <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5">
-            <span>{review.hours} hrs on record</span>
+    <div 
+      className="mb-4 rounded-xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+      }}
+    >
+      <div className="p-4">
+        {/* User Info & Recommendation */}
+        <div className="flex items-start gap-3 mb-4">
+          <img src={review.avatar} alt={review.user} className="w-11 h-11 rounded-lg ring-2 ring-white/10" />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-white font-medium hover:text-cyan-400 cursor-pointer transition-colors">{review.user}</p>
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                review.rating === 'positive' 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
+              }`}>
+                {review.rating === 'positive' ? <ThumbsUp className="w-3 h-3" /> : <ThumbsDown className="w-3 h-3" />}
+                {review.rating === 'positive' ? 'Recommended' : 'Not Recommended'}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {review.hours} hrs played
+              </span>
+              <span>•</span>
+              <span>{review.date}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Recommendation Badge */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded flex items-center justify-center ${
-          review.rating === 'positive' ? 'bg-cyan-500/20' : 'bg-red-500/20'
-        }`}>
-          {review.rating === 'positive' 
-            ? <ThumbsUp className="w-5 h-5 text-cyan-400" /> 
-            : <ThumbsDown className="w-5 h-5 text-red-400" />
-          }
-        </div>
-        <div>
-          <p className={`text-sm font-medium ${review.rating === 'positive' ? 'text-cyan-400' : 'text-red-400'}`}>
-            {review.rating === 'positive' ? 'Recommended' : 'Not Recommended'}
-          </p>
-          <p className="text-[11px] text-slate-500">Posted: {review.date}</p>
-        </div>
-      </div>
+        {/* Review Content */}
+        <p className="text-sm text-slate-300 leading-relaxed mb-4">{review.content}</p>
 
-      {/* Review Content */}
-      <p className="text-[13px] text-slate-300 leading-relaxed mb-4">{review.content}</p>
-
-      {/* Helpful Section */}
-      <div className="flex items-center gap-4">
-        <span className="text-[11px] text-slate-500">
-          {review.helpful} people found this review helpful
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-500">Was this review helpful?</span>
-          <button 
-            onClick={() => setHelpfulVoted('yes')}
-            className={`px-3 py-1 rounded text-[11px] transition-colors ${
-              helpfulVoted === 'yes' 
-                ? 'bg-cyan-500/30 text-cyan-400 border border-cyan-500/50' 
-                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
-            }`}
-          >
-            Yes
-          </button>
-          <button 
-            onClick={() => setHelpfulVoted('no')}
-            className={`px-3 py-1 rounded text-[11px] transition-colors ${
-              helpfulVoted === 'no' 
-                ? 'bg-red-500/30 text-red-400 border border-red-500/50' 
-                : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600/50 border border-transparent'
-            }`}
-          >
-            No
-          </button>
-          <button className="px-3 py-1 rounded text-[11px] bg-slate-700/50 text-slate-400 hover:bg-slate-600/50">
-            😄 Funny
-          </button>
+        {/* Reactions Bar */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ReactionButton 
+              emoji="👍" 
+              label="Helpful" 
+              count={review.helpful + (reactions.helpful ? 1 : 0)}
+              isActive={reactions.helpful}
+              onClick={() => toggleReaction('helpful')}
+            />
+            <ReactionButton 
+              emoji="👎" 
+              count={review.notHelpful + (reactions.notHelpful ? 1 : 0)}
+              isActive={reactions.notHelpful}
+              onClick={() => toggleReaction('notHelpful')}
+            />
+            <ReactionButton 
+              emoji="😂" 
+              label="Funny"
+              count={reactions.funny ? 1 : 0}
+              isActive={reactions.funny}
+              onClick={() => toggleReaction('funny')}
+            />
+            <ReactionButton 
+              emoji="💡" 
+              label="Insightful"
+              count={reactions.insightful ? 1 : 0}
+              isActive={reactions.insightful}
+              onClick={() => toggleReaction('insightful')}
+            />
+            <ReactionButton 
+              emoji="🤝" 
+              label="Agree"
+              count={reactions.agree ? 1 : 0}
+              isActive={reactions.agree}
+              onClick={() => toggleReaction('agree')}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => toggleReaction('award')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
+                reactions.award
+                  ? 'bg-amber-500/30 text-amber-400 border border-amber-500/50'
+                  : 'bg-white/5 text-slate-400 hover:bg-amber-500/20 hover:text-amber-400 border border-transparent'
+              }`}
+            >
+              <Star className="w-3.5 h-3.5" />
+              Award
+            </button>
+            <button className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+              <Flag className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
