@@ -358,7 +358,7 @@ export default function Store() {
     
     // Store Mode State
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
-    const [storeSubView, setStoreSubView] = useState(searchParams.get('sub') || 'games'); // 'games' | 'library'
+    const [storeSubView, setStoreSubView] = useState('games'); // 'games' | 'library'
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
