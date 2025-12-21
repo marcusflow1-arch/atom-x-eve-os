@@ -708,19 +708,174 @@ function GameBoxes() {
   );
 }
 
-// Game filter list for New Content (SAVED FOR LATER)
-const gameFilterList = [
+// Genre list for scrollable selector
+const GENRE_LIST = [
   { id: 'all', name: 'All Games', icon: '🎮' },
-  { id: 'elden-ring', name: 'Elden Ring', icon: '⚔️' },
-  { id: 'cyberpunk', name: 'Cyberpunk 2088', icon: '🌃' },
-  { id: 'baldurs-gate', name: "Baldur's Gate 3", icon: '🧙' },
-  { id: 'neon-legends', name: 'Neon Legends', icon: '⚡' },
-  { id: 'dragon-age', name: 'Dragon Age', icon: '🐉' },
-  { id: 'shadow-realm', name: 'Shadow Realm', icon: '👁️' },
-  { id: 'stellar-odyssey', name: 'Stellar Odyssey', icon: '🚀' },
-  { id: 'final-fantasy', name: 'Final Fantasy', icon: '✨' },
-  { id: 'dark-souls', name: 'Dark Souls', icon: '🔥' },
+  { id: 'rpg', name: 'RPG', icon: '⚔️' },
+  { id: 'mmorpg', name: 'MMORPG', icon: '🌍' },
+  { id: 'fantasy', name: 'Fantasy', icon: '🧙' },
+  { id: 'sci-fi', name: 'Sci-Fi', icon: '🚀' },
+  { id: 'action', name: 'Action', icon: '💥' },
+  { id: 'adventure', name: 'Adventure', icon: '🗺️' },
+  { id: 'horror', name: 'Horror', icon: '👻' },
+  { id: 'simulation', name: 'Simulation', icon: '🎯' },
+  { id: 'strategy', name: 'Strategy', icon: '♟️' },
+  { id: 'racing', name: 'Racing', icon: '🏎️' },
+  { id: 'sports', name: 'Sports', icon: '⚽' },
+  { id: 'fighting', name: 'Fighting', icon: '🥊' },
+  { id: 'shooter', name: 'Shooter', icon: '🔫' },
+  { id: 'puzzle', name: 'Puzzle', icon: '🧩' },
 ];
+
+// Scrollable Genre Selector Component
+function GenreScrollSelector({ selectedGenre, onSelectGenre, genres }) {
+  const scrollRef = useRef(null);
+
+  return (
+    <div 
+      ref={scrollRef}
+      className="h-full overflow-y-auto pr-2"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+    >
+      <div className="space-y-1">
+        {genres.map((genre, index) => (
+          <motion.button
+            key={genre.id}
+            onClick={() => onSelectGenre(genre.id)}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.03 }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
+              selectedGenre === genre.id
+                ? 'bg-cyan-500/20 border border-cyan-400/40 text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                : 'bg-white/[0.03] border border-white/5 text-white/60 hover:bg-white/[0.06] hover:text-white hover:border-white/10'
+            }`}
+          >
+            <span className="text-lg">{genre.icon}</span>
+            <span className="text-sm font-medium truncate">{genre.name}</span>
+            {selectedGenre === genre.id && (
+              <motion.div 
+                layoutId="genreIndicator"
+                className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400"
+              />
+            )}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Empty Game Box Placeholder with liquid glass effect
+function EmptyGameBox() {
+  return (
+    <div 
+      className="aspect-[3/4] rounded-xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.2)',
+      }}
+    >
+      <div className="w-full h-full flex items-center justify-center">
+        <Gamepad2 className="w-6 h-6 text-white/10" />
+      </div>
+    </div>
+  );
+}
+
+// Game Box Component for grid
+function GameGridBox({ game, onClick }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  if (!game) return <EmptyGameBox />;
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.03, y: -4 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={() => onClick?.(game)}
+      className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer relative"
+      style={{
+        boxShadow: isHovered 
+          ? '0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(6,182,212,0.15)' 
+          : '0 4px 15px rgba(0,0,0,0.3)',
+        transition: 'box-shadow 0.3s ease',
+      }}
+    >
+      <img 
+        src={game.cover_image || game.cover} 
+        alt={game.title}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+      
+      {/* Hover overlay */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center"
+            >
+              <Play className="w-4 h-4 text-black fill-black ml-0.5" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Game title */}
+      <div className="absolute bottom-0 left-0 right-0 p-2">
+        <p className="text-white font-bold text-[10px] truncate drop-shadow-lg">{game.title}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+// Library Games Grid (7 columns x 3 rows)
+function LibraryGamesGrid({ games, onSelectGame }) {
+  const navigate = useNavigate();
+  const COLS = 7;
+  const ROWS = 3;
+  const totalSlots = COLS * ROWS;
+
+  // Fill grid with games, pad with nulls for empty slots
+  const gridItems = [...games.slice(0, totalSlots)];
+  while (gridItems.length < totalSlots) {
+    gridItems.push(null);
+  }
+
+  const handleGameClick = (game) => {
+    if (game) {
+      navigate(createPageUrl('Library') + `?game=${game.id}`);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-7 gap-3">
+      {gridItems.map((game, index) => (
+        <motion.div
+          key={game?.id || `empty-${index}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.02 }}
+        >
+          <GameGridBox game={game} onClick={handleGameClick} />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
 // Library Game Card Component
 function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
