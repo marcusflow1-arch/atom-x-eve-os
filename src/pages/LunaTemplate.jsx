@@ -1074,7 +1074,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="fixed top-20 left-8 right-8 bottom-8 z-30"
+              className="fixed top-[340px] left-8 right-8 bottom-8 z-30"
             >
               <FocusModePanel />
             </motion.div>
