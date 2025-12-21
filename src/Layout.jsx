@@ -526,31 +526,43 @@ function LayoutContent({ children, currentPageName }) {
                                     </div>
                                   </button>
 
-                                  {p.includes('/lunatemplate') && (
+                                  {(p.includes('/lunatemplate') || p.includes('/blacksmith') || p.includes('/seasonalpass')) && (
                                     <div className="hidden sm:flex items-center gap-2 ml-1">
                                       <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">
                                         Atom X Eve Dashboard page
                                       </span>
                                       <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <button onClick={() => { setPendingRoute(createPageUrl('Blacksmith')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
-                                        <Hammer className="w-4 h-4" />
-                                        <span>Blacksmith</span>
+                                      <button
+                                        onClick={() => { setPendingRoute(createPageUrl(p.includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith')); setShowRouteTransition(true); }}
+                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                                      >
+                                        {p.includes('/blacksmith') ? (
+                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                                        ) : (
+                                          <>
+                                            <Hammer className="w-4 h-4" />
+                                            <span>Blacksmith</span>
+                                          </>
+                                        )}
                                       </button>
                                       <div className="h-6 w-px bg-white/20 mx-2" />
-                                      <button onClick={() => { setPendingRoute(createPageUrl('SeasonalPass')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
-                                        <Crown className="w-4 h-4" />
-                                        <span>Season Pass</span>
+                                      <button
+                                        onClick={() => { setPendingRoute(createPageUrl(p.includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass')); setShowRouteTransition(true); }}
+                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
+                                      >
+                                        {p.includes('/seasonalpass') ? (
+                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
+                                        ) : (
+                                          <>
+                                            <Crown className="w-4 h-4" />
+                                            <span>Season Pass</span>
+                                          </>
+                                        )}
                                       </button>
                                     </div>
                                   )}
 
-                                  {(p.includes('/blacksmith') || p.includes('/seasonalpass')) && (
-                                    <div className="hidden sm:flex items-center gap-2 ml-1">
-                                      <button onClick={() => { setPendingRoute(createPageUrl('LunaTemplate')); setShowRouteTransition(true); }} className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm">
-                                        <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                      </button>
-                                    </div>
-                                  )}
+
                                 </div>
                               )}
 
