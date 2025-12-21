@@ -1111,7 +1111,7 @@ export default function Library({ onSwitchToStore }) {
                               />
                             ))}
                           </motion.div>
-                        )
+                        )}
 
                         {['streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
                           <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
