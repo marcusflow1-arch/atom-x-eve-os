@@ -270,6 +270,7 @@ function GameBoxes() {
 export default function FocusModePanel() {
   const [selectedCard, setSelectedCard] = useState(upcomingCards[0]);
   const scrollRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('pinned'); // Keep for potential future use
 
   return (
     <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
