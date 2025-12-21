@@ -436,7 +436,7 @@ export default function FocusModePanel() {
           </AnimatePresence>
         </div>
       </div>
-      </div>
+    </div>
     </div>
   );
 }
