@@ -1067,7 +1067,7 @@ export default function LunaTemplate() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
           </div>
 
-          {/* Skill Boxes - Single Row */}
+          {/* Skill Boxes - Single Row with Drop Targets */}
           <div className="flex gap-3">
             {[0, 1, 2, 3, 4].map(i => {
               const skillMap = {
@@ -1097,17 +1097,65 @@ export default function LunaTemplate() {
                 }
               };
 
+              const onDragOver = (e) => {
+                if (e.dataTransfer) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'copy';
+                }
+              };
+
+              const onDrop = (e) => {
+                e.preventDefault();
+                try {
+                  const json = e.dataTransfer.getData('application/json');
+                  const payload = json ? JSON.parse(json) : null;
+                  if (payload?.source === 'luna-card' && payload.card) {
+                    window.LUNA_HOTBAR = window.LUNA_HOTBAR || {};
+                    window.LUNA_HOTBAR[i] = payload.card;
+                    // Optional: flash active state briefly to confirm assignment
+                    setActiveSkills(prev => {
+                      const next = [...prev];
+                      next[i] = true;
+                      setTimeout(() => setActiveSkills(p => {
+                        const n = [...p];
+                        n[i] = false;
+                        return n;
+                      }), 500);
+                      return next;
+                    });
+                  }
+                } catch {}
+              };
+
+              const assigned = (window.LUNA_HOTBAR && window.LUNA_HOTBAR[i]) || null;
+
               return (
                 <div 
                   key={`skill-${i}`}
                   onClick={handleSkillClick}
-                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
+                  className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center relative overflow-hidden ${
                     activeSkills[i] 
                       ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
                       : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
                   }`}
+                  title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}
                 >
+                  {/* Key label */}
                   <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                  {/* Assigned card preview */}
+                  {assigned && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {assigned.image ? (
+                        <img src={assigned.image} alt={assigned.title} className="w-full h-full object-cover opacity-30" />
+                      ) : (
+                        <span className="text-white/50 text-[10px] font-semibold px-1 text-center leading-tight line-clamp-2">
+                          {assigned.title}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
