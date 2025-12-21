@@ -1388,6 +1388,136 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
   );
 }
 
+// Colorful Card Box Component
+function ColorfulBox({ children, className = '', gradient = 'from-cyan-500/20 to-blue-500/20', borderColor = 'border-cyan-500/30' }) {
+  return (
+    <div 
+      className={`rounded-2xl p-4 ${className}`}
+      style={{
+        background: `linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)`,
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+      }}
+    >
+      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient} opacity-30 pointer-events-none`} />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
+// Quick Stats Widget
+function QuickStatsWidget() {
+  const stats = [
+    { label: 'Games Owned', value: '24', icon: Gamepad2, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+    { label: 'Achievements', value: '156', icon: Trophy, color: 'text-amber-400', bg: 'bg-amber-500/20' },
+    { label: 'Hours Played', value: '342', icon: Clock, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+    { label: 'Cards Collected', value: '89', icon: Sparkles, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {stats.map((stat, i) => (
+        <motion.div
+          key={stat.label}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1 }}
+          className="relative overflow-hidden rounded-xl p-3"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className={`absolute top-0 right-0 w-16 h-16 ${stat.bg} rounded-full blur-2xl opacity-50 -translate-y-4 translate-x-4`} />
+          <div className="flex items-center gap-2 relative z-10">
+            <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
+              <stat.icon className={`w-4 h-4 ${stat.color}`} />
+            </div>
+            <div>
+              <p className="text-white font-bold text-lg leading-none">{stat.value}</p>
+              <p className="text-white/40 text-[10px]">{stat.label}</p>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+// Featured Card Widget
+function FeaturedCardWidget() {
+  const featuredCard = upcomingCards[0];
+  const style = rarityStyles[featuredCard.rarity];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative overflow-hidden rounded-2xl"
+      style={{
+        background: 'linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(245,158,11,0.05) 100%)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(251,191,36,0.3)',
+        boxShadow: '0 0 40px rgba(251,191,36,0.15)'
+      }}
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
+            {featuredCard.icon}
+          </div>
+          <div>
+            <p className={`text-xs font-bold uppercase tracking-wider ${style.text}`}>{featuredCard.rarity}</p>
+            <h3 className="text-white font-bold">{featuredCard.name}</h3>
+          </div>
+        </div>
+        <p className="text-white/50 text-xs mb-3 line-clamp-2">{featuredCard.description}</p>
+        <div className="flex items-center justify-between">
+          <span className="text-amber-400 text-xs">{featuredCard.game}</span>
+          <button className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 rounded-lg text-amber-300 text-xs transition-colors">
+            View Details
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Activity Feed Widget
+function ActivityFeedWidget() {
+  const activities = [
+    { icon: Trophy, text: 'Unlocked "Dragon Slayer" achievement', time: '2h ago', color: 'text-amber-400', bg: 'bg-amber-500/20' },
+    { icon: Gamepad2, text: 'Started playing Elden Ring', time: '5h ago', color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+    { icon: Star, text: 'Earned 500 XP in RPG genre', time: '1d ago', color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  ];
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3">Recent Activity</h3>
+      {activities.map((activity, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: i * 0.1 }}
+          className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] transition-colors"
+        >
+          <div className={`w-7 h-7 rounded-lg ${activity.bg} flex items-center justify-center flex-shrink-0`}>
+            <activity.icon className={`w-3.5 h-3.5 ${activity.color}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs truncate">{activity.text}</p>
+            <p className="text-white/30 text-[10px]">{activity.time}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 // Main Export
 export default function FocusModePanel() {
   const { user, isAuthenticated } = useAuth();
@@ -1468,15 +1598,31 @@ export default function FocusModePanel() {
 
       {/* Top Section - Genre Selector + Game Details (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left side - placeholder for 3D viewer area */}
-        <div className="w-[300px] flex-shrink-0">
-          {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
+        {/* Left side - Stats and Activity */}
+        <div className="w-[300px] flex-shrink-0 space-y-4">
+          {/* Quick Stats */}
+          <QuickStatsWidget />
+          
+          {/* Featured Card */}
+          <FeaturedCardWidget />
+          
+          {/* Activity Feed */}
+          <div 
+            className="rounded-2xl p-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <ActivityFeedWidget />
+          </div>
         </div>
 
         {/* Right of 3D Viewer - Genre Selector + Content */}
         <div className="flex-1 flex gap-4 min-h-0">
-          {/* Vertical Divider */}
-          <div className="w-px bg-white/10 self-stretch" />
+          {/* Vertical Divider with gradient */}
+          <div className="w-px self-stretch bg-gradient-to-b from-cyan-500/30 via-purple-500/20 to-transparent" />
 
           {/* Content Area - Genre list controls bottom Library */}
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -1492,8 +1638,8 @@ export default function FocusModePanel() {
         </div>
       </div>
 
-      {/* Horizontal Divider */}
-      <div className="h-px bg-white/10 my-4" />
+      {/* Horizontal Divider with gradient */}
+      <div className="h-px my-4 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
 
       {/* Calendar Modal */}
       <AnimatePresence>
@@ -1511,18 +1657,39 @@ export default function FocusModePanel() {
 
       {/* Bottom Section - Time, Goals, and Library Games (receives activeGenre from scroll) */}
       <div className="flex gap-6 pt-4">
-        {/* Time & Date with Mini Calendar */}
-        <div className="flex-shrink-0">
+        {/* Time & Date with Mini Calendar - Enhanced styling */}
+        <div 
+          className="flex-shrink-0 rounded-2xl p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(34,211,238,0.1) 0%, rgba(59,130,246,0.05) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(34,211,238,0.2)',
+          }}
+        >
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
         </div>
 
-        {/* Goals */}
-        <div className="flex-shrink-0 w-48">
+        {/* Goals - Enhanced styling */}
+        <div 
+          className="flex-shrink-0 w-52 rounded-2xl p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(139,92,246,0.05) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(168,85,247,0.2)',
+          }}
+        >
           <GoalsPanel />
         </div>
 
-        {/* Library Games - Populated by active genre from top-right scroll */}
-        <div className="flex-1 min-w-0">
+        {/* Library Games - Enhanced styling */}
+        <div 
+          className="flex-1 min-w-0 rounded-2xl p-4"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
           <LibraryGamesSection 
             activeGenre={activeGenre}
             gamesByGenre={gamesByGenre}
