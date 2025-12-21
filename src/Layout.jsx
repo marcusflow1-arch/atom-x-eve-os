@@ -528,66 +528,66 @@ function LayoutContent({ children, currentPageName }) {
                                   </button>
 
                                   {showLunaHeaderBar && (
-                                    <div className="flex items-center gap-3 ml-2">
-                                      <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">Atom X Eve Dashboard page</span>
-                                      
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {location.pathname.toLowerCase().includes('/blacksmith') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Hammer className="w-4 h-4" />
-                                            <span>Blacksmith</span>
-                                          </>
-                                        )}
-                                      </button>
-                                      
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {location.pathname.toLowerCase().includes('/seasonalpass') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Crown className="w-4 h-4" />
-                                            <span>Season Pass</span>
-                                          </>
-                                        )}
-                                      </button>
-                                      
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {location.pathname.toLowerCase().includes('/entertainment') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Clapperboard className="w-4 h-4" />
-                                            <span>Entertainment</span>
-                                          </>
-                                        )}
-                                      </button>
-                                      
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
-                                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
-                                      >
-                                        {location.pathname.toLowerCase().includes('/clan') ? (
-                                          <span className="text-sm md:text-base font-semibold">Dashboard</span>
-                                        ) : (
-                                          <>
-                                            <Users className="w-4 h-4" />
-                                            <span>Clan</span>
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                  )}
+                                                                            <div className="flex items-center gap-6 ml-4">
+                                                                              <span className="text-base md:text-lg font-semibold text-white/90 tracking-wide">Atom X Eve Dashboard page</span>
+
+                                                                              <button
+                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
+                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
+                                                                                  location.pathname.toLowerCase().includes('/blacksmith')
+                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                                                                }`}
+                                                                              >
+                                                                                <span className="flex items-center gap-2">
+                                                                                  <Hammer className="w-4 h-4" />
+                                                                                  {location.pathname.toLowerCase().includes('/blacksmith') ? 'Dashboard' : 'Blacksmith'}
+                                                                                </span>
+                                                                              </button>
+
+                                                                              <button
+                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
+                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
+                                                                                  location.pathname.toLowerCase().includes('/seasonalpass')
+                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                                                                }`}
+                                                                              >
+                                                                                <span className="flex items-center gap-2">
+                                                                                  <Crown className="w-4 h-4" />
+                                                                                  {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
+                                                                                </span>
+                                                                              </button>
+
+                                                                              <button
+                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
+                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
+                                                                                  location.pathname.toLowerCase().includes('/entertainment')
+                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                                                                }`}
+                                                                              >
+                                                                                <span className="flex items-center gap-2">
+                                                                                  <Clapperboard className="w-4 h-4" />
+                                                                                  {location.pathname.toLowerCase().includes('/entertainment') ? 'Dashboard' : 'Entertainment'}
+                                                                                </span>
+                                                                              </button>
+
+                                                                              <button
+                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
+                                                                                  location.pathname.toLowerCase().includes('/clan')
+                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
+                                                                                }`}
+                                                                              >
+                                                                                <span className="flex items-center gap-2">
+                                                                                  <Users className="w-4 h-4" />
+                                                                                  {location.pathname.toLowerCase().includes('/clan') ? 'Dashboard' : 'Clan'}
+                                                                                </span>
+                                                                              </button>
+                                                                            </div>
+                                                                          )}
                                 </div>
                               )}
 
@@ -625,11 +625,8 @@ function LayoutContent({ children, currentPageName }) {
       })()}
 
       {showLunaHeaderBar && (
-        <>
-          <div className="fixed inset-x-0 top-0 h-20 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 z-20 pointer-events-none" />
-          <div className="fixed left-0 right-0 top-20 h-px bg-white/20 z-30 pointer-events-none" />
-        </>
-      )}
+                    <div className="fixed inset-x-0 top-0 h-20 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 z-20 pointer-events-none" />
+                  )}
 
       {showLunaHeaderBar && (
         <div className="fixed top-4 right-4 z-40 flex items-center gap-4">
