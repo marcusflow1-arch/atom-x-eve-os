@@ -787,7 +787,15 @@ export default function Library({ onSwitchToStore }) {
       <div className="relative z-10 px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex-1"></div>
+          <div className="flex items-center">
+            <button
+              onClick={() => setEmbeddedView('achievements')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
+            >
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <span>Achievements</span>
+            </button>
+          </div>
 
           <div className="flex items-center gap-4">
             {/* Search */}
@@ -803,27 +811,6 @@ export default function Library({ onSwitchToStore }) {
               <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
                 <Mic className="w-4 h-4" />
               </button>
-            </div>
-
-            {/* Transitional Buttons */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (onSwitchToStore) onSwitchToStore();
-                  else window.location.href = createPageUrl('Store');
-                }}
-                className="border-white/20 text-white/80 hover:bg-white/10"
-              >
-                Store
-              </Button>
-              <Button
-                variant={embeddedView === 'achievements' ? 'default' : 'outline'}
-                onClick={() => setEmbeddedView(prev => prev === 'achievements' ? 'library' : 'achievements')}
-                className={embeddedView === 'achievements' ? 'bg-blue-600 hover:bg-blue-700' : 'border-white/20 text-white/80 hover:bg-white/10'}
-              >
-                Achievements
-              </Button>
             </div>
 
             {/* View Toggle */}
