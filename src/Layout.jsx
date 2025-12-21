@@ -626,7 +626,7 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Divider below header for Luna pages */}
       {showLunaHeaderBar && (
-        <div className="fixed left-0 right-0 top-20 z-30 border-t border-white/15 pointer-events-none" />
+        <div className="fixed left-0 right-0 top-20 z-30 border-t border-white/15 pointer-events-none" id="luna-divider" />
       )}
 
       {/* Main Content with Error Boundary */}
