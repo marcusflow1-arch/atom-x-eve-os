@@ -2365,12 +2365,6 @@ export default function LunaTemplate() {
         )}
       </AnimatePresence>
 
-      {/* 3D Avatar Customizer */}
-      <AnimatePresence>
-        {showAvatarCustomizer && (
-          <AvatarCustomizer3D onClose={() => setShowAvatarCustomizer(false)} />
-        )}
-      </AnimatePresence>
       </div>
     
   );
