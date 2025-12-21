@@ -655,12 +655,12 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
-        <div className="page-container" style={{ paddingTop: showLunaHeaderBar ? 0 : undefined }}>
+        <div className="page-container" style={{ paddingTop: showLunaHeaderBar ? 0 : undefined, overflowY: showLunaHeaderBar ? 'hidden' : undefined }}>
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               {showLunaHeaderBar ? (
-                <div className="pt-20">
-                  <AnimatePresence mode="wait">
+                                    <div className="h-[calc(100vh-5rem)] overflow-y-auto">
+                                      <AnimatePresence mode="wait">
                     <motion.div
                       key={location.pathname}
                       initial={{ opacity: 0 }}
