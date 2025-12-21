@@ -1059,7 +1059,7 @@ export default function LunaTemplate() {
             className={`fixed pointer-events-auto z-20 transition-all duration-500 ease-in-out ${
               uiVisible 
                 ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px]' 
-                : 'top-[25%] left-[15%] -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px]'
+                : 'top-[calc(5rem+200px)] left-[200px] w-[350px] h-[350px]'
             }`}
           >
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
