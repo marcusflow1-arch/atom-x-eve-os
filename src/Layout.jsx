@@ -530,7 +530,7 @@ function LayoutContent({ children, currentPageName }) {
                                   {showLunaHeaderBar && (
                                     <div className="flex items-center gap-3 ml-2">
                                       <span className="text-sm md:text-base font-semibold text-white/90 tracking-wide">Atom X Eve Dashboard page</span>
-                                      <div className="h-6 w-px bg-white/20" />
+                                      
                                       <button
                                         onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
@@ -544,7 +544,7 @@ function LayoutContent({ children, currentPageName }) {
                                           </>
                                         )}
                                       </button>
-                                      <div className="h-6 w-px bg-white/20" />
+                                      
                                       <button
                                         onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
@@ -558,7 +558,7 @@ function LayoutContent({ children, currentPageName }) {
                                           </>
                                         )}
                                       </button>
-                                      <div className="h-6 w-px bg-white/20" />
+                                      
                                       <button
                                         onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
@@ -572,7 +572,7 @@ function LayoutContent({ children, currentPageName }) {
                                           </>
                                         )}
                                       </button>
-                                      <div className="h-6 w-px bg-white/20" />
+                                      
                                       <button
                                         onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
                                         className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors text-sm"
