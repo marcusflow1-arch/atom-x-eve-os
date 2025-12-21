@@ -23,6 +23,7 @@ import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
 import Library from './Library';
 import Achievements from './Achievements';
+import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -365,6 +366,10 @@ export default function Store() {
     const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
     const [showVoiceOptions, setShowVoiceOptions] = useState(false); // New state for voice dropdown
 
+    // Scroll transition state
+    const [showScrollTransition, setShowScrollTransition] = useState(false);
+    const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
+
     // Navigation State
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
     const [activeGameIndex, setActiveGameIndex] = useState(0);
@@ -504,11 +509,7 @@ export default function Store() {
                 e.preventDefault();
                 const game = genreData[activeGenreIndex].items[activeGameIndex];
                 if (game) {
-                    setIsNavigating(true);
-                    setTimeout(() => {
-                        navigate(createPageUrl(`GameDetail?id=${game.id}`));
-                        setIsNavigating(false);
-                    }, 300);
+                    handleNavigateToGame(game.id);
                 }
             }
         };
@@ -567,6 +568,12 @@ export default function Store() {
             window.removeEventListener('wheel', handleWheel);
         };
     }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode, viewMode]);
+
+    // Navigate with scroll transition
+    const handleNavigateToGame = (id) => {
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
+    };
 
     // Active Item Helpers
     const currentNavGenre = genreData[activeGenreIndex];
@@ -968,7 +975,7 @@ export default function Store() {
                                                 <motion.div
                                                     key={game.id}
                                                     whileHover={{ scale: 1.02, y: -5 }}
-                                                    onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                                                    onClick={() => handleNavigateToGame(game.id)}
                                                     className="w-[380px] flex-shrink-0 aspect-video rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
                                                 >
                                                     <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -1024,7 +1031,7 @@ export default function Store() {
                                                                     group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
                                                                     ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
                                                                 `}
-                                                                onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+                                                                onClick={() => handleNavigateToGame(game.id)}
                                                             >
                                                                 <img 
                                                                     src={game.cover_image || game.image} 
@@ -1207,7 +1214,7 @@ export default function Store() {
                                                         key={game.id}
                                                         onClick={() => {
                                                             setActiveGameIndex(idx);
-                                                            if (isActive) navigate(createPageUrl(`GameDetail?id=${game.id}`));
+                                                            if (isActive) handleNavigateToGame(game.id);
                                                         }}
                                                         animate={{ 
                                                             scale: isActive ? 1.1 : 0.9,
@@ -1308,6 +1315,14 @@ export default function Store() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {showScrollTransition && (
+              <ScrollTransitionOverlay onComplete={() => {
+                const url = pendingNavigateUrl;
+                setShowScrollTransition(false);
+                setPendingNavigateUrl(null);
+                if (url) navigate(url);
+              }} />
+            )}
         </div>
     );
 }

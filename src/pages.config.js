@@ -1,83 +1,83 @@
-import Achievements from './pages/Achievements';
-import Blacksmith from './pages/Blacksmith';
 import AIConsole from './pages/AIConsole';
-import Library from './pages/Library';
 import AINews from './pages/AINews';
-import Store from './pages/Store';
-import InstallApp from './pages/InstallApp';
-import Mailbox from './pages/Mailbox';
-import Notifications from './pages/Notifications';
-import Community from './pages/Community';
+import AbilityAchievements from './pages/AbilityAchievements';
+import Achievements from './pages/Achievements';
+import AdamXEve from './pages/AdamXEve';
+import Admin from './pages/Admin';
+import AvatarStudio from './pages/AvatarStudio';
+import Blacksmith from './pages/Blacksmith';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import OrderConfirmation from './pages/OrderConfirmation';
-import AdamXEve from './pages/AdamXEve';
-import Storyline from './pages/Storyline';
-import GameDetail from './pages/GameDetail';
-import StreamingHub from './pages/StreamingHub';
-import StreamDetail from './pages/StreamDetail';
-import AvatarStudio from './pages/AvatarStudio';
-import AbilityAchievements from './pages/AbilityAchievements';
-import PlayerProfile from './pages/PlayerProfile';
-import GameProfile from './pages/GameProfile';
-import Orders from './pages/Orders';
-import Ideals from './pages/Ideals';
-import GameDevHub from './pages/GameDevHub';
-import Events from './pages/Events';
-import Admin from './pages/Admin';
-import SeasonalPass from './pages/SeasonalPass';
-import LunaTemplate from './pages/LunaTemplate';
-import GenreMastery from './pages/GenreMastery';
-import WorldEvents from './pages/WorldEvents';
-import Home from './pages/Home';
 import Clan from './pages/Clan';
+import Community from './pages/Community';
+import CrossGameFusion from './pages/CrossGameFusion';
+import Events from './pages/Events';
+import GameDetail from './pages/GameDetail';
+import GameDevHub from './pages/GameDevHub';
+import GameProfile from './pages/GameProfile';
+import GenreMastery from './pages/GenreMastery';
+import Home from './pages/Home';
+import Ideals from './pages/Ideals';
+import InstallApp from './pages/InstallApp';
+import Library from './pages/Library';
+import LunaTemplate from './pages/LunaTemplate';
+import Mailbox from './pages/Mailbox';
+import Notifications from './pages/Notifications';
+import OrderConfirmation from './pages/OrderConfirmation';
+import Orders from './pages/Orders';
+import PlayerProfile from './pages/PlayerProfile';
+import SeasonalPass from './pages/SeasonalPass';
+import SocialFeed from './pages/SocialFeed';
+import Store from './pages/Store';
+import Storyline from './pages/Storyline';
+import StreamDetail from './pages/StreamDetail';
+import StreamWatch from './pages/StreamWatch';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
-import StreamWatch from './pages/StreamWatch';
-import SocialFeed from './pages/SocialFeed';
-import CrossGameFusion from './pages/CrossGameFusion';
+import StreamingHub from './pages/StreamingHub';
+import WorldEvents from './pages/WorldEvents';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Achievements": Achievements,
-    "Blacksmith": Blacksmith,
     "AIConsole": AIConsole,
-    "Library": Library,
     "AINews": AINews,
-    "Store": Store,
-    "InstallApp": InstallApp,
-    "Mailbox": Mailbox,
-    "Notifications": Notifications,
-    "Community": Community,
+    "AbilityAchievements": AbilityAchievements,
+    "Achievements": Achievements,
+    "AdamXEve": AdamXEve,
+    "Admin": Admin,
+    "AvatarStudio": AvatarStudio,
+    "Blacksmith": Blacksmith,
     "Cart": Cart,
     "Checkout": Checkout,
-    "OrderConfirmation": OrderConfirmation,
-    "AdamXEve": AdamXEve,
-    "Storyline": Storyline,
-    "GameDetail": GameDetail,
-    "StreamingHub": StreamingHub,
-    "StreamDetail": StreamDetail,
-    "AvatarStudio": AvatarStudio,
-    "AbilityAchievements": AbilityAchievements,
-    "PlayerProfile": PlayerProfile,
-    "GameProfile": GameProfile,
-    "Orders": Orders,
-    "Ideals": Ideals,
-    "GameDevHub": GameDevHub,
-    "Events": Events,
-    "Admin": Admin,
-    "SeasonalPass": SeasonalPass,
-    "LunaTemplate": LunaTemplate,
-    "GenreMastery": GenreMastery,
-    "WorldEvents": WorldEvents,
-    "Home": Home,
     "Clan": Clan,
+    "Community": Community,
+    "CrossGameFusion": CrossGameFusion,
+    "Events": Events,
+    "GameDetail": GameDetail,
+    "GameDevHub": GameDevHub,
+    "GameProfile": GameProfile,
+    "GenreMastery": GenreMastery,
+    "Home": Home,
+    "Ideals": Ideals,
+    "InstallApp": InstallApp,
+    "Library": Library,
+    "LunaTemplate": LunaTemplate,
+    "Mailbox": Mailbox,
+    "Notifications": Notifications,
+    "OrderConfirmation": OrderConfirmation,
+    "Orders": Orders,
+    "PlayerProfile": PlayerProfile,
+    "SeasonalPass": SeasonalPass,
+    "SocialFeed": SocialFeed,
+    "Store": Store,
+    "Storyline": Storyline,
+    "StreamDetail": StreamDetail,
+    "StreamWatch": StreamWatch,
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
-    "StreamWatch": StreamWatch,
-    "SocialFeed": SocialFeed,
-    "CrossGameFusion": CrossGameFusion,
+    "StreamingHub": StreamingHub,
+    "WorldEvents": WorldEvents,
 }
 
 export const pagesConfig = {

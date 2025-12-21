@@ -18,6 +18,7 @@ import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -641,6 +642,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
   const [activeDetailTab, setActiveDetailTab] = useState('overview');
+  const [showScrollTransition, setShowScrollTransition] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   
   // Sidebar Filters
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -794,7 +797,14 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <button
-              onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
+              onClick={() => {
+                if (onSwitchToAchievements) {
+                  setPendingAction('store_achievements');
+                } else {
+                  setPendingAction('library_achievements');
+                }
+                setShowScrollTransition(true);
+              }}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
             >
               <Trophy className="w-4 h-4 text-yellow-400" />
@@ -1204,6 +1214,23 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           />
         )}
       </AnimatePresence>
-    </div>
-  );
+
+      {showScrollTransition && (
+        <ScrollTransitionOverlay onComplete={() => {
+          if (pendingAction === 'store_achievements') {
+            setShowScrollTransition(false);
+            setPendingAction(null);
+            onSwitchToAchievements && onSwitchToAchievements();
+          } else if (pendingAction === 'library_achievements') {
+            setShowScrollTransition(false);
+            setPendingAction(null);
+            setEmbeddedView('achievements');
+          } else {
+            setShowScrollTransition(false);
+            setPendingAction(null);
+          }
+        }} />
+      )}
+      </div>
+      );
 }
