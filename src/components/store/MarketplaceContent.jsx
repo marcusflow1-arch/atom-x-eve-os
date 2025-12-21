@@ -811,50 +811,20 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
       </div>
 
       <div className="px-2 pb-6">
-        {/* Main Layout: Sidebar + Content (Card Detail + Games) */}
-        <div className="flex gap-6">
+        {/* Developer Limited Edition Section - Full Width */}
+        <DeveloperLimitedEdition />
+
+        {/* Results Section - Sidebar + Results */}
+        <div className="flex gap-6 mt-8">
           {/* Sidebar */}
           <aside className="hidden lg:block">
             <FilterSidebar filters={filters} setFilters={setFilters} />
           </aside>
 
-          {/* Center Content - Card Detail Box (reduced 70%, card increased 50%) */}
-          <div className="w-[30%] flex-shrink-0 flex flex-col gap-4">
-            {/* Card Display Box - Translucent */}
-            <div 
-              className="rounded-2xl p-4 flex items-center justify-center"
-              style={{
-                background: 'rgba(15, 23, 42, 0.4)',
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                minHeight: '280px',
-              }}
-            >
-              <DeveloperLimitedEdition mode="card-only" />
-            </div>
-
-            {/* Card Info Box - Separate */}
-            <div 
-              className="rounded-2xl p-4"
-              style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%)',
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <DeveloperLimitedEdition mode="info-only" />
-            </div>
-          </div>
-
-          {/* Right Side - Games Display */}
-          <div className="flex-1 min-w-0 flex flex-col">
-            {/* Developer Selector & Games */}
-            <DeveloperLimitedEdition mode="games-only" />
-
+          {/* Results */}
+          <div className="flex-1 min-w-0">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-4 mt-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <p className="text-white/50 text-sm">
                   {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
@@ -904,7 +874,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
               <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
               
               {/* Inner Scroll Container for Results */}
-              <div className="h-[500px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-1">
+              <div className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-1">
                 {viewMode === 'list' ? (
                   <div className="space-y-2 p-2">
                     {filteredItems.map(item => (
