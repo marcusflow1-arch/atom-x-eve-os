@@ -160,7 +160,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
   );
 };
 
-function AchievementsView() {
+function AchievementsView({ onExitToLibrary }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
   const [allGames, setAllGames] = useState([]);
   const [localAchievements, setLocalAchievements] = useState({});
@@ -354,15 +354,26 @@ function AchievementsView() {
             
             {/* Header */}
             <div className="flex items-center gap-3">
-              <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
+              {onExitToLibrary ? (
                 <motion.button
+                  onClick={onExitToLibrary}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                  className="ml-12 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
                 >
                   <Gamepad2 className="w-5 h-5 text-white/80" />
                 </motion.button>
-              </Link>
+              ) : (
+                <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                  >
+                    <Gamepad2 className="w-5 h-5 text-white/80" />
+                  </motion.button>
+                </Link>
+              )}
               <h1 className="text-2xl font-black tracking-tighter text-white">
                 Achievements
               </h1>
@@ -562,10 +573,10 @@ function AchievementsView() {
   );
 }
 
-export default function Achievements() {
+export default function Achievements({ onExitToLibrary }) {
   return (
     <div className="h-screen w-full overflow-hidden">
-      <AchievementsView />
+      <AchievementsView onExitToLibrary={onExitToLibrary} />
     </div>
   );
 }

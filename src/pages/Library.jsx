@@ -624,7 +624,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
   );
 };
 
-export default function Library({ onSwitchToStore }) {
+export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const { user, isAuthenticated } = useAuth();
   const [ownedGames, setOwnedGames] = useState([]);
   const [favoriteGames, setFavoriteGames] = useState([]);
@@ -794,7 +794,7 @@ export default function Library({ onSwitchToStore }) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <button
-              onClick={() => setEmbeddedView('achievements')}
+              onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
             >
               <Trophy className="w-4 h-4 text-yellow-400" />

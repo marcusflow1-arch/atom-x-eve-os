@@ -22,6 +22,7 @@ import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
 import Library from './Library';
+import Achievements from './Achievements';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -783,7 +784,17 @@ export default function Store() {
 
             {/* MAIN CONTENT AREA */}
             <AnimatePresence mode="wait">
-                {storeMode === 'store' && storeSubView === 'library' ? (
+                {storeMode === 'store' && storeSubView === 'achievements' ? (
+                    <motion.div
+                        key="embedded-achievements"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="w-full h-full pt-20 overflow-hidden"
+                    >
+                        <Achievements onExitToLibrary={() => setStoreSubView('library')} />
+                    </motion.div>
+                ) : storeMode === 'store' && storeSubView === 'library' ? (
                     <motion.div
                         key="embedded-library"
                         initial={{ opacity: 0 }}
@@ -791,7 +802,7 @@ export default function Store() {
                         exit={{ opacity: 0 }}
                         className="w-full h-full pt-20 overflow-hidden"
                     >
-                        <Library onSwitchToStore={() => setStoreSubView('games')} />
+                        <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
                     </motion.div>
                 ) : storeMode === 'store' ? (
                     viewMode === 'classic' ? (
