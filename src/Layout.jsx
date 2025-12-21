@@ -387,7 +387,7 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex-1 overflow-y-auto p-4">
                 <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
                 <div className="space-y-1">
-                  {allNavItems.filter(item => item.name !== 'Library' && item.name !== 'Achievements').map((item) => {
+                  {allNavItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
                       <Link
