@@ -1208,12 +1208,13 @@ function LibraryGamesSection() {
   );
 }
 
-// Library Content Area Component
+// Library Content Area Component - Now with genre selector and grid
 function LibraryContentArea({ onSelectGame, selectedGame }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedGenre, setSelectedGenre] = useState('all');
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -1229,7 +1230,7 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
       } else {
         if (testGameAlpha) userGames.push(testGameAlpha);
         // Add some mock games for demo
-        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 12)];
+        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 15)];
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
@@ -1239,19 +1240,15 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
     fetchGames();
   }, [user, isAuthenticated]);
 
-  const gamesByGenre = useMemo(() => {
-    return ownedGames.reduce((acc, game) => {
-      const g = game.genre || 'Uncategorized';
-      if (!acc[g]) acc[g] = [];
-      acc[g].push(game);
-      return acc;
-    }, {});
-  }, [ownedGames]);
-
-  const handlePlayGame = (game) => {
-    // Navigate to library with game selected
-    navigate(createPageUrl('Library') + `?game=${game.id}`);
-  };
+  // Filter games by selected genre
+  const filteredGames = useMemo(() => {
+    if (selectedGenre === 'all') return ownedGames;
+    return ownedGames.filter(game => {
+      const gameGenre = (game.genre || '').toLowerCase();
+      return gameGenre.includes(selectedGenre.toLowerCase()) || 
+             selectedGenre.toLowerCase().includes(gameGenre);
+    });
+  }, [ownedGames, selectedGenre]);
 
   if (loading) {
     return (
@@ -1262,32 +1259,45 @@ function LibraryContentArea({ onSelectGame, selectedGame }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      {/* Selected Game Detail */}
-      <AnimatePresence>
-        {selectedGame && (
-          <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Genre Rows */}
-      {Object.entries(gamesByGenre).map(([genre, games]) => (
-        <GenreRow
-          key={genre}
-          genre={genre}
-          games={games}
-          onSelectGame={onSelectGame}
-          selectedGame={selectedGame}
-          onPlayGame={handlePlayGame}
+    <div className="flex h-full gap-4">
+      {/* Genre Selector Box (Left side, scrollable) */}
+      <div 
+        className="w-44 flex-shrink-0 rounded-2xl p-3 h-full"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.3)',
+        }}
+      >
+        <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-3 px-1">Genres</h4>
+        <GenreScrollSelector 
+          selectedGenre={selectedGenre}
+          onSelectGenre={setSelectedGenre}
+          genres={GENRE_LIST}
         />
-      ))}
+      </div>
 
-      {Object.keys(gamesByGenre).length === 0 && (
-        <div className="flex flex-col items-center justify-center h-48 text-white/30">
-          <LibraryIcon className="w-12 h-12 mb-4 opacity-50" />
-          <p>No games in your library yet</p>
+      {/* Games Grid Area (Right side) */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <LibraryIcon className="w-4 h-4 text-cyan-400" />
+            <h3 className="text-white font-bold text-sm">Library Games</h3>
+            <span className="text-white/30 text-xs">
+              {selectedGenre === 'all' ? 'All' : GENRE_LIST.find(g => g.id === selectedGenre)?.name}
+            </span>
+          </div>
+          <span className="text-white/40 text-xs">{filteredGames.length} games</span>
         </div>
-      )}
+
+        {/* Games Grid */}
+        <div className="flex-1 overflow-hidden">
+          <LibraryGamesGrid games={filteredGames} onSelectGame={onSelectGame} />
+        </div>
+      </div>
     </div>
   );
 }
