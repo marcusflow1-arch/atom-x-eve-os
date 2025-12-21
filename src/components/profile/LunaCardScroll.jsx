@@ -175,7 +175,27 @@ const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
       >
         {filteredCards.length > 0 ? (
           filteredCards.map((card, i) => (
-            <div key={card.id} className="flex-shrink-0 w-[30%] min-w-[90px]">
+            <div
+              key={card.id}
+              className="flex-shrink-0 w-[30%] min-w-[90px]"
+              draggable
+              onDragStart={(e) => {
+                const payload = {
+                  source: 'luna-card',
+                  card: {
+                    title: activeGame ? `${activeGame.title} Card ${i + 1}` : `${genre} Card ${i + 1}`,
+                    id: `${genre}-${i}`,
+                    image: activeGame?.image,
+                    type: card.type
+                  }
+                };
+                try {
+                  e.dataTransfer.setData('application/json', JSON.stringify(payload));
+                } catch {}
+                e.dataTransfer.setData('text/plain', 'luna-card');
+                e.dataTransfer.effectAllowed = 'copy';
+              }}
+            >
               <ShinyCard 
                 onClick={() => onCardClick && onCardClick({ 
                   title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
