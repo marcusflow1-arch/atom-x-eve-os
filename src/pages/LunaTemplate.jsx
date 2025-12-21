@@ -1036,60 +1036,7 @@ export default function LunaTemplate() {
             <Circle className="w-5 h-5 text-white/80" />
           </button>
 
-          {/* Dropdown Circle Icons on Hover */}
-          <div className="absolute top-full left-0 mt-2 flex flex-col gap-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-            
-            {/* World Events */}
-            <button
-              onClick={() => navigate(createPageUrl('WorldEvents'))}
-              className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            >
-              <Globe className="w-5 h-5 text-white/80" />
-            </button>
-
-            {/* Pin Games */}
-            <button
-              onClick={() => setShowPinGames(true)}
-              className="w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/20 hover:border-cyan-400/40"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(147, 197, 253, 0.15) 50%, rgba(203, 213, 225, 0.2) 100%)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 20px rgba(147, 197, 253, 0.2)'
-              }}
-            >
-              <Gamepad2 className="w-5 h-5 text-blue-100" />
-            </button>
-
-            {/* Seasonal Pass */}
-            <button
-              onClick={() => setShowSeasonalPass(true)}
-              className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            >
-              <Crown className="w-5 h-5 text-white/80" />
-            </button>
-
-            {/* AI News */}
-            <button
-              onClick={() => setShowAINews(true)}
-              className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            >
-              <Radio className="w-5 h-5 text-white/80" />
-            </button>
-
-            {/* User Interface */}
-            <button
-              onClick={() => setShowBlankPage(true)}
-              className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            >
-              <User className="w-5 h-5 text-white/80" />
-            </button>
-
-          </div>
+          {/* Removed hover-expanding circle shortcuts as requested */}
         </div>
 
 
@@ -1189,7 +1136,8 @@ export default function LunaTemplate() {
             )}
 
         {/* AI Home Button - Below Skills */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
+        {uiVisible && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
             {ORBITAL_ITEMS.filter(item => ['home'].includes(item.id)).map((item) => {
               const Icon = item.icon;
               
@@ -1491,12 +1439,11 @@ export default function LunaTemplate() {
               onClick={() => setShowInventory(false)}
               className="fixed top-40 left-8 z-40 w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
               style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            >
+              >
               <X className="w-5 h-5 text-white/80" />
               </motion.button>
               )}
-              </AnimatePresence> */
-              }
+              </AnimatePresence>
 
               {/* UI Toggle Side Bars */}
               <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
@@ -2000,7 +1947,6 @@ export default function LunaTemplate() {
         )}
         </AnimatePresence>
         </div>
-        )
         )}
 
       {/* Blank Drawer */}
