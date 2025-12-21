@@ -936,14 +936,28 @@ export default function LunaTemplate() {
       if (['1', '2', '3', '4', '5'].includes(key)) {
         const index = parseInt(key) - 1;
 
-        // Toggle active state
+        // Toggle active state briefly
         setActiveSkills(prev => {
-          const newSkills = [...prev];
-          newSkills[index] = !newSkills[index];
-          return newSkills;
+          const next = [...prev];
+          next[index] = true;
+          setTimeout(() => setActiveSkills(p => {
+            const n = [...p];
+            n[index] = false;
+            return n;
+          }), 800);
+          return next;
         });
 
-        // Map keys to skill IDs
+        // If a card is assigned to this slot, trigger its demo
+        const assigned = (window.LUNA_HOTBAR && window.LUNA_HOTBAR[index]) || null;
+        if (assigned && window.LUNA_ACTION_STATE) {
+          const skillFromCardType = { ability: 'kick_ability' };
+          const derived = skillFromCardType[assigned.type] || 'kick_ability';
+          window.LUNA_ACTION_STATE.skill = derived;
+          return;
+        }
+
+        // Fallback to static mapping
         const skillMap = {
           '1': 'kick_ability',
           '2': null,
@@ -951,7 +965,6 @@ export default function LunaTemplate() {
           '4': null,
           '5': null
         };
-
         const skillId = skillMap[key];
         if (skillId && window.LUNA_ACTION_STATE) {
           window.LUNA_ACTION_STATE.skill = skillId;
