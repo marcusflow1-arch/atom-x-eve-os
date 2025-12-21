@@ -557,11 +557,12 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
 
           {/* Right Column - Game Info Sidebar */}
           <div className="w-[300px] flex-shrink-0">
-            <GameInfoSidebar 
+            <PurchaseBox 
               game={game} 
               gameIsOwned={gameIsOwned} 
               onPurchase={handlePurchase}
             />
+            <GameInfoSidebar game={game} />
           </div>
         </div>
       </div>
