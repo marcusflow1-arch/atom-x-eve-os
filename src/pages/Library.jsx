@@ -765,6 +765,15 @@ export default function Library({ onSwitchToStore }) {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl"
           >
+            <div className="absolute top-6 left-6">
+              <button
+                onClick={() => setEmbeddedView('library')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
+              >
+                <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                <span>Achievements</span>
+              </button>
+            </div>
             <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
               <Button variant="outline" onClick={() => setEmbeddedView('library')} className="border-white/20 text-white/80 hover:bg-white/10">Back to Library</Button>
               {onSwitchToStore && (
