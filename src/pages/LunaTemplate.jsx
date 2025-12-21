@@ -962,7 +962,18 @@ export default function LunaTemplate() {
 
     window.addEventListener('keydown', handleSkillKey);
     return () => window.removeEventListener('keydown', handleSkillKey);
-  }, []);
+    }, []);
+
+    // Hotkey to toggle UI (I key)
+    useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'i' || e.key === 'I') {
+        setUiVisible((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    }, []);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -1425,24 +1436,6 @@ export default function LunaTemplate() {
               )}
               </AnimatePresence>
 
-              {/* UI Toggle Side Bars */}
-              <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
-                {/* Hide UI Bar (decorative) */}
-                <div 
-                  className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-40 ${
-                    uiVisible 
-                      ? 'bg-white/10 hover:bg-white/30 hover:w-1.5' 
-                      : 'bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.5)] w-1.5'
-                  }`}
-                />
-                
-                {/* UI Hide/Show Bar (repurposed) */}
-                <button 
-                  onClick={() => setUiVisible(v => !v)}
-                  className="w-1 h-32 rounded-full transition-all duration-500 hover:h-40 bg-purple-400/30 hover:bg-purple-400/50 hover:w-1.5 shadow-[0_0_15px_rgba(192,132,252,0.3)]"
-                  title={uiVisible ? 'Hide UI' : 'Show UI'}
-                />
-              </div>
 
               {/* Main Content Area */}
               {uiVisible && (
