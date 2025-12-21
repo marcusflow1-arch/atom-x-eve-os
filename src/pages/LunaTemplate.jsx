@@ -1501,9 +1501,8 @@ export default function LunaTemplate() {
 
               {/* UI Toggle Side Bars */}
               <div className="fixed right-2 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
-                {/* Hide UI Bar */}
-                <button 
-                  onClick={() => setUiVisible(!uiVisible)}
+                {/* Hide UI Bar (decorative) */}
+                <div 
                   className={`w-1 h-32 rounded-full transition-all duration-500 hover:h-40 ${
                     uiVisible 
                       ? 'bg-white/10 hover:bg-white/30 hover:w-1.5' 
@@ -1520,6 +1519,7 @@ export default function LunaTemplate() {
               </div>
 
               {/* Main Content Area */}
+              {uiVisible && (
               <div className="w-full mt-24 px-12 relative">
               <AnimatePresence mode="wait">
               {false && (
@@ -2001,6 +2001,7 @@ export default function LunaTemplate() {
         )}
         </AnimatePresence>
         </div>
+        )}
 
       {/* Blank Drawer */}
       <AnimatePresence>
