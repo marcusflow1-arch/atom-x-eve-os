@@ -612,7 +612,7 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
             {/* Equipment Tab */}
             <TabsContent value="equipment">
               <h3 className="text-2xl font-bold mb-6">Equipment & Gear</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {(game?.equipment || [
                   { id: 1, name: 'Dragon Blade', type: 'Weapon', rarity: 'Legendary', description: 'A legendary sword forged from dragon scales', stats: { attack: 150, speed: 25 } },
                   { id: 2, name: 'Shadow Armor', type: 'Chest', rarity: 'Epic', description: 'Armor that bends light around the wearer', stats: { defense: 120, stealth: 40 } },
@@ -622,24 +622,24 @@ export default function GameDetailPanel({ gameId, onClose, showBackButton = true
                   { id: 6, name: 'Crystal Shield', type: 'Shield', rarity: 'Epic', description: 'Crystalline barrier that reflects magic', stats: { defense: 90, magic_resist: 45 } },
                 ]).map((item, index) => (
                   <InteractiveCard key={item.id} delay={index * 0.05}>
-                    <div className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge className={`${rarityColors[item.rarity]} text-xs`}>
+                    <div className="p-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Badge className={`${rarityColors[item.rarity]} text-[9px] px-1.5 py-0.5`}>
                           {item.rarity}
                         </Badge>
-                        <span className="text-slate-500 text-xs uppercase">{item.type}</span>
+                        <span className="text-slate-500 text-[8px] uppercase">{item.type}</span>
                       </div>
                       
-                      <div className="w-full aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg mb-4 flex items-center justify-center border border-white/5">
-                        <Sword className="w-16 h-16 text-slate-600" />
+                      <div className="w-full aspect-square bg-gradient-to-br from-slate-800 to-slate-900 rounded-md mb-2 flex items-center justify-center border border-white/5">
+                        <Sword className="w-7 h-7 text-slate-600" />
                       </div>
                       
-                      <h4 className="font-bold text-white text-lg mb-2">{item.name}</h4>
-                      <p className="text-slate-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+                      <h4 className="font-bold text-white text-[11px] mb-1 truncate">{item.name}</h4>
+                      <p className="text-slate-400 text-[9px] mb-2 line-clamp-2">{item.description}</p>
                       
-                      <div className="space-y-2 pt-4 border-t border-white/5">
+                      <div className="space-y-1 pt-2 border-t border-white/5">
                         {Object.entries(item.stats).map(([stat, value]) => (
-                          <div key={stat} className="flex justify-between text-sm">
+                          <div key={stat} className="flex justify-between text-[9px]">
                             <span className="text-slate-400 capitalize">{stat.replace('_', ' ')}</span>
                             <span className="text-green-400 font-bold">+{value}</span>
                           </div>
