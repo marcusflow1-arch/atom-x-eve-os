@@ -774,12 +774,7 @@ export default function Library({ onSwitchToStore }) {
                 <span>Achievements</span>
               </button>
             </div>
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-              <Button variant="outline" onClick={() => setEmbeddedView('library')} className="border-white/20 text-white/80 hover:bg-white/10">Back to Library</Button>
-              {onSwitchToStore && (
-                <Button variant="outline" onClick={() => onSwitchToStore()} className="border-white/20 text-white/80 hover:bg-white/10">Store</Button>
-              )}
-            </div>
+
             <div className="w-full h-full overflow-hidden">
               <Achievements />
             </div>
