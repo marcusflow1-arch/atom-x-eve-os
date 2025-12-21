@@ -552,33 +552,9 @@ function AchievementsView() {
 }
 
 export default function Achievements() {
-  const [viewMode, setViewMode] = useState('achievements');
-
   return (
     <div className="h-screen w-full overflow-hidden">
-      <AnimatePresence mode="wait">
-        {viewMode === 'achievements' ? (
-          <motion.div
-            key="achievements"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="h-full w-full"
-          >
-            <AchievementsView onSwitchToForge={() => setViewMode('blacksmith')} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="blacksmith"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="h-full w-full"
-          >
-            <BlacksmithPage isEmbedded={true} onToggleView={() => setViewMode('achievements')} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AchievementsView />
     </div>
   );
 }
