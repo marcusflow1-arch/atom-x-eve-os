@@ -1066,6 +1066,24 @@ export default function LunaTemplate() {
           </div>
         )}
 
+        {/* Focus Mode Background Overlay */}
+        <AnimatePresence>
+          {!uiVisible && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="fixed inset-0 z-10"
+              style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 58, 95, 0.7) 50%, rgba(15, 23, 42, 0.75) 100%)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)'
+              }}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
         <AnimatePresence>
           {!uiVisible && (
