@@ -530,8 +530,8 @@ function LayoutContent({ children, currentPageName }) {
                                   {showLunaHeaderBar && (
                                                                             <div className="flex items-center gap-6 ml-4">
                                                                               <span className="text-base md:text-lg font-semibold text-white/90 tracking-wide">
-                                                                                Atom X Eve <span className="underline underline-offset-4">Dashboard</span> Home
-                                                                              </span>
+                                                                                                                            Atom X Eve Dashboard Home
+                                                                                                                          </span>
 
                                                                               <div className="h-6 w-px bg-white/20" />
 
