@@ -3,7 +3,7 @@ import EntertainmentUI from "@/components/entertainment/EntertainmentUI";
 
 export default function Entertainment() {
   return (
-    <div className="min-h-screen w-full pt-20">
+    <div className="min-h-screen w-full pt-0">
       <EntertainmentUI />
     </div>
   );
