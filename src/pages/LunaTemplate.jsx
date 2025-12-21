@@ -1975,7 +1975,7 @@ export default function LunaTemplate() {
                     </div>
 
                   </motion.div>
-            ) : null}
+            ) : null)}
             {showInventory && uiVisible && (
               <motion.div 
                 key="inventory"
@@ -1999,7 +1999,6 @@ export default function LunaTemplate() {
         )}
         </AnimatePresence>
         </div>
-        )
         )}
 
       {/* Blank Drawer */}
