@@ -624,22 +624,29 @@ function LayoutContent({ children, currentPageName }) {
         );
       })()}
 
+      {/* Divider below header for Luna pages */}
+      {showLunaHeaderBar && (
+        <div className="fixed left-0 right-0 top-20 z-30 border-t border-white/15 pointer-events-none" />
+      )}
+
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
         <div className="page-container">
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               {showLunaHeaderBar ? (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={location.pathname}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    {children}
-                  </motion.div>
-                </AnimatePresence>
+                <div className="pt-24">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={location.pathname}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {children}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
               ) : (
                 children
               )}
