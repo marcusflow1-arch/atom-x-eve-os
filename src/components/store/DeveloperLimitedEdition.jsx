@@ -772,49 +772,6 @@ export default function DeveloperLimitedEdition() {
             </AnimatePresence>
           </div>
 
-          {/* Right - Games by Developer Panel */}
-          <div 
-            className="w-72 flex-shrink-0 rounded-2xl p-4"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            }}
-          >
-            <h4 className="text-white font-bold mb-4 flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400" />
-              Games by {currentDeveloper.name}
-            </h4>
-            
-            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-              {currentDeveloper.games.map((game, index) => (
-                <button
-                  key={game.id}
-                  onClick={() => handleSelectGame(index)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                    index === selectedGameIndex 
-                      ? 'bg-white/[0.1] border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
-                      : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/10 hover:border-white/20'
-                  }`}
-                >
-                  <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
-                    <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-semibold text-sm truncate">{game.title}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-white/50 text-xs">{game.genre}</span>
-                      <span className="text-white/30">•</span>
-                      <span className="text-white/50 text-xs">{game.year}</span>
-                    </div>
-                    <p className="text-[10px] text-amber-400/80 mt-1">{game.limitedCards?.length || 0} Limited Cards</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
         </motion.div>
       </AnimatePresence>
 
