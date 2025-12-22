@@ -4,7 +4,7 @@ import {
   Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
   Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
-  Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal
+  Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
