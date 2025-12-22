@@ -810,7 +810,8 @@ export default function Store() {
                 )}
             </AnimatePresence>
 
-            {/* MAIN CONTENT AREA */}
+            {/* MAIN CONTENT AREA - Scrollable below header */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <AnimatePresence mode="wait">
                 {storeMode === 'store' && storeSubView === 'achievements' ? (
                     <motion.div
@@ -818,7 +819,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full pt-20 overflow-hidden"
+                        className="w-full h-full overflow-hidden"
                     >
                         <Achievements onExitToLibrary={() => setStoreSubView('library')} />
                     </motion.div>
@@ -828,7 +829,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full pt-20 overflow-hidden"
+                        className="w-full h-full overflow-hidden"
                     >
                         <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
                     </motion.div>
@@ -840,7 +841,7 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full pt-20 pb-0 bg-transparent"
+                            className="w-full h-full pb-0 bg-transparent"
                         >
                             {/* Dynamic Background */}
                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
