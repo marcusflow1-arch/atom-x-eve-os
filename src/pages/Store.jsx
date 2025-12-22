@@ -389,6 +389,31 @@ export default function Store() {
         }
     }, [activeGenreIndex, viewMode]);
 
+    // Header fade on scroll effect
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolling(true);
+            setHeaderOpacity(0.3);
+            
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+            
+            scrollTimeoutRef.current = setTimeout(() => {
+                setIsScrolling(false);
+                setHeaderOpacity(1);
+            }, 150);
+        };
+
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            window.removeEventListener('scroll', handleScroll, true);
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+        };
+    }, []);
+
     // Filters for Sidebar
     const [activeCategory, setActiveCategory] = useState('All Games');
     const [priceRange, setPriceRange] = useState([0, 100]);
