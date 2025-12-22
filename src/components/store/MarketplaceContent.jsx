@@ -786,33 +786,47 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
-      {/* Secondary Navigation (moved from header) */}
-      <div className="flex items-center gap-2 px-6 py-3 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-2xl mb-8 overflow-x-auto scrollbar-hide">
-        {[
-          { name: 'Companions', icon: Ghost },
-          { name: 'Gear & Equipment', icon: Shield },
-          { name: 'Abilities & Skills', icon: Zap },
-          { name: 'Consumables', icon: Package },
-          { name: 'Crafting Materials', icon: Gem },
-          { name: 'Mounts & Vehicles', icon: Truck },
-        ].map((item) => (
-          <button 
-            key={item.name}
-            onClick={() => {
-              const target = item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name;
-              setFilters(prev => ({ ...prev, category: prev.category === target ? 'all' : target }));
-            }}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filters.category === (item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-          >
-            <item.icon className="w-3.5 h-3.5" />
-            {item.name}
-          </button>
-        ))}
-      </div>
-
       <div className="px-2 pb-6">
         {/* Main Layout */}
         <div className="flex flex-col gap-6">
+          {/* Adam and Eve Limited Edition - Dev Edition */}
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tight">Adam and Eve</h2>
+                <p className="text-white/50 text-sm">Limited Edition • Dev Edition</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: 'Adam - Genesis Core', type: 'AI Companion', rarity: 'Mythic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=600&fit=crop', description: 'The original AI entity. Unlocks developer-tier abilities.' },
+                { name: 'Eve - Synthesis', type: 'AI Companion', rarity: 'Mythic', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=600&fit=crop', description: 'The evolved counterpart. Adaptive intelligence core.' },
+                { name: 'Eden Protocol', type: 'Ability', rarity: 'Legendary', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=600&fit=crop', description: 'Exclusive dev-tier reality manipulation ability.' },
+                { name: 'Founders Badge', type: 'Cosmetic', rarity: 'Legendary', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=600&fit=crop', description: 'Mark of the original developers. Eternal recognition.' },
+              ].map((card, idx) => {
+                const rarityColor = card.rarity === 'Mythic' 
+                  ? { bg: 'bg-red-900', text: 'text-red-300' }
+                  : { bg: 'bg-orange-900', text: 'text-orange-300' };
+                return (
+                  <div key={idx} className="group cursor-pointer">
+                    <ShinyCard>
+                      <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <Badge className={`${rarityColor.bg} ${rarityColor.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md mb-2`}>{card.rarity}</Badge>
+                        <h3 className="text-white font-bold text-sm leading-tight group-hover:text-blue-400 transition-colors">{card.name}</h3>
+                        <p className="text-white/50 text-[10px]">{card.type}</p>
+                      </div>
+                    </ShinyCard>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Developer Limited Edition Section - Full Width */}
           <DeveloperLimitedEdition />
 
