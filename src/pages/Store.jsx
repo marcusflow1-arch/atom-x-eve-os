@@ -1141,7 +1141,7 @@ export default function Store() {
 
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20"> {/* pt-20 for header space */}
-                                    
+
                                     {/* Breadcrumb moved slightly down */}
                                     <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
                                         <div className="flex items-center gap-2">
@@ -1230,7 +1230,7 @@ export default function Store() {
                                         >
                                             {currentNavGenre.items.map((game, idx) => {
                                                 const isActive = idx === activeGameIndex;
-                                                
+
                                                 return (
                                                     <motion.div
                                                         key={game.id}
@@ -1311,6 +1311,7 @@ export default function Store() {
                                         </AnimatePresence>
                                     </div>
                                 </div>
+                                </>
                             </>
                         )}
                     </motion.div>
