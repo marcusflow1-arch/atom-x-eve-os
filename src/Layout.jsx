@@ -614,7 +614,7 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
-              <div className="flex items-center gap-6 mt-1 pl-1">
+              <div className="flex items-center gap-6 mt-1 pl-1" style={{ paddingTop: '0.5rem' }}>
 
 
                 {/* Dock Items */}
