@@ -369,6 +369,11 @@ export default function Store() {
     // Scroll transition state
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
+    
+    // Header fade on scroll
+    const [headerOpacity, setHeaderOpacity] = useState(1);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const scrollTimeoutRef = useRef(null);
 
     // Navigation State
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
