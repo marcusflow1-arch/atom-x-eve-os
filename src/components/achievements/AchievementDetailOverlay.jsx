@@ -172,7 +172,7 @@ export default function AchievementDetailOverlay({ achievement, onClose, onTrack
           >
             <Clapperboard className="w-5 h-5 text-white" />
           </button>>
-          <div className="flex items-start gap-6">
+          <div className="flex items-start gap-6 relative">
             <div className={`text-7xl ${rarity.color}`}>{achievement.icon}</div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
