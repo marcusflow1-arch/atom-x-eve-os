@@ -1321,7 +1321,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
                     >
                         <MarketplaceContent searchTerm={marketplaceSearchTerm} />
                     </motion.div>
@@ -1331,7 +1331,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
                     >
                         <TradingPostContent />
                     </motion.div>
