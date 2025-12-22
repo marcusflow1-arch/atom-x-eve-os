@@ -584,9 +584,12 @@ export default function Store() {
     const ITEM_GAP = 24;
     const CROSS_Y_VH = 40; // Intersection point in VH
 
+    // Header height (h-20 = 80px) + line (1px) = 81px
+    const HEADER_HEIGHT = 81;
+
     return (
         <div 
-            className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
+            className="h-screen w-full relative text-white font-sans select-none flex flex-col"
             style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
             
