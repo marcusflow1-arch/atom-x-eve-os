@@ -589,12 +589,12 @@ export default function Store() {
 
     return (
         <div 
-            className="min-h-screen w-full relative text-white font-sans select-none overflow-y-auto"
+            className="h-screen w-full relative text-white font-sans select-none flex flex-col"
             style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
             
-            {/* Top Navigation Bar (Part of page flow) */}
-            <div className="z-50 flex flex-col bg-slate-900/80 backdrop-blur-md border-b border-transparent"
+            {/* Top Navigation Bar (Scrolls with page) */}
+            <div className="z-50 flex flex-col bg-slate-900/80 backdrop-blur-md border-b border-transparent flex-shrink-0"
                  style={{ borderBottomColor: 'transparent' }}>
                 
                 <div className="h-20 flex items-center justify-between px-8">
@@ -809,8 +809,8 @@ export default function Store() {
                 )}
             </AnimatePresence>
 
-            {/* MAIN CONTENT AREA */}
-            <div className="overflow-x-hidden">
+            {/* MAIN CONTENT AREA - Scrollable below header */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <AnimatePresence mode="wait">
                 {storeMode === 'store' && storeSubView === 'achievements' ? (
                     <motion.div
