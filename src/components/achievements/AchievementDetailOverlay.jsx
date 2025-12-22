@@ -79,6 +79,7 @@ const getRewardData = (achievement) => {
 
 export default function AchievementDetailOverlay({ achievement, onClose, onTrack, isTracked, onShare, onChallenge }) {
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showMoment, setShowMoment] = useState(false);
   
   if (!achievement) return null;
   
