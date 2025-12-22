@@ -163,6 +163,14 @@ export default function AchievementDetailOverlay({ achievement, onClose, onTrack
 
         {/* Header Section */}
         <div className={`relative p-8 border-b-2 ${rarity.border}`}>
+          {/* In-card Tutorial Icon Button */}
+          <button
+            onClick={() => setShowMoment(true)}
+            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md flex items-center justify-center transition-all"
+            title="View Unlock Moment"
+          >
+            <Clapperboard className="w-5 h-5 text-white" />
+          </button>>
           <div className="flex items-start gap-6">
             <div className={`text-7xl ${rarity.color}`}>{achievement.icon}</div>
             <div className="flex-1">
