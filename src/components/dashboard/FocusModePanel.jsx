@@ -1391,6 +1391,331 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   );
 }
 
+// Card Detail Overlay - Achievement store style
+function CardDetailOverlay({ card, onClose }) {
+  if (!card) return null;
+  
+  const style = rarityStyles[card.rarity];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl rounded-2xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%)',
+          backdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+        }}
+      >
+        {/* Header with rarity glow */}
+        <div className={`h-1 ${
+          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500' :
+          card.rarity === 'Epic' ? 'bg-gradient-to-r from-purple-500 via-pink-400 to-purple-500' :
+          'bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500'
+        }`} />
+
+        <div className="p-6">
+          {/* Close Button */}
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors z-10"
+          >
+            <X className="w-5 h-5 text-white/60" />
+          </button>
+
+          <div className="flex gap-6">
+            {/* Card Preview - Left side */}
+            <div className="flex-shrink-0">
+              <AchievementStyleCard card={card} isSelected={true} size="large" />
+            </div>
+
+            {/* Card Details - Right side */}
+            <div className="flex-1 min-w-0">
+              {/* Title & Rarity */}
+              <div className="mb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold text-white">{card.name}</h2>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    card.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                    card.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                    'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  }`}>{card.rarity}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-white/50">
+                  <span>{card.type}</span>
+                  <span>•</span>
+                  <span>{card.game}</span>
+                  <span>•</span>
+                  <span className={card.releaseDate === 'Available Now' ? 'text-green-400' : 'text-amber-400'}>{card.releaseDate}</span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-white/70 text-sm leading-relaxed mb-4">{card.description}</p>
+
+              {/* Lore */}
+              {card.lore && (
+                <div className="p-3 bg-white/[0.03] rounded-lg border border-white/5 mb-4">
+                  <p className="text-white/40 text-xs italic leading-relaxed">"{card.lore}"</p>
+                </div>
+              )}
+
+              {/* Stats Grid */}
+              <div className="mb-4">
+                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2">Stats</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(card.stats).map(([key, val]) => (
+                    <div key={key} className="p-2 bg-white/[0.03] rounded-lg border border-white/5 text-center">
+                      <p className="text-white font-bold text-sm">{val}</p>
+                      <p className="text-white/40 text-[10px] uppercase">{key}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Unlock Condition */}
+              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-300 text-xs font-bold uppercase">How to Unlock</span>
+                </div>
+                <p className="text-white/70 text-sm">{card.unlockCondition}</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-4">
+                <button className="flex-1 px-4 py-2.5 bg-white text-black font-bold text-sm rounded-lg hover:bg-white/90 transition-colors">
+                  Track Progress
+                </button>
+                <button className="px-4 py-2.5 bg-white/10 text-white font-medium text-sm rounded-lg hover:bg-white/20 transition-colors border border-white/10">
+                  Add to Wishlist
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// New Cards Section - Genre-based layout like Library
+function NewCardsSection({ upcomingCards }) {
+  const [activeCardGenre, setActiveCardGenre] = useState('All');
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [showCardOverlay, setShowCardOverlay] = useState(false);
+  const cardScrollRef = useRef(null);
+  const genreRefs = useRef({});
+
+  // Filter cards by genre
+  const filteredCards = useMemo(() => {
+    if (activeCardGenre === 'All') return upcomingCards;
+    return upcomingCards.filter(card => card.genre === activeCardGenre);
+  }, [upcomingCards, activeCardGenre]);
+
+  // Handle card click - show overlay
+  const handleCardClick = (card) => {
+    setSelectedCard(card);
+    setShowCardOverlay(true);
+  };
+
+  // Handle genre scroll
+  const handleGenreScroll = () => {
+    // Similar to library genre scroll
+  };
+
+  return (
+    <motion.div
+      key="cards"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="h-full flex flex-col"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Upcoming Cards</h4>
+        <span className="text-amber-400 text-xs font-semibold">{filteredCards.length} Cards</span>
+      </div>
+
+      {/* Main Content - Genre selector left, Cards + Details right */}
+      <div className="flex gap-4 flex-1 min-h-0">
+        {/* Genre Selector - Vertical scroll */}
+        <div className="w-24 flex-shrink-0 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
+          {CARD_GENRES.map((genre) => {
+            const count = genre === 'All' ? upcomingCards.length : upcomingCards.filter(c => c.genre === genre).length;
+            const isActive = activeCardGenre === genre;
+            
+            return (
+              <div
+                key={genre}
+                ref={(el) => genreRefs.current[genre] = el}
+                onClick={() => setActiveCardGenre(genre)}
+                className={`relative py-2 px-2 cursor-pointer rounded-lg mb-1 transition-all ${
+                  isActive ? 'bg-white/10' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`font-medium transition-all ${
+                    isActive ? 'text-cyan-300 text-xs' : 'text-white/40 text-[10px]'
+                  }`}>
+                    {genre}
+                  </span>
+                  <span className={`text-[9px] ${isActive ? 'text-cyan-400' : 'text-white/20'}`}>
+                    {count}
+                  </span>
+                </div>
+                
+                {isActive && (
+                  <motion.div
+                    layoutId="cardGenreActiveLine"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-cyan-400 rounded-full"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Vertical Divider */}
+        <div className="w-px bg-white/10 self-stretch" />
+
+        {/* Cards Row + Selected Card Details */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Cards Horizontal Scroll */}
+          <div 
+            ref={cardScrollRef}
+            className="flex gap-3 overflow-x-auto pb-3 mb-3"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredCards.map((card, idx) => (
+                <motion.div
+                  key={card.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ delay: idx * 0.03 }}
+                >
+                  <AchievementStyleCard
+                    card={card}
+                    isSelected={selectedCard?.id === card.id}
+                    onClick={() => setSelectedCard(card)}
+                    size="small"
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            
+            {filteredCards.length === 0 && (
+              <div className="flex items-center justify-center w-full h-28 text-white/30 text-xs">
+                No cards in {activeCardGenre}
+              </div>
+            )}
+          </div>
+
+          {/* Selected Card Quick Details */}
+          <AnimatePresence mode="wait">
+            {selectedCard ? (
+              <motion.div
+                key={selectedCard.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex-1 p-3 bg-white/[0.02] rounded-lg border border-white/5 overflow-y-auto"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">{selectedCard.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h4 className="text-white font-bold text-sm">{selectedCard.name}</h4>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${
+                        selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
+                        selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
+                        'bg-blue-500/20 text-blue-300'
+                      }`}>{selectedCard.rarity}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                        selectedCard.releaseDate === 'Available Now' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'
+                      }`}>{selectedCard.releaseDate}</span>
+                    </div>
+                    
+                    <p className="text-white/40 text-[10px] mb-2">{selectedCard.type} • {selectedCard.game}</p>
+                    <p className="text-white/60 text-xs mb-3 line-clamp-2">{selectedCard.description}</p>
+                    
+                    {/* Stats */}
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {Object.entries(selectedCard.stats).map(([key, val]) => (
+                        <div key={key} className="px-2 py-1 bg-black/30 rounded text-[9px]">
+                          <span className="text-white/40">{key}:</span>
+                          <span className="text-cyan-400 ml-1 font-semibold">{val}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Unlock & View More */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[9px] text-amber-400/70">
+                        <Trophy className="w-3 h-3" />
+                        <span className="truncate">{selectedCard.unlockCondition}</span>
+                      </div>
+                      <button 
+                        onClick={() => setShowCardOverlay(true)}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white font-medium transition-colors flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col items-center justify-center text-white/20"
+              >
+                <Crown className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-xs">Select a card to view details</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Full Card Detail Overlay */}
+      <AnimatePresence>
+        {showCardOverlay && selectedCard && (
+          <CardDetailOverlay 
+            card={selectedCard} 
+            onClose={() => setShowCardOverlay(false)} 
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 // News Feed Section - Xbox-style organized dashboard
 function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
   const [activeTab, setActiveTab] = useState('feed');
