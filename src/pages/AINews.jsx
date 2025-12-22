@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, TrendingUp, Zap, Users, Search, Eye, Heart, Share2, Calendar, MessageSquare, ThumbsUp } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import NewsDetailOverlay from '@/components/news/NewsDetailOverlay';
+import { Clock, TrendingUp, Zap, Users, Search, Filter, Eye, Heart, Share2 } from 'lucide-react';
 
 const newsData = [
     {
@@ -69,7 +68,7 @@ const newsData = [
         readTime: "6 min read",
         views: "7.3K",
         likes: "198",
-        image: null,
+        image: "https://images.unsplash.com/photo-1555255707-c07966088b7b?w=400&h=250&fit=crop",
         author: "Player Health Team"
     }
 ];
@@ -85,7 +84,6 @@ const categoryColors = {
 export default function AINewsPage() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedArticle, setSelectedArticle] = useState(null);
 
     const filteredNews = newsData.filter(article => {
         const categoryMatch = selectedCategory === 'all' || article.category === selectedCategory;
@@ -93,39 +91,6 @@ export default function AINewsPage() {
                            article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
         return categoryMatch && searchMatch;
     });
-
-    // Convert relative timestamps like "2 hours ago" into actual dates for grouping
-    const toDate = (ts) => {
-        const now = new Date();
-        if (!ts) return now;
-        const m = ts.match(/(\d+)\s+(hour|hours|day|days)\s+ago/i);
-        if (m) {
-            const n = parseInt(m[1], 10);
-            if (m[2].startsWith('hour')) {
-                return new Date(now.getTime() - n * 60 * 60 * 1000);
-            }
-            if (m[2].startsWith('day')) {
-                return new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
-            }
-        }
-        return now;
-    };
-
-    const groupedByDate = useMemo(() => {
-        const groups = {};
-        filteredNews.forEach(a => {
-            const d = toDate(a.timestamp);
-            const label = d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
-            if (!groups[label]) groups[label] = [];
-            groups[label].push({ ...a, _date: d });
-        });
-        // Sort groups by date desc
-        const entries = Object.entries(groups).sort(([,a], [,b]) => b[0]?0:0);
-        // Maintain original order using date on first item
-        return Object.entries(groups)
-          .sort((a, b) => (b[1][0]._date - a[1][0]._date))
-          .map(([label, items]) => ({ label, items: items.sort((x, y) => y._date - x._date) }));
-    }, [filteredNews]);
 
     const categories = ['all', ...new Set(newsData.map(article => article.category))];
 
@@ -164,42 +129,6 @@ export default function AINewsPage() {
                     position: relative;
                     overflow: hidden;
                     cursor: pointer;
-                }
-
-                /* Timeline */
-                .timeline {
-                    position: relative;
-                    padding-left: 2.5rem;
-                }
-                .timeline::before {
-                    content: '';
-                    position: absolute;
-                    left: 1rem;
-                    top: 0;
-                    bottom: 0;
-                    width: 2px;
-                    background: linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-                }
-                .date-chip {
-                    position: relative;
-                    padding-left: 0.75rem;
-                }
-                .date-chip::before {
-                    content: '';
-                    position: absolute;
-                    left: -1.55rem;
-                    top: 0.5rem;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 9999px;
-                    background: linear-gradient(135deg, #22d3ee, #6366f1);
-                    box-shadow: 0 0 12px rgba(99,102,241,0.6);
-                }
-                .glass {
-                    background: rgba(15,23,42,0.6);
-                    border: 1px solid rgba(148,163,184,0.2);
-                    backdrop-filter: blur(18px) saturate(160%);
-                    border-radius: 14px;
                 }
 
                 .news-card::before {
