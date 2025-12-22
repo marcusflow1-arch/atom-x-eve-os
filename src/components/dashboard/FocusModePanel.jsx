@@ -1425,24 +1425,24 @@ export default function FocusModePanel() {
     <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* Top Section - Game Details (right of 3D viewer) */}
+      {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
         {/* Left side - placeholder for 3D viewer area */}
         <div className="w-[300px] flex-shrink-0">
           {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
         </div>
 
-        {/* Right of 3D Viewer - Game Details Content */}
-        <div className="flex-1 flex gap-4 min-h-0">
+        {/* Right of 3D Viewer - News & Updates Feed */}
+        <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Shows selected game details */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <LibraryContentArea 
-              onSelectGame={setSelectedGame}
+          {/* Content Area - News, Updates, New Cards */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+            <NewsFeedSection 
+              upcomingCards={upcomingCards}
               selectedGame={selectedGame}
-              loading={loading}
+              onSelectGame={setSelectedGame}
             />
           </div>
         </div>
