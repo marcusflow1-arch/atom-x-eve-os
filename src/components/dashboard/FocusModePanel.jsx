@@ -1312,8 +1312,8 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   );
 }
 
-// Library Content Area Component - Now receives activeGenre from parent
-function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreChange, gamesByGenre, loading }) {
+// Library Content Area Component - Now shows game details only
+function LibraryContentArea({ onSelectGame, selectedGame, loading }) {
 
   if (loading) {
     return (
@@ -1324,20 +1324,7 @@ function LibraryContentArea({ onSelectGame, selectedGame, activeGenre, onGenreCh
   }
 
   return (
-    <div className="flex h-full gap-4">
-      {/* Genre Selector (Vertical scroll controls Library) */}
-      <div className="w-48 flex-shrink-0">
-        <GenreSelectorArea 
-          genres={Object.keys(gamesByGenre)}
-          activeGenre={activeGenre}
-          onGenreChange={onGenreChange}
-          gamesByGenre={gamesByGenre}
-        />
-      </div>
-      
-      {/* Vertical Divider */}
-      <div className="w-px bg-white/10 self-stretch" />
-      
+    <div className="flex h-full">
       {/* Selected Game Detail - Shows when game is clicked */}
       <div className="flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
