@@ -1391,125 +1391,186 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   );
 }
 
-// Card Detail Overlay - Achievement store style
+// Card Detail Overlay - Translucent Achievement style (like Destiny cards)
 function CardDetailOverlay({ card, onClose }) {
   if (!card) return null;
   
   const style = rarityStyles[card.rarity];
+  
+  // Generate a card ID
+  const cardId = `CARD-${card.id.toString().padStart(4, '0')}-${card.rarity?.substring(0, 1)}${card.type?.substring(0, 1)}`;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+      {/* Translucent Backdrop with blur */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
 
-      {/* Modal */}
+      {/* Modal Container - Translucent glass box */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl rounded-2xl overflow-hidden"
+        className={`relative w-full max-w-3xl rounded-2xl overflow-hidden border-2 ${style?.border || 'border-white/20'}`}
         style={{
-          background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.95) 100%)',
-          backdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+          background: 'rgba(15, 23, 42, 0.4)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 60px ${
+            card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.15)' :
+            card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.15)' :
+            'rgba(59, 130, 246, 0.15)'
+          }`
         }}
       >
-        {/* Header with rarity glow */}
+        {/* Top Rarity Glow Bar */}
         <div className={`h-1 ${
-          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500' :
-          card.rarity === 'Epic' ? 'bg-gradient-to-r from-purple-500 via-pink-400 to-purple-500' :
-          'bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500'
+          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400 to-transparent' :
+          card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' :
+          'bg-gradient-to-r from-transparent via-blue-400 to-transparent'
         }`} />
 
-        <div className="p-6">
-          {/* Close Button */}
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors z-10"
-          >
-            <X className="w-5 h-5 text-white/60" />
-          </button>
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10 backdrop-blur-md border border-white/10"
+        >
+          <X className="w-5 h-5 text-white/80" />
+        </button>
 
-          <div className="flex gap-6">
-            {/* Card Preview - Left side */}
-            <div className="flex-shrink-0">
-              <AchievementStyleCard card={card} isSelected={true} size="large" />
+        <div className="p-8">
+          <div className="flex gap-8">
+            {/* Left Side - Card Preview in Glass Box */}
+            <div className="flex-shrink-0 flex flex-col items-center">
+              {/* Card Container with inner glow */}
+              <div 
+                className={`p-4 rounded-xl border ${style?.border || 'border-white/20'}`}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  boxShadow: `inset 0 0 30px ${
+                    card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.1)' :
+                    card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.1)' :
+                    'rgba(59, 130, 246, 0.1)'
+                  }`
+                }}
+              >
+                <AchievementStyleCard card={card} isSelected={true} size="large" />
+              </div>
+              
+              {/* Card ID Badge */}
+              <div className="mt-4 px-4 py-2 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-white/30 text-[10px] font-mono tracking-widest">{cardId}</p>
+              </div>
             </div>
 
-            {/* Card Details - Right side */}
+            {/* Right Side - Card Details */}
             <div className="flex-1 min-w-0">
-              {/* Title & Rarity */}
-              <div className="mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-white">{card.name}</h2>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    card.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                    card.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
-                    'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                  }`}>{card.rarity}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-white/50">
-                  <span>{card.type}</span>
-                  <span>•</span>
-                  <span>{card.game}</span>
-                  <span>•</span>
-                  <span className={card.releaseDate === 'Available Now' ? 'text-green-400' : 'text-amber-400'}>{card.releaseDate}</span>
-                </div>
+              {/* Title */}
+              <h2 className={`text-3xl font-black mb-2 ${style?.text || 'text-white'}`}>{card.name}</h2>
+              
+              {/* Meta Tags Row */}
+              <div className="flex flex-wrap items-center gap-2 mb-5">
+                {/* Rarity */}
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${
+                  card.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                  card.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
+                  'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                }`}>
+                  <Star className="w-3 h-3 inline mr-1" />
+                  {card.rarity}
+                </span>
+                
+                {/* Type/Class */}
+                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-white/80 border border-white/10">
+                  <Zap className="w-3 h-3 inline mr-1" />
+                  {card.type}
+                </span>
+                
+                {/* Genre */}
+                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-white/80 border border-white/10">
+                  {card.genre}
+                </span>
+
+                {/* Release Status */}
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                  card.releaseDate === 'Available Now' 
+                    ? 'bg-green-500/20 text-green-300 border-green-500/30' 
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}>
+                  {card.releaseDate}
+                </span>
               </div>
 
               {/* Description */}
-              <p className="text-white/70 text-sm leading-relaxed mb-4">{card.description}</p>
+              <p className="text-white/70 text-sm leading-relaxed mb-5">{card.description}</p>
 
-              {/* Lore */}
-              {card.lore && (
-                <div className="p-3 bg-white/[0.03] rounded-lg border border-white/5 mb-4">
-                  <p className="text-white/40 text-xs italic leading-relaxed">"{card.lore}"</p>
-                </div>
-              )}
+              {/* Source Game */}
+              <div className="flex items-center gap-2 mb-5 p-3 rounded-lg bg-white/5 border border-white/10">
+                <Gamepad2 className="w-4 h-4 text-white/40" />
+                <span className="text-white/60 text-sm">From: <span className="text-white font-medium">{card.game}</span></span>
+              </div>
 
               {/* Stats Grid */}
-              <div className="mb-4">
-                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-2">Stats</h4>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="mb-5">
+                <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">Card Stats</h4>
+                <div className="grid grid-cols-3 gap-3">
                   {Object.entries(card.stats).map(([key, val]) => (
-                    <div key={key} className="p-2 bg-white/[0.03] rounded-lg border border-white/5 text-center">
-                      <p className="text-white font-bold text-sm">{val}</p>
-                      <p className="text-white/40 text-[10px] uppercase">{key}</p>
+                    <div 
+                      key={key} 
+                      className="p-3 rounded-lg text-center border border-white/10"
+                      style={{ background: 'rgba(255,255,255,0.03)' }}
+                    >
+                      <p className={`font-bold text-lg ${style?.text || 'text-cyan-400'}`}>{val}</p>
+                      <p className="text-white/40 text-[10px] uppercase tracking-wide">{key}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Unlock Condition */}
-              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <Trophy className="w-4 h-4 text-amber-400" />
-                  <span className="text-amber-300 text-xs font-bold uppercase">How to Unlock</span>
+              {/* Lore */}
+              {card.lore && (
+                <div className="p-4 rounded-lg border border-white/10 mb-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <BookOpen className="w-4 h-4 text-white/30 mb-2" />
+                  <p className="text-white/50 text-xs italic leading-relaxed">"{card.lore}"</p>
                 </div>
-                <p className="text-white/70 text-sm">{card.unlockCondition}</p>
+              )}
+
+              {/* Unlock Condition */}
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-300 text-xs font-bold uppercase tracking-wide">Unlock Condition</span>
+                </div>
+                <p className="text-white/80 text-sm">{card.unlockCondition}</p>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-4">
-                <button className="flex-1 px-4 py-2.5 bg-white text-black font-bold text-sm rounded-lg hover:bg-white/90 transition-colors">
+              <div className="flex gap-3 mt-5">
+                <button className="flex-1 px-5 py-3 bg-white text-black font-bold text-sm rounded-xl hover:bg-white/90 transition-all hover:scale-[1.02]">
                   Track Progress
                 </button>
-                <button className="px-4 py-2.5 bg-white/10 text-white font-medium text-sm rounded-lg hover:bg-white/20 transition-colors border border-white/10">
-                  Add to Wishlist
+                <button className="px-5 py-3 bg-white/10 text-white font-medium text-sm rounded-xl hover:bg-white/20 transition-all border border-white/10">
+                  <Heart className="w-4 h-4 inline mr-2" />
+                  Wishlist
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Bottom Fade Bar */}
+        <div className={`h-0.5 ${
+          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400/50 to-transparent' :
+          card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400/50 to-transparent' :
+          'bg-gradient-to-r from-transparent via-blue-400/50 to-transparent'
+        }`} />
       </motion.div>
     </motion.div>
   );
