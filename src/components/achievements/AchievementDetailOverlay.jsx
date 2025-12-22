@@ -193,6 +193,59 @@ export default function AchievementDetailOverlay({ achievement, onClose, onTrack
           </div>
         </div>
 
+        {/* Unlock Moment Overlay */}
+        {showMoment && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex"
+            style={{ background: 'rgba(0,0,0,0.8)' }}
+          >
+            {/* Left: Video */}
+            <div className="w-full md:w-1/2 p-4 md:p-6 flex items-center justify-center" onClick={() => setShowMoment(false)}>
+              <div className="w-full max-w-xl aspect-video rounded-xl overflow-hidden border border-white/10 bg-black">
+                <video
+                  src={achievement.unlock_video_url || 'https://www.w3schools.com/html/mov_bbb.mp4'}
+                  controls
+                  autoPlay
+                  muted
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            {/* Right: Action Description */}
+            <div className="hidden md:flex w-1/2 p-6 flex-col border-l border-white/10 bg-slate-950/60 backdrop-blur-md">
+              <h3 className="text-white text-xl font-bold mb-2">How you unlocked it</h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                {achievement.unlock_description || 'This achievement was unlocked during a clutch moment: you parried a boss strike, chained a 5-hit combo, and finished under 30% HP within 90 seconds.'}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                <div>
+                  <div className="text-slate-500">Game</div>
+                  <div className="text-white/90">{achievement.game}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Timestamp</div>
+                  <div className="text-white/90">{achievement.unlocked_at || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Mode</div>
+                  <div className="text-white/90">{achievement.mode || 'Story'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500">Difficulty</div>
+                  <div className="text-white/90">{achievement.difficulty || 'Normal'}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMoment(false)}
+                className="mt-auto self-end px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm"
+              >Close</button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Rewards Section - THE STAR OF THE SHOW */}
         <div className="p-8 bg-slate-900/50">
           <div className="flex items-center gap-3 mb-6">
