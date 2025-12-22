@@ -64,7 +64,7 @@ export default function CardTutorialOverlay({ card, onClose }) {
 
           {/* Left Panel */}
           <div
-            className={`relative rounded-2xl border ${style.border} overflow-hidden bg-white/5 backdrop-blur-2xl border-white/20`}}
+            className={`relative rounded-2xl border ${style.border} overflow-hidden bg-white/5 backdrop-blur-2xl border-white/20`}
             style={{
               background: "rgba(15,23,42,0.5)",
               backdropFilter: "blur(30px) saturate(180%)",
