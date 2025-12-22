@@ -1603,6 +1603,37 @@ function NewCardsSection({ upcomingCards }) {
     // Similar to library genre scroll
   };
 
+  // Map selected card to AchievementDetailOverlay format
+  const achievementFromCard = useMemo(() => {
+    if (!selectedCard) return null;
+    const rarityPoints = {
+      Common: 25,
+      Rare: 50,
+      Epic: 100,
+      Legendary: 150
+    };
+    const categoryMap = {
+      Ability: 'ability',
+      Equipment: 'equipment',
+      Passive: 'ability'
+    };
+    return {
+      title: selectedCard.name,
+      description: selectedCard.description,
+      game: selectedCard.game,
+      category: categoryMap[selectedCard.type] || 'standard',
+      rarity: selectedCard.rarity,
+      points: rarityPoints[selectedCard.rarity] || 50,
+      icon: selectedCard.icon,
+      reward: {
+        type: selectedCard.type,
+        name: selectedCard.name,
+        description: selectedCard.lore || selectedCard.description,
+        stats: selectedCard.stats
+      }
+    };
+  }, [selectedCard]);
+
   return (
     <motion.div
       key="cards"
