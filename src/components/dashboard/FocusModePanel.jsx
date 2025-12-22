@@ -1696,75 +1696,7 @@ function NewCardsSection({ upcomingCards }) {
             )}
           </div>
 
-          {/* Selected Card Quick Details */}
-          <AnimatePresence mode="wait">
-            {selectedCard ? (
-              <motion.div
-                key={selectedCard.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex-1 p-3 bg-white/[0.02] rounded-lg border border-white/5 overflow-y-auto"
-                style={{ scrollbarWidth: 'none' }}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-3xl">{selectedCard.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h4 className="text-white font-bold text-sm">{selectedCard.name}</h4>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${
-                        selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
-                        selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
-                        'bg-blue-500/20 text-blue-300'
-                      }`}>{selectedCard.rarity}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${
-                        selectedCard.releaseDate === 'Available Now' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'
-                      }`}>{selectedCard.releaseDate}</span>
-                    </div>
-                    
-                    <p className="text-white/40 text-[10px] mb-2">{selectedCard.type} • {selectedCard.game}</p>
-                    <p className="text-white/60 text-xs mb-3 line-clamp-2">{selectedCard.description}</p>
-                    
-                    {/* Stats */}
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {Object.entries(selectedCard.stats).map(([key, val]) => (
-                        <div key={key} className="px-2 py-1 bg-black/30 rounded text-[9px]">
-                          <span className="text-white/40">{key}:</span>
-                          <span className="text-cyan-400 ml-1 font-semibold">{val}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Unlock & View More */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-[9px] text-amber-400/70">
-                        <Trophy className="w-3 h-3" />
-                        <span className="truncate">{selectedCard.unlockCondition}</span>
-                      </div>
-                      <button 
-                        onClick={() => setShowCardOverlay(true)}
-                        className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] text-white font-medium transition-colors flex items-center gap-1"
-                      >
-                        <Eye className="w-3 h-3" />
-                        Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col items-center justify-center text-white/20"
-              >
-                <Crown className="w-8 h-8 mb-2 opacity-50" />
-                <p className="text-xs">Select a card to view details</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Selected Card Quick Details removed per request; overlay handles details/tutorials */}
         </div>
       </div>
 

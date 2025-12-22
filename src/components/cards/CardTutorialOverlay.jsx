@@ -44,7 +44,7 @@ export default function CardTutorialOverlay({ card, onClose }) {
         {/* Backdrop */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
 
-        {/* Container */}
+        {/* Container - liquid glass frame */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -64,7 +64,7 @@ export default function CardTutorialOverlay({ card, onClose }) {
 
           {/* Left Panel */}
           <div
-            className={`relative rounded-2xl border ${style.border} overflow-hidden`}
+            className={`relative rounded-2xl border ${style.border} overflow-hidden bg-white/5 backdrop-blur-2xl border-white/20`
             style={{
               background: "rgba(15,23,42,0.5)",
               backdropFilter: "blur(30px) saturate(180%)",
@@ -91,6 +91,11 @@ export default function CardTutorialOverlay({ card, onClose }) {
               >
                 <Swords className="w-4 h-4 text-white" />
               </button>
+            </div>
+
+            {/* Liquid glass shine */}
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-1/3 left-1/2 -translate-x-1/2 w-[140%] h-[60%] bg-gradient-to-b from-white/15 via-white/5 to-transparent blur-2xl opacity-60" />
             </div>
 
             {/* Content */}
@@ -135,13 +140,16 @@ export default function CardTutorialOverlay({ card, onClose }) {
 
           {/* Right Panel */}
           <div
-            className="rounded-2xl border border-white/10"
+            className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl"
             style={{
               background: "rgba(15,23,42,0.45)",
               backdropFilter: "blur(30px) saturate(180%)",
               WebkitBackdropFilter: "blur(30px) saturate(180%)",
             }}
           >
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-1/3 left-1/2 -translate-x-1/2 w-[140%] h-[55%] bg-gradient-to-b from-white/12 via-white/4 to-transparent blur-2xl opacity-70" />
+            </div>
             <div className="p-6 md:p-8">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
