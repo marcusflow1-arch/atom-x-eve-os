@@ -1198,28 +1198,22 @@ const ALL_GENRES = [
   'MMO'
 ];
 
-// Genre Selector (Top-Right, Vertical Scroll) - Controls bottom Library
-function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre }) {
+// Mini Genre Selector (For bottom section next to Library)
+function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
   const scrollTimeoutRef = useRef(null);
-  const isScrollingRef = useRef(false);
 
-  // Use all genres, showing which ones have games
   const displayGenres = ALL_GENRES;
 
-  // Debounced scroll handler - slower and more controlled
+  // Debounced scroll handler
   const handleScroll = () => {
     if (!scrollRef.current) return;
     
-    // Clear any existing timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
     
-    isScrollingRef.current = true;
-    
-    // Debounce the genre change - wait 150ms after scroll stops
     scrollTimeoutRef.current = setTimeout(() => {
       if (!scrollRef.current) return;
       
@@ -1247,38 +1241,26 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
       if (closestGenre !== activeGenre) {
         onGenreChange(closestGenre);
       }
-      
-      isScrollingRef.current = false;
-    }, 150);
+    }, 100);
   };
 
-  // Handle wheel event to slow down scrolling
   const handleWheel = (e) => {
     if (!scrollRef.current) return;
-    
     e.preventDefault();
-    
-    // Slow down scroll speed significantly (divide by 3)
-    const scrollAmount = e.deltaY / 3;
-    
     scrollRef.current.scrollBy({
-      top: scrollAmount,
+      top: e.deltaY / 2,
       behavior: 'auto'
     });
   };
 
-  // Click to select genre directly
   const handleGenreClick = (genre) => {
     onGenreChange(genre);
-    
-    // Scroll the clicked genre into center view
     const el = genreRefs.current[genre];
     if (el && scrollRef.current) {
       const container = scrollRef.current;
       const containerHeight = container.clientHeight;
       const elTop = el.offsetTop;
       const elHeight = el.clientHeight;
-      
       container.scrollTo({
         top: elTop - (containerHeight / 2) + (elHeight / 2),
         behavior: 'smooth'
@@ -1287,17 +1269,12 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Gamepad2 className="w-3 h-3 text-cyan-400" />
-        Genres
-      </h3>
-      
+    <div className="flex flex-col h-32 w-28 flex-shrink-0">
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
         onWheel={handleWheel}
-        className="flex-1 overflow-y-auto space-y-1 pr-2 py-12"
+        className="flex-1 overflow-y-auto py-6"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {displayGenres.map((genre, index) => {
@@ -1305,42 +1282,29 @@ function GenreSelectorArea({ genres, activeGenre, onGenreChange, gamesByGenre })
           const isActive = activeGenre === genre;
           
           return (
-            <motion.div
+            <div
               key={genre}
               ref={(el) => genreRefs.current[genre] = el}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.03 }}
               onClick={() => handleGenreClick(genre)}
-              className="relative py-4 pl-3 cursor-pointer hover:bg-white/5 rounded-lg transition-colors"
+              className="relative py-1.5 pl-2 cursor-pointer hover:bg-white/5 rounded transition-colors"
             >
-              <span className={`font-semibold transition-all duration-300 ${
+              <span className={`font-medium transition-all duration-200 ${
                 isActive 
-                  ? 'text-cyan-300 text-xl' 
+                  ? 'text-cyan-300 text-xs' 
                   : hasGames
-                    ? 'text-white/50 text-sm'
-                    : 'text-white/20 text-sm'
+                    ? 'text-white/40 text-[10px]'
+                    : 'text-white/15 text-[10px]'
               }`}>
                 {genre}
               </span>
               
-              {/* Game count badge */}
-              {hasGames && (
-                <span className={`ml-2 text-xs transition-all duration-300 ${
-                  isActive ? 'text-cyan-400' : 'text-white/30'
-                }`}>
-                  ({gamesByGenre[genre].length})
-                </span>
-              )}
-              
-              {/* Active indicator line */}
               {isActive && (
                 <motion.div
-                  layoutId="genreActiveLine"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full"
+                  layoutId="miniGenreActiveLine"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-cyan-400 rounded-full"
                 />
               )}
-            </motion.div>
+            </div>
           );
         })}
       </div>
