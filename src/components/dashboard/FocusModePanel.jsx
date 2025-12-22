@@ -1312,37 +1312,164 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   );
 }
 
-// Library Content Area Component - Now shows game details only
-function LibraryContentArea({ onSelectGame, selectedGame, loading }) {
+// News Feed Section - Shows platform updates, new cards, AI updates
+function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
+  const [selectedCard, setSelectedCard] = useState(null);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Platform updates mock data
+  const platformUpdates = [
+    { id: 1, type: 'platform', title: 'Atom x Eve v2.5 Released', description: 'New AI learning algorithms, improved card fusion system, and seasonal pass updates.', time: '2 hours ago', icon: '🚀' },
+    { id: 2, type: 'ai', title: 'AI Behavior Update', description: 'Your AI companion now learns from stealth gameplay patterns.', time: '5 hours ago', icon: '🤖' },
+    { id: 3, type: 'event', title: 'Winter Solstice Event', description: 'Limited time cards and exclusive AI traits available until Dec 31.', time: '1 day ago', icon: '❄️' },
+  ];
+
+  const aiUpdates = [
+    { id: 1, trait: 'Combat Aggression', change: '+5%', reason: 'Based on recent RPG sessions' },
+    { id: 2, trait: 'Risk Tolerance', change: '+12%', reason: 'Observed high-stakes decisions' },
+    { id: 3, trait: 'Stealth Preference', change: '-3%', reason: 'Switched to direct combat style' },
+  ];
 
   return (
-    <div className="flex h-full">
-      {/* Selected Game Detail - Shows when game is clicked */}
-      <div className="flex-1 overflow-hidden">
-        <AnimatePresence mode="wait">
-          {selectedGame ? (
-            <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
-          ) : (
+    <div className="space-y-6">
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-white font-bold text-lg flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-cyan-400" />
+          What's New
+        </h2>
+        <span className="text-white/30 text-xs">Updated just now</span>
+      </div>
+
+      {/* Platform Updates */}
+      <div>
+        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Radio className="w-3 h-3 text-purple-400" />
+          Platform Updates
+        </h3>
+        <div className="space-y-2">
+          {platformUpdates.map((update) => (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="h-full flex flex-col items-center justify-center text-white/30"
+              key={update.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="p-3 bg-white/[0.03] rounded-xl border border-white/5 hover:border-white/15 transition-all cursor-pointer group"
             >
-              <Eye className="w-10 h-10 mb-3 opacity-50" />
-              <p className="text-sm">Click a game below to view details</p>
+              <div className="flex items-start gap-3">
+                <span className="text-xl">{update.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">{update.title}</h4>
+                    <span className="text-white/30 text-[10px]">{update.time}</span>
+                  </div>
+                  <p className="text-white/50 text-xs leading-relaxed">{update.description}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Learning Updates */}
+      <div>
+        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Zap className="w-3 h-3 text-amber-400" />
+          AI Evolution
+        </h3>
+        <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 rounded-xl border border-amber-500/20 p-3">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+              <span className="text-lg">🧠</span>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Your AI is Learning</p>
+              <p className="text-white/40 text-[10px]">Recent behavioral adaptations</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {aiUpdates.map((update) => (
+              <div key={update.id} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
+                <span className="text-white/70 text-xs">{update.trait}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold ${update.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                    {update.change}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Upcoming Cards */}
+      <div>
+        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Crown className="w-3 h-3 text-cyan-400" />
+          New Cards Available
+        </h3>
+        <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+          {upcomingCards.slice(0, 4).map((card) => (
+            <AchievementStyleCard
+              key={card.id}
+              card={card}
+              isSelected={selectedCard?.id === card.id}
+              onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
+              size="small"
+            />
+          ))}
+        </div>
+        
+        {/* Selected Card Details */}
+        <AnimatePresence>
+          {selectedCard && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3 p-3 bg-white/[0.03] rounded-xl border border-white/10"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">{selectedCard.icon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="text-white font-bold text-sm">{selectedCard.name}</h4>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
+                      selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
+                      'bg-blue-500/20 text-blue-300'
+                    }`}>{selectedCard.rarity}</span>
+                  </div>
+                  <p className="text-white/50 text-xs mb-2">{selectedCard.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(selectedCard.stats).map(([key, val]) => (
+                      <span key={key} className="text-[10px] px-2 py-1 bg-white/5 rounded text-white/60">
+                        {key}: <span className="text-cyan-300">{val}</span>
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-amber-400/70 text-[10px] mt-2 italic">🔓 {selectedCard.unlockCondition}</p>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Quick Game Access - If game selected from bottom */}
+      <AnimatePresence>
+        {selectedGame && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Gamepad2 className="w-3 h-3 text-green-400" />
+              Selected Game
+            </h3>
+            <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
