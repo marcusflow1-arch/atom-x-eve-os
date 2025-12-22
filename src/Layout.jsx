@@ -190,8 +190,9 @@ function LayoutContent({ children, currentPageName }) {
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            position: relative;
-            z-index: 20;
+            position: sticky;
+            top: 0;
+            z-index: 40;
           }
 
           .nav-container {
