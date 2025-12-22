@@ -1312,161 +1312,316 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   );
 }
 
-// News Feed Section - Shows platform updates, new cards, AI updates
+// News Feed Section - Xbox-style organized dashboard
 function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
+  const [activeTab, setActiveTab] = useState('feed');
   const [selectedCard, setSelectedCard] = useState(null);
 
-  // Platform updates mock data
-  const platformUpdates = [
-    { id: 1, type: 'platform', title: 'Atom x Eve v2.5 Released', description: 'New AI learning algorithms, improved card fusion system, and seasonal pass updates.', time: '2 hours ago', icon: '🚀' },
-    { id: 2, type: 'ai', title: 'AI Behavior Update', description: 'Your AI companion now learns from stealth gameplay patterns.', time: '5 hours ago', icon: '🤖' },
-    { id: 3, type: 'event', title: 'Winter Solstice Event', description: 'Limited time cards and exclusive AI traits available until Dec 31.', time: '1 day ago', icon: '❄️' },
+  // Featured content
+  const featuredContent = {
+    title: "Winter Solstice Event",
+    subtitle: "Limited Time",
+    description: "Exclusive AI traits and legendary cards available until December 31st",
+    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=300&fit=crop",
+    tag: "LIVE EVENT"
+  };
+
+  // Platform updates
+  const updates = [
+    { id: 1, category: 'PLATFORM', title: 'Atom x Eve v2.5', description: 'New AI algorithms & card fusion', time: '2h', color: 'bg-green-500' },
+    { id: 2, category: 'AI', title: 'Behavior Sync', description: 'Stealth pattern recognition added', time: '5h', color: 'bg-purple-500' },
+    { id: 3, category: 'CARDS', title: 'New Legendaries', description: '3 new cards in the vault', time: '1d', color: 'bg-amber-500' },
   ];
 
-  const aiUpdates = [
-    { id: 1, trait: 'Combat Aggression', change: '+5%', reason: 'Based on recent RPG sessions' },
-    { id: 2, trait: 'Risk Tolerance', change: '+12%', reason: 'Observed high-stakes decisions' },
-    { id: 3, trait: 'Stealth Preference', change: '-3%', reason: 'Switched to direct combat style' },
+  // AI stats
+  const aiStats = [
+    { label: 'Combat Style', value: 'Aggressive', trend: '+5%', up: true },
+    { label: 'Risk Level', value: 'High', trend: '+12%', up: true },
+    { label: 'Stealth Pref', value: 'Low', trend: '-3%', up: false },
+  ];
+
+  const tabs = [
+    { id: 'feed', label: 'Feed' },
+    { id: 'ai', label: 'AI Status' },
+    { id: 'cards', label: 'New Cards' },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-white font-bold text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-cyan-400" />
-          What's New
-        </h2>
-        <span className="text-white/30 text-xs">Updated just now</span>
+    <div className="h-full flex flex-col">
+      {/* Header Bar - Xbox style */}
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`text-sm font-semibold uppercase tracking-wide transition-all pb-2 border-b-2 ${
+                activeTab === tab.id 
+                  ? 'text-white border-green-500' 
+                  : 'text-white/40 border-transparent hover:text-white/70'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-white/30 text-xs font-mono">LIVE</span>
       </div>
 
-      {/* Platform Updates */}
-      <div>
-        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Radio className="w-3 h-3 text-purple-400" />
-          Platform Updates
-        </h3>
-        <div className="space-y-2">
-          {platformUpdates.map((update) => (
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <AnimatePresence mode="wait">
+          {activeTab === 'feed' && (
             <motion.div
-              key={update.id}
-              initial={{ opacity: 0, x: -10 }}
+              key="feed"
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="p-3 bg-white/[0.03] rounded-xl border border-white/5 hover:border-white/15 transition-all cursor-pointer group"
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
             >
-              <div className="flex items-start gap-3">
-                <span className="text-xl">{update.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">{update.title}</h4>
-                    <span className="text-white/30 text-[10px]">{update.time}</span>
-                  </div>
-                  <p className="text-white/50 text-xs leading-relaxed">{update.description}</p>
+              {/* Featured Banner */}
+              <div className="relative rounded-lg overflow-hidden h-36 group cursor-pointer">
+                <img 
+                  src={featuredContent.image} 
+                  alt={featuredContent.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+                <div className="absolute top-3 left-3">
+                  <span className="px-2 py-0.5 bg-green-500 text-black text-[10px] font-bold uppercase tracking-wider rounded">
+                    {featuredContent.tag}
+                  </span>
+                </div>
+                <div className="absolute bottom-3 left-3 right-3">
+                  <p className="text-white/50 text-[10px] uppercase tracking-wider">{featuredContent.subtitle}</p>
+                  <h3 className="text-white font-bold text-lg">{featuredContent.title}</h3>
+                  <p className="text-white/60 text-xs mt-0.5">{featuredContent.description}</p>
+                </div>
+              </div>
+
+              {/* Updates List */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Recent Updates</h4>
+                  <button className="text-green-400 text-[10px] font-semibold hover:text-green-300">See All</button>
+                </div>
+                <div className="space-y-2">
+                  {updates.map((update) => (
+                    <div 
+                      key={update.id}
+                      className="flex items-center gap-3 p-3 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                    >
+                      <div className={`w-1 h-10 rounded-full ${update.color}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{update.category}</span>
+                          <span className="text-white/20">•</span>
+                          <span className="text-[9px] text-white/30">{update.time}</span>
+                        </div>
+                        <h5 className="text-white font-semibold text-sm group-hover:text-green-400 transition-colors">{update.title}</h5>
+                        <p className="text-white/40 text-xs truncate">{update.description}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Stats Row */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+                  <p className="text-2xl font-bold text-white">47</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Cards Owned</p>
+                </div>
+                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+                  <p className="text-2xl font-bold text-green-400">12</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Games Played</p>
+                </div>
+                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+                  <p className="text-2xl font-bold text-purple-400">Lv.8</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Level</p>
                 </div>
               </div>
             </motion.div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      {/* AI Learning Updates */}
-      <div>
-        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Zap className="w-3 h-3 text-amber-400" />
-          AI Evolution
-        </h3>
-        <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 rounded-xl border border-amber-500/20 p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-              <span className="text-lg">🧠</span>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm">Your AI is Learning</p>
-              <p className="text-white/40 text-[10px]">Recent behavioral adaptations</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {aiUpdates.map((update) => (
-              <div key={update.id} className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
-                <span className="text-white/70 text-xs">{update.trait}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-bold ${update.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                    {update.change}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Cards */}
-      <div>
-        <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Crown className="w-3 h-3 text-cyan-400" />
-          New Cards Available
-        </h3>
-        <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {upcomingCards.slice(0, 4).map((card) => (
-            <AchievementStyleCard
-              key={card.id}
-              card={card}
-              isSelected={selectedCard?.id === card.id}
-              onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
-              size="small"
-            />
-          ))}
-        </div>
-        
-        {/* Selected Card Details */}
-        <AnimatePresence>
-          {selectedCard && (
+          {activeTab === 'ai' && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 p-3 bg-white/[0.03] rounded-xl border border-white/10"
+              key="ai"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">{selectedCard.icon}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-white font-bold text-sm">{selectedCard.name}</h4>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                      selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
-                      selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
-                      'bg-blue-500/20 text-blue-300'
-                    }`}>{selectedCard.rarity}</span>
-                  </div>
-                  <p className="text-white/50 text-xs mb-2">{selectedCard.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(selectedCard.stats).map(([key, val]) => (
-                      <span key={key} className="text-[10px] px-2 py-1 bg-white/5 rounded text-white/60">
-                        {key}: <span className="text-cyan-300">{val}</span>
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-amber-400/70 text-[10px] mt-2 italic">🔓 {selectedCard.unlockCondition}</p>
+              {/* AI Header */}
+              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/10 to-transparent rounded-lg border border-purple-500/20">
+                <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center border-2 border-purple-500/40">
+                  <Bot className="w-7 h-7 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg">ATOM AI</h3>
+                  <p className="text-purple-300/60 text-xs">Learning from your gameplay • Active</p>
+                </div>
+                <div className="ml-auto text-right">
+                  <p className="text-white font-bold">Level 8</p>
+                  <p className="text-white/30 text-[10px]">2,450 / 3,000 XP</p>
                 </div>
               </div>
+
+              {/* XP Progress */}
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: '82%' }} />
+              </div>
+
+              {/* Behavioral Stats */}
+              <div>
+                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-3">Behavioral Analysis</h4>
+                <div className="space-y-2">
+                  {aiStats.map((stat, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
+                      <span className="text-white/70 text-sm">{stat.label}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-white font-semibold text-sm">{stat.value}</span>
+                        <span className={`text-xs font-bold ${stat.up ? 'text-green-400' : 'text-red-400'}`}>
+                          {stat.trend}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Learning */}
+              <div>
+                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-3">Recent Learning</h4>
+                <div className="p-4 bg-white/[0.02] rounded-lg border border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-amber-400" />
+                    <span className="text-white font-semibold text-sm">New Pattern Detected</span>
+                  </div>
+                  <p className="text-white/50 text-xs leading-relaxed">
+                    Your AI noticed increased aggression in RPG combat scenarios. Adapting companion behavior to match your playstyle.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'cards' && (
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
+            >
+              {/* Cards Header */}
+              <div className="flex items-center justify-between">
+                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Available This Season</h4>
+                <span className="text-amber-400 text-xs font-semibold">{upcomingCards.length} New</span>
+              </div>
+
+              {/* Card Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {upcomingCards.slice(0, 4).map((card) => (
+                  <motion.div
+                    key={card.id}
+                    onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      selectedCard?.id === card.id 
+                        ? 'bg-white/10 border-green-500/50' 
+                        : 'bg-white/[0.02] border-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">{card.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-white font-semibold text-xs truncate">{card.name}</h5>
+                        <span className={`text-[9px] uppercase tracking-wider ${
+                          card.rarity === 'Legendary' ? 'text-amber-400' :
+                          card.rarity === 'Epic' ? 'text-purple-400' : 'text-blue-400'
+                        }`}>{card.rarity}</span>
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-[10px] line-clamp-2">{card.description}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Selected Card Detail */}
+              <AnimatePresence>
+                {selectedCard && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="p-4 bg-gradient-to-br from-white/[0.05] to-transparent rounded-lg border border-white/10"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">{selectedCard.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-white font-bold">{selectedCard.name}</h4>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                            selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
+                            selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
+                            'bg-blue-500/20 text-blue-300'
+                          }`}>{selectedCard.rarity}</span>
+                        </div>
+                        <p className="text-white/60 text-xs mb-3">{selectedCard.description}</p>
+                        
+                        {/* Stats */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {Object.entries(selectedCard.stats).map(([key, val]) => (
+                            <div key={key} className="px-2 py-1 bg-black/30 rounded text-[10px]">
+                              <span className="text-white/40">{key}:</span>
+                              <span className="text-green-400 ml-1 font-semibold">{val}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Unlock Condition */}
+                        <div className="flex items-center gap-2 text-[10px] text-amber-400/70">
+                          <Trophy className="w-3 h-3" />
+                          <span>{selectedCard.unlockCondition}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Quick Game Access - If game selected from bottom */}
+      {/* Selected Game Panel - Shows at bottom when game selected */}
       <AnimatePresence>
         {selectedGame && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
+            className="mt-4 pt-4 border-t border-white/10"
           >
-            <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Gamepad2 className="w-3 h-3 text-green-400" />
-              Selected Game
-            </h3>
-            <GameDetailPanel game={selectedGame} onClose={() => onSelectGame(null)} />
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Now Playing</h4>
+              <button onClick={() => onSelectGame(null)} className="text-white/30 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+              <img src={selectedGame.image || selectedGame.cover_image} alt={selectedGame.title} className="w-12 h-12 rounded object-cover" />
+              <div className="flex-1 min-w-0">
+                <h5 className="text-white font-semibold text-sm truncate">{selectedGame.title}</h5>
+                <p className="text-green-400 text-xs">{selectedGame.genre}</p>
+              </div>
+              <button className="px-4 py-2 bg-green-500 text-black font-bold text-xs uppercase rounded hover:bg-green-400 transition-colors">
+                Play
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
