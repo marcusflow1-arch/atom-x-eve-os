@@ -1352,7 +1352,7 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   };
 
   return (
-    <div className="flex flex-col h-32 w-28 flex-shrink-0">
+    <div className="flex flex-col h-64 w-32 flex-shrink-0">
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
