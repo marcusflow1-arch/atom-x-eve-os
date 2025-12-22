@@ -593,8 +593,8 @@ export default function Store() {
             style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
             
-            {/* Top Navigation Bar (Fixed Header) */}
-            <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-slate-900/80 backdrop-blur-md border-b border-transparent"
+            {/* Top Navigation Bar (Scrolls with page) */}
+            <div className="z-50 flex flex-col bg-slate-900/80 backdrop-blur-md border-b border-transparent flex-shrink-0"
                  style={{ borderBottomColor: 'transparent' }}>
                 
                 <div className="h-20 flex items-center justify-between px-8">
@@ -770,8 +770,7 @@ export default function Store() {
                 <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
             </div>
 
-            {/* Spacer for fixed header */}
-            <div style={{ height: `${HEADER_HEIGHT}px`, flexShrink: 0 }} />
+
 
             {/* App Drawer Overlay */}
             <AnimatePresence>
