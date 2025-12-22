@@ -1711,7 +1711,7 @@ function NewCardsSection({ upcomingCards }) {
                   <AchievementStyleCard
                     card={card}
                     isSelected={selectedCard?.id === card.id}
-                    onClick={() => setSelectedCard(card)}
+                    onClick={() => { setSelectedCard(card); setShowCardOverlay(true); }}
                     size="small"
                   />
                 </motion.div>
