@@ -2059,11 +2059,13 @@ export default function FocusModePanel() {
         </div>
 
         {/* Mini Genre Selector - Scroll to change games */}
-        <MiniGenreSelector 
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          gamesByGenre={gamesByGenre}
-        />
+        <div className="ml-2 md:ml-4">
+          <MiniGenreSelector 
+            activeGenre={activeGenre}
+            onGenreChange={setActiveGenre}
+            gamesByGenre={gamesByGenre}
+          />
+        </div>
 
         {/* Library Games - Changes based on genre scroll */}
         <div className="flex-1 min-w-0">
