@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Star, Trophy, Package, Zap, Crown, Users, Target, Sparkles, ArrowRight } from 'lucide-react';
+import { X, Star, Trophy, Package, Zap, Crown, Users, Target, Sparkles, ArrowRight, Clapperboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
