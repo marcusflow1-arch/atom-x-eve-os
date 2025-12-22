@@ -584,18 +584,15 @@ export default function Store() {
     const ITEM_GAP = 24;
     const CROSS_Y_VH = 40; // Intersection point in VH
 
-    // Header height (h-20 = 80px) + line (1px) = 81px
-    const HEADER_HEIGHT = 81;
-
     return (
         <div 
-            className="h-screen w-full relative text-white font-sans select-none flex flex-col"
+            className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
             style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
         >
             
-            {/* Top Navigation Bar (Scrolls with page) */}
-            <div className="z-50 flex flex-col bg-slate-900/80 backdrop-blur-md border-b border-transparent flex-shrink-0"
-                 style={{ borderBottomColor: 'transparent' }}>
+            {/* Top Navigation Bar (Translucent/Invisible) */}
+            <div className="absolute top-0 left-0 right-0 z-50 flex flex-col" 
+                 style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, transparent 100%)' }}> {/* Invisible bg as requested */}
                 
                 <div className="h-20 flex items-center justify-between px-8">
                 <div className="flex items-center gap-6">
@@ -770,8 +767,6 @@ export default function Store() {
                 <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
             </div>
 
-
-
             {/* App Drawer Overlay */}
             <AnimatePresence>
                 {drawerOpen && (
@@ -809,8 +804,7 @@ export default function Store() {
                 )}
             </AnimatePresence>
 
-            {/* MAIN CONTENT AREA - Scrollable below header */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            {/* MAIN CONTENT AREA */}
             <AnimatePresence mode="wait">
                 {storeMode === 'store' && storeSubView === 'achievements' ? (
                     <motion.div
@@ -818,7 +812,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full overflow-hidden"
+                        className="w-full h-full pt-20 overflow-hidden"
                     >
                         <Achievements onExitToLibrary={() => setStoreSubView('library')} />
                     </motion.div>
@@ -828,7 +822,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full overflow-hidden"
+                        className="w-full h-full pt-20 overflow-hidden"
                     >
                         <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
                     </motion.div>
@@ -840,7 +834,7 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full pb-0 bg-transparent"
+                            className="w-full h-full pt-20 pb-0 bg-transparent"
                         >
                             {/* Dynamic Background */}
                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -1140,7 +1134,7 @@ export default function Store() {
 
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20"> {/* pt-20 for header space */}
-
+                                    
                                     {/* Breadcrumb moved slightly down */}
                                     <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
                                         <div className="flex items-center gap-2">
@@ -1229,7 +1223,7 @@ export default function Store() {
                                         >
                                             {currentNavGenre.items.map((game, idx) => {
                                                 const isActive = idx === activeGameIndex;
-
+                                                
                                                 return (
                                                     <motion.div
                                                         key={game.id}
@@ -1310,9 +1304,9 @@ export default function Store() {
                                         </AnimatePresence>
                                     </div>
                                 </div>
-                                </>
-                                )}
-                                </motion.div>
+                            </>
+                        )}
+                    </motion.div>
                     ) // Closing viewMode check
                 ) : storeMode === 'marketplace' ? (
                     <motion.div
@@ -1320,7 +1314,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
                         <MarketplaceContent searchTerm={marketplaceSearchTerm} />
                     </motion.div>
@@ -1330,13 +1324,12 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-8"
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
                         <TradingPostContent />
                     </motion.div>
                 )}
             </AnimatePresence>
-            </div>
             {showScrollTransition && (
               <ScrollTransitionOverlay onComplete={() => {
                 const url = pendingNavigateUrl;

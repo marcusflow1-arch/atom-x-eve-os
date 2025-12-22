@@ -786,28 +786,28 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
-      {/* Adam and Eve Limited Edition - Dev Edition */}
-      <div 
-        className="relative rounded-2xl p-6 mb-6 overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(236, 72, 153, 0.2) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          boxShadow: '0 8px 32px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-        }}
-      >
-        {/* Animated background shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -skew-x-12 animate-pulse" style={{ animationDuration: '3s' }} />
-        
-        <div className="relative flex items-center justify-center gap-4">
-          <Sparkles className="w-6 h-6 text-purple-400" />
-          <h2 className="text-2xl md:text-3xl font-bold text-white text-center">
-            Adam and Eve, Limited Edition
-          </h2>
-          <Sparkles className="w-6 h-6 text-pink-400" />
-        </div>
-        <p className="text-center text-white/60 mt-2 text-sm">Dev Edition • Exclusive Collection</p>
+      {/* Secondary Navigation (moved from header) */}
+      <div className="flex items-center gap-2 px-6 py-3 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-2xl mb-8 overflow-x-auto scrollbar-hide">
+        {[
+          { name: 'Companions', icon: Ghost },
+          { name: 'Gear & Equipment', icon: Shield },
+          { name: 'Abilities & Skills', icon: Zap },
+          { name: 'Consumables', icon: Package },
+          { name: 'Crafting Materials', icon: Gem },
+          { name: 'Mounts & Vehicles', icon: Truck },
+        ].map((item) => (
+          <button 
+            key={item.name}
+            onClick={() => {
+              const target = item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name;
+              setFilters(prev => ({ ...prev, category: prev.category === target ? 'all' : target }));
+            }}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${filters.category === (item.name === 'Gear & Equipment' ? 'Gear' : item.name === 'Abilities & Skills' ? 'Abilities' : item.name === 'Crafting Materials' ? 'Materials' : item.name === 'Mounts & Vehicles' ? 'Mounts' : item.name) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <item.icon className="w-3.5 h-3.5" />
+            {item.name}
+          </button>
+        ))}
       </div>
 
       <div className="px-2 pb-6">
