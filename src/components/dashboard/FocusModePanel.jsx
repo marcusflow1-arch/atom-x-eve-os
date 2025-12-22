@@ -1521,32 +1521,16 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
                 <span className="text-amber-400 text-xs font-semibold">{upcomingCards.length} New</span>
               </div>
 
-              {/* Card Grid */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Card Grid - Using AchievementStyleCard with tilt effect */}
+              <div className="grid grid-cols-2 gap-4">
                 {upcomingCards.slice(0, 4).map((card) => (
-                  <motion.div
+                  <AchievementStyleCard
                     key={card.id}
+                    card={card}
+                    isSelected={selectedCard?.id === card.id}
                     onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                      selectedCard?.id === card.id 
-                        ? 'bg-white/10 border-green-500/50' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">{card.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <h5 className="text-white font-semibold text-xs truncate">{card.name}</h5>
-                        <span className={`text-[9px] uppercase tracking-wider ${
-                          card.rarity === 'Legendary' ? 'text-amber-400' :
-                          card.rarity === 'Epic' ? 'text-purple-400' : 'text-blue-400'
-                        }`}>{card.rarity}</span>
-                      </div>
-                    </div>
-                    <p className="text-white/40 text-[10px] line-clamp-2">{card.description}</p>
-                  </motion.div>
+                    size="medium"
+                  />
                 ))}
               </div>
 
