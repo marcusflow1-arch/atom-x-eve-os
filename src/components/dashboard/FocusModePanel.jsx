@@ -1745,10 +1745,25 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
   ];
 
   const tabs = [
-    { id: 'feed', label: 'Feed' },
-    { id: 'ai', label: 'AI Status' },
-    { id: 'cards', label: 'New Cards' },
-  ];
+      { id: 'feed', label: 'Feed' },
+      { id: 'ai', label: 'AI Status' },
+      { id: 'cards', label: 'New Cards' },
+    ];
+
+    // News items for the Feed (Steam-style timeline)
+    const newsItems = [
+      { id: 101, date: '2025-12-02', category: 'REGULAR UPDATE', title: 'ArtiO Arrives: Bear Goddess Update', subtitle: 'Dual stances, new Aspect, extensive balance', summary: 'A major balance patch lands with refined experience.', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800&h=450&fit=crop' },
+      { id: 102, date: '2025-11-26', category: 'ITEM / DISCOUNT', title: 'Black Friday Sale', subtitle: '25% off Diamond storewide', summary: 'Limited-time sale on bundles and cosmetics.', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=450&fit=crop' },
+      { id: 103, date: '2025-11-26', category: 'SMALL UPDATE', title: 'Client Hotfix 1.0.3', summary: 'Fixes party invites and reduces memory spikes.' },
+      { id: 104, date: '2025-11-18', category: 'REGULAR UPDATE', title: 'Da Ji Arrives | Nine-Tailed Vox Patch', subtitle: 'Rewards, performance fixes, UX polish.', summary: 'Content refresh modernizes early game routes.', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=450&fit=crop' },
+    ];
+
+    const groupedNews = useMemo(() => {
+      const by = newsItems.reduce((acc, n) => { (acc[n.date] = acc[n.date] || []).push(n); return acc; }, {});
+      return Object.keys(by)
+        .sort((a, b) => new Date(b) - new Date(a))
+        .map((d) => ({ date: d, items: by[d] }));
+    }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -1781,71 +1796,35 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-4"
+              className="space-y-6"
             >
-              {/* Featured Banner */}
-              <div className="relative rounded-lg overflow-hidden h-36 group cursor-pointer">
-                <img 
-                  src={featuredContent.image} 
-                  alt={featuredContent.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-                <div className="absolute top-3 left-3">
-                  <span className="px-2 py-0.5 bg-green-500 text-black text-[10px] font-bold uppercase tracking-wider rounded">
-                    {featuredContent.tag}
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <p className="text-white/50 text-[10px] uppercase tracking-wider">{featuredContent.subtitle}</p>
-                  <h3 className="text-white font-bold text-lg">{featuredContent.title}</h3>
-                  <p className="text-white/60 text-xs mt-0.5">{featuredContent.description}</p>
-                </div>
-              </div>
+              <style>{`
+                .date-chip { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(14px); border-radius: 9999px; }
+                .sep-line { height: 1px; background: rgba(255,255,255,0.12); }
+              `}</style>
 
-              {/* Updates List */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Recent Updates</h4>
-                  <button className="text-green-400 text-[10px] font-semibold hover:text-green-300">See All</button>
-                </div>
-                <div className="space-y-2">
-                  {updates.map((update) => (
-                    <div 
-                      key={update.id}
-                      className="flex items-center gap-3 p-3 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
-                    >
-                      <div className={`w-1 h-10 rounded-full ${update.color}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{update.category}</span>
-                          <span className="text-white/20">•</span>
-                          <span className="text-[9px] text-white/30">{update.time}</span>
-                        </div>
-                        <h5 className="text-white font-semibold text-sm group-hover:text-green-400 transition-colors">{update.title}</h5>
-                        <p className="text-white/40 text-xs truncate">{update.description}</p>
+              {/* Steam-like timeline grouped by date */}
+              <div className="space-y-8">
+                {groupedNews.map((section, idx) => {
+                  const d = new Date(section.date);
+                  const label = d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase();
+                  return (
+                    <div key={section.date} className="relative">
+                      {idx !== 0 && <div className="sep-line mb-3" />}
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="date-chip px-3 py-1 text-[11px] font-semibold text-white/90">{label}</span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+                      <div className="space-y-3">
+                        {section.items.map((item) => (
+                          <NewsItemCard key={item.id} item={item} onClick={setSelectedNews} />
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
 
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-white">47</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Cards Owned</p>
-                </div>
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-green-400">12</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Games Played</p>
-                </div>
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-purple-400">Lv.8</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Level</p>
-                </div>
-              </div>
+              <NewsDetailOverlay item={selectedNews} onClose={() => setSelectedNews(null)} />
             </motion.div>
           )}
 
