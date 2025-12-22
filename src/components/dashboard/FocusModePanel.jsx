@@ -124,6 +124,8 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
 
   const sizeClasses = size === 'small' 
     ? 'w-20 h-28' 
+    : size === 'medium'
+    ? 'w-28 h-40'
     : size === 'large' 
     ? 'w-40 h-56' 
     : 'w-28 h-40';
