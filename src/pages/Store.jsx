@@ -1311,9 +1311,8 @@ export default function Store() {
                                     </div>
                                 </div>
                                 </>
-                            </>
-                        )}
-                    </motion.div>
+                                )}
+                                </motion.div>
                     ) // Closing viewMode check
                 ) : storeMode === 'marketplace' ? (
                     <motion.div
