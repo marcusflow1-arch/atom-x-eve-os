@@ -770,6 +770,9 @@ export default function Store() {
                 <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
             </div>
 
+            {/* Spacer for fixed header */}
+            <div style={{ height: `${HEADER_HEIGHT}px`, flexShrink: 0 }} />
+
             {/* App Drawer Overlay */}
             <AnimatePresence>
                 {drawerOpen && (
