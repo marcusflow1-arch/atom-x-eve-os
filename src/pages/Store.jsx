@@ -1337,6 +1337,7 @@ export default function Store() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            </div>
             {showScrollTransition && (
               <ScrollTransitionOverlay onComplete={() => {
                 const url = pendingNavigateUrl;
