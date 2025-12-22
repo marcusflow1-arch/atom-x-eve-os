@@ -29,6 +29,7 @@ import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
 import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
+import Store from './pages/Store';
 import Storyline from './pages/Storyline';
 import StreamDetail from './pages/StreamDetail';
 import StreamWatch from './pages/StreamWatch';
@@ -36,7 +37,6 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Store from './pages/Store';
 import __Layout from './Layout.jsx';
 
 
@@ -72,6 +72,7 @@ export const PAGES = {
     "PlayerProfile": PlayerProfile,
     "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
+    "Store": Store,
     "Storyline": Storyline,
     "StreamDetail": StreamDetail,
     "StreamWatch": StreamWatch,
@@ -79,7 +80,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Store": Store,
 }
 
 export const pagesConfig = {
