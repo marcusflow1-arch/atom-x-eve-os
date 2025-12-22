@@ -12,6 +12,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
+import AchievementDetailOverlay from '../achievements/AchievementDetailOverlay';
 
 
 // Mock pinned games
