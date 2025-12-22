@@ -1797,12 +1797,16 @@ function NewCardsSection({ upcomingCards }) {
         </div>
       </div>
 
-      {/* Full Card Detail Overlay */}
+      {/* Full Card Detail Overlay (use Achievements translucent UI) */}
       <AnimatePresence>
-        {showCardOverlay && selectedCard && (
-          <CardDetailOverlay 
-            card={selectedCard} 
-            onClose={() => setShowCardOverlay(false)} 
+        {showCardOverlay && achievementFromCard && (
+          <AchievementDetailOverlay 
+            achievement={achievementFromCard}
+            onClose={() => setShowCardOverlay(false)}
+            onTrack={() => {}}
+            isTracked={false}
+            onShare={() => {}}
+            onChallenge={() => {}}
           />
         )}
       </AnimatePresence>
