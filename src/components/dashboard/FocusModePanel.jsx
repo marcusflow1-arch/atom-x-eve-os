@@ -22,75 +22,152 @@ const pinnedGames = [
   { id: 5, title: 'Neon Legends', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', lastPlayed: '2 days ago', progress: 55 },
 ];
 
-// Upcoming cards with achievement-style design
+// Upcoming cards with achievement-style design - organized by genre
 const upcomingCards = [
   { 
     id: 1, 
     name: 'Voidtech Slayer', 
     type: 'Ability', 
     rarity: 'Legendary', 
+    genre: 'RPG',
     game: 'Elden Ring: Nightreign', 
     icon: '⚔️',
     description: 'A devastating attack that rips through dimensional barriers, dealing massive damage to all enemies in a cone.',
     stats: { Power: 95, Cooldown: '12s', Range: 'Medium' },
-    unlockCondition: 'Complete "The Eternal Night" questline'
+    unlockCondition: 'Complete "The Eternal Night" questline',
+    releaseDate: 'Season 3',
+    lore: 'Forged in the void between worlds, this technique was mastered by the Nightreign Knights who guard the boundary between realms.'
   },
   { 
     id: 2, 
     name: 'Quantum Shield', 
     type: 'Equipment', 
     rarity: 'Epic', 
+    genre: 'Sci-Fi',
     game: 'Cyberpunk 2088', 
     icon: '🛡️',
     description: 'Advanced nano-tech protection from the Night City underworld. Absorbs incoming damage.',
     stats: { Defense: 78, Duration: '8s', Absorption: '40%' },
-    unlockCondition: 'Reach Cyberpunk genre level 15'
+    unlockCondition: 'Reach Cyberpunk genre level 15',
+    releaseDate: 'Season 3',
+    lore: 'Developed by Arasaka\'s black ops division, this shield creates a quantum probability field that deflects incoming projectiles.'
   },
   { 
     id: 3, 
     name: 'Arcane Surge', 
     type: 'Passive', 
     rarity: 'Rare', 
+    genre: 'RPG',
     game: 'Baldur\'s Gate 3', 
     icon: '✨',
     description: 'Channel the Weave to amplify magical abilities. Each spell increases power.',
     stats: { Bonus: '+25%', Stack: '5x', Duration: '10s' },
-    unlockCondition: 'Cast 1000 spells across RPG games'
+    unlockCondition: 'Cast 1000 spells across RPG games',
+    releaseDate: 'Available Now',
+    lore: 'The Weave responds to those who show dedication. Masters of this technique can feel the very fabric of magic bend to their will.'
   },
   { 
     id: 4, 
     name: 'Neon Rush', 
     type: 'Ability', 
     rarity: 'Epic', 
+    genre: 'Action',
     game: 'Neon Legends', 
     icon: '⚡',
     description: 'Burst of speed through the neon-lit streets. Become untargetable while dashing.',
     stats: { Speed: '+300%', Duration: '2s', Damage: '45' },
-    unlockCondition: 'Win 50 races in Action games'
+    unlockCondition: 'Win 50 races in Action games',
+    releaseDate: 'Season 3',
+    lore: 'Street racers who master this technique become living lightning, leaving only afterimages in their wake.'
   },
   { 
     id: 5, 
     name: 'Dragon\'s Breath', 
     type: 'Ability', 
     rarity: 'Legendary', 
+    genre: 'RPG',
     game: 'Dragon Age', 
     icon: '🔥',
     description: 'Unleash the fury of an ancient dragon, breathing fire in a massive area.',
     stats: { Power: 120, Area: 'Large', Burn: '6s' },
-    unlockCondition: 'Defeat 10 dragons across all games'
+    unlockCondition: 'Defeat 10 dragons across all games',
+    releaseDate: 'Season 4',
+    lore: 'Only those who have faced the mightiest beasts and emerged victorious can channel their primal fury.'
   },
   { 
     id: 6, 
     name: 'Shadow Step', 
     type: 'Ability', 
     rarity: 'Rare', 
+    genre: 'Action',
     game: 'Shadow Realm', 
     icon: '👁️',
     description: 'Teleport through shadows to strike from behind.',
     stats: { Range: '15m', Damage: '+50%', Cooldown: '8s' },
-    unlockCondition: 'Perform 500 stealth kills'
+    unlockCondition: 'Perform 500 stealth kills',
+    releaseDate: 'Available Now',
+    lore: 'The shadow realm exists in parallel to our own. Those attuned to its frequency can slip between worlds at will.'
+  },
+  { 
+    id: 7, 
+    name: 'Chrono Freeze', 
+    type: 'Ability', 
+    rarity: 'Legendary', 
+    genre: 'Sci-Fi',
+    game: 'Temporal Wars', 
+    icon: '⏱️',
+    description: 'Stop time in a localized area, freezing all enemies for 3 seconds.',
+    stats: { Duration: '3s', Area: '10m', Cooldown: '30s' },
+    unlockCondition: 'Complete all Sci-Fi genre challenges',
+    releaseDate: 'Season 4',
+    lore: 'Manipulating the fourth dimension requires immense focus. One wrong calculation and you cease to exist.'
+  },
+  { 
+    id: 8, 
+    name: 'Berserker Rage', 
+    type: 'Passive', 
+    rarity: 'Epic', 
+    genre: 'Action',
+    game: 'Viking Conquest', 
+    icon: '🪓',
+    description: 'Enter a frenzied state when health drops below 30%. Massive damage boost.',
+    stats: { Damage: '+100%', Defense: '-25%', Duration: 'Until healed' },
+    unlockCondition: 'Survive 100 near-death encounters',
+    releaseDate: 'Season 3',
+    lore: 'The old gods favor those who fight without fear of death. In this state, warriors become unstoppable forces of destruction.'
+  },
+  { 
+    id: 9, 
+    name: 'Starship Command', 
+    type: 'Equipment', 
+    rarity: 'Legendary', 
+    genre: 'Sci-Fi',
+    game: 'Stellar Odyssey', 
+    icon: '🚀',
+    description: 'Summon your personal starship for orbital support strikes.',
+    stats: { Damage: 200, Cooldown: '60s', Range: 'Global' },
+    unlockCondition: 'Own 5 Sci-Fi games',
+    releaseDate: 'Season 4',
+    lore: 'Command-linked neural interfaces allow pilots to call upon their vessels from anywhere in the galaxy.'
+  },
+  { 
+    id: 10, 
+    name: 'Nature\'s Wrath', 
+    type: 'Ability', 
+    rarity: 'Rare', 
+    genre: 'RPG',
+    game: 'Druid Chronicles', 
+    icon: '🌿',
+    description: 'Command the forces of nature to entangle and damage enemies.',
+    stats: { Damage: 45, Root: '4s', Area: 'Medium' },
+    unlockCondition: 'Complete 25 nature-themed quests',
+    releaseDate: 'Available Now',
+    lore: 'The earth remembers those who protect it. In times of need, it rises to defend its champions.'
   },
 ];
+
+// Card genres for filtering
+const CARD_GENRES = ['All', 'RPG', 'Action', 'Sci-Fi', 'Horror', 'Strategy'];
 
 const rarityStyles = {
   Common: { border: 'border-slate-400', glow: '', ring: 'ring-slate-400/30', text: 'text-slate-300' },
