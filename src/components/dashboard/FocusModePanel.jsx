@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
+import NewsItemCard from '../news/NewsItemCard';
+import NewsDetailOverlay from '../news/NewsDetailOverlay';
 
 
 // Mock pinned games
