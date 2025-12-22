@@ -1373,7 +1373,7 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
             >
               <span className={`font-medium transition-all duration-200 ${
                 isActive 
-                  ? 'text-cyan-300 text-[11px]' 
+                  ? 'text-cyan-300 text-sm' 
                   : hasGames
                     ? 'text-white/40 text-[11px]'
                     : 'text-white/15 text-[11px]'
