@@ -1352,7 +1352,7 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   };
 
   return (
-    <div className="flex flex-col h-64 w-28 flex-shrink-0">
+    <div className="flex flex-col h-32 w-28 flex-shrink-0">
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
@@ -1373,10 +1373,10 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
             >
               <span className={`font-medium transition-all duration-200 ${
                 isActive 
-                  ? 'text-cyan-300 text-sm' 
+                  ? 'text-cyan-300 text-xs' 
                   : hasGames
-                    ? 'text-white/40 text-xs'
-                    : 'text-white/15 text-[11px]'
+                    ? 'text-white/40 text-[10px]'
+                    : 'text-white/15 text-[10px]'
               }`}>
                 {genre}
               </span>
@@ -2049,22 +2049,26 @@ export default function FocusModePanel() {
       </AnimatePresence>
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex gap-4 pt-4 items-start">
-        {/* Left Column: Calendar then Today's Goals */}
-        <div className="flex-shrink-0 w-64 flex flex-col gap-3">
+      <div className="flex gap-4 pt-4">
+        {/* Time & Date with Mini Calendar */}
+        <div className="flex-shrink-0">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+        </div>
+
+        {/* Goals */}
+        <div className="flex-shrink-0 w-40">
           <GoalsPanel />
         </div>
 
-        {/* Mini Genre Selector - vertical scroller to the right */}
+        {/* Mini Genre Selector - Scroll to change games */}
         <MiniGenreSelector 
           activeGenre={activeGenre}
           onGenreChange={setActiveGenre}
           gamesByGenre={gamesByGenre}
         />
 
-        {/* Library Games - Expanded downward space */}
-        <div className="flex-1 min-w-0 min-h-[18rem]">
+        {/* Library Games - Changes based on genre scroll */}
+        <div className="flex-1 min-w-0">
           <LibraryGamesSection 
             activeGenre={activeGenre}
             gamesByGenre={gamesByGenre}
