@@ -1587,75 +1587,9 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
           )}
 
           {activeTab === 'cards' && (
-            <motion.div
-              key="cards"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-4"
-            >
-              {/* Cards Header */}
-              <div className="flex items-center justify-between">
-                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Available This Season</h4>
-                <span className="text-amber-400 text-xs font-semibold">{upcomingCards.length} New</span>
-              </div>
-
-              {/* Card Grid - Using AchievementStyleCard with tilt effect */}
-              <div className="grid grid-cols-2 gap-4">
-                {upcomingCards.slice(0, 4).map((card) => (
-                  <AchievementStyleCard
-                    key={card.id}
-                    card={card}
-                    isSelected={selectedCard?.id === card.id}
-                    onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
-                    size="medium"
-                  />
-                ))}
-              </div>
-
-              {/* Selected Card Detail */}
-              <AnimatePresence>
-                {selectedCard && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="p-4 bg-gradient-to-br from-white/[0.05] to-transparent rounded-lg border border-white/10"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">{selectedCard.icon}</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-white font-bold">{selectedCard.name}</h4>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                            selectedCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300' :
-                            selectedCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300' :
-                            'bg-blue-500/20 text-blue-300'
-                          }`}>{selectedCard.rarity}</span>
-                        </div>
-                        <p className="text-white/60 text-xs mb-3">{selectedCard.description}</p>
-                        
-                        {/* Stats */}
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {Object.entries(selectedCard.stats).map(([key, val]) => (
-                            <div key={key} className="px-2 py-1 bg-black/30 rounded text-[10px]">
-                              <span className="text-white/40">{key}:</span>
-                              <span className="text-green-400 ml-1 font-semibold">{val}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Unlock Condition */}
-                        <div className="flex items-center gap-2 text-[10px] text-amber-400/70">
-                          <Trophy className="w-3 h-3" />
-                          <span>{selectedCard.unlockCondition}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+            <NewCardsSection 
+              upcomingCards={upcomingCards}
+            />
           )}
         </AnimatePresence>
       </div>
