@@ -642,9 +642,7 @@ function LayoutContent({ children, currentPageName }) {
         );
       })()}
 
-      {showLunaHeaderBar && (
-                    <div className="fixed inset-x-0 top-0 h-20 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 z-20 pointer-events-none" />
-                  )}
+      {/* Removed Luna header bar - now part of page content for seamless animation */}
 
       {showLunaHeaderBar && (
         <div className="fixed top-4 right-4 z-40 flex items-center gap-4">
