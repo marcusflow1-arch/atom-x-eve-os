@@ -1719,6 +1719,7 @@ function NewCardsSection({ upcomingCards }) {
 function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   // Featured content
   const featuredContent = {
