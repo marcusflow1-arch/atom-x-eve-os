@@ -1,4 +1,5 @@
 import AIConsole from './pages/AIConsole';
+import AINews from './pages/AINews';
 import AbilityAchievements from './pages/AbilityAchievements';
 import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
@@ -22,6 +23,7 @@ import InstallApp from './pages/InstallApp';
 import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
+import News from './pages/News';
 import Notifications from './pages/Notifications';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
@@ -36,13 +38,12 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import AINews from './pages/AINews';
-import News from './pages/News';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AIConsole": AIConsole,
+    "AINews": AINews,
     "AbilityAchievements": AbilityAchievements,
     "Achievements": Achievements,
     "AdamXEve": AdamXEve,
@@ -66,6 +67,7 @@ export const PAGES = {
     "Library": Library,
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
+    "News": News,
     "Notifications": Notifications,
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
@@ -80,8 +82,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "AINews": AINews,
-    "News": News,
 }
 
 export const pagesConfig = {

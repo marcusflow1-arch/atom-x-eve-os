@@ -159,7 +159,9 @@ function LayoutContent({ children, currentPageName }) {
 
           .page-container {
             height: 100%;
+            min-height: 130vh; /* Make pages ~30% longer */
             overflow-y: auto;
+            padding-top: 6rem; /* Push content below fixed header/hamburger */
           }
 
           *:focus {
