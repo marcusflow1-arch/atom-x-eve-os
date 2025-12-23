@@ -749,15 +749,15 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                    </div>
                                </div>
 
-                               {/* Right: Detail Panel */}
+                               {/* Right: Detail Panel - Full Height */}
                                 <div className="flex-1 flex flex-col overflow-hidden">
                                     {selectedItem ? (
-                                        <div className="flex-1 flex p-6 gap-6 overflow-hidden">
-                                            {/* Left Column: Card + Actions */}
-                                            <div className="flex flex-col items-center flex-shrink-0 w-56">
-                                                {/* Large Card - Moved up */}
+                                        <div className="flex-1 flex p-4 gap-6 overflow-hidden">
+                                            {/* Left Column: Larger Card + Actions - Full Height */}
+                                            <div className="flex flex-col items-center flex-shrink-0 w-64">
+                                                {/* Larger Card - Takes more vertical space */}
                                                 <div 
-                                                    className={`w-48 h-64 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
+                                                    className={`w-56 h-80 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
                                                     style={{
                                                         background: `linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)`,
                                                         boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
@@ -774,7 +774,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
 
                                                     {/* Enchant Level Indicator */}
                                                     {enchantLevel > 0 && (
-                                                        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold ${
+                                                        <div className={`absolute top-3 right-3 px-2.5 py-1.5 rounded-lg text-sm font-bold ${
                                                             enchantLevel >= 96 ? 'bg-rose-500 text-white' :
                                                             enchantLevel >= 72 ? 'bg-orange-500 text-white' :
                                                             enchantLevel >= 48 ? 'bg-purple-500 text-white' :
@@ -785,22 +785,22 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                         </div>
                                                     )}
 
-                                                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                        <div className="text-base font-black text-white mb-1">{selectedItem.name}</div>
+                                                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                                                        <div className="text-lg font-black text-white mb-1">{selectedItem.name}</div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className={`text-xs font-bold ${rarityStyles[selectedItem.rarity].color}`}>{selectedItem.rarity}</span>
-                                                            <span className="text-xs text-slate-400">Lv.{selectedItem.level_requirement}</span>
+                                                            <span className={`text-sm font-bold ${rarityStyles[selectedItem.rarity].color}`}>{selectedItem.rarity}</span>
+                                                            <span className="text-sm text-slate-400">Lv.{selectedItem.level_requirement}</span>
                                                         </div>
                                                     </div>
                                                     {/* Corner decorations */}
-                                                    <div className={`absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-tl-lg`} />
-                                                    <div className={`absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-tr-lg`} />
-                                                    <div className={`absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-lg`} />
-                                                    <div className={`absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-lg`} />
+                                                    <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-tl-xl`} />
+                                                    <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-tr-xl`} />
+                                                    <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-xl`} />
+                                                    <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-xl`} />
                                                 </div>
 
                                                 {/* Action Buttons - 2x2 Grid below card */}
-                                                <div className="grid grid-cols-2 gap-2 mt-4 w-48">
+                                                <div className="grid grid-cols-2 gap-3 mt-5 w-56">
                                                     {[
                                                         { id: 'enchant', icon: Sparkles, label: 'Enchant', color: 'text-blue-400', bg: 'bg-blue-500/10', activeBg: 'bg-blue-500/20', borderActive: 'border-blue-500/50' },
                                                         { id: 'combine', icon: ArrowLeftRight, label: 'Combine', color: 'text-purple-400', bg: 'bg-purple-500/10', activeBg: 'bg-purple-500/20', borderActive: 'border-purple-500/50' },
@@ -810,21 +810,21 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                         <button
                                                             key={action.id}
                                                             onClick={() => setActiveAction(action.id)}
-                                                            className={`flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all border ${
+                                                            className={`flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl transition-all border ${
                                                                 activeAction === action.id 
                                                                     ? `${action.activeBg} ${action.borderActive} ${action.color}` 
                                                                     : `${action.bg} border-white/10 text-slate-400 hover:text-white hover:border-white/20`
                                                             }`}
                                                         >
                                                             <action.icon className="w-5 h-5" />
-                                                            <span className="text-[10px] font-semibold">{action.label}</span>
+                                                            <span className="text-xs font-semibold">{action.label}</span>
                                                         </button>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            {/* Right: Dynamic Action Panel */}
-                                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                            {/* Right: Dynamic Action Panel - More Space */}
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                                                 <AnimatePresence mode="wait">
                                                     {activeAction === 'enchant' && (
                                                         <motion.div
