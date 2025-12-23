@@ -2097,9 +2097,9 @@ export default function FocusModePanel() {
       {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) + Calendar & Goals below */}
-        <div className="w-[300px] flex-shrink-0 flex flex-col">
+        <div className="w-[260px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
-          <div className="relative flex-1 min-h-[300px]">
+          <div className="relative flex-1 min-h-[260px]">
             {/* Invisible boundary - 3D viewer floats above this space */}
           </div>
           
