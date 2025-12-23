@@ -1468,8 +1468,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
-        {/* Content Area - List or Grid View */}
-        {viewMode === 'list' ? (
+        {/* Content Area - List View (default) */}
+        {viewMode === 'list' && (
           <div className="flex-1 min-h-[calc(100vh-200px)]">
             <LunaGamePanel
               game={selectedGame}
@@ -1480,15 +1480,115 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               onShowGameDetails={() => setShowGameDetailsOverlay(true)}
             />
           </div>
-        ) : (
-          <LibraryGridView
-            games={filteredGames}
-            onLaunchGame={handleLaunchGame}
-            onStreamGame={handleStreamGame}
-            onSwitchToAchievements={() => setEmbeddedView('achievements')}
-          />
         )}
       </div>
+
+      {/* Grid View - Full Screen Overlay (below header) */}
+      {viewMode === 'grid' && (
+        <div className="fixed top-0 left-0 right-0 bottom-0 z-30 bg-slate-900 flex flex-col">
+          {/* Top Header Bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0" style={{ background: 'rgba(15, 23, 42, 0.95)' }}>
+            {/* Left - Logo & Nav */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <button className="p-2 hover:bg-white/10 rounded-lg transition-all">
+                  <div className="flex flex-col gap-1">
+                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                    <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                  </div>
+                </button>
+                <span className="text-white font-bold text-lg">Atom X Eve Library</span>
+              </div>
+              
+              {/* Category Tabs */}
+              <div className="flex items-center gap-1">
+                <button className="px-4 py-1.5 rounded-full bg-blue-500 text-white text-sm font-medium">
+                  Games
+                </button>
+                <button className="px-4 py-1.5 rounded-full text-white/60 hover:text-white text-sm font-medium transition-all">
+                  Marketplace
+                </button>
+                <button className="px-4 py-1.5 rounded-full text-white/60 hover:text-white text-sm font-medium transition-all">
+                  Trading Post
+                </button>
+              </div>
+            </div>
+
+            {/* Right - Search & Cart */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-48 bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20"
+                />
+              </div>
+              <button className="p-2 hover:bg-white/10 rounded-lg transition-all">
+                <ShoppingCart className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary Header - Achievements & Search/View Toggle */}
+          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: 'rgba(20, 30, 45, 0.8)' }}>
+            {/* Left - Achievements Button */}
+            <button
+              onClick={() => setEmbeddedView('achievements')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-all"
+            >
+              <Trophy className="w-4 h-4" />
+              <span className="text-sm font-medium">Achievements</span>
+            </button>
+
+            {/* Right - Search & View Toggle */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-48 bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20"
+                />
+                <button className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Mic className="w-4 h-4 text-white/30 hover:text-white/60 transition-all" />
+                </button>
+              </div>
+              
+              {/* View Toggle */}
+              <div className="flex items-center border border-white/10 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Content */}
+          <div className="flex-1 overflow-hidden">
+            <LibraryGridView
+              games={filteredGames}
+              onLaunchGame={handleLaunchGame}
+              onStreamGame={handleStreamGame}
+              onSwitchToAchievements={() => setEmbeddedView('achievements')}
+            />
+          </div>
+        </div>
+      )}
 
 
 
