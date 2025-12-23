@@ -1360,7 +1360,7 @@ const ALL_GENRES = [
   'Abstract'
 ];
 
-// Compact Vertical Genre Scroll Selector (next to Library)
+// Compact Vertical Genre Scroll Selector (next to Library) - Fixed height showing ~7 items
 function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
@@ -1385,18 +1385,18 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   };
 
   return (
-    <div className="flex flex-col w-28 flex-shrink-0 h-full">
+    <div className="flex flex-col w-28 flex-shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-white/50 text-[9px] font-bold uppercase tracking-wider">Genres</h3>
       </div>
       
-      {/* Vertical Scroll Genre List */}
+      {/* Vertical Scroll Genre List - Fixed height for ~7 items */}
       <div 
         ref={scrollRef}
         onWheel={handleWheel}
-        className="flex-1 overflow-y-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="overflow-y-auto"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '168px' }}
       >
         {displayGenres.map((genre) => {
           const gameCount = gamesByGenre[genre]?.length || 0;
