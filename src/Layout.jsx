@@ -81,7 +81,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan'].some(s => location.pathname.toLowerCase().includes(s));
+  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan','/community'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
@@ -592,7 +592,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                               </button>
 
                                                                               <button
-                                                                                onClick={() => navigate(createPageUrl('Community'))}
+                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
                                                                                 className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
                                                                                   location.pathname.toLowerCase().includes('/community')
                                                                                     ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
@@ -601,7 +601,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                               >
                                                                                 <span className="flex items-center gap-2">
                                                                                   <MessageSquare className="w-4 h-4" />
-                                                                                  Forum
+                                                                                  {location.pathname.toLowerCase().includes('/community') ? 'Dashboard' : 'Forum'}
                                                                                 </span>
                                                                               </button>
                                                                               </div>
