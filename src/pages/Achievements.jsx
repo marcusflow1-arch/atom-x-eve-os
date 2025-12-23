@@ -18,26 +18,23 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-// --- Achievements Cross Menu Component (Grid View) ---
+// --- Achievements Cross Menu Component (Grid View - Store Style) ---
 const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeoutRef = useRef(null);
-  const cardScrollRef = useRef(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  const ITEM_HEIGHT = 100;
-  const ITEM_GAP = 16;
+  const ITEM_HEIGHT = 80;
+  const ITEM_GAP = 24;
   const CROSS_Y_VH = 40;
 
-  const selectedGame = games[activeIndex];
+  const selectedGame = games[activeGameIndex];
 
   // Generate cards for selected game
   const tradingCards = useMemo(() => {
     if (!selectedGame) return [];
     const gameAchievements = localAchievements[selectedGame.title] || [];
     
-    // Combine achievements with generated cards
     const cards = gameAchievements.map((ach, i) => ({
       id: ach.id || `ach-${selectedGame.id}-${i}`,
       title: ach.title,
@@ -52,7 +49,6 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) 
       achievementData: ach
     }));
 
-    // Add some trading cards if achievements are sparse
     if (cards.length < 8) {
       for (let i = cards.length; i < 8; i++) {
         cards.push({
@@ -72,88 +68,91 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) 
     return cards;
   }, [selectedGame, localAchievements]);
 
-  const selectedCard = tradingCards[activeCardIndex];
+  const activeCard = tradingCards[activeCardIndex];
 
-  // Handle wheel scroll for games (vertical)
-  const handleGameScroll = (e) => {
-    e.preventDefault();
-    setIsScrolling(true);
-    
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    
-    if (e.deltaY > 0 && activeIndex < games.length - 1) {
-      setActiveIndex(prev => prev + 1);
-      setActiveCardIndex(0); // Reset card selection when changing game
-    } else if (e.deltaY < 0 && activeIndex > 0) {
-      setActiveIndex(prev => prev - 1);
-      setActiveCardIndex(0);
-    }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
-      setIsScrolling(false);
-    }, 300);
-  };
-
-  // Handle horizontal scroll for cards
-  const handleCardScroll = (e) => {
-    e.preventDefault();
-    if (e.deltaX > 0 || e.deltaY > 0) {
-      if (activeCardIndex < tradingCards.length - 1) {
-        setActiveCardIndex(prev => prev + 1);
-      }
-    } else if (e.deltaX < 0 || e.deltaY < 0) {
-      if (activeCardIndex > 0) {
-        setActiveCardIndex(prev => prev - 1);
-      }
-    }
-  };
-
-  // Keyboard navigation
+  // Keyboard + Wheel Navigation (Store-style)
   useEffect(() => {
+    let lastWheelTime = 0;
+    const WHEEL_COOLDOWN = 150;
+
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowDown' || e.key === 's') {
+      if (isNavigating || games.length === 0) return;
+      const key = e.key.toLowerCase();
+
+      if (key === 'arrowup' || key === 'w') {
         e.preventDefault();
-        setIsScrolling(true);
-        if (activeIndex < games.length - 1) {
-          setActiveIndex(prev => prev + 1);
+        if (activeGameIndex > 0) {
+          setActiveGameIndex(prev => prev - 1);
           setActiveCardIndex(0);
         }
-        setTimeout(() => setIsScrolling(false), 300);
-      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+      } else if (key === 'arrowdown' || key === 's') {
         e.preventDefault();
-        setIsScrolling(true);
-        if (activeIndex > 0) {
-          setActiveIndex(prev => prev - 1);
+        if (activeGameIndex < games.length - 1) {
+          setActiveGameIndex(prev => prev + 1);
           setActiveCardIndex(0);
         }
-        setTimeout(() => setIsScrolling(false), 300);
-      } else if (e.key === 'ArrowRight' || e.key === 'd') {
-        e.preventDefault();
-        if (activeCardIndex < tradingCards.length - 1) {
-          setActiveCardIndex(prev => prev + 1);
-        }
-      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+      } else if (key === 'arrowleft' || key === 'a') {
         e.preventDefault();
         if (activeCardIndex > 0) {
           setActiveCardIndex(prev => prev - 1);
         }
-      } else if (e.key === 'Enter') {
-        if (selectedCard) {
-          onCardClick(selectedCard);
+      } else if (key === 'arrowright' || key === 'd') {
+        e.preventDefault();
+        if (activeCardIndex < tradingCards.length - 1) {
+          setActiveCardIndex(prev => prev + 1);
+        }
+      } else if (key === 'enter') {
+        e.preventDefault();
+        if (activeCard) {
+          onCardClick(activeCard);
+        }
+      }
+    };
+
+    const handleWheel = (e) => {
+      if (isNavigating || games.length === 0) return;
+      const now = Date.now();
+      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
+        // Horizontal (Cards)
+        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+          if (activeCardIndex < tradingCards.length - 1) {
+            setActiveCardIndex(prev => prev + 1);
+            lastWheelTime = now;
+          }
+        } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
+          if (activeCardIndex > 0) {
+            setActiveCardIndex(prev => prev - 1);
+            lastWheelTime = now;
+          }
+        }
+      } else {
+        // Vertical (Games)
+        if (e.deltaY > 0) {
+          if (activeGameIndex < games.length - 1) {
+            setActiveGameIndex(prev => prev + 1);
+            setActiveCardIndex(0);
+            lastWheelTime = now;
+          }
+        } else if (e.deltaY < 0) {
+          if (activeGameIndex > 0) {
+            setActiveGameIndex(prev => prev - 1);
+            setActiveCardIndex(0);
+            lastWheelTime = now;
+          }
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      window.removeEventListener('wheel', handleWheel);
     };
-  }, [activeIndex, activeCardIndex, games.length, tradingCards.length, selectedCard, onCardClick]);
+  }, [activeGameIndex, activeCardIndex, games.length, tradingCards.length, activeCard, onCardClick, isNavigating]);
 
   const rarityColors = {
     Common: "border-slate-500/50 text-slate-400",
@@ -164,207 +163,220 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) 
     Mythic: "border-red-500/50 text-red-400"
   };
 
+  if (games.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <p className="text-white/50">No games found</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-140px)] relative">
-      {/* Background - Selected Card Image */}
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Dynamic Background - Changes based on active card */}
       <AnimatePresence mode="wait">
-        {selectedCard && (
-          <motion.div
-            key={selectedCard.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 z-0"
-          >
-            <img 
-              src={selectedCard.image} 
-              alt="" 
-              className="w-full h-full object-cover opacity-20 blur-sm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/60" />
-          </motion.div>
-        )}
+        <motion.div 
+          key={activeCard?.id || selectedGame?.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0 z-0"
+        >
+          <div className="absolute inset-0 bg-transparent" />
+          
+          {(activeCard?.image || selectedGame?.cover_image) && (
+            <>
+              <img 
+                src={activeCard?.image || selectedGame?.cover_image || selectedGame?.cover} 
+                alt="bg" 
+                className="w-full h-full object-cover opacity-40 blur-sm scale-105" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+            </>
+          )}
+          
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-yellow-600/10 rounded-full blur-[150px] mix-blend-screen" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        </motion.div>
       </AnimatePresence>
 
-      {/* Left Side - Scrolling Game Boxes */}
-      <div 
-        className="relative w-40 h-full flex items-center overflow-hidden flex-shrink-0 z-10"
-        onWheel={handleGameScroll}
-      >
-        <motion.div
-          className="absolute left-4 flex flex-col gap-4"
-          animate={{ 
-            y: `calc(${CROSS_Y_VH}vh - ${activeIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px - 70px)`,
-            opacity: isScrolling ? 0.5 : 1
-          }}
-          transition={{ 
-            y: { type: "spring", stiffness: 250, damping: 25 },
-            opacity: { duration: 0.15 }
-          }}
-        >
-          {games.map((game, idx) => {
-            const isActive = idx === activeIndex;
-            return (
-              <motion.div
-                key={game.id}
-                onClick={() => {
-                  setActiveIndex(idx);
-                  setActiveCardIndex(0);
-                }}
-                animate={{ 
-                  scale: isActive ? 1.1 : 0.85,
-                  opacity: isActive ? 1 : 0.4,
-                  x: isActive ? 16 : 0
-                }}
-                className={`
-                  w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden relative
-                  ${isActive 
-                    ? 'ring-2 ring-yellow-400/60 shadow-[0_0_25px_rgba(250,204,21,0.3)]' 
-                    : 'border border-white/10'
-                  }
-                `}
-              >
-                <img 
-                  src={game.cover_image || game.cover} 
-                  alt={game.title}
-                  className="w-full h-full object-cover"
-                />
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </div>
+      {/* Interface Layer */}
+      <div className="relative z-10 w-full h-full">
+        
+        {/* Breadcrumb */}
+        <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4" />
+            <span>Achievements</span>
+          </div>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-white">{selectedGame?.title || 'Select Game'}</span>
+        </div>
 
-      {/* Vertical Line */}
-      <div className="w-px h-full bg-white/10 flex-shrink-0 z-10" />
+        {/* VERTICAL AXIS (Games) - Like Genres in Store */}
+        <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
+          <motion.div 
+            className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+            animate={{ 
+              y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
+            }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+          >
+            {games.map((game, idx) => {
+              const isActive = idx === activeGameIndex;
+              return (
+                <motion.div
+                  key={game.id}
+                  onClick={() => {
+                    setActiveGameIndex(idx);
+                    setActiveCardIndex(0);
+                  }}
+                  animate={{ 
+                    scale: isActive ? 1.2 : 0.9,
+                    opacity: isActive ? 1 : 0.3,
+                    x: isActive ? 20 : 0
+                  }}
+                  className="flex flex-col items-center gap-2 cursor-pointer w-32"
+                >
+                  <div className={`
+                    w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden
+                    ${isActive 
+                      ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
+                      : 'border border-white/10 backdrop-blur-sm'
+                    }
+                  `}>
+                    <img 
+                      src={game.cover_image || game.cover} 
+                      alt={game.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
+                    {game.title}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
 
-      {/* Right Side - Cards Horizontal Scroll */}
-      <div 
-        ref={cardScrollRef}
-        className="flex-1 pl-8 overflow-hidden flex flex-col z-10"
-        onWheel={handleCardScroll}
-      >
-        {selectedGame && (
-          <>
-            {/* Game Title */}
-            <div className="mb-4 flex-shrink-0">
-              <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">
-                {selectedGame.genre}
-              </Badge>
-              <h2 className="text-2xl font-black text-white">{selectedGame.title}</h2>
-              <p className="text-white/40 text-sm">{tradingCards.length} Cards Available</p>
-            </div>
+        {/* HORIZONTAL AXIS (Cards) - Like Games in Store */}
+        <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+          <motion.div 
+            className="flex items-center gap-8 pl-64 pointer-events-auto"
+            animate={{ 
+              x: -activeCardIndex * (200 + 32)
+            }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+          >
+            {tradingCards.map((card, idx) => {
+              const isActive = idx === activeCardIndex;
+              
+              return (
+                <motion.div
+                  key={card.id}
+                  onClick={() => {
+                    setActiveCardIndex(idx);
+                    if (isActive) onCardClick(card);
+                  }}
+                  animate={{ 
+                    scale: isActive ? 1.1 : 0.9,
+                    opacity: isActive ? 1 : 0.4,
+                    y: isActive ? 0 : 20
+                  }}
+                  className={`
+                    w-[200px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                    border transition-all duration-300 shadow-2xl
+                    ${isActive 
+                      ? 'border-white/40 shadow-yellow-500/20' 
+                      : 'border-white/5 bg-black/40'
+                    }
+                  `}
+                  style={{
+                    background: 'rgba(20, 25, 35, 0.9)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                >
+                  {/* Card Image */}
+                  <div className="absolute inset-0">
+                    <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className="absolute top-3 right-3 text-3xl drop-shadow-lg">{card.icon}</div>
+                  
+                  {/* Rarity Badge */}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="outline" className={`text-[10px] px-2 py-0.5 border backdrop-blur-md ${rarityColors[card.rarity] || rarityColors.Common}`}>
+                      {card.rarity}
+                    </Badge>
+                  </div>
 
-            {/* Cards Horizontal Carousel */}
-            <div className="flex-1 flex items-center overflow-hidden">
-              <motion.div
-                className="flex gap-6"
-                animate={{
-                  x: -activeCardIndex * 220
-                }}
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-              >
-                {tradingCards.map((card, idx) => {
-                  const isActive = idx === activeCardIndex;
-                  return (
-                    <motion.div
-                      key={card.id}
-                      onClick={() => {
-                        setActiveCardIndex(idx);
-                        if (isActive) onCardClick(card);
-                      }}
-                      animate={{
-                        scale: isActive ? 1.1 : 0.9,
-                        opacity: isActive ? 1 : 0.5,
-                        y: isActive ? -10 : 0
-                      }}
-                      whileHover={{ scale: isActive ? 1.15 : 0.95 }}
-                      className={`
-                        w-48 h-72 rounded-xl cursor-pointer flex-shrink-0 overflow-hidden relative
-                        ${isActive 
-                          ? 'ring-2 ring-yellow-400/60 shadow-[0_0_30px_rgba(250,204,21,0.3)]' 
-                          : 'border border-white/10'
-                        }
-                      `}
-                      style={{
-                        background: 'rgba(20, 25, 35, 0.9)',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                    >
-                      {/* Card Content */}
-                      <div className="absolute inset-0 flex flex-col p-3">
-                        {/* Card Image */}
-                        <div className="relative w-full h-2/3 rounded-lg overflow-hidden mb-2 border border-white/10">
-                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <div className="absolute top-2 right-2 text-2xl">{card.icon}</div>
-                        </div>
-                        
-                        {/* Card Info */}
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                            <div className="flex gap-1 flex-wrap">
-                              <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${rarityColors[card.rarity] || rarityColors.Common}`}>
-                                {card.rarity}
-                              </Badge>
-                              {card.isAchievement && (
-                                <Badge variant="outline" className="text-[9px] h-4 px-1 border-yellow-500/50 text-yellow-400">
-                                  {card.points} pts
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Selected Glow */}
-                      {isActive && (
-                        <motion.div
-                          className="absolute inset-0 pointer-events-none"
-                          animate={{
-                            boxShadow: [
-                              'inset 0 0 20px rgba(250, 204, 21, 0.2)',
-                              'inset 0 0 40px rgba(250, 204, 21, 0.4)',
-                              'inset 0 0 20px rgba(250, 204, 21, 0.2)'
-                            ]
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
+                  {/* Card Info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h4 className="text-white font-bold text-sm truncate mb-1">{card.title}</h4>
+                    <div className="flex items-center justify-between text-xs text-white/50">
+                      <span>{card.category}</span>
+                      {card.isAchievement && (
+                        <span className="text-yellow-400 font-bold">{card.points} pts</span>
                       )}
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </div>
-
-            {/* Selected Card Preview */}
-            {selectedCard && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">{selectedCard.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-lg">{selectedCard.title}</h3>
-                    <p className="text-white/50 text-sm mb-2">{selectedCard.description}</p>
-                    <div className="flex items-center gap-3">
-                      <Badge className={`${rarityColors[selectedCard.rarity]}`}>{selectedCard.rarity}</Badge>
-                      <span className="text-yellow-400 text-sm font-bold">{selectedCard.points} pts</span>
-                      <span className="text-white/30 text-xs">Click to view details</span>
                     </div>
                   </div>
+                  
+                  {!isActive && <div className="absolute inset-0 bg-black/50" />}
+                  {isActive && (
+                    <motion.div 
+                      layoutId="card-active-border"
+                      className="absolute inset-0 border-4 border-yellow-400/60 rounded-xl z-20" 
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+
+        {/* ACTIVE CARD DETAILS - Bottom Left */}
+        <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
+          <AnimatePresence mode="wait">
+            {activeCard && (
+              <motion.div
+                key={activeCard.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                    {selectedGame?.genre}
+                  </Badge>
+                  <Badge className={`backdrop-blur-md ${rarityColors[activeCard.rarity]}`}>
+                    {activeCard.rarity}
+                  </Badge>
+                  {activeCard.isAchievement && (
+                    <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/40">
+                      {activeCard.points} pts
+                    </Badge>
+                  )}
                 </div>
+                <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl">
+                  {activeCard.title}
+                </h1>
+                <p className="text-lg text-white/70 line-clamp-3 max-w-xl drop-shadow-md">
+                  {activeCard.description}
+                </p>
+                <p className="text-sm text-white/40">Press Enter or Click to view details</p>
               </motion.div>
             )}
-          </>
-        )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
