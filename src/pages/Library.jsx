@@ -1109,30 +1109,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           </div>
         </div>
 
-        {/* Filter Tabs (List View Only) */}
-        {viewMode === 'list' && (
-        <div className="flex items-center gap-6 mb-8">
-          {['all', 'installed', 'favorites'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`text-sm font-medium transition-colors capitalize pb-2 relative ${
-                activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              {tab === 'favorites' && <Heart className="w-4 h-4 inline mr-2" />}
-              {tab}
-              {activeTab === tab && (
-                <motion.div 
-                  layoutId="activeLibraryTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400"
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-        )}
+
 
         {/* Transitional Menu Overlay */}
         <AnimatePresence>
