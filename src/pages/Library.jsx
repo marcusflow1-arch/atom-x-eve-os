@@ -1055,8 +1055,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
-        {(
-          <div className="flex gap-6">
+        <div className="flex gap-6">
             {/* Left Sidebar - Game List */}
             <div className="w-80 flex-shrink-0">
               <ShinySidebarBox className="p-4 h-full">
