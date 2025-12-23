@@ -830,6 +830,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                 }`}
+                title="Grid View"
               >
                 <Grid className="w-4 h-4" />
               </button>
@@ -838,8 +839,18 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                 }`}
+                title="List View"
               >
                 <List className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('cross')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'cross' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                }`}
+                title="Cross View"
+              >
+                <Gamepad2 className="w-4 h-4" />
               </button>
             </div>
           </div>
