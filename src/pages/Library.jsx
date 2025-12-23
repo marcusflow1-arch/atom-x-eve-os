@@ -1089,7 +1089,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               />
             </div>
           </div>
-        )}
       </div>
 
 
