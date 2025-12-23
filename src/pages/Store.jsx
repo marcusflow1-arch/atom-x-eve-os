@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import MarketplaceContent from '../components/store/MarketplaceContent';
 import TradingPostContent from '../components/store/TradingPostContent';
-import { ALL_NAV_ITEMS } from '../components/dashboard/NavigationConfig';
+import { NAV_HIERARCHY } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
@@ -823,12 +823,12 @@ export default function Store() {
                             onClick={() => setDrawerOpen(false)}
                         />
                         <motion.div
-                            initial={{ x: -300, opacity: 0 }}
+                            initial={{ x: -320, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -300, opacity: 0 }}
+                            exit={{ x: -320, opacity: 0 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 left-0 bottom-0 w-72 border-r z-50 p-6 shadow-2xl"
-                            style={{
+                            className="fixed top-0 left-0 bottom-0 w-80 z-50 flex flex-col rounded-r-3xl"
+                            style={{ 
                               background: 'rgba(100, 120, 140, 0.12)',
                               backdropFilter: 'blur(30px) saturate(150%)',
                               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
@@ -836,19 +836,61 @@ export default function Store() {
                               boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
                             }}
                         >
-                            <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">Navigation</h2>
-                            <div className="space-y-1">
-                                {ALL_NAV_ITEMS.map((page) => (
-                                    <Link
-                                        key={page.name}
-                                        to={page.path}
+                            {/* Drawer Header */}
+                            <div className="p-6">
+                              <div className="flex items-center justify-between mb-4">
+                                <span className="text-white font-bold text-xl tracking-wider">ATOM×EVE</span>
+                                <button 
+                                  onClick={() => setDrawerOpen(false)}
+                                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                                >
+                                  <X className="w-4 h-4 text-white/60" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Nav Items - Hierarchical */}
+                            <div className="flex-1 overflow-y-auto p-4">
+                              <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
+                              <div className="space-y-1">
+                                {NAV_HIERARCHY.map((mainItem) => {
+                                  return (
+                                    <div key={mainItem.name}>
+                                      {/* Main Page Link */}
+                                      <Link
+                                        to={mainItem.path}
                                         onClick={() => setDrawerOpen(false)}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-left"
-                                    >
-                                        <page.icon className="w-5 h-5" />
-                                        <span className="font-medium">{page.name}</span>
-                                    </Link>
-                                ))}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left text-white/60 hover:text-white border border-transparent hover:bg-white/[0.05]"
+                                      >
+                                        <mainItem.icon className="w-5 h-5" />
+                                        <span className="font-medium">{mainItem.name}</span>
+                                      </Link>
+
+                                      {/* Sub-pages */}
+                                      {mainItem.subPages && mainItem.subPages.length > 0 && (
+                                        <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                                          {mainItem.subPages.map((subItem) => (
+                                            <Link
+                                              key={subItem.name}
+                                              to={subItem.path}
+                                              onClick={() => setDrawerOpen(false)}
+                                              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-left text-white/50 hover:text-white/80 border border-transparent"
+                                            >
+                                              <subItem.icon className="w-4 h-4" />
+                                              <span className="text-sm">{subItem.name}</span>
+                                            </Link>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Drawer Footer */}
+                            <div className="p-4">
+                              <p className="text-white/20 text-xs text-center">© 2025 ATOM×EVE</p>
                             </div>
                         </motion.div>
                     </>
