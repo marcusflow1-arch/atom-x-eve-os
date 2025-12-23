@@ -1802,12 +1802,7 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
     { id: 3, category: 'CARDS', title: 'New Legendaries', description: '3 new cards in the vault', time: '1d', color: 'bg-amber-500' },
   ];
 
-  // AI stats
-  const aiStats = [
-    { label: 'Combat Style', value: 'Aggressive', trend: '+5%', up: true },
-    { label: 'Risk Level', value: 'High', trend: '+12%', up: true },
-    { label: 'Stealth Pref', value: 'Low', trend: '-3%', up: false },
-  ];
+
 
   const tabs = [
     { id: 'feed', label: 'Feed' },
