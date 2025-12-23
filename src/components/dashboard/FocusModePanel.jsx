@@ -2211,18 +2211,17 @@ export default function FocusModePanel() {
       </AnimatePresence>
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex gap-4 pt-4">
-        {/* Time & Date with Mini Calendar */}
-        <div className="flex-shrink-0">
+      <div className="flex gap-4 pt-4 flex-1 min-h-0">
+        {/* Left Column - Time & Goals */}
+        <div className="flex flex-col gap-4 flex-shrink-0 w-44">
+          {/* Time & Date with Mini Calendar */}
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-        </div>
 
-        {/* Goals */}
-        <div className="flex-shrink-0 w-40">
+          {/* Goals */}
           <GoalsPanel />
         </div>
 
-        {/* Mini Genre Selector - Scroll to change games */}
+        {/* Genre Selector - Full height scrollable panel */}
         <MiniGenreSelector 
           activeGenre={activeGenre}
           onGenreChange={setActiveGenre}
@@ -2230,7 +2229,7 @@ export default function FocusModePanel() {
         />
 
         {/* Library Games - Changes based on genre scroll */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col">
           <LibraryGamesSection 
             activeGenre={activeGenre}
             gamesByGenre={gamesByGenre}
