@@ -124,6 +124,21 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
                 {isActive && (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 )}
+                {/* Achievement Icon - Above the active game */}
+                {isActive && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSwitchToAchievements?.();
+                    }}
+                    className="absolute -top-10 left-1/2 -translate-x-1/2 w-8 h-8 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 flex items-center justify-center border border-yellow-500/30 transition-all"
+                    title="View Achievements"
+                  >
+                    <Trophy className="w-4 h-4 text-yellow-400" />
+                  </motion.button>
+                )}
               </motion.div>
             );
           })}
