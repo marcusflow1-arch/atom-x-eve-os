@@ -799,15 +799,40 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                        <span>Slots Available</span>
                                                        <span className="text-white font-mono">{selectedItem.enchantment_slots - selectedItem.modifiers.length} / {selectedItem.enchantment_slots}</span>
                                                    </div>
-                                               </div>
-                                           </div>
-                                       </div>
-                                   ) : (
-                                       <div className="h-full flex flex-col items-center justify-center text-slate-600">
-                                           <Hammer className="w-20 h-20 mb-4 opacity-20" />
-                                           <p className="text-lg font-medium">Select an item to view details</p>
-                                       </div>
-                                   )}
+                                                   </div>
+                                                   </div>
+
+                                                   {/* Action Buttons */}
+                                                   <div className="flex gap-4">
+                                                   <Button 
+                                                   onClick={() => setShowWorkstation(true)} 
+                                                   className="flex-1 bg-blue-600 hover:bg-blue-500 font-bold h-12 rounded-xl"
+                                                   >
+                                                   <Sparkles className="w-4 h-4 mr-2" />
+                                                   Enchant
+                                                   </Button>
+                                                   <Button 
+                                                   variant="outline" 
+                                                   className="flex-1 border-white/20 hover:bg-white/10 h-12 rounded-xl text-white"
+                                                   >
+                                                   <RotateCw className="w-4 h-4 mr-2" />
+                                                   Reforge
+                                                   </Button>
+                                                   <Button 
+                                                   variant="destructive" 
+                                                   className="flex-1 bg-rose-600 hover:bg-rose-500 h-12 rounded-xl"
+                                                   >
+                                                   <Trash2 className="w-4 h-4 mr-2" />
+                                                   Salvage
+                                                   </Button>
+                                                   </div>
+                                                   </div>
+                                                   ) : (
+                                                   <div className="h-full flex flex-col items-center justify-center text-slate-600">
+                                                   <Hammer className="w-20 h-20 mb-4 opacity-20" />
+                                                   <p className="text-lg font-medium">Select an item to view details</p>
+                                                   </div>
+                                                   )}
                                </div>
                            </div>
                        </div>
