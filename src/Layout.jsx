@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-              LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp
+              LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
             } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
@@ -19,6 +19,7 @@ import ServiceWorker from './components/desktop/ServiceWorker';
 import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
 import SocialHub from './components/dashboard/SocialHub';
+import CalendarOverlay from './components/calendar/CalendarOverlay';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -87,6 +88,8 @@ function LayoutContent({ children, currentPageName }) {
   const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
@@ -702,27 +705,56 @@ function LayoutContent({ children, currentPageName }) {
       {/* Removed Luna header bar - now part of page content for seamless animation */}
 
       {showLunaHeaderBar && (
-        <div className="fixed top-4 right-4 z-40 flex items-center gap-4">
-          <motion.button
-            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
-            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')}
-            title="Profile"
-          >
-            <User className="w-6 h-6 text-white/80" />
-          </motion.button>
-          <motion.button
-            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
-            style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-            whileHover={{ scale: 1.1, rotate: 90 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-            title="Settings"
-          >
-            <Settings className="w-6 h-6 text-white/80" />
-          </motion.button>
+        <div className="fixed top-4 right-4 z-40 flex flex-col items-end gap-2">
+          {/* Top Row: Profile & Settings */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')}
+              title="Profile"
+            >
+              <User className="w-5 h-5 text-white/80" />
+            </motion.button>
+            <motion.button
+              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+              title="Settings"
+            >
+              <Settings className="w-5 h-5 text-white/80" />
+            </motion.button>
+          </div>
+          
+          {/* Second Row: Calendar & Alerts */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCalendarOpen(true)}
+              title="Calendar"
+            >
+              <Calendar className="w-5 h-5 text-white/80" />
+            </motion.button>
+            <motion.button
+              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10 relative"
+              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setAlertsOpen(true)}
+              title="Alerts"
+            >
+              <Bell className="w-5 h-5 text-white/80" />
+              {/* Notification dot */}
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            </motion.button>
+          </div>
         </div>
       )}
 
@@ -776,6 +808,108 @@ function LayoutContent({ children, currentPageName }) {
               {/* Social Hub Content */}
               <div className="w-full h-full overflow-hidden">
                 <SocialHub />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Calendar Overlay */}
+      <AnimatePresence>
+        {calendarOpen && (
+          <CalendarOverlay 
+            onClose={() => setCalendarOpen(false)} 
+            currentUserId={user?.id} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Alerts Overlay */}
+      <AnimatePresence>
+        {alertsOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setAlertsOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-20 right-4 w-96 max-h-[70vh] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl z-50 overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-lg font-bold text-white">Alerts & Updates</h3>
+                </div>
+                <button
+                  onClick={() => setAlertsOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+              
+              {/* Alerts Content */}
+              <div className="p-4 space-y-3 max-h-[calc(70vh-80px)] overflow-y-auto">
+                {/* Sample alerts - these would come from your data */}
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                      <Rocket className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">New Feature Released</p>
+                      <p className="text-white/50 text-xs mt-0.5">Card fusion system is now available!</p>
+                      <p className="text-white/30 text-[10px] mt-1">2 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                      <Crown className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Season Pass Update</p>
+                      <p className="text-white/50 text-xs mt-0.5">New rewards added to tier 15!</p>
+                      <p className="text-white/30 text-[10px] mt-1">5 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                      <Trophy className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Achievement Unlocked</p>
+                      <p className="text-white/50 text-xs mt-0.5">First Steps - Complete your profile</p>
+                      <p className="text-white/30 text-[10px] mt-1">1 day ago</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-4 h-4 text-white/60" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">Clan Activity</p>
+                      <p className="text-white/50 text-xs mt-0.5">Your clan completed a guild quest</p>
+                      <p className="text-white/30 text-[10px] mt-1">2 days ago</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </>
