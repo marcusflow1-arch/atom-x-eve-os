@@ -624,12 +624,12 @@ export default function Store() {
             <div 
                 className="absolute top-0 left-0 right-0 z-50 flex flex-col transition-opacity duration-200" 
                 style={{ 
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, transparent 100%)',
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)',
                     opacity: headerOpacity,
                     pointerEvents: isScrolling ? 'none' : 'auto'
                 }}>
                 
-                <div className="h-20 flex items-center justify-between px-8">
+                <div className="h-16 flex items-center justify-between px-6">
                 <div className="flex items-center gap-6">
                     {/* Menu Button */}
                     <button
