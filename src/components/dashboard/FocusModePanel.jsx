@@ -1360,64 +1360,19 @@ const ALL_GENRES = [
   'Abstract'
 ];
 
-// Full Genre Selector Panel (Expanded for more space)
+// Compact Horizontal Genre Scroll Selector
 function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
-  const scrollTimeoutRef = useRef(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const displayGenres = ALL_GENRES;
-  
-  // Filter genres by search
-  const filteredGenres = searchTerm 
-    ? displayGenres.filter(g => g.toLowerCase().includes(searchTerm.toLowerCase()))
-    : displayGenres;
-
-  // Debounced scroll handler
-  const handleScroll = () => {
-    if (!scrollRef.current || searchTerm) return;
-    
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
-      if (!scrollRef.current) return;
-      
-      const container = scrollRef.current;
-      const containerRect = container.getBoundingClientRect();
-      const containerCenter = containerRect.top + containerRect.height / 2;
-      
-      let closestGenre = filteredGenres[0];
-      let closestDistance = Infinity;
-      
-      filteredGenres.forEach((genre) => {
-        const el = genreRefs.current[genre];
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const elCenter = rect.top + rect.height / 2;
-          const distance = Math.abs(elCenter - containerCenter);
-          
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestGenre = genre;
-          }
-        }
-      });
-      
-      if (closestGenre !== activeGenre) {
-        onGenreChange(closestGenre);
-      }
-    }, 100);
-  };
 
   const handleWheel = (e) => {
     if (!scrollRef.current) return;
     e.preventDefault();
     scrollRef.current.scrollBy({
-      top: e.deltaY / 2,
-      behavior: 'auto'
+      left: e.deltaY,
+      behavior: 'smooth'
     });
   };
 
@@ -1425,54 +1380,42 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
     onGenreChange(genre);
     const el = genreRefs.current[genre];
     if (el && scrollRef.current) {
-      const container = scrollRef.current;
-      const containerHeight = container.clientHeight;
-      const elTop = el.offsetTop;
-      const elHeight = el.clientHeight;
-      container.scrollTo({
-        top: elTop - (containerHeight / 2) + (elHeight / 2),
-        behavior: 'smooth'
-      });
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
   };
 
-  // Count games with content
-  const genresWithGames = displayGenres.filter(g => gamesByGenre[g]?.length > 0).length;
-
   return (
-    <div className="flex flex-col w-44 flex-shrink-0 h-full">
+    <div className="flex flex-col w-56 flex-shrink-0">
       {/* Header */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-white font-bold text-xs flex items-center gap-1.5">
-            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
-            Genres
-          </h3>
-          <span className="text-white/30 text-[9px]">{genresWithGames} active</span>
-        </div>
-        
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
-          <input
-            type="text"
-            placeholder="Search genres..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-7 pr-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/30 focus:outline-none focus:border-cyan-400/50"
-          />
+      <div className="flex items-center justify-between mb-1.5">
+        <h3 className="text-white font-bold text-[10px] flex items-center gap-1">
+          <Gamepad2 className="w-3 h-3 text-cyan-400" />
+          Genres
+        </h3>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => scrollRef.current?.scrollBy({ left: -100, behavior: 'smooth' })}
+            className="w-4 h-4 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center"
+          >
+            <ChevronLeft className="w-2.5 h-2.5 text-white/50" />
+          </button>
+          <button 
+            onClick={() => scrollRef.current?.scrollBy({ left: 100, behavior: 'smooth' })}
+            className="w-4 h-4 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center"
+          >
+            <ChevronRight className="w-2.5 h-2.5 text-white/50" />
+          </button>
         </div>
       </div>
       
-      {/* Genre List - Full height scrollable */}
+      {/* Horizontal Scroll Genre List */}
       <div 
         ref={scrollRef}
-        onScroll={handleScroll}
         onWheel={handleWheel}
-        className="flex-1 overflow-y-auto rounded-lg bg-white/[0.02] border border-white/5 p-2"
+        className="flex gap-1 overflow-x-auto py-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {filteredGenres.map((genre, index) => {
+        {displayGenres.map((genre) => {
           const gameCount = gamesByGenre[genre]?.length || 0;
           const hasGames = gameCount > 0;
           const isActive = activeGenre === genre;
@@ -1482,56 +1425,21 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
               key={genre}
               ref={(el) => genreRefs.current[genre] = el}
               onClick={() => handleGenreClick(genre)}
-              className={`relative flex items-center justify-between py-2 px-2.5 cursor-pointer rounded-lg mb-0.5 transition-all ${
+              className={`flex-shrink-0 px-2 py-1 rounded cursor-pointer transition-all ${
                 isActive 
-                  ? 'bg-cyan-500/20 border border-cyan-400/30' 
-                  : 'hover:bg-white/5 border border-transparent'
+                  ? 'bg-cyan-500/30 text-cyan-300' 
+                  : hasGames
+                    ? 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                    : 'text-white/20 hover:text-white/40'
               }`}
             >
-              <div className="flex items-center gap-2">
-                {isActive && (
-                  <motion.div
-                    layoutId="genreActiveDot"
-                    className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-                  />
-                )}
-                <span className={`font-medium transition-all duration-200 ${
-                  isActive 
-                    ? 'text-cyan-300 text-xs' 
-                    : hasGames
-                      ? 'text-white/70 text-[11px]'
-                      : 'text-white/25 text-[11px]'
-                }`}>
-                  {genre}
-                </span>
-              </div>
-              
-              {hasGames && (
-                <span className={`text-[9px] px-1.5 py-0.5 rounded ${
-                  isActive 
-                    ? 'bg-cyan-400/20 text-cyan-300' 
-                    : 'bg-white/5 text-white/40'
-                }`}>
-                  {gameCount}
-                </span>
+              <span className="text-[9px] font-medium whitespace-nowrap">{genre}</span>
+              {hasGames && isActive && (
+                <span className="ml-1 text-[8px] text-cyan-400">{gameCount}</span>
               )}
             </div>
           );
         })}
-        
-        {filteredGenres.length === 0 && (
-          <div className="flex items-center justify-center h-20 text-white/30 text-xs">
-            No genres found
-          </div>
-        )}
-      </div>
-      
-      {/* Footer Stats */}
-      <div className="mt-2 pt-2 border-t border-white/5">
-        <div className="flex items-center justify-between text-[9px] text-white/30">
-          <span>{displayGenres.length} total genres</span>
-          <span>{filteredGenres.length} shown</span>
-        </div>
       </div>
     </div>
   );
