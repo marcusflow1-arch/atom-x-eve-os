@@ -1275,37 +1275,9 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         )}
       </div>
 
-      {/* Grid View - Full Screen Overlay */}
+      {/* Grid View - Full Screen Overlay (below header) */}
       {viewMode === 'grid' && (
-        <div className="fixed inset-0 z-40 bg-slate-900">
-          {/* Header for Grid View */}
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <input
-                type="text"
-                placeholder="Search games..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-56 bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20"
-              />
-            </div>
-            <button
-              onClick={() => setViewMode('list')}
-              className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400"
-              title="Grid View (Active)"
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:bg-white/10"
-              title="List View"
-            >
-              <List className="w-5 h-5" />
-            </button>
-          </div>
-
+        <div className="fixed top-20 left-0 right-0 bottom-0 z-30 bg-slate-900">
           <LibraryGridView
             games={filteredGames}
             onLaunchGame={handleLaunchGame}
