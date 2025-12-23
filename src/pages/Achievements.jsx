@@ -18,6 +18,358 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+// --- Achievements Cross Menu Component (Grid View) ---
+const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef(null);
+  const cardScrollRef = useRef(null);
+
+  const ITEM_HEIGHT = 100;
+  const ITEM_GAP = 16;
+  const CROSS_Y_VH = 40;
+
+  const selectedGame = games[activeIndex];
+
+  // Generate cards for selected game
+  const tradingCards = useMemo(() => {
+    if (!selectedGame) return [];
+    const gameAchievements = localAchievements[selectedGame.title] || [];
+    
+    // Combine achievements with generated cards
+    const cards = gameAchievements.map((ach, i) => ({
+      id: ach.id || `ach-${selectedGame.id}-${i}`,
+      title: ach.title,
+      series: selectedGame.title,
+      rarity: ach.rarity || ['Common', 'Rare', 'Epic', 'Legendary'][Math.floor(Math.random() * 4)],
+      image: selectedGame.cover_image || selectedGame.cover,
+      description: ach.description,
+      points: ach.points || 100,
+      icon: ach.icon || '🏆',
+      category: ach.category || 'General',
+      isAchievement: true,
+      achievementData: ach
+    }));
+
+    // Add some trading cards if achievements are sparse
+    if (cards.length < 8) {
+      for (let i = cards.length; i < 8; i++) {
+        cards.push({
+          id: `card-${selectedGame.id}-${i}`,
+          title: `${selectedGame.title} Card ${i + 1}`,
+          series: selectedGame.title,
+          rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
+          image: selectedGame.cover_image || selectedGame.cover,
+          description: `A collectible trading card from ${selectedGame.title}.`,
+          points: Math.floor(Math.random() * 500) + 100,
+          icon: ['🎮', '⚔️', '🛡️', '🔮', '💎'][Math.floor(Math.random() * 5)],
+          category: 'Collectible',
+          isAchievement: false
+        });
+      }
+    }
+    return cards;
+  }, [selectedGame, localAchievements]);
+
+  const selectedCard = tradingCards[activeCardIndex];
+
+  // Handle wheel scroll for games (vertical)
+  const handleGameScroll = (e) => {
+    e.preventDefault();
+    setIsScrolling(true);
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    if (e.deltaY > 0 && activeIndex < games.length - 1) {
+      setActiveIndex(prev => prev + 1);
+      setActiveCardIndex(0); // Reset card selection when changing game
+    } else if (e.deltaY < 0 && activeIndex > 0) {
+      setActiveIndex(prev => prev - 1);
+      setActiveCardIndex(0);
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsScrolling(false);
+    }, 300);
+  };
+
+  // Handle horizontal scroll for cards
+  const handleCardScroll = (e) => {
+    e.preventDefault();
+    if (e.deltaX > 0 || e.deltaY > 0) {
+      if (activeCardIndex < tradingCards.length - 1) {
+        setActiveCardIndex(prev => prev + 1);
+      }
+    } else if (e.deltaX < 0 || e.deltaY < 0) {
+      if (activeCardIndex > 0) {
+        setActiveCardIndex(prev => prev - 1);
+      }
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 's') {
+        e.preventDefault();
+        setIsScrolling(true);
+        if (activeIndex < games.length - 1) {
+          setActiveIndex(prev => prev + 1);
+          setActiveCardIndex(0);
+        }
+        setTimeout(() => setIsScrolling(false), 300);
+      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+        e.preventDefault();
+        setIsScrolling(true);
+        if (activeIndex > 0) {
+          setActiveIndex(prev => prev - 1);
+          setActiveCardIndex(0);
+        }
+        setTimeout(() => setIsScrolling(false), 300);
+      } else if (e.key === 'ArrowRight' || e.key === 'd') {
+        e.preventDefault();
+        if (activeCardIndex < tradingCards.length - 1) {
+          setActiveCardIndex(prev => prev + 1);
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+        e.preventDefault();
+        if (activeCardIndex > 0) {
+          setActiveCardIndex(prev => prev - 1);
+        }
+      } else if (e.key === 'Enter') {
+        if (selectedCard) {
+          onCardClick(selectedCard);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [activeIndex, activeCardIndex, games.length, tradingCards.length, selectedCard, onCardClick]);
+
+  const rarityColors = {
+    Common: "border-slate-500/50 text-slate-400",
+    Uncommon: "border-green-500/50 text-green-400",
+    Rare: "border-blue-500/50 text-blue-400",
+    Epic: "border-purple-500/50 text-purple-400",
+    Legendary: "border-orange-500/50 text-orange-400",
+    Mythic: "border-red-500/50 text-red-400"
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-140px)] relative">
+      {/* Background - Selected Card Image */}
+      <AnimatePresence mode="wait">
+        {selectedCard && (
+          <motion.div
+            key={selectedCard.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-0"
+          >
+            <img 
+              src={selectedCard.image} 
+              alt="" 
+              className="w-full h-full object-cover opacity-20 blur-sm"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/60" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Left Side - Scrolling Game Boxes */}
+      <div 
+        className="relative w-40 h-full flex items-center overflow-hidden flex-shrink-0 z-10"
+        onWheel={handleGameScroll}
+      >
+        <motion.div
+          className="absolute left-4 flex flex-col gap-4"
+          animate={{ 
+            y: `calc(${CROSS_Y_VH}vh - ${activeIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px - 70px)`,
+            opacity: isScrolling ? 0.5 : 1
+          }}
+          transition={{ 
+            y: { type: "spring", stiffness: 250, damping: 25 },
+            opacity: { duration: 0.15 }
+          }}
+        >
+          {games.map((game, idx) => {
+            const isActive = idx === activeIndex;
+            return (
+              <motion.div
+                key={game.id}
+                onClick={() => {
+                  setActiveIndex(idx);
+                  setActiveCardIndex(0);
+                }}
+                animate={{ 
+                  scale: isActive ? 1.1 : 0.85,
+                  opacity: isActive ? 1 : 0.4,
+                  x: isActive ? 16 : 0
+                }}
+                className={`
+                  w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden relative
+                  ${isActive 
+                    ? 'ring-2 ring-yellow-400/60 shadow-[0_0_25px_rgba(250,204,21,0.3)]' 
+                    : 'border border-white/10'
+                  }
+                `}
+              >
+                <img 
+                  src={game.cover_image || game.cover} 
+                  alt={game.title}
+                  className="w-full h-full object-cover"
+                />
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                )}
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </div>
+
+      {/* Vertical Line */}
+      <div className="w-px h-full bg-white/10 flex-shrink-0 z-10" />
+
+      {/* Right Side - Cards Horizontal Scroll */}
+      <div 
+        ref={cardScrollRef}
+        className="flex-1 pl-8 overflow-hidden flex flex-col z-10"
+        onWheel={handleCardScroll}
+      >
+        {selectedGame && (
+          <>
+            {/* Game Title */}
+            <div className="mb-4 flex-shrink-0">
+              <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">
+                {selectedGame.genre}
+              </Badge>
+              <h2 className="text-2xl font-black text-white">{selectedGame.title}</h2>
+              <p className="text-white/40 text-sm">{tradingCards.length} Cards Available</p>
+            </div>
+
+            {/* Cards Horizontal Carousel */}
+            <div className="flex-1 flex items-center overflow-hidden">
+              <motion.div
+                className="flex gap-6"
+                animate={{
+                  x: -activeCardIndex * 220
+                }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+              >
+                {tradingCards.map((card, idx) => {
+                  const isActive = idx === activeCardIndex;
+                  return (
+                    <motion.div
+                      key={card.id}
+                      onClick={() => {
+                        setActiveCardIndex(idx);
+                        if (isActive) onCardClick(card);
+                      }}
+                      animate={{
+                        scale: isActive ? 1.1 : 0.9,
+                        opacity: isActive ? 1 : 0.5,
+                        y: isActive ? -10 : 0
+                      }}
+                      whileHover={{ scale: isActive ? 1.15 : 0.95 }}
+                      className={`
+                        w-48 h-72 rounded-xl cursor-pointer flex-shrink-0 overflow-hidden relative
+                        ${isActive 
+                          ? 'ring-2 ring-yellow-400/60 shadow-[0_0_30px_rgba(250,204,21,0.3)]' 
+                          : 'border border-white/10'
+                        }
+                      `}
+                      style={{
+                        background: 'rgba(20, 25, 35, 0.9)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      {/* Card Content */}
+                      <div className="absolute inset-0 flex flex-col p-3">
+                        {/* Card Image */}
+                        <div className="relative w-full h-2/3 rounded-lg overflow-hidden mb-2 border border-white/10">
+                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute top-2 right-2 text-2xl">{card.icon}</div>
+                        </div>
+                        
+                        {/* Card Info */}
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                            <div className="flex gap-1 flex-wrap">
+                              <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${rarityColors[card.rarity] || rarityColors.Common}`}>
+                                {card.rarity}
+                              </Badge>
+                              {card.isAchievement && (
+                                <Badge variant="outline" className="text-[9px] h-4 px-1 border-yellow-500/50 text-yellow-400">
+                                  {card.points} pts
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Selected Glow */}
+                      {isActive && (
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          animate={{
+                            boxShadow: [
+                              'inset 0 0 20px rgba(250, 204, 21, 0.2)',
+                              'inset 0 0 40px rgba(250, 204, 21, 0.4)',
+                              'inset 0 0 20px rgba(250, 204, 21, 0.2)'
+                            ]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </div>
+
+            {/* Selected Card Preview */}
+            {selectedCard && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">{selectedCard.icon}</div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-bold text-lg">{selectedCard.title}</h3>
+                    <p className="text-white/50 text-sm mb-2">{selectedCard.description}</p>
+                    <div className="flex items-center gap-3">
+                      <Badge className={`${rarityColors[selectedCard.rarity]}`}>{selectedCard.rarity}</Badge>
+                      <span className="text-yellow-400 text-sm font-bold">{selectedCard.points} pts</span>
+                      <span className="text-white/30 text-xs">Click to view details</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
   return (
