@@ -446,6 +446,32 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const [showWorkstation, setShowWorkstation] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   
+  // Enchant state
+  const [enchantLevel, setEnchantLevel] = useState(0);
+  const [enchantResult, setEnchantResult] = useState(null);
+  
+  // Combine state
+  const [combineQuantity, setCombineQuantity] = useState(1);
+  const [combineXP, setCombineXP] = useState(0);
+  
+  // Enchant attempt handler - 12% increase with fail chance
+  const handleEnchantAttempt = () => {
+    const failChance = Math.min(90, enchantLevel); // Fail chance increases with level
+    const roll = Math.random() * 100;
+    
+    if (roll > failChance) {
+      // Success
+      setEnchantLevel(Math.min(120, enchantLevel + 12));
+      setEnchantResult('success');
+    } else {
+      // Fail
+      setEnchantResult('fail');
+    }
+    
+    // Clear result after 2 seconds
+    setTimeout(() => setEnchantResult(null), 2000);
+  };
+  
   // Forge Mastery XP - Based on User Data
   const forgeXP = user?.forge_xp || 0;
   const forgeLevel = user?.forge_level || 1;
