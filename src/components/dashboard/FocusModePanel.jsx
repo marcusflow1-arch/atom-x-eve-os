@@ -1360,7 +1360,7 @@ const ALL_GENRES = [
   'Abstract'
 ];
 
-// Compact Horizontal Genre Scroll Selector
+// Compact Vertical Genre Scroll Selector (next to Library)
 function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
@@ -1371,7 +1371,7 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
     if (!scrollRef.current) return;
     e.preventDefault();
     scrollRef.current.scrollBy({
-      left: e.deltaY,
+      top: e.deltaY / 2,
       behavior: 'smooth'
     });
   };
@@ -1380,39 +1380,22 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
     onGenreChange(genre);
     const el = genreRefs.current[genre];
     if (el && scrollRef.current) {
-      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
   return (
-    <div className="flex flex-col w-56 flex-shrink-0">
+    <div className="flex flex-col w-28 flex-shrink-0 h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-1.5">
-        <h3 className="text-white font-bold text-[10px] flex items-center gap-1">
-          <Gamepad2 className="w-3 h-3 text-cyan-400" />
-          Genres
-        </h3>
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={() => scrollRef.current?.scrollBy({ left: -100, behavior: 'smooth' })}
-            className="w-4 h-4 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center"
-          >
-            <ChevronLeft className="w-2.5 h-2.5 text-white/50" />
-          </button>
-          <button 
-            onClick={() => scrollRef.current?.scrollBy({ left: 100, behavior: 'smooth' })}
-            className="w-4 h-4 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center"
-          >
-            <ChevronRight className="w-2.5 h-2.5 text-white/50" />
-          </button>
-        </div>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-white/50 text-[9px] font-bold uppercase tracking-wider">Genres</h3>
       </div>
       
-      {/* Horizontal Scroll Genre List */}
+      {/* Vertical Scroll Genre List */}
       <div 
         ref={scrollRef}
         onWheel={handleWheel}
-        className="flex gap-1 overflow-x-auto py-1"
+        className="flex-1 overflow-y-auto"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {displayGenres.map((genre) => {
@@ -1425,17 +1408,23 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
               key={genre}
               ref={(el) => genreRefs.current[genre] = el}
               onClick={() => handleGenreClick(genre)}
-              className={`flex-shrink-0 px-2 py-1 rounded cursor-pointer transition-all ${
+              className={`relative py-1 pl-2 pr-1 cursor-pointer transition-all rounded-sm ${
                 isActive 
-                  ? 'bg-cyan-500/30 text-cyan-300' 
+                  ? 'text-cyan-300' 
                   : hasGames
-                    ? 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                    : 'text-white/20 hover:text-white/40'
+                    ? 'text-white/50 hover:text-white/80'
+                    : 'text-white/20 hover:text-white/30'
               }`}
             >
-              <span className="text-[9px] font-medium whitespace-nowrap">{genre}</span>
-              {hasGames && isActive && (
-                <span className="ml-1 text-[8px] text-cyan-400">{gameCount}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="genreActiveLine"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-cyan-400 rounded-full"
+                />
+              )}
+              <span className={`text-[10px] font-medium ${isActive ? 'text-cyan-300' : ''}`}>{genre}</span>
+              {hasGames && (
+                <span className={`ml-1 text-[8px] ${isActive ? 'text-cyan-400' : 'text-white/30'}`}>({gameCount})</span>
               )}
             </div>
           );
