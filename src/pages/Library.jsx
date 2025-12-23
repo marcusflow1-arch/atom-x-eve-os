@@ -933,7 +933,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState('list'); // list is default now
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
   const [showTransitionMenu, setShowTransitionMenu] = useState(false);
   const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
