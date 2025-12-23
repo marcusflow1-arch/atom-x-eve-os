@@ -1207,13 +1207,6 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
           ref={libraryScrollRef}
           className="flex-1 overflow-y-auto space-y-3"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
-          onClick={(e) => {
-            // Close panel if clicking on empty space (not on a game)
-            if (e.target === e.currentTarget || e.target.closest('[data-library-grid]')) {
-              setShowGamePanel(false);
-            }
-          }}
-          data-library-grid
         >
           <AnimatePresence mode="popLayout">
             {rows.map((row, rowIndex) => (
@@ -1328,8 +1321,18 @@ function GameOptionsPanel({ game, onClose }) {
           WebkitBackdropFilter: 'blur(20px)',
         }}
       >
+        {/* Close Button */}
+        <div className="flex justify-end p-2">
+          <button
+            onClick={onClose}
+            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            <X className="w-3 h-3 text-white/60" />
+          </button>
+        </div>
+
         {/* Game Cover */}
-        <div className="px-3 pt-3 pb-3">
+        <div className="px-3 pb-3">
           <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
             <img 
               src={game.cover_image || game.cover} 
