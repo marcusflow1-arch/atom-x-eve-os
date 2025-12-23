@@ -1055,7 +1055,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               </button>
             </div>
 
-            <LibraryCrossMenu 
+            <LibraryGridView 
               games={filteredGames}
               onLaunchGame={handleLaunchGame}
               onStreamGame={handleStreamGame}
