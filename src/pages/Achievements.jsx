@@ -528,6 +528,7 @@ function AchievementsView({ onExitToLibrary }) {
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
