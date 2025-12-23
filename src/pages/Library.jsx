@@ -19,6 +19,144 @@ import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
+// --- Library Cross Menu Component ---
+const LibraryCrossMenu = ({ onClose }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef(null);
+  
+  // Generate placeholder boxes
+  const boxes = Array.from({ length: 15 }, (_, i) => ({ id: i }));
+  
+  const ITEM_HEIGHT = 80;
+  const ITEM_GAP = 24;
+  const CROSS_Y_VH = 40;
+
+  // Handle wheel scroll
+  useEffect(() => {
+    const handleWheel = (e) => {
+      // Start dimming
+      setIsScrolling(true);
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Navigate
+      if (e.deltaY > 0 && activeIndex < boxes.length - 1) {
+        setActiveIndex(prev => prev + 1);
+      } else if (e.deltaY < 0 && activeIndex > 0) {
+        setActiveIndex(prev => prev - 1);
+      }
+      
+      // Stop dimming after delay
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 300);
+    };
+
+    window.addEventListener('wheel', handleWheel);
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [activeIndex, boxes.length]);
+
+  // Handle keyboard
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 's') {
+        setIsScrolling(true);
+        if (activeIndex < boxes.length - 1) setActiveIndex(prev => prev + 1);
+        setTimeout(() => setIsScrolling(false), 300);
+      } else if (e.key === 'ArrowUp' || e.key === 'w') {
+        setIsScrolling(true);
+        if (activeIndex > 0) setActiveIndex(prev => prev - 1);
+        setTimeout(() => setIsScrolling(false), 300);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeIndex, boxes.length]);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="fixed inset-0 z-50 flex"
+        style={{ 
+          background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)',
+        }}
+      >
+        {/* Left Side - Scrolling Boxes */}
+        <div className="relative w-48 h-full flex items-center overflow-hidden">
+          <motion.div
+            className="absolute left-8 flex flex-col gap-6"
+            animate={{ 
+              y: `calc(${CROSS_Y_VH}vh - ${activeIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`,
+              opacity: isScrolling ? 0.5 : 1
+            }}
+            transition={{ 
+              y: { type: "spring", stiffness: 250, damping: 25 },
+              opacity: { duration: 0.15 }
+            }}
+          >
+            {boxes.map((box, idx) => {
+              const isActive = idx === activeIndex;
+              return (
+                <motion.div
+                  key={box.id}
+                  onClick={() => setActiveIndex(idx)}
+                  animate={{ 
+                    scale: isActive ? 1.1 : 0.85,
+                    opacity: isActive ? 1 : 0.4,
+                    x: isActive ? 10 : 0
+                  }}
+                  className={`
+                    w-20 h-20 rounded-xl cursor-pointer transition-all duration-300
+                    ${isActive 
+                      ? 'bg-white/15 border-2 border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)]' 
+                      : 'bg-white/5 border border-white/10'
+                    }
+                  `}
+                />
+              );
+            })}
+          </motion.div>
+        </div>
+
+        {/* Invisible Vertical Line */}
+        <div className="w-px h-full bg-white/10" />
+
+        {/* Right Side - Empty for now */}
+        <div className="flex-1">
+        </div>
+        
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="fixed top-6 right-6 z-[60] text-white/60 hover:text-white transition-all"
+        >
+          <X className="w-8 h-8" />
+        </button>
+      </motion.div>
+    </>
+  );
+};
+
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
   return (
