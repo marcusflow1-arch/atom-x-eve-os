@@ -17,6 +17,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../CartContext';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { ShoppingCart } from 'lucide-react';
 import { Game } from '@/entities/Game';
 import { aiGamesList, otherSampleGames } from './mockData';
 import ShinyCard from '@/components/shared/ShinyCard';
@@ -401,6 +405,7 @@ const GalacticInventoryItem = ({ item, onClick }) => {
 
 export default function TradingPostContent() {
   const { user } = useAuth();
+  const { cartCount } = useCart();
   const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState('board');
@@ -861,6 +866,11 @@ export default function TradingPostContent() {
                         className="bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm w-48"
                       />
                     </div>
+
+                    <Link to={createPageUrl('Cart')} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative backdrop-blur-md border border-white/10">
+                      <ShoppingCart className="w-4 h-4 text-white/80" />
+                      {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
+                    </Link>
                   </div>
                 )}
               </div>
