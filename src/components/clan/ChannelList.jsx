@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Hash, Volume2, Plus, ChevronDown, Settings, LogOut, Trash2, Home, Archive, Calendar, Crown } from 'lucide-react';
+import { Hash, Volume2, Plus, ChevronDown, Settings, LogOut, Trash2, Home, Archive, Calendar, Crown, Users, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,12 @@ import {
     DialogTrigger,
     DialogFooter
 } from "@/components/ui/dialog";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 export default function ChannelList({ clan, activeChannelId, onSelectChannel, onSelectSpecial }) {
     const queryClient = useQueryClient();
