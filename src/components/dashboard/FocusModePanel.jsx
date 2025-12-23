@@ -1373,10 +1373,10 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
             >
               <span className={`font-medium transition-all duration-200 ${
                 isActive 
-                  ? 'text-cyan-300 text-[14px]' 
+                  ? 'text-cyan-300 text-[12px]' 
                   : hasGames
-                    ? 'text-white/40 text-[14px]'
-                    : 'text-white/15 text-[13px]'
+                    ? 'text-white/40 text-[12px]'
+                    : 'text-white/15 text-[11px]'
               }`}>
                 {genre}
               </span>
@@ -2049,7 +2049,7 @@ export default function FocusModePanel() {
       </AnimatePresence>
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex gap-4 pt-4 min-h-[65vh]">
+      <div className="flex gap-4 pt-4 min-h-[50vh]">
         {/* Left Column: Calendar then Goals stacked */}
         <div className="flex-shrink-0 flex flex-col gap-3">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
