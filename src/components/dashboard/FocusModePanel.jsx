@@ -1271,7 +1271,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   );
 }
 
-// Game Options Slide-out Panel
+// Game Options Full Panel Overlay (fills entire section above the bottom divider)
 function GameOptionsPanel({ game, onClose }) {
   const navigate = useNavigate();
 
@@ -1306,78 +1306,101 @@ function GameOptionsPanel({ game, onClose }) {
   };
 
   return (
-    <motion.div
-      initial={{ width: 0, opacity: 0 }}
-      animate={{ width: 220, opacity: 1 }}
-      exit={{ width: 0, opacity: 0 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="h-full flex-shrink-0 overflow-hidden"
-    >
-      <div 
-        className="h-full w-[220px] rounded-xl border border-white/10 flex flex-col"
-        style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm z-40"
+        onClick={onClose}
+      />
+      
+      {/* Panel sliding from left */}
+      <motion.div
+        initial={{ x: '-100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '-100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="absolute inset-0 z-50 flex"
+        style={{ pointerEvents: 'none' }}
       >
-        {/* Close Button */}
-        <div className="flex justify-end p-2">
-          <button
-            onClick={onClose}
-            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            <X className="w-3 h-3 text-white/60" />
-          </button>
-        </div>
-
-        {/* Game Cover */}
-        <div className="px-3 pb-3">
-          <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
-            <img 
-              src={game.cover_image || game.cover} 
-              alt={game.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          </div>
-        </div>
-
-        {/* Game Title */}
-        <div className="px-3 pb-3">
-          <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
-          <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
-        </div>
-
-        {/* Menu Options */}
-        <div className="flex-1 px-3 pb-3 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-          {menuOptions.map((option) => (
+        <div 
+          className="h-full w-80 rounded-r-3xl border-r border-white/10 flex flex-col overflow-hidden"
+          style={{
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            boxShadow: '4px 0 30px rgba(0,0,0,0.5)',
+            pointerEvents: 'auto',
+          }}
+        >
+          {/* Header with Close */}
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-white font-bold text-lg">Game Options</h2>
             <button
-              key={option.id}
-              onClick={() => handleOptionClick(option.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg ${option.color} ${option.textColor} text-xs font-medium transition-all`}
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
             >
-              <option.icon className="w-4 h-4" />
-              {option.label}
+              <X className="w-4 h-4 text-white/60" />
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Quick Stats */}
-        <div className="px-3 pb-3 pt-2 border-t border-white/10">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-center p-2 bg-white/5 rounded-lg">
-              <p className="text-white font-bold text-xs">12.5h</p>
-              <p className="text-white/30 text-[8px]">Played</p>
-            </div>
-            <div className="text-center p-2 bg-white/5 rounded-lg">
-              <p className="text-white font-bold text-xs">8/15</p>
-              <p className="text-white/30 text-[8px]">Achievements</p>
+          {/* Game Cover - Larger */}
+          <div className="p-4">
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+              <img 
+                src={game.cover_image || game.cover} 
+                alt={game.title} 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3">
+                <h3 className="text-white font-bold text-xl">{game.title}</h3>
+                <p className="text-white/50 text-sm capitalize">{game.genre}</p>
+              </div>
             </div>
           </div>
+
+          {/* Quick Stats Row */}
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="text-center p-3 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-white font-bold text-lg">12.5h</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-wider">Played</p>
+              </div>
+              <div className="text-center p-3 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-white font-bold text-lg">8/15</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-wider">Achievements</p>
+              </div>
+              <div className="text-center p-3 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-white font-bold text-lg">Lv.12</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-wider">AI Level</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Options */}
+          <div className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            {menuOptions.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => handleOptionClick(option.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ${option.color} ${option.textColor} text-sm font-medium transition-all`}
+              >
+                <option.icon className="w-5 h-5" />
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-white/10">
+            <p className="text-white/20 text-[10px] text-center">© 2025 ATOM×EVE</p>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }
 
