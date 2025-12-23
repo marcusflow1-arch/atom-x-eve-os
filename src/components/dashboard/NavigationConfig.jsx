@@ -1,3 +1,4 @@
+
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -13,11 +14,11 @@ export const NAV_HIERARCHY = [
         icon: Home,
         path: createPageUrl('LunaTemplate'),
         subPages: [
-            { name: 'Blacksmith', icon: Hammer, path: createPageUrl('LunaTemplate') + '?panel=blacksmith' },
-            { name: 'Season Pass', icon: Crown, path: createPageUrl('LunaTemplate') + '?panel=seasonpass' },
-            { name: 'Entertainment', icon: Clapperboard, path: createPageUrl('LunaTemplate') + '?panel=entertainment' },
-            { name: 'Clan', icon: Users, path: createPageUrl('LunaTemplate') + '?panel=clan' },
-            { name: 'Forum', icon: MessageSquare, path: createPageUrl('LunaTemplate') + '?panel=forum' },
+            { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
+            { name: 'Season Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
+            { name: 'Entertainment', icon: Clapperboard, path: createPageUrl('Entertainment') },
+            { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
+            { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
         ]
     },
     {
