@@ -1144,40 +1144,17 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
-        <div className="flex gap-6">
-            {/* Left Sidebar - Game List */}
-            <div className="w-80 flex-shrink-0">
-              <ShinySidebarBox className="p-4 h-full">
-                <div className="mb-4">
-                  <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
-                </div>
-                <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-                  {filteredGames.map(game => (
-                    <LunaSidebarItem
-                      key={game.id}
-                      game={game}
-                      isSelected={selectedGame?.id === game.id}
-                      isStreaming={game.id === streamingGameId}
-                      onSelect={setSelectedGame}
-                      onPlay={handleLaunchGame}
-                    />
-                  ))}
-                </div>
-              </ShinySidebarBox>
-            </div>
-
-            {/* Game Detail Panel */}
-            <div className="flex-1 min-h-[calc(100vh-200px)]">
-              <LunaGamePanel
-                game={selectedGame}
-                isStreaming={selectedGame?.id === streamingGameId}
-                onPlay={handleLaunchGame}
-                onStream={handleStreamGame}
-                onShowAchievements={() => setShowAchievementsOverlay(true)}
-                onShowGameDetails={() => setShowGameDetailsOverlay(true)}
-              />
-            </div>
-          </div>
+        {/* Game Detail Panel - Full Width */}
+        <div className="flex-1 min-h-[calc(100vh-200px)]">
+          <LunaGamePanel
+            game={selectedGame}
+            isStreaming={selectedGame?.id === streamingGameId}
+            onPlay={handleLaunchGame}
+            onStream={handleStreamGame}
+            onShowAchievements={() => setShowAchievementsOverlay(true)}
+            onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+          />
+        </div>
       </div>
 
 
