@@ -2093,21 +2093,13 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Calendar on far left, Library Games */}
-      <div className="flex gap-4 pt-4">
-        {/* Calendar - Far left */}
-        <div className="w-[160px] flex-shrink-0">
-          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-        </div>
-
-        {/* Library Games */}
-        <div className="flex-1 min-w-0">
-          <LibraryGamesSection 
-            onSelectGame={setSelectedGame}
-            selectedGame={selectedGame}
-            allGames={ownedGames}
-          />
-        </div>
+      {/* Bottom Section - Library Games (full width) */}
+      <div className="pt-4">
+        <LibraryGamesSection 
+          onSelectGame={setSelectedGame}
+          selectedGame={selectedGame}
+          allGames={ownedGames}
+        />
       </div>
     </div>
   );
