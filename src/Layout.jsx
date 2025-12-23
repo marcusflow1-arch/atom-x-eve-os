@@ -11,7 +11,7 @@ import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import PWAManifest from './components/desktop/PWAManifest';
@@ -89,7 +89,6 @@ function LayoutContent({ children, currentPageName }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [alertsOpen, setAlertsOpen] = useState(false);
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
@@ -768,16 +767,6 @@ function LayoutContent({ children, currentPageName }) {
                   title="Calendar"
                 >
                   <Calendar className="w-5 h-5 text-white/80" />
-                </motion.button>
-                <motion.button
-                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10 relative"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setAlertsOpen(true)}
-                  title="Alerts"
-                >
-                  <Bell className="w-5 h-5 text-white/80" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                 </motion.button>
                 <motion.button
                   className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10"

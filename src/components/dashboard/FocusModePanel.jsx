@@ -1954,65 +1954,6 @@ function LivePanel({ upcomingCards }) {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto space-y-4" style={{ scrollbarWidth: 'none' }}>
-        {/* New Cards Section */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              New Cards
-            </h4>
-            <button 
-              onClick={() => navigate(createPageUrl('Achievements'))}
-              className="text-cyan-400 text-[10px] font-semibold hover:text-cyan-300 flex items-center gap-1"
-            >
-              View All <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            {latestCards.map((card) => (
-              <AchievementStyleCard
-                key={card.id}
-                card={card}
-                isSelected={false}
-                onClick={() => handleCardClick(card)}
-                size="small"
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* System Alerts */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-              <Bell className="w-3 h-3 text-cyan-400" />
-              Alerts
-            </h4>
-          </div>
-          <div className="space-y-1.5">
-            {alerts.map((alert) => (
-              <div 
-                key={alert.id}
-                className="flex items-center gap-2 p-2 rounded-lg border hover:border-cyan-400/20 transition-all cursor-pointer group"
-                style={{
-                  background: 'rgba(100, 120, 140, 0.08)',
-                  backdropFilter: 'blur(10px) saturate(110%)',
-                  WebkitBackdropFilter: 'blur(10px) saturate(110%)',
-                  borderColor: 'rgba(255, 255, 255, 0.06)'
-                }}
-              >
-                <div className={`w-1 h-8 rounded-full ${alert.color}`} />
-                <span className="text-lg">{alert.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <h5 className="text-white font-semibold text-xs group-hover:text-cyan-400 transition-colors">{alert.title}</h5>
-                  <p className="text-white/40 text-[10px] truncate">{alert.description}</p>
-                </div>
-                <span className="text-[9px] text-white/30">{alert.time}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-2">
           <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
@@ -2029,16 +1970,6 @@ function LivePanel({ upcomingCards }) {
           </div>
         </div>
       </div>
-
-      {/* Card Detail Overlay */}
-      <AnimatePresence>
-        {showCardOverlay && selectedCard && (
-          <CardTutorialOverlay 
-            card={selectedCard}
-            onClose={() => setShowCardOverlay(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

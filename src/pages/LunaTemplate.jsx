@@ -1241,8 +1241,43 @@ export default function LunaTemplate() {
             </div>
             )}
 
-        {/* AI Home Button - Small Icon at Bottom Center */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
+        {/* AI Home Button - Hover Menu at Bottom Center */}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto group">
+          {/* Left Items */}
+          <div className="flex items-center gap-2 mr-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'skill-tree'))}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+              }}
+              title="Skill Tree"
+            >
+              <Layers className="w-5 h-5 text-white" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'battle'))}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+              }}
+              title="Battle Mode"
+            >
+              <Swords className="w-5 h-5 text-white" />
+            </motion.button>
+          </div>
+
+          {/* Center Home Button */}
           <motion.button
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.95 }}
@@ -1254,9 +1289,44 @@ export default function LunaTemplate() {
               WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
             }}
+            title="AI Home"
           >
             <Home className="w-6 h-6 text-white" />
           </motion.button>
+
+          {/* Right Items */}
+          <div className="flex items-center gap-2 ml-2 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'story'))}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+              }}
+              title="AI Story"
+            >
+              <BookOpen className="w-5 h-5 text-white" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(item => item.id === 'games'))}
+              className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+              }}
+              title="PINGAMES"
+            >
+              <Gamepad2 className="w-5 h-5 text-white" />
+            </motion.button>
+          </div>
         </div>
         )}
 
