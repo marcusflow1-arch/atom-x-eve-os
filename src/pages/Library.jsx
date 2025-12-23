@@ -924,7 +924,9 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
 
   const ITEM_HEIGHT = 80;
   const ITEM_GAP = 24;
-  const CROSS_Y_VH = 50;
+  // Position to align with center of game card (header ~100px + card starts ~0px from content, card is ~256px tall, center is ~128px)
+  // Total offset from top: header area (~100px) + half of card height (~128px) = ~228px
+  const CARD_CENTER_OFFSET = 228;
 
   // Sync selectedGame with activeGameIndex
   useEffect(() => {
@@ -967,9 +969,9 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
       className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20"
     >
       <motion.div 
-        className="flex flex-col items-center gap-6 py-8"
+        className="flex flex-col items-center gap-6"
         animate={{ 
-          y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
+          y: CARD_CENTER_OFFSET - (activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)) - (ITEM_HEIGHT / 2)
         }}
         transition={{ type: "spring", stiffness: 250, damping: 25 }}
       >
