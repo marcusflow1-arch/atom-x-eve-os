@@ -2137,22 +2137,23 @@ export default function FocusModePanel() {
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
       <div className="flex gap-4 pt-4">
-        {/* Time & Date with Mini Calendar */}
-        <div className="flex-shrink-0">
+        {/* Left Column - Time/Calendar and Genre Selector stacked */}
+        <div className="flex flex-col gap-2 flex-shrink-0">
+          {/* Time & Date with Mini Calendar */}
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+          
+          {/* Genre Selector - Under calendar */}
+          <MiniGenreSelector 
+            activeGenre={activeGenre}
+            onGenreChange={setActiveGenre}
+            gamesByGenre={gamesByGenre}
+          />
         </div>
 
         {/* Goals */}
         <div className="flex-shrink-0 w-40">
           <GoalsPanel />
         </div>
-
-        {/* Genre Selector - Vertical scroll next to Library */}
-        <MiniGenreSelector 
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          gamesByGenre={gamesByGenre}
-        />
 
         {/* Library Games - Changes based on genre scroll */}
         <div className="flex-1 min-w-0">
