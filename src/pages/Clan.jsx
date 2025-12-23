@@ -182,6 +182,10 @@ export default function ClanPage() {
                     <ClanDashboard clan={activeClan} events={events} />
                 ) : selectedChannelId === 'vault' && activeClan ? (
                     <ClanVault clan={activeClan} />
+                ) : selectedChannelId === 'members' && activeClan ? (
+                    <div className="flex-1 p-8">
+                        <MemberList clan={activeClan} fullView />
+                    </div>
                 ) : activeClan && activeChannel ? (
                     <div className="flex flex-1 min-w-0">
                         <ChatArea channel={activeChannel} clan={activeClan} />
