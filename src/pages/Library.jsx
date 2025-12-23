@@ -1110,13 +1110,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Ambient Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
-      </div>
-
       <div className="relative z-10 px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
