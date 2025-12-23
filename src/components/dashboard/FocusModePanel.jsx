@@ -1282,11 +1282,9 @@ function GameOptionsPanel({ game, onClose }) {
   const navigate = useNavigate();
 
   const menuOptions = [
-    { id: 'play', label: 'Play Game', icon: Play, color: 'bg-green-500 hover:bg-green-400', textColor: 'text-black' },
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'bg-white/10 hover:bg-white/20', textColor: 'text-white' },
-    { id: 'settings', label: 'Settings', icon: Settings, color: 'bg-white/10 hover:bg-white/20', textColor: 'text-white' },
-    { id: 'updates', label: 'Check Updates', icon: Zap, color: 'bg-white/10 hover:bg-white/20', textColor: 'text-white' },
-    { id: 'uninstall', label: 'Uninstall', icon: Trash2, color: 'bg-red-500/20 hover:bg-red-500/30', textColor: 'text-red-400' },
+    { id: 'play', label: 'Play Game', icon: Play, isButton: true },
+    { id: 'settings', label: 'Settings', icon: Settings, isButton: false },
+    { id: 'updates', label: 'Check Updates', icon: Zap, isButton: false },
   ];
 
   const handleOptionClick = (optionId) => {
@@ -1294,17 +1292,11 @@ function GameOptionsPanel({ game, onClose }) {
       case 'play':
         console.log('Launching game:', game.title);
         break;
-      case 'achievements':
-        navigate(createPageUrl('Achievements'));
-        break;
       case 'settings':
         console.log('Opening settings for:', game.title);
         break;
       case 'updates':
         console.log('Checking updates for:', game.title);
-        break;
-      case 'uninstall':
-        console.log('Uninstalling:', game.title);
         break;
       default:
         break;
@@ -1350,14 +1342,25 @@ function GameOptionsPanel({ game, onClose }) {
         {/* Menu Options */}
         <div className="flex-1 px-3 pb-3 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           {menuOptions.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleOptionClick(option.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg ${option.color} ${option.textColor} text-xs font-medium transition-all`}
-            >
-              <option.icon className="w-4 h-4" />
-              {option.label}
-            </button>
+            option.isButton ? (
+              <button
+                key={option.id}
+                onClick={() => handleOptionClick(option.id)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-medium transition-all"
+              >
+                <option.icon className="w-4 h-4" />
+                {option.label}
+              </button>
+            ) : (
+              <div
+                key={option.id}
+                onClick={() => handleOptionClick(option.id)}
+                className="flex items-center gap-2.5 py-1.5 text-white/70 hover:text-white text-xs cursor-pointer transition-colors"
+              >
+                <option.icon className="w-4 h-4 text-white/50" />
+                {option.label}
+              </div>
+            )
           ))}
         </div>
 
