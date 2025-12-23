@@ -27,45 +27,48 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
   const scrollTimeoutRef = useRef(null);
   const containerRef = useRef(null);
   
-  const ITEM_HEIGHT = 100;
-  const ITEM_GAP = 16;
+  const ITEM_HEIGHT = 80;
+  const ITEM_GAP = 24;
   const CROSS_Y_VH = 40;
 
   const selectedGame = games[activeIndex];
 
-  // Handle wheel scroll - only when mouse is over the game selector area
-  const handleWheelScroll = (e) => {
-    e.preventDefault();
-    setIsScrolling(true);
-    
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    
-    if (e.deltaY > 0 && activeIndex < games.length - 1) {
-      setActiveIndex(prev => prev + 1);
-    } else if (e.deltaY < 0 && activeIndex > 0) {
-      setActiveIndex(prev => prev - 1);
-    }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
-      setIsScrolling(false);
-    }, 300);
-  };
+  // Handle wheel scroll
+  useEffect(() => {
+    let lastWheelTime = 0;
+    const WHEEL_COOLDOWN = 150;
+
+    const handleWheel = (e) => {
+      if (isScrolling || games.length === 0) return;
+      const now = Date.now();
+      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+      if (e.deltaY > 0) {
+        if (activeIndex < games.length - 1) {
+          setActiveIndex(prev => prev + 1);
+          lastWheelTime = now;
+        }
+      } else if (e.deltaY < 0) {
+        if (activeIndex > 0) {
+          setActiveIndex(prev => prev - 1);
+          lastWheelTime = now;
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [activeIndex, games.length, isScrolling]);
 
   // Handle keyboard
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowDown' || e.key === 's') {
         e.preventDefault();
-        setIsScrolling(true);
         if (activeIndex < games.length - 1) setActiveIndex(prev => prev + 1);
-        setTimeout(() => setIsScrolling(false), 300);
       } else if (e.key === 'ArrowUp' || e.key === 'w') {
         e.preventDefault();
-        setIsScrolling(true);
         if (activeIndex > 0) setActiveIndex(prev => prev - 1);
-        setTimeout(() => setIsScrolling(false), 300);
       }
     };
 
@@ -78,239 +81,265 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
     };
   }, [activeIndex, games.length]);
 
-  return (
-    <div className="flex h-[calc(100vh-140px)]">
-      {/* Left Side - Scrolling Game Boxes */}
-      <div 
-        ref={containerRef}
-        className="relative w-48 h-full flex items-center overflow-hidden flex-shrink-0"
-        onWheel={handleWheelScroll}
-      >
-        <motion.div
-          className="absolute left-6 flex flex-col gap-4"
-          animate={{ 
-            y: `calc(${CROSS_Y_VH}vh - ${activeIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px - 70px)`,
-            opacity: isScrolling ? 0.5 : 1
-          }}
-          transition={{ 
-            y: { type: "spring", stiffness: 250, damping: 25 },
-            opacity: { duration: 0.15 }
-          }}
-        >
-          {games.map((game, idx) => {
-            const isActive = idx === activeIndex;
-            return (
-              <motion.div
-                key={game.id}
-                onClick={() => setActiveIndex(idx)}
-                animate={{ 
-                  scale: isActive ? 1.05 : 0.85,
-                  opacity: isActive ? 1 : 0.4,
-                  x: isActive ? 8 : 0
-                }}
-                className={`
-                  w-24 h-24 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden relative
-                  ${isActive 
-                    ? 'ring-2 ring-white/40 shadow-[0_0_25px_rgba(255,255,255,0.2)]' 
-                    : 'border border-white/10'
-                  }
-                `}
-              >
-                <img 
-                  src={game.cover_image || game.cover} 
-                  alt={game.title}
-                  className="w-full h-full object-cover"
-                />
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                )}
-                {/* Achievement Icon - Above the active game */}
-                {isActive && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSwitchToAchievements?.();
-                    }}
-                    className="absolute -top-10 left-1/2 -translate-x-1/2 w-8 h-8 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 flex items-center justify-center border border-yellow-500/30 transition-all"
-                    title="View Achievements"
-                  >
-                    <Trophy className="w-4 h-4 text-yellow-400" />
-                  </motion.button>
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
+  if (games.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <p className="text-white/50">No games found</p>
       </div>
+    );
+  }
 
-      {/* Vertical Line */}
-      <div className="w-px h-full bg-white/10 flex-shrink-0" />
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Dynamic Background */}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={selectedGame?.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0 z-0"
+        >
+          {selectedGame?.cover_image && (
+            <>
+              <img 
+                src={selectedGame.banner || selectedGame.cover_image || selectedGame.cover} 
+                alt="bg" 
+                className="w-full h-full object-cover opacity-40 blur-sm scale-105" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+            </>
+          )}
+          
+          {/* Ambient Glows */}
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Right Side - Game Details */}
-      <div className="flex-1 pl-8 overflow-hidden flex flex-col">
-        {selectedGame && (
-          <>
-            {/* Game Header */}
-            <div className="mb-6 flex-shrink-0">
-              <div className="flex items-end gap-6 mb-6">
-                <div className="w-28 h-36 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
-                  <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+      {/* Interface Layer */}
+      <div className="relative z-10 w-full h-full flex">
+        
+        {/* VERTICAL AXIS (Games) - Left Side */}
+        <div className="relative w-48 h-full flex flex-col items-center z-20 pointer-events-none">
+          <motion.div 
+            className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+            animate={{ 
+              y: `calc(${CROSS_Y_VH}vh - ${activeIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
+            }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+          >
+            {games.map((game, idx) => {
+              const isActive = idx === activeIndex;
+              return (
+                <motion.div
+                  key={game.id}
+                  onClick={() => setActiveIndex(idx)}
+                  animate={{ 
+                    scale: isActive ? 1.2 : 0.9,
+                    opacity: isActive ? 1 : 0.3,
+                    x: isActive ? 20 : 0
+                  }}
+                  className="flex flex-col items-center gap-2 cursor-pointer w-32"
+                >
+                  <div className={`
+                    w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden
+                    ${isActive 
+                      ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
+                      : 'border border-white/10 backdrop-blur-sm'
+                    }
+                  `}>
+                    <img 
+                      src={game.cover_image || game.cover} 
+                      alt={game.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
+                    {game.title}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+
+        {/* Vertical Line */}
+        <div className="w-px h-full bg-white/10 flex-shrink-0" />
+
+        {/* Right Side - Game Details Panel */}
+        <div className="flex-1 pl-8 pr-8 py-8 overflow-hidden flex flex-col">
+          {selectedGame && (
+            <>
+              {/* Game Header */}
+              <div className="mb-6 flex-shrink-0">
+                <div className="flex items-end gap-6 mb-6">
+                  <div className="w-28 h-36 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
+                    <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
+                    <h1 className="text-3xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
+                    <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        <span>12.5h played</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-yellow-400" />
+                        <span>8/15 achievements</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={() => onLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
+                        <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                      </Button>
+                      <Button variant="outline" onClick={() => onStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                        <Radio className="w-4 h-4 mr-2" /> Stream
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => onSwitchToAchievements?.()} 
+                        className="border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-400"
+                      >
+                        <Trophy className="w-4 h-4 mr-2" /> Achievements
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
-                  <h1 className="text-3xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
-                  <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-400" />
-                      <span>12.5h played</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-yellow-400" />
-                      <span>8/15 achievements</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button onClick={() => onLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
-                      <Play className="w-4 h-4 mr-2 fill-current" /> Play
-                    </Button>
-                    <Button variant="outline" onClick={() => onStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                      <Radio className="w-4 h-4 mr-2" /> Stream
-                    </Button>
-                  </div>
+
+                {/* Navigation Tabs */}
+                <div className="flex items-center gap-8 border-b border-white/10">
+                  {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements'].map((tab) => {
+                    const id = tab.toLowerCase().replace(' ', '_');
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setActiveDetailTab(id)}
+                        className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
+                          activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
+                        }`}
+                      >
+                        {tab}
+                        {activeDetailTab === id && (
+                          <motion.div 
+                            layoutId="libraryCrossMenuTabLine"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-8 border-b border-white/10">
-                {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements'].map((tab) => {
-                  const id = tab.toLowerCase().replace(' ', '_');
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setActiveDetailTab(id)}
-                      className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
-                        activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
-                      }`}
+              {/* Content Area */}
+              <div className="flex-1 overflow-y-auto pr-4" style={{ scrollbarWidth: 'none' }}>
+                <AnimatePresence mode="wait">
+                  {activeDetailTab === 'overview' && (
+                    <motion.div 
+                      key="overview"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="space-y-8"
                     >
-                      {tab}
-                      {activeDetailTab === id && (
-                        <motion.div 
-                          layoutId="crossMenuTabLine"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto pr-4" style={{ scrollbarWidth: 'none' }}>
-              <AnimatePresence mode="wait">
-                {activeDetailTab === 'overview' && (
-                  <motion.div 
-                    key="overview"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-8"
-                  >
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="col-span-2 space-y-6">
-                        <div>
-                          <h3 className="text-lg font-bold text-white mb-3">About</h3>
-                          <p className="text-white/60 leading-relaxed text-sm">
-                            {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
-                          </p>
-                        </div>
-                        
-                        {/* Trailer */}
-                        <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-video relative group cursor-pointer">
-                          <img src={selectedGame.banner || selectedGame.cover_image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Play className="w-6 h-6 fill-white text-white" />
-                            </div>
+                      <div className="grid grid-cols-3 gap-6">
+                        <div className="col-span-2 space-y-6">
+                          <div>
+                            <h3 className="text-lg font-bold text-white mb-3">About</h3>
+                            <p className="text-white/60 leading-relaxed text-sm">
+                              {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
+                            </p>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                          <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Game Stats</h4>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-white/60">Last Played</span>
-                              <span className="text-sm text-white font-medium">Today</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-white/60">Time Played</span>
-                              <span className="text-sm text-white font-medium">12.5 hrs</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-white/60">Achievements</span>
-                              <span className="text-sm text-white font-medium">8 / 15</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                          <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Friends Playing</h4>
-                          <div className="flex -space-x-2">
-                            {[1,2,3].map(i => (
-                              <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs font-bold">
-                                {String.fromCharCode(64+i)}
+                          
+                          {/* Trailer */}
+                          <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-video relative group cursor-pointer">
+                            <img src={selectedGame.banner || selectedGame.cover_image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Play className="w-6 h-6 fill-white text-white" />
                               </div>
-                            ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Game Stats</h4>
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-white/60">Last Played</span>
+                                <span className="text-sm text-white font-medium">Today</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-white/60">Time Played</span>
+                                <span className="text-sm text-white font-medium">12.5 hrs</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-white/60">Achievements</span>
+                                <span className="text-sm text-white font-medium">8 / 15</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Friends Playing</h4>
+                            <div className="flex -space-x-2">
+                              {[1,2,3].map(i => (
+                                <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs font-bold">
+                                  {String.fromCharCode(64+i)}
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  )}
 
-                {activeDetailTab === 'achievements' && (
-                  <motion.div 
-                    key="achievements" 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex flex-wrap gap-3"
-                  >
-                    {[
-                      { title: 'First Blood', xp: 500, unlocked: true },
-                      { title: 'Master Explorer', xp: 1000, unlocked: false },
-                      { title: 'Speed Demon', xp: 750, unlocked: true },
-                      { title: 'Collector', xp: 2000, unlocked: false },
-                      { title: 'Champion', xp: 1500, unlocked: false },
-                      { title: 'Perfectionist', xp: 3000, unlocked: false },
-                    ].map((ach, i) => (
-                      <DigitalAchievementCard 
-                        key={i}
-                        title={ach.title}
-                        icon="🏆"
-                        rarity={ach.unlocked ? 'Legendary' : 'Epic'}
-                        unlocked={ach.unlocked}
-                        xp={ach.xp}
-                        size="small"
-                      />
-                    ))}
-                  </motion.div>
-                )}
+                  {activeDetailTab === 'achievements' && (
+                    <motion.div 
+                      key="achievements" 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex flex-wrap gap-3"
+                    >
+                      {[
+                        { title: 'First Blood', xp: 500, unlocked: true },
+                        { title: 'Master Explorer', xp: 1000, unlocked: false },
+                        { title: 'Speed Demon', xp: 750, unlocked: true },
+                        { title: 'Collector', xp: 2000, unlocked: false },
+                        { title: 'Champion', xp: 1500, unlocked: false },
+                        { title: 'Perfectionist', xp: 3000, unlocked: false },
+                      ].map((ach, i) => (
+                        <DigitalAchievementCard 
+                          key={i}
+                          title={ach.title}
+                          icon="🏆"
+                          rarity={ach.unlocked ? 'Legendary' : 'Epic'}
+                          unlocked={ach.unlocked}
+                          xp={ach.xp}
+                          size="small"
+                        />
+                      ))}
+                    </motion.div>
+                  )}
 
-                {['discussion', 'streamers', 'guide', 'support'].includes(activeDetailTab) && (
-                  <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
-                    <Bot className="w-12 h-12 mb-4 opacity-50" />
-                    <p>Content for {activeDetailTab} coming soon.</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </>
-        )}
+                  {['discussion', 'streamers', 'guide', 'support'].includes(activeDetailTab) && (
+                    <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
+                      <Bot className="w-12 h-12 mb-4 opacity-50" />
+                      <p>Content for {activeDetailTab} coming soon.</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -932,7 +961,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('grid'); // grid is default - full page Store-like view
   const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1054,10 +1083,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   }
 
   return (
-    <div 
-      className="min-h-screen text-white"
-      style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
-    >
+    <div className="h-screen w-full text-white overflow-hidden relative">
       {/* Achievements Overlay-style Transition */}
       <AnimatePresence>
         {embeddedView === 'achievements' && (
@@ -1168,12 +1194,35 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         )}
 
         {viewMode === 'grid' ? (
-          <LibraryCrossMenu 
-            games={filteredGames}
-            onLaunchGame={handleLaunchGame}
-            onStreamGame={handleStreamGame}
-            onSwitchToAchievements={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-          />
+          <div className="absolute inset-0">
+            {/* Top Left Controls */}
+            <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
+              {/* Grid/List Toggle */}
+              <button 
+                onClick={() => setViewMode('list')}
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                title="Switch to List View"
+              >
+                <List className="w-5 h-5 text-white/70 hover:text-white" />
+              </button>
+
+              {/* Achievements Button */}
+              <button 
+                onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
+                className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 transition-all"
+                title="View Achievements"
+              >
+                <Trophy className="w-5 h-5 text-yellow-400" />
+              </button>
+            </div>
+
+            <LibraryCrossMenu 
+              games={filteredGames}
+              onLaunchGame={handleLaunchGame}
+              onStreamGame={handleStreamGame}
+              onSwitchToAchievements={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
+            />
+          </div>
         ) : (
           <div className="flex gap-6">
             {/* Left Sidebar - Game List */}

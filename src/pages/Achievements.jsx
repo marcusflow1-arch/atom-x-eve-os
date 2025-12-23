@@ -206,13 +206,30 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) 
       {/* Interface Layer */}
       <div className="relative z-10 w-full h-full">
         
-        {/* Breadcrumb */}
-        <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4" />
-            <span>Achievements</span>
-          </div>
-          <ChevronRight className="w-4 h-4" />
+        {/* Top Left Controls - Grid Toggle + Library Button */}
+        <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
+          {/* Grid/List Toggle */}
+          <button 
+            onClick={() => setViewMode('list')}
+            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+            title="Switch to List View"
+          >
+            <List className="w-5 h-5 text-white/70 hover:text-white" />
+          </button>
+          
+          {/* Library Button (Controller Icon) */}
+          <Link to={createPageUrl('Library')}>
+            <button 
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+              title="Back to Library"
+            >
+              <Gamepad2 className="w-5 h-5 text-white/70 hover:text-white" />
+            </button>
+          </Link>
+        </div>
+
+        {/* Breadcrumb - Game Title Only */}
+        <div className="absolute top-8 left-32 flex items-center gap-2 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
           <span className="text-white">{selectedGame?.title || 'Select Game'}</span>
         </div>
 
@@ -540,7 +557,7 @@ function AchievementsView({ onExitToLibrary }) {
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list' - grid is default
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -705,21 +722,10 @@ function AchievementsView({ onExitToLibrary }) {
   }, [allGames]);
 
   return (
-    <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+    <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
       {/* Grid View Mode - Full Screen Like Store */}
       {viewMode === 'grid' ? (
-        <div className="h-full w-full relative">
-          {/* Grid Toggle Button - Top Right */}
-          <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
-            <button 
-              onClick={() => setViewMode('list')}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-              title="Switch to List View"
-            >
-              <List className="w-4 h-4 text-white/60 hover:text-white" />
-            </button>
-          </div>
-
+        <div className="absolute inset-0">
           <AchievementsCrossMenu 
             games={filteredGames}
             localAchievements={localAchievements}
