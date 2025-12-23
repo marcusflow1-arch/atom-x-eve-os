@@ -1063,12 +1063,12 @@ export default function LunaTemplate() {
             className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${
               uiVisible 
                 ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' 
-                : 'top-20 left-8 w-[240px] h-[260px] z-[35]'
+                : 'top-20 left-8 w-[200px] h-[180px] z-[35]'
             }`}
             style={!uiVisible ? {
-              /* Constrained to area: below header, above calendar line, left of Feed divider */
-              maxWidth: '240px',
-              maxHeight: '260px',
+              /* Constrained to reduced area */
+              maxWidth: '200px',
+              maxHeight: '180px',
             } : {}}
           >
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />

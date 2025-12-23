@@ -2094,22 +2094,19 @@ export default function FocusModePanel() {
     <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* Top Section - News Feed & Content (right of 3D viewer) */}
-      <div className="flex gap-6 flex-1 min-h-0">
+      {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
+      <div className="flex gap-6 min-h-0" style={{ height: '280px', maxHeight: '280px' }}>
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) + Calendar & Goals below */}
-        <div className="w-[260px] flex-shrink-0 flex flex-col">
+        <div className="w-[220px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
-          <div className="relative flex-1 min-h-[260px]">
+          <div className="relative flex-1 min-h-[180px]">
             {/* Invisible boundary - 3D viewer floats above this space */}
           </div>
           
-          {/* Invisible line above calendar */}
-          <div className="h-px bg-transparent" />
-          
-          {/* Calendar & Goals - Below 3D viewer space, above the main horizontal line */}
-          <div className="mt-2 pt-2 border-t border-white/5">
+          {/* Calendar & Goals - Below 3D viewer space */}
+          <div className="mt-1">
             <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-            <div className="mt-2">
+            <div className="mt-1">
               <GoalsPanel />
             </div>
           </div>
@@ -2131,8 +2128,8 @@ export default function FocusModePanel() {
         </div>
       </div>
 
-      {/* Horizontal Divider */}
-      <div className="h-px bg-white/10 my-4" />
+      {/* Horizontal Divider - Moved up */}
+      <div className="h-px bg-white/10 my-2" />
 
       {/* Calendar Modal */}
       <AnimatePresence>
