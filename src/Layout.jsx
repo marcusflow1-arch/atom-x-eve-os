@@ -669,8 +669,15 @@ function LayoutContent({ children, currentPageName }) {
         </div>
       )}
 
-      {/* Main Content with Error Boundary */}
-      <main className="flex-grow overflow-hidden">
+      {/* Invisible Header Divider Line - Content must stay below this */}
+      <div 
+        className="fixed top-[72px] left-0 right-0 h-px z-30 pointer-events-none"
+        style={{ background: 'transparent' }}
+        aria-hidden="true"
+      />
+
+      {/* Main Content with Error Boundary - Starts below header divider */}
+      <main className="flex-grow overflow-hidden pt-[72px]">
         <div className="page-container">
           <ErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
