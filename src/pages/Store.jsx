@@ -749,8 +749,8 @@ export default function Store() {
                               </div>
                             </div>
                         </div>
-                    ) : storeMode === 'store' ? (
-                        /* Standard Store Search */
+                    ) : storeMode === 'store' && storeSubView === 'games' ? (
+                        /* Standard Store Search - Only for Games view, NOT Library/Achievements */
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 w-72 hover:bg-black/40 hover:border-white/20 transition-all focus-within:bg-black/50 focus-within:border-white/30 shadow-lg">
