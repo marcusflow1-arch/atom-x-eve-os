@@ -1126,14 +1126,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               </button>
             </div>
 
-            {/* Grid Menu Button */}
-            <button
-              onClick={() => setShowTransitionMenu(true)}
-              className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all"
-              title="Open Menu"
-            >
-              <LayoutGrid className="w-5 h-5 text-white/70 hover:text-white" />
-            </button>
+
           </div>
         </div>
 
