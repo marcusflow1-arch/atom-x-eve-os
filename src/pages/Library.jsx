@@ -192,8 +192,16 @@ const LibraryGridView = ({ games, onLaunchGame, onStreamGame, onSwitchToAchievem
           </div>
         </div>
 
-        {/* Center Content */}
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'rgba(15, 23, 42, 0.4)' }}>
+        {/* Right Content - Separate Box */}
+        <div 
+          className="flex-1 flex flex-col overflow-hidden rounded-2xl border border-white/10" 
+          style={{ 
+            background: 'rgba(100, 120, 140, 0.08)',
+            backdropFilter: 'blur(20px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
+          }}
+        >
           {selectedGame ? (
             <>
               {/* Game Header */}
