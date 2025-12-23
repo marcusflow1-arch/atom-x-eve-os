@@ -22,9 +22,13 @@ import { createPageUrl } from '@/utils';
 const ShinySidebarBox = ({ children, className = "" }) => {
   return (
     <motion.div
-      className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
+      className={`relative overflow-hidden rounded-2xl border shadow-2xl ${className}`}
       style={{
-        background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)',
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(20px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+        borderColor: 'rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
       }}
     >
         {children}
@@ -336,12 +340,12 @@ function AchievementsView({ onExitToLibrary }) {
   }, [allGames]);
 
   return (
-    <div className="h-screen w-full bg-[#0f172a] text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30">
+    <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Ambient Glow */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+      <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-indigo-500/10 via-blue-500/5 to-transparent blur-3xl" />
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
       </div>
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
@@ -434,11 +438,17 @@ function AchievementsView({ onExitToLibrary }) {
                         setSelectedGame(game);
                         setSelectedAchievement(null);
                     }}
-                    className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                    className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
                         selectedGame?.id === game.id 
-                        ? 'bg-white/10 shadow-lg border border-white/10' 
-                        : 'hover:bg-white/5 border border-transparent'
+                        ? 'shadow-lg border-cyan-400/30' 
+                        : 'hover:border-cyan-400/20 border-transparent'
                     }`}
+                    style={selectedGame?.id === game.id ? {
+                      background: 'rgba(34, 211, 238, 0.12)',
+                      boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
+                    } : {
+                      background: 'transparent'
+                    }}
                     whileHover={{ x: 4 }}
                   >
                     {/* Small Box (Image) */}

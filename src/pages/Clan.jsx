@@ -150,7 +150,7 @@ export default function ClanPage() {
     }
 
     return (
-        <div className="flex h-screen w-full overflow-hidden font-sans text-slate-800 relative" style={bgStyle}>
+        <div className="flex h-screen w-full overflow-hidden font-sans text-slate-200 relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 1. Server List (Left) */}
             <ServerList 
                 activeClanId={activeClan?.id} 
@@ -172,7 +172,12 @@ export default function ClanPage() {
             )}
 
             {/* 3. Main Content Area */}
-            <div className="flex-1 flex min-w-0 relative z-10 bg-white/40 backdrop-blur-xl shadow-inner border-l border-white/40">
+            <div className="flex-1 flex min-w-0 relative z-10 shadow-inner border-l" style={{
+              background: 'rgba(100, 120, 140, 0.08)',
+              backdropFilter: 'blur(20px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+              borderLeft: '1px solid rgba(255, 255, 255, 0.08)'
+            }}>
                 {selectedChannelId === 'overview' && activeClan ? (
                     <ClanDashboard clan={activeClan} events={events} />
                 ) : selectedChannelId === 'vault' && activeClan ? (

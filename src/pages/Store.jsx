@@ -29,14 +29,6 @@ import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay
 const ShinySidebarBox = ({ children, className = "" }) => {
   const x = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  
-  // Create a moving gradient that follows the mouse
-  const gradientBg = useTransform(
-    mouseX, 
-    [0, 1], 
-    ["linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 0%, transparent 100%)", 
-     "linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)"]
-  );
 
   function handleMouseMove({ currentTarget, clientX }) {
     const { left, width } = currentTarget.getBoundingClientRect();
@@ -45,11 +37,15 @@ const ShinySidebarBox = ({ children, className = "" }) => {
 
   return (
     <motion.div
-      className={`relative overflow-hidden bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl ${className}`}
+      className={`relative overflow-hidden border rounded-2xl shadow-2xl ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => x.set(0.5)}
       style={{
-        WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(20px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+        borderColor: 'rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
       }}
     >
         {/* The Shine Effect */}
@@ -617,7 +613,7 @@ export default function Store() {
     return (
         <div 
             className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
-            style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             
             {/* Top Navigation Bar (Translucent/Invisible) - Fades on scroll */}
@@ -818,7 +814,14 @@ export default function Store() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -300, opacity: 0 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 left-0 bottom-0 w-72 bg-slate-900/90 backdrop-blur-3xl border-r border-white/10 z-50 p-6 shadow-2xl"
+                            className="fixed top-0 left-0 bottom-0 w-72 border-r z-50 p-6 shadow-2xl"
+                            style={{
+                              background: 'rgba(100, 120, 140, 0.12)',
+                              backdropFilter: 'blur(30px) saturate(150%)',
+                              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                              borderRight: '1px solid rgba(255, 255, 255, 0.10)',
+                              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                            }}
                         >
                             <h2 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-4">Navigation</h2>
                             <div className="space-y-1">
@@ -1078,9 +1081,15 @@ export default function Store() {
                                                                 }}
                                                                 onMouseLeave={() => setHoveredGame(null)}
                                                                 className={`
-                                                                    group relative aspect-[3/4] bg-white/[0.03] backdrop-blur-xl rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all
-                                                                    ${isKeyboardActive ? 'ring-2 ring-blue-500 scale-105 z-10' : 'border border-white/10 hover:shadow-blue-500/10 hover:border-blue-500/30'}
+                                                                    group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all border
+                                                                    ${isKeyboardActive ? 'ring-2 ring-cyan-400 scale-105 z-10' : 'hover:shadow-cyan-500/10 hover:border-cyan-400/30'}
                                                                 `}
+                                                                style={isKeyboardActive ? {} : {
+                                                                  background: 'rgba(100, 120, 140, 0.10)',
+                                                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                                                  borderColor: 'rgba(255, 255, 255, 0.08)'
+                                                                }}
                                                                 onClick={() => handleNavigateToGame(game.id)}
                                                             >
                                                                 <img 

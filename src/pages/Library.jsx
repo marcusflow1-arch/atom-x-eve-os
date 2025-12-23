@@ -23,9 +23,13 @@ import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 const ShinySidebarBox = ({ children, className = "" }) => {
   return (
     <motion.div
-      className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl ${className}`}
+      className={`relative overflow-hidden rounded-2xl border shadow-2xl ${className}`}
       style={{
-        background: 'linear-gradient(180deg, #020617 0%, #0f172a 100%)', // Darker blue background
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(20px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+        borderColor: 'rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
       }}
     >
         {children}
@@ -754,7 +758,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   return (
     <div 
       className="min-h-screen text-white"
-      style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #2d3548 25%, #3d4a5c 50%, #2d3548 75%, #1a1f2e 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
     >
       {/* Achievements Overlay-style Transition */}
       <AnimatePresence>
@@ -920,7 +924,11 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                                                               <button
                                                                   key={game.id}
                                                                   onClick={() => setSelectedGame(game)}
-                                                                  className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group ${selectedGame?.id === game.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                                  className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group border ${selectedGame?.id === game.id ? 'border-cyan-400/30' : 'hover:border-cyan-400/20 border-transparent'}`}
+                                                  style={selectedGame?.id === game.id ? {
+                                                    background: 'rgba(34, 211, 238, 0.12)',
+                                                    boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
+                                                  } : {}}
                                                               >
                                                                   <div className="w-8 h-8 rounded bg-slate-800 flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-white/30">
                                                                       <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
