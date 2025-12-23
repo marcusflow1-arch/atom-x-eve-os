@@ -120,10 +120,10 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
       </AnimatePresence>
 
       {/* Interface Layer */}
-      <div className="relative z-10 w-full h-full flex">
+      <div className="relative z-10 w-full h-full">
         
         {/* VERTICAL AXIS (Games) - Left Side */}
-        <div className="relative w-48 h-full flex flex-col items-center z-20 pointer-events-none">
+        <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
           <motion.div 
             className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
             animate={{ 
@@ -166,11 +166,8 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
           </motion.div>
         </div>
 
-        {/* Vertical Line */}
-        <div className="w-px h-full bg-white/10 flex-shrink-0" />
-
         {/* Right Side - Game Details Panel */}
-        <div className="flex-1 pl-8 pr-8 py-8 overflow-hidden flex flex-col">
+        <div className="absolute top-0 bottom-0 right-0 left-64 pl-8 pr-8 py-8 overflow-hidden flex flex-col">
           {selectedGame && (
             <>
               {/* Game Header */}
