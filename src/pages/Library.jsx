@@ -982,6 +982,16 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
+        {/* Left Side Scroll Menu */}
+        <div className="flex-shrink-0">
+          <LibraryScrollMenu
+            games={filteredGames}
+            selectedGame={selectedGame}
+            onSelectGame={setSelectedGame}
+            onLaunchGame={handleLaunchGame}
+          />
+        </div>
+
         {/* Content Area - List View */}
         <div className="flex-1 min-h-[calc(100vh-200px)]">
           <LunaGamePanel
