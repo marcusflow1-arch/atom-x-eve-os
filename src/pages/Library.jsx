@@ -19,13 +19,10 @@ import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
-// --- Library Cross Menu Component (Inline Grid View) ---
+// --- Library Cross Menu Component (Full Page Grid View - Achievements Style) ---
 const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchievements }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState('overview');
-  const scrollTimeoutRef = useRef(null);
-  const containerRef = useRef(null);
   
   const ITEM_HEIGHT = 80;
   const ITEM_GAP = 24;
@@ -39,7 +36,7 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
     const WHEEL_COOLDOWN = 150;
 
     const handleWheel = (e) => {
-      if (isScrolling || games.length === 0) return;
+      if (games.length === 0) return;
       const now = Date.now();
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
 
@@ -58,7 +55,7 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
 
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [activeIndex, games.length, isScrolling]);
+  }, [activeIndex, games.length]);
 
   // Handle keyboard
   useEffect(() => {
@@ -73,12 +70,7 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, games.length]);
 
   if (games.length === 0) {
@@ -91,7 +83,7 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Dynamic Background */}
+      {/* Dynamic Background - Fades based on selected game */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={selectedGame?.id}
@@ -101,6 +93,8 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
           transition={{ duration: 0.6 }}
           className="absolute inset-0 z-0"
         >
+          <div className="absolute inset-0 bg-transparent" />
+          
           {selectedGame?.cover_image && (
             <>
               <img 
@@ -122,7 +116,7 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
       {/* Interface Layer */}
       <div className="relative z-10 w-full h-full">
         
-        {/* VERTICAL AXIS (Games) - Left Side */}
+        {/* VERTICAL AXIS (Games) - Left Side - Small boxes that pop out */}
         <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
           <motion.div 
             className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
@@ -166,56 +160,64 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
           </motion.div>
         </div>
 
-        {/* Right Side - Game Details Panel */}
-        <div className="absolute top-0 bottom-0 right-0 left-64 pl-8 pr-8 py-8 overflow-hidden flex flex-col">
-          {selectedGame && (
-            <>
-              {/* Game Header */}
-              <div className="mb-6 flex-shrink-0">
-                <div className="flex items-end gap-6 mb-6">
-                  <div className="w-28 h-36 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
-                    <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+        {/* Right Side - Game Details with Tabs */}
+        <div className="absolute bottom-16 left-72 right-16 z-30 pointer-events-none">
+          <AnimatePresence mode="wait">
+            {selectedGame && (
+              <motion.div
+                key={selectedGame.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="pointer-events-auto"
+              >
+                {/* Game Info Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                    {selectedGame.genre}
+                  </Badge>
+                  <div className="flex items-center gap-2 text-white/50 text-sm">
+                    <Clock className="w-4 h-4 text-blue-400" />
+                    <span>12.5h played</span>
                   </div>
-                  <div className="flex-1">
-                    <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
-                    <h1 className="text-3xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
-                    <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-blue-400" />
-                        <span>12.5h played</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4 text-yellow-400" />
-                        <span>8/15 achievements</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button onClick={() => onLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
-                        <Play className="w-4 h-4 mr-2 fill-current" /> Play
-                      </Button>
-                      <Button variant="outline" onClick={() => onStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                        <Radio className="w-4 h-4 mr-2" /> Stream
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => onSwitchToAchievements?.()} 
-                        className="border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-400"
-                      >
-                        <Trophy className="w-4 h-4 mr-2" /> Achievements
-                      </Button>
-                    </div>
+                  <div className="flex items-center gap-2 text-white/50 text-sm">
+                    <Trophy className="w-4 h-4 text-yellow-400" />
+                    <span>8/15 achievements</span>
                   </div>
                 </div>
 
+                {/* Game Title */}
+                <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl mb-4">
+                  {selectedGame.title}
+                </h1>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mb-6">
+                  <Button onClick={() => onLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold px-8">
+                    <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                  </Button>
+                  <Button variant="outline" onClick={() => onStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                    <Radio className="w-4 h-4 mr-2" /> Stream
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => onSwitchToAchievements?.()} 
+                    className="border-yellow-500/30 hover:bg-yellow-500/10 text-yellow-400"
+                  >
+                    <Trophy className="w-4 h-4 mr-2" /> Achievements
+                  </Button>
+                </div>
+
                 {/* Navigation Tabs */}
-                <div className="flex items-center gap-8 border-b border-white/10">
-                  {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements'].map((tab) => {
+                <div className="flex items-center gap-6 mb-6">
+                  {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements', 'Streamer Affiliate'].map((tab) => {
                     const id = tab.toLowerCase().replace(' ', '_');
                     return (
                       <button
                         key={id}
                         onClick={() => setActiveDetailTab(id)}
-                        className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
+                        className={`text-sm font-bold uppercase tracking-wider transition-all relative pb-2 ${
                           activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
@@ -230,112 +232,65 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame, onSwitchToAchieve
                     );
                   })}
                 </div>
-              </div>
 
-              {/* Content Area */}
-              <div className="flex-1 overflow-y-auto pr-4" style={{ scrollbarWidth: 'none' }}>
-                <AnimatePresence mode="wait">
-                  {activeDetailTab === 'overview' && (
-                    <motion.div 
-                      key="overview"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-8"
-                    >
-                      <div className="grid grid-cols-3 gap-6">
-                        <div className="col-span-2 space-y-6">
-                          <div>
-                            <h3 className="text-lg font-bold text-white mb-3">About</h3>
-                            <p className="text-white/60 leading-relaxed text-sm">
-                              {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
-                            </p>
-                          </div>
-                          
-                          {/* Trailer */}
-                          <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-video relative group cursor-pointer">
-                            <img src={selectedGame.banner || selectedGame.cover_image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Play className="w-6 h-6 fill-white text-white" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                {/* Tab Content */}
+                <div className="max-w-3xl">
+                  <AnimatePresence mode="wait">
+                    {activeDetailTab === 'overview' && (
+                      <motion.div 
+                        key="overview"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        <p className="text-lg text-white/70 line-clamp-3 drop-shadow-md">
+                          {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
+                        </p>
+                      </motion.div>
+                    )}
 
-                        <div className="space-y-4">
-                          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                            <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Game Stats</h4>
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-white/60">Last Played</span>
-                                <span className="text-sm text-white font-medium">Today</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-white/60">Time Played</span>
-                                <span className="text-sm text-white font-medium">12.5 hrs</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-white/60">Achievements</span>
-                                <span className="text-sm text-white font-medium">8 / 15</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                            <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Friends Playing</h4>
-                            <div className="flex -space-x-2">
-                              {[1,2,3].map(i => (
-                                <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs font-bold">
-                                  {String.fromCharCode(64+i)}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
+                    {activeDetailTab === 'achievements' && (
+                      <motion.div 
+                        key="achievements" 
+                        initial={{ opacity: 0, y: 10 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex flex-wrap gap-3"
+                      >
+                        {[
+                          { title: 'First Blood', xp: 500, unlocked: true },
+                          { title: 'Master Explorer', xp: 1000, unlocked: false },
+                          { title: 'Speed Demon', xp: 750, unlocked: true },
+                          { title: 'Collector', xp: 2000, unlocked: false },
+                        ].map((ach, i) => (
+                          <DigitalAchievementCard 
+                            key={i}
+                            title={ach.title}
+                            icon="🏆"
+                            rarity={ach.unlocked ? 'Legendary' : 'Epic'}
+                            unlocked={ach.unlocked}
+                            xp={ach.xp}
+                            size="small"
+                          />
+                        ))}
+                      </motion.div>
+                    )}
 
-                  {activeDetailTab === 'achievements' && (
-                    <motion.div 
-                      key="achievements" 
-                      initial={{ opacity: 0, y: 10 }} 
-                      animate={{ opacity: 1, y: 0 }} 
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex flex-wrap gap-3"
-                    >
-                      {[
-                        { title: 'First Blood', xp: 500, unlocked: true },
-                        { title: 'Master Explorer', xp: 1000, unlocked: false },
-                        { title: 'Speed Demon', xp: 750, unlocked: true },
-                        { title: 'Collector', xp: 2000, unlocked: false },
-                        { title: 'Champion', xp: 1500, unlocked: false },
-                        { title: 'Perfectionist', xp: 3000, unlocked: false },
-                      ].map((ach, i) => (
-                        <DigitalAchievementCard 
-                          key={i}
-                          title={ach.title}
-                          icon="🏆"
-                          rarity={ach.unlocked ? 'Legendary' : 'Epic'}
-                          unlocked={ach.unlocked}
-                          xp={ach.xp}
-                          size="small"
-                        />
-                      ))}
-                    </motion.div>
-                  )}
-
-                  {['discussion', 'streamers', 'guide', 'support'].includes(activeDetailTab) && (
-                    <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
-                      <Bot className="w-12 h-12 mb-4 opacity-50" />
-                      <p>Content for {activeDetailTab} coming soon.</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </>
-          )}
+                    {['discussion', 'streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
+                      <motion.div 
+                        key="placeholder" 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        className="text-white/40"
+                      >
+                        <p>Content for {activeDetailTab.replace('_', ' ')} coming soon.</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
