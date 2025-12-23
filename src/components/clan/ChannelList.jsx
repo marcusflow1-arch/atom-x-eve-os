@@ -109,6 +109,20 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                     <Archive className={`w-4 h-4 mr-2 ${activeChannelId === 'vault' ? 'text-amber-500' : 'text-slate-400'}`} />
                     <span className="text-sm">Guild Vault</span>
                  </button>
+                 <button 
+                    onClick={() => onSelectSpecial('members')}
+                    className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-all duration-200 ${
+                        activeChannelId === 'members' 
+                            ? 'bg-green-50 text-green-600 font-bold border border-green-100 shadow-sm' 
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                    }`}
+                >
+                    <div className="flex items-center">
+                        <Users className={`w-4 h-4 mr-2 ${activeChannelId === 'members' ? 'text-green-500' : 'text-slate-400'}`} />
+                        <span className="text-sm">Members</span>
+                    </div>
+                    <Badge className="bg-slate-100 text-slate-600 text-[10px] h-5 px-1.5">{memberCount}</Badge>
+                 </button>
             </div>
         </div>
     );
