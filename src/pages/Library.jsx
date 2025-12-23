@@ -954,7 +954,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
   const [activeDetailTab, setActiveDetailTab] = useState('overview');
-  const [showBlankGridView, setShowBlankGridView] = useState(false);
+
   
   // Sidebar Filters
   const [selectedGenres, setSelectedGenres] = useState([]);
