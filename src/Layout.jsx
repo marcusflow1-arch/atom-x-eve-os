@@ -705,55 +705,60 @@ function LayoutContent({ children, currentPageName }) {
       {/* Removed Luna header bar - now part of page content for seamless animation */}
 
       {showLunaHeaderBar && (
-        <div className="fixed top-4 right-4 z-40 flex flex-col items-end gap-2">
-          {/* Top Row: Profile & Settings */}
-          <div className="flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-40">
+          {/* Profile icon with hover menu */}
+          <div className="relative group">
             <motion.button
-              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
+              className="w-11 h-11 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
               style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')}
               title="Profile"
             >
               <User className="w-5 h-5 text-white/80" />
             </motion.button>
-            <motion.button
-              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-              title="Settings"
-            >
-              <Settings className="w-5 h-5 text-white/80" />
-            </motion.button>
-          </div>
-          
-          {/* Second Row: Calendar & Alerts */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setCalendarOpen(true)}
-              title="Calendar"
-            >
-              <Calendar className="w-5 h-5 text-white/80" />
-            </motion.button>
-            <motion.button
-              className="w-10 h-10 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10 relative"
-              style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setAlertsOpen(true)}
-              title="Alerts"
-            >
-              <Bell className="w-5 h-5 text-white/80" />
-              {/* Notification dot */}
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </motion.button>
+            
+            {/* Hover Menu */}
+            <div className="absolute top-full right-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out">
+              <div 
+                className="flex flex-col gap-2 p-2 rounded-xl border border-white/10"
+                style={{ 
+                  background: 'rgba(15, 20, 25, 0.9)',
+                  backdropFilter: 'blur(40px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(200%)'
+                }}
+              >
+                <motion.button
+                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCalendarOpen(true)}
+                  title="Calendar"
+                >
+                  <Calendar className="w-5 h-5 text-white/80" />
+                </motion.button>
+                <motion.button
+                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10 relative"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setAlertsOpen(true)}
+                  title="Alerts"
+                >
+                  <Bell className="w-5 h-5 text-white/80" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                </motion.button>
+                <motion.button
+                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                  title="Settings"
+                >
+                  <Settings className="w-5 h-5 text-white/80" />
+                </motion.button>
+              </div>
+            </div>
           </div>
         </div>
       )}
