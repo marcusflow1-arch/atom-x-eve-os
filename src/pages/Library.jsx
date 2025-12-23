@@ -1496,7 +1496,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       {/* Blank Grid View Overlay */}
       <AnimatePresence>
         {showBlankGridView && (
-          <LibraryCrossMenu onClose={() => setShowBlankGridView(false)} />
+          <LibraryCrossMenu onClose={() => setShowBlankGridView(false)} games={ownedGames} />
         )}
       </AnimatePresence>
 
