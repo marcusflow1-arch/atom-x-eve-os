@@ -860,6 +860,7 @@ export default function LunaTemplate() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [userEvents, setUserEvents] = useState([]);
   const [platformUpdates, setPlatformUpdates] = useState([]);
   const [showForumOverlay, setShowForumOverlay] = useState(false);
