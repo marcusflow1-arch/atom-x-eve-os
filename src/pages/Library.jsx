@@ -1022,37 +1022,40 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         </div>
         )}
 
-        {viewMode === 'grid' ? (
-          <div className="absolute inset-0">
-            {/* Top Left Controls */}
-            <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
-              {/* Grid/List Toggle */}
-              <button 
-                onClick={() => setViewMode('list')}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                title="Switch to List View"
+        {/* Transitional Menu Overlay */}
+        <AnimatePresence>
+          {showTransitionMenu && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowTransitionMenu(false)}
+                className="absolute top-6 right-6 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 transition-all"
               >
-                <List className="w-5 h-5 text-white/70 hover:text-white" />
+                <X className="w-5 h-5 text-white" />
               </button>
 
-              {/* Achievements Button */}
-              <button 
-                onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-                className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 transition-all"
-                title="View Achievements"
-              >
-                <Trophy className="w-5 h-5 text-yellow-400" />
-              </button>
-            </div>
+              {/* Menu Content - Blank for now */}
+              <div className="text-center">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <LayoutGrid className="w-16 h-16 text-white/20 mx-auto mb-6" />
+                  <h2 className="text-2xl font-bold text-white mb-2">Menu</h2>
+                  <p className="text-white/40">Content coming soon</p>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            <LibraryGridView 
-              games={filteredGames}
-              onLaunchGame={handleLaunchGame}
-              onStreamGame={handleStreamGame}
-              onSwitchToAchievements={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-            />
-          </div>
-        ) : (
+        {(
           <div className="flex gap-6">
             {/* Left Sidebar - Game List */}
             <div className="w-80 flex-shrink-0">
