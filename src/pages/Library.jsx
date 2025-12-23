@@ -831,6 +831,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 // --- Library Scroll Menu Component (Like Achievements) ---
 const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) => {
   const [activeGameIndex, setActiveGameIndex] = useState(0);
+  const scrollMenuRef = useRef(null);
 
   const ITEM_HEIGHT = 80;
   const ITEM_GAP = 24;
@@ -846,46 +847,38 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
     }
   }, [selectedGame, games]);
 
-  // Wheel Navigation for vertical scroll
-  useEffect(() => {
-    let lastWheelTime = 0;
-    const WHEEL_COOLDOWN = 150;
-
-    const handleWheel = (e) => {
-      if (games.length === 0) return;
-      const now = Date.now();
-      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
-
-      // Only handle vertical scroll
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        if (e.deltaY > 0) {
-          if (activeGameIndex < games.length - 1) {
-            const newIndex = activeGameIndex + 1;
-            setActiveGameIndex(newIndex);
-            onSelectGame(games[newIndex]);
-            lastWheelTime = now;
-          }
-        } else if (e.deltaY < 0) {
-          if (activeGameIndex > 0) {
-            const newIndex = activeGameIndex - 1;
-            setActiveGameIndex(newIndex);
-            onSelectGame(games[newIndex]);
-            lastWheelTime = now;
-          }
+  // Wheel Navigation - only on the scroll menu area
+  const handleWheel = (e) => {
+    if (games.length === 0) return;
+    e.stopPropagation();
+    
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      if (e.deltaY > 0) {
+        if (activeGameIndex < games.length - 1) {
+          const newIndex = activeGameIndex + 1;
+          setActiveGameIndex(newIndex);
+          onSelectGame(games[newIndex]);
+        }
+      } else if (e.deltaY < 0) {
+        if (activeGameIndex > 0) {
+          const newIndex = activeGameIndex - 1;
+          setActiveGameIndex(newIndex);
+          onSelectGame(games[newIndex]);
         }
       }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [activeGameIndex, games, onSelectGame]);
+    }
+  };
 
   if (games.length === 0) return null;
 
   return (
-    <div className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20 pointer-events-none">
+    <div 
+      ref={scrollMenuRef}
+      onWheel={handleWheel}
+      className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20"
+    >
       <motion.div 
-        className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+        className="flex flex-col items-center gap-6 py-8"
         animate={{ 
           y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
         }}
