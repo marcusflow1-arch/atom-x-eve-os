@@ -667,7 +667,6 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
 
   const ITEM_HEIGHT = 80;
   const ITEM_GAP = 24;
-  const CROSS_Y_VH = 50;
 
   // Sync selectedGame with activeGameIndex
   useEffect(() => {
@@ -707,12 +706,12 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
     <div 
       ref={scrollMenuRef}
       onWheel={handleWheel}
-      className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20"
+      className="w-36 h-[calc(100vh-200px)] flex flex-col items-center justify-center overflow-hidden"
     >
       <motion.div 
-        className="flex flex-col items-center gap-6 py-8"
+        className="flex flex-col items-center gap-6"
         animate={{ 
-          y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
+          y: -activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)
         }}
         transition={{ type: "spring", stiffness: 250, damping: 25 }}
       >
@@ -726,9 +725,8 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
                 onSelectGame(game);
               }}
               animate={{ 
-                scale: isActive ? 1.2 : 0.85,
-                opacity: isActive ? 1 : 0.3,
-                x: isActive ? 24 : 0
+                scale: isActive ? 1.15 : 0.85,
+                opacity: isActive ? 1 : 0.35,
               }}
               className="flex flex-col items-center gap-2 cursor-pointer w-28"
             >
