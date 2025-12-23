@@ -1222,13 +1222,18 @@ function LibraryGamesSection({ activeGenre, gamesByGenre, onSelectGame, selected
                     className="flex-shrink-0 w-[calc(10%-6px)] min-w-[60px] group cursor-pointer"
                     onClick={() => onSelectGame(game)}
                   >
-                    <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all ${
+                    <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
                       isSelected 
                         ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
                         : 'border-white/10 hover:border-cyan-400/50'
                     }`}>
                       <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                          <Play className="w-3 h-3 text-white ml-0.5" />
+                        </div>
+                      </div>
                       <div className="absolute bottom-0 left-0 right-0 p-1">
                         <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
                       </div>
@@ -1444,9 +1449,9 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-cyan-400 rounded-full"
                 />
               )}
-              <span className={`text-[11.5px] font-medium ${isActive ? 'text-cyan-300' : ''}`}>{genre}</span>
+              <span className={`text-[10px] font-medium ${isActive ? 'text-cyan-300' : ''}`}>{genre}</span>
               {hasGames && (
-                <span className={`ml-1 text-[9px] ${isActive ? 'text-cyan-400' : 'text-white/30'}`}>({gameCount})</span>
+                <span className={`ml-1 text-[8px] ${isActive ? 'text-cyan-400' : 'text-white/30'}`}>({gameCount})</span>
               )}
             </div>
           );
