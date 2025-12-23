@@ -742,7 +742,7 @@ function AchievementsView({ onExitToLibrary }) {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">(
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         <div className="flex gap-8 h-full overflow-hidden">
           
           {/* Left Sidebar (Shiny Box) */}
