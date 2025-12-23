@@ -2096,28 +2096,17 @@ export default function FocusModePanel() {
 
       {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left side - 3D viewer area (FIXED, doesn't scroll) + Calendar & Goals below */}
-        <div className="w-[300px] flex-shrink-0 flex flex-col">
-          {/* 3D Viewer Container - Fixed visual space */}
-          <div className="relative flex-1 min-h-[280px]">
-            {/* Invisible boundary line below header */}
-            <div className="absolute top-0 left-0 right-0 h-px" />
-            
-            {/* 3D viewer renders here - this is the locked viewport */}
-            <div 
-              id="3d-viewer-container" 
-              className="absolute inset-0"
-              style={{ 
-                position: 'sticky',
-                top: 0,
-                zIndex: 5
-              }}
-            >
-              {/* 3D viewer renders via LunaTemplate */}
-            </div>
+        {/* Left side - Space for 3D viewer (rendered separately as fixed element) + Calendar & Goals below */}
+        <div className="w-[260px] flex-shrink-0 flex flex-col">
+          {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
+          <div className="relative flex-1 min-h-[260px]">
+            {/* Invisible boundary - 3D viewer floats above this space */}
           </div>
           
-          {/* Calendar & Goals - Below 3D viewer, above the horizontal line */}
+          {/* Invisible line above calendar */}
+          <div className="h-px bg-transparent" />
+          
+          {/* Calendar & Goals - Below 3D viewer space, above the main horizontal line */}
           <div className="mt-2 pt-2 border-t border-white/5">
             <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
             <div className="mt-2">

@@ -1057,14 +1057,19 @@ export default function LunaTemplate() {
         className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)' }}
       >
-        {/* 3D Model Viewer - Positioned based on UI visibility */}
+        {/* 3D Model Viewer - Fixed floating element in top-left, separate from page scroll */}
         {modelUrl && (
           <div 
-            className={`fixed pointer-events-auto z-20 transition-all duration-500 ease-in-out ${
+            className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${
               uiVisible 
-                ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px]' 
-                : 'top-20 left-8 w-[300px] h-[300px]'
+                ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' 
+                : 'top-20 left-8 w-[240px] h-[260px] z-[35]'
             }`}
+            style={!uiVisible ? {
+              /* Constrained to area: below header, above calendar line, left of Feed divider */
+              maxWidth: '240px',
+              maxHeight: '260px',
+            } : {}}
           >
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
           </div>
