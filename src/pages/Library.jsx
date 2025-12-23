@@ -841,6 +841,12 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               >
                 <List className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setShowBlankGridView(true)}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all text-white/40 hover:text-white"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
