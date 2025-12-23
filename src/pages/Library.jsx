@@ -135,33 +135,6 @@ const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame }) => {
 
       {/* Right Side - Game Details */}
       <div className="flex-1 pl-8 overflow-hidden flex flex-col">
-        {/* Top Right Controls */}
-        <div className="flex items-center justify-end gap-4 mb-6">
-          {/* Achievements Button */}
-          <button
-            onClick={onSwitchToAchievements}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90 transition-all"
-          >
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm">Achievements</span>
-          </button>
-
-          {/* Search */}
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-            <input
-              type="text"
-              placeholder="Search games..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-            />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-              <Mic className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
         {selectedGame && (
           <>
             {/* Game Header */}
