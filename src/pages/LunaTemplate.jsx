@@ -863,7 +863,7 @@ export default function LunaTemplate() {
   const [userEvents, setUserEvents] = useState([]);
   const [platformUpdates, setPlatformUpdates] = useState([]);
   const [showForumOverlay, setShowForumOverlay] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState(null); // 'forum' | null
+  const [activeSubTab, setActiveSubTab] = useState(null); // 'forum' | 'blacksmith' | 'seasonalpass' | 'entertainment' | 'clan' | null
   const [modelUrl, setModelUrl] = useState(null);
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
@@ -894,6 +894,13 @@ export default function LunaTemplate() {
     const panel = params.get('panel');
     setShowSettings(panel === 'settings');
     setShowProfile(panel === 'profile');
+    
+    // Handle sub-tabs
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+      setActiveSubTab(panel);
+    } else {
+      setActiveSubTab(null);
+    }
   }, [location.search]);
 
   // Fetch User Events and Platform Updates
@@ -2484,9 +2491,9 @@ export default function LunaTemplate() {
         )}
       </AnimatePresence>
 
-      {/* Forum Full Page View - Transitions like other sub-tabs */}
+      {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
       <AnimatePresence>
-        {activeSubTab === 'forum' && (
+        {activeSubTab && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -2498,7 +2505,11 @@ export default function LunaTemplate() {
             }}
           >
             <div className="h-full w-full pt-20 overflow-hidden">
-              <CommunityPage />
+              {activeSubTab === 'forum' && <CommunityPage />}
+              {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
+              {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
+              {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
+              {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
           </motion.div>
         )}
