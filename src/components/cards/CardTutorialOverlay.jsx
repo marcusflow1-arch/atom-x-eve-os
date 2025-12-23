@@ -56,10 +56,10 @@ export default function CardTutorialOverlay({ card, onClose }) {
           {/* Close Button */}
           <button
             onClick={onClose}
+            className="absolute -top-2 right-0 md:-top-4 md:-right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center"
             title="Close"
-            className="absolute top-3 right-3 z-10 text-white/80 hover:text-white"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-white" />
           </button>
 
           {/* Left Panel */}

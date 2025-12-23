@@ -159,9 +159,7 @@ function LayoutContent({ children, currentPageName }) {
 
           .page-container {
             height: 100%;
-            min-height: 130vh; /* Make pages ~30% longer */
             overflow-y: auto;
-            padding-top: 6rem; /* Push content below fixed header/hamburger */
           }
 
           *:focus {
@@ -190,9 +188,8 @@ function LayoutContent({ children, currentPageName }) {
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            position: sticky;
-            top: 0;
-            z-index: 40;
+            position: relative;
+            z-index: 20;
           }
 
           .nav-container {
@@ -614,7 +611,7 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Under Bar Content: Page Name & Dock Items */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
-              <div className="flex items-center gap-6 mt-1 pl-1" style={{ paddingTop: '0.5rem' }}>
+              <div className="flex items-center gap-6 mt-1 pl-1">
 
 
                 {/* Dock Items */}
