@@ -2023,7 +2023,7 @@ export default function FocusModePanel() {
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="h-full flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
       {/* Top Section - News Feed & Content (right of 3D viewer) */}
