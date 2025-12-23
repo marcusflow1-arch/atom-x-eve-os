@@ -2066,33 +2066,38 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex gap-4 pt-4">
-        {/* Time & Date with Mini Calendar */}
-        <div className="flex-shrink-0">
-          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+      {/* Bottom Section - Time/Calendar, then Goals below, then Genre + Library */}
+      <div className="flex flex-col gap-6 pt-4 pb-8 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        {/* Row 1: Time & Date with Mini Calendar */}
+        <div className="flex gap-4">
+          <div className="flex-shrink-0">
+            <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+          </div>
         </div>
 
-        {/* Goals */}
-        <div className="flex-shrink-0 w-40">
+        {/* Row 2: Goals - Now below Calendar */}
+        <div className="w-full max-w-xs">
           <GoalsPanel />
         </div>
 
-        {/* Mini Genre Selector - Scroll to change games */}
-        <MiniGenreSelector 
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          gamesByGenre={gamesByGenre}
-        />
-
-        {/* Library Games - Changes based on genre scroll */}
-        <div className="flex-1 min-w-0">
-          <LibraryGamesSection 
+        {/* Row 3: Genre Selector and Library Games */}
+        <div className="flex gap-4">
+          {/* Mini Genre Selector - Scroll to change games */}
+          <MiniGenreSelector 
             activeGenre={activeGenre}
+            onGenreChange={setActiveGenre}
             gamesByGenre={gamesByGenre}
-            onSelectGame={setSelectedGame}
-            selectedGame={selectedGame}
           />
+
+          {/* Library Games - Changes based on genre scroll */}
+          <div className="flex-1 min-w-0">
+            <LibraryGamesSection 
+              activeGenre={activeGenre}
+              gamesByGenre={gamesByGenre}
+              onSelectGame={setSelectedGame}
+              selectedGame={selectedGame}
+            />
+          </div>
         </div>
       </div>
     </div>
