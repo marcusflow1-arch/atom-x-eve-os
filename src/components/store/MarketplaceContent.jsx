@@ -786,6 +786,13 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent p-4 sm:p-6">
+      {/* Translucent Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <h2 className="text-xl font-bold text-white/60">Marketplace</h2>
+        <div className="h-6 w-px bg-white/10" />
+        <p className="text-white/40 text-sm">Trade items, abilities, and more</p>
+      </div>
+
       <div className="px-2 pb-6">
         {/* Main Layout */}
         <div className="flex flex-col gap-6">

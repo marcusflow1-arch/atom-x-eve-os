@@ -514,46 +514,45 @@ export default function SocialHub() {
       backdropFilter: 'blur(25px) saturate(140%)',
       WebkitBackdropFilter: 'blur(25px) saturate(140%)'
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - Translucent */}
       <div className="flex items-center gap-4 px-6 py-4" style={{
-        background: 'rgba(100, 120, 140, 0.12)',
-        backdropFilter: 'blur(20px) saturate(130%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.10)',
-        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+        background: 'transparent',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
+        <h2 className="text-xl font-bold text-white/60 mr-4">Social Hub</h2>
+        <div className="h-6 w-px bg-white/10" />
         <button
           onClick={() => setActiveView('feed')}
-          className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
             activeView === 'feed'
               ? 'text-white'
-              : 'text-slate-400 hover:text-white'
+              : 'text-white/50 hover:text-white/80'
           }`}
           style={activeView === 'feed' ? {
-            background: 'rgba(34, 211, 238, 0.15)',
-            backdropFilter: 'blur(15px) saturate(130%)',
-            WebkitBackdropFilter: 'blur(15px) saturate(130%)',
-            border: '1px solid rgba(34, 211, 238, 0.30)',
-            boxShadow: '0 0 15px rgba(34, 211, 238, 0.2)'
-          } : {}}
+            background: 'rgba(255, 255, 255, 0.10)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          } : {
+            background: 'transparent',
+            border: '1px solid transparent'
+          }}
         >
           <TrendingUp className="w-4 h-4 inline mr-2" />
           Feed
         </button>
         <button
           onClick={() => setActiveView('marketplace')}
-          className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
             activeView === 'marketplace'
               ? 'text-white'
-              : 'text-slate-400 hover:text-white'
+              : 'text-white/50 hover:text-white/80'
           }`}
           style={activeView === 'marketplace' ? {
-            background: 'rgba(34, 211, 238, 0.15)',
-            backdropFilter: 'blur(15px) saturate(130%)',
-            WebkitBackdropFilter: 'blur(15px) saturate(130%)',
-            border: '1px solid rgba(34, 211, 238, 0.30)',
-            boxShadow: '0 0 15px rgba(34, 211, 238, 0.2)'
-          } : {}}
+            background: 'rgba(255, 255, 255, 0.10)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          } : {
+            background: 'transparent',
+            border: '1px solid transparent'
+          }}
         >
           <ShoppingBag className="w-4 h-4 inline mr-2" />
           Marketplace
