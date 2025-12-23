@@ -460,8 +460,8 @@ function LayoutContent({ children, currentPageName }) {
                     );
                   })}
 
-                  {/* Admin Link - Only in Editor */}
-                  {(window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app')) && (
+                  {/* Admin Link - Only in Editor/Preview (not in published app) */}
+                  {(window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview')) && (
                     <>
                       <div className="my-2 border-t border-white/10" />
                       <Link
@@ -558,6 +558,9 @@ function LayoutContent({ children, currentPageName }) {
 
         if (headerConfig.hidden) return null;
 
+        // Check if we're in editor/preview mode (not published)
+        const isEditorMode = window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview');
+
         const DOCK_ITEMS = [
 
           { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
@@ -567,7 +570,7 @@ function LayoutContent({ children, currentPageName }) {
 
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
-            {headerConfig.showMenu && (
+            {headerConfig.showMenu && isEditorMode && (
                                 <div className="flex items-center gap-3">
                                   <button
                                     onClick={() => setDrawerOpen(true)}
