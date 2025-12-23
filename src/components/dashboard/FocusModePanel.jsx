@@ -2017,9 +2017,9 @@ export default function FocusModePanel() {
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - News, Updates, New Cards */}
+          {/* Content Area - Live Panel (unified) */}
           <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-            <NewsFeedSection 
+            <LivePanel 
               upcomingCards={upcomingCards}
               selectedGame={selectedGame}
               onSelectGame={setSelectedGame}
