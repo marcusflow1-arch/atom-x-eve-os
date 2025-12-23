@@ -1,4 +1,3 @@
-
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -29,6 +28,12 @@ export const NAV_HIERARCHY = [
             { name: 'Library', icon: Library, path: createPageUrl('Store') + '?subview=library' },
             { name: 'Achievements', icon: Trophy, path: createPageUrl('Store') + '?subview=achievements' },
         ]
+    },
+    {
+        name: 'Social',
+        icon: TrendingUp,
+        path: createPageUrl('SocialFeed'),
+        subPages: []
     },
 ];
 
