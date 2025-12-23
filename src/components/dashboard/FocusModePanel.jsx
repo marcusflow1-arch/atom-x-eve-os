@@ -2096,9 +2096,18 @@ export default function FocusModePanel() {
 
       {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left side - placeholder for 3D viewer area */}
-        <div className="w-[300px] flex-shrink-0">
+        {/* Left side - 3D viewer area + Calendar & Goals below */}
+        <div className="w-[300px] flex-shrink-0 flex flex-col">
           {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
+          <div className="flex-1" />
+          
+          {/* Calendar & Goals - Below 3D viewer, above the line */}
+          <div className="mt-auto">
+            <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+            <div className="mt-3">
+              <GoalsPanel />
+            </div>
+          </div>
         </div>
 
         {/* Right of 3D Viewer - News & Updates Feed */}
@@ -2134,16 +2143,8 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Time+Goals, Genre Selector, and Library Games */}
+      {/* Bottom Section - Genre Selector and Library Games */}
       <div className="flex gap-4 pt-4">
-        {/* Time & Date with Mini Calendar + Goals underneath */}
-        <div className="flex-shrink-0 flex flex-col">
-          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-          <div className="mt-3">
-            <GoalsPanel />
-          </div>
-        </div>
-
         {/* Genre Selector - Vertical scroll */}
         <MiniGenreSelector 
           activeGenre={activeGenre}
