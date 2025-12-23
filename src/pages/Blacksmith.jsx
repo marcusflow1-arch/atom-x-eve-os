@@ -671,8 +671,8 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                            </div>
 
                            <div className="flex-1 flex overflow-hidden">
-                               {/* Inner Sidebar: Item List */}
-                               <div className="w-80 flex flex-col border-r border-white/10">
+                               {/* Items Grid */}
+                               <div className="flex-1 flex flex-col">
                                    {/* Tabs */}
                                    <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5">
                                        {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
@@ -688,51 +688,60 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                        ))}
                                    </div>
 
-                                   {/* List */}
-                                   <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                      {displayedItems.length > 0 ? displayedItems.map(item => (
-                                          <div
-                                              key={item.id}
-                                              onClick={() => setSelectedItem(item)}
-                                              className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
-                                                  item.isUnlocked 
-                                                      ? `${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
-                                                      : 'opacity-40 grayscale hover:opacity-60 border border-transparent'
-                                              }`}
-                                          >
-                                              <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative`}>
-                                                  <img src={item.preview_image_url} className="w-full h-full object-cover" />
-                                                  {!item.isUnlocked && (
-                                                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                          <Layers className="w-4 h-4 text-white/30" />
-                                                      </div>
-                                                  )}
-                                              </div>
-                                              <div className="min-w-0">
-                                                  <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : item.isUnlocked ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                      {item.name}
-                                                  </div>
-                                                  <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                                                      <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
-                                                      <span>•</span>
-                                                      <span>Lv.{item.level_requirement}</span>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      )) : (
-                                          <div className="text-center text-slate-500 text-sm py-8">
-                                              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                              <p>No items found for this game.</p>
-                                              <p className="text-xs text-slate-600 mt-2">Unlock items through achievements!</p>
-                                          </div>
-                                      )}
+                                   {/* Grid */}
+                                   <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                       {displayedItems.length > 0 ? (
+                                           <div className="grid grid-cols-4 gap-4">
+                                               {displayedItems.map(item => (
+                                                   <div
+                                                       key={item.id}
+                                                       onClick={() => setSelectedItem(item)}
+                                                       className={`aspect-[3/4] rounded-xl cursor-pointer transition-all overflow-hidden border ${
+                                                           item.isUnlocked 
+                                                               ? `${selectedItem?.id === item.id ? 'border-blue-500/50 shadow-lg shadow-blue-500/20' : 'border-white/10 hover:border-blue-400/30'}`
+                                                               : 'opacity-40 grayscale border-white/10'
+                                                       }`}
+                                                   >
+                                                       <div className="relative w-full h-full bg-black/40">
+                                                           <img src={item.preview_image_url} className="w-full h-full object-cover" />
+                                                           {!item.isUnlocked && (
+                                                               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                                   <Layers className="w-8 h-8 text-white/30" />
+                                                               </div>
+                                                           )}
+                                                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                                                           <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                               <div className={`font-bold text-sm text-white mb-1 truncate`}>
+                                                                   {item.name}
+                                                               </div>
+                                                               <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                                                                   <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>
+                                                   </div>
+                                               ))}
+                                           </div>
+                                       ) : (
+                                           <div className="text-center text-slate-500 text-sm py-8">
+                                               <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                               <p>No items found for this game.</p>
+                                               <p className="text-xs text-slate-600 mt-2">Unlock items through achievements!</p>
+                                           </div>
+                                       )}
                                    </div>
                                </div>
 
-                               {/* Main Content: Item Details */}
-                               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 relative">
-                                   {selectedItem ? (
-                                       <div className="max-w-4xl mx-auto">
+                               {/* Right Panel: Item Details */}
+                               <AnimatePresence>
+                                   {selectedItem && (
+                                       <motion.div 
+                                           initial={{ x: 400, opacity: 0 }}
+                                           animate={{ x: 0, opacity: 1 }}
+                                           exit={{ x: 400, opacity: 0 }}
+                                           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                           className="w-96 flex-shrink-0 border-l border-white/10 overflow-y-auto custom-scrollbar p-6 bg-slate-900/20"
+                                       >
                                            <div className="flex items-center gap-3 mb-4">
                                                <Badge className={`bg-transparent border ${rarityStyles[selectedItem.rarity].border} ${rarityStyles[selectedItem.rarity].color}`}>
                                                    {selectedItem.rarity} {selectedItem.type}
@@ -742,31 +751,31 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                </Badge>
                                            </div>
 
-                                           <h1 className="text-5xl font-black text-white mb-4 tracking-tight drop-shadow-lg">
+                                           <h1 className="text-3xl font-black text-white mb-4 tracking-tight drop-shadow-lg">
                                                {selectedItem.name}
                                            </h1>
 
-                                           <div className="border-l-4 border-blue-500 pl-4 py-1 mb-10">
-                                               <p className="text-xl text-slate-400 italic">
+                                           <div className="border-l-4 border-blue-500 pl-4 py-1 mb-6">
+                                               <p className="text-sm text-slate-400 italic">
                                                    "{selectedItem.description}"
                                                </p>
                                            </div>
 
-                                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-                                               <div className="bg-slate-800/50 rounded-3xl p-6 border border-white/5">
-                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">
+                                           <div className="space-y-4 mb-6">
+                                               <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                                                        <Layers className="w-4 h-4" /> Base Stats
                                                    </h3>
-                                                   <div className="space-y-6">
+                                                   <div className="space-y-4">
                                                        {Object.entries(selectedItem.base_stats).map(([stat, value]) => (
                                                            <div key={stat} className="space-y-2">
-                                                               <div className="flex justify-between text-sm font-bold uppercase tracking-wider">
+                                                               <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                                                                    <span className="text-slate-400">{stat.replace('_', ' ')}</span>
                                                                    <span className="text-white">{value}</span>
                                                                </div>
                                                                <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
                                                                    <div 
-                                                                       className="h-full bg-slate-500" 
+                                                                       className="h-full bg-gradient-to-r from-blue-500 to-cyan-500" 
                                                                        style={{ width: `${Math.min((value / 200) * 100, 100)}%` }}
                                                                    />
                                                                </div>
@@ -775,65 +784,60 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                    </div>
                                                </div>
 
-                                               <div className="bg-slate-800/50 rounded-3xl p-6 border border-white/5">
-                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-6 flex items-center gap-2">
+                                               <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+                                                   <h3 className="text-xs font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                                                        <Sparkles className="w-4 h-4" /> Enhancements
                                                    </h3>
-                                                   <div className="space-y-3">
+                                                   <div className="space-y-2">
                                                        {selectedItem.modifiers.map((mod, i) => (
-                                                           <div key={i} className="bg-slate-900/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
-                                                               <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500">
-                                                                   <Zap className="w-5 h-5 fill-current" />
+                                                           <div key={i} className="bg-slate-900/50 p-3 rounded-lg border border-white/5 flex items-center gap-3">
+                                                               <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                                                                   <Zap className="w-4 h-4 fill-current" />
                                                                </div>
                                                                <div>
-                                                                   <div className="font-bold text-white text-sm">{mod.name}</div>
-                                                                   <div className="text-slate-400 text-xs">{mod.effect}</div>
+                                                                   <div className="font-bold text-white text-xs">{mod.name}</div>
+                                                                   <div className="text-slate-400 text-[10px]">{mod.effect}</div>
                                                                </div>
                                                            </div>
                                                        ))}
                                                        {selectedItem.modifiers.length === 0 && (
-                                                           <div className="text-slate-600 text-sm text-center py-4">No enhancements active</div>
+                                                           <div className="text-slate-600 text-xs text-center py-3">No enhancements active</div>
                                                        )}
                                                    </div>
-                                                   <div className="mt-6 flex justify-between items-center text-xs text-slate-500 border-t border-white/5 pt-4">
+                                                   <div className="mt-4 flex justify-between items-center text-xs text-slate-500 border-t border-white/5 pt-3">
                                                        <span>Slots Available</span>
                                                        <span className="text-white font-mono">{selectedItem.enchantment_slots - selectedItem.modifiers.length} / {selectedItem.enchantment_slots}</span>
                                                    </div>
-                                                   </div>
-                                                   </div>
+                                               </div>
+                                           </div>
 
-                                                   {/* Action Buttons */}
-                                                   <div className="flex gap-4">
-                                                   <Button 
+                                           {/* Action Buttons */}
+                                           <div className="flex flex-col gap-3">
+                                               <Button 
                                                    onClick={() => setShowWorkstation(true)} 
-                                                   className="flex-1 bg-blue-600 hover:bg-blue-500 font-bold h-12 rounded-xl"
-                                                   >
+                                                   className="w-full bg-blue-600 hover:bg-blue-500 font-bold h-11 rounded-xl"
+                                               >
                                                    <Sparkles className="w-4 h-4 mr-2" />
                                                    Enchant
-                                                   </Button>
-                                                   <Button 
+                                               </Button>
+                                               <Button 
                                                    variant="outline" 
-                                                   className="flex-1 border-white/20 hover:bg-white/10 h-12 rounded-xl text-white"
-                                                   >
+                                                   className="w-full border-white/20 hover:bg-white/10 h-11 rounded-xl text-white"
+                                               >
                                                    <RotateCw className="w-4 h-4 mr-2" />
                                                    Reforge
-                                                   </Button>
-                                                   <Button 
+                                               </Button>
+                                               <Button 
                                                    variant="destructive" 
-                                                   className="flex-1 bg-rose-600 hover:bg-rose-500 h-12 rounded-xl"
-                                                   >
+                                                   className="w-full bg-rose-600 hover:bg-rose-500 h-11 rounded-xl"
+                                               >
                                                    <Trash2 className="w-4 h-4 mr-2" />
                                                    Salvage
-                                                   </Button>
-                                                   </div>
-                                                   </div>
-                                                   ) : (
-                                                   <div className="h-full flex flex-col items-center justify-center text-slate-600">
-                                                   <Hammer className="w-20 h-20 mb-4 opacity-20" />
-                                                   <p className="text-lg font-medium">Select an item to view details</p>
-                                                   </div>
-                                                   )}
-                               </div>
+                                               </Button>
+                                           </div>
+                                       </motion.div>
+                                   )}
+                               </AnimatePresence>
                            </div>
                        </div>
                    ) : (
