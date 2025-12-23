@@ -140,6 +140,85 @@ export default function SettingsPanel() {
              </div>
            </div>
         </TabsContent>
+
+        <TabsContent value="streamer" className="space-y-6">
+          {/* Banner Section */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Profile Banner</h3>
+            <div className="relative aspect-[3/1] rounded-xl overflow-hidden bg-slate-800 border-2 border-dashed border-white/20 hover:border-blue-400 transition-colors cursor-pointer group">
+              {streamerProfile.bannerImage ? (
+                <img src={streamerProfile.bannerImage} alt="Banner" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <Upload className="w-12 h-12 text-white/40 mx-auto mb-2" />
+                    <p className="text-white/60">Click to upload banner</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Introduction Video */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Introduction Video</h3>
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800 border-2 border-dashed border-white/20 hover:border-blue-400 transition-colors cursor-pointer">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <Video className="w-12 h-12 text-white/40 mx-auto mb-2" />
+                  <p className="text-white/60">Click to upload intro video</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gallery Images */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Gallery Images</h3>
+            <div className="grid grid-cols-4 gap-4">
+              {streamerProfile.images.map((img, idx) => (
+                <div key={idx} className="relative aspect-video rounded-lg overflow-hidden group">
+                  <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button className="absolute top-2 right-2 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ))}
+              <div className="aspect-video rounded-lg bg-slate-800 border-2 border-dashed border-white/20 hover:border-blue-400 transition-colors cursor-pointer flex items-center justify-center">
+                <ImageIcon className="w-8 h-8 text-white/40" />
+              </div>
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Bio</h3>
+            <textarea
+              value={streamerProfile.bio}
+              onChange={(e) => setStreamerProfile({ ...streamerProfile, bio: e.target.value })}
+              className="w-full bg-slate-800 border border-white/20 rounded-lg p-4 text-white placeholder:text-white/40 focus:outline-none focus:border-blue-500 h-32"
+              placeholder="Tell your viewers about yourself..."
+            />
+          </div>
+
+          {/* Sponsors/Affiliations */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Sponsors & Affiliations</h3>
+            <div className="flex gap-4">
+              <div className="w-32 h-32 rounded-lg bg-slate-800 border-2 border-dashed border-white/20 hover:border-blue-400 transition-colors cursor-pointer flex items-center justify-center">
+                <Users className="w-8 h-8 text-white/40" />
+              </div>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Save className="w-4 h-4 mr-2" />
+              Save Streamer Profile
+            </Button>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
