@@ -748,7 +748,7 @@ function LayoutContent({ children, currentPageName }) {
             >
               <User className="w-5 h-5 text-white/80" />
             </motion.button>
-            
+
             {/* Hover Menu */}
             <div className="absolute top-full right-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out">
               <div 
@@ -759,6 +759,16 @@ function LayoutContent({ children, currentPageName }) {
                   WebkitBackdropFilter: 'blur(40px) saturate(200%)'
                 }}
               >
+                <motion.button
+                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10 relative"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=notifications')}
+                  title="Notifications"
+                >
+                  <Bell className="w-5 h-5 text-white/80" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+                </motion.button>
                 <motion.button
                   className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10"
                   whileHover={{ scale: 1.1 }}
