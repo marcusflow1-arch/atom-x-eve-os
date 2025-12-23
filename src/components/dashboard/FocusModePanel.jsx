@@ -1185,77 +1185,80 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   }
 
   return (
-    <div className="h-full flex flex-col relative">
-      {/* Clickable Title - Transitions to Store */}
-      <div className="flex items-center justify-between mb-2">
-        <button 
-          onClick={handleLibraryClick}
-          className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
-        >
-          <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-          Library Games
-          <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
-        </button>
-        
-        <span className="text-white/30 text-xs">({currentGames.length} games)</span>
-      </div>
+    <div className="h-full flex gap-3">
+      {/* Main Games Grid */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${showGamePanel && selectedGame ? 'pr-0' : ''}`}>
+        {/* Clickable Title - Transitions to Store */}
+        <div className="flex items-center justify-between mb-2">
+          <button 
+            onClick={handleLibraryClick}
+            className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
+          >
+            <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            Library Games
+            <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+          </button>
+          
+          <span className="text-white/30 text-xs">({currentGames.length} games)</span>
+        </div>
 
-      {/* Games Grid - Rows of 10, vertical scroll */}
-      <div 
-        ref={libraryScrollRef}
-        className="flex-1 overflow-y-auto space-y-3"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
-      >
-        <AnimatePresence mode="popLayout">
-          {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex gap-2">
-              {row.map((game, index) => {
-                const isSelected = selectedGame?.id === game.id && showGamePanel;
-                return (
-                  <motion.div
-                    key={game.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                    transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
-                    className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
-                    onClick={() => handleGameClick(game)}
-                  >
-                    <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
-                      isSelected 
-                        ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
-                        : 'border-white/10 hover:border-cyan-400/50'
-                    }`}>
-                      <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                          <Play className="w-3 h-3 text-white ml-0.5" />
+        {/* Games Grid - Rows of 10, vertical scroll */}
+        <div 
+          ref={libraryScrollRef}
+          className="flex-1 overflow-y-auto space-y-3"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
+        >
+          <AnimatePresence mode="popLayout">
+            {rows.map((row, rowIndex) => (
+              <div key={rowIndex} className="flex gap-2">
+                {row.map((game, index) => {
+                  const isSelected = selectedGame?.id === game.id && showGamePanel;
+                  return (
+                    <motion.div
+                      key={game.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                      transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
+                      className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
+                      onClick={() => handleGameClick(game)}
+                    >
+                      <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
+                        isSelected 
+                          ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
+                          : 'border-white/10 hover:border-cyan-400/50'
+                      }`}>
+                        <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                            <Play className="w-3 h-3 text-white ml-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-1">
+                          <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
                         </div>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-1">
-                        <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ))}
-        </AnimatePresence>
-        {currentGames.length === 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center w-full h-20 text-white/30 text-xs"
-          >
-            No games in library
-          </motion.div>
-        )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ))}
+          </AnimatePresence>
+          {currentGames.length === 0 && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center w-full h-20 text-white/30 text-xs"
+            >
+              No games in library
+            </motion.div>
+          )}
+        </div>
       </div>
 
-      {/* Full-section Game Options Panel Overlay */}
+      {/* Slide-out Game Options Panel */}
       <AnimatePresence>
         {showGamePanel && selectedGame && (
           <GameOptionsPanel 
@@ -1268,7 +1271,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   );
 }
 
-// Game Options Panel (slides from right, stays within Library Games section only)
+// Game Options Slide-out Panel
 function GameOptionsPanel({ game, onClose }) {
   const navigate = useNavigate();
 
@@ -1303,94 +1306,78 @@ function GameOptionsPanel({ game, onClose }) {
   };
 
   return (
-    <>
-      {/* Backdrop - only covers this section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm z-40 rounded-xl"
-        onClick={onClose}
-      />
-      
-      {/* Panel sliding from right */}
-      <motion.div
-        initial={{ x: '100%', opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: '100%', opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="absolute top-0 right-0 bottom-0 z-50 w-72"
+    <motion.div
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: 220, opacity: 1 }}
+      exit={{ width: 0, opacity: 0 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      className="h-full flex-shrink-0 overflow-hidden"
+    >
+      <div 
+        className="h-full w-[220px] rounded-xl border border-white/10 flex flex-col"
+        style={{
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
       >
-        <div 
-          className="h-full w-full rounded-l-2xl border-l border-white/10 flex flex-col overflow-hidden"
-          style={{
-            background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            boxShadow: '-4px 0 30px rgba(0,0,0,0.5)',
-          }}
-        >
-          {/* Header with Close */}
-          <div className="flex items-center justify-between p-3 border-b border-white/10">
-            <h2 className="text-white font-bold text-sm">Game Options</h2>
-            <button
-              onClick={onClose}
-              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              <X className="w-3 h-3 text-white/60" />
-            </button>
-          </div>
+        {/* Close Button */}
+        <div className="flex justify-end p-2">
+          <button
+            onClick={onClose}
+            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            <X className="w-3 h-3 text-white/60" />
+          </button>
+        </div>
 
-          {/* Game Cover */}
-          <div className="p-3">
-            <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
-              <img 
-                src={game.cover_image || game.cover} 
-                alt={game.title} 
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-2 left-2 right-2">
-                <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
-                <p className="text-white/50 text-[10px] capitalize">{game.genre}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats Row */}
-          <div className="px-3 pb-2">
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="text-center p-2 bg-white/5 rounded-lg border border-white/10">
-                <p className="text-white font-bold text-xs">12.5h</p>
-                <p className="text-white/40 text-[8px] uppercase">Played</p>
-              </div>
-              <div className="text-center p-2 bg-white/5 rounded-lg border border-white/10">
-                <p className="text-white font-bold text-xs">8/15</p>
-                <p className="text-white/40 text-[8px] uppercase">Achievements</p>
-              </div>
-              <div className="text-center p-2 bg-white/5 rounded-lg border border-white/10">
-                <p className="text-white font-bold text-xs">Lv.12</p>
-                <p className="text-white/40 text-[8px] uppercase">AI Level</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Menu Options */}
-          <div className="flex-1 px-3 pb-3 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-            {menuOptions.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg ${option.color} ${option.textColor} text-xs font-medium transition-all`}
-              >
-                <option.icon className="w-4 h-4" />
-                {option.label}
-              </button>
-            ))}
+        {/* Game Cover */}
+        <div className="px-3 pb-3">
+          <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
+            <img 
+              src={game.cover_image || game.cover} 
+              alt={game.title} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           </div>
         </div>
-      </motion.div>
-    </>
+
+        {/* Game Title */}
+        <div className="px-3 pb-3">
+          <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
+          <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
+        </div>
+
+        {/* Menu Options */}
+        <div className="flex-1 px-3 pb-3 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          {menuOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => handleOptionClick(option.id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg ${option.color} ${option.textColor} text-xs font-medium transition-all`}
+            >
+              <option.icon className="w-4 h-4" />
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="px-3 pb-3 pt-2 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-center p-2 bg-white/5 rounded-lg">
+              <p className="text-white font-bold text-xs">12.5h</p>
+              <p className="text-white/30 text-[8px]">Played</p>
+            </div>
+            <div className="text-center p-2 bg-white/5 rounded-lg">
+              <p className="text-white font-bold text-xs">8/15</p>
+              <p className="text-white/30 text-[8px]">Achievements</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
