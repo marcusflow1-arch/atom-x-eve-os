@@ -58,6 +58,23 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
         }
     });
 
+    const deleteChannelMutation = useMutation({
+        mutationFn: (channelId) => base44.entities.ClanChannel.delete(channelId),
+        onSuccess: () => {
+            queryClient.invalidateQueries(['clanChannels']);
+        }
+    });
+
+    // Fetch member count
+    const { data: members } = useQuery({
+        queryKey: ['clanMembersCount', clan.id],
+        queryFn: async () => {
+            return await base44.entities.ClanMember.filter({ divisionId: clan.id });
+        }
+    });
+
+    const memberCount = members?.length || 0;
+
     const textChannels = channels?.filter(c => c.type === 'text') || [];
     const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
 
