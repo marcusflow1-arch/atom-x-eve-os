@@ -703,7 +703,22 @@ function AchievementsView({ onExitToLibrary }) {
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
-        {/* Main Layout: 2 Columns */}
+        {/* Grid View Mode */}
+        {viewMode === 'grid' ? (
+          <AchievementsCrossMenu 
+            games={filteredGames}
+            localAchievements={localAchievements}
+            onCardClick={(card) => {
+              if (card.isAchievement && card.achievementData) {
+                setSelectedAchievement(card.achievementData);
+              } else {
+                setSelectedCard(card);
+              }
+            }}
+            user={user}
+          />
+        ) : (
+        /* Main Layout: 2 Columns */
         <div className="flex gap-8 h-full overflow-hidden">
           
           {/* Left Sidebar (Shiny Box) */}
