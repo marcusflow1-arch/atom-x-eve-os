@@ -150,7 +150,7 @@ export default function CommunityPage() {
 
     return (
         <div 
-            className="min-h-screen text-white p-8 overflow-hidden"
+            className="min-h-screen text-white p-8 pt-24 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             {/* Close Button - Top Right */}
