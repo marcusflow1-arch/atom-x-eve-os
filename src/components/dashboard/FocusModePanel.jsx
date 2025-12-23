@@ -1360,17 +1360,23 @@ const ALL_GENRES = [
   'Abstract'
 ];
 
-// Mini Genre Selector (For bottom section next to Library)
+// Full Genre Selector Panel (Expanded for more space)
 function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
   const scrollTimeoutRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const displayGenres = ALL_GENRES;
+  
+  // Filter genres by search
+  const filteredGenres = searchTerm 
+    ? displayGenres.filter(g => g.toLowerCase().includes(searchTerm.toLowerCase()))
+    : displayGenres;
 
   // Debounced scroll handler
   const handleScroll = () => {
-    if (!scrollRef.current) return;
+    if (!scrollRef.current || searchTerm) return;
     
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -1383,10 +1389,10 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
       const containerRect = container.getBoundingClientRect();
       const containerCenter = containerRect.top + containerRect.height / 2;
       
-      let closestGenre = displayGenres[0];
+      let closestGenre = filteredGenres[0];
       let closestDistance = Infinity;
       
-      displayGenres.forEach((genre) => {
+      filteredGenres.forEach((genre) => {
         const el = genreRefs.current[genre];
         if (el) {
           const rect = el.getBoundingClientRect();
@@ -1430,17 +1436,45 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
     }
   };
 
+  // Count games with content
+  const genresWithGames = displayGenres.filter(g => gamesByGenre[g]?.length > 0).length;
+
   return (
-    <div className="flex flex-col h-32 w-28 flex-shrink-0">
+    <div className="flex flex-col w-44 flex-shrink-0 h-full">
+      {/* Header */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-white font-bold text-xs flex items-center gap-1.5">
+            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
+            Genres
+          </h3>
+          <span className="text-white/30 text-[9px]">{genresWithGames} active</span>
+        </div>
+        
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
+          <input
+            type="text"
+            placeholder="Search genres..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-7 pr-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/30 focus:outline-none focus:border-cyan-400/50"
+          />
+        </div>
+      </div>
+      
+      {/* Genre List - Full height scrollable */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
         onWheel={handleWheel}
-        className="flex-1 overflow-y-auto py-6"
+        className="flex-1 overflow-y-auto rounded-lg bg-white/[0.02] border border-white/5 p-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {displayGenres.map((genre, index) => {
-          const hasGames = gamesByGenre[genre]?.length > 0;
+        {filteredGenres.map((genre, index) => {
+          const gameCount = gamesByGenre[genre]?.length || 0;
+          const hasGames = gameCount > 0;
           const isActive = activeGenre === genre;
           
           return (
@@ -1448,27 +1482,56 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
               key={genre}
               ref={(el) => genreRefs.current[genre] = el}
               onClick={() => handleGenreClick(genre)}
-              className="relative py-1.5 pl-2 cursor-pointer hover:bg-white/5 rounded transition-colors"
-            >
-              <span className={`font-medium transition-all duration-200 ${
+              className={`relative flex items-center justify-between py-2 px-2.5 cursor-pointer rounded-lg mb-0.5 transition-all ${
                 isActive 
-                  ? 'text-cyan-300 text-xs' 
-                  : hasGames
-                    ? 'text-white/40 text-[10px]'
-                    : 'text-white/15 text-[10px]'
-              }`}>
-                {genre}
-              </span>
+                  ? 'bg-cyan-500/20 border border-cyan-400/30' 
+                  : 'hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {isActive && (
+                  <motion.div
+                    layoutId="genreActiveDot"
+                    className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+                  />
+                )}
+                <span className={`font-medium transition-all duration-200 ${
+                  isActive 
+                    ? 'text-cyan-300 text-xs' 
+                    : hasGames
+                      ? 'text-white/70 text-[11px]'
+                      : 'text-white/25 text-[11px]'
+                }`}>
+                  {genre}
+                </span>
+              </div>
               
-              {isActive && (
-                <motion.div
-                  layoutId="miniGenreActiveLine"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-cyan-400 rounded-full"
-                />
+              {hasGames && (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                  isActive 
+                    ? 'bg-cyan-400/20 text-cyan-300' 
+                    : 'bg-white/5 text-white/40'
+                }`}>
+                  {gameCount}
+                </span>
               )}
             </div>
           );
         })}
+        
+        {filteredGenres.length === 0 && (
+          <div className="flex items-center justify-center h-20 text-white/30 text-xs">
+            No genres found
+          </div>
+        )}
+      </div>
+      
+      {/* Footer Stats */}
+      <div className="mt-2 pt-2 border-t border-white/5">
+        <div className="flex items-center justify-between text-[9px] text-white/30">
+          <span>{displayGenres.length} total genres</span>
+          <span>{filteredGenres.length} shown</span>
+        </div>
       </div>
     </div>
   );
