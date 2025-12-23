@@ -2108,35 +2108,32 @@ export default function FocusModePanel() {
       </AnimatePresence>
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex flex-col gap-3 pt-4">
-        {/* Top Row - Genre Selector spanning full width */}
+      <div className="flex gap-4 pt-4">
+        {/* Time & Date with Mini Calendar */}
+        <div className="flex-shrink-0">
+          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+        </div>
+
+        {/* Goals */}
+        <div className="flex-shrink-0 w-40">
+          <GoalsPanel />
+        </div>
+
+        {/* Genre Selector - Vertical scroll next to Library */}
         <MiniGenreSelector 
           activeGenre={activeGenre}
           onGenreChange={setActiveGenre}
           gamesByGenre={gamesByGenre}
         />
-        
-        {/* Bottom Row - Time, Goals, and Library */}
-        <div className="flex gap-4">
-          {/* Time & Date with Mini Calendar */}
-          <div className="flex-shrink-0">
-            <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-          </div>
 
-          {/* Goals */}
-          <div className="flex-shrink-0 w-40">
-            <GoalsPanel />
-          </div>
-
-          {/* Library Games - Changes based on genre scroll */}
-          <div className="flex-1 min-w-0">
-            <LibraryGamesSection 
-              activeGenre={activeGenre}
-              gamesByGenre={gamesByGenre}
-              onSelectGame={setSelectedGame}
-              selectedGame={selectedGame}
-            />
-          </div>
+        {/* Library Games - Changes based on genre scroll */}
+        <div className="flex-1 min-w-0">
+          <LibraryGamesSection 
+            activeGenre={activeGenre}
+            gamesByGenre={gamesByGenre}
+            onSelectGame={setSelectedGame}
+            selectedGame={selectedGame}
+          />
         </div>
       </div>
     </div>
