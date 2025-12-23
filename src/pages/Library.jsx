@@ -667,6 +667,7 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
 
   const ITEM_HEIGHT = 80;
   const ITEM_GAP = 24;
+  const CROSS_Y_VH = 50;
 
   // Sync selectedGame with activeGameIndex
   useEffect(() => {
@@ -706,12 +707,12 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
     <div 
       ref={scrollMenuRef}
       onWheel={handleWheel}
-      className="w-36 h-[calc(100vh-200px)] flex flex-col items-center justify-center overflow-hidden"
+      className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20"
     >
       <motion.div 
-        className="flex flex-col items-center gap-6"
+        className="flex flex-col items-center gap-6 py-8"
         animate={{ 
-          y: -activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)
+          y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
         }}
         transition={{ type: "spring", stiffness: 250, damping: 25 }}
       >
@@ -725,8 +726,9 @@ const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) 
                 onSelectGame(game);
               }}
               animate={{ 
-                scale: isActive ? 1.15 : 0.85,
-                opacity: isActive ? 1 : 0.35,
+                scale: isActive ? 1.2 : 0.85,
+                opacity: isActive ? 1 : 0.3,
+                x: isActive ? 24 : 0
               }}
               className="flex flex-col items-center gap-2 cursor-pointer w-28"
             >
@@ -912,7 +914,15 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 px-8 py-8 flex gap-6">
+      {/* Left Side Scroll Menu */}
+      <LibraryScrollMenu
+        games={filteredGames}
+        selectedGame={selectedGame}
+        onSelectGame={setSelectedGame}
+        onLaunchGame={handleLaunchGame}
+      />
+
+      <div className="relative z-10 px-8 py-8 pl-44">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -979,16 +989,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Left Side Scroll Menu */}
-        <div className="flex-shrink-0">
-          <LibraryScrollMenu
-            games={filteredGames}
-            selectedGame={selectedGame}
-            onSelectGame={setSelectedGame}
-            onLaunchGame={handleLaunchGame}
-          />
-        </div>
 
         {/* Content Area - List View */}
         <div className="flex-1 min-h-[calc(100vh-200px)]">
