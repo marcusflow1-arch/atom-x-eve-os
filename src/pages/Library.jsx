@@ -990,19 +990,17 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
-        {/* Content Area - List View (default) */}
-        {viewMode === 'list' && (
-          <div className="flex-1 min-h-[calc(100vh-200px)]">
-            <LunaGamePanel
-              game={selectedGame}
-              isStreaming={selectedGame?.id === streamingGameId}
-              onPlay={handleLaunchGame}
-              onStream={handleStreamGame}
-              onShowAchievements={() => setShowAchievementsOverlay(true)}
-              onShowGameDetails={() => setShowGameDetailsOverlay(true)}
-            />
-          </div>
-        )}
+        {/* Content Area - List View */}
+        <div className="flex-1 min-h-[calc(100vh-200px)]">
+          <LunaGamePanel
+            game={selectedGame}
+            isStreaming={selectedGame?.id === streamingGameId}
+            onPlay={handleLaunchGame}
+            onStream={handleStreamGame}
+            onShowAchievements={() => setShowAchievementsOverlay(true)}
+            onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+          />
+        </div>
       </div>
 
 
