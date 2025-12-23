@@ -1781,167 +1781,143 @@ function NewCardsSection({ upcomingCards }) {
   );
 }
 
-// News Feed Section - Xbox-style organized dashboard
-function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
-  const [activeTab, setActiveTab] = useState('feed');
+// Live Panel - Condensed unified module (replaces Feed/AI Status/Cards tabs)
+function LivePanel({ upcomingCards, selectedGame, onSelectGame }) {
+  const navigate = useNavigate();
+  const [showCardOverlay, setShowCardOverlay] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
 
-  // Featured content
-  const featuredContent = {
-    title: "Winter Solstice Event",
-    subtitle: "Limited Time",
-    description: "Exclusive AI traits and legendary cards available until December 31st",
-    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=300&fit=crop",
-    tag: "LIVE EVENT"
+  // System alerts / updates
+  const alerts = [
+    { id: 1, type: 'event', icon: '🎄', title: 'Winter Solstice Event', description: 'Legendary cards available', time: 'Live', color: 'bg-green-500' },
+    { id: 2, type: 'drop', icon: '🃏', title: 'New Card Drop', description: '3 new legendaries added', time: '2h', color: 'bg-amber-500' },
+    { id: 3, type: 'update', icon: '🤖', title: 'AI Update v2.5', description: 'Behavior sync improved', time: '5h', color: 'bg-purple-500' },
+  ];
+
+  // Get latest 3 cards
+  const latestCards = upcomingCards.slice(0, 3);
+
+  const handleCardClick = (card) => {
+    setSelectedCard(card);
+    setShowCardOverlay(true);
   };
-
-  // Platform updates
-  const updates = [
-    { id: 1, category: 'PLATFORM', title: 'Atom x Eve v2.5', description: 'New AI algorithms & card fusion', time: '2h', color: 'bg-green-500' },
-    { id: 2, category: 'AI', title: 'Behavior Sync', description: 'Stealth pattern recognition added', time: '5h', color: 'bg-purple-500' },
-    { id: 3, category: 'CARDS', title: 'New Legendaries', description: '3 new cards in the vault', time: '1d', color: 'bg-amber-500' },
-  ];
-
-
-
-  const tabs = [
-    { id: 'feed', label: 'Feed' },
-    { id: 'cards', label: 'New Cards' },
-  ];
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header Bar - Xbox style */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`text-sm font-semibold uppercase tracking-wide transition-all ${
-                activeTab === tab.id 
-                  ? 'text-white' 
-                  : 'text-white/40 hover:text-white/70'
-              }`}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+          <Radio className="w-4 h-4 text-green-400 animate-pulse" />
+          Live Panel
+        </h3>
+        <span className="text-green-400 text-[10px] font-mono">● LIVE</span>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto space-y-4" style={{ scrollbarWidth: 'none' }}>
+        {/* New Cards Section */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              New Cards
+            </h4>
+            <button 
+              onClick={() => navigate(createPageUrl('Achievements'))}
+              className="text-cyan-400 text-[10px] font-semibold hover:text-cyan-300 flex items-center gap-1"
             >
-              {tab.label}
+              View All <ChevronRight className="w-3 h-3" />
             </button>
-          ))}
+          </div>
+          <div className="flex gap-2">
+            {latestCards.map((card) => (
+              <AchievementStyleCard
+                key={card.id}
+                card={card}
+                isSelected={false}
+                onClick={() => handleCardClick(card)}
+                size="small"
+              />
+            ))}
+          </div>
         </div>
-        <span className="text-white/30 text-xs font-mono">LIVE</span>
+
+        {/* System Alerts */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+              <Bell className="w-3 h-3 text-cyan-400" />
+              Alerts
+            </h4>
+          </div>
+          <div className="space-y-1.5">
+            {alerts.map((alert) => (
+              <div 
+                key={alert.id}
+                className="flex items-center gap-2 p-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+              >
+                <div className={`w-1 h-8 rounded-full ${alert.color}`} />
+                <span className="text-lg">{alert.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <h5 className="text-white font-semibold text-xs group-hover:text-cyan-400 transition-colors">{alert.title}</h5>
+                  <p className="text-white/40 text-[10px] truncate">{alert.description}</p>
+                </div>
+                <span className="text-[9px] text-white/30">{alert.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+            <p className="text-lg font-bold text-white">47</p>
+            <p className="text-[8px] text-white/40 uppercase">Cards</p>
+          </div>
+          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+            <p className="text-lg font-bold text-green-400">12</p>
+            <p className="text-[8px] text-white/40 uppercase">Games</p>
+          </div>
+          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+            <p className="text-lg font-bold text-purple-400">Lv.8</p>
+            <p className="text-[8px] text-white/40 uppercase">AI</p>
+          </div>
+        </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        <AnimatePresence mode="wait">
-          {activeTab === 'feed' && (
-            <motion.div
-              key="feed"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-4"
-            >
-              {/* Featured Banner */}
-              <div className="relative rounded-lg overflow-hidden h-36 group cursor-pointer">
-                <img 
-                  src={featuredContent.image} 
-                  alt={featuredContent.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-                <div className="absolute top-3 left-3">
-                  <span className="px-2 py-0.5 bg-green-500 text-black text-[10px] font-bold uppercase tracking-wider rounded">
-                    {featuredContent.tag}
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3">
-                  <p className="text-white/50 text-[10px] uppercase tracking-wider">{featuredContent.subtitle}</p>
-                  <h3 className="text-white font-bold text-lg">{featuredContent.title}</h3>
-                  <p className="text-white/60 text-xs mt-0.5">{featuredContent.description}</p>
-                </div>
-              </div>
-
-              {/* Updates List */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Recent Updates</h4>
-                  <button className="text-green-400 text-[10px] font-semibold hover:text-green-300">See All</button>
-                </div>
-                <div className="space-y-2">
-                  {updates.map((update) => (
-                    <div 
-                      key={update.id}
-                      className="flex items-center gap-3 p-3 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
-                    >
-                      <div className={`w-1 h-10 rounded-full ${update.color}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider">{update.category}</span>
-                          <span className="text-white/20">•</span>
-                          <span className="text-[9px] text-white/30">{update.time}</span>
-                        </div>
-                        <h5 className="text-white font-semibold text-sm group-hover:text-green-400 transition-colors">{update.title}</h5>
-                        <p className="text-white/40 text-xs truncate">{update.description}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick Stats Row */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-white">47</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Cards Owned</p>
-                </div>
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-green-400">12</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Games Played</p>
-                </div>
-                <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-                  <p className="text-2xl font-bold text-purple-400">Lv.8</p>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Level</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'cards' && (
-            <NewCardsSection 
-              upcomingCards={upcomingCards}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Selected Game Panel - Shows at bottom when game selected */}
+      {/* Selected Game Panel */}
       <AnimatePresence>
         {selectedGame && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="mt-4 pt-4 border-t border-white/10"
+            className="mt-3 pt-3 border-t border-white/10"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Now Playing</h4>
-              <button onClick={() => onSelectGame(null)} className="text-white/30 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-              <img src={selectedGame.image || selectedGame.cover_image} alt={selectedGame.title} className="w-12 h-12 rounded object-cover" />
+            <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+              <img src={selectedGame.image || selectedGame.cover_image} alt={selectedGame.title} className="w-10 h-10 rounded object-cover" />
               <div className="flex-1 min-w-0">
-                <h5 className="text-white font-semibold text-sm truncate">{selectedGame.title}</h5>
-                <p className="text-green-400 text-xs">{selectedGame.genre}</p>
+                <h5 className="text-white font-semibold text-xs truncate">{selectedGame.title}</h5>
+                <p className="text-green-400 text-[10px]">{selectedGame.genre}</p>
               </div>
-              <button className="px-4 py-2 bg-green-500 text-black font-bold text-xs uppercase rounded hover:bg-green-400 transition-colors">
-                Play
+              <button 
+                onClick={() => onSelectGame(null)} 
+                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+              >
+                <X className="w-3 h-3 text-white/60" />
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Card Detail Overlay */}
+      <AnimatePresence>
+        {showCardOverlay && selectedCard && (
+          <CardTutorialOverlay 
+            card={selectedCard}
+            onClose={() => setShowCardOverlay(false)}
+          />
         )}
       </AnimatePresence>
     </div>
