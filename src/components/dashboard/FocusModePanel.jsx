@@ -226,7 +226,14 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
       style={{ transformStyle: 'preserve-3d' }}
     >
       {/* Card Base */}
-      <div className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isSelected || isHovered ? style.glow : ''} overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 transition-shadow duration-300`}>
+      <div 
+        className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isSelected || isHovered ? style.glow : ''} overflow-hidden transition-shadow duration-300`}
+        style={{
+          background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
+        }}
+      >
         {/* Animated shine line */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -453,11 +460,11 @@ function CalendarModal({ isOpen, onClose, selectedDate, events, onAddEvent, onDe
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-3xl rounded-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+          background: 'linear-gradient(135deg, rgba(100, 120, 140, 0.15) 0%, rgba(80, 100, 120, 0.10) 100%)',
+          backdropFilter: 'blur(30px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
         }}
       >
         {/* Header */}
@@ -772,7 +779,13 @@ function GameBoxes() {
       {pinnedGames.slice(0, 4).map((game) => (
         <div 
           key={game.id}
-          className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.05] backdrop-blur-sm border border-white/10 hover:border-cyan-400/40 transition-all cursor-pointer group w-40"
+          className="flex items-center gap-2 p-2 rounded-lg border hover:border-cyan-400/40 transition-all cursor-pointer group w-40"
+          style={{
+            background: 'rgba(100, 120, 140, 0.10)',
+            backdropFilter: 'blur(12px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+            borderColor: 'rgba(255, 255, 255, 0.08)'
+          }}
         >
           <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0">
             <img src={game.image} alt={game.title} className="w-full h-full object-cover" />
@@ -1069,7 +1082,7 @@ function GameDetailPanel({ game, onClose }) {
                   { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
                   { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
                 ].map((stat, i) => (
-                  <div key={i} className="text-center p-2 bg-white/[0.03] rounded-lg border border-white/5">
+                  <div key={i} className="text-center p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                     <stat.icon className={`w-3 h-3 ${stat.color} mx-auto mb-1`} />
                     <p className="text-white font-bold text-xs">{stat.value}</p>
                     <p className="text-white/30 text-[8px]">{stat.label}</p>
@@ -1092,7 +1105,7 @@ function GameDetailPanel({ game, onClose }) {
                 { title: 'Hidden easter eggs found!', replies: 23, user: 'MysticMage' },
                 { title: 'Looking for raid group', replies: 12, user: 'ShadowNinja' },
               ].map((topic, i) => (
-                <div key={i} className="p-2 bg-white/[0.03] rounded-lg border border-white/5 cursor-pointer hover:bg-white/[0.06] transition-colors">
+                <div key={i} className="p-2 rounded-lg border cursor-pointer transition-colors hover:border-cyan-400/20" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                   <h4 className="text-white text-[10px] font-medium mb-0.5">{topic.title}</h4>
                   <p className="text-white/30 text-[8px]">by {topic.user} • {topic.replies} replies</p>
                 </div>
@@ -1114,7 +1127,7 @@ function GameDetailPanel({ game, onClose }) {
                 { name: 'Arena Champion', icon: '⚔️', progress: 50, rarity: 'Rare' },
                 { name: 'Explorer', icon: '🗺️', progress: 30, rarity: 'Common' },
               ].map((ach, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-white/[0.03] rounded-lg border border-white/5">
+                <div key={i} className="flex items-center gap-2 p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                   <span className="text-lg">{ach.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
@@ -1122,13 +1135,13 @@ function GameDetailPanel({ game, onClose }) {
                       <span className={`text-[8px] px-1.5 py-0.5 rounded ${
                         ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400' :
                         ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
-                        ach.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-400' :
+                        ach.rarity === 'Rare' ? 'bg-cyan-500/20 text-cyan-400' :
                         'bg-white/10 text-white/50'
                       }`}>{ach.rarity}</span>
                     </div>
                     <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full"
+                        className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full"
                         style={{ width: `${ach.progress}%` }}
                       />
                     </div>
@@ -1314,11 +1327,13 @@ function GameOptionsPanel({ game, onClose }) {
       onClick={(e) => e.stopPropagation()}
     >
       <div 
-        className="h-full w-[220px] rounded-xl border border-white/10 flex flex-col"
+        className="h-full w-[220px] rounded-xl border flex flex-col"
         style={{
-          background: 'rgba(15, 23, 42, 0.8)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          background: 'rgba(100, 120, 140, 0.12)',
+          backdropFilter: 'blur(16px) saturate(130%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(130%)',
+          borderColor: 'rgba(255, 255, 255, 0.10)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
         }}
       >
         {/* Game Cover */}
@@ -1367,11 +1382,11 @@ function GameOptionsPanel({ game, onClose }) {
         {/* Quick Stats */}
         <div className="px-3 pb-3 pt-2 border-t border-white/10">
           <div className="grid grid-cols-2 gap-2">
-            <div className="text-center p-2 bg-white/5 rounded-lg">
+            <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(100, 120, 140, 0.10)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
               <p className="text-white font-bold text-xs">12.5h</p>
               <p className="text-white/30 text-[8px]">Played</p>
             </div>
-            <div className="text-center p-2 bg-white/5 rounded-lg">
+            <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(100, 120, 140, 0.10)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
               <p className="text-white font-bold text-xs">8/15</p>
               <p className="text-white/30 text-[8px]">Achievements</p>
             </div>
@@ -1614,13 +1629,13 @@ function CardDetailOverlay({ card, onClose }) {
         onClick={(e) => e.stopPropagation()}
         className={`relative w-full max-w-3xl rounded-2xl overflow-hidden border-2 ${style?.border || 'border-white/20'}`}
         style={{
-          background: 'rgba(15, 23, 42, 0.4)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          background: 'linear-gradient(135deg, rgba(100, 120, 140, 0.15) 0%, rgba(80, 100, 120, 0.12) 100%)',
+          backdropFilter: 'blur(35px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(35px) saturate(150%)',
           boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 60px ${
             card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.15)' :
             card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.15)' :
-            'rgba(59, 130, 246, 0.15)'
+            'rgba(34, 211, 238, 0.15)'
           }`
         }}
       >
@@ -1978,7 +1993,13 @@ function LivePanel({ upcomingCards }) {
             {alerts.map((alert) => (
               <div 
                 key={alert.id}
-                className="flex items-center gap-2 p-2 bg-white/[0.02] hover:bg-white/[0.05] rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                className="flex items-center gap-2 p-2 rounded-lg border hover:border-cyan-400/20 transition-all cursor-pointer group"
+                style={{
+                  background: 'rgba(100, 120, 140, 0.08)',
+                  backdropFilter: 'blur(10px) saturate(110%)',
+                  WebkitBackdropFilter: 'blur(10px) saturate(110%)',
+                  borderColor: 'rgba(255, 255, 255, 0.06)'
+                }}
               >
                 <div className={`w-1 h-8 rounded-full ${alert.color}`} />
                 <span className="text-lg">{alert.icon}</span>
@@ -1994,15 +2015,15 @@ function LivePanel({ upcomingCards }) {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
             <p className="text-lg font-bold text-white">47</p>
             <p className="text-[8px] text-white/40 uppercase">Cards</p>
           </div>
-          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
-            <p className="text-lg font-bold text-green-400">12</p>
+          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+            <p className="text-lg font-bold text-cyan-400">12</p>
             <p className="text-[8px] text-white/40 uppercase">Games</p>
           </div>
-          <div className="p-2 bg-white/[0.02] rounded-lg border border-white/5 text-center">
+          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
             <p className="text-lg font-bold text-purple-400">Lv.8</p>
             <p className="text-[8px] text-white/40 uppercase">AI</p>
           </div>

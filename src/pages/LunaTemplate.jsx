@@ -1056,7 +1056,7 @@ export default function LunaTemplate() {
 
       <div 
         className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
-        style={{ background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
       >
         {/* 3D Model Viewer - Fixed floating element in top-left, separate from page scroll */}
         {modelUrl && (
@@ -1086,9 +1086,9 @@ export default function LunaTemplate() {
               transition={{ duration: 0.4 }}
               className="fixed inset-0 z-10"
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 58, 95, 0.7) 50%, rgba(15, 23, 42, 0.75) 100%)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)'
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 95, 0.75) 50%, rgba(15, 23, 42, 0.85) 100%)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)'
               }}
             />
           )}
@@ -1208,8 +1208,9 @@ export default function LunaTemplate() {
                   className={`w-14 h-14 rounded-xl backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center relative overflow-hidden ${
                     activeSkills[i] 
                       ? 'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
-                      : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.05]'
+                      : 'bg-[rgba(100,120,140,0.08)] border-white/[0.08] hover:bg-[rgba(100,120,140,0.12)]'
                   }`}
+                  style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                   title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}
                 >
                   {/* Key label */}
@@ -1848,7 +1849,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-full border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
