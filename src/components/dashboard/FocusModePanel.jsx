@@ -1364,24 +1364,52 @@ const ALL_GENRES = [
 function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
   const scrollRef = useRef(null);
   const genreRefs = useRef({});
+  const currentIndexRef = useRef(0);
 
   const displayGenres = ALL_GENRES;
 
+  // Initialize currentIndex based on activeGenre
+  useEffect(() => {
+    const idx = displayGenres.indexOf(activeGenre);
+    if (idx !== -1) {
+      currentIndexRef.current = idx;
+    }
+  }, [activeGenre, displayGenres]);
+
+  // Scroll to Action genre on mount
+  useEffect(() => {
+    const actionIndex = displayGenres.indexOf('Action');
+    if (actionIndex !== -1 && scrollRef.current && genreRefs.current['Action']) {
+      currentIndexRef.current = actionIndex;
+      genreRefs.current['Action'].scrollIntoView({ block: 'start' });
+    }
+  }, []);
+
   const handleWheel = (e) => {
-    if (!scrollRef.current) return;
     e.preventDefault();
-    scrollRef.current.scrollBy({
-      top: e.deltaY / 2,
-      behavior: 'smooth'
-    });
+    
+    // Determine scroll direction and move one genre at a time
+    const direction = e.deltaY > 0 ? 1 : -1;
+    const newIndex = Math.max(0, Math.min(displayGenres.length - 1, currentIndexRef.current + direction));
+    
+    if (newIndex !== currentIndexRef.current) {
+      currentIndexRef.current = newIndex;
+      const newGenre = displayGenres[newIndex];
+      onGenreChange(newGenre);
+      
+      const el = genreRefs.current[newGenre];
+      if (el && scrollRef.current) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   };
 
   const handleGenreClick = (genre) => {
-    onGenreChange(genre);
-    const el = genreRefs.current[genre];
-    if (el && scrollRef.current) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const idx = displayGenres.indexOf(genre);
+    if (idx !== -1) {
+      currentIndexRef.current = idx;
     }
+    onGenreChange(genre);
   };
 
   return (
