@@ -564,11 +564,14 @@ function LayoutContent({ children, currentPageName }) {
         // Check if we're in editor/preview mode (not published)
         const isEditorMode = window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview');
 
-        const DOCK_ITEMS = [
-
+        const DOCK_ITEMS_LEFT = [
           { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
+        ];
+
+        const DOCK_ITEMS_RIGHT = [
           { id: 'marketplace', label: 'Market', icon: Target, route: 'Store?mode=marketplace' },
+          { id: 'social', label: 'Social Hub', icon: TrendingUp, action: () => setSocialHubOpen(true) },
         ];
 
         return (
@@ -669,31 +672,59 @@ function LayoutContent({ children, currentPageName }) {
                                 </div>
                               )}
 
-            {/* Under Bar Content: Page Name & Dock Items */}
+            {/* Under Bar Content: Home Hover Menu */}
             {(headerConfig.showModeToggle || headerConfig.showDock) && (
               <div className="flex items-center gap-6 mt-1 pl-1">
-
-
-                {/* Dock Items */}
+                {/* Home Button with Hover Menu */}
                 {headerConfig.showDock && mode === 'ai' && (
-                   <div className="flex items-center gap-2">
-                       {DOCK_ITEMS.map(item => (
-                           <Link 
-                             key={item.id} 
-                             to={createPageUrl(item.route)}
-                             className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
-                             title={item.label}
-                           >
-                               <item.icon className="w-4 h-4" />
-                           </Link>
-                       ))}
-                       <button
-                         onClick={() => setSocialHubOpen(true)}
-                         className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
-                         title="Social Hub"
+                   <div className="relative group flex items-center">
+                       {/* Left Items - appear on hover */}
+                       <div className="flex items-center gap-2 mr-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+                           {DOCK_ITEMS_LEFT.map(item => (
+                               <Link 
+                                 key={item.id} 
+                                 to={createPageUrl(item.route)}
+                                 className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                                 title={item.label}
+                               >
+                                   <item.icon className="w-4 h-4" />
+                               </Link>
+                           ))}
+                       </div>
+
+                       {/* Home Button (Center) */}
+                       <Link
+                         to={createPageUrl('LunaTemplate')}
+                         className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105 z-10"
+                         title="Home"
                        >
-                         <TrendingUp className="w-4 h-4" />
-                       </button>
+                           <Home className="w-5 h-5" />
+                       </Link>
+
+                       {/* Right Items - appear on hover */}
+                       <div className="flex items-center gap-2 ml-2 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+                           {DOCK_ITEMS_RIGHT.map(item => (
+                               item.action ? (
+                                 <button
+                                   key={item.id}
+                                   onClick={item.action}
+                                   className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                                   title={item.label}
+                                 >
+                                     <item.icon className="w-4 h-4" />
+                                 </button>
+                               ) : (
+                                 <Link 
+                                   key={item.id} 
+                                   to={createPageUrl(item.route)}
+                                   className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-105"
+                                   title={item.label}
+                                 >
+                                     <item.icon className="w-4 h-4" />
+                                 </Link>
+                               )
+                           ))}
+                       </div>
                    </div>
                 )}
               </div>
