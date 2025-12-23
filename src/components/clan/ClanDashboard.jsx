@@ -278,7 +278,7 @@ export default function ClanDashboard({ clan, events }) {
                     <MemberViewport clanId={clan.id} />
 
                     <GlassCard className="flex flex-col bg-gradient-to-b from-white/70 to-blue-50/30">
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-4">
                              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                  <Calendar className="w-4 h-4" /> Upcoming Events
                              </h3>
@@ -287,21 +287,20 @@ export default function ClanDashboard({ clan, events }) {
                              </Button>
                         </div>
 
-                        <div className="flex-1 space-y-4">
+                        <div className="space-y-3 max-h-[250px] overflow-y-auto">
                             {events && events.length > 0 ? events.map(event => (
-                                <div key={event.id} className="relative bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden cursor-pointer">
+                                <div key={event.id} className="relative bg-white rounded-xl p-3 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden cursor-pointer">
                                     <div className="absolute top-0 right-0 p-2 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                                        <Sword className="w-16 h-16 text-blue-600" />
+                                        <Sword className="w-12 h-12 text-blue-600" />
                                     </div>
                                     <div className="flex items-start gap-3 relative z-10">
-                                        <div className="flex flex-col items-center justify-center bg-slate-100 rounded-lg w-12 h-12 border border-slate-200 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                            <span className="text-[10px] font-bold uppercase opacity-60">{format(new Date(event.startTime), 'MMM')}</span>
-                                            <span className="text-lg font-bold">{format(new Date(event.startTime), 'd')}</span>
+                                        <div className="flex flex-col items-center justify-center bg-slate-100 rounded-lg w-10 h-10 border border-slate-200 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                            <span className="text-[8px] font-bold uppercase opacity-60">{format(new Date(event.startTime), 'MMM')}</span>
+                                            <span className="text-sm font-bold">{format(new Date(event.startTime), 'd')}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{event.title}</h4>
-                                            <p className="text-xs text-slate-500 mb-2 truncate">{event.description}</p>
-                                            <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-slate-800 text-sm truncate group-hover:text-blue-600 transition-colors">{event.title}</h4>
+                                            <div className="flex items-center gap-2 mt-1">
                                                 <Badge className="text-[10px] px-1.5 h-5 bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100">
                                                     {event.participants?.length || 0}/{event.maxParticipants}
                                                 </Badge>
@@ -311,8 +310,8 @@ export default function ClanDashboard({ clan, events }) {
                                     </div>
                                 </div>
                             )) : (
-                                <div className="text-center py-12 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                                    <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <div className="text-center py-8 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                    <Calendar className="w-6 h-6 mx-auto mb-2 opacity-50" />
                                     <p className="text-xs font-medium">No active operations</p>
                                 </div>
                             )}
