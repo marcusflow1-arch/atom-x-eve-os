@@ -718,7 +718,6 @@ function AchievementsView({ onExitToLibrary }) {
             user={user}
           />
         ) : (
-        /* Main Layout: 2 Columns */
         <div className="flex gap-8 h-full overflow-hidden">
           
           {/* Left Sidebar (Shiny Box) */}
