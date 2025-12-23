@@ -33,28 +33,29 @@ export default function EntertainmentUI() {
           "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)",
       }}
     >
-      {/* Header */}
+      {/* Header - Translucent */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-6">
-          <h2 className="text-3xl font-bold text-white/90 drop-shadow-lg">User Interface</h2>
-          <div className="h-8 w-px bg-white/20" />
+          <h2 className="text-2xl font-bold text-white/60">User Interface</h2>
+          <div className="h-8 w-px bg-white/10" />
           <div className="flex gap-3">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === t.id ? "text-white" : "text-white/60 hover:text-white"
+                className={`px-6 py-3 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === t.id ? "text-white" : "text-white/50 hover:text-white/80"
                 }`}
                 style={
                   activeTab === t.id
                     ? {
-                        background: "rgba(59, 130, 246, 0.3)",
-                        backdropFilter: "blur(20px)",
-                        WebkitBackdropFilter: "blur(20px)",
-                        border: "1px solid rgba(147, 197, 253, 0.3)",
+                        background: "rgba(59, 130, 246, 0.10)",
+                        border: "1px solid rgba(147, 197, 253, 0.15)",
                       }
-                    : {}
+                    : {
+                        background: "transparent",
+                        border: "1px solid transparent"
+                      }
                 }
               >
                 {t.label}

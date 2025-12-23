@@ -557,27 +557,26 @@ export default function SeasonalPassContent() {
       </div>
       
       <div className="relative z-10 p-8">
-        {/* Header */}
+        {/* Header - Translucent */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="ml-16">
-              <h1 className="text-5xl font-black mb-2 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-700 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-2 text-white/70">
                 Season 1: Awakening
               </h1>
-              <p className="text-slate-400">Level {currentLevel} / 100 • 45 days remaining</p>
+              <p className="text-white/40">Level {currentLevel} / 100 • 45 days remaining</p>
             </div>
             
             <div className="flex items-center gap-4">
               <div 
                 className="text-right px-5 py-2.5 rounded-lg"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(50px) saturate(200%)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.10)',
                 }}
               >
-                <div className="text-xs text-slate-400 font-medium">Season XP</div>
-                <div className="text-xl font-bold text-white">{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()}</div>
+                <div className="text-xs text-white/40 font-medium">Season XP</div>
+                <div className="text-xl font-bold text-white/80">{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()}</div>
               </div>
               <Button 
                 onClick={async () => {
@@ -587,12 +586,11 @@ export default function SeasonalPassContent() {
                 }}
                 style={{
                   background: isPremiumOwned 
-                    ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(251, 146, 60, 0.18))'
-                    : 'rgba(96, 165, 250, 0.15)',
-                  backdropFilter: 'blur(50px) saturate(200%)',
+                    ? 'rgba(234, 179, 8, 0.10)'
+                    : 'rgba(96, 165, 250, 0.10)',
                   border: isPremiumOwned 
-                    ? '1px solid rgba(234, 179, 8, 0.35)' 
-                    : '1px solid rgba(96, 165, 250, 0.3)',
+                    ? '1px solid rgba(234, 179, 8, 0.20)' 
+                    : '1px solid rgba(96, 165, 250, 0.20)',
                   color: isPremiumOwned ? '#ca8a04' : '#3b82f6',
                   fontSize: '14px',
                   fontWeight: '600',
@@ -609,15 +607,14 @@ export default function SeasonalPassContent() {
           <div 
             className="w-full h-2.5 rounded-full overflow-hidden"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.10)',
             }}
           >
             <motion.div
               className="h-full"
               style={{
-                background: 'linear-gradient(90deg, rgba(96, 165, 250, 0.5), rgba(147, 197, 253, 0.5))',
+                background: 'linear-gradient(90deg, rgba(96, 165, 250, 0.4), rgba(147, 197, 253, 0.4))',
               }}
               initial={{ width: 0 }}
               animate={{ width: `${xpProgress}%` }}

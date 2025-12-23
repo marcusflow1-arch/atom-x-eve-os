@@ -150,7 +150,7 @@ export default function ClanPage() {
     }
 
     return (
-        <div className="flex h-screen w-full overflow-hidden font-sans text-slate-200 relative pt-20" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+        <div className="flex h-screen w-full overflow-hidden font-sans text-slate-200 relative pt-16" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 1. Server List (Left) */}
             <ServerList 
                 activeClanId={activeClan?.id} 
