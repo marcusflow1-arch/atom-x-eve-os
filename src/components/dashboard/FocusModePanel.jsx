@@ -2137,22 +2137,15 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Genre Selector, Calendar/Goals, and Library Games */}
+      {/* Bottom Section - Calendar/Goals on far left, Library Games, Genre Selector on far right */}
       <div className="flex gap-4 pt-4">
-        {/* Genre Selector - Vertical scroll */}
-        <MiniGenreSelector 
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          gamesByGenre={gamesByGenre}
-        />
-
-        {/* Calendar & Goals - Below Genre selector */}
+        {/* Calendar & Goals - Far left */}
         <div className="w-[160px] flex-shrink-0 flex flex-col gap-2">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
           <GoalsPanel />
         </div>
 
-        {/* Library Games - Changes based on genre scroll */}
+        {/* Library Games - Center */}
         <div className="flex-1 min-w-0">
           <LibraryGamesSection 
             activeGenre={activeGenre}
@@ -2162,6 +2155,13 @@ export default function FocusModePanel() {
             allGames={ownedGames}
           />
         </div>
+
+        {/* Genre Selector - Far right */}
+        <MiniGenreSelector 
+          activeGenre={activeGenre}
+          onGenreChange={setActiveGenre}
+          gamesByGenre={gamesByGenre}
+        />
       </div>
     </div>
   );
