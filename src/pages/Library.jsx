@@ -579,33 +579,35 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
           )}
         </div>
 
-        {/* Action Buttons - Vertical */}
+        {/* Action Buttons - Play & Stream side by side, Options below */}
         <div className="flex flex-col gap-2">
-          <motion.button
-            onClick={() => onPlay(game)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Play className="w-4 h-4 fill-current" />
-            Play
-          </motion.button>
-          <motion.button
-            onClick={() => onStream(game)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/20 text-purple-300 font-semibold text-sm hover:bg-purple-500/30 transition-all border border-purple-500/30"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Radio className="w-4 h-4" />
-            Stream
-          </motion.button>
+          <div className="flex gap-2">
+            <motion.button
+              onClick={() => onPlay(game)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white text-black font-semibold text-xs hover:bg-white/90 transition-all"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Play
+            </motion.button>
+            <motion.button
+              onClick={() => onStream(game)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 text-purple-300 font-semibold text-xs hover:bg-purple-500/30 transition-all border border-purple-500/30"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              Stream
+            </motion.button>
+          </div>
           <motion.button
             onClick={onShowGameDetails}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 text-white/70 font-medium text-sm hover:bg-white/20 transition-all border border-white/10"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 text-white/70 font-medium text-xs hover:bg-white/20 transition-all border border-white/10"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <MoreHorizontal className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
             Options
           </motion.button>
         </div>
