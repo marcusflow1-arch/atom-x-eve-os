@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 const GlassCard = ({ children, className = "" }) => (
-    <div className={`bg-white/70 backdrop-blur-xl border border-white/50 shadow-sm rounded-2xl p-6 ${className}`}>
+    <div className={`bg-white/10 backdrop-blur-xl border border-white/10 shadow-sm rounded-2xl p-6 ${className}`}>
         {children}
     </div>
 );
@@ -18,12 +18,12 @@ const GlassCard = ({ children, className = "" }) => (
 // Shortcut Item Component with Icon
 const ShortcutItem = ({ icon: Icon, label, to, color = "blue" }) => {
     const colorStyles = {
-        blue: "bg-blue-500/10 text-blue-600 border-blue-200 hover:bg-blue-500/20",
-        purple: "bg-purple-500/10 text-purple-600 border-purple-200 hover:bg-purple-500/20",
-        green: "bg-green-500/10 text-green-600 border-green-200 hover:bg-green-500/20",
-        orange: "bg-orange-500/10 text-orange-600 border-orange-200 hover:bg-orange-500/20",
-        pink: "bg-pink-500/10 text-pink-600 border-pink-200 hover:bg-pink-500/20",
-        cyan: "bg-cyan-500/10 text-cyan-600 border-cyan-200 hover:bg-cyan-500/20",
+        blue: "bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30",
+        purple: "bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30",
+        green: "bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30",
+        orange: "bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30",
+        pink: "bg-pink-500/20 text-pink-300 border-pink-500/30 hover:bg-pink-500/30",
+        cyan: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/30",
     };
     
     return (
@@ -31,7 +31,7 @@ const ShortcutItem = ({ icon: Icon, label, to, color = "blue" }) => {
             to={to}
             className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all cursor-pointer ${colorStyles[color]}`}
         >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/50 shadow-sm">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/10 shadow-sm">
                 <Icon className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold">{label}</span>
@@ -59,19 +59,19 @@ const MemberViewport = ({ clanId }) => {
 
     const getRoleBadge = (role) => {
         switch(role) {
-            case 'leader': return { icon: Crown, color: 'text-yellow-500', bg: 'bg-yellow-50' };
-            case 'officer': return { icon: Shield, color: 'text-blue-500', bg: 'bg-blue-50' };
-            default: return { icon: Users, color: 'text-slate-400', bg: 'bg-slate-50' };
+            case 'leader': return { icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
+            case 'officer': return { icon: Shield, color: 'text-blue-400', bg: 'bg-blue-500/20' };
+            default: return { icon: Users, color: 'text-white/40', bg: 'bg-white/10' };
         }
     };
 
     return (
         <GlassCard className="!p-4">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
                     <Users className="w-4 h-4" /> Members Online
                 </h3>
-                <span className="text-xs font-mono text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">
+                <span className="text-xs font-mono text-green-400 bg-green-500/20 px-2 py-0.5 rounded border border-green-500/30">
                     {members?.length || 0} Online
                 </span>
             </div>
@@ -82,26 +82,26 @@ const MemberViewport = ({ clanId }) => {
                     return (
                         <div 
                             key={m.id} 
-                            className="flex items-center gap-2 p-2 rounded-lg bg-white/50 hover:bg-white/80 transition-all cursor-pointer border border-slate-100"
+                            className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer border border-white/10"
                         >
                             <div className="relative">
-                                <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden ring-2 ring-white">
+                                <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden ring-2 ring-white/20">
                                     {m.user?.avatar_url ? (
                                         <img src={m.user.avatar_url} className="w-full h-full object-cover" alt="" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">
+                                        <div className="w-full h-full flex items-center justify-center text-white/40 text-xs font-bold">
                                             {m.user?.full_name?.charAt(0) || '?'}
                                         </div>
                                     )}
                                 </div>
-                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold text-slate-700 truncate flex items-center gap-1">
+                                <div className="text-xs font-semibold text-white truncate flex items-center gap-1">
                                     {m.user?.full_name || 'Unknown'}
                                     <RoleIcon className={`w-3 h-3 ${roleInfo.color}`} />
                                 </div>
-                                <div className="text-[10px] text-slate-400 truncate">
+                                <div className="text-[10px] text-white/40 truncate">
                                     {m.role === 'leader' ? 'Commander' : m.role === 'officer' ? 'Officer' : 'Agent'}
                                 </div>
                             </div>
@@ -111,7 +111,7 @@ const MemberViewport = ({ clanId }) => {
             </div>
             {members && members.length > 8 && (
                 <div className="mt-2 text-center">
-                    <span className="text-xs text-slate-400">+{members.length - 8} more members</span>
+                    <span className="text-xs text-white/40">+{members.length - 8} more members</span>
                 </div>
             )}
         </GlassCard>
@@ -176,15 +176,15 @@ export default function ClanDashboard({ clan, events }) {
                     {/* Message of the Day */}
                     <GlassCard className="relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-purple-500" />
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <Crown className="w-4 h-4 text-yellow-500" /> Message of the Day
+                        <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-yellow-400" /> Message of the Day
                         </h3>
-                        <p className="text-xl text-slate-700 font-medium leading-relaxed italic">
+                        <p className="text-xl text-white font-medium leading-relaxed italic">
                             "{clan.description || "Welcome to the guild. Coordinate your raid schedules in the #planning channel. We aim for World First this season."}"
                         </p>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+                        <div className="mt-4 flex items-center gap-2 text-xs text-white/40">
                             <span>Updated by Commander</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300" />
+                            <span className="w-1 h-1 rounded-full bg-white/30" />
                             <span>Today at 09:00 AM</span>
                         </div>
                     </GlassCard>
@@ -193,17 +193,17 @@ export default function ClanDashboard({ clan, events }) {
                     <div className="grid grid-cols-2 gap-6">
                          <GlassCard>
                              <div className="flex items-center justify-between mb-4">
-                                 <h3 className="text-sm font-bold text-slate-500">Guild XP</h3>
-                                 <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{Math.floor(progress)}%</span>
+                                 <h3 className="text-sm font-bold text-white/60">Guild XP</h3>
+                                 <span className="text-xs font-mono text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded border border-blue-500/30">{Math.floor(progress)}%</span>
                              </div>
-                             <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                             <div className="h-4 bg-white/10 rounded-full overflow-hidden border border-white/10">
                                  <motion.div 
                                      initial={{ width: 0 }}
                                      animate={{ width: `${progress}%` }}
                                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
                                  />
                              </div>
-                             <div className="mt-2 flex justify-between text-xs text-slate-400">
+                             <div className="mt-2 flex justify-between text-xs text-white/40">
                                  <span>Lvl {clan.level}</span>
                                  <span>Lvl {clan.level + 1}</span>
                              </div>
@@ -211,13 +211,13 @@ export default function ClanDashboard({ clan, events }) {
 
                          <GlassCard>
                              <div className="flex items-center justify-between mb-4">
-                                 <h3 className="text-sm font-bold text-slate-500">Weekly Contribution</h3>
-                                 <Trophy className="w-4 h-4 text-yellow-500" />
+                                 <h3 className="text-sm font-bold text-white/60">Weekly Contribution</h3>
+                                 <Trophy className="w-4 h-4 text-yellow-400" />
                              </div>
                              <div className="flex items-end gap-2">
-                                 <span className="text-2xl font-bold text-slate-800">24,500</span>
-                                 <span className="text-sm text-green-500 mb-1 flex items-center font-bold">
-                                     +12% <span className="text-slate-400 text-xs ml-1 font-normal">vs last week</span>
+                                 <span className="text-2xl font-bold text-white">24,500</span>
+                                 <span className="text-sm text-green-400 mb-1 flex items-center font-bold">
+                                     +12% <span className="text-white/40 text-xs ml-1 font-normal">vs last week</span>
                                  </span>
                              </div>
                          </GlassCard>
@@ -225,8 +225,8 @@ export default function ClanDashboard({ clan, events }) {
 
                     {/* Active Guild Quests */}
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <Target className="w-5 h-5 text-red-500" /> Active Guild Quests
+                        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-red-400" /> Active Guild Quests
                         </h2>
                         <div className="space-y-3">
                             {[
@@ -234,23 +234,23 @@ export default function ClanDashboard({ clan, events }) {
                                 { title: "Gather Void Essence", progress: 450, total: 1000, reward: "+500 Guild XP", type: "Collection" },
                                 { title: "Win PvP Skirmishes", progress: 8, total: 20, reward: "Gladiator Title", type: "PvP" }
                             ].map((quest, i) => (
-                                <GlassCard key={i} className="p-4 hover:bg-white/80 transition-colors cursor-pointer group !bg-white/40">
+                                <GlassCard key={i} className="p-4 hover:bg-white/15 transition-colors cursor-pointer group !bg-white/5">
                                     <div className="flex justify-between items-center mb-3">
                                         <div className="flex items-center gap-3">
-                                            <Badge variant="outline" className="bg-white border-slate-200 text-slate-500 group-hover:border-blue-300 group-hover:text-blue-600 transition-colors shadow-sm">
+                                            <Badge variant="outline" className="bg-white/10 border-white/20 text-white/70 group-hover:border-blue-400/50 group-hover:text-blue-300 transition-colors">
                                                 {quest.type}
                                             </Badge>
-                                            <span className="font-bold text-slate-700">{quest.title}</span>
+                                            <span className="font-bold text-white">{quest.title}</span>
                                         </div>
-                                        <span className="text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-md border border-amber-100">{quest.reward}</span>
+                                        <span className="text-xs font-bold text-amber-300 bg-amber-500/20 px-2 py-1 rounded-md border border-amber-500/30">{quest.reward}</span>
                                     </div>
-                                    <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                                    <div className="relative h-2 bg-white/10 rounded-full overflow-hidden border border-white/10">
                                         <div 
                                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-orange-500"
                                             style={{ width: `${(quest.progress / quest.total) * 100}%` }}
                                         />
                                     </div>
-                                    <div className="mt-1 text-right text-[10px] text-slate-400 font-mono">
+                                    <div className="mt-1 text-right text-[10px] text-white/40 font-mono">
                                         {quest.progress} / {quest.total}
                                     </div>
                                 </GlassCard>
@@ -263,7 +263,7 @@ export default function ClanDashboard({ clan, events }) {
                 <div className="col-span-4 space-y-6">
                     {/* Quick Shortcuts */}
                     <GlassCard className="!p-4">
-                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Quick Access</h3>
+                        <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-4">Quick Access</h3>
                         <div className="grid grid-cols-3 gap-2">
                             <ShortcutItem icon={MessageSquare} label="Forum" to={createPageUrl('Community')} color="blue" />
                             <ShortcutItem icon={ShoppingBag} label="Store" to={createPageUrl('Store')} color="purple" />
@@ -277,40 +277,40 @@ export default function ClanDashboard({ clan, events }) {
                     {/* Member Viewport */}
                     <MemberViewport clanId={clan.id} />
 
-                    <GlassCard className="flex flex-col bg-gradient-to-b from-white/70 to-blue-50/30">
+                    <GlassCard className="flex flex-col">
                         <div className="flex items-center justify-between mb-4">
-                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                             <h3 className="text-sm font-bold text-white/50 uppercase tracking-wider flex items-center gap-2">
                                  <Calendar className="w-4 h-4" /> Upcoming Events
                              </h3>
-                             <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-slate-100">
-                                 <Sword className="w-3 h-3 text-slate-400" />
+                             <Button size="icon" variant="ghost" className="h-6 w-6 rounded-full hover:bg-white/10">
+                                 <Sword className="w-3 h-3 text-white/40" />
                              </Button>
                         </div>
 
                         <div className="space-y-3 max-h-[250px] overflow-y-auto">
                             {events && events.length > 0 ? events.map(event => (
-                                <div key={event.id} className="relative bg-white rounded-xl p-3 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden cursor-pointer">
+                                <div key={event.id} className="relative bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 hover:border-blue-500/30 transition-all group overflow-hidden cursor-pointer">
                                     <div className="absolute top-0 right-0 p-2 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                                        <Sword className="w-12 h-12 text-blue-600" />
+                                        <Sword className="w-12 h-12 text-blue-400" />
                                     </div>
                                     <div className="flex items-start gap-3 relative z-10">
-                                        <div className="flex flex-col items-center justify-center bg-slate-100 rounded-lg w-10 h-10 border border-slate-200 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                        <div className="flex flex-col items-center justify-center bg-white/10 rounded-lg w-10 h-10 border border-white/10 text-white/70 group-hover:bg-blue-500/20 group-hover:text-blue-300 transition-colors">
                                             <span className="text-[8px] font-bold uppercase opacity-60">{format(new Date(event.startTime), 'MMM')}</span>
                                             <span className="text-sm font-bold">{format(new Date(event.startTime), 'd')}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-slate-800 text-sm truncate group-hover:text-blue-600 transition-colors">{event.title}</h4>
+                                            <h4 className="font-bold text-white text-sm truncate group-hover:text-blue-300 transition-colors">{event.title}</h4>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <Badge className="text-[10px] px-1.5 h-5 bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100">
+                                                <Badge className="text-[10px] px-1.5 h-5 bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30">
                                                     {event.participants?.length || 0}/{event.maxParticipants}
                                                 </Badge>
-                                                <span className="text-[10px] text-slate-400 font-medium">{format(new Date(event.startTime), 'h:mm a')}</span>
+                                                <span className="text-[10px] text-white/40 font-medium">{format(new Date(event.startTime), 'h:mm a')}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             )) : (
-                                <div className="text-center py-8 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                <div className="text-center py-8 text-white/40 bg-white/5 rounded-xl border border-dashed border-white/10">
                                     <Calendar className="w-6 h-6 mx-auto mb-2 opacity-50" />
                                     <p className="text-xs font-medium">No active operations</p>
                                 </div>
