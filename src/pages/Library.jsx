@@ -1060,7 +1060,16 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="relative z-10 px-8 py-8">
+
+      {/* Left Side Scroll Menu */}
+      <LibraryScrollMenu
+        games={filteredGames}
+        selectedGame={selectedGame}
+        onSelectGame={setSelectedGame}
+        onLaunchGame={handleLaunchGame}
+      />
+
+      <div className="relative z-10 px-8 py-8 pl-44">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
