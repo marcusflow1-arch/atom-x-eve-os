@@ -524,23 +524,23 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
         transition={{ duration: 0.4 }}
       >
         
-        {/* Top Navigation Bar */}
+        {/* Top Navigation Bar - Translucent */}
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
-              <h1 className="ml-4 text-3xl font-black tracking-tighter text-white flex items-center gap-3 drop-shadow-md">
+              <h1 className="ml-4 text-2xl font-bold tracking-wide text-white/70 flex items-center gap-3">
                 Blacksmith Forge
               </h1>
             </div>
-            <nav className="flex gap-1 bg-slate-800/50 rounded-full p-1 backdrop-blur-xl border border-white/10 shadow-lg">
+            <nav className="flex gap-1 bg-white/[0.03] rounded-full p-1 border border-white/10">
               {['forge', 'materials', 'collab'].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide transition-all ${
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                     viewMode === mode 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-white/10 text-white border border-white/20' 
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/5'
                   }`}
                 >
                   {mode === 'collab' ? 'Collaborations' : mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -551,14 +551,14 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
 
           <div className="flex gap-6 items-center">
             {(user?.materials || []).slice(0, 2).map(mat => (
-              <div key={mat.id} className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
+              <div key={mat.id} className="flex items-center gap-3 bg-white/[0.03] px-4 py-2 rounded-2xl border border-white/10">
                 <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity]?.color.replace('text-', 'bg-') || 'bg-slate-500'}`} />
-                <span className="text-slate-300 text-sm font-medium">{mat.name}</span>
-                <span className="text-white font-bold font-mono">{mat.quantity}</span>
+                <span className="text-white/60 text-sm font-medium">{mat.name}</span>
+                <span className="text-white/80 font-bold font-mono">{mat.quantity}</span>
               </div>
             ))}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 border-2 border-white/50 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <img src={user?.avatar_url} className="w-full h-full rounded-full opacity-90" alt="User" />
+            <div className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center overflow-hidden">
+              <img src={user?.avatar_url} className="w-full h-full rounded-full opacity-80" alt="User" />
             </div>
           </div>
         </header>
