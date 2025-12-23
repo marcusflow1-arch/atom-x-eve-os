@@ -1920,26 +1920,118 @@ function NewCardsSection({ upcomingCards }) {
   );
 }
 
-// Live Panel - Condensed unified module (replaces Feed/AI Status/Cards tabs)
+// Large 3D Card Component for Live Panel
+function Large3DCard({ card, isActive }) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+  const style = rarityStyles[card.rarity];
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setTilt({
+      x: (y - 0.5) * 25,
+      y: (x - 0.5) * -25
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+    setIsHovered(false);
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      animate={{
+        rotateX: tilt.x,
+        rotateY: tilt.y,
+        scale: isHovered ? 1.02 : 1
+      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="w-32 h-44 relative cursor-pointer flex-shrink-0"
+      style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+    >
+      {/* Card Base */}
+      <div 
+        className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isHovered ? style.glow : ''} overflow-hidden transition-shadow duration-300`}
+        style={{
+          background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          boxShadow: isHovered 
+            ? `0 20px 40px rgba(0,0,0,0.5), 0 0 30px ${
+                card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.3)' :
+                card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
+                'rgba(59, 130, 246, 0.3)'
+              }` 
+            : '0 10px 30px rgba(0,0,0,0.4)'
+        }}
+      >
+        {/* Animated shine line */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)`,
+          }}
+        />
+        
+        {/* Content */}
+        <div className="relative h-full flex flex-col p-3">
+          {/* Rarity indicator */}
+          <div className="flex justify-between items-start mb-2">
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${style.text}`}>
+              {card.rarity}
+            </span>
+            <span className="text-[8px] text-white/40">{card.type}</span>
+          </div>
+
+          {/* Icon */}
+          <div className="flex-1 flex items-center justify-center">
+            <span className="text-5xl drop-shadow-lg">{card.icon}</span>
+          </div>
+
+          {/* Name */}
+          <div className="text-center mt-2">
+            <p className="text-white font-bold text-sm leading-tight">{card.name}</p>
+            <p className="text-white/40 text-[9px] mt-1">{card.game}</p>
+          </div>
+        </div>
+
+        {/* Corner decorations */}
+        <div className={`absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 ${style.border} rounded-tl-lg`} />
+        <div className={`absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 ${style.border} rounded-tr-lg`} />
+        <div className={`absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 ${style.border} rounded-bl-lg`} />
+        <div className={`absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 ${style.border} rounded-br-lg`} />
+      </div>
+    </motion.div>
+  );
+}
+
+// Live Panel - Redesigned with large 3D card showcase
 function LivePanel({ upcomingCards }) {
   const navigate = useNavigate();
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showCardOverlay, setShowCardOverlay] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null);
 
-  // System alerts / updates
-  const alerts = [
-    { id: 1, type: 'event', icon: '🎄', title: 'Winter Solstice Event', description: 'Legendary cards available', time: 'Live', color: 'bg-green-500' },
-    { id: 2, type: 'drop', icon: '🃏', title: 'New Card Drop', description: '3 new legendaries added', time: '2h', color: 'bg-amber-500' },
-    { id: 3, type: 'update', icon: '🤖', title: 'AI Update v2.5', description: 'Behavior sync improved', time: '5h', color: 'bg-purple-500' },
-  ];
+  const currentCard = upcomingCards[currentCardIndex];
+  const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
 
-  // Get latest 3 cards
-  const latestCards = upcomingCards.slice(0, 3);
-
-  const handleCardClick = (card) => {
-    setSelectedCard(card);
-    setShowCardOverlay(true);
+  const nextCard = () => {
+    setCurrentCardIndex((prev) => (prev + 1) % upcomingCards.length);
   };
+
+  const prevCard = () => {
+    setCurrentCardIndex((prev) => (prev - 1 + upcomingCards.length) % upcomingCards.length);
+  };
+
+  if (!currentCard) return null;
 
   return (
     <div className="h-full flex flex-col">
@@ -1947,29 +2039,112 @@ function LivePanel({ upcomingCards }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
           <Radio className="w-4 h-4 text-green-400 animate-pulse" />
-          Live Panel
+          New Cards
         </h3>
-        <span className="text-green-400 text-[10px] font-mono">● LIVE</span>
+        <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto space-y-4" style={{ scrollbarWidth: 'none' }}>
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-            <p className="text-lg font-bold text-white">47</p>
-            <p className="text-[8px] text-white/40 uppercase">Cards</p>
+      {/* Main Content - Card + Description + Demo */}
+      <div className="flex-1 flex items-start gap-4">
+        {/* Left: 3D Card with Arrows */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Left Arrow */}
+          <button 
+            onClick={prevCard}
+            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+          >
+            <ChevronLeft className="w-3 h-3 text-white/60" />
+          </button>
+
+          {/* 3D Card */}
+          <Large3DCard card={currentCard} isActive={true} />
+
+          {/* Right Arrow */}
+          <button 
+            onClick={nextCard}
+            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+          >
+            <ChevronRight className="w-3 h-3 text-white/60" />
+          </button>
+        </div>
+
+        {/* Middle: Card Description */}
+        <div className="flex-1 min-w-0 h-44 flex flex-col">
+          {/* Card Title & Meta */}
+          <div className="mb-2">
+            <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-[9px] px-2 py-0.5 rounded border ${
+                currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                'bg-blue-500/20 text-blue-300 border-blue-500/30'
+              }`}>{currentCard.rarity}</span>
+              <span className="text-[9px] text-white/40">{currentCard.type}</span>
+              <span className="text-[9px] text-white/30">•</span>
+              <span className="text-[9px] text-white/40">{currentCard.genre}</span>
+            </div>
           </div>
-          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-            <p className="text-lg font-bold text-cyan-400">12</p>
-            <p className="text-[8px] text-white/40 uppercase">Games</p>
+
+          {/* Description */}
+          <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
+            {currentCard.description}
+          </p>
+
+          {/* Stats Row */}
+          <div className="flex gap-2 mb-2">
+            {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
+              <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
+                <span className="text-[8px] text-white/40 uppercase">{key}</span>
+                <span className="text-[10px] text-white font-bold ml-1">{val}</span>
+              </div>
+            ))}
           </div>
-          <div className="p-2 rounded-lg border text-center" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-            <p className="text-lg font-bold text-purple-400">Lv.8</p>
-            <p className="text-[8px] text-white/40 uppercase">AI</p>
+
+          {/* Unlock Condition */}
+          <div className="mt-auto flex items-center gap-2 text-[9px]">
+            <Trophy className="w-3 h-3 text-amber-400" />
+            <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
+          </div>
+        </div>
+
+        {/* Right: Demo Video Box */}
+        <div 
+          className="w-36 h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
+          style={{
+            background: 'rgba(100, 120, 140, 0.08)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)'
+          }}
+          onClick={() => setShowCardOverlay(true)}
+        >
+          {/* Demo Placeholder */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all mb-2">
+              <Play className="w-5 h-5 text-white/70 ml-0.5" />
+            </div>
+            <span className="text-[10px] text-white/40 font-medium">Demonstration</span>
+            <span className="text-[8px] text-white/30 mt-1">Click to view</span>
+          </div>
+
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
+          {/* Demo label */}
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
+            <span className="text-[8px] text-white/60 uppercase tracking-wider">Demo</span>
           </div>
         </div>
       </div>
+
+      {/* Card Detail Overlay */}
+      <AnimatePresence>
+        {showCardOverlay && currentCard && (
+          <CardTutorialOverlay 
+            card={currentCard}
+            onClose={() => setShowCardOverlay(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
