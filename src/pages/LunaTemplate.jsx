@@ -1134,7 +1134,7 @@ export default function LunaTemplate() {
 
         {/* Skills Section Above Dock */}
         {uiVisible && !showInventory && (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto" aria-hidden={!uiVisible}>
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto" aria-hidden={!uiVisible}>
           <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
           
           {/* Decorative Lines */}
@@ -1757,7 +1757,7 @@ export default function LunaTemplate() {
                       transition={{ duration: 0.3 }}
                       className="flex justify-between gap-12"
                     >
-                    <div className="flex flex-col items-start gap-8 relative z-40">
+                    <div className="flex flex-col items-start gap-10 relative z-40">
                       {/* Weapons Section - 3 boxes */}
                       <div className="flex flex-col items-center">
                         <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
