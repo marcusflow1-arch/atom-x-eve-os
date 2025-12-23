@@ -1171,17 +1171,26 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           )}
         </AnimatePresence>
 
-        {/* Game Detail Panel - Full Width */}
-        <div className="flex-1 min-h-[calc(100vh-200px)]">
-          <LunaGamePanel
-            game={selectedGame}
-            isStreaming={selectedGame?.id === streamingGameId}
-            onPlay={handleLaunchGame}
-            onStream={handleStreamGame}
-            onShowAchievements={() => setShowAchievementsOverlay(true)}
-            onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+        {/* Content Area - List or Grid View */}
+        {viewMode === 'list' ? (
+          <div className="flex-1 min-h-[calc(100vh-200px)]">
+            <LunaGamePanel
+              game={selectedGame}
+              isStreaming={selectedGame?.id === streamingGameId}
+              onPlay={handleLaunchGame}
+              onStream={handleStreamGame}
+              onShowAchievements={() => setShowAchievementsOverlay(true)}
+              onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+            />
+          </div>
+        ) : (
+          <LibraryGridView
+            games={filteredGames}
+            onLaunchGame={handleLaunchGame}
+            onStreamGame={handleStreamGame}
+            onSwitchToAchievements={() => setEmbeddedView('achievements')}
           />
-        </div>
+        )}
       </div>
 
 
