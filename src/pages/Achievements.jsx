@@ -731,6 +731,22 @@ function AchievementsView({ onExitToLibrary }) {
                   </motion.button>
                 </Link>
               )}
+              
+              {/* Grid Toggle Button */}
+              <motion.button
+                onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400' 
+                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                }`}
+                title={viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </motion.button>
+              
               <h1 className="text-2xl font-black tracking-tighter text-white">
                 Achievements
               </h1>
