@@ -937,7 +937,6 @@ function AchievementsView({ onExitToLibrary }) {
           </div>
 
         </div>
-        )
       </div>
       </>
       )}
