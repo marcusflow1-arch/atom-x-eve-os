@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon
+  ChevronDown, Mic as MicIcon, LayoutGrid, List
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
