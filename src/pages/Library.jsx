@@ -1005,20 +1005,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         )}
       </div>
 
-      {/* Grid View - Full Screen Overlay */}
-      {viewMode === 'grid' && (
-        <div className="fixed inset-0 z-30">
-          <LibraryGridView
-            games={filteredGames}
-            onLaunchGame={handleLaunchGame}
-            onStreamGame={handleStreamGame}
-            onSwitchToAchievements={() => setEmbeddedView('achievements')}
-            onSwitchToList={() => setViewMode('list')}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
-        </div>
-      )}
+
 
 
 
