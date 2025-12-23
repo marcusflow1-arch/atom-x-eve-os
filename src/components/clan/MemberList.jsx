@@ -1,9 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Crown, Shield } from 'lucide-react';
+import { Crown, Shield, Users } from 'lucide-react';
 
-export default function MemberList({ clan }) {
+export default function MemberList({ clan, fullView = false }) {
     const { data: members } = useQuery({
         queryKey: ['clanMembersList', clan.id],
         queryFn: async () => {
