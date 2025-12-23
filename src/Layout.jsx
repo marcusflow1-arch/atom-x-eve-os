@@ -582,84 +582,84 @@ function LayoutContent({ children, currentPageName }) {
                                   </button>
 
                                   {showLunaHeaderBar && (
-                                                                            <div className="flex items-center gap-6 ml-4">
-                                                                              <span className="text-base md:text-lg font-semibold text-white/90 tracking-wide">
-                                                                                                                            Atom X Eve Dashboard Home
-                                                                                                                          </span>
+                                                                                <div className="flex items-center gap-6 ml-4">
+                                                                                  <span className="text-base md:text-lg font-semibold text-white/70 tracking-wide">
+                                                                                                                                Atom X Eve Dashboard Home
+                                                                                                                              </span>
 
-                                                                              <div className="h-6 w-px bg-white/20" />
+                                                                                  <div className="h-6 w-px bg-white/10" />
 
-                                                                              <button
-                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
-                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
-                                                                                  location.pathname.toLowerCase().includes('/blacksmith')
-                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                                                }`}
-                                                                              >
-                                                                                <span className="flex items-center gap-2">
-                                                                                  <Hammer className="w-4 h-4" />
-                                                                                  {location.pathname.toLowerCase().includes('/blacksmith') ? 'Dashboard' : 'Blacksmith'}
-                                                                                </span>
-                                                                              </button>
+                                                                                  <button
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
+                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
+                                                                                      location.pathname.toLowerCase().includes('/blacksmith')
+                                                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
+                                                                                    }`}
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      <Hammer className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/blacksmith') ? 'Dashboard' : 'Blacksmith'}
+                                                                                    </span>
+                                                                                  </button>
 
-                                                                              <button
-                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
-                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
-                                                                                  location.pathname.toLowerCase().includes('/seasonalpass')
-                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                                                }`}
-                                                                              >
-                                                                                <span className="flex items-center gap-2">
-                                                                                  <Crown className="w-4 h-4" />
-                                                                                  {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
-                                                                                </span>
-                                                                              </button>
+                                                                                  <button
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
+                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
+                                                                                      location.pathname.toLowerCase().includes('/seasonalpass')
+                                                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
+                                                                                    }`}
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      <Crown className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
+                                                                                    </span>
+                                                                                  </button>
 
-                                                                              <button
-                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
-                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
-                                                                                  location.pathname.toLowerCase().includes('/entertainment')
-                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                                                }`}
-                                                                              >
-                                                                                <span className="flex items-center gap-2">
-                                                                                  <Clapperboard className="w-4 h-4" />
-                                                                                  {location.pathname.toLowerCase().includes('/entertainment') ? 'Dashboard' : 'Entertainment'}
-                                                                                </span>
-                                                                              </button>
+                                                                                  <button
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
+                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
+                                                                                      location.pathname.toLowerCase().includes('/entertainment')
+                                                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
+                                                                                    }`}
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      <Clapperboard className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/entertainment') ? 'Dashboard' : 'Entertainment'}
+                                                                                    </span>
+                                                                                  </button>
 
-                                                                              <button
-                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
-                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
-                                                                                  location.pathname.toLowerCase().includes('/clan')
-                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                                                }`}
-                                                                              >
-                                                                                <span className="flex items-center gap-2">
-                                                                                  <Users className="w-4 h-4" />
-                                                                                  {location.pathname.toLowerCase().includes('/clan') ? 'Dashboard' : 'Clan'}
-                                                                                </span>
-                                                                              </button>
+                                                                                  <button
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
+                                                                                      location.pathname.toLowerCase().includes('/clan')
+                                                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
+                                                                                    }`}
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      <Users className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/clan') ? 'Dashboard' : 'Clan'}
+                                                                                    </span>
+                                                                                  </button>
 
-                                                                              <button
-                                                                                onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
-                                                                                className={`relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border ${
-                                                                                  location.pathname.toLowerCase().includes('/community')
-                                                                                    ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                                                                    : 'bg-transparent border-transparent text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20'
-                                                                                }`}
-                                                                              >
-                                                                                <span className="flex items-center gap-2">
-                                                                                  <MessageSquare className="w-4 h-4" />
-                                                                                  {location.pathname.toLowerCase().includes('/community') ? 'Dashboard' : 'Forum'}
-                                                                                </span>
-                                                                              </button>
-                                                                              </div>
-                                                                              )}
+                                                                                  <button
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
+                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
+                                                                                      location.pathname.toLowerCase().includes('/community')
+                                                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
+                                                                                    }`}
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      <MessageSquare className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/community') ? 'Dashboard' : 'Forum'}
+                                                                                    </span>
+                                                                                  </button>
+                                                                                  </div>
+                                                                                  )}
                                 </div>
                               )}
 
@@ -701,17 +701,17 @@ function LayoutContent({ children, currentPageName }) {
       {showLunaHeaderBar && (
         <div className="fixed top-4 right-4 z-40 flex items-center gap-4">
           <motion.button
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border-2 border-white/20"
+            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=profile')}
             title="Profile"
           >
-            <User className="w-6 h-6 text-white" />
+            <User className="w-6 h-6 text-white/80" />
           </motion.button>
           <motion.button
-            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)] border border-white/10"
+            className="w-12 h-12 rounded-full bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/10"
             style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.95 }}
