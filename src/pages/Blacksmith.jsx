@@ -674,24 +674,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                    {selectedGame ? (
                        <div className="flex flex-col h-full">
                            {/* Game Header Bar */}
-                           <div className="h-16 flex items-center justify-between px-8 border-b border-white/10 shrink-0">
-                               <div className="flex items-center gap-3">
-                                  <button 
-                                      onClick={() => setSelectedGame(null)} 
-                                      className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
-                                  >
-                                      <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                      <span className="font-bold uppercase tracking-wider text-sm">Back to Games</span>
-                                  </button>
-
-                                  <button
-                                     onClick={() => navigate(createPageUrl('CrossGameFusion'))}
-                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
-                                  >
-                                     <Shuffle className="w-4 h-4" />
-                                     <span className="text-xs font-bold">Cross-Fusion</span>
-                                  </button>
-                               </div>
+                           <div className="h-12 flex items-center justify-between px-4 shrink-0">
                                <Badge variant="outline" className="bg-blue-900/20 border-blue-500/30 text-blue-400">
                                    {selectedGame.title}
                                </Badge>
