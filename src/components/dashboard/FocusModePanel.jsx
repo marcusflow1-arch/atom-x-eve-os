@@ -1185,7 +1185,12 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   }
 
   return (
-    <div className="h-full flex gap-3">
+    <div className="h-full flex gap-3" onClick={(e) => {
+      // Close panel when clicking outside of it (but not on games)
+      if (!e.target.closest('[data-game-panel]') && !e.target.closest('[data-game-card]')) {
+        setShowGamePanel(false);
+      }
+    }}>
       {/* Main Games Grid */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${showGamePanel && selectedGame ? 'pr-0' : ''}`}>
         {/* Clickable Title - Transitions to Store */}
@@ -1217,12 +1222,13 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
                     <motion.div
                       key={game.id}
                       layout
+                      data-game-card
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
                       transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
                       className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
-                      onClick={() => handleGameClick(game)}
+                      onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
                     >
                       <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
                         isSelected 
@@ -1312,6 +1318,8 @@ function GameOptionsPanel({ game, onClose }) {
       exit={{ width: 0, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className="h-full flex-shrink-0 overflow-hidden"
+      data-game-panel
+      onClick={(e) => e.stopPropagation()}
     >
       <div 
         className="h-full w-[220px] rounded-xl border border-white/10 flex flex-col"
@@ -1321,18 +1329,8 @@ function GameOptionsPanel({ game, onClose }) {
           WebkitBackdropFilter: 'blur(20px)',
         }}
       >
-        {/* Close Button */}
-        <div className="flex justify-end p-2">
-          <button
-            onClick={onClose}
-            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-          >
-            <X className="w-3 h-3 text-white/60" />
-          </button>
-        </div>
-
         {/* Game Cover */}
-        <div className="px-3 pb-3">
+        <div className="px-3 pt-3 pb-3">
           <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
             <img 
               src={game.cover_image || game.cover} 
