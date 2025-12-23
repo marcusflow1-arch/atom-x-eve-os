@@ -89,9 +89,17 @@ const LibraryGridView = ({ games, onLaunchGame, onStreamGame, onSwitchToAchievem
       </div>
 
       {/* Main Content Row */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        <div className="w-52 flex-shrink-0 border-r border-white/10 flex flex-col overflow-hidden" style={{ background: 'rgba(20, 30, 45, 0.6)' }}>
+      <div className="flex-1 flex gap-4 overflow-hidden p-4">
+        {/* Left Sidebar - Separate Box */}
+        <div 
+          className="w-52 flex-shrink-0 flex flex-col overflow-hidden rounded-2xl border border-white/10" 
+          style={{ 
+            background: 'rgba(100, 120, 140, 0.12)',
+            backdropFilter: 'blur(20px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+          }}
+        >
           {/* Achievements Button */}
           <div className="p-3 border-b border-white/10">
             <button
