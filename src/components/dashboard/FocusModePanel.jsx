@@ -1811,23 +1811,22 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
 
   const tabs = [
     { id: 'feed', label: 'Feed' },
-    { id: 'ai', label: 'AI Status' },
     { id: 'cards', label: 'New Cards' },
   ];
 
   return (
     <div className="h-full flex flex-col">
       {/* Header Bar - Xbox style */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`text-sm font-semibold uppercase tracking-wide transition-all pb-2 border-b-2 ${
+              className={`text-sm font-semibold uppercase tracking-wide transition-all ${
                 activeTab === tab.id 
-                  ? 'text-white border-green-500' 
-                  : 'text-white/40 border-transparent hover:text-white/70'
+                  ? 'text-white' 
+                  : 'text-white/40 hover:text-white/70'
               }`}
             >
               {tab.label}
@@ -1909,68 +1908,6 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
                 <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5 text-center">
                   <p className="text-2xl font-bold text-purple-400">Lv.8</p>
                   <p className="text-[10px] text-white/40 uppercase tracking-wider">AI Level</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'ai' && (
-            <motion.div
-              key="ai"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-4"
-            >
-              {/* AI Header */}
-              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/10 to-transparent rounded-lg border border-purple-500/20">
-                <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center border-2 border-purple-500/40">
-                  <Bot className="w-7 h-7 text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg">ATOM AI</h3>
-                  <p className="text-purple-300/60 text-xs">Learning from your gameplay • Active</p>
-                </div>
-                <div className="ml-auto text-right">
-                  <p className="text-white font-bold">Level 8</p>
-                  <p className="text-white/30 text-[10px]">2,450 / 3,000 XP</p>
-                </div>
-              </div>
-
-              {/* XP Progress */}
-              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: '82%' }} />
-              </div>
-
-              {/* Behavioral Stats */}
-              <div>
-                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-3">Behavioral Analysis</h4>
-                <div className="space-y-2">
-                  {aiStats.map((stat, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                      <span className="text-white/70 text-sm">{stat.label}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-white font-semibold text-sm">{stat.value}</span>
-                        <span className={`text-xs font-bold ${stat.up ? 'text-green-400' : 'text-red-400'}`}>
-                          {stat.trend}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Learning */}
-              <div>
-                <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-3">Recent Learning</h4>
-                <div className="p-4 bg-white/[0.02] rounded-lg border border-white/5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4 text-amber-400" />
-                    <span className="text-white font-semibold text-sm">New Pattern Detected</span>
-                  </div>
-                  <p className="text-white/50 text-xs leading-relaxed">
-                    Your AI noticed increased aggression in RPG combat scenarios. Adapting companion behavior to match your playstyle.
-                  </p>
                 </div>
               </div>
             </motion.div>
