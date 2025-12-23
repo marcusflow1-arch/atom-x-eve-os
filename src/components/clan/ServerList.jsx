@@ -61,27 +61,27 @@ export default function ServerList({ activeClanId, onSelectClan, onCreateClan })
   };
 
   return (
-    <div className="w-[84px] h-full flex flex-col items-center pb-4 pt-20 gap-3 bg-white/60 backdrop-blur-xl border-r border-slate-200/60 overflow-y-auto no-scrollbar z-20 shadow-lg">
+    <div className="w-[84px] h-full flex flex-col items-center pb-4 pt-20 gap-3 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 overflow-y-auto no-scrollbar z-20">
       
       {/* Add Game Chat Button */}
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger>
             <div 
-              className="w-14 h-14 rounded-[32px] hover:rounded-[20px] bg-white hover:bg-green-50 text-green-600 border border-green-200 border-dashed hover:border-green-400 hover:shadow-md transition-all flex items-center justify-center cursor-pointer group" 
+              className="w-14 h-14 rounded-[32px] hover:rounded-[20px] bg-white/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 border-dashed hover:border-green-400 transition-all flex items-center justify-center cursor-pointer group" 
               onClick={() => setIsCreateGameChatOpen(true)}
             >
               <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-slate-900 border-slate-700 text-white font-bold ml-2">
+          <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white font-bold ml-2">
             <p>Create Game Chat</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
       {/* Divider */}
-      <div className="w-10 h-[2px] bg-slate-200 rounded-full my-1" />
+      <div className="w-10 h-[2px] bg-white/10 rounded-full my-1" />
 
       {/* Game Chats List */}
       {gameChats?.map(chat => (
@@ -94,19 +94,19 @@ export default function ServerList({ activeClanId, onSelectClan, onCreateClan })
                     <TooltipTrigger>
                         <button 
                             onClick={() => setSelectedGameChatId(chat.id)}
-                            className={`w-14 h-14 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden border border-transparent shadow-md
+                            className={`w-14 h-14 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden border shadow-md
                                 ${selectedGameChatId === chat.id 
-                                    ? 'rounded-[20px] ring-2 ring-blue-500 ring-offset-2 ring-offset-white bg-blue-50' 
-                                    : 'rounded-[32px] hover:rounded-[20px] hover:shadow-lg bg-white ring-1 ring-slate-100'
+                                    ? 'rounded-[20px] ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-900 bg-blue-500/20 border-blue-500/50' 
+                                    : 'rounded-[32px] hover:rounded-[20px] bg-white/10 border-white/10 hover:border-white/20'
                                 }
                             `}
                         >
-                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 text-blue-600 flex items-center justify-center">
+                            <div className="w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 text-blue-400 flex items-center justify-center">
                                 <Gamepad2 className="w-6 h-6" />
                             </div>
                         </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="bg-slate-900 border-slate-700 text-white font-bold ml-2">
+                    <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-white font-bold ml-2">
                         <p>{chat.name}</p>
                     </TooltipContent>
                 </Tooltip>
@@ -116,25 +116,25 @@ export default function ServerList({ activeClanId, onSelectClan, onCreateClan })
 
       {/* Create Game Chat Modal */}
       <Dialog open={isCreateGameChatOpen} onOpenChange={setIsCreateGameChatOpen}>
-          <DialogContent className="bg-white/95 backdrop-blur-2xl border border-slate-200 text-slate-900 rounded-3xl shadow-2xl">
+          <DialogContent className="bg-slate-900/95 backdrop-blur-xl border border-white/10 text-white rounded-3xl shadow-2xl">
               <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-bold text-slate-900 flex items-center justify-center gap-2">
-                      <Gamepad2 className="w-5 h-5 text-blue-500" />
+                  <DialogTitle className="text-center text-xl font-bold text-white flex items-center justify-center gap-2">
+                      <Gamepad2 className="w-5 h-5 text-blue-400" />
                       Create Game Chat
                   </DialogTitle>
               </DialogHeader>
               <div className="py-4">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Game Name</label>
+                  <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 block">Game Name</label>
                   <Input 
                       value={newGameName}
                       onChange={e => setNewGameName(e.target.value)}
-                      className="bg-slate-50 border-slate-200 text-slate-900 h-12 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+                      className="bg-white/10 border-white/20 text-white h-12 rounded-xl focus:ring-2 focus:ring-blue-500/30 placeholder:text-white/30"
                       placeholder="e.g. Call of Duty, Fortnite..."
                       onKeyDown={(e) => e.key === 'Enter' && handleCreateGameChat()}
                   />
               </div>
               <DialogFooter>
-                  <Button variant="ghost" onClick={() => setIsCreateGameChatOpen(false)} className="text-slate-500 hover:text-slate-900 hover:bg-slate-100">Cancel</Button>
+                  <Button variant="ghost" onClick={() => setIsCreateGameChatOpen(false)} className="text-white/60 hover:text-white hover:bg-white/10">Cancel</Button>
                   <Button 
                       onClick={handleCreateGameChat}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"

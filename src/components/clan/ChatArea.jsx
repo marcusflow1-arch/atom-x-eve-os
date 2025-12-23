@@ -54,27 +54,27 @@ export default function ChatArea({ channel, clan }) {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-w-0 bg-white/30 backdrop-blur-sm relative z-0">
+        <div className="flex-1 flex flex-col min-w-0 relative z-0">
             {/* Header */}
-            <div className="h-14 px-4 border-b border-slate-200/60 flex items-center bg-white/60 backdrop-blur-md shadow-sm z-10">
-                {channel.type === 'voice' ? <Volume2 className="w-5 h-5 text-slate-500 mr-3" /> : <Hash className="w-5 h-5 text-slate-500 mr-3" />}
-                <h3 className="font-bold text-slate-800 text-base">{channel.name}</h3>
+            <div className="h-14 px-4 border-b border-white/10 flex items-center bg-slate-900/40 backdrop-blur-md z-10">
+                {channel.type === 'voice' ? <Volume2 className="w-5 h-5 text-white/50 mr-3" /> : <Hash className="w-5 h-5 text-white/50 mr-3" />}
+                <h3 className="font-bold text-white text-base">{channel.name}</h3>
                 {channel.description && (
                     <>
-                        <div className="w-[1px] h-6 bg-slate-300 mx-4" />
-                        <span className="text-slate-500 text-xs truncate">{channel.description}</span>
+                        <div className="w-[1px] h-6 bg-white/20 mx-4" />
+                        <span className="text-white/50 text-xs truncate">{channel.description}</span>
                     </>
                 )}
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4" ref={scrollRef}>
-                <div className="mt-8 mb-12 border-b border-slate-200 pb-8">
-                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 border border-slate-200">
-                        <Hash className="w-8 h-8 text-slate-400" />
+                <div className="mt-8 mb-12 border-b border-white/10 pb-8">
+                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/10">
+                        <Hash className="w-8 h-8 text-white/40" />
                     </div>
-                    <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">Welcome to #{channel.name}!</h1>
-                    <p className="text-slate-500">This is the start of the <span className="text-slate-800 font-bold">#{channel.name}</span> channel.</p>
+                    <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Welcome to #{channel.name}!</h1>
+                    <p className="text-white/50">This is the start of the <span className="text-white font-bold">#{channel.name}</span> channel.</p>
                 </div>
 
                 {messages?.map((msg, idx) => {
@@ -82,13 +82,13 @@ export default function ChatArea({ channel, clan }) {
                     const isSameAuthor = prevMsg && prevMsg.author === msg.author && (new Date(msg.created_date) - new Date(prevMsg.created_date) < 300000); 
 
                     return (
-                        <div key={msg.id} className={`group flex gap-4 ${isSameAuthor ? 'mt-1 py-0.5' : 'mt-6 py-1'} px-4 -mx-4 rounded-lg hover:bg-white/40 transition-colors`}>
+                        <div key={msg.id} className={`group flex gap-4 ${isSameAuthor ? 'mt-1 py-0.5' : 'mt-6 py-1'} px-4 -mx-4 rounded-lg hover:bg-white/5 transition-colors`}>
                             {!isSameAuthor ? (
-                                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all flex-shrink-0 mt-0.5 shadow-sm border border-white">
+                                <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all flex-shrink-0 mt-0.5 ring-2 ring-white/10">
                                     {msg.authorAvatar && <img src={msg.authorAvatar} className="w-full h-full object-cover" />}
                                 </div>
                             ) : (
-                                <div className="w-10 flex-shrink-0 text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 text-right pr-3 select-none leading-6">
+                                <div className="w-10 flex-shrink-0 text-[10px] text-white/30 opacity-0 group-hover:opacity-100 text-right pr-3 select-none leading-6">
                                     {format(new Date(msg.created_date), 'h:mm a')}
                                 </div>
                             )}
@@ -96,11 +96,11 @@ export default function ChatArea({ channel, clan }) {
                             <div className="flex-1 min-w-0">
                                 {!isSameAuthor && (
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-bold text-slate-900 hover:underline cursor-pointer text-sm">{msg.author}</span>
-                                        <span className="text-[10px] text-slate-500 font-medium">{format(new Date(msg.created_date), 'MM/dd/yyyy h:mm a')}</span>
+                                        <span className="font-bold text-white hover:underline cursor-pointer text-sm">{msg.author}</span>
+                                        <span className="text-[10px] text-white/40 font-medium">{format(new Date(msg.created_date), 'MM/dd/yyyy h:mm a')}</span>
                                     </div>
                                 )}
-                                <p className={`text-slate-700 text-[0.93rem] whitespace-pre-wrap ${isSameAuthor ? '' : 'leading-relaxed'}`}>{msg.content}</p>
+                                <p className={`text-white/80 text-[0.93rem] whitespace-pre-wrap ${isSameAuthor ? '' : 'leading-relaxed'}`}>{msg.content}</p>
                             </div>
                         </div>
                     );
@@ -109,21 +109,21 @@ export default function ChatArea({ channel, clan }) {
 
             {/* Input */}
             <div className="px-4 pb-6 pt-2">
-                <div className="bg-white/80 backdrop-blur-md rounded-xl p-2 flex items-center gap-3 relative border border-slate-200 shadow-sm transition-all focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/10">
-                    <button className="text-slate-400 hover:text-slate-700 transition-colors bg-slate-100 rounded-full p-1.5 hover:bg-slate-200">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 flex items-center gap-3 relative border border-white/10 transition-all focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20">
+                    <button className="text-white/40 hover:text-white transition-colors bg-white/10 rounded-full p-1.5 hover:bg-white/20">
                         <PlusCircle className="w-5 h-5" />
                     </button>
                     <input 
-                        className="bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-400 flex-1 h-full py-2 font-medium"
+                        className="bg-transparent border-none outline-none text-white placeholder:text-white/40 flex-1 h-full py-2 font-medium"
                         placeholder={`Message #${channel.name}`}
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
                     />
                     <div className="flex items-center gap-2 mr-1">
-                        <Gift className="w-6 h-6 text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded hover:bg-slate-100 transition-all" />
-                        <Sticker className="w-6 h-6 text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded hover:bg-slate-100 transition-all" />
-                        <Smile className="w-6 h-6 text-slate-400 hover:text-slate-700 cursor-pointer p-1 rounded hover:bg-slate-100 transition-all" />
+                        <Gift className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                        <Sticker className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                        <Smile className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
                     </div>
                 </div>
             </div>
