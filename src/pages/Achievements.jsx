@@ -350,141 +350,156 @@ function AchievementsView({ onExitToLibrary }) {
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
-        {/* Main Layout: 2 Columns */}
-        <div className="flex gap-8 h-full overflow-hidden">
-          
-          {/* Left Sidebar (Shiny Box) */}
-          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
-            
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              {onExitToLibrary ? (
-                <motion.button
-                  onClick={onExitToLibrary}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="ml-12 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                >
-                  <Gamepad2 className="w-5 h-5 text-white/80" />
-                </motion.button>
-              ) : (
-                <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+        {/* Header Row */}
+        <div className="flex items-center gap-3 mb-6">
+          {onExitToLibrary ? (
+            <motion.button
+              onClick={onExitToLibrary}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="ml-12 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+            >
+              <Gamepad2 className="w-5 h-5 text-white/80" />
+            </motion.button>
+          ) : (
+            <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+              >
+                <Gamepad2 className="w-5 h-5 text-white/80" />
+              </motion.button>
+            </Link>
+          )}
+          <h1 className="text-2xl font-black tracking-tighter text-white">
+            Achievements
+          </h1>
+
+          {/* Genre Filter Dropdown */}
+          <div className="ml-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20">
+                  <Filter className="w-4 h-4" />
+                  <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
+                  <ChevronDown className="w-4 h-4 text-white/70" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-[200px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                style={{ background: 'rgba(30, 41, 59, 0.9)' }}
+              >
+                {genres.map((genre) => (
+                  <DropdownMenuItem
+                    key={genre}
+                    onClick={() => setActiveGenre(genre)}
+                    className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
+                      activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
+                    }`}
                   >
-                    <Gamepad2 className="w-5 h-5 text-white/80" />
-                  </motion.button>
-                </Link>
-              )}
-              <h1 className="text-2xl font-black tracking-tighter text-white">
-                Achievements
-              </h1>
+                    {genre}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Main Grid Layout - Like Store Cross Interface */}
+        <div className="flex-1 flex overflow-hidden">
+          
+          {/* Left: Vertical Game List (Scroll Menu) */}
+          <div className="w-[280px] flex-shrink-0 h-full flex flex-col pr-6">
+            {/* Search */}
+            <div className="relative group mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+              />
             </div>
 
-            {/* Shiny Box Container */}
-            <ShinySidebarBox className="flex-1 flex flex-col p-5">
-              
-              {/* Search with Mic */}
-              <div className="relative group mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                  <MicIcon className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Genre Filters - Liquid Glass Dropdown */}
-              <div className="mb-6">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
-                      <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
-                      <ChevronDown className="w-4 h-4 text-white/70" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
-                    style={{ background: 'rgba(30, 41, 59, 0.7)' }} // Fallback/base color for better readability
-                  >
-                    {genres.map((genre) => (
-                      <DropdownMenuItem
-                        key={genre}
-                        onClick={() => setActiveGenre(genre)}
-                        className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
-                          activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
-                        }`}
-                      >
-                        {genre}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Game List */}
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                {filteredGames.map(game => (
-                  <motion.button
-                    key={game.id}
-                    onClick={() => {
-                        setSelectedGame(game);
-                        setSelectedAchievement(null);
-                    }}
-                    className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
-                        selectedGame?.id === game.id 
-                        ? 'shadow-lg border-cyan-400/30' 
-                        : 'hover:border-cyan-400/20 border-transparent'
-                    }`}
-                    style={selectedGame?.id === game.id ? {
-                      background: 'rgba(34, 211, 238, 0.12)',
-                      boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                    } : {
-                      background: 'transparent'
-                    }}
-                    whileHover={{ x: 4 }}
-                  >
-                    {/* Small Box (Image) */}
-                    <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
-                      <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
+            {/* Game List - Vertical Scroll */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
+              {filteredGames.map((game, index) => (
+                <motion.button
+                  key={game.id}
+                  onClick={() => {
+                      setSelectedGame(game);
+                      setSelectedAchievement(null);
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                  className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
+                      selectedGame?.id === game.id 
+                      ? 'shadow-lg border-cyan-400/30' 
+                      : 'hover:border-white/10 border-transparent hover:bg-white/5'
+                  }`}
+                  style={selectedGame?.id === game.id ? {
+                    background: 'rgba(34, 211, 238, 0.12)',
+                    boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
+                  } : {}}
+                >
+                  {/* Game Thumbnail */}
+                  <div className="w-12 h-16 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/20 transition-colors">
+                    <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  
+                  {/* Game Info */}
+                  <div className="flex-1 text-left overflow-hidden">
+                    <h3 className={`font-semibold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
+                      {game.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 truncate">{game.genre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                        <Trophy className="w-3 h-3" />
+                        <span>{Math.floor(Math.random() * 15) + 1}/15</span>
+                      </div>
                     </div>
-                    
-                    {/* Name */}
-                    <div className="flex-1 text-left overflow-hidden">
-                      <h3 className={`font-bold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
-                        {game.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 truncate">{game.genre}</p>
-                    </div>
+                  </div>
 
-                    {selectedGame?.id === game.id && (
-                        <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-
-            </ShinySidebarBox>
+                  {/* Selection Indicator */}
+                  {selectedGame?.id === game.id && (
+                    <div className="w-1 h-10 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
+                  )}
+                </motion.button>
+              ))}
+            </div>
           </div>
 
-          {/* Right Content: Achievements Grid (Cards) */}
+          {/* Right: Cards Grid */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {selectedGame ? (
               <>
-                {/* Header Removed as requested - Only Cards Displayed */}
+                {/* Game Title Bar */}
+                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-white/10">
+                  <div className="w-16 h-20 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+                    <img src={selectedGame.cover_image || selectedGame.cover} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedGame.title}</h2>
+                    <p className="text-sm text-slate-400">{selectedGame.genre} • {tradingCards.length} Cards Available</p>
+                  </div>
+                </div>
 
+                {/* Cards Grid */}
                 <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
                     {tradingCards.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                             {tradingCards.map((card, i) => (
-                                <div key={card.id} className="aspect-[2.5/3.5]">
+                                <motion.div 
+                                  key={card.id} 
+                                  className="aspect-[2.5/3.5]"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.03 }}
+                                >
                                     <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
                                         <div className="absolute inset-0 flex flex-col p-3">
                                             <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
@@ -499,6 +514,7 @@ function AchievementsView({ onExitToLibrary }) {
                                                             card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
                                                             card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
                                                             card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                            card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
                                                             'border-slate-500/50 text-slate-400'
                                                         }`}>
                                                             {card.rarity}
@@ -508,7 +524,7 @@ function AchievementsView({ onExitToLibrary }) {
                                             </div>
                                         </div>
                                     </ShinyCard>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     ) : (
@@ -523,7 +539,7 @@ function AchievementsView({ onExitToLibrary }) {
               <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                 <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
                 <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
+                <p className="max-w-md text-center">Choose a game from the list to view your collection of achievements and trading cards.</p>
               </div>
             )}
           </div>
