@@ -690,45 +690,42 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
 
                                    {/* List */}
                                    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                       {displayedItems.length > 0 ? displayedItems.map(item => (
-                                           <div
-                                               key={item.id}
-                                               onClick={() => {
-                                                   setSelectedItem(item);
-                                                   setShowWorkstation(true);
-                                               }}
-                                               className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
-                                                   item.isUnlocked 
-                                                       ? `${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
-                                                       : 'opacity-40 grayscale hover:opacity-60 border border-transparent'
-                                               }`}
-                                           >
-                                               <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative`}>
-                                                   <img src={item.preview_image_url} className="w-full h-full object-cover" />
-                                                   {!item.isUnlocked && (
-                                                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                           <Layers className="w-4 h-4 text-white/30" />
-                                                       </div>
-                                                   )}
-                                               </div>
-                                               <div className="min-w-0">
-                                                   <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : item.isUnlocked ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                       {item.name}
-                                                   </div>
-                                                   <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                                                       <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
-                                                       <span>•</span>
-                                                       <span>Lv.{item.level_requirement}</span>
-                                                   </div>
-                                               </div>
-                                           </div>
-                                       )) : (
-                                           <div className="text-center text-slate-500 text-sm py-8">
-                                               <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                               <p>No items found for this game.</p>
-                                               <p className="text-xs text-slate-600 mt-2">Unlock items through achievements!</p>
-                                           </div>
-                                       )}
+                                      {displayedItems.length > 0 ? displayedItems.map(item => (
+                                          <div
+                                              key={item.id}
+                                              onClick={() => setSelectedItem(item)}
+                                              className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all ${
+                                                  item.isUnlocked 
+                                                      ? `${selectedItem?.id === item.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`
+                                                      : 'opacity-40 grayscale hover:opacity-60 border border-transparent'
+                                              }`}
+                                          >
+                                              <div className={`w-10 h-10 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative`}>
+                                                  <img src={item.preview_image_url} className="w-full h-full object-cover" />
+                                                  {!item.isUnlocked && (
+                                                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                          <Layers className="w-4 h-4 text-white/30" />
+                                                      </div>
+                                                  )}
+                                              </div>
+                                              <div className="min-w-0">
+                                                  <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : item.isUnlocked ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                      {item.name}
+                                                  </div>
+                                                  <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                      <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
+                                                      <span>•</span>
+                                                      <span>Lv.{item.level_requirement}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      )) : (
+                                          <div className="text-center text-slate-500 text-sm py-8">
+                                              <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                              <p>No items found for this game.</p>
+                                              <p className="text-xs text-slate-600 mt-2">Unlock items through achievements!</p>
+                                          </div>
+                                      )}
                                    </div>
                                </div>
 
