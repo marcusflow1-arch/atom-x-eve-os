@@ -1155,9 +1155,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         {viewMode === 'grid' ? (
           <LibraryCrossMenu 
             games={filteredGames}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onSwitchToAchievements={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
             onLaunchGame={handleLaunchGame}
             onStreamGame={handleStreamGame}
           />
