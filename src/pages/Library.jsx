@@ -1075,10 +1075,10 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           <div className="flex items-center">
             <button
               onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
+              className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 transition-all"
+              title="Achievements"
             >
-              <Trophy className="w-4 h-4 text-yellow-400" />
-              <span>Achievements</span>
+              <Trophy className="w-5 h-5 text-yellow-400" />
             </button>
           </div>
 
