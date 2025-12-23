@@ -267,7 +267,7 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
   );
 }
 
-// Mini Calendar Component
+// Mini Calendar Component - 20% smaller
 function MiniCalendar({ onDayClick, events }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const today = new Date();
@@ -307,30 +307,30 @@ function MiniCalendar({ onDayClick, events }) {
   const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
 
   return (
-    <div className="mt-3">
+    <div className="mt-2" style={{ transform: 'scale(0.8)', transformOrigin: 'top left', width: '125%' }}>
       {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1.5">
         <button 
           onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-          className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+          className="w-4 h-4 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
         >
-          <ChevronLeft className="w-3 h-3 text-white/60" />
+          <ChevronLeft className="w-2.5 h-2.5 text-white/60" />
         </button>
-        <span className="text-xs text-white/80 font-medium">
+        <span className="text-[10px] text-white/80 font-medium">
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </span>
         <button 
           onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-          className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+          className="w-4 h-4 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
         >
-          <ChevronRight className="w-3 h-3 text-white/60" />
+          <ChevronRight className="w-2.5 h-2.5 text-white/60" />
         </button>
       </div>
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-0.5 mb-1">
+      <div className="grid grid-cols-7 gap-0.5 mb-0.5">
         {dayNames.map((day, i) => (
-          <div key={i} className="text-center text-[8px] text-white/40 font-medium py-0.5">
+          <div key={i} className="text-center text-[7px] text-white/40 font-medium py-0.5">
             {day}
           </div>
         ))}
@@ -342,7 +342,7 @@ function MiniCalendar({ onDayClick, events }) {
           <div
             key={index}
             onClick={() => day && onDayClick(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-            className={`aspect-square flex items-center justify-center text-[10px] rounded transition-all relative ${
+            className={`aspect-square flex items-center justify-center text-[8px] rounded transition-all relative ${
               day
                 ? isToday(day)
                   ? 'bg-cyan-500 text-white font-bold cursor-pointer'
@@ -352,7 +352,7 @@ function MiniCalendar({ onDayClick, events }) {
           >
             {day}
             {hasEvent(day) && (
-              <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-400" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-amber-400" />
             )}
           </div>
         ))}
@@ -2096,15 +2096,31 @@ export default function FocusModePanel() {
 
       {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left side - 3D viewer area + Calendar & Goals below */}
+        {/* Left side - 3D viewer area (FIXED, doesn't scroll) + Calendar & Goals below */}
         <div className="w-[300px] flex-shrink-0 flex flex-col">
-          {/* 3D viewer renders here via fixed positioning in LunaTemplate */}
-          <div className="flex-1" />
+          {/* 3D Viewer Container - Fixed visual space */}
+          <div className="relative flex-1 min-h-[280px]">
+            {/* Invisible boundary line below header */}
+            <div className="absolute top-0 left-0 right-0 h-px" />
+            
+            {/* 3D viewer renders here - this is the locked viewport */}
+            <div 
+              id="3d-viewer-container" 
+              className="absolute inset-0"
+              style={{ 
+                position: 'sticky',
+                top: 0,
+                zIndex: 5
+              }}
+            >
+              {/* 3D viewer renders via LunaTemplate */}
+            </div>
+          </div>
           
-          {/* Calendar & Goals - Below 3D viewer, above the line */}
-          <div className="mt-auto">
+          {/* Calendar & Goals - Below 3D viewer, above the horizontal line */}
+          <div className="mt-2 pt-2 border-t border-white/5">
             <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-            <div className="mt-3">
+            <div className="mt-2">
               <GoalsPanel />
             </div>
           </div>
