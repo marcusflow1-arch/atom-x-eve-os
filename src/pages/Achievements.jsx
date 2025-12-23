@@ -206,7 +206,7 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user, on
       {/* Interface Layer */}
       <div className="relative z-10 w-full h-full">
         
-        {/* Top Left Controls - Grid Toggle + Library Button */}
+        {/* Top Left Controls - Grid Toggle Only */}
         <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
           {/* Grid/List Toggle */}
           <button 
@@ -216,16 +216,6 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user, on
           >
             <List className="w-5 h-5 text-white/70 hover:text-white" />
           </button>
-          
-          {/* Library Button (Controller Icon) */}
-          <Link to={createPageUrl('Library')}>
-            <button 
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-              title="Back to Library"
-            >
-              <Gamepad2 className="w-5 h-5 text-white/70 hover:text-white" />
-            </button>
-          </Link>
         </div>
 
         {/* Breadcrumb - Game Title Only */}
