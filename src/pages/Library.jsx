@@ -17,7 +17,6 @@ import GameAchievementsOverlay from '../components/library/GameAchievementsOverl
 import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Crosshair } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 // --- Shiny Sidebar Box Component ---
