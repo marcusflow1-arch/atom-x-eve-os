@@ -410,8 +410,8 @@ const LibraryGridView = ({ games, onLaunchGame, onStreamGame, onSwitchToAchievem
           )}
         </div>
 
-        {/* Right Sidebar - Search & Stats */}
-        <div className="w-56 flex-shrink-0 border-l border-white/10 flex flex-col" style={{ background: 'rgba(20, 30, 45, 0.6)' }}>
+        {/* Right Sidebar - Search & Stats - Inside right content box */}
+        <div className="w-56 flex-shrink-0 border-l border-white/10 flex flex-col" style={{ background: 'rgba(20, 30, 45, 0.3)' }}>
           {/* Search & View Toggle */}
           <div className="p-3 border-b border-white/10 space-y-3">
             <div className="relative">
