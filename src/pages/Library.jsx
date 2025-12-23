@@ -1095,13 +1095,26 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       <div className="relative z-10 px-8 py-8 pl-44">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
               className="p-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 hover:border-yellow-500/50 transition-all"
               title="Achievements"
             >
               <Trophy className="w-5 h-5 text-yellow-400" />
+            </button>
+            
+            {/* View Mode Toggle */}
+            <button
+              onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+              className={`p-2.5 rounded-xl transition-all border ${
+                viewMode === 'grid' 
+                  ? 'bg-blue-500/20 border-blue-500/30 text-blue-400' 
+                  : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+              }`}
+              title={viewMode === 'grid' ? 'Switch to List View' : 'Switch to Grid View'}
+            >
+              <LayoutGrid className="w-5 h-5" />
             </button>
           </div>
 
@@ -1120,8 +1133,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 <Mic className="w-4 h-4" />
               </button>
             </div>
-
-
           </div>
         </div>
 
