@@ -1156,13 +1156,13 @@ function GameDetailPanel({ game, onClose }) {
   );
 }
 
-// Library Games Section (Bottom) - receives genre from scroll context
-function LibraryGamesSection({ activeGenre, gamesByGenre, onSelectGame, selectedGame, allGames }) {
+// Library Games Section (Bottom) - shows all games
+function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   const navigate = useNavigate();
   const libraryScrollRef = useRef(null);
   
-  // If "All" is selected, show all games, otherwise filter by genre
-  const currentGames = activeGenre === 'All' ? allGames : (gamesByGenre[activeGenre] || []);
+  // Show all games
+  const currentGames = allGames;
 
   const handleLibraryClick = () => {
     navigate(createPageUrl('Store'));
@@ -1187,17 +1187,7 @@ function LibraryGamesSection({ activeGenre, gamesByGenre, onSelectGame, selected
           <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
         </button>
         
-        <div className="flex items-center gap-2">
-          <motion.span 
-            key={activeGenre}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-cyan-400 text-xs font-medium capitalize"
-          >
-            {activeGenre || 'All Games'}
-          </motion.span>
-          <span className="text-white/30 text-xs">({currentGames.length})</span>
-        </div>
+        <span className="text-white/30 text-xs">({currentGames.length} games)</span>
       </div>
 
       {/* Games Grid - Rows of 10, vertical scroll */}
@@ -1219,7 +1209,7 @@ function LibraryGamesSection({ activeGenre, gamesByGenre, onSelectGame, selected
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: -20 }}
                     transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
-                    className="flex-shrink-0 w-[calc(10%-6px)] min-w-[60px] group cursor-pointer"
+                    className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
                     onClick={() => onSelectGame(game)}
                   >
                     <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
@@ -2045,31 +2035,21 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Calendar/Goals on far left, Library Games, Genre Selector on far right */}
+      {/* Bottom Section - Calendar on far left, Library Games */}
       <div className="flex gap-4 pt-4">
-        {/* Calendar & Goals - Far left */}
-        <div className="w-[160px] flex-shrink-0 flex flex-col gap-2">
+        {/* Calendar - Far left */}
+        <div className="w-[160px] flex-shrink-0">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-          <GoalsPanel />
         </div>
 
-        {/* Library Games - Center */}
+        {/* Library Games */}
         <div className="flex-1 min-w-0">
           <LibraryGamesSection 
-            activeGenre={activeGenre}
-            gamesByGenre={gamesByGenre}
             onSelectGame={setSelectedGame}
             selectedGame={selectedGame}
             allGames={ownedGames}
           />
         </div>
-
-        {/* Genre Selector - Far right */}
-        <MiniGenreSelector 
-          activeGenre={activeGenre}
-          onGenreChange={setActiveGenre}
-          gamesByGenre={gamesByGenre}
-        />
       </div>
     </div>
   );
