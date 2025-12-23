@@ -1104,70 +1104,55 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       </div>
 
       <div className="relative z-10 px-8 py-8">
-        {/* Header - Only show for list view */}
-        {viewMode === 'list' && (
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center">
-              <button
-                onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
-              >
-                <Trophy className="w-4 h-4 text-yellow-400" />
-                <span>Achievements</span>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <button
+              onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
+            >
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              <span>Achievements</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Search */}
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+              />
+              <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
+                <Mic className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
-              {/* Search */}
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                  <Mic className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                  }`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+            {/* View Toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        )}
-        
-        {/* Grid View Toggle - Top Right */}
-        {viewMode === 'grid' && (
-          <div className="absolute top-8 left-8 z-20">
-            <button
-              onClick={() => setViewMode('list')}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90 transition-all"
-            >
-              <List className="w-4 h-4" />
-              <span className="text-sm">List View</span>
-            </button>
-          </div>
-        )}
+        </div>
 
         {/* Filter Tabs (List View Only) */}
         {viewMode === 'list' && (
