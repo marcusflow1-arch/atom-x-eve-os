@@ -895,6 +895,7 @@ export default function LunaTemplate() {
     const panel = params.get('panel');
     setShowSettings(panel === 'settings');
     setShowProfile(panel === 'profile');
+    setShowNotifications(panel === 'notifications');
     
     // Handle sub-tabs
     if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
