@@ -49,9 +49,9 @@ const LibraryGridView = ({ games, onLaunchGame, onStreamGame, onSwitchToAchievem
   const tabs = ['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements', 'Streamer Affiliate'];
 
   return (
-    <div className="h-full w-full flex flex-col bg-slate-900">
+    <div className="h-full w-full flex flex-col" style={{ background: 'transparent' }}>
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0" style={{ background: 'rgba(15, 23, 42, 0.95)' }}>
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: 'transparent' }}>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <button className="p-2 hover:bg-white/10 rounded-lg transition-all">
