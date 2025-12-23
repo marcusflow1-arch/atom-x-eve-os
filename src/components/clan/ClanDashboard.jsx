@@ -259,9 +259,25 @@ export default function ClanDashboard({ clan, events }) {
                     </div>
                 </div>
 
-                {/* Right Column: Events */}
+                {/* Right Column: Events, Shortcuts & Members */}
                 <div className="col-span-4 space-y-6">
-                    <GlassCard className="h-full flex flex-col bg-gradient-to-b from-white/70 to-blue-50/30">
+                    {/* Quick Shortcuts */}
+                    <GlassCard className="!p-4">
+                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Quick Access</h3>
+                        <div className="grid grid-cols-3 gap-2">
+                            <ShortcutItem icon={MessageSquare} label="Forum" to={createPageUrl('Community')} color="blue" />
+                            <ShortcutItem icon={ShoppingBag} label="Store" to={createPageUrl('Store')} color="purple" />
+                            <ShortcutItem icon={TrendingUp} label="Social" to={createPageUrl('SocialFeed')} color="green" />
+                            <ShortcutItem icon={Gamepad2} label="Games" to={createPageUrl('Store') + '?subview=library'} color="orange" />
+                            <ShortcutItem icon={Trophy} label="Achieve" to={createPageUrl('Achievements')} color="pink" />
+                            <ShortcutItem icon={Settings} label="Settings" to={createPageUrl('LunaTemplate') + '?panel=settings'} color="cyan" />
+                        </div>
+                    </GlassCard>
+
+                    {/* Member Viewport */}
+                    <MemberViewport clanId={clan.id} />
+
+                    <GlassCard className="flex flex-col bg-gradient-to-b from-white/70 to-blue-50/30">
                         <div className="flex items-center justify-between mb-6">
                              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                  <Calendar className="w-4 h-4" /> Upcoming Events
