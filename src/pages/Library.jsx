@@ -20,7 +20,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 // --- Library Cross Menu Component (Inline Grid View) ---
-const LibraryCrossMenu = ({ games, searchTerm, setSearchTerm, onSwitchToAchievements, onLaunchGame, onStreamGame }) => {
+const LibraryCrossMenu = ({ games, onLaunchGame, onStreamGame }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState('overview');
