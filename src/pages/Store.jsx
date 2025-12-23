@@ -354,7 +354,20 @@ export default function Store() {
     
     // Store Mode State
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
-    const [storeSubView, setStoreSubView] = useState('games'); // 'games' | 'library'
+    const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games'); // 'games' | 'library' | 'achievements'
+    
+    // Sync storeSubView with URL params when they change
+    useEffect(() => {
+        const subview = searchParams.get('subview');
+        if (subview) {
+            setStoreSubView(subview);
+            setStoreMode('store');
+        }
+        const mode = searchParams.get('mode');
+        if (mode) {
+            setStoreMode(mode);
+        }
+    }, [searchParams]);
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
