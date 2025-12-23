@@ -169,18 +169,45 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                     </div>
                     <div className="space-y-[2px]">
                         {textChannels.map(channel => (
-                            <button
-                                key={channel.id}
-                                onClick={() => onSelectChannel(channel)}
-                                className={`w-full flex items-center px-3 py-1.5 rounded-lg group transition-all duration-200 ${
-                                    activeChannelId === channel.id 
-                                        ? 'bg-slate-100 text-slate-900 font-bold' 
-                                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                                }`}
-                            >
-                                <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-slate-800' : 'text-slate-400'}`} />
-                                <span className="text-sm truncate">{channel.name}</span>
-                            </button>
+                            <ContextMenu key={channel.id}>
+                                <ContextMenuTrigger>
+                                    <button
+                                        onClick={() => onSelectChannel(channel)}
+                                        className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-all duration-200 ${
+                                            activeChannelId === channel.id 
+                                                ? 'bg-slate-100 text-slate-900 font-bold' 
+                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        <div className="flex items-center">
+                                            <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-slate-800' : 'text-slate-400'}`} />
+                                            <span className="text-sm truncate">{channel.name}</span>
+                                        </div>
+                                        <X 
+                                            className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all" 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if(confirm(`Delete #${channel.name}?`)) {
+                                                    deleteChannelMutation.mutate(channel.id);
+                                                }
+                                            }}
+                                        />
+                                    </button>
+                                </ContextMenuTrigger>
+                                <ContextMenuContent className="bg-white border-slate-200 rounded-lg shadow-xl">
+                                    <ContextMenuItem 
+                                        className="text-red-500 hover:bg-red-50 cursor-pointer"
+                                        onClick={() => {
+                                            if(confirm(`Delete #${channel.name}?`)) {
+                                                deleteChannelMutation.mutate(channel.id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete Channel
+                                    </ContextMenuItem>
+                                </ContextMenuContent>
+                            </ContextMenu>
                         ))}
                     </div>
                 </div>
