@@ -19,7 +19,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 // --- Achievements Cross Menu Component (Grid View - Store Style) ---
-const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) => {
+const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user, onSwitchViewMode }) => {
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -210,7 +210,7 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user }) 
         <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
           {/* Grid/List Toggle */}
           <button 
-            onClick={() => setViewMode('list')}
+            onClick={() => onSwitchViewMode?.()}
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
             title="Switch to List View"
           >
@@ -737,6 +737,7 @@ function AchievementsView({ onExitToLibrary }) {
               }
             }}
             user={user}
+            onSwitchViewMode={() => setViewMode('list')}
           />
         </div>
       ) : (
