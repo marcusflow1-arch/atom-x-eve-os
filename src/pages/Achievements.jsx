@@ -913,6 +913,7 @@ function AchievementsView({ onExitToLibrary }) {
           </div>
 
         </div>
+        )}
       </div>
 
       {/* Detail Overlay */}
