@@ -1054,7 +1054,7 @@ export default function LunaTemplate() {
   return (
 
       <div 
-        className="min-h-screen text-white p-8 overflow-hidden relative"
+        className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
         style={{ background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)' }}
       >
         {/* 3D Model Viewer - Positioned based on UI visibility */}
