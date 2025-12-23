@@ -1185,80 +1185,77 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   }
 
   return (
-    <div className="h-full flex gap-3">
-      {/* Main Games Grid */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${showGamePanel && selectedGame ? 'pr-0' : ''}`}>
-        {/* Clickable Title - Transitions to Store */}
-        <div className="flex items-center justify-between mb-2">
-          <button 
-            onClick={handleLibraryClick}
-            className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
-          >
-            <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-            Library Games
-            <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
-          </button>
-          
-          <span className="text-white/30 text-xs">({currentGames.length} games)</span>
-        </div>
-
-        {/* Games Grid - Rows of 10, vertical scroll */}
-        <div 
-          ref={libraryScrollRef}
-          className="flex-1 overflow-y-auto space-y-3"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
+    <div className="h-full flex flex-col relative">
+      {/* Clickable Title - Transitions to Store */}
+      <div className="flex items-center justify-between mb-2">
+        <button 
+          onClick={handleLibraryClick}
+          className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
         >
-          <AnimatePresence mode="popLayout">
-            {rows.map((row, rowIndex) => (
-              <div key={rowIndex} className="flex gap-2">
-                {row.map((game, index) => {
-                  const isSelected = selectedGame?.id === game.id && showGamePanel;
-                  return (
-                    <motion.div
-                      key={game.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                      transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
-                      className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
-                      onClick={() => handleGameClick(game)}
-                    >
-                      <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
-                        isSelected 
-                          ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
-                          : 'border-white/10 hover:border-cyan-400/50'
-                      }`}>
-                        <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                            <Play className="w-3 h-3 text-white ml-0.5" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-1">
-                          <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ))}
-          </AnimatePresence>
-          {currentGames.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center w-full h-20 text-white/30 text-xs"
-            >
-              No games in library
-            </motion.div>
-          )}
-        </div>
+          <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+          Library Games
+          <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+        </button>
+        
+        <span className="text-white/30 text-xs">({currentGames.length} games)</span>
       </div>
 
-      {/* Slide-out Game Options Panel */}
+      {/* Games Grid - Rows of 10, vertical scroll */}
+      <div 
+        ref={libraryScrollRef}
+        className="flex-1 overflow-y-auto space-y-3"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
+      >
+        <AnimatePresence mode="popLayout">
+          {rows.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex gap-2">
+              {row.map((game, index) => {
+                const isSelected = selectedGame?.id === game.id && showGamePanel;
+                return (
+                  <motion.div
+                    key={game.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                    transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
+                    className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
+                    onClick={() => handleGameClick(game)}
+                  >
+                    <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
+                      isSelected 
+                        ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
+                        : 'border-white/10 hover:border-cyan-400/50'
+                    }`}>
+                      <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                          <Play className="w-3 h-3 text-white ml-0.5" />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-1">
+                        <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ))}
+        </AnimatePresence>
+        {currentGames.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-center w-full h-20 text-white/30 text-xs"
+          >
+            No games in library
+          </motion.div>
+        )}
+      </div>
+
+      {/* Full-section Game Options Panel Overlay */}
       <AnimatePresence>
         {showGamePanel && selectedGame && (
           <GameOptionsPanel 
