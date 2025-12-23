@@ -732,272 +732,357 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                </div>
 
                                {/* Right: Detail Panel */}
-                               <div className="flex-1 flex flex-col overflow-hidden">
-                                   {selectedItem ? (
-                                       <div className="flex-1 flex items-center p-6 gap-4">
-                                           {/* Left: Large Card */}
-                                           <div className="flex flex-col items-center flex-shrink-0">
-                                               <div 
-                                                   className={`w-48 h-64 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
-                                                   style={{
-                                                       background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                                                       boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
-                                                           selectedItem.rarity === 'Legendary' ? 'rgba(251, 146, 60, 0.2)' :
-                                                           selectedItem.rarity === 'Mythic' ? 'rgba(244, 63, 94, 0.2)' :
-                                                           selectedItem.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.2)' :
-                                                           'rgba(59, 130, 246, 0.2)'
-                                                       }`
-                                                   }}
-                                               >
-                                                   <img src={selectedItem.preview_image_url} className="w-full h-full object-cover" />
-                                                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                                                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                       <div className={`text-lg font-black text-white mb-1`}>{selectedItem.name}</div>
-                                                       <div className="flex items-center gap-2">
-                                                           <span className={`text-xs font-bold ${rarityStyles[selectedItem.rarity].color}`}>{selectedItem.rarity}</span>
-                                                           <span className="text-xs text-slate-400">Lv.{selectedItem.level_requirement}</span>
-                                                       </div>
-                                                   </div>
-                                                   {/* Corner decorations */}
-                                                   <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-tl-lg`} />
-                                                   <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-tr-lg`} />
-                                                   <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-lg`} />
-                                                   <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-lg`} />
-                                               </div>
-                                               <h2 className="text-xl font-black text-white mt-4 text-center">{selectedItem.name}</h2>
-                                               <p className="text-slate-400 text-xs mt-1">{selectedItem.type}</p>
-                                           </div>
+                                <div className="flex-1 flex flex-col overflow-hidden">
+                                    {selectedItem ? (
+                                        <div className="flex-1 flex p-6 gap-6 overflow-hidden">
+                                            {/* Left Column: Card + Actions */}
+                                            <div className="flex flex-col items-center flex-shrink-0 w-56">
+                                                {/* Large Card - Moved up */}
+                                                <div 
+                                                    className={`w-48 h-64 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
+                                                    style={{
+                                                        background: `linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)`,
+                                                        boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
+                                                            enchantLevel >= 96 ? 'rgba(244, 63, 94, 0.4)' :
+                                                            enchantLevel >= 72 ? 'rgba(251, 146, 60, 0.4)' :
+                                                            enchantLevel >= 48 ? 'rgba(168, 85, 247, 0.3)' :
+                                                            enchantLevel >= 24 ? 'rgba(59, 130, 246, 0.3)' :
+                                                            'rgba(100, 116, 139, 0.2)'
+                                                        }`
+                                                    }}
+                                                >
+                                                    <img src={selectedItem.preview_image_url} className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-                                           {/* Invisible vertical divider */}
-                                           <div className="w-px h-full bg-transparent mx-2" />
+                                                    {/* Enchant Level Indicator */}
+                                                    {enchantLevel > 0 && (
+                                                        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-bold ${
+                                                            enchantLevel >= 96 ? 'bg-rose-500 text-white' :
+                                                            enchantLevel >= 72 ? 'bg-orange-500 text-white' :
+                                                            enchantLevel >= 48 ? 'bg-purple-500 text-white' :
+                                                            enchantLevel >= 24 ? 'bg-blue-500 text-white' :
+                                                            'bg-slate-600 text-white'
+                                                        }`}>
+                                                            +{enchantLevel}%
+                                                        </div>
+                                                    )}
 
-                                           {/* Middle: Vertical Icon Menu */}
-                                           <div className="flex flex-col gap-2 flex-shrink-0">
-                                               {[
-                                                   { id: 'enchant', icon: Sparkles, label: 'Enchant', color: 'text-blue-400', hoverBg: 'hover:bg-blue-500/10' },
-                                                   { id: 'combine', icon: ArrowLeftRight, label: 'Combine', color: 'text-purple-400', hoverBg: 'hover:bg-purple-500/10' },
-                                                   { id: 'train', icon: Users, label: 'Train', color: 'text-cyan-400', hoverBg: 'hover:bg-cyan-500/10' },
-                                                   { id: 'ascend', icon: Crown, label: 'Ascend', color: 'text-amber-400', hoverBg: 'hover:bg-amber-500/10' },
-                                               ].map((action) => (
-                                                   <button
-                                                       key={action.id}
-                                                       onClick={() => setActiveAction(action.id)}
-                                                       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all border ${
-                                                           activeAction === action.id 
-                                                               ? `bg-white/10 border-white/20 ${action.color}` 
-                                                               : `border-transparent text-slate-500 ${action.hoverBg} hover:text-white`
-                                                       }`}
-                                                   >
-                                                       <action.icon className="w-5 h-5" />
-                                                       <span className="text-sm font-semibold">{action.label}</span>
-                                                   </button>
-                                               ))}
-                                           </div>
+                                                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                                                        <div className="text-base font-black text-white mb-1">{selectedItem.name}</div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-xs font-bold ${rarityStyles[selectedItem.rarity].color}`}>{selectedItem.rarity}</span>
+                                                            <span className="text-xs text-slate-400">Lv.{selectedItem.level_requirement}</span>
+                                                        </div>
+                                                    </div>
+                                                    {/* Corner decorations */}
+                                                    <div className={`absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-tl-lg`} />
+                                                    <div className={`absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-tr-lg`} />
+                                                    <div className={`absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-lg`} />
+                                                    <div className={`absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-lg`} />
+                                                </div>
 
-                                           {/* Invisible vertical divider */}
-                                           <div className="w-px h-full bg-transparent mx-2" />
+                                                {/* Action Buttons - 2x2 Grid below card */}
+                                                <div className="grid grid-cols-2 gap-2 mt-4 w-48">
+                                                    {[
+                                                        { id: 'enchant', icon: Sparkles, label: 'Enchant', color: 'text-blue-400', bg: 'bg-blue-500/10', activeBg: 'bg-blue-500/20', borderActive: 'border-blue-500/50' },
+                                                        { id: 'combine', icon: ArrowLeftRight, label: 'Combine', color: 'text-purple-400', bg: 'bg-purple-500/10', activeBg: 'bg-purple-500/20', borderActive: 'border-purple-500/50' },
+                                                        { id: 'train', icon: Users, label: 'Train', color: 'text-cyan-400', bg: 'bg-cyan-500/10', activeBg: 'bg-cyan-500/20', borderActive: 'border-cyan-500/50' },
+                                                        { id: 'ascend', icon: Crown, label: 'Ascend', color: 'text-amber-400', bg: 'bg-amber-500/10', activeBg: 'bg-amber-500/20', borderActive: 'border-amber-500/50' },
+                                                    ].map((action) => (
+                                                        <button
+                                                            key={action.id}
+                                                            onClick={() => setActiveAction(action.id)}
+                                                            className={`flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all border ${
+                                                                activeAction === action.id 
+                                                                    ? `${action.activeBg} ${action.borderActive} ${action.color}` 
+                                                                    : `${action.bg} border-white/10 text-slate-400 hover:text-white hover:border-white/20`
+                                                            }`}
+                                                        >
+                                                            <action.icon className="w-5 h-5" />
+                                                            <span className="text-[10px] font-semibold">{action.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
 
-                                           {/* Right: Dynamic Action Panel */}
-                                           <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                               <AnimatePresence mode="wait">
-                                                   {activeAction === 'enchant' && (
-                                                       <motion.div
-                                                           key="enchant-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Enchantment</h3>
-                                                           
-                                                           {/* Available Perks */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Available Perks</h4>
-                                                               {[
-                                                                   { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
-                                                                   { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
-                                                                   { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
-                                                               ].map((perk, i) => (
-                                                                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
-                                                                       <div>
-                                                                           <p className="text-white text-sm font-semibold">{perk.name}</p>
-                                                                           <p className="text-slate-400 text-xs">{perk.effect}</p>
-                                                                       </div>
-                                                                       <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
-                                                                   </div>
-                                                               ))}
-                                                           </div>
+                                            {/* Right: Dynamic Action Panel */}
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                                <AnimatePresence mode="wait">
+                                                    {activeAction === 'enchant' && (
+                                                        <motion.div
+                                                            key="enchant-panel"
+                                                            initial={{ opacity: 0, x: 20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -20 }}
+                                                            className="space-y-4"
+                                                        >
+                                                            <h3 className="text-white font-bold text-lg">Enchantment</h3>
 
-                                                           {/* Enchantment Slider */}
-                                                           <div className="mt-6">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-3">Enhancement Level</h4>
-                                                               <div className="space-y-3">
-                                                                   <div className="flex items-center justify-between text-sm">
-                                                                       <span className="text-slate-400">Current</span>
-                                                                       <span className="text-white font-bold">{selectedItem.modifiers.length * 25}%</span>
-                                                                   </div>
-                                                                   <input 
-                                                                       type="range" 
-                                                                       min="0" 
-                                                                       max="100" 
-                                                                       defaultValue={selectedItem.modifiers.length * 25}
-                                                                       className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer slider"
-                                                                       style={{
-                                                                           background: `linear-gradient(to right, rgb(59, 130, 246) 0%, rgb(59, 130, 246) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) 100%)`
-                                                                       }}
-                                                                   />
-                                                                   <Button className="w-full bg-blue-600 hover:bg-blue-500 h-10 rounded-lg">
-                                                                       Apply Enchantment
-                                                                   </Button>
-                                                               </div>
-                                                           </div>
-                                                       </motion.div>
-                                                   )}
+                                                            {/* Current Enchant Level */}
+                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="text-slate-400 text-xs uppercase">Current Enchant Level</span>
+                                                                    <span className={`font-bold text-xl ${
+                                                                        enchantLevel >= 96 ? 'text-rose-400' :
+                                                                        enchantLevel >= 72 ? 'text-orange-400' :
+                                                                        enchantLevel >= 48 ? 'text-purple-400' :
+                                                                        enchantLevel >= 24 ? 'text-blue-400' :
+                                                                        'text-white'
+                                                                    }`}>+{enchantLevel}%</span>
+                                                                </div>
+                                                                <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                                                    <div 
+                                                                        className={`h-full transition-all duration-300 ${
+                                                                            enchantLevel >= 96 ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
+                                                                            enchantLevel >= 72 ? 'bg-gradient-to-r from-orange-500 to-amber-500' :
+                                                                            enchantLevel >= 48 ? 'bg-gradient-to-r from-purple-500 to-violet-500' :
+                                                                            enchantLevel >= 24 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                                                            'bg-gradient-to-r from-slate-500 to-slate-400'
+                                                                        }`}
+                                                                        style={{ width: `${(enchantLevel / 120) * 100}%` }}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                                                    <span>0%</span>
+                                                                    <span>120%</span>
+                                                                </div>
+                                                            </div>
 
-                                                   {activeAction === 'combine' && (
-                                                       <motion.div
-                                                           key="combine-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Combine Stage</h3>
-                                                           
-                                                           {/* Quantity Selector */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Quantity</h4>
-                                                               <div className="flex items-center gap-3">
-                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
-                                                                       <span className="text-xl font-bold">−</span>
-                                                                   </button>
-                                                                   <div className="flex-1 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                                                                       <span className="text-white font-bold text-lg">1</span>
-                                                                   </div>
-                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
-                                                                       <span className="text-xl font-bold">+</span>
-                                                                   </button>
-                                                               </div>
-                                                           </div>
+                                                            {/* Enchant Button - 12% increase with fail chance */}
+                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    <span className="text-white font-semibold">Enchant (+12%)</span>
+                                                                    <span className="text-red-400 text-xs">Fail: {Math.min(90, enchantLevel)}%</span>
+                                                                </div>
+                                                                <Button 
+                                                                    onClick={handleEnchantAttempt}
+                                                                    className="w-full bg-blue-600 hover:bg-blue-500 h-12 rounded-lg font-bold"
+                                                                    disabled={enchantLevel >= 120}
+                                                                >
+                                                                    <Sparkles className="w-4 h-4 mr-2" />
+                                                                    {enchantLevel >= 120 ? 'Max Enchant' : 'Attempt Enchant'}
+                                                                </Button>
+                                                                {enchantResult && (
+                                                                    <p className={`text-center text-sm mt-2 font-semibold ${enchantResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                                                        {enchantResult === 'success' ? '✓ Enchant Successful!' : '✗ Enchant Failed!'}
+                                                                    </p>
+                                                                )}
+                                                            </div>
 
-                                                           {/* Drag & Drop Zone */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Material Card</h4>
-                                                               <div className="h-32 rounded-xl border-2 border-dashed border-white/20 bg-white/5 flex flex-col items-center justify-center hover:border-purple-400/50 transition-all cursor-pointer">
-                                                                   <Plus className="w-8 h-8 text-white/30 mb-2" />
-                                                                   <p className="text-white/40 text-xs">Drag card here</p>
-                                                               </div>
-                                                           </div>
+                                                            {/* Available Effects */}
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Add Effect</h4>
+                                                                {[
+                                                                    { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
+                                                                    { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
+                                                                    { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
+                                                                ].map((perk, i) => (
+                                                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
+                                                                        <div>
+                                                                            <p className="text-white text-sm font-semibold">{perk.name}</p>
+                                                                            <p className="text-slate-400 text-xs">{perk.effect}</p>
+                                                                        </div>
+                                                                        <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
 
-                                                           {/* Combine Button */}
-                                                           <Button className="w-full bg-purple-600 hover:bg-purple-500 h-12 rounded-lg font-bold">
-                                                               <ArrowLeftRight className="w-4 h-4 mr-2" />
-                                                               Combine Stage
-                                                           </Button>
-                                                       </motion.div>
-                                                   )}
+                                                    {activeAction === 'combine' && (
+                                                        <motion.div
+                                                            key="combine-panel"
+                                                            initial={{ opacity: 0, x: 20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -20 }}
+                                                            className="space-y-4"
+                                                        >
+                                                            <h3 className="text-white font-bold text-lg">Combine Cards</h3>
 
-                                                   {activeAction === 'train' && (
-                                                       <motion.div
-                                                           key="train-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Train Card</h3>
-                                                           
-                                                           {/* Current Level */}
-                                                           <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                                               <div className="flex items-center justify-between mb-2">
-                                                                   <span className="text-slate-400 text-xs uppercase">Current Level</span>
-                                                                   <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
-                                                               </div>
-                                                               <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                                                   <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
-                                                               </div>
-                                                           </div>
+                                                            {/* Quantity Controls */}
+                                                            <div className="flex items-center justify-between bg-white/5 rounded-xl p-3 border border-white/10">
+                                                                <span className="text-slate-400 text-sm">Cards to Combine</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <button 
+                                                                        onClick={() => setCombineQuantity(Math.max(1, combineQuantity - 1))}
+                                                                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                                                    >
+                                                                        <span className="text-lg font-bold">−</span>
+                                                                    </button>
+                                                                    <span className="text-white font-bold text-lg w-8 text-center">{combineQuantity}</span>
+                                                                    <button 
+                                                                        onClick={() => setCombineQuantity(Math.min(12, combineQuantity + 1))}
+                                                                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+                                                                    >
+                                                                        <span className="text-lg font-bold">+</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-slate-500 text-xs text-right">Max: 12 cards</p>
 
-                                                           {/* Level Options */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
-                                                               <div className="grid grid-cols-3 gap-2">
-                                                                   {[1, 5, 10].map((increment) => (
-                                                                       <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
-                                                                           +{increment}
-                                                                       </button>
-                                                                   ))}
-                                                               </div>
-                                                               <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
-                                                                   Max Level
-                                                               </Button>
-                                                           </div>
-                                                       </motion.div>
-                                                   )}
+                                                            {/* 4x4 Card Slots Grid */}
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Card Slots (4 rows)</h4>
+                                                                <div className="grid grid-cols-4 gap-2">
+                                                                    {Array.from({ length: 16 }).map((_, i) => (
+                                                                        <div 
+                                                                            key={i}
+                                                                            className={`aspect-[3/4] rounded-lg border-2 border-dashed flex items-center justify-center transition-all cursor-pointer ${
+                                                                                i < combineQuantity 
+                                                                                    ? 'border-purple-400/50 bg-purple-500/10 hover:bg-purple-500/20' 
+                                                                                    : 'border-white/10 bg-white/5 opacity-40'
+                                                                            }`}
+                                                                        >
+                                                                            {i < combineQuantity ? (
+                                                                                <Plus className="w-4 h-4 text-purple-400" />
+                                                                            ) : (
+                                                                                <X className="w-3 h-3 text-white/20" />
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                                <p className="text-slate-500 text-xs text-center mt-2">Drag cards to slots</p>
+                                                            </div>
 
-                                                   {activeAction === 'ascend' && (
-                                                       <motion.div
-                                                           key="ascend-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Ascend Card</h3>
-                                                           
-                                                           {/* Ascension Info */}
-                                                           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
-                                                               <p className="text-amber-300 text-xs font-semibold mb-2">Ascension unlocks powerful effects</p>
-                                                               <p className="text-white/60 text-xs">Choose an effect to permanently enhance this card.</p>
-                                                           </div>
+                                                            {/* Experience Input */}
+                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-3">Experience to Add</h4>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Input 
+                                                                        type="number"
+                                                                        value={combineXP}
+                                                                        onChange={(e) => setCombineXP(Math.max(0, parseInt(e.target.value) || 0))}
+                                                                        className="flex-1 bg-white/5 border-white/10 text-white"
+                                                                        placeholder="Enter XP amount"
+                                                                    />
+                                                                    <button className="px-3 py-2 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold hover:bg-purple-500/30">
+                                                                        Max
+                                                                    </button>
+                                                                </div>
+                                                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden mt-3">
+                                                                    <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: `${Math.min(100, (combineXP / 1000) * 100)}%` }} />
+                                                                </div>
+                                                            </div>
 
-                                                           {/* Effect Selection */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Select Effect</h4>
-                                                               {[
-                                                                   { name: 'Divine Fury', description: '+30% All Stats', icon: Star },
-                                                                   { name: 'Eternal Guardian', description: 'Damage Reduction +25%', icon: Shield },
-                                                                   { name: 'Void Essence', description: 'Ignores 20% Defense', icon: Zap },
-                                                               ].map((effect, i) => (
-                                                                   <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
-                                                                       <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                                                                           <effect.icon className="w-5 h-5 text-amber-400" />
-                                                                       </div>
-                                                                       <div className="flex-1">
-                                                                           <p className="text-white text-sm font-semibold">{effect.name}</p>
-                                                                           <p className="text-slate-400 text-xs">{effect.description}</p>
-                                                                       </div>
-                                                                   </div>
-                                                               ))}
-                                                           </div>
+                                                            {/* Combine Button */}
+                                                            <Button className="w-full bg-purple-600 hover:bg-purple-500 h-12 rounded-lg font-bold">
+                                                                <ArrowLeftRight className="w-4 h-4 mr-2" />
+                                                                Combine {combineQuantity} Cards
+                                                            </Button>
+                                                        </motion.div>
+                                                    )}
 
-                                                           <Button className="w-full bg-amber-600 hover:bg-amber-500 h-12 rounded-lg font-bold mt-4">
-                                                               <Crown className="w-4 h-4 mr-2" />
-                                                               Ascend Now
-                                                           </Button>
-                                                       </motion.div>
-                                                   )}
+                                                    {activeAction === 'train' && (
+                                                        <motion.div
+                                                            key="train-panel"
+                                                            initial={{ opacity: 0, x: 20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -20 }}
+                                                            className="space-y-4"
+                                                        >
+                                                            <h3 className="text-white font-bold text-lg">Train Card</h3>
 
-                                                   {!activeAction && (
-                                                       <motion.div
-                                                           key="no-action"
-                                                           initial={{ opacity: 0 }}
-                                                           animate={{ opacity: 1 }}
-                                                           className="flex items-center justify-center h-full text-slate-500"
-                                                       >
-                                                           <p className="text-sm">Select an action</p>
-                                                       </motion.div>
-                                                   )}
-                                               </AnimatePresence>
-                                           </div>
-                                       </div>
-                                   ) : (
-                                       <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
-                                           <Hammer className="w-16 h-16 mb-4 opacity-20" />
-                                           <p className="text-sm">Select an item to view details</p>
-                                       </div>
-                                   )}
-                               </div>
+                                                            {/* Current Level */}
+                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="text-slate-400 text-xs uppercase">Current Level</span>
+                                                                    <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
+                                                                </div>
+                                                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Level Options */}
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
+                                                                <div className="grid grid-cols-3 gap-2">
+                                                                    {[1, 5, 10].map((increment) => (
+                                                                        <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
+                                                                            +{increment}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
+                                                                    Max Level
+                                                                </Button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {activeAction === 'ascend' && (
+                                                        <motion.div
+                                                            key="ascend-panel"
+                                                            initial={{ opacity: 0, x: 20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -20 }}
+                                                            className="space-y-4"
+                                                        >
+                                                            <h3 className="text-white font-bold text-lg">Ascend Card</h3>
+
+                                                            {/* Ascension Warning */}
+                                                            <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
+                                                                <p className="text-amber-300 text-sm font-semibold mb-2">⚠️ Ascension Resets Level</p>
+                                                                <p className="text-white/60 text-xs">Ascending will reset the card's level to 1, but permanently increases the stat gains per level.</p>
+                                                            </div>
+
+                                                            {/* Current Ascension */}
+                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-slate-400 text-sm">Ascension Tier</span>
+                                                                    <div className="flex items-center gap-1">
+                                                                        {[1,2,3,4,5].map((tier) => (
+                                                                            <Star key={tier} className={`w-4 h-4 ${tier <= 1 ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-white/40 text-xs mt-2">Current bonus: +10% stats per level</p>
+                                                            </div>
+
+                                                            {/* Ascend Benefits */}
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Next Ascension Benefits</h4>
+                                                                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
+                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                        <Crown className="w-4 h-4 text-amber-400" />
+                                                                        <span className="text-white font-semibold text-sm">Tier 2 Ascension</span>
+                                                                    </div>
+                                                                    <ul className="text-xs text-slate-300 space-y-1 pl-6">
+                                                                        <li>• +20% stats per level (up from +10%)</li>
+                                                                        <li>• Unlock new visual effects</li>
+                                                                        <li>• Access to Tier 2 enchantments</li>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+
+                                                            <Button className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 h-12 rounded-lg font-bold">
+                                                                <Crown className="w-4 h-4 mr-2" />
+                                                                Ascend to Tier 2
+                                                            </Button>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {!activeAction && (
+                                                        <motion.div
+                                                            key="no-action"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            className="flex flex-col items-center justify-center h-64 text-slate-500"
+                                                        >
+                                                            <Hammer className="w-12 h-12 mb-3 opacity-30" />
+                                                            <p className="text-sm">Select an action to begin</p>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
+                                            <Hammer className="w-16 h-16 mb-4 opacity-20" />
+                                            <p className="text-sm">Select an item to view details</p>
+                                        </div>
+                                    )}
+                                </div>
                            </div>
                        </div>
                    ) : (
