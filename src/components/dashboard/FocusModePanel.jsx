@@ -1903,7 +1903,7 @@ function NewCardsSection({ upcomingCards }) {
 }
 
 // Live Panel - Condensed unified module (replaces Feed/AI Status/Cards tabs)
-function LivePanel({ upcomingCards, selectedGame, onSelectGame }) {
+function LivePanel({ upcomingCards }) {
   const navigate = useNavigate();
   const [showCardOverlay, setShowCardOverlay] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -2005,32 +2005,6 @@ function LivePanel({ upcomingCards, selectedGame, onSelectGame }) {
           </div>
         </div>
       </div>
-
-      {/* Selected Game Panel */}
-      <AnimatePresence>
-        {selectedGame && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="mt-3 pt-3 border-t border-white/10"
-          >
-            <div className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-              <img src={selectedGame.image || selectedGame.cover_image} alt={selectedGame.title} className="w-10 h-10 rounded object-cover" />
-              <div className="flex-1 min-w-0">
-                <h5 className="text-white font-semibold text-xs truncate">{selectedGame.title}</h5>
-                <p className="text-green-400 text-[10px]">{selectedGame.genre}</p>
-              </div>
-              <button 
-                onClick={() => onSelectGame(null)} 
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-              >
-                <X className="w-3 h-3 text-white/60" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Card Detail Overlay */}
       <AnimatePresence>
@@ -2142,8 +2116,6 @@ export default function FocusModePanel() {
           <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
             <LivePanel 
               upcomingCards={upcomingCards}
-              selectedGame={selectedGame}
-              onSelectGame={setSelectedGame}
             />
           </div>
         </div>
