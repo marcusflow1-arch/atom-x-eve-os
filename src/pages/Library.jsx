@@ -1172,6 +1172,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
             games={filteredGames}
             onLaunchGame={handleLaunchGame}
             onStreamGame={handleStreamGame}
+            onSwitchToAchievements={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
           />
         ) : (
           <div className="flex gap-6">
