@@ -1096,8 +1096,9 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="fixed top-20 left-8 right-8 z-30 overflow-y-auto"
+              className="fixed left-8 right-8 z-30 overflow-y-auto"
               style={{ 
+                top: '80px',
                 bottom: '32px',
                 maxHeight: 'calc(100vh - 112px)',
                 minHeight: '800px'
