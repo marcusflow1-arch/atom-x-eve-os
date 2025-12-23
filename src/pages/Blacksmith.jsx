@@ -444,6 +444,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const [isGenreOpen, setIsGenreOpen] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showWorkstation, setShowWorkstation] = useState(false);
+  const [activeAction, setActiveAction] = useState(null);
   
   // Forge Mastery XP - Based on User Data
   const forgeXP = user?.forge_xp || 0;
@@ -730,30 +731,12 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                    </div>
                                </div>
 
-                               {/* Right: Detail Panel with Card in Center */}
+                               {/* Right: Detail Panel */}
                                <div className="flex-1 flex flex-col overflow-hidden">
                                    {selectedItem ? (
-                                       <div className="flex-1 flex items-center justify-center p-6 gap-6">
-                                           {/* Left Actions */}
-                                           <div className="flex flex-col gap-3 w-36">
-                                               <Button 
-                                                   onClick={() => setShowWorkstation(true)} 
-                                                   className="w-full bg-blue-600 hover:bg-blue-500 font-bold h-12 rounded-xl"
-                                               >
-                                                   <Sparkles className="w-4 h-4 mr-2" />
-                                                   Enchant
-                                               </Button>
-                                               <Button 
-                                                   variant="outline" 
-                                                   className="w-full border-white/20 hover:bg-white/10 h-12 rounded-xl text-white"
-                                               >
-                                                   <ArrowLeftRight className="w-4 h-4 mr-2" />
-                                                   Combine
-                                               </Button>
-                                           </div>
-
-                                           {/* Center: Large Card */}
-                                           <div className="flex flex-col items-center">
+                                       <div className="flex-1 flex items-center p-6 gap-4">
+                                           {/* Left: Large Card */}
+                                           <div className="flex flex-col items-center flex-shrink-0">
                                                <div 
                                                    className={`w-48 h-64 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
                                                    style={{
@@ -781,27 +764,231 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                    <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-lg`} />
                                                    <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-lg`} />
                                                </div>
-                                               {/* Card Name Below */}
                                                <h2 className="text-xl font-black text-white mt-4 text-center">{selectedItem.name}</h2>
                                                <p className="text-slate-400 text-xs mt-1">{selectedItem.type}</p>
                                            </div>
 
-                                           {/* Right Actions */}
-                                           <div className="flex flex-col gap-3 w-36">
-                                               <Button 
-                                                   variant="outline" 
-                                                   className="w-full border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 h-12 rounded-xl text-purple-300"
-                                               >
-                                                   <Crown className="w-4 h-4 mr-2" />
-                                                   Ascend
-                                               </Button>
-                                               <Button 
-                                                   variant="outline" 
-                                                   className="w-full border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 h-12 rounded-xl text-cyan-300"
-                                               >
-                                                   <Users className="w-4 h-4 mr-2" />
-                                                   Train
-                                               </Button>
+                                           {/* Invisible vertical divider */}
+                                           <div className="w-px h-full bg-transparent mx-2" />
+
+                                           {/* Middle: Vertical Icon Menu */}
+                                           <div className="flex flex-col gap-2 flex-shrink-0">
+                                               {[
+                                                   { id: 'enchant', icon: Sparkles, label: 'Enchant', color: 'text-blue-400', hoverBg: 'hover:bg-blue-500/10' },
+                                                   { id: 'combine', icon: ArrowLeftRight, label: 'Combine', color: 'text-purple-400', hoverBg: 'hover:bg-purple-500/10' },
+                                                   { id: 'train', icon: Users, label: 'Train', color: 'text-cyan-400', hoverBg: 'hover:bg-cyan-500/10' },
+                                                   { id: 'ascend', icon: Crown, label: 'Ascend', color: 'text-amber-400', hoverBg: 'hover:bg-amber-500/10' },
+                                               ].map((action) => (
+                                                   <button
+                                                       key={action.id}
+                                                       onClick={() => setActiveAction(action.id)}
+                                                       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all border ${
+                                                           activeAction === action.id 
+                                                               ? `bg-white/10 border-white/20 ${action.color}` 
+                                                               : `border-transparent text-slate-500 ${action.hoverBg} hover:text-white`
+                                                       }`}
+                                                   >
+                                                       <action.icon className="w-5 h-5" />
+                                                       <span className="text-sm font-semibold">{action.label}</span>
+                                                   </button>
+                                               ))}
+                                           </div>
+
+                                           {/* Invisible vertical divider */}
+                                           <div className="w-px h-full bg-transparent mx-2" />
+
+                                           {/* Right: Dynamic Action Panel */}
+                                           <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                               <AnimatePresence mode="wait">
+                                                   {activeAction === 'enchant' && (
+                                                       <motion.div
+                                                           key="enchant-panel"
+                                                           initial={{ opacity: 0, x: 20 }}
+                                                           animate={{ opacity: 1, x: 0 }}
+                                                           exit={{ opacity: 0, x: -20 }}
+                                                           className="space-y-4"
+                                                       >
+                                                           <h3 className="text-white font-bold text-lg mb-4">Enchantment</h3>
+                                                           
+                                                           {/* Available Perks */}
+                                                           <div className="space-y-2">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Available Perks</h4>
+                                                               {[
+                                                                   { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
+                                                                   { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
+                                                                   { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
+                                                               ].map((perk, i) => (
+                                                                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
+                                                                       <div>
+                                                                           <p className="text-white text-sm font-semibold">{perk.name}</p>
+                                                                           <p className="text-slate-400 text-xs">{perk.effect}</p>
+                                                                       </div>
+                                                                       <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
+                                                                   </div>
+                                                               ))}
+                                                           </div>
+
+                                                           {/* Enchantment Slider */}
+                                                           <div className="mt-6">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-3">Enhancement Level</h4>
+                                                               <div className="space-y-3">
+                                                                   <div className="flex items-center justify-between text-sm">
+                                                                       <span className="text-slate-400">Current</span>
+                                                                       <span className="text-white font-bold">{selectedItem.modifiers.length * 25}%</span>
+                                                                   </div>
+                                                                   <input 
+                                                                       type="range" 
+                                                                       min="0" 
+                                                                       max="100" 
+                                                                       defaultValue={selectedItem.modifiers.length * 25}
+                                                                       className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer slider"
+                                                                       style={{
+                                                                           background: `linear-gradient(to right, rgb(59, 130, 246) 0%, rgb(59, 130, 246) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) 100%)`
+                                                                       }}
+                                                                   />
+                                                                   <Button className="w-full bg-blue-600 hover:bg-blue-500 h-10 rounded-lg">
+                                                                       Apply Enchantment
+                                                                   </Button>
+                                                               </div>
+                                                           </div>
+                                                       </motion.div>
+                                                   )}
+
+                                                   {activeAction === 'combine' && (
+                                                       <motion.div
+                                                           key="combine-panel"
+                                                           initial={{ opacity: 0, x: 20 }}
+                                                           animate={{ opacity: 1, x: 0 }}
+                                                           exit={{ opacity: 0, x: -20 }}
+                                                           className="space-y-4"
+                                                       >
+                                                           <h3 className="text-white font-bold text-lg mb-4">Combine Stage</h3>
+                                                           
+                                                           {/* Quantity Selector */}
+                                                           <div className="space-y-2">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Quantity</h4>
+                                                               <div className="flex items-center gap-3">
+                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
+                                                                       <span className="text-xl font-bold">−</span>
+                                                                   </button>
+                                                                   <div className="flex-1 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                                                       <span className="text-white font-bold text-lg">1</span>
+                                                                   </div>
+                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
+                                                                       <span className="text-xl font-bold">+</span>
+                                                                   </button>
+                                                               </div>
+                                                           </div>
+
+                                                           {/* Drag & Drop Zone */}
+                                                           <div className="space-y-2">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Material Card</h4>
+                                                               <div className="h-32 rounded-xl border-2 border-dashed border-white/20 bg-white/5 flex flex-col items-center justify-center hover:border-purple-400/50 transition-all cursor-pointer">
+                                                                   <Plus className="w-8 h-8 text-white/30 mb-2" />
+                                                                   <p className="text-white/40 text-xs">Drag card here</p>
+                                                               </div>
+                                                           </div>
+
+                                                           {/* Combine Button */}
+                                                           <Button className="w-full bg-purple-600 hover:bg-purple-500 h-12 rounded-lg font-bold">
+                                                               <ArrowLeftRight className="w-4 h-4 mr-2" />
+                                                               Combine Stage
+                                                           </Button>
+                                                       </motion.div>
+                                                   )}
+
+                                                   {activeAction === 'train' && (
+                                                       <motion.div
+                                                           key="train-panel"
+                                                           initial={{ opacity: 0, x: 20 }}
+                                                           animate={{ opacity: 1, x: 0 }}
+                                                           exit={{ opacity: 0, x: -20 }}
+                                                           className="space-y-4"
+                                                       >
+                                                           <h3 className="text-white font-bold text-lg mb-4">Train Card</h3>
+                                                           
+                                                           {/* Current Level */}
+                                                           <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                                                               <div className="flex items-center justify-between mb-2">
+                                                                   <span className="text-slate-400 text-xs uppercase">Current Level</span>
+                                                                   <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
+                                                               </div>
+                                                               <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                                   <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
+                                                               </div>
+                                                           </div>
+
+                                                           {/* Level Options */}
+                                                           <div className="space-y-2">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
+                                                               <div className="grid grid-cols-3 gap-2">
+                                                                   {[1, 5, 10].map((increment) => (
+                                                                       <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
+                                                                           +{increment}
+                                                                       </button>
+                                                                   ))}
+                                                               </div>
+                                                               <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
+                                                                   Max Level
+                                                               </Button>
+                                                           </div>
+                                                       </motion.div>
+                                                   )}
+
+                                                   {activeAction === 'ascend' && (
+                                                       <motion.div
+                                                           key="ascend-panel"
+                                                           initial={{ opacity: 0, x: 20 }}
+                                                           animate={{ opacity: 1, x: 0 }}
+                                                           exit={{ opacity: 0, x: -20 }}
+                                                           className="space-y-4"
+                                                       >
+                                                           <h3 className="text-white font-bold text-lg mb-4">Ascend Card</h3>
+                                                           
+                                                           {/* Ascension Info */}
+                                                           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
+                                                               <p className="text-amber-300 text-xs font-semibold mb-2">Ascension unlocks powerful effects</p>
+                                                               <p className="text-white/60 text-xs">Choose an effect to permanently enhance this card.</p>
+                                                           </div>
+
+                                                           {/* Effect Selection */}
+                                                           <div className="space-y-2">
+                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Select Effect</h4>
+                                                               {[
+                                                                   { name: 'Divine Fury', description: '+30% All Stats', icon: Star },
+                                                                   { name: 'Eternal Guardian', description: 'Damage Reduction +25%', icon: Shield },
+                                                                   { name: 'Void Essence', description: 'Ignores 20% Defense', icon: Zap },
+                                                               ].map((effect, i) => (
+                                                                   <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
+                                                                       <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                                                           <effect.icon className="w-5 h-5 text-amber-400" />
+                                                                       </div>
+                                                                       <div className="flex-1">
+                                                                           <p className="text-white text-sm font-semibold">{effect.name}</p>
+                                                                           <p className="text-slate-400 text-xs">{effect.description}</p>
+                                                                       </div>
+                                                                   </div>
+                                                               ))}
+                                                           </div>
+
+                                                           <Button className="w-full bg-amber-600 hover:bg-amber-500 h-12 rounded-lg font-bold mt-4">
+                                                               <Crown className="w-4 h-4 mr-2" />
+                                                               Ascend Now
+                                                           </Button>
+                                                       </motion.div>
+                                                   )}
+
+                                                   {!activeAction && (
+                                                       <motion.div
+                                                           key="no-action"
+                                                           initial={{ opacity: 0 }}
+                                                           animate={{ opacity: 1 }}
+                                                           className="flex items-center justify-center h-full text-slate-500"
+                                                       >
+                                                           <p className="text-sm">Select an action</p>
+                                                       </motion.div>
+                                                   )}
+                                               </AnimatePresence>
                                            </div>
                                        </div>
                                    ) : (
