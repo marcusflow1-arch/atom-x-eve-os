@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, 
+  Hammer, Search, Filter, Package, Gamepad2, Layers, Star, Zap, Shield,
   Gem, Trash2, Plus, Settings, Eye, RotateCw, Sparkles, Crown, Users, ArrowLeftRight,
-  ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X, Shuffle
+  ChevronRight, ChevronLeft, Menu, ChevronDown, Mic, X, Shuffle, Minus
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
