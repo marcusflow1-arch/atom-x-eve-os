@@ -137,7 +137,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="h-screen w-screen bg-slate-900 text-slate-300 font-sans flex flex-col overflow-hidden relative">
+    <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
         <ThemeBackground themeId="moon_essence" />
@@ -335,8 +335,14 @@ function LayoutContent({ children, currentPageName }) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-80 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col rounded-r-3xl"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+              className="fixed top-0 left-0 bottom-0 w-80 z-50 flex flex-col rounded-r-3xl"
+              style={{ 
+                background: 'rgba(100, 120, 140, 0.12)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              }}
             >
               {/* Drawer Header */}
               <div className="p-6">
@@ -352,7 +358,7 @@ function LayoutContent({ children, currentPageName }) {
                 
                 {/* User Info */}
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04]">
+                  <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                     <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden ring-2 ring-white/20">
                       {user?.avatar_url ? (
                         <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -375,7 +381,8 @@ function LayoutContent({ children, currentPageName }) {
                 ) : (
                   <button
                     onClick={handleSignIn}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/[0.06] hover:bg-white/[0.1] rounded-xl text-white font-medium transition-all"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white font-medium transition-all hover:border-cyan-400/30"
+                    style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                     >
                     <LogIn className="w-4 h-4" />
                     Sign In
@@ -396,9 +403,15 @@ function LayoutContent({ children, currentPageName }) {
                         onClick={() => setDrawerOpen(false)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
                           isActive 
-                            ? 'bg-white/[0.1] text-white' 
-                            : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+                            ? 'text-white border border-cyan-400/30' 
+                            : 'text-white/60 hover:text-white border border-transparent'
                         }`}
+                        style={isActive ? { 
+                          background: 'rgba(34, 211, 238, 0.12)', 
+                          boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)' 
+                        } : { 
+                          background: 'transparent' 
+                        }}
                       >
                         <item.icon className="w-5 h-5" />
                         <span className="font-medium">{item.name}</span>

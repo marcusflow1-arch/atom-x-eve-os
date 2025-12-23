@@ -1700,7 +1700,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
@@ -1735,7 +1742,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
@@ -1758,7 +1772,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
@@ -1781,7 +1802,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
@@ -1815,7 +1843,14 @@ export default function LunaTemplate() {
                               <div 
                                 key={slotId} 
                                 onClick={() => handleBoxClick(slotId)} 
-                                className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                style={{ 
+                                  background: 'rgba(100, 120, 140, 0.10)',
+                                  backdropFilter: 'blur(12px) saturate(120%)',
+                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                }}
                               >
                                 {equippedItem && (
                                   <img 
@@ -1891,7 +1926,14 @@ export default function LunaTemplate() {
                                 <div 
                                   key={slotId} 
                                   onClick={() => handleBoxClick(slotId)} 
-                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  style={{ 
+                                    background: 'rgba(100, 120, 140, 0.10)',
+                                    backdropFilter: 'blur(12px) saturate(120%)',
+                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                  }}
                                 >
                                   {equippedItem && (
                                     <img 
@@ -1912,7 +1954,14 @@ export default function LunaTemplate() {
                                 <div 
                                   key={slotId} 
                                   onClick={() => handleBoxClick(slotId)} 
-                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  style={{ 
+                                    background: 'rgba(100, 120, 140, 0.10)',
+                                    backdropFilter: 'blur(12px) saturate(120%)',
+                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                  }}
                                 >
                                   {equippedItem && (
                                     <img 
@@ -1948,7 +1997,14 @@ export default function LunaTemplate() {
                                 <div 
                                   key={slotId} 
                                   onClick={() => handleBoxClick(slotId)} 
-                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  style={{ 
+                                    background: 'rgba(100, 120, 140, 0.10)',
+                                    backdropFilter: 'blur(12px) saturate(120%)',
+                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                  }}
                                 >
                                   {equippedItem && (
                                     <img 
@@ -1969,7 +2025,14 @@ export default function LunaTemplate() {
                                 <div 
                                   key={slotId} 
                                   onClick={() => handleBoxClick(slotId)} 
-                                  className="w-20 h-20 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.05] shadow-lg hover:bg-white/[0.05] transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
+                                  style={{ 
+                                    background: 'rgba(100, 120, 140, 0.10)',
+                                    backdropFilter: 'blur(12px) saturate(120%)',
+                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+                                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                  }}
                                 >
                                   {equippedItem && (
                                     <img 
