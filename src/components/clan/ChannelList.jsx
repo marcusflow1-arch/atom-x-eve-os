@@ -81,7 +81,7 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
     // Guild Features Section
     const renderGuildHall = () => (
         <div className="mb-4">
-             <div className="flex items-center justify-between px-3 mb-2 group text-slate-400 hover:text-slate-800 cursor-pointer transition-colors">
+             <div className="flex items-center justify-between px-3 mb-2 group text-white/40 hover:text-white/70 cursor-pointer transition-colors">
                 <div className="flex items-center text-[10px] font-black uppercase tracking-widest">
                     <ChevronDown className="w-3 h-3 mr-1" /> Guild Hall
                 </div>
@@ -91,57 +91,57 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                     onClick={() => onSelectSpecial('overview')}
                     className={`w-full flex items-center px-3 py-1.5 rounded-lg group transition-all duration-200 ${
                         activeChannelId === 'overview' 
-                            ? 'bg-blue-50 text-blue-600 font-bold border border-blue-100 shadow-sm' 
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                            ? 'bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30' 
+                            : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent'
                     }`}
                 >
-                    <Home className={`w-4 h-4 mr-2 ${activeChannelId === 'overview' ? 'text-blue-500' : 'text-slate-400'}`} />
+                    <Home className={`w-4 h-4 mr-2 ${activeChannelId === 'overview' ? 'text-blue-400' : 'text-white/40'}`} />
                     <span className="text-sm">Dashboard</span>
                  </button>
                  <button 
                     onClick={() => onSelectSpecial('vault')}
                     className={`w-full flex items-center px-3 py-1.5 rounded-lg group transition-all duration-200 ${
                         activeChannelId === 'vault' 
-                            ? 'bg-amber-50 text-amber-600 font-bold border border-amber-100 shadow-sm' 
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                            ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' 
+                            : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent'
                     }`}
                 >
-                    <Archive className={`w-4 h-4 mr-2 ${activeChannelId === 'vault' ? 'text-amber-500' : 'text-slate-400'}`} />
+                    <Archive className={`w-4 h-4 mr-2 ${activeChannelId === 'vault' ? 'text-amber-400' : 'text-white/40'}`} />
                     <span className="text-sm">Guild Vault</span>
                  </button>
                  <button 
                     onClick={() => onSelectSpecial('members')}
                     className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-all duration-200 ${
                         activeChannelId === 'members' 
-                            ? 'bg-green-50 text-green-600 font-bold border border-green-100 shadow-sm' 
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                            ? 'bg-green-500/20 text-green-300 font-bold border border-green-500/30' 
+                            : 'text-white/60 hover:bg-white/10 hover:text-white border border-transparent'
                     }`}
                 >
                     <div className="flex items-center">
-                        <Users className={`w-4 h-4 mr-2 ${activeChannelId === 'members' ? 'text-green-500' : 'text-slate-400'}`} />
+                        <Users className={`w-4 h-4 mr-2 ${activeChannelId === 'members' ? 'text-green-400' : 'text-white/40'}`} />
                         <span className="text-sm">Members</span>
                     </div>
-                    <Badge className="bg-slate-100 text-slate-600 text-[10px] h-5 px-1.5">{memberCount}</Badge>
+                    <Badge className="bg-white/10 text-white/60 text-[10px] h-5 px-1.5">{memberCount}</Badge>
                  </button>
             </div>
         </div>
     );
 
     return (
-        <div className="w-64 bg-white/70 backdrop-blur-xl border-r border-slate-200/60 flex flex-col h-full relative z-10 shadow-sm">
+        <div className="w-64 bg-slate-900/60 backdrop-blur-xl border-r border-white/10 flex flex-col h-full relative z-10">
             {/* Server Header */}
             <DropdownMenu>
-                <DropdownMenuTrigger className="h-14 px-4 flex items-center justify-between border-b border-slate-200/60 hover:bg-slate-50/50 transition-colors font-black text-slate-800 shadow-sm cursor-pointer outline-none tracking-tight">
+                <DropdownMenuTrigger className="h-14 px-4 flex items-center justify-between border-b border-white/10 hover:bg-white/5 transition-colors font-black text-white shadow-sm cursor-pointer outline-none tracking-tight">
                      <span className="truncate text-lg">{clan.name}</span>
-                     <ChevronDown className="w-4 h-4 opacity-50 text-slate-500" />
+                     <ChevronDown className="w-4 h-4 opacity-50 text-white/60" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-60 bg-white border-slate-200 text-slate-600 rounded-xl p-1 shadow-2xl">
-                    <DropdownMenuLabel className="text-xs uppercase text-slate-400 tracking-widest px-2 py-2">Division Settings</DropdownMenuLabel>
-                    <DropdownMenuItem className="hover:bg-blue-50 hover:text-blue-600 cursor-pointer rounded-lg mb-1 focus:bg-blue-50 focus:text-blue-600" onClick={() => setIsCreateChannelOpen(true)}>
+                <DropdownMenuContent className="w-60 bg-slate-800/95 backdrop-blur-xl border-white/10 text-slate-300 rounded-xl p-1 shadow-2xl">
+                    <DropdownMenuLabel className="text-xs uppercase text-slate-500 tracking-widest px-2 py-2">Division Settings</DropdownMenuLabel>
+                    <DropdownMenuItem className="hover:bg-white/10 hover:text-white cursor-pointer rounded-lg mb-1 focus:bg-white/10 focus:text-white" onClick={() => setIsCreateChannelOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" /> Create Channel
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-slate-100" />
-                    <DropdownMenuItem className="text-red-500 hover:bg-red-50 hover:text-red-600 cursor-pointer rounded-lg focus:bg-red-50 focus:text-red-600" onClick={() => {
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem className="text-red-400 hover:bg-red-500/20 hover:text-red-300 cursor-pointer rounded-lg focus:bg-red-500/20 focus:text-red-300" onClick={() => {
                         if(confirm('Are you sure you want to delete this division? This action cannot be undone.')) {
                             deleteClanMutation.mutate();
                         }
@@ -152,17 +152,17 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
             </DropdownMenu>
 
             {/* Channels */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-4 space-y-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-4 space-y-6 text-white">
                 
                 {renderGuildHall()}
 
                 {/* Text Channels */}
                 <div>
-                    <div className="flex items-center justify-between px-3 mb-2 group text-slate-400 hover:text-slate-800 cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between px-3 mb-2 group text-white/40 hover:text-white/70 cursor-pointer transition-colors">
                         <div className="flex items-center text-[10px] font-black uppercase tracking-widest">
                             <ChevronDown className="w-3 h-3 mr-1" /> Text Channels
                         </div>
-                        <Plus className="w-3 h-3 hover:text-blue-600" onClick={() => {
+                        <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
                             setNewChannelType('text');
                             setIsCreateChannelOpen(true);
                         }} />
@@ -175,16 +175,16 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                         onClick={() => onSelectChannel(channel)}
                                         className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-all duration-200 ${
                                             activeChannelId === channel.id 
-                                                ? 'bg-slate-100 text-slate-900 font-bold' 
-                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                                ? 'bg-white/10 text-white font-bold' 
+                                                : 'text-white/60 hover:bg-white/5 hover:text-white'
                                         }`}
                                     >
                                         <div className="flex items-center">
-                                            <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-slate-800' : 'text-slate-400'}`} />
+                                            <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
                                             <span className="text-sm truncate">{channel.name}</span>
                                         </div>
                                         <X 
-                                            className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all" 
+                                            className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if(confirm(`Delete #${channel.name}?`)) {
@@ -194,9 +194,9 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                         />
                                     </button>
                                 </ContextMenuTrigger>
-                                <ContextMenuContent className="bg-white border-slate-200 rounded-lg shadow-xl">
+                                <ContextMenuContent className="bg-slate-800/95 backdrop-blur-xl border-white/10 rounded-lg shadow-xl">
                                     <ContextMenuItem 
-                                        className="text-red-500 hover:bg-red-50 cursor-pointer"
+                                        className="text-red-400 hover:bg-red-500/20 cursor-pointer"
                                         onClick={() => {
                                             if(confirm(`Delete #${channel.name}?`)) {
                                                 deleteChannelMutation.mutate(channel.id);
@@ -214,11 +214,11 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
 
                 {/* Voice Channels */}
                 <div>
-                    <div className="flex items-center justify-between px-3 mb-2 group text-slate-400 hover:text-slate-800 cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between px-3 mb-2 group text-white/40 hover:text-white/70 cursor-pointer transition-colors">
                         <div className="flex items-center text-[10px] font-black uppercase tracking-widest">
                             <ChevronDown className="w-3 h-3 mr-1" /> Voice Channels
                         </div>
-                        <Plus className="w-3 h-3 hover:text-blue-600" onClick={() => {
+                        <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
                             setNewChannelType('voice');
                             setIsCreateChannelOpen(true);
                         }} />
@@ -231,16 +231,16 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                         onClick={() => onSelectChannel(channel)}
                                         className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-all duration-200 ${
                                             activeChannelId === channel.id 
-                                                ? 'bg-slate-100 text-slate-900 font-bold' 
-                                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                                ? 'bg-white/10 text-white font-bold' 
+                                                : 'text-white/60 hover:bg-white/5 hover:text-white'
                                         }`}
                                     >
                                         <div className="flex items-center">
-                                            <Volume2 className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-slate-800' : 'text-slate-400'}`} />
+                                            <Volume2 className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
                                             <span className="text-sm truncate">{channel.name}</span>
                                         </div>
                                         <X 
-                                            className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all" 
+                                            className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if(confirm(`Delete ${channel.name}?`)) {
@@ -250,9 +250,9 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                         />
                                     </button>
                                 </ContextMenuTrigger>
-                                <ContextMenuContent className="bg-white border-slate-200 rounded-lg shadow-xl">
+                                <ContextMenuContent className="bg-slate-800/95 backdrop-blur-xl border-white/10 rounded-lg shadow-xl">
                                     <ContextMenuItem 
-                                        className="text-red-500 hover:bg-red-50 cursor-pointer"
+                                        className="text-red-400 hover:bg-red-500/20 cursor-pointer"
                                         onClick={() => {
                                             if(confirm(`Delete ${channel.name}?`)) {
                                                 deleteChannelMutation.mutate(channel.id);
@@ -273,58 +273,58 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
 
             {/* Create Channel Modal */}
             <Dialog open={isCreateChannelOpen} onOpenChange={setIsCreateChannelOpen}>
-                <DialogContent className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200">
+                <DialogContent className="bg-slate-900/95 backdrop-blur-xl text-white rounded-2xl shadow-2xl border border-white/10">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">Create Channel</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-white">Create Channel</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                          <div>
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Channel Type</label>
+                             <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 block">Channel Type</label>
                              <div className="space-y-2">
                                  <div 
-                                    className={`p-4 rounded-xl cursor-pointer flex items-center justify-between border transition-all ${newChannelType === 'text' ? 'bg-blue-50 border-blue-500/50 shadow-sm' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+                                    className={`p-4 rounded-xl cursor-pointer flex items-center justify-between border transition-all ${newChannelType === 'text' ? 'bg-blue-500/20 border-blue-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
                                     onClick={() => setNewChannelType('text')}
                                  >
                                      <div className="flex items-center gap-4">
-                                         <Hash className={`w-6 h-6 ${newChannelType === 'text' ? 'text-blue-500' : 'text-slate-400'}`} />
+                                         <Hash className={`w-6 h-6 ${newChannelType === 'text' ? 'text-blue-400' : 'text-white/40'}`} />
                                          <div>
-                                             <div className="font-bold text-slate-900">Text Channel</div>
-                                             <div className="text-xs text-slate-500">Post images, GIFs, stickers, and opinions.</div>
+                                             <div className="font-bold text-white">Text Channel</div>
+                                             <div className="text-xs text-white/50">Post images, GIFs, stickers, and opinions.</div>
                                          </div>
                                      </div>
-                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${newChannelType === 'text' ? 'border-blue-500' : 'border-slate-300'}`}>
-                                         {newChannelType === 'text' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
+                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${newChannelType === 'text' ? 'border-blue-400' : 'border-white/30'}`}>
+                                         {newChannelType === 'text' && <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />}
                                      </div>
                                  </div>
                                  <div 
-                                    className={`p-4 rounded-xl cursor-pointer flex items-center justify-between border transition-all ${newChannelType === 'voice' ? 'bg-blue-50 border-blue-500/50 shadow-sm' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+                                    className={`p-4 rounded-xl cursor-pointer flex items-center justify-between border transition-all ${newChannelType === 'voice' ? 'bg-blue-500/20 border-blue-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
                                     onClick={() => setNewChannelType('voice')}
                                  >
                                      <div className="flex items-center gap-4">
-                                         <Volume2 className={`w-6 h-6 ${newChannelType === 'voice' ? 'text-blue-500' : 'text-slate-400'}`} />
+                                         <Volume2 className={`w-6 h-6 ${newChannelType === 'voice' ? 'text-blue-400' : 'text-white/40'}`} />
                                          <div>
-                                             <div className="font-bold text-slate-900">Voice Channel</div>
-                                             <div className="text-xs text-slate-500">Hang out together with voice, video, and screen share.</div>
+                                             <div className="font-bold text-white">Voice Channel</div>
+                                             <div className="text-xs text-white/50">Hang out together with voice, video, and screen share.</div>
                                          </div>
                                      </div>
-                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${newChannelType === 'voice' ? 'border-blue-500' : 'border-slate-300'}`}>
-                                         {newChannelType === 'voice' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
+                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${newChannelType === 'voice' ? 'border-blue-400' : 'border-white/30'}`}>
+                                         {newChannelType === 'voice' && <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />}
                                      </div>
                                  </div>
                              </div>
                          </div>
                          <div>
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Channel Name</label>
+                             <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 block">Channel Name</label>
                              <Input 
                                 value={newChannelName}
                                 onChange={e => setNewChannelName(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                                className="bg-slate-50 border-slate-200 text-slate-900 h-11 focus:ring-2 focus:ring-blue-500/20"
+                                className="bg-white/10 border-white/20 text-white h-11 focus:ring-2 focus:ring-blue-500/30 placeholder:text-white/30"
                                 placeholder="new-channel"
                              />
                          </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsCreateChannelOpen(false)} className="text-slate-500 hover:bg-slate-100 hover:text-slate-900">Cancel</Button>
+                        <Button variant="ghost" onClick={() => setIsCreateChannelOpen(false)} className="text-white/60 hover:bg-white/10 hover:text-white">Cancel</Button>
                         <Button 
                             onClick={() => createChannelMutation.mutate({ name: newChannelName, type: newChannelType })}
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
