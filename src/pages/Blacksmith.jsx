@@ -598,6 +598,15 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
               {/* LEFT SIDEBAR (Shiny Box Style) */}
               <div className="w-[300px] flex-shrink-0 h-full overflow-hidden">
                   <ShinySidebarBox className="h-full p-6 flex flex-col">
+                       {/* Cross-Fusion Button */}
+                       <button
+                          onClick={() => navigate(createPageUrl('CrossGameFusion'))}
+                          className="flex items-center justify-center gap-2 w-full px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                       >
+                          <Shuffle className="w-4 h-4" />
+                          <span className="text-sm font-bold">Cross-Fusion</span>
+                       </button>
+
                        {/* Search */}
                        <div className="relative group mb-6">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
