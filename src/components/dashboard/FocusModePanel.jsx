@@ -2096,19 +2096,11 @@ export default function FocusModePanel() {
 
       {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
       <div className="flex gap-6 min-h-0" style={{ height: '280px', maxHeight: '280px' }}>
-        {/* Left side - Space for 3D viewer (rendered separately as fixed element) + Calendar & Goals below */}
+        {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
           <div className="relative flex-1 min-h-[180px]">
             {/* Invisible boundary - 3D viewer floats above this space */}
-          </div>
-          
-          {/* Calendar & Goals - Below 3D viewer space */}
-          <div className="mt-1">
-            <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
-            <div className="mt-1">
-              <GoalsPanel />
-            </div>
           </div>
         </div>
 
@@ -2145,7 +2137,7 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Genre Selector and Library Games */}
+      {/* Bottom Section - Genre Selector, Calendar/Goals, and Library Games */}
       <div className="flex gap-4 pt-4">
         {/* Genre Selector - Vertical scroll */}
         <MiniGenreSelector 
@@ -2153,6 +2145,12 @@ export default function FocusModePanel() {
           onGenreChange={setActiveGenre}
           gamesByGenre={gamesByGenre}
         />
+
+        {/* Calendar & Goals - Below Genre selector */}
+        <div className="w-[160px] flex-shrink-0 flex flex-col gap-2">
+          <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
+          <GoalsPanel />
+        </div>
 
         {/* Library Games - Changes based on genre scroll */}
         <div className="flex-1 min-w-0">
