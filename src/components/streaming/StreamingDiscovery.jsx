@@ -356,18 +356,32 @@ export default function StreamingDiscovery() {
 
   return (
     <div className="flex gap-6 h-full p-6">
-      {/* User Profile Button */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Left Column - Profile Button + Filter Sidebar */}
+      <div className="flex flex-col gap-4">
+        {/* User Profile Button - Above Categories */}
         <button
-          onClick={() => navigate(createPageUrl('StreamerProfileEdit'))}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/30 rounded-lg text-white transition-all"
+          onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-white transition-all w-[280px]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(100, 116, 139, 0.3) 50%, rgba(59, 130, 246, 0.2) 100%)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+          }}
         >
-          <User className="w-4 h-4" />
-          <span className="font-semibold">{currentUserName}</span>
+          <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center">
+            <User className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="flex-1 text-left">
+            <span className="font-semibold text-sm">{currentUserName}</span>
+            <p className="text-white/50 text-xs">Edit Streamer Profile</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-white/40" />
         </button>
-      </div>
 
-      <FilterSidebar filters={filters} setFilters={setFilters} />
+        <FilterSidebar filters={filters} setFilters={setFilters} />
+      </div>
 
       <div className="flex-1 overflow-y-auto">
         {/* Introduce Yourself Section */}
