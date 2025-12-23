@@ -800,6 +800,109 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
   );
 };
 
+// --- Library Scroll Menu Component (Like Achievements) ---
+const LibraryScrollMenu = ({ games, selectedGame, onSelectGame, onLaunchGame }) => {
+  const [activeGameIndex, setActiveGameIndex] = useState(0);
+
+  const ITEM_HEIGHT = 80;
+  const ITEM_GAP = 24;
+  const CROSS_Y_VH = 50;
+
+  // Sync selectedGame with activeGameIndex
+  useEffect(() => {
+    if (selectedGame && games.length > 0) {
+      const idx = games.findIndex(g => g.id === selectedGame.id);
+      if (idx !== -1 && idx !== activeGameIndex) {
+        setActiveGameIndex(idx);
+      }
+    }
+  }, [selectedGame, games]);
+
+  // Wheel Navigation for vertical scroll
+  useEffect(() => {
+    let lastWheelTime = 0;
+    const WHEEL_COOLDOWN = 150;
+
+    const handleWheel = (e) => {
+      if (games.length === 0) return;
+      const now = Date.now();
+      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+      // Only handle vertical scroll
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        if (e.deltaY > 0) {
+          if (activeGameIndex < games.length - 1) {
+            const newIndex = activeGameIndex + 1;
+            setActiveGameIndex(newIndex);
+            onSelectGame(games[newIndex]);
+            lastWheelTime = now;
+          }
+        } else if (e.deltaY < 0) {
+          if (activeGameIndex > 0) {
+            const newIndex = activeGameIndex - 1;
+            setActiveGameIndex(newIndex);
+            onSelectGame(games[newIndex]);
+            lastWheelTime = now;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [activeGameIndex, games, onSelectGame]);
+
+  if (games.length === 0) return null;
+
+  return (
+    <div className="absolute top-0 bottom-0 left-0 w-40 flex flex-col items-center z-20 pointer-events-none">
+      <motion.div 
+        className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+        animate={{ 
+          y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
+        }}
+        transition={{ type: "spring", stiffness: 250, damping: 25 }}
+      >
+        {games.map((game, idx) => {
+          const isActive = idx === activeGameIndex;
+          return (
+            <motion.div
+              key={game.id}
+              onClick={() => {
+                setActiveGameIndex(idx);
+                onSelectGame(game);
+              }}
+              animate={{ 
+                scale: isActive ? 1.2 : 0.85,
+                opacity: isActive ? 1 : 0.3,
+                x: isActive ? 24 : 0
+              }}
+              className="flex flex-col items-center gap-2 cursor-pointer w-28"
+            >
+              <div className={`
+                w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 overflow-hidden
+                ${isActive 
+                  ? 'shadow-[0_0_30px_rgba(34,211,238,0.3)] backdrop-blur-md border border-cyan-400/30' 
+                  : 'border border-white/10 backdrop-blur-sm'
+                }
+              `}>
+                <img 
+                  src={game.cover_image || game.cover} 
+                  alt={game.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-wider text-center truncate w-full transition-all duration-300 ${isActive ? 'text-white' : 'text-transparent'}`}>
+                {game.title}
+              </span>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+};
+
 export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const { user, isAuthenticated } = useAuth();
   const [ownedGames, setOwnedGames] = useState([]);
