@@ -986,25 +986,14 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               </button>
             </div>
 
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Grid Menu Button */}
+            <button
+              onClick={() => setShowTransitionMenu(true)}
+              className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all"
+              title="Open Menu"
+            >
+              <LayoutGrid className="w-5 h-5 text-white/70 hover:text-white" />
+            </button>
           </div>
         </div>
 
