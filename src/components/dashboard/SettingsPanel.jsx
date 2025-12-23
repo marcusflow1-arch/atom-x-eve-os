@@ -3,10 +3,21 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Volume2, Monitor, Bell, Shield, User, HelpCircle } from 'lucide-react';
+import { Volume2, Monitor, Bell, Shield, User, HelpCircle, Video, Upload, X, Image as ImageIcon, Users, Save } from 'lucide-react';
 
 export default function SettingsPanel() {
   const [volume, setVolume] = useState(80);
+  const [streamerProfile, setStreamerProfile] = useState({
+    bannerImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=400&fit=crop',
+    introVideo: '',
+    images: [
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop',
+      'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop'
+    ],
+    sponsors: [],
+    bio: 'Professional gamer and content creator',
+    favoriteGames: ['Counter-Strike 2', 'Valorant', 'Apex Legends']
+  });
   
   return (
     <div className="max-w-4xl mx-auto py-10 px-6">
@@ -18,11 +29,12 @@ export default function SettingsPanel() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="bg-white/5 border border-white/10 p-1 mb-8">
+        <TabsList className="bg-white/5 border border-white/10 p-1 mb-8 flex-wrap">
           <TabsTrigger value="general" className="gap-2"><Monitor className="w-4 h-4" /> General</TabsTrigger>
           <TabsTrigger value="audio" className="gap-2"><Volume2 className="w-4 h-4" /> Audio</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2"><Bell className="w-4 h-4" /> Notifications</TabsTrigger>
           <TabsTrigger value="account" className="gap-2"><User className="w-4 h-4" /> Account</TabsTrigger>
+          <TabsTrigger value="streamer" className="gap-2"><Video className="w-4 h-4" /> Streamer Profile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
