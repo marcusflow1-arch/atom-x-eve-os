@@ -280,14 +280,14 @@ const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) =>
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     onClick={() => onSelect(game)}
-    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 ${
-      isSelected 
-        ? 'bg-white/10 shadow-lg' 
-        : 'hover:bg-white/5'
+    className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 border ${
+    isSelected 
+    ? 'border-cyan-400/30 shadow-lg' 
+    : 'hover:border-cyan-400/20 border-transparent'
     }`}
     style={isSelected ? {
-      border: '1px solid rgba(255,255,255,0.15)',
-      boxShadow: '0 4px 20px rgba(100,150,200,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+    background: 'rgba(34, 211, 238, 0.12)',
+    boxShadow: '0 0 12px rgba(34, 211, 238, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
     } : {}}
     whileHover={{ x: 4 }}
   >

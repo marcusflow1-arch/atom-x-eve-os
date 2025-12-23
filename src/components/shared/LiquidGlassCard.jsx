@@ -11,11 +11,11 @@ export const LiquidGlassCard = ({ children, className = "", hover = true, onClic
       onClick={onClick}
       className={`relative overflow-hidden rounded-2xl transition-all duration-300 ${hover ? 'cursor-pointer hover:shadow-[0_0_50px_rgba(100,150,255,0.15)]' : ''} ${className}`}
       style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(20px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
       }}
       onMouseMove={({ currentTarget, clientX }) => {
         const { left, width } = currentTarget.getBoundingClientRect();
