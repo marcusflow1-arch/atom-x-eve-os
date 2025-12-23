@@ -1044,7 +1044,7 @@ function GameDetailPanel({ game, onClose }) {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1">
         <AnimatePresence mode="wait">
           {activeTab === 'overview' && (
             <motion.div
@@ -1788,7 +1788,7 @@ function NewsFeedSection({ upcomingCards, selectedGame, onSelectGame }) {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1">
         <AnimatePresence mode="wait">
           {activeTab === 'feed' && (
             <motion.div
@@ -2021,7 +2021,7 @@ export default function FocusModePanel() {
           <div className="w-px bg-white/10 self-stretch" />
 
           {/* Content Area - News, Updates, New Cards */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex-1 flex flex-col pr-2">
             <NewsFeedSection 
               upcomingCards={upcomingCards}
               selectedGame={selectedGame}
@@ -2049,7 +2049,7 @@ export default function FocusModePanel() {
       </AnimatePresence>
 
       {/* Bottom Section - Time, Goals, Genre Selector, and Library Games */}
-      <div className="flex gap-4 pt-4 min-h-[50vh]">
+      <div className="flex gap-4 pt-4">
         {/* Left Column: Calendar then Goals stacked */}
         <div className="flex-shrink-0 flex flex-col gap-3">
           <TimeDisplay onCalendarClick={handleCalendarDayClick} events={calendarEvents} />
@@ -2059,13 +2059,11 @@ export default function FocusModePanel() {
         </div>
 
         {/* Mini Genre Selector - Scroll to change games */}
-        <div className="ml-2 md:ml-4">
-          <MiniGenreSelector 
-            activeGenre={activeGenre}
-            onGenreChange={setActiveGenre}
-            gamesByGenre={gamesByGenre}
-          />
-        </div>
+        <MiniGenreSelector 
+          activeGenre={activeGenre}
+          onGenreChange={setActiveGenre}
+          gamesByGenre={gamesByGenre}
+        />
 
         {/* Library Games - Changes based on genre scroll */}
         <div className="flex-1 min-w-0">
