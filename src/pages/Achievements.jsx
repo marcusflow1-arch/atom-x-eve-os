@@ -706,17 +706,20 @@ function AchievementsView({ onExitToLibrary }) {
 
   return (
     <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      {/* Ambient Glow */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
-      </div>
+      {/* Grid View Mode - Full Screen Like Store */}
+      {viewMode === 'grid' ? (
+        <div className="h-full w-full relative">
+          {/* Grid Toggle Button - Top Right */}
+          <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+            <button 
+              onClick={() => setViewMode('list')}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+              title="Switch to List View"
+            >
+              <List className="w-4 h-4 text-white/60 hover:text-white" />
+            </button>
+          </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
-        
-        {/* Grid View Mode */}
-        {viewMode === 'grid' ? (
           <AchievementsCrossMenu 
             games={filteredGames}
             localAchievements={localAchievements}
@@ -729,7 +732,17 @@ function AchievementsView({ onExitToLibrary }) {
             }}
             user={user}
           />
-        ) : (
+        </div>
+      ) : (
+      <>
+      {/* Ambient Glow - List View Only */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
+      </div>
+
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">(
         <div className="flex gap-8 h-full overflow-hidden">
           
           {/* Left Sidebar (Shiny Box) */}
