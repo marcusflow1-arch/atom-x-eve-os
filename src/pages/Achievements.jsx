@@ -515,13 +515,18 @@ function AchievementsView({ onExitToLibrary }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
-                {/* Grid View Toggle */}
+                {/* Grid View Toggle - 4 small squares */}
                 <button
                   onClick={() => setViewMode('classic')}
                   className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
                   title="Switch to Grid View"
                 >
-                  <LayoutGrid className="w-4 h-4 text-white/60 hover:text-white" />
+                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                  </div>
                 </button>
                 
                 {/* Gamepad Icon */}
