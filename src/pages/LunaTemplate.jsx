@@ -2134,8 +2134,7 @@ export default function LunaTemplate() {
                     <div className="flex-shrink-0 pt-6 flex flex-col relative z-40">
                       <LunaStatsPanel />
                     </div>
-
-                  </motion.div>
+                    </div>
                   
                   {/* Divider Line */}
                   <div className="w-full flex items-center gap-4 mt-12 mb-6">
