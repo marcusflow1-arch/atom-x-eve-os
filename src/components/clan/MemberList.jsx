@@ -1,9 +1,22 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Crown, Shield, Users } from 'lucide-react';
+import { Crown, Shield, Users, Plus, X, Search, UserPlus } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function MemberList({ clan, fullView = false }) {
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [invitePlayerId, setInvitePlayerId] = useState('');
+    const [inviteError, setInviteError] = useState('');
+    const [inviteSuccess, setInviteSuccess] = useState('');
+
+    // Check if current user is leader
+    const isLeader = clan?.leaderId === user?.id;
     const { data: members } = useQuery({
         queryKey: ['clanMembersList', clan.id],
         queryFn: async () => {
@@ -57,6 +70,39 @@ export default function MemberList({ clan, fullView = false }) {
     const officers = onlineMembers.filter(m => m.role === 'officer');
     const membersList = onlineMembers.filter(m => m.role === 'member');
 
+    // Invite member mutation
+    const inviteMutation = useMutation({
+        mutationFn: async (playerId) => {
+            // Create an invite record
+            return await base44.entities.ClanInvite.create({
+                divisionId: clan.id,
+                inviterId: user?.id,
+                inviteeId: playerId,
+                status: 'pending'
+            });
+        },
+        onSuccess: () => {
+            setInviteSuccess('Invite sent successfully!');
+            setInvitePlayerId('');
+            setTimeout(() => {
+                setShowInviteModal(false);
+                setInviteSuccess('');
+            }, 1500);
+        },
+        onError: (err) => {
+            setInviteError('Failed to send invite. Please check the player ID.');
+        }
+    });
+
+    const handleInvite = () => {
+        setInviteError('');
+        if (!invitePlayerId.trim()) {
+            setInviteError('Please enter a player ID or email');
+            return;
+        }
+        inviteMutation.mutate(invitePlayerId.trim());
+    };
+
     // Full view mode for the Members page
     if (fullView) {
         return (
@@ -73,8 +119,60 @@ export default function MemberList({ clan, fullView = false }) {
                                 <p className="text-white/50 text-sm">{onlineMembers.length} members in {clan.name}</p>
                             </div>
                         </div>
+                        {/* Add Member Button */}
+                        {(isLeader || officers.some(o => o.userId === user?.id)) && (
+                            <Button 
+                                onClick={() => setShowInviteModal(true)}
+                                className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Member
+                            </Button>
+                        )}
                     </div>
                 </div>
+
+                {/* Invite Modal */}
+                <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
+                    <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 text-white">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                <UserPlus className="w-5 h-5 text-green-400" />
+                                Invite Player to {clan.name}
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Player ID or Email</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <Input 
+                                        value={invitePlayerId}
+                                        onChange={(e) => setInvitePlayerId(e.target.value)}
+                                        placeholder="Enter player ID or email address..."
+                                        className="pl-10 bg-slate-800 border-slate-700 text-white"
+                                    />
+                                </div>
+                            </div>
+                            {inviteError && (
+                                <p className="text-red-400 text-sm">{inviteError}</p>
+                            )}
+                            {inviteSuccess && (
+                                <p className="text-green-400 text-sm">{inviteSuccess}</p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowInviteModal(false)} className="border-slate-700 text-slate-400">Cancel</Button>
+                            <Button 
+                                onClick={handleInvite}
+                                disabled={inviteMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                {inviteMutation.isPending ? 'Sending...' : 'Send Invite'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
                 
                 {/* Members Grid */}
                 <div className="p-6 overflow-y-auto max-h-[calc(100vh-250px)]">
