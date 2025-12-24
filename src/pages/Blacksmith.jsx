@@ -1041,55 +1041,55 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                 )}
 
                                                 {activeAction === 'ascend' && (
-                                                        <motion.div
-                                                            key="ascend-panel"
-                                                            initial={{ opacity: 0, x: 20 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            exit={{ opacity: 0, x: -20 }}
-                                                            className="space-y-4"
-                                                        >
-                                                            <h3 className="text-white font-bold text-lg">Ascend Card</h3>
+                                                    <motion.div
+                                                        key="ascend-panel"
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -20 }}
+                                                        className="space-y-4"
+                                                    >
+                                                        <h3 className="text-white font-bold text-lg">Ascend Card</h3>
 
-                                                            {/* Ascension Warning */}
-                                                            <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
-                                                                <p className="text-amber-300 text-sm font-semibold mb-2">⚠️ Ascension Resets Level</p>
-                                                                <p className="text-white/60 text-xs">Ascending will reset the card's level to 1, but permanently increases the stat gains per level.</p>
-                                                            </div>
+                                                        {/* Ascension Warning */}
+                                                        <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
+                                                            <p className="text-amber-300 text-sm font-semibold mb-2">⚠️ Ascension Resets Level</p>
+                                                            <p className="text-white/60 text-xs">Ascending will reset the card's level to 1, but permanently increases the stat gains per level.</p>
+                                                        </div>
 
-                                                            {/* Current Ascension */}
-                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="text-slate-400 text-sm">Ascension Tier</span>
-                                                                    <div className="flex items-center gap-1">
-                                                                        {[1,2,3,4,5].map((tier) => (
-                                                                            <Star key={tier} className={`w-4 h-4 ${tier <= 1 ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                                <p className="text-white/40 text-xs mt-2">Current bonus: +10% stats per level</p>
-                                                            </div>
-
-                                                            {/* Ascend Benefits */}
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Next Ascension Benefits</h4>
-                                                                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
-                                                                    <div className="flex items-center gap-2 mb-2">
-                                                                        <Crown className="w-4 h-4 text-amber-400" />
-                                                                        <span className="text-white font-semibold text-sm">Tier 2 Ascension</span>
-                                                                    </div>
-                                                                    <ul className="text-xs text-slate-300 space-y-1 pl-6">
-                                                                        <li>• +20% stats per level (up from +10%)</li>
-                                                                        <li>• Unlock new visual effects</li>
-                                                                        <li>• Access to Tier 2 enchantments</li>
-                                                                    </ul>
+                                                        {/* Current Ascension */}
+                                                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-slate-400 text-sm">Ascension Tier</span>
+                                                                <div className="flex items-center gap-1">
+                                                                    {[1,2,3,4,5].map((tier) => (
+                                                                        <Star key={tier} className={`w-4 h-4 ${tier <= 1 ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
+                                                                    ))}
                                                                 </div>
                                                             </div>
+                                                            <p className="text-white/40 text-xs mt-2">Current bonus: +10% stats per level</p>
+                                                        </div>
 
-                                                            <Button className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 h-12 rounded-lg font-bold">
-                                                                <Crown className="w-4 h-4 mr-2" />
-                                                                Ascend to Tier 2
-                                                            </Button>
-                                                </motion.div>
+                                                        {/* Ascend Benefits */}
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Next Ascension Benefits</h4>
+                                                            <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <Crown className="w-4 h-4 text-amber-400" />
+                                                                    <span className="text-white font-semibold text-sm">Tier 2 Ascension</span>
+                                                                </div>
+                                                                <ul className="text-xs text-slate-300 space-y-1 pl-6">
+                                                                    <li>• +20% stats per level (up from +10%)</li>
+                                                                    <li>• Unlock new visual effects</li>
+                                                                    <li>• Access to Tier 2 enchantments</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        <Button className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 h-12 rounded-lg font-bold">
+                                                            <Crown className="w-4 h-4 mr-2" />
+                                                            Ascend to Tier 2
+                                                        </Button>
+                                                    </motion.div>
                                                 )}
 
                                                 {!activeAction && (
