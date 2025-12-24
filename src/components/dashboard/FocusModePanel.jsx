@@ -2560,13 +2560,8 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Upcoming Events Section - Below New Cards */}
-      <div className="mt-6 w-full">
-        <UpcomingEventsSection />
-      </div>
-
       {/* Bottom Section - Library Games with Banner - Centered */}
-      <div className="mt-4 w-full max-w-4xl mx-auto">
+      <div className="mt-6 w-full max-w-4xl mx-auto">
         {/* Library Banner Section - Banner centered, line below, references to the right */}
         <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
         
@@ -2577,6 +2572,11 @@ export default function FocusModePanel({ onBackgroundChange }) {
           showGamePanel={showGamePanel}
           onClosePanel={handleCloseGamePanel}
         />
+      </div>
+
+      {/* Upcoming Events Section - Below New Cards */}
+      <div className="mt-6 w-full">
+        <UpcomingEventsSection />
       </div>
 
       {/* Game Options Panel - Below the Live Panel / Demo video */}
