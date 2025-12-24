@@ -2579,9 +2579,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
         {/* Right: Moved LunaCardScroll (compact) */}
         <div className="col-span-3">
-          <div className="scale-[0.9] origin-top-right">
-            <LunaCardScroll />
-          </div>
+          <LunaCardScroll />
         </div>
       </div>
 
