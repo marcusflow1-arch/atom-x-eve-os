@@ -2560,24 +2560,21 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Library + Card Selector (to the right) */}
-      <div className="mt-6 w-full max-w-6xl mx-auto grid grid-cols-12 gap-4 items-start">
-        <div className="col-span-12 lg:col-span-8">
-          <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-          <LibraryGamesSection 
-            onSelectGame={handleGameSelect}
-            selectedGame={selectedGame}
-            allGames={ownedGames}
-            showGamePanel={showGamePanel}
-            onClosePanel={handleCloseGamePanel}
-          />
-        </div>
-        <div className="col-span-12 lg:col-span-4">
-          <NewCardsSection upcomingCards={upcomingCards} />
-        </div>
+      {/* Bottom Section - Library Games with Banner - Centered */}
+      <div className="mt-6 w-full max-w-4xl mx-auto">
+        {/* Library Banner Section - Banner centered, line below, references to the right */}
+        <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+        
+        <LibraryGamesSection 
+          onSelectGame={handleGameSelect}
+          selectedGame={selectedGame}
+          allGames={ownedGames}
+          showGamePanel={showGamePanel}
+          onClosePanel={handleCloseGamePanel}
+        />
       </div>
 
-      {/* Upcoming Events Section */}
+      {/* Upcoming Events Section - Below New Cards */}
       <div className="mt-6 w-full">
         <UpcomingEventsSection />
       </div>
