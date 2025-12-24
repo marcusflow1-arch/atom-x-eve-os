@@ -1281,7 +1281,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           )}
         </div>
         {showGamePanel && selectedGame && (
-          <div className="w-72 -ml-2 self-start sticky top-0" data-game-panel>
+          <div className="w-[32rem] -ml-8 self-start sticky top-0" data-game-panel>
             <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
           </div>
         )}
@@ -1319,7 +1319,7 @@ function GameOptionsPanel({ game, onClose }) {
 
   return (
     <div 
-      className="w-full rounded-xl border px-4 py-2.5"
+      className="w-full rounded-xl border px-4 py-1.5"
       data-game-panel
       onClick={(e) => e.stopPropagation()}
       style={{
@@ -1332,7 +1332,7 @@ function GameOptionsPanel({ game, onClose }) {
     >
       <div className="flex items-center gap-3">
         {/* Game Cover */}
-        <div className="w-14 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <div className="w-12 h-14 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
           <img 
             src={game.cover_image || game.cover} 
             alt={game.title} 
@@ -1344,7 +1344,7 @@ function GameOptionsPanel({ game, onClose }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
+              <h3 className="text-white font-bold text-xs truncate">{game.title}</h3>
               <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
             </div>
             <button 
@@ -1356,36 +1356,36 @@ function GameOptionsPanel({ game, onClose }) {
           </div>
 
           {/* Quick Stats */}
-          <div className="flex gap-3 mb-2">
+          <div className="flex gap-2 mb-1">
             <div className="flex items-center gap-1.5 text-xs">
-              <Clock className="w-3.5 h-3.5 text-blue-400" />
+              <Clock className="w-3 h-3 text-blue-400" />
               <span className="text-white/70">12.5h</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs">
-              <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+              <Trophy className="w-3 h-3 text-yellow-400" />
               <span className="text-white/70">8/15</span>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="mt-2 space-y-2">
+          <div className="mt-1 space-y-1.5">
             <button
               onClick={() => handleOptionClick('play')}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
+              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
             >
               <Play className="w-4 h-4" />
               Play Game
             </button>
             <button
               onClick={() => handleOptionClick('settings')}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-xs transition-colors border border-white/10"
+              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-xs transition-colors border border-white/10"
             >
               <Settings className="w-4 h-4" />
               Settings
             </button>
             <button
               onClick={() => handleOptionClick('updates')}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs transition-colors border border-amber-400/30"
+              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs transition-colors border border-amber-400/30"
             >
               <Zap className="w-4 h-4" />
               Check Updates
