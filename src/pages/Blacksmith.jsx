@@ -916,10 +916,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                                     </div>
                                                                 ))}
                                                             </div>
-                                                        </motion.div>
-                                                    )}
+                                                </motion.div>
+                                                )}
 
-                                                    {activeAction === 'combine' && (
+                                                {activeAction === 'combine' && (
                                                         <motion.div
                                                             key="combine-panel"
                                                             initial={{ opacity: 0, x: 20 }}
