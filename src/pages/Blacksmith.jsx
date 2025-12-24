@@ -746,11 +746,21 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                 <div className="w-72 flex-shrink-0 border-l border-r border-white/10 flex flex-col h-full">
                                     {selectedItem ? (
                                         <div className="flex-1 flex flex-col p-4 items-center">
+                                            {/* Cross-Fusion Button - Above Card */}
+                                            <button
+                                               onClick={() => navigate(createPageUrl('CrossGameFusion'))}
+                                               className="flex items-center justify-center gap-2 w-56 px-4 py-2.5 mb-4 rounded-xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
+                                            >
+                                               <Shuffle className="w-4 h-4" />
+                                               <span className="text-sm font-bold">Cross-Fusion</span>
+                                            </button>
+
                                             {/* Card Display */}
                                             <div className="flex flex-col items-center flex-shrink-0">
                                                 {/* Larger Card - Takes more vertical space */}
                                                 <div 
-                                                    className={`w-56 h-80 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
+                                                    onClick={() => setShowItemModal(true)}
+                                                    className={`w-56 h-80 rounded-2xl border-2 overflow-hidden relative cursor-pointer hover:scale-[1.02] transition-transform ${rarityStyles[selectedItem.rarity].border}`}
                                                     style={{
                                                         background: `linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)`,
                                                         boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
