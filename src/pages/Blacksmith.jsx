@@ -614,31 +614,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  {/* Dynamic Background */}
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentCrossGame?.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.6 }}
-                      className="absolute inset-0 z-0"
-                    >
-                      {currentCrossGame?.id && mockItems.find(i => i.game_id === currentCrossGame.id)?.preview_image_url && (
-                        <>
-                          <img
-                            src={mockItems.find(i => i.game_id === currentCrossGame.id)?.preview_image_url}
-                            alt="bg"
-                            className="w-full h-full object-cover opacity-30 blur-sm scale-105"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
-                        </>
-                      )}
-                      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                    </motion.div>
-                  </AnimatePresence>
+  
 
                   {/* Interface Layer */}
                   <div className="relative z-10 w-full h-full">
