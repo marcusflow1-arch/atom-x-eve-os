@@ -2131,10 +2131,21 @@ export default function LunaTemplate() {
                     {/* Right Side Stats Panel */}
                     <div className="flex-shrink-0 pt-6 flex flex-col relative z-40">
                       <LunaStatsPanel />
-                      <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                     </div>
 
                   </motion.div>
+                  
+                  {/* Divider Line */}
+                  <div className="w-full flex items-center gap-4 mt-12 mb-6">
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <span className="text-white/30 text-xs font-medium uppercase tracking-widest">Library</span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  </div>
+                  
+                  {/* Library Section - Bottom Docked, Secondary */}
+                  <div className="w-full">
+                    <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
+                  </div>
             ) : null)}
             {showInventory && uiVisible && (
               <motion.div 
