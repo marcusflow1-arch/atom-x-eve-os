@@ -2518,22 +2518,22 @@ export default function FocusModePanel({ onBackgroundChange }) {
     <div className="h-full flex flex-col items-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
+      {/* Top Section - Events (next to 3D viewer) & New Cards (right side) */}
       <div className="flex gap-6 min-h-0 w-full" style={{ height: '280px', maxHeight: '280px' }}>
-        {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
+        {/* Left side - Space for 3D viewer + Upcoming Events */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
-          {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
-          <div className="relative flex-1 min-h-[180px]">
-            {/* Invisible boundary - 3D viewer floats above this space */}
+          {/* Upcoming Events - Compact version next to 3D viewer */}
+          <div className="flex-1 min-h-0">
+            <UpcomingEventsSection compact />
           </div>
         </div>
 
-        {/* Right of 3D Viewer - News & Updates Feed */}
+        {/* Right of 3D Viewer - New Cards (Live Panel) */}
         <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Live Panel (unified) */}
+          {/* Content Area - Live Panel with New Cards */}
           <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
             <LivePanel 
               upcomingCards={upcomingCards}
@@ -2559,11 +2559,6 @@ export default function FocusModePanel({ onBackgroundChange }) {
       </AnimatePresence>
 
 
-
-      {/* Upcoming Events Section - Below New Cards */}
-      <div className="mt-6 w-full">
-        <UpcomingEventsSection />
-      </div>
 
       {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
