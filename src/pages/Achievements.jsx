@@ -15,7 +15,7 @@ import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 // --- Shiny Sidebar Box Component ---
