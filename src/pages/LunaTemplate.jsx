@@ -1757,8 +1757,10 @@ export default function LunaTemplate() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="flex justify-between gap-12"
+                      className="flex flex-col"
                     >
+                    {/* Primary Dashboard Section */}
+                    <div className="flex justify-between gap-12">
                     <div className="flex flex-col items-start gap-10 relative z-40">
                       {/* Weapons Section - 3 boxes */}
                       <div className="flex flex-col items-center">
