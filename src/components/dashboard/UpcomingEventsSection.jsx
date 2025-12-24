@@ -61,19 +61,19 @@ const MOCK_EVENTS = [
   }
 ];
 
-const FeaturedEventCard = ({ event, compact = false }) => {
+const FeaturedEventCard = ({ event }) => {
   const Icon = event.icon;
   
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
-      className="relative h-full rounded-xl overflow-hidden cursor-pointer group"
+      whileHover={{ scale: 1.02, y: -4 }}
+      className="relative h-full rounded-2xl overflow-hidden cursor-pointer group"
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(20px) saturate(150%)',
         WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
       }}
     >
       {/* Background Image */}
@@ -84,29 +84,29 @@ const FeaturedEventCard = ({ event, compact = false }) => {
       </div>
       
       {/* Content */}
-      <div className={`relative h-full flex flex-col justify-between ${compact ? 'p-2.5' : 'p-3'}`}>
+      <div className="relative h-full flex flex-col justify-between p-5">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
-            <Icon className="w-2.5 h-2.5 text-white/80" />
-            <span className="text-[8px] font-semibold text-white/80 uppercase tracking-wider">Featured</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+            <Icon className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider">Featured</span>
           </div>
           <div className="text-right">
-            <div className="text-white font-bold text-xs">{event.date}</div>
-            <div className="text-white/50 text-[9px]">{event.time}</div>
+            <div className="text-white font-bold text-lg">{event.date}</div>
+            <div className="text-white/50 text-xs">{event.time}</div>
           </div>
         </div>
         
         <div>
-          <h3 className={`text-white font-bold ${compact ? 'text-xs' : 'text-sm'} mb-0.5 group-hover:text-cyan-300 transition-colors truncate`}>{event.title}</h3>
-          <p className="text-white/60 text-[10px] truncate">{event.subtitle}</p>
+          <h3 className="text-white font-bold text-xl mb-1 group-hover:text-cyan-300 transition-colors">{event.title}</h3>
+          <p className="text-white/60 text-sm">{event.subtitle}</p>
           
-          <div className="flex items-center gap-1.5 mt-2">
-            <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-lg py-1.5 text-white text-[9px] font-semibold transition-all flex items-center justify-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Add
+          <div className="flex items-center gap-2 mt-4">
+            <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Add to Calendar
             </button>
-            <button className="w-7 h-7 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center transition-all">
-              <ChevronRight className="w-3 h-3 text-cyan-400" />
+            <button className="w-10 h-10 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center transition-all">
+              <ChevronRight className="w-5 h-5 text-cyan-400" />
             </button>
           </div>
         </div>
@@ -115,124 +115,89 @@ const FeaturedEventCard = ({ event, compact = false }) => {
   );
 };
 
-const SmallEventCard = ({ event, compact = false }) => {
+const SmallEventCard = ({ event }) => {
   const Icon = event.icon;
   
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -1 }}
-      className="relative rounded-lg overflow-hidden cursor-pointer group"
+      whileHover={{ scale: 1.03, y: -2 }}
+      className="relative rounded-xl overflow-hidden cursor-pointer group"
       style={{
         background: 'rgba(100, 120, 140, 0.06)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
       }}
     >
-      <div className={`flex items-center gap-2 ${compact ? 'p-1.5' : 'p-2'}`}>
+      <div className="flex items-center gap-3 p-3">
         {/* Image Thumbnail */}
-        <div className={`${compact ? 'w-10 h-10' : 'w-11 h-11'} rounded-md overflow-hidden flex-shrink-0 relative`}>
+        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img src={event.image} alt="" className="w-full h-full object-cover" />
           <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-60`} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white drop-shadow-lg`} />
+            <Icon className="w-5 h-5 text-white drop-shadow-lg" />
           </div>
         </div>
         
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <h4 className={`text-white font-semibold ${compact ? 'text-[10px]' : 'text-xs'} truncate group-hover:text-cyan-300 transition-colors`}>{event.title}</h4>
-          <div className="flex items-center gap-1 mt-0.5">
-            <Clock className="w-2.5 h-2.5 text-white/30" />
-            <span className="text-white/50 text-[8px]">{event.date}</span>
+          <h4 className="text-white font-semibold text-sm truncate group-hover:text-cyan-300 transition-colors">{event.title}</h4>
+          <p className="text-white/40 text-xs truncate">{event.subtitle}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Clock className="w-3 h-3 text-white/30" />
+            <span className="text-white/50 text-[10px]">{event.date} • {event.time}</span>
           </div>
         </div>
         
         {/* Arrow */}
-        <ChevronRight className="w-3 h-3 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
+        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
       </div>
     </motion.div>
   );
 };
 
-export default function UpcomingEventsSection({ compact = false }) {
+export default function UpcomingEventsSection() {
   const featuredEvent = MOCK_EVENTS.find(e => e.featured);
   const otherEvents = MOCK_EVENTS.filter(e => !e.featured);
   
-  // Compact mode for sidebar placement (next to 3D viewer)
-  if (compact) {
-    return (
-      <div className="h-full flex flex-col">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-            <h3 className="text-white font-bold text-xs">Events</h3>
-          </div>
-          <button className="text-white/40 hover:text-white text-[9px] font-medium flex items-center gap-0.5 transition-colors">
-            All <ChevronRight className="w-2.5 h-2.5" />
-          </button>
-        </div>
-        
-        {/* Compact Events Layout - Vertical stack */}
-        <div className="flex-1 flex flex-col gap-2 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-          {/* Featured Event - Smaller */}
-          {featuredEvent && (
-            <div className="h-[100px] flex-shrink-0">
-              <FeaturedEventCard event={featuredEvent} compact />
-            </div>
-          )}
-          
-          {/* Other Events - Compact list */}
-          <div className="flex flex-col gap-1.5">
-            {otherEvents.slice(0, 3).map((event) => (
-              <SmallEventCard key={event.id} event={event} compact />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Full size mode (for below cards section)
   return (
-    <div className="w-full py-4">
+    <div className="w-full py-6">
       {/* Section Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-400/20">
-            <Calendar className="w-3 h-3 text-cyan-400" />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-400/20">
+            <Calendar className="w-4 h-4 text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-white font-bold text-sm">Upcoming Events</h2>
-            <p className="text-white/40 text-[10px]">Don't miss out</p>
+            <h2 className="text-white font-bold text-lg">Upcoming Events</h2>
+            <p className="text-white/40 text-xs">Don't miss out on what's happening</p>
           </div>
         </div>
-        <button className="text-white/40 hover:text-white text-[10px] font-medium flex items-center gap-1 transition-colors">
-          View All <ChevronRight className="w-2.5 h-2.5" />
+        <button className="text-white/40 hover:text-white text-xs font-medium flex items-center gap-1 transition-colors">
+          View All <ChevronRight className="w-3 h-3" />
         </button>
       </div>
       
       {/* Events Grid - Collage Layout */}
       <div 
-        className="rounded-xl p-3"
+        className="rounded-2xl p-4"
         style={{
           background: 'rgba(100, 120, 140, 0.04)',
           backdropFilter: 'blur(24px) saturate(160%)',
           WebkitBackdropFilter: 'blur(24px) saturate(160%)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.02)'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.02)'
         }}
       >
-        <div className="grid grid-cols-12 gap-3">
+        <div className="grid grid-cols-12 gap-4">
           {/* Featured Large Card - Takes 5 columns */}
-          <div className="col-span-5 row-span-2 h-[160px]">
+          <div className="col-span-5 row-span-2 h-[220px]">
             {featuredEvent && <FeaturedEventCard event={featuredEvent} />}
           </div>
           
           {/* Small Cards Grid - Takes 7 columns */}
-          <div className="col-span-7 grid grid-cols-2 gap-2">
+          <div className="col-span-7 grid grid-cols-2 gap-3">
             {otherEvents.map((event) => (
               <SmallEventCard key={event.id} event={event} />
             ))}
