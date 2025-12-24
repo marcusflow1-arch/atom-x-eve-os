@@ -1170,10 +1170,9 @@ function GameDetailPanel({ game, onClose }) {
 }
 
 // Library Games Section (Bottom) - shows all games
-function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
+function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePanel, onClosePanel }) {
   const navigate = useNavigate();
   const libraryScrollRef = useRef(null);
-  const [showGamePanel, setShowGamePanel] = useState(false);
   
   // Show all games
   const currentGames = allGames;
@@ -1184,11 +1183,6 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
 
   const handleGameClick = (game) => {
     onSelectGame(game);
-    setShowGamePanel(true);
-  };
-
-  const handleClosePanel = () => {
-    setShowGamePanel(false);
   };
 
   // Split games into rows of 10
@@ -1198,10 +1192,10 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
   }
 
   return (
-    <div className="h-full flex gap-3" onClick={(e) => {
+    <div className="h-full flex flex-col" onClick={(e) => {
       // Close panel when clicking outside of it (but not on games)
       if (!e.target.closest('[data-game-panel]') && !e.target.closest('[data-game-card]')) {
-        setShowGamePanel(false);
+        onClosePanel();
       }
     }}>
       {/* Main Games Grid */}
@@ -1276,10 +1270,9 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
           )}
         </div>
       </div>
-
-      </div>
-      );
-      }
+    </div>
+  );
+}
 
 // Game Options Panel - Horizontal layout below Demo video
 function GameOptionsPanel({ game, onClose }) {
