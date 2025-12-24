@@ -20,7 +20,6 @@ import GenreMastery from './pages/GenreMastery';
 import Home from './pages/Home';
 import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
-import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
@@ -37,6 +36,7 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
+import Library from './pages/Library';
 import __Layout from './Layout.jsx';
 
 
@@ -63,7 +63,6 @@ export const PAGES = {
     "Home": Home,
     "Ideals": Ideals,
     "InstallApp": InstallApp,
-    "Library": Library,
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
@@ -80,6 +79,7 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
+    "Library": Library,
 }
 
 export const pagesConfig = {
