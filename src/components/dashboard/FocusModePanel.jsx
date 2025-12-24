@@ -2597,7 +2597,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
       {/* Game Options Panel - Below the Live Panel / Demo video */}
       <AnimatePresence>
-        {showGamePanel && selectedGame && (
+        {showGamePanel && selectedGame && selectedGame.title !== 'Destiny Brigades' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
