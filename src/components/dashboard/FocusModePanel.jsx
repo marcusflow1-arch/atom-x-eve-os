@@ -2273,11 +2273,30 @@ export default function FocusModePanel() {
       {/* Bottom Section - Library Games - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
         <LibraryGamesSection 
-          onSelectGame={setSelectedGame}
+          onSelectGame={handleGameSelect}
           selectedGame={selectedGame}
           allGames={ownedGames}
+          showGamePanel={showGamePanel}
+          onClosePanel={handleCloseGamePanel}
         />
       </div>
+
+      {/* Game Options Panel - Below the Live Panel / Demo video */}
+      <AnimatePresence>
+        {showGamePanel && selectedGame && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="w-full max-w-4xl mx-auto mt-4"
+          >
+            <GameOptionsPanel 
+              game={selectedGame} 
+              onClose={handleCloseGamePanel}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
