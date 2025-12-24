@@ -794,28 +794,6 @@ export default function SocialHub() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              {/* The Vault - Tradeable Abilities */}
-              <div className="backdrop-blur-xl rounded-xl p-4" style={{
-                background: 'rgba(100, 120, 140, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.10)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-              }}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-bold flex items-center gap-2">
-                    <Package className="w-5 h-5 text-purple-400" />
-                    The Vault
-                  </h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  {mockAbilities.slice(0, 4).map((ability) => (
-                    <AbilityCard key={ability.id} ability={ability} />
-                  ))}
-                </div>
-                <Button size="sm" className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300">
-                  Trade Items
-                </Button>
-              </div>
-
               {/* Marketplace Hot Trades */}
               <div className="backdrop-blur-xl rounded-xl p-4" style={{
                 background: 'rgba(100, 120, 140, 0.12)',
