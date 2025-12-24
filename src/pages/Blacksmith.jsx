@@ -627,11 +627,23 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                     </div>
 
                     {/* VERTICAL AXIS (Games) */}
-                    <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
+                    <div 
+                      className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none"
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        if (e.deltaY > 0 && activeGameIndex < allGames.length - 1) {
+                          setActiveGameIndex(activeGameIndex + 1);
+                          setActiveCardIndex(0);
+                        } else if (e.deltaY < 0 && activeGameIndex > 0) {
+                          setActiveGameIndex(activeGameIndex - 1);
+                          setActiveCardIndex(0);
+                        }
+                      }}
+                    >
                       <motion.div
-                        className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+                        className="flex flex-col items-center gap-5 py-8 pointer-events-auto"
                         animate={{
-                          y: `calc(40vh - ${activeGameIndex * 104}px - 40px)`
+                          y: `calc(40vh - ${activeGameIndex * 88}px - 32px)`
                         }}
                         transition={{ type: "spring", stiffness: 250, damping: 25 }}
                       >
@@ -649,10 +661,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                 opacity: isActive ? 1 : 0.3,
                                 x: isActive ? 20 : 0
                               }}
-                              className="flex flex-col items-center gap-2 cursor-pointer w-32"
+                              className="flex flex-col items-center gap-2 cursor-pointer w-28"
                             >
                               <div className={`
-                                w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300
+                                w-12 h-12 rounded-xl overflow-hidden transition-all duration-300
                                 ${isActive
                                   ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40'
                                   : 'border border-white/10'
@@ -664,7 +676,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                   className="w-full h-full object-cover"
                                 />
                               </div>
-                              <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
+                              <span className={`text-[10px] font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
                                 {game.title}
                               </span>
                             </motion.div>
