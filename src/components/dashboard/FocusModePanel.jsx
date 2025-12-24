@@ -2188,9 +2188,12 @@ function LivePanel({ upcomingCards }) {
         <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
       </div>
 
-      {/* Main Content - Card + Description + Demo */}
+      {/* Main Content - Demo (left) + Card (center) + Description (right) */}
       <div className="flex-1 flex items-start gap-4">
-        {/* Left: 3D Card with Arrows */}
+        {/* Far Left: Demo Video Box next to left arrow */}
+        <DemoVideoBox card={currentCard} />
+
+        {/* Center: 3D Card with Arrows */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Left Arrow */}
           <button 
@@ -2212,7 +2215,7 @@ function LivePanel({ upcomingCards }) {
           </button>
         </div>
 
-        {/* Middle: Card Description */}
+        {/* Far Right: Card Description */}
         <div className="flex-1 min-w-0 h-44 flex flex-col">
           {/* Card Title & Meta */}
           <div className="mb-2">
@@ -2250,9 +2253,6 @@ function LivePanel({ upcomingCards }) {
             <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
           </div>
         </div>
-
-        {/* Right: Demo Video Box */}
-        <DemoVideoBox card={currentCard} />
       </div>
     </div>
   );
