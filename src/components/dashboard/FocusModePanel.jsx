@@ -2557,9 +2557,14 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* New Cards (moved under 3D viewer) */}
-      <div className="mt-6 w-full max-w-4xl mx-auto">
-        <LivePanel upcomingCards={upcomingCards} />
+      {/* New Cards (moved under 3D viewer) + Game Banner & Memories aligned */}
+      <div className="mt-6 w-full max-w-6xl mx-auto flex gap-6 items-start">
+        <div className="flex-1 min-w-0">
+          <LivePanel upcomingCards={upcomingCards} />
+        </div>
+        <div className="w-[420px] shrink-0">
+          <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+        </div>
       </div>
 
       {/* Upcoming Events Section - Below New Cards */}
@@ -2567,11 +2572,8 @@ export default function FocusModePanel({ onBackgroundChange }) {
         <UpcomingEventsSection />
       </div>
 
-      {/* Bottom Section - Library Games with Banner - Centered */}
+      {/* Bottom Section - Library Games */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
-        {/* Library Banner Section - Banner centered, line below, references to the right */}
-        <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-        
         <LibraryGamesSection 
           onSelectGame={handleGameSelect}
           selectedGame={selectedGame}
