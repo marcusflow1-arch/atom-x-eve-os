@@ -1903,6 +1903,89 @@ function NewCardsSection({ upcomingCards }) {
   );
 }
 
+// Demo Video Box Component - plays card demonstration video
+function DemoVideoBox({ card }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+
+  // Mock demo videos mapped to card types/genres
+  const getDemoVideo = () => {
+    const demoVideos = {
+      'Ability': 'https://www.w3schools.com/html/mov_bbb.mp4',
+      'Equipment': 'https://www.w3schools.com/html/movie.mp4',
+      'Passive': 'https://www.w3schools.com/html/mov_bbb.mp4',
+    };
+    return demoVideos[card?.type] || 'https://www.w3schools.com/html/mov_bbb.mp4';
+  };
+
+  const handlePlay = () => {
+    setShowVideo(true);
+    setIsPlaying(true);
+  };
+
+  const handleClose = () => {
+    setShowVideo(false);
+    setIsPlaying(false);
+  };
+
+  return (
+    <div 
+      className="w-36 h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
+      style={{
+        background: 'rgba(100, 120, 140, 0.08)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
+      }}
+      onClick={handlePlay}
+    >
+      {showVideo ? (
+        <>
+          {/* Video Player */}
+          <video
+            src={getDemoVideo()}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {/* Close button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors z-10"
+          >
+            <X className="w-3 h-3 text-white" />
+          </button>
+          {/* Playing indicator */}
+          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-red-500/80 backdrop-blur-sm flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span className="text-[8px] text-white uppercase tracking-wider">Playing</span>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Demo Placeholder */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all mb-2">
+              <Play className="w-5 h-5 text-white/70 ml-0.5" />
+            </div>
+            <span className="text-[10px] text-white/40 font-medium">Demonstration</span>
+            <span className="text-[8px] text-white/30 mt-1">Click to view</span>
+          </div>
+
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
+          {/* Demo label */}
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
+            <span className="text-[8px] text-white/60 uppercase tracking-wider">Demo</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Large 3D Card Component for Live Panel
 function Large3DCard({ card, isActive }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
