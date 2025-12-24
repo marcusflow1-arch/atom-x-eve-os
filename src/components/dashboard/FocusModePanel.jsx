@@ -2174,16 +2174,6 @@ function LivePanel({ upcomingCards }) {
         {/* Right: Demo Video Box */}
         <DemoVideoBox card={currentCard} />
       </div>
-
-      {/* Card Detail Overlay */}
-      <AnimatePresence>
-        {showCardOverlay && currentCard && (
-          <CardTutorialOverlay 
-            card={currentCard}
-            onClose={() => setShowCardOverlay(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
