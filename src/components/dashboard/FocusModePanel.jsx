@@ -1281,7 +1281,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           )}
         </div>
         {showGamePanel && selectedGame && (
-          <div className="w-56 self-start sticky top-0" data-game-panel>
+          <div className="w-72 -ml-2 self-start sticky top-0" data-game-panel>
             <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
           </div>
         )}
@@ -1332,7 +1332,7 @@ function GameOptionsPanel({ game, onClose }) {
     >
       <div className="flex items-center gap-4">
         {/* Game Cover */}
-        <div className="w-20 h-28 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <div className="w-16 h-20 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
           <img 
             src={game.cover_image || game.cover} 
             alt={game.title} 
@@ -1368,28 +1368,28 @@ function GameOptionsPanel({ game, onClose }) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
-            {menuOptions.map((option) => (
-              option.isButton ? (
-                <button
-                  key={option.id}
-                  onClick={() => handleOptionClick(option.id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
-                >
-                  <option.icon className="w-4 h-4" />
-                  {option.label}
-                </button>
-              ) : (
-                <button
-                  key={option.id}
-                  onClick={() => handleOptionClick(option.id)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs transition-colors border border-white/10"
-                >
-                  <option.icon className="w-3.5 h-3.5" />
-                  {option.label}
-                </button>
-              )
-            ))}
+          <div className="mt-2 space-y-2">
+            <button
+              onClick={() => handleOptionClick('play')}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-sm font-bold transition-all"
+            >
+              <Play className="w-4 h-4" />
+              Play Game
+            </button>
+            <button
+              onClick={() => handleOptionClick('settings')}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-sm transition-colors border border-white/10"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+            <button
+              onClick={() => handleOptionClick('updates')}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-sm transition-colors border border-amber-400/30"
+            >
+              <Zap className="w-4 h-4" />
+              Check Updates
+            </button>
           </div>
         </div>
       </div>
