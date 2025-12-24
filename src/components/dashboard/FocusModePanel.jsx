@@ -2251,8 +2251,7 @@ export default function FocusModePanel() {
         </div>
       </div>
 
-      {/* Horizontal Divider - Moved up */}
-      <div className="h-px bg-white/10 my-2" />
+
 
       {/* Calendar Modal */}
       <AnimatePresence>
