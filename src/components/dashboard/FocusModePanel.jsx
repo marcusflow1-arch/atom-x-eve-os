@@ -1281,7 +1281,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
       );
       }
 
-// Game Options Slide-out Panel
+// Game Options Panel - Horizontal layout below Demo video
 function GameOptionsPanel({ game, onClose }) {
   const navigate = useNavigate();
 
@@ -1308,83 +1308,82 @@ function GameOptionsPanel({ game, onClose }) {
   };
 
   return (
-    <motion.div
-      initial={{ width: 0, opacity: 0 }}
-      animate={{ width: 220, opacity: 1 }}
-      exit={{ width: 0, opacity: 0 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="h-full flex-shrink-0 overflow-hidden"
+    <div 
+      className="w-full rounded-xl border p-4"
       data-game-panel
       onClick={(e) => e.stopPropagation()}
+      style={{
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(16px) saturate(130%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(130%)',
+        borderColor: 'rgba(255, 255, 255, 0.10)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+      }}
     >
-      <div 
-        className="h-full w-[220px] rounded-xl border flex flex-col"
-        style={{
-          background: 'rgba(100, 120, 140, 0.12)',
-          backdropFilter: 'blur(16px) saturate(130%)',
-          WebkitBackdropFilter: 'blur(16px) saturate(130%)',
-          borderColor: 'rgba(255, 255, 255, 0.10)',
-          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-        }}
-      >
+      <div className="flex items-center gap-4">
         {/* Game Cover */}
-        <div className="px-3 pt-3 pb-3">
-          <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-white/10">
-            <img 
-              src={game.cover_image || game.cover} 
-              alt={game.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="w-20 h-28 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+          <img 
+            src={game.cover_image || game.cover} 
+            alt={game.title} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {/* Game Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <h3 className="text-white font-bold text-base truncate">{game.title}</h3>
+              <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+            >
+              <X className="w-3 h-3 text-white/60" />
+            </button>
           </div>
-        </div>
 
-        {/* Game Title */}
-        <div className="px-3 pb-3">
-          <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
-          <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
-        </div>
-
-        {/* Menu Options */}
-        <div className="flex-1 px-3 pb-3 space-y-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-          {menuOptions.map((option) => (
-            option.isButton ? (
-              <button
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-medium transition-all"
-              >
-                <option.icon className="w-4 h-4" />
-                {option.label}
-              </button>
-            ) : (
-              <div
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                className="flex items-center gap-2.5 py-1.5 text-white/70 hover:text-white text-xs cursor-pointer transition-colors"
-              >
-                <option.icon className="w-4 h-4 text-white/50" />
-                {option.label}
-              </div>
-            )
-          ))}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="px-3 pb-3 pt-2 border-t border-white/10">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(100, 120, 140, 0.10)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-              <p className="text-white font-bold text-xs">12.5h</p>
-              <p className="text-white/30 text-[8px]">Played</p>
+          {/* Quick Stats */}
+          <div className="flex gap-4 mb-3">
+            <div className="flex items-center gap-1.5 text-xs">
+              <Clock className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-white/70">12.5h</span>
             </div>
-            <div className="text-center p-2 rounded-lg" style={{ background: 'rgba(100, 120, 140, 0.10)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-              <p className="text-white font-bold text-xs">8/15</p>
-              <p className="text-white/30 text-[8px]">Achievements</p>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+              <span className="text-white/70">8/15</span>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {menuOptions.map((option) => (
+              option.isButton ? (
+                <button
+                  key={option.id}
+                  onClick={() => handleOptionClick(option.id)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
+                >
+                  <option.icon className="w-4 h-4" />
+                  {option.label}
+                </button>
+              ) : (
+                <button
+                  key={option.id}
+                  onClick={() => handleOptionClick(option.id)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs transition-colors border border-white/10"
+                >
+                  <option.icon className="w-3.5 h-3.5" />
+                  {option.label}
+                </button>
+              )
+            ))}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
