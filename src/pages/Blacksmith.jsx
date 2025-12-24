@@ -446,6 +446,11 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const [showWorkstation, setShowWorkstation] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   
+  // Cross interface state for Forge
+  const [activeGameIndex, setActiveGameIndex] = useState(0);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [showItemDetail, setShowItemDetail] = useState(false);
+  
   // Forge Mastery XP - Based on User Data
   const forgeXP = user?.forge_xp || 0;
   const forgeLevel = user?.forge_level || 1;
