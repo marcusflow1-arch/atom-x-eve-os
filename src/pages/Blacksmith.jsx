@@ -895,7 +895,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   </div>
 
                   {/* Right Side - Content Area */}
-                  <div className="flex-1 flex items-center justify-center">
+                  <div className="flex-1 flex items-center justify-center overflow-hidden">
                     <AnimatePresence mode="wait">
                       {/* Enhance Subpages */}
                       {selectedForgeAction === 'enhance' && selectedEnhanceSubpage === 'enchantment' && (
@@ -904,9 +904,14 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="text-center text-white/40"
+                          className="w-full h-full"
                         >
-                          {/* Enchantment Page - Empty */}
+                          <EnchantmentPanel 
+                            item={activeItem} 
+                            onEnhance={(item, newLevel) => {
+                              console.log('Enhanced:', item.name, 'to', newLevel);
+                            }}
+                          />
                         </motion.div>
                       )}
 
@@ -916,9 +921,14 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="text-center text-white/40"
+                          className="w-full h-full"
                         >
-                          {/* Combine Stage Page - Empty */}
+                          <CombineStagePanel 
+                            item={activeItem}
+                            onCombine={(card, selectedCards) => {
+                              console.log('Combined:', card.name, 'with', selectedCards.length, 'cards');
+                            }}
+                          />
                         </motion.div>
                       )}
 
