@@ -746,12 +746,12 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                    </div>
                                </div>
 
-                               {/* Right: Detail Panel - Full Height */}
-                                <div className="flex-1 flex flex-col overflow-hidden">
+                               {/* Center: Card Display */}
+                                <div className="w-72 flex-shrink-0 border-l border-r border-white/10 flex flex-col h-full">
                                     {selectedItem ? (
-                                        <div className="flex-1 flex p-4 gap-6 overflow-hidden">
-                                            {/* Left Column: Larger Card + Actions - Full Height */}
-                                            <div className="flex flex-col items-center flex-shrink-0 w-64">
+                                        <div className="flex-1 flex flex-col p-4 items-center">
+                                            {/* Card Display */}
+                                            <div className="flex flex-col items-center flex-shrink-0">
                                                 {/* Larger Card - Takes more vertical space */}
                                                 <div 
                                                     className={`w-56 h-80 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
