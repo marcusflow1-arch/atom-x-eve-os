@@ -14,6 +14,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
 import ItemWorkstation from '../components/blacksmith/ItemWorkstation';
+import EnchantmentPanel from '../components/blacksmith/EnchantmentPanel';
+import CombineStagePanel from '../components/blacksmith/CombineStagePanel';
 // BlacksmithGameSelect is replaced by the sidebar
 
 // --- Shiny Sidebar Box Component ---
