@@ -166,6 +166,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
 
 function AchievementsView({ onExitToLibrary }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
+  const navigate = useNavigate();
   const [allGames, setAllGames] = useState([]);
   const [localAchievements, setLocalAchievements] = useState({});
   const [selectedGame, setSelectedGame] = useState(null);
@@ -177,6 +178,13 @@ function AchievementsView({ onExitToLibrary }) {
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
   const [showGridMenu, setShowGridMenu] = useState(false);
+  
+  // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
+  const [viewMode, setViewMode] = useState('cross');
+  
+  // Cross Interface Navigation State
+  const [activeGameIndex, setActiveGameIndex] = useState(0);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
