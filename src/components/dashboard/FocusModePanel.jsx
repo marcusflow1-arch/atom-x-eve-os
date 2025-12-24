@@ -2557,7 +2557,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
           </div>
 
           {/* Right: LunaCardScroll aligned with Demo box */}
-          <div className="w-64 flex-shrink-0 self-start">
+          <div className="w-72 flex-shrink-0 self-start">
             <LunaCardScroll />
           </div>
         </div>
