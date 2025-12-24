@@ -584,9 +584,6 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                 <span className="text-white/80 font-bold font-mono">{mat.quantity}</span>
               </div>
             ))}
-            <div className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center overflow-hidden">
-              <img src={user?.avatar_url} className="w-full h-full rounded-full opacity-80" alt="User" />
-            </div>
           </div>
         </header>
 
