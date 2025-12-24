@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Star, Users, Trophy, Calendar, Target, Sword, Crown, MessageSquare, Package, Settings, Gamepad2, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Shield, Star, Users, Trophy, Calendar, Target, Sword, Crown, MessageSquare, Package, Settings, Gamepad2, ShoppingBag, TrendingUp, Camera, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { useAuth } from '@/components/auth/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const GlassCard = ({ children, className = "" }) => (
     <div className={`bg-white/10 backdrop-blur-xl border border-white/10 shadow-sm rounded-2xl p-6 ${className}`}>
@@ -119,19 +122,71 @@ const MemberViewport = ({ clanId }) => {
 };
 
 export default function ClanDashboard({ clan, events }) {
-    const progress = (clan.xp / 10000) * 100; 
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const progress = (clan.xp / 10000) * 100;
+    const isLeader = clan?.leaderId === user?.id;
+    const [showBannerModal, setShowBannerModal] = useState(false);
+    const [bannerUrl, setBannerUrl] = useState(clan.banner || '');
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef(null);
+
+    // Update banner mutation
+    const updateBannerMutation = useMutation({
+        mutationFn: async (newBanner) => {
+            return await base44.entities.Division.update(clan.id, { banner: newBanner });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['myClanMembershipsInitial']);
+            setShowBannerModal(false);
+        }
+    });
+
+    const handleBannerUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        setIsUploading(true);
+        try {
+            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            setBannerUrl(file_url);
+        } catch (err) {
+            console.error('Upload failed:', err);
+        }
+        setIsUploading(false);
+    };
+
+    const handleSaveBanner = () => {
+        if (bannerUrl) {
+            updateBannerMutation.mutate(bannerUrl);
+        }
+    };
 
     return (
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8">
             {/* Guild Header Banner */}
-            <div className="relative h-64 rounded-3xl overflow-hidden group shadow-lg border border-white/20">
+            <div 
+                className={`relative h-64 rounded-3xl overflow-hidden group shadow-lg border border-white/20 ${isLeader ? 'cursor-pointer' : ''}`}
+                onClick={() => isLeader && setShowBannerModal(true)}
+            >
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent z-10" />
                 <img 
                     src={clan.banner || "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200"} 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                     alt="Clan Banner"
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-8 z-20 flex items-end justify-between">
+                
+                {/* Change Banner Overlay - Only for leader */}
+                {isLeader && (
+                    <div className="absolute inset-0 z-20 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 backdrop-blur-md border border-white/30">
+                            <Camera className="w-5 h-5 text-white" />
+                            <span className="text-white font-medium text-sm">Change Banner</span>
+                        </div>
+                    </div>
+                )}
+                
+                <div className="absolute bottom-0 left-0 right-0 p-8 z-20 flex items-end justify-between pointer-events-none">
                     <div className="flex items-end gap-6">
                         <div className="w-24 h-24 rounded-2xl bg-white border-2 border-white p-0.5 shadow-2xl backdrop-blur-sm">
                             {clan.icon ? (
@@ -151,7 +206,7 @@ export default function ClanDashboard({ clan, events }) {
                             </p>
                         </div>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pointer-events-auto">
                          {/* Stats Pill */}
                          <div className="flex items-center gap-4 bg-white/20 backdrop-blur-md rounded-full px-6 py-3 border border-white/20 shadow-lg">
                              <div className="text-center">
@@ -167,6 +222,71 @@ export default function ClanDashboard({ clan, events }) {
                     </div>
                 </div>
             </div>
+
+            {/* Banner Change Modal */}
+            <Dialog open={showBannerModal} onOpenChange={setShowBannerModal}>
+                <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 text-white max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Camera className="w-5 h-5 text-blue-400" />
+                            Change Guild Banner
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        {/* Preview */}
+                        <div className="aspect-video rounded-xl overflow-hidden border border-white/20 bg-slate-800">
+                            {bannerUrl ? (
+                                <img src={bannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-white/40">
+                                    <span>No banner selected</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Upload Option */}
+                        <div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleBannerUpload}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            <Button 
+                                onClick={() => fileInputRef.current?.click()}
+                                variant="outline"
+                                className="w-full border-slate-700 text-white gap-2"
+                                disabled={isUploading}
+                            >
+                                <Upload className="w-4 h-4" />
+                                {isUploading ? 'Uploading...' : 'Upload Image'}
+                            </Button>
+                        </div>
+
+                        {/* URL Option */}
+                        <div>
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Or paste image URL</label>
+                            <Input 
+                                value={bannerUrl}
+                                onChange={(e) => setBannerUrl(e.target.value)}
+                                placeholder="https://example.com/banner.jpg"
+                                className="bg-slate-800 border-slate-700 text-white"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowBannerModal(false)} className="border-slate-700 text-slate-400">Cancel</Button>
+                        <Button 
+                            onClick={handleSaveBanner}
+                            disabled={updateBannerMutation.isPending || !bannerUrl}
+                            className="bg-blue-600 hover:bg-blue-700"
+                        >
+                            {updateBannerMutation.isPending ? 'Saving...' : 'Save Banner'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Main Grid */}
             <div className="grid grid-cols-12 gap-8">
