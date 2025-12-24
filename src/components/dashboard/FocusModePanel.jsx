@@ -2518,8 +2518,13 @@ export default function FocusModePanel({ onBackgroundChange }) {
     <div className="h-full flex flex-col items-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
-      <div className="flex gap-6 min-h-0 w-full" style={{ height: '280px', maxHeight: '280px' }}>
+      {/* Upcoming Events Section - First */}
+      <div className="w-full mb-6">
+        <UpcomingEventsSection />
+      </div>
+
+      {/* New Cards Section with Demo */}
+      <div className="flex gap-6 min-h-0 w-full mb-6" style={{ height: '280px', maxHeight: '280px' }}>
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
@@ -2542,7 +2547,10 @@ export default function FocusModePanel({ onBackgroundChange }) {
         </div>
       </div>
 
-
+      {/* Genre Card Scroll - Below Demo */}
+      <div className="w-full mb-6">
+        <NewCardsSection upcomingCards={upcomingCards} />
+      </div>
 
       {/* Calendar Modal */}
       <AnimatePresence>
@@ -2557,13 +2565,6 @@ export default function FocusModePanel({ onBackgroundChange }) {
           />
         )}
       </AnimatePresence>
-
-
-
-      {/* Upcoming Events Section - Below New Cards */}
-      <div className="mt-6 w-full">
-        <UpcomingEventsSection />
-      </div>
 
       {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
