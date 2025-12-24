@@ -16,6 +16,8 @@ import CraftingChallenges from '../components/crafting/CraftingChallenges';
 import ItemWorkstation from '../components/blacksmith/ItemWorkstation';
 import EnchantmentPanel from '../components/blacksmith/EnchantmentPanel';
 import CombineStagePanel from '../components/blacksmith/CombineStagePanel';
+import LevelUpPanel from '../components/blacksmith/LevelUpPanel';
+import AscendPanel from '../components/blacksmith/AscendPanel';
 // BlacksmithGameSelect is replaced by the sidebar
 
 // --- Shiny Sidebar Box Component ---
@@ -939,9 +941,14 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="text-center text-white/40"
+                          className="w-full h-full"
                         >
-                          {/* Level Up Page - Empty */}
+                          <LevelUpPanel 
+                            item={activeItem}
+                            onLevelUp={(item, newLevel) => {
+                              console.log('Leveled up:', item.name, 'to level', newLevel);
+                            }}
+                          />
                         </motion.div>
                       )}
 
@@ -952,9 +959,14 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="text-center text-white/40"
+                          className="w-full h-full"
                         >
-                          {/* Ascend Page - Empty */}
+                          <AscendPanel 
+                            item={activeItem}
+                            onAscend={(item, newAscension) => {
+                              console.log('Ascended:', item.name, 'to level', newAscension);
+                            }}
+                          />
                         </motion.div>
                       )}
                     </AnimatePresence>
