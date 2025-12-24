@@ -1105,7 +1105,7 @@ export default function LunaTemplate() {
           </div>
       }
 
-        {/* Focus Mode Background Overlay */}
+        {/* Focus Mode Background Overlay - More translucent when custom background is active */}
         <AnimatePresence>
           {!uiVisible &&
         <motion.div
@@ -1114,7 +1114,11 @@ export default function LunaTemplate() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-10"
-          style={{
+          style={customBackground ? {
+            background: 'rgba(15, 23, 42, 0.3)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          } : {
             background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 95, 0.75) 50%, rgba(15, 23, 42, 0.85) 100%)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)'
