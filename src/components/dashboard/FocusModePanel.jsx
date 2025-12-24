@@ -2282,7 +2282,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
 
   // Mock game references - scenes from games featuring AI avatar
   const gameReferences = [
-    { id: 1, title: 'Final Stand', thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920', game: 'Elden Ring' },
+    { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
     { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
     { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
     { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
