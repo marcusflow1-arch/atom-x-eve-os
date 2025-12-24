@@ -838,74 +838,41 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                 >
                   {/* Left Side - Action Menu */}
                   <div className="w-64 flex-shrink-0 flex flex-col pt-8 pl-8">
-                    {/* Back Button */}
-                    <button
-                      onClick={() => {
-                        if (selectedEnhanceSubpage) {
+                    {/* Main Actions */}
+                    <div className="flex flex-col gap-4">
+                      {/* Enhance */}
+                      <button
+                        onClick={() => setSelectedForgeAction('enhance')}
+                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'enhance' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                      >
+                        <Sparkles className={`w-5 h-5 ${selectedForgeAction === 'enhance' ? 'text-purple-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
+                        <span className="font-medium">Enhance</span>
+                      </button>
+
+                      {/* Level Up */}
+                      <button
+                        onClick={() => {
+                          setSelectedForgeAction('levelup');
                           setSelectedEnhanceSubpage(null);
-                        } else if (selectedForgeAction) {
-                          setSelectedForgeAction(null);
-                        } else {
-                          setShowItemDetail(false);
-                        }
-                      }}
-                      className="mb-8 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                      <span className="font-semibold">Back</span>
-                    </button>
+                        }}
+                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'levelup' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                      >
+                        <Zap className={`w-5 h-5 ${selectedForgeAction === 'levelup' ? 'text-cyan-300' : 'text-cyan-400 group-hover:text-cyan-300'}`} />
+                        <span className="font-medium">Level Up</span>
+                      </button>
 
-                    {/* Main Actions or Sub-actions */}
-                    {!selectedForgeAction ? (
-                      /* Main Action List */
-                      <div className="flex flex-col gap-4">
-                        {/* Enhance */}
-                        <button
-                          onClick={() => setSelectedForgeAction('enhance')}
-                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
-                        >
-                          <Sparkles className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
-                          <span className="font-medium">Enhance</span>
-                        </button>
-
-                        {/* Level Up */}
-                        <button
-                          onClick={() => setSelectedForgeAction('levelup')}
-                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
-                        >
-                          <Zap className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300" />
-                          <span className="font-medium">Level Up</span>
-                        </button>
-
-                        {/* Ascend */}
-                        <button
-                          onClick={() => setSelectedForgeAction('ascend')}
-                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
-                        >
-                          <Crown className="w-5 h-5 text-amber-400 group-hover:text-amber-300" />
-                          <span className="font-medium">Ascend</span>
-                        </button>
-                      </div>
-                    ) : selectedForgeAction === 'enhance' && !selectedEnhanceSubpage ? (
-                      /* Enhance Sub-actions */
-                      <div className="flex flex-col gap-4">
-                        <button
-                          onClick={() => setSelectedEnhanceSubpage('enchantment')}
-                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
-                        >
-                          <Sparkles className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
-                          <span className="font-medium">Enchantment</span>
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedEnhanceSubpage('combine')}
-                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
-                        >
-                          <ArrowLeftRight className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
-                          <span className="font-medium">Combine Stage</span>
-                        </button>
-                      </div>
-                    ) : null}
+                      {/* Ascend */}
+                      <button
+                        onClick={() => {
+                          setSelectedForgeAction('ascend');
+                          setSelectedEnhanceSubpage(null);
+                        }}
+                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'ascend' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                      >
+                        <Crown className={`w-5 h-5 ${selectedForgeAction === 'ascend' ? 'text-amber-300' : 'text-amber-400 group-hover:text-amber-300'}`} />
+                        <span className="font-medium">Ascend</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Right Side - Content Area */}
