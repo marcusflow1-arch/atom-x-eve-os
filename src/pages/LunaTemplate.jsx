@@ -1330,6 +1330,21 @@ export default function LunaTemplate() {
 
               <BookOpen className="w-5 h-5 text-white" />
             </motion.button>
+            <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+            }}
+            title="Library">
+
+              <Gamepad2 className="w-5 h-5 text-white" />
+            </motion.button>
           </div>
         </div>
         )}
