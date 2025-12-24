@@ -1089,10 +1089,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                                 <Crown className="w-4 h-4 mr-2" />
                                                                 Ascend to Tier 2
                                                             </Button>
-                                                        </motion.div>
-                                                    )}
+                                                </motion.div>
+                                                )}
 
-                                                    {!activeAction && (
+                                                {!activeAction && (
                                                         <motion.div
                                                             key="no-action"
                                                             initial={{ opacity: 0 }}
