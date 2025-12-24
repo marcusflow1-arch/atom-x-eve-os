@@ -1309,7 +1309,7 @@ function GameOptionsPanel({ game, onClose }) {
 
   return (
     <div 
-      className="w-full rounded-xl border p-4 scale-50 origin-top-left"
+      className="w-full rounded-xl border p-4"
       data-game-panel
       onClick={(e) => e.stopPropagation()}
       style={{
