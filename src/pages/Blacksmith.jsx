@@ -1037,10 +1037,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                                     Max Level
                                                                 </Button>
                                                             </div>
-                                                        </motion.div>
-                                                    )}
+                                                </motion.div>
+                                                )}
 
-                                                    {activeAction === 'ascend' && (
+                                                {activeAction === 'ascend' && (
                                                         <motion.div
                                                             key="ascend-panel"
                                                             initial={{ opacity: 0, x: 20 }}
