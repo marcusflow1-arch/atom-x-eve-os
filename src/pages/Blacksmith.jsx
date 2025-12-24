@@ -445,6 +445,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showWorkstation, setShowWorkstation] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
+  const [showItemModal, setShowItemModal] = useState(false);
   
   // Enchant state
   const [enchantLevel, setEnchantLevel] = useState(0);
