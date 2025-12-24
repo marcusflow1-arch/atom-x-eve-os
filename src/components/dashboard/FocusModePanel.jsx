@@ -2082,9 +2082,7 @@ function Large3DCard({ card, isActive }) {
 
 // Live Panel - Redesigned with large 3D card showcase
 function LivePanel({ upcomingCards }) {
-  const navigate = useNavigate();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [showCardOverlay, setShowCardOverlay] = useState(false);
 
   const currentCard = upcomingCards[currentCardIndex];
   const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
