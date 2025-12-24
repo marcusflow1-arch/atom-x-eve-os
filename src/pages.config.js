@@ -1,6 +1,7 @@
 import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AbilityAchievements from './pages/AbilityAchievements';
+import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AvatarStudio from './pages/AvatarStudio';
@@ -36,7 +37,6 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Achievements from './pages/Achievements';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +44,7 @@ export const PAGES = {
     "AIConsole": AIConsole,
     "AINews": AINews,
     "AbilityAchievements": AbilityAchievements,
+    "Achievements": Achievements,
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AvatarStudio": AvatarStudio,
@@ -79,7 +80,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Achievements": Achievements,
 }
 
 export const pagesConfig = {
