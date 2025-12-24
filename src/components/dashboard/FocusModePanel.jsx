@@ -2144,6 +2144,7 @@ function LivePanel({ upcomingCards }) {
 export default function FocusModePanel() {
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
+  const [showGamePanel, setShowGamePanel] = useState(false);
   const [activeGenre, setActiveGenre] = useState('Action');
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
@@ -2153,6 +2154,15 @@ export default function FocusModePanel() {
   ]);
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleGameSelect = (game) => {
+    setSelectedGame(game);
+    setShowGamePanel(true);
+  };
+
+  const handleCloseGamePanel = () => {
+    setShowGamePanel(false);
+  };
 
   // Fetch games for bottom Library section
   useEffect(() => {
