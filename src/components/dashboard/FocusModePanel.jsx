@@ -1330,9 +1330,9 @@ function GameOptionsPanel({ game, onClose }) {
         boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
       }}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Game Cover */}
-        <div className="w-16 h-20 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <div className="w-14 h-18 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
           <img 
             src={game.cover_image || game.cover} 
             alt={game.title} 
@@ -1344,8 +1344,8 @@ function GameOptionsPanel({ game, onClose }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h3 className="text-white font-bold text-base truncate">{game.title}</h3>
-              <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+              <h3 className="text-white font-bold text-sm truncate">{game.title}</h3>
+              <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
             </div>
             <button 
               onClick={onClose}
@@ -1356,7 +1356,7 @@ function GameOptionsPanel({ game, onClose }) {
           </div>
 
           {/* Quick Stats */}
-          <div className="flex gap-4 mb-3">
+          <div className="flex gap-3 mb-2">
             <div className="flex items-center gap-1.5 text-xs">
               <Clock className="w-3.5 h-3.5 text-blue-400" />
               <span className="text-white/70">12.5h</span>
@@ -1371,21 +1371,21 @@ function GameOptionsPanel({ game, onClose }) {
           <div className="mt-2 space-y-2">
             <button
               onClick={() => handleOptionClick('play')}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-sm font-bold transition-all"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
             >
               <Play className="w-4 h-4" />
               Play Game
             </button>
             <button
               onClick={() => handleOptionClick('settings')}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-sm transition-colors border border-white/10"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-xs transition-colors border border-white/10"
             >
               <Settings className="w-4 h-4" />
               Settings
             </button>
             <button
               onClick={() => handleOptionClick('updates')}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-sm transition-colors border border-amber-400/30"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs transition-colors border border-amber-400/30"
             >
               <Zap className="w-4 h-4" />
               Check Updates
