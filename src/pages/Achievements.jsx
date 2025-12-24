@@ -348,207 +348,564 @@ function AchievementsView({ onExitToLibrary }) {
     return ['All', ...Array.from(g)];
   }, [allGames]);
 
+  // Keyboard and wheel navigation for cross interface
+  useEffect(() => {
+    if (viewMode !== 'cross' || isLoading || filteredGames.length === 0) return;
+
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      
+      // Up/Down: Change game
+      if (key === 'arrowup' || key === 'w') {
+        e.preventDefault();
+        if (activeGameIndex > 0) {
+          setActiveGameIndex(prev => prev - 1);
+          setActiveCardIndex(0);
+        }
+      } else if (key === 'arrowdown' || key === 's') {
+        e.preventDefault();
+        if (activeGameIndex < filteredGames.length - 1) {
+          setActiveGameIndex(prev => prev + 1);
+          setActiveCardIndex(0);
+        }
+      }
+      // Left/Right: Change card
+      else if (key === 'arrowleft' || key === 'a') {
+        e.preventDefault();
+        if (activeCardIndex > 0) {
+          setActiveCardIndex(prev => prev - 1);
+        }
+      } else if (key === 'arrowright' || key === 'd') {
+        e.preventDefault();
+        const currentGame = filteredGames[activeGameIndex];
+        const cards = generateCardsForGame(currentGame);
+        if (activeCardIndex < cards.length - 1) {
+          setActiveCardIndex(prev => prev + 1);
+        }
+      }
+      // Enter: Select card
+      else if (key === 'enter') {
+        e.preventDefault();
+        const currentGame = filteredGames[activeGameIndex];
+        const cards = generateCardsForGame(currentGame);
+        if (cards[activeCardIndex]) {
+          setSelectedCard(cards[activeCardIndex]);
+        }
+      }
+    };
+
+    let lastWheelTime = 0;
+    const WHEEL_COOLDOWN = 150;
+
+    const handleWheel = (e) => {
+      const now = Date.now();
+      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
+        // Horizontal (Cards)
+        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+          const currentGame = filteredGames[activeGameIndex];
+          const cards = generateCardsForGame(currentGame);
+          if (activeCardIndex < cards.length - 1) {
+            setActiveCardIndex(prev => prev + 1);
+            lastWheelTime = now;
+          }
+        } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
+          if (activeCardIndex > 0) {
+            setActiveCardIndex(prev => prev - 1);
+            lastWheelTime = now;
+          }
+        }
+      } else {
+        // Vertical (Games)
+        if (e.deltaY > 0) {
+          if (activeGameIndex < filteredGames.length - 1) {
+            setActiveGameIndex(prev => prev + 1);
+            setActiveCardIndex(0);
+            lastWheelTime = now;
+          }
+        } else if (e.deltaY < 0) {
+          if (activeGameIndex > 0) {
+            setActiveGameIndex(prev => prev - 1);
+            setActiveCardIndex(0);
+            lastWheelTime = now;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading]);
+
+  // Helper to generate cards for a game
+  const generateCardsForGame = useCallback((game) => {
+    if (!game) return [];
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: `card-${game.id}-${i}`,
+      title: `${game.title} Card ${i + 1}`,
+      series: game.title,
+      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
+      image: game.cover_image || game.cover,
+      description: `A collectible trading card from ${game.title}.`,
+      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
+    }));
+  }, []);
+
+  // Current game and cards for cross view
+  const currentCrossGame = filteredGames[activeGameIndex];
+  const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
+  const activeCard = currentCrossCards[activeCardIndex];
+
+  // Constants for positioning
+  const ITEM_HEIGHT = 80;
+  const CROSS_Y_VH = 40;
+
   return (
     <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      {/* Ambient Glow */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
-      </div>
-
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
-        
-        {/* Main Layout: 2 Columns */}
-        <div className="flex gap-8 h-full overflow-hidden">
-          
-          {/* Left Sidebar (Shiny Box) */}
-          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
-            
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              {onExitToLibrary ? (
-                <motion.button
-                  onClick={onExitToLibrary}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="ml-12 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                >
-                  <Gamepad2 className="w-5 h-5 text-white/80" />
-                </motion.button>
-              ) : (
-                <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                  >
-                    <Gamepad2 className="w-5 h-5 text-white/80" />
-                  </motion.button>
-                </Link>
-              )}
-              <h1 className="text-2xl font-black tracking-tighter text-white">
-                Achievements
-              </h1>
-              
-              {/* Grid Menu Button */}
-              <motion.button
-                onClick={() => setShowGridMenu(true)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+      
+      <AnimatePresence mode="wait">
+        {viewMode === 'cross' ? (
+          /* CROSS INTERFACE VIEW */
+          <motion.div
+            key="cross-interface"
+            className="w-full h-full relative"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Dynamic Background */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCrossGame?.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6 }}
+                className="absolute inset-0 z-0"
               >
-                <LayoutGrid className="w-5 h-5 text-white/80" />
-              </motion.button>
-            </div>
+                <div className="absolute inset-0 bg-transparent" />
+                {currentCrossGame?.cover_image && (
+                  <>
+                    <img
+                      src={currentCrossGame.cover_image || currentCrossGame.cover}
+                      alt="bg"
+                      className="w-full h-full object-cover opacity-40 blur-sm scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                  </>
+                )}
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+              </motion.div>
+            </AnimatePresence>
 
-            {/* Shiny Box Container */}
-            <ShinySidebarBox className="flex-1 flex flex-col p-5">
+            {/* Interface Layer */}
+            <div className="relative z-10 w-full h-full">
               
-              {/* Search with Mic */}
-              <div className="relative group mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-                />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                  <MicIcon className="w-4 h-4" />
+              {/* Header with Game Name and Controls */}
+              <div className="absolute top-8 left-12 flex items-center gap-4 z-30">
+                <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
+                  {currentCrossGame?.title || 'Select a Game'}
+                </span>
+                
+                {/* Grid View Toggle */}
+                <button
+                  onClick={() => setViewMode('classic')}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                  title="Switch to Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4 text-white/60 hover:text-white" />
+                </button>
+                
+                {/* Gamepad Icon */}
+                <button
+                  onClick={() => navigate(createPageUrl('Library'))}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                  title="Go to Library"
+                >
+                  <Gamepad2 className="w-4 h-4 text-white/60 hover:text-white" />
                 </button>
               </div>
 
-              {/* Genre Filters - Liquid Glass Dropdown */}
-              <div className="mb-6">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
-                      <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
-                      <ChevronDown className="w-4 h-4 text-white/70" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
-                    style={{ background: 'rgba(30, 41, 59, 0.7)' }} // Fallback/base color for better readability
-                  >
-                    {genres.map((genre) => (
-                      <DropdownMenuItem
-                        key={genre}
-                        onClick={() => setActiveGenre(genre)}
-                        className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
-                          activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
-                        }`}
+              {/* VERTICAL AXIS (Games) */}
+              <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
+                <motion.div
+                  className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+                  animate={{
+                    y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + 24)}px - ${ITEM_HEIGHT / 2}px)`
+                  }}
+                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                >
+                  {filteredGames.map((game, idx) => {
+                    const isActive = idx === activeGameIndex;
+                    return (
+                      <motion.div
+                        key={game.id}
+                        onClick={() => {
+                          setActiveGameIndex(idx);
+                          setActiveCardIndex(0);
+                        }}
+                        animate={{
+                          scale: isActive ? 1.2 : 0.9,
+                          opacity: isActive ? 1 : 0.3,
+                          x: isActive ? 20 : 0
+                        }}
+                        className="flex flex-col items-center gap-2 cursor-pointer w-32"
                       >
-                        {genre}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Game List */}
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                {filteredGames.map(game => (
-                  <motion.button
-                    key={game.id}
-                    onClick={() => {
-                        setSelectedGame(game);
-                        setSelectedAchievement(null);
-                    }}
-                    className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
-                        selectedGame?.id === game.id 
-                        ? 'shadow-lg border-cyan-400/30' 
-                        : 'hover:border-cyan-400/20 border-transparent'
-                    }`}
-                    style={selectedGame?.id === game.id ? {
-                      background: 'rgba(34, 211, 238, 0.12)',
-                      boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                    } : {
-                      background: 'transparent'
-                    }}
-                    whileHover={{ x: 4 }}
-                  >
-                    {/* Small Box (Image) */}
-                    <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
-                      <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    
-                    {/* Name */}
-                    <div className="flex-1 text-left overflow-hidden">
-                      <h3 className={`font-bold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
-                        {game.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 truncate">{game.genre}</p>
-                    </div>
-
-                    {selectedGame?.id === game.id && (
-                        <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-
-            </ShinySidebarBox>
-          </div>
-
-          {/* Right Content: Achievements Grid (Cards) */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            {selectedGame ? (
-              <>
-                {/* Header Removed as requested - Only Cards Displayed */}
-
-                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
-                    {tradingCards.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                            {tradingCards.map((card, i) => (
-                                <div key={card.id} className="aspect-[2.5/3.5]">
-                                    <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
-                                        <div className="absolute inset-0 flex flex-col p-3">
-                                            <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                            </div>
-                                            <div className="flex-1 flex flex-col justify-between">
-                                                <div>
-                                                    <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                    <div className="flex gap-1 flex-wrap">
-                                                        <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                            card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                            card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                            card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                            'border-slate-500/50 text-slate-400'
-                                                        }`}>
-                                                            {card.rarity}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </ShinyCard>
-                                </div>
-                            ))}
+                        <div className={`
+                          w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300
+                          ${isActive
+                            ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40'
+                            : 'border border-white/10'
+                          }
+                        `}>
+                          <img
+                            src={game.cover_image || game.cover}
+                            alt={game.title}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
+                        <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
+                          {game.title}
+                        </span>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+
+              {/* HORIZONTAL AXIS (Cards) */}
+              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+                <motion.div
+                  className="flex items-center gap-8 pl-64 pointer-events-auto"
+                  animate={{
+                    x: -activeCardIndex * (200 + 32)
+                  }}
+                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                >
+                  {currentCrossCards.map((card, idx) => {
+                    const isActive = idx === activeCardIndex;
+                    return (
+                      <motion.div
+                        key={card.id}
+                        onClick={() => {
+                          setActiveCardIndex(idx);
+                          if (isActive) setSelectedCard(card);
+                        }}
+                        animate={{
+                          scale: isActive ? 1.1 : 0.9,
+                          opacity: isActive ? 1 : 0.4,
+                          y: isActive ? 0 : 20
+                        }}
+                        className={`
+                          w-[200px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                          border transition-all duration-300 shadow-2xl
+                          ${isActive
+                            ? 'border-white/40 shadow-blue-500/20'
+                            : 'border-white/5 bg-black/40'
+                          }
+                        `}
+                      >
+                        <ShinyCard index={idx}>
+                          <div className="absolute inset-0 flex flex-col p-3">
+                            <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                  card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                  card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                  card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                  card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                  'border-slate-500/50 text-slate-400'
+                                }`}>
+                                  {card.rarity}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </ShinyCard>
+                        {isActive && (
+                          <motion.div
+                            layoutId="card-active-border"
+                            className="absolute inset-0 border-4 border-white/60 rounded-xl z-20"
+                            transition={{ duration: 0.2 }}
+                          />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              </div>
+
+              {/* ACTIVE CARD DETAILS */}
+              <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
+                <AnimatePresence mode="wait">
+                  {activeCard && (
+                    <motion.div
+                      key={activeCard.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                          {currentCrossGame?.genre || 'adventure'}
+                        </Badge>
+                        <Badge className={`backdrop-blur-md border ${
+                          activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
+                          activeCard.rarity === 'Epic' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
+                          activeCard.rarity === 'Rare' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
+                          activeCard.rarity === 'Mythic' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
+                          'bg-slate-500/20 border-slate-500/40 text-slate-300'
+                        }`}>
+                          {activeCard.rarity}
+                        </Badge>
+                      </div>
+                      <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl">
+                        {activeCard.title}
+                      </h1>
+                      <p className="text-lg text-white/70 line-clamp-3 max-w-xl drop-shadow-md">
+                        {activeCard.description}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* CLASSIC SIDEBAR VIEW */
+          <motion.div
+            key="classic-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-full w-full"
+          >
+            {/* Ambient Glow */}
+            <div className="absolute inset-0 z-0">
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+              <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
+            </div>
+
+            <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
+              
+              {/* Main Layout: 2 Columns */}
+              <div className="flex gap-8 h-full overflow-hidden">
+                
+                {/* Left Sidebar (Shiny Box) */}
+                <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
+                  
+                  {/* Header */}
+                  <div className="flex items-center gap-3">
+                    {onExitToLibrary ? (
+                      <motion.button
+                        onClick={onExitToLibrary}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="ml-12 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                      >
+                        <Gamepad2 className="w-5 h-5 text-white/80" />
+                      </motion.button>
                     ) : (
-                        <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                            <Layers className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">No trading cards found</p>
-                        </div>
+                      <Link to={createPageUrl('Library')} title="Go to Library" className="ml-12">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                        >
+                          <Gamepad2 className="w-5 h-5 text-white/80" />
+                        </motion.button>
+                      </Link>
                     )}
-                </div>
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
-                <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
-                <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
-              </div>
-            )}
-          </div>
+                    <h1 className="text-2xl font-black tracking-tighter text-white">
+                      Achievements
+                    </h1>
+                    
+                    {/* Grid Menu Button */}
+                    <motion.button
+                      onClick={() => setShowGridMenu(true)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                    >
+                      <LayoutGrid className="w-5 h-5 text-white/80" />
+                    </motion.button>
+                    
+                    {/* Cross View Toggle */}
+                    <motion.button
+                      onClick={() => setViewMode('cross')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                      title="Switch to Cross View"
+                    >
+                      <Gamepad2 className="w-5 h-5 text-white/80" />
+                    </motion.button>
+                  </div>
 
-        </div>
-      </div>
+                  {/* Shiny Box Container */}
+                  <ShinySidebarBox className="flex-1 flex flex-col p-5">
+                    
+                    {/* Search with Mic */}
+                    <div className="relative group mb-6">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="Search games..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+                      />
+                      <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
+                        <MicIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Genre Filters - Liquid Glass Dropdown */}
+                    <div className="mb-6">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
+                            <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
+                            <ChevronDown className="w-4 h-4 text-white/70" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent 
+                          className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                          style={{ background: 'rgba(30, 41, 59, 0.7)' }}
+                        >
+                          {genres.map((genre) => (
+                            <DropdownMenuItem
+                              key={genre}
+                              onClick={() => setActiveGenre(genre)}
+                              className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
+                                activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
+                              }`}
+                            >
+                              {genre}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Game List */}
+                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
+                      {filteredGames.map(game => (
+                        <motion.button
+                          key={game.id}
+                          onClick={() => {
+                              setSelectedGame(game);
+                              setSelectedAchievement(null);
+                          }}
+                          className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
+                              selectedGame?.id === game.id 
+                              ? 'shadow-lg border-cyan-400/30' 
+                              : 'hover:border-cyan-400/20 border-transparent'
+                          }`}
+                          style={selectedGame?.id === game.id ? {
+                            background: 'rgba(34, 211, 238, 0.12)',
+                            boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
+                          } : {
+                            background: 'transparent'
+                          }}
+                          whileHover={{ x: 4 }}
+                        >
+                          {/* Small Box (Image) */}
+                          <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
+                            <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          
+                          {/* Name */}
+                          <div className="flex-1 text-left overflow-hidden">
+                            <h3 className={`font-bold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                              {game.title}
+                            </h3>
+                            <p className="text-xs text-slate-500 truncate">{game.genre}</p>
+                          </div>
+
+                          {selectedGame?.id === game.id && (
+                              <div className="w-1 h-8 bg-blue-500 rounded-full" />
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+
+                  </ShinySidebarBox>
+                </div>
+
+                {/* Right Content: Achievements Grid (Cards) */}
+                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                  {selectedGame ? (
+                    <>
+                      <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
+                          {tradingCards.length > 0 ? (
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                  {tradingCards.map((card, i) => (
+                                      <div key={card.id} className="aspect-[2.5/3.5]">
+                                          <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
+                                              <div className="absolute inset-0 flex flex-col p-3">
+                                                  <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                                      <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                                  </div>
+                                                  <div className="flex-1 flex flex-col justify-between">
+                                                      <div>
+                                                          <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                                          <div className="flex gap-1 flex-wrap">
+                                                              <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                                                  card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                                                  card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                                                  card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                                  'border-slate-500/50 text-slate-400'
+                                                              }`}>
+                                                                  {card.rarity}
+                                                              </Badge>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </ShinyCard>
+                                      </div>
+                                  ))}
+                              </div>
+                          ) : (
+                              <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                                  <Layers className="w-16 h-16 mb-4 opacity-20" />
+                                  <p className="text-lg font-medium">No trading cards found</p>
+                              </div>
+                          )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                      <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
+                      <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
+                      <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Detail Overlay */}
       <AnimatePresence>
