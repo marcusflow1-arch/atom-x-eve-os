@@ -2243,10 +2243,51 @@ function LivePanel({ upcomingCards }) {
   );
 }
 
-// Library Banner Section - Vertical line + Game Banner next to library games
-function LibraryBannerSection({ games }) {
+// Game Reference - clickable scene moments from games that change the Luna dashboard background
+function GameReference({ reference, onClick, isActive }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => onClick(reference)}
+      className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
+        isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
+      }`}
+    >
+      <img 
+        src={reference.thumbnail} 
+        alt={reference.title}
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+      <div className="absolute bottom-1 left-1 right-1">
+        <p className="text-white text-[7px] font-bold truncate">{reference.title}</p>
+      </div>
+      {/* Scene type indicator */}
+      <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+        reference.type === 'death' ? 'bg-red-500' :
+        reference.type === 'victory' ? 'bg-green-500' :
+        reference.type === 'battle' ? 'bg-orange-500' :
+        'bg-blue-500'
+      }`} />
+    </motion.div>
+  );
+}
+
+// Library Banner Section - Banner centered, line below, references to the right
+function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
+  const [activeReference, setActiveReference] = useState(null);
+
+  // Mock game references - scenes from games featuring AI avatar
+  const gameReferences = [
+    { id: 1, title: 'Final Stand', thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920', game: 'Elden Ring' },
+    { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
+    { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
+    { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
+    { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
+  ];
 
   // Sample games for banner picker
   const bannerGames = games?.slice(0, 8) || [
@@ -2256,18 +2297,44 @@ function LibraryBannerSection({ games }) {
     { id: 4, title: 'Shadow Realm', cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800', genre: 'Horror' },
   ];
 
-  return (
-    <div className="flex items-stretch gap-4 h-[120px] mb-4">
-      {/* Vertical Divider Line - Centered, same height as banner */}
-      <div className="w-px bg-white/20 self-stretch" />
+  const handleReferenceClick = (reference) => {
+    setActiveReference(reference);
+    if (onBackgroundChange) {
+      onBackgroundChange(reference.background);
+    }
+  };
 
-      {/* Game Banner - Extends to the right edge */}
-      <div className="flex-1">
-        <GameBanner 
-          game={selectedBannerGame} 
-          onChangeBanner={() => setShowBannerPicker(true)} 
-        />
+  return (
+    <div className="flex flex-col items-center mb-4">
+      {/* Top Row: Banner (50% smaller, centered) + References to the right */}
+      <div className="flex items-stretch gap-4 w-full">
+        {/* Spacer for centering */}
+        <div className="flex-1" />
+        
+        {/* Game Banner - 50% smaller, centered */}
+        <div className="w-[200px] h-[60px] flex-shrink-0">
+          <GameBanner 
+            game={selectedBannerGame} 
+            onChangeBanner={() => setShowBannerPicker(true)} 
+          />
+        </div>
+
+        {/* References Section - To the right of the banner */}
+        <div className="flex-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
+          {gameReferences.map((ref) => (
+            <GameReference 
+              key={ref.id} 
+              reference={ref} 
+              onClick={handleReferenceClick}
+              isActive={activeReference?.id === ref.id}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Horizontal Line below banner - between banner and AI Home button */}
+      <div className="w-[200px] h-px bg-white/20 mt-3" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
