@@ -5,7 +5,7 @@ import {
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
   Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
   Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-  Heart, BookOpen, Bell, Settings, Book
+  Heart, BookOpen, Bell, Settings, Book, Home
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -2244,7 +2244,25 @@ function LivePanel({ upcomingCards }) {
 }
 
 // Game Reference - clickable scene moments from games that change the Luna dashboard background
-function GameReference({ reference, onClick, isActive }) {
+function GameReference({ reference, onClick, isActive, isHomeButton }) {
+  if (isHomeButton) {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onClick}
+        className="relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-cyan-400/50 transition-all flex-shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
+      >
+        <div className="w-full h-full flex items-center justify-center">
+          <Home className="w-6 h-6 text-white/80" />
+        </div>
+        <div className="absolute bottom-1 left-1 right-1">
+          <p className="text-white text-[7px] font-bold truncate text-center">Home</p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
@@ -2279,6 +2297,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
+  const scrollRef = useRef(null);
 
   // Mock game references - scenes from games featuring AI avatar
   const gameReferences = [
@@ -2304,6 +2323,13 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
     }
   };
 
+  const handleHomeClick = () => {
+    setActiveReference(null);
+    if (onBackgroundChange) {
+      onBackgroundChange(null);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center mb-4">
       {/* Top Row: Banner (50% smaller, centered) + References to the right */}
@@ -2319,8 +2345,12 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
           />
         </div>
 
-        {/* References Section - To the right of the banner */}
-        <div className="flex-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {/* References Section - Horizontal scroll with Home button at end */}
+        <div 
+          ref={scrollRef}
+          className="flex-1 flex items-center gap-2 overflow-x-auto" 
+          style={{ scrollbarWidth: 'none' }}
+        >
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
           {gameReferences.map((ref) => (
             <GameReference 
@@ -2330,6 +2360,11 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
               isActive={activeReference?.id === ref.id}
             />
           ))}
+          {/* Home Button - Returns to default background */}
+          <GameReference 
+            isHomeButton={true}
+            onClick={handleHomeClick}
+          />
         </div>
       </div>
 
