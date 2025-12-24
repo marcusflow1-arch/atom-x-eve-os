@@ -368,7 +368,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
   return (
     <div className="h-full flex gap-6">
       {/* Left Side - Game Card + Actions */}
-      <div className="flex-shrink-0 flex flex-col gap-4">
+      <div className="flex-shrink-0 flex flex-col gap-4 mt-24">
         {/* Game Card */}
         <div 
           className="w-48 aspect-[3/4] rounded-2xl overflow-hidden relative border border-white/10"
