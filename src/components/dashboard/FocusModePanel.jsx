@@ -2533,11 +2533,8 @@ export default function FocusModePanel({ onBackgroundChange }) {
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Live Panel (unified) */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-            <LivePanel 
-              upcomingCards={upcomingCards}
-            />
+          {/* Content Area placeholder (New Cards moved below 3D viewer) */}
+          <div className="flex-1 min-h-0 pr-2" style={{ scrollbarWidth: 'none' }}>
           </div>
         </div>
       </div>
@@ -2559,6 +2556,11 @@ export default function FocusModePanel({ onBackgroundChange }) {
       </AnimatePresence>
 
 
+
+      {/* New Cards (moved under 3D viewer) */}
+      <div className="mt-6 w-full max-w-4xl mx-auto">
+        <LivePanel upcomingCards={upcomingCards} />
+      </div>
 
       {/* Upcoming Events Section - Below New Cards */}
       <div className="mt-6 w-full">
