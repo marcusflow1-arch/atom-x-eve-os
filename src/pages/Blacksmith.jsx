@@ -561,7 +561,25 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
         <header className="flex items-center justify-between mb-8 relative">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
-              <h1 className="ml-4 text-2xl font-bold tracking-wide text-white/70 flex items-center gap-3">
+              {showItemDetail && (
+                <button
+                  onClick={() => {
+                    if (selectedEnhanceSubpage) {
+                      setSelectedEnhanceSubpage(null);
+                    } else if (selectedForgeAction) {
+                      setSelectedForgeAction(null);
+                    } else {
+                      setShowItemDetail(false);
+                      setSelectedForgeAction(null);
+                      setSelectedEnhanceSubpage(null);
+                    }
+                  }}
+                  className="ml-4 text-white/60 hover:text-white transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+              <h1 className={`${showItemDetail ? '' : 'ml-4'} text-2xl font-bold tracking-wide text-white/70 flex items-center gap-3`}>
                 Blacksmith Forge
               </h1>
             </div>
@@ -573,6 +591,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
               { id: 'forge', label: 'Forge', icon: Hammer },
               { id: 'materials', label: 'Materials', icon: Package },
               { id: 'collab', label: 'Collaborations', icon: Users },
+              ...(showItemDetail && selectedForgeAction === 'enhance' ? [
+                { id: 'enchantment', label: 'Enchantment', icon: Sparkles, isSubpage: true },
+                { id: 'combine', label: 'Combine Stage', icon: ArrowLeftRight, isSubpage: true },
+              ] : [])
             ].map((mode) => (
               <button
                 key={mode.id}
