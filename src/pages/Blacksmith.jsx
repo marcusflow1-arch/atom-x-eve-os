@@ -1093,18 +1093,18 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                 )}
 
                                                 {!activeAction && (
-                                                        <motion.div
-                                                            key="no-action"
-                                                            initial={{ opacity: 0 }}
-                                                            animate={{ opacity: 1 }}
-                                                            className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500"
-                                                        >
-                                                            <div className="text-center">
-                                                                <Hammer className="w-16 h-16 mb-4 opacity-20 mx-auto" />
-                                                                <h3 className="text-xl font-bold text-slate-400 mb-2">Action Workspace</h3>
-                                                                <p className="text-sm text-slate-500 max-w-xs">Select an action from the card panel to begin crafting, enchanting, or evolving your items.</p>
-                                                            </div>
-                                                </motion.div>
+                                                    <motion.div
+                                                        key="no-action"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500"
+                                                    >
+                                                        <div className="text-center">
+                                                            <Hammer className="w-16 h-16 mb-4 opacity-20 mx-auto" />
+                                                            <h3 className="text-xl font-bold text-slate-400 mb-2">Action Workspace</h3>
+                                                            <p className="text-sm text-slate-500 max-w-xs">Select an action from the card panel to begin crafting, enchanting, or evolving your items.</p>
+                                                        </div>
+                                                    </motion.div>
                                                 )}
                                             </AnimatePresence>
                                         </div>
