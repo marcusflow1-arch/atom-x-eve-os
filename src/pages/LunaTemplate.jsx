@@ -1068,13 +1068,23 @@ export default function LunaTemplate() {
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{ 
-        background: customBackground 
-          ? `url(${customBackground}) center/cover no-repeat` 
-          : 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
       }}>
-      {/* Light overlay when custom background is active - more translucent to show image */}
+      {/* Custom background image - shown in front of base gradient, behind content */}
       {customBackground && (
-        <div className="absolute inset-0 bg-black/30 z-0" />
+        <div 
+          className="absolute inset-0 z-[5]"
+          style={{
+            backgroundImage: `url(${customBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+      )}
+      {/* Very light overlay to maintain some readability */}
+      {customBackground && (
+        <div className="absolute inset-0 bg-black/20 z-[6]" />
       )}
 
         {/* 3D Model Viewer - Fixed floating element in top-left, separate from page scroll */}
