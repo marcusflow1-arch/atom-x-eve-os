@@ -533,21 +533,29 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                 Blacksmith Forge
               </h1>
             </div>
-            <nav className="flex gap-1 bg-white/[0.03] rounded-full p-1 border border-white/10">
-              {['forge', 'materials', 'collab'].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                    viewMode === mode 
-                      ? 'bg-white/10 text-white border border-white/20' 
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-                  }`}
-                >
-                  {mode === 'collab' ? 'Collaborations' : mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </nav>
+          </div>
+
+          {/* Centered Navigation */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6">
+            {[
+              { id: 'forge', label: 'Forge', icon: Hammer },
+              { id: 'materials', label: 'Materials', icon: Package },
+              { id: 'collab', label: 'Collaborations', icon: Users },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setViewMode(mode.id)}
+                className={`flex items-center gap-2 text-xs font-medium transition-all ${
+                  viewMode === mode.id 
+                    ? 'text-white' 
+                    : 'text-white/40 hover:text-white/70'
+                }`}
+                style={{ transform: 'scale(0.85)' }}
+              >
+                <mode.icon className="w-4 h-4" />
+                <span>{mode.label}</span>
+              </button>
+            ))}
           </div>
 
           <div className="flex gap-6 items-center">
