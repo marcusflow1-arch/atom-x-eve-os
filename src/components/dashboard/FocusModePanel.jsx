@@ -2269,8 +2269,8 @@ export default function FocusModePanel() {
 
 
 
-      {/* Bottom Section - Library Games */}
-      <div className="mt-4">
+      {/* Bottom Section - Library Games - Centered */}
+      <div className="mt-4 w-full max-w-4xl mx-auto">
         <LibraryGamesSection 
           onSelectGame={setSelectedGame}
           selectedGame={selectedGame}
