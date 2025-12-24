@@ -1003,41 +1003,41 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                 )}
 
                                                 {activeAction === 'train' && (
-                                                        <motion.div
-                                                            key="train-panel"
-                                                            initial={{ opacity: 0, x: 20 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            exit={{ opacity: 0, x: -20 }}
-                                                            className="space-y-4"
-                                                        >
-                                                            <h3 className="text-white font-bold text-lg">Train Card</h3>
+                                                    <motion.div
+                                                        key="train-panel"
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -20 }}
+                                                        className="space-y-4"
+                                                    >
+                                                        <h3 className="text-white font-bold text-lg">Train Card</h3>
 
-                                                            {/* Current Level */}
-                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <span className="text-slate-400 text-xs uppercase">Current Level</span>
-                                                                    <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
-                                                                </div>
-                                                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                                                    <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
-                                                                </div>
+                                                        {/* Current Level */}
+                                                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-slate-400 text-xs uppercase">Current Level</span>
+                                                                <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
                                                             </div>
+                                                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
+                                                            </div>
+                                                        </div>
 
-                                                            {/* Level Options */}
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
-                                                                <div className="grid grid-cols-3 gap-2">
-                                                                    {[1, 5, 10].map((increment) => (
-                                                                        <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
-                                                                            +{increment}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
-                                                                    Max Level
-                                                                </Button>
+                                                        {/* Level Options */}
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                {[1, 5, 10].map((increment) => (
+                                                                    <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
+                                                                        +{increment}
+                                                                    </button>
+                                                                ))}
                                                             </div>
-                                                </motion.div>
+                                                            <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
+                                                                Max Level
+                                                            </Button>
+                                                        </div>
+                                                    </motion.div>
                                                 )}
 
                                                 {activeAction === 'ascend' && (
