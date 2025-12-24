@@ -528,15 +528,6 @@ function AchievementsView({ onExitToLibrary }) {
                     <div className="bg-white/60 hover:bg-white rounded-[2px]" />
                   </div>
                 </button>
-                
-                {/* Gamepad Icon */}
-                <button
-                  onClick={() => navigate(createPageUrl('Library'))}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                  title="Go to Library"
-                >
-                  <Gamepad2 className="w-4 h-4 text-white/60 hover:text-white" />
-                </button>
               </div>
 
               {/* VERTICAL AXIS (Games) */}
