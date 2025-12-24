@@ -364,6 +364,7 @@ export default function SocialHub() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [activeView, setActiveView] = useState('feed'); // 'feed' or 'marketplace'
+  const [feedSubView, setFeedSubView] = useState('feed'); // 'feed' or 'contracts'
 
   // 1. Fetch Social Feed
   const { data: feedData, isLoading: isFeedLoading } = useQuery({
