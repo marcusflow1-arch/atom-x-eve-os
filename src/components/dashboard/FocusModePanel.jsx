@@ -1234,9 +1234,9 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
                       transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
-                      className="flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
+                      className="relative flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
-                    >
+                      >
                       <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
                         isSelected 
                           ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
@@ -1253,6 +1253,13 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                           <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
                         </div>
                       </div>
+
+                      {/* Inline Options Panel to the right for Destiny Brigades */}
+                      {isSelected && showGamePanel && selectedGame?.title === 'Destiny Brigades' && (
+                        <div className="absolute left-full top-0 ml-2 w-[280px] z-20" data-game-panel>
+                          <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
