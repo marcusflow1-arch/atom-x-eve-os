@@ -906,7 +906,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                     )}
                   </div>
                 </motion.div>
-              ) : null}
+              )}
             </AnimatePresence>
           ) : viewMode === 'collab' ? (
             <div className="w-full h-full overflow-y-auto">
