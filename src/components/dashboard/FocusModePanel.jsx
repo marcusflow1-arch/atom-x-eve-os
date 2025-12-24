@@ -2527,7 +2527,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
       {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
         {/* Library Banner Section - Banner centered, line below, references to the right */}
-        <LibraryBannerSection games={ownedGames} onBackgroundChange={(bg) => console.log('Background changed to:', bg)} />
+        <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
         
         <LibraryGamesSection 
           onSelectGame={handleGameSelect}
