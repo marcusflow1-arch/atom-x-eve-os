@@ -590,6 +590,40 @@ function AchievementsView({ onExitToLibrary }) {
         </div>
       </motion.div>
 
+      {/* Grid Menu Overlay */}
+      <AnimatePresence>
+        {showGridMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowGridMenu(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              {/* Content area - blank for now */}
+              <div className="flex-1 overflow-y-auto">
+              </div>
+              
+              <button 
+                onClick={() => setShowGridMenu(false)}
+                className="fixed top-6 right-6 z-[60] text-white/60 hover:text-white transition-all"
+              >
+                <X className="w-8 h-8" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
