@@ -503,6 +503,31 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
     return items;
   }, [categoryFilter, selectedGame, viewMode, user]);
 
+  // Get unique games for cross interface
+  const allGames = useMemo(() => {
+    const gameMap = new Map();
+    mockItems.forEach(item => {
+      if (!gameMap.has(item.game_id)) {
+        gameMap.set(item.game_id, {
+          id: item.game_id,
+          title: item.game_title,
+          cover_image: item.preview_image_url,
+          cover: item.preview_image_url,
+          genre: item.genre
+        });
+      }
+    });
+    return Array.from(gameMap.values());
+  }, []);
+
+  // Get items for current cross game
+  const currentCrossGame = allGames[activeGameIndex];
+  const currentCrossItems = useMemo(() => {
+    if (!currentCrossGame) return [];
+    return mockItems.filter(item => item.game_id === currentCrossGame.id);
+  }, [currentCrossGame]);
+  const activeItem = currentCrossItems[activeCardIndex];
+
   // Auto-select first item when game changes
   useEffect(() => {
     if (selectedGame && displayedItems.length > 0) {
