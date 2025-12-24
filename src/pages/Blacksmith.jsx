@@ -14,7 +14,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CraftingCollaborations from '../components/crafting/CraftingCollaborations';
 import CraftingChallenges from '../components/crafting/CraftingChallenges';
 import ItemWorkstation from '../components/blacksmith/ItemWorkstation';
-// BlacksmithGameSelect is replaced by the sidebar
+// Blacksmith Forge - Three-column layout with Game Selector, Card Display, and Action Workspace
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
