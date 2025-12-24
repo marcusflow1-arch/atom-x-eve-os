@@ -1207,13 +1207,13 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
       {/* Main Games Grid */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${showGamePanel && selectedGame ? 'pr-0' : ''}`}>
         {/* Clickable Title - Transitions to Store */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <button 
             onClick={handleLibraryClick}
             className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
           >
-            <LibraryIcon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-            Library Games
+            <Book className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            Library
             <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
           </button>
           
