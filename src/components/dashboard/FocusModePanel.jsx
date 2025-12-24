@@ -1319,7 +1319,7 @@ function GameOptionsPanel({ game, onClose }) {
 
   return (
     <div 
-      className="w-full rounded-xl border p-4"
+      className="w-full rounded-xl border px-4 py-2.5"
       data-game-panel
       onClick={(e) => e.stopPropagation()}
       style={{
@@ -1332,7 +1332,7 @@ function GameOptionsPanel({ game, onClose }) {
     >
       <div className="flex items-center gap-3">
         {/* Game Cover */}
-        <div className="w-14 h-18 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <div className="w-14 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
           <img 
             src={game.cover_image || game.cover} 
             alt={game.title} 
