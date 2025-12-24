@@ -2268,8 +2268,7 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Spacer to push library to bottom */}
-      <div className="flex-1" />
+
 
       {/* Bottom Section - Library Games (fixed to very bottom) */}
       <div className="mt-auto pt-4">
