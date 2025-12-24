@@ -2331,8 +2331,11 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
 
   return (
     <div className="flex flex-col items-center mb-4">
-      {/* Top Row: Banner centered with references to the right */}
-      <div className="flex items-stretch gap-4 w-full justify-center">
+      {/* Top Row: Banner (50% smaller, centered) + References to the right */}
+      <div className="flex items-stretch gap-4 w-full">
+        {/* Spacer for centering */}
+        <div className="flex-1" />
+        
         {/* Game Banner - 50% smaller, centered */}
         <div className="w-[200px] h-[60px] flex-shrink-0">
           <GameBanner 
@@ -2344,7 +2347,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         {/* References Section - Horizontal scroll with Home button at end */}
         <div 
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto" 
+          className="flex-1 flex items-center gap-2 overflow-x-auto" 
           style={{ scrollbarWidth: 'none' }}
         >
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
@@ -2528,18 +2531,11 @@ export default function FocusModePanel({ onBackgroundChange }) {
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Library (moved here) */}
+          {/* Content Area - Live Panel (unified) */}
           <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-            <div className="w-full">
-              <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-              <LibraryGamesSection 
-                onSelectGame={handleGameSelect}
-                selectedGame={selectedGame}
-                allGames={ownedGames}
-                showGamePanel={showGamePanel}
-                onClosePanel={handleCloseGamePanel}
-              />
-            </div>
+            <LivePanel 
+              upcomingCards={upcomingCards}
+            />
           </div>
         </div>
       </div>
@@ -2562,9 +2558,18 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Bottom Section - Card Selection */}
+      {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-6 w-full max-w-4xl mx-auto">
-        <NewCardsSection upcomingCards={upcomingCards} />
+        {/* Library Banner Section - Banner centered, line below, references to the right */}
+        <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+        
+        <LibraryGamesSection 
+          onSelectGame={handleGameSelect}
+          selectedGame={selectedGame}
+          allGames={ownedGames}
+          showGamePanel={showGamePanel}
+          onClosePanel={handleCloseGamePanel}
+        />
       </div>
 
       {/* Upcoming Events Section - Below New Cards */}
