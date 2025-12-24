@@ -846,77 +846,77 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                         exit={{ opacity: 0, x: -20 }}
                                                         className="space-y-4"
                                                     >
-                                                            <h3 className="text-white font-bold text-lg">Enchantment</h3>
+                                                        <h3 className="text-white font-bold text-lg">Enchantment</h3>
 
-                                                            {/* Current Enchant Level */}
-                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <span className="text-slate-400 text-xs uppercase">Current Enchant Level</span>
-                                                                    <span className={`font-bold text-xl ${
-                                                                        enchantLevel >= 96 ? 'text-rose-400' :
-                                                                        enchantLevel >= 72 ? 'text-orange-400' :
-                                                                        enchantLevel >= 48 ? 'text-purple-400' :
-                                                                        enchantLevel >= 24 ? 'text-blue-400' :
-                                                                        'text-white'
-                                                                    }`}>+{enchantLevel}%</span>
-                                                                </div>
-                                                                <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                                                                    <div 
-                                                                        className={`h-full transition-all duration-300 ${
-                                                                            enchantLevel >= 96 ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
-                                                                            enchantLevel >= 72 ? 'bg-gradient-to-r from-orange-500 to-amber-500' :
-                                                                            enchantLevel >= 48 ? 'bg-gradient-to-r from-purple-500 to-violet-500' :
-                                                                            enchantLevel >= 24 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
-                                                                            'bg-gradient-to-r from-slate-500 to-slate-400'
-                                                                        }`}
-                                                                        style={{ width: `${(enchantLevel / 120) * 100}%` }}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                                                                    <span>0%</span>
-                                                                    <span>120%</span>
-                                                                </div>
+                                                        {/* Current Enchant Level */}
+                                                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-slate-400 text-xs uppercase">Current Enchant Level</span>
+                                                                <span className={`font-bold text-xl ${
+                                                                    enchantLevel >= 96 ? 'text-rose-400' :
+                                                                    enchantLevel >= 72 ? 'text-orange-400' :
+                                                                    enchantLevel >= 48 ? 'text-purple-400' :
+                                                                    enchantLevel >= 24 ? 'text-blue-400' :
+                                                                    'text-white'
+                                                                }`}>+{enchantLevel}%</span>
                                                             </div>
-
-                                                            {/* Enchant Button - 12% increase with fail chance */}
-                                                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                                                <div className="flex items-center justify-between mb-3">
-                                                                    <span className="text-white font-semibold">Enchant (+12%)</span>
-                                                                    <span className="text-red-400 text-xs">Fail: {Math.min(90, enchantLevel)}%</span>
-                                                                </div>
-                                                                <Button 
-                                                                    onClick={handleEnchantAttempt}
-                                                                    className="w-full bg-blue-600 hover:bg-blue-500 h-12 rounded-lg font-bold"
-                                                                    disabled={enchantLevel >= 120}
-                                                                >
-                                                                    <Sparkles className="w-4 h-4 mr-2" />
-                                                                    {enchantLevel >= 120 ? 'Max Enchant' : 'Attempt Enchant'}
-                                                                </Button>
-                                                                {enchantResult && (
-                                                                    <p className={`text-center text-sm mt-2 font-semibold ${enchantResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                                                                        {enchantResult === 'success' ? '✓ Enchant Successful!' : '✗ Enchant Failed!'}
-                                                                    </p>
-                                                                )}
+                                                            <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className={`h-full transition-all duration-300 ${
+                                                                        enchantLevel >= 96 ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
+                                                                        enchantLevel >= 72 ? 'bg-gradient-to-r from-orange-500 to-amber-500' :
+                                                                        enchantLevel >= 48 ? 'bg-gradient-to-r from-purple-500 to-violet-500' :
+                                                                        enchantLevel >= 24 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                                                        'bg-gradient-to-r from-slate-500 to-slate-400'
+                                                                    }`}
+                                                                    style={{ width: `${(enchantLevel / 120) * 100}%` }}
+                                                                />
                                                             </div>
+                                                            <div className="flex justify-between text-xs text-slate-500 mt-1">
+                                                                <span>0%</span>
+                                                                <span>120%</span>
+                                                            </div>
+                                                        </div>
 
-                                                            {/* Available Effects */}
-                                                            <div className="space-y-2">
-                                                                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Add Effect</h4>
-                                                                {[
-                                                                    { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
-                                                                    { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
-                                                                    { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
-                                                                ].map((perk, i) => (
-                                                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
-                                                                        <div>
-                                                                            <p className="text-white text-sm font-semibold">{perk.name}</p>
-                                                                            <p className="text-slate-400 text-xs">{perk.effect}</p>
-                                                                        </div>
-                                                                        <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
+                                                        {/* Enchant Button - 12% increase with fail chance */}
+                                                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <span className="text-white font-semibold">Enchant (+12%)</span>
+                                                                <span className="text-red-400 text-xs">Fail: {Math.min(90, enchantLevel)}%</span>
+                                                            </div>
+                                                            <Button 
+                                                                onClick={handleEnchantAttempt}
+                                                                className="w-full bg-blue-600 hover:bg-blue-500 h-12 rounded-lg font-bold"
+                                                                disabled={enchantLevel >= 120}
+                                                            >
+                                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                                {enchantLevel >= 120 ? 'Max Enchant' : 'Attempt Enchant'}
+                                                            </Button>
+                                                            {enchantResult && (
+                                                                <p className={`text-center text-sm mt-2 font-semibold ${enchantResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                                                    {enchantResult === 'success' ? '✓ Enchant Successful!' : '✗ Enchant Failed!'}
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Available Effects */}
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Add Effect</h4>
+                                                            {[
+                                                                { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
+                                                                { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
+                                                                { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
+                                                            ].map((perk, i) => (
+                                                                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
+                                                                    <div>
+                                                                        <p className="text-white text-sm font-semibold">{perk.name}</p>
+                                                                        <p className="text-slate-400 text-xs">{perk.effect}</p>
                                                                     </div>
-                                                                ))}
-                                                            </div>
-                                                </motion.div>
+                                                                    <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
                                                 )}
 
                                                 {activeAction === 'combine' && (
