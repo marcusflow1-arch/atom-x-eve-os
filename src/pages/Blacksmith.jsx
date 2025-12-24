@@ -1093,19 +1093,24 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                             key="no-action"
                                                             initial={{ opacity: 0 }}
                                                             animate={{ opacity: 1 }}
-                                                            className="flex flex-col items-center justify-center h-64 text-slate-500"
+                                                            className="flex flex-col items-center justify-center h-full min-h-[400px] text-slate-500"
                                                         >
-                                                            <Hammer className="w-12 h-12 mb-3 opacity-30" />
-                                                            <p className="text-sm">Select an action to begin</p>
+                                                            <div className="text-center">
+                                                                <Hammer className="w-16 h-16 mb-4 opacity-20 mx-auto" />
+                                                                <h3 className="text-xl font-bold text-slate-400 mb-2">Action Workspace</h3>
+                                                                <p className="text-sm text-slate-500 max-w-xs">Select an action from the card panel to begin crafting, enchanting, or evolving your items.</p>
+                                                            </div>
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
-                                            </div>
                                         </div>
                                     ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
-                                            <Hammer className="w-16 h-16 mb-4 opacity-20" />
-                                            <p className="text-sm">Select an item to view details</p>
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600 p-6">
+                                            <div className="text-center">
+                                                <Hammer className="w-20 h-20 mb-6 opacity-15 mx-auto" />
+                                                <h3 className="text-2xl font-bold text-slate-400 mb-2">Forge Workspace</h3>
+                                                <p className="text-slate-500 max-w-md">Select a card from your inventory to access the full crafting system. Enchant, combine, train, and ascend your items here.</p>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
