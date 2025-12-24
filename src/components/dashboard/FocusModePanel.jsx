@@ -1211,8 +1211,6 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
             Library
             <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
           </button>
-          
-          <span className="text-white/30 text-xs">({currentGames.length} games)</span>
         </div>
 
         {/* Games Grid - Rows of 10, vertical scroll */}
