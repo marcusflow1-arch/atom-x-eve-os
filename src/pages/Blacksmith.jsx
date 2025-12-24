@@ -598,9 +598,15 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
             ].map((mode) => (
               <button
                 key={mode.id}
-                onClick={() => setViewMode(mode.id)}
+                onClick={() => {
+                  if (mode.isSubpage) {
+                    setSelectedEnhanceSubpage(mode.id);
+                  } else {
+                    setViewMode(mode.id);
+                  }
+                }}
                 className={`flex items-center gap-2 text-xs font-medium transition-all ${
-                  viewMode === mode.id 
+                  (mode.isSubpage ? selectedEnhanceSubpage === mode.id : viewMode === mode.id)
                     ? 'text-white' 
                     : 'text-white/40 hover:text-white/70'
                 }`}
