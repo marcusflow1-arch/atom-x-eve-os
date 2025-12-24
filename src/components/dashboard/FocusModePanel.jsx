@@ -2080,9 +2080,76 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
+// Game Banner Component - Editable banner display
+function GameBanner({ game, onChangeBanner }) {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Default banner if no game selected
+  const bannerImage = game?.cover_image || game?.cover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800';
+  const bannerTitle = game?.title || 'Select a Game';
+  
+  return (
+    <div 
+      className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
+      style={{
+        background: 'rgba(100, 120, 140, 0.08)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.10)'
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onChangeBanner}
+    >
+      {/* Banner Image */}
+      <img 
+        src={bannerImage} 
+        alt={bannerTitle}
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+      
+      {/* Game Info */}
+      <div className="absolute bottom-3 left-3 right-3">
+        <h4 className="text-white font-bold text-sm truncate">{bannerTitle}</h4>
+        {game?.genre && (
+          <p className="text-white/50 text-[10px] capitalize">{game.genre}</p>
+        )}
+      </div>
+      
+      {/* Change Banner Indicator */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20">
+              <Settings className="w-4 h-4 text-white/70" />
+              <span className="text-white/80 text-xs font-medium">Change Banner</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Banner Label */}
+      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
+        <span className="text-[8px] text-white/60 uppercase tracking-wider">Featured Game</span>
+      </div>
+    </div>
+  );
+}
+
 // Live Panel - Redesigned with large 3D card showcase
 function LivePanel({ upcomingCards }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [selectedBannerGame, setSelectedBannerGame] = useState(null);
+  const [showBannerPicker, setShowBannerPicker] = useState(false);
 
   const currentCard = upcomingCards[currentCardIndex];
   const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
@@ -2094,6 +2161,14 @@ function LivePanel({ upcomingCards }) {
   const prevCard = () => {
     setCurrentCardIndex((prev) => (prev - 1 + upcomingCards.length) % upcomingCards.length);
   };
+
+  // Sample games for banner picker
+  const bannerGames = [
+    { id: 1, title: 'Cyberpunk 2088', cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', genre: 'RPG' },
+    { id: 2, title: 'Elden Ring', cover_image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800', genre: 'Action RPG' },
+    { id: 3, title: 'Stellar Odyssey', cover_image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800', genre: 'Space Sim' },
+    { id: 4, title: 'Shadow Realm', cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800', genre: 'Horror' },
+  ];
 
   if (!currentCard) return null;
 
@@ -2108,8 +2183,8 @@ function LivePanel({ upcomingCards }) {
         <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
       </div>
 
-      {/* Main Content - Card + Description + Demo */}
-      <div className="flex-1 flex items-start gap-4">
+      {/* Main Content - Card + Vertical Line + Banner + Demo */}
+      <div className="flex-1 flex items-stretch gap-0">
         {/* Left: 3D Card with Arrows */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Left Arrow */}
@@ -2132,48 +2207,78 @@ function LivePanel({ upcomingCards }) {
           </button>
         </div>
 
-        {/* Middle: Card Description */}
-        <div className="flex-1 min-w-0 h-44 flex flex-col">
-          {/* Card Title & Meta */}
-          <div className="mb-2">
-            <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                'bg-blue-500/20 text-blue-300 border-blue-500/30'
-              }`}>{currentCard.rarity}</span>
-              <span className="text-[9px] text-white/40">{currentCard.type}</span>
-              <span className="text-[9px] text-white/30">•</span>
-              <span className="text-[9px] text-white/40">{currentCard.genre}</span>
-            </div>
+        {/* Vertical Divider Line - Same height as the 3D Card */}
+        <div className="w-px bg-white/20 mx-4 self-stretch" style={{ height: '176px' }} />
+
+        {/* Right Section: Game Banner extending to Demo Video */}
+        <div className="flex-1 flex gap-4 h-44">
+          {/* Game Banner - Takes remaining space */}
+          <div className="flex-1 min-w-0">
+            <GameBanner 
+              game={selectedBannerGame} 
+              onChangeBanner={() => setShowBannerPicker(true)} 
+            />
           </div>
 
-          {/* Description */}
-          <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
-            {currentCard.description}
-          </p>
-
-          {/* Stats Row */}
-          <div className="flex gap-2 mb-2">
-            {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
-              <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
-                <span className="text-[8px] text-white/40 uppercase">{key}</span>
-                <span className="text-[10px] text-white font-bold ml-1">{val}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Unlock Condition */}
-          <div className="mt-auto flex items-center gap-2 text-[9px]">
-            <Trophy className="w-3 h-3 text-amber-400" />
-            <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
-          </div>
+          {/* Demo Video Box */}
+          <DemoVideoBox card={currentCard} />
         </div>
-
-        {/* Right: Demo Video Box */}
-        <DemoVideoBox card={currentCard} />
       </div>
+
+      {/* Banner Picker Modal */}
+      <AnimatePresence>
+        {showBannerPicker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowBannerPicker(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-lg rounded-2xl p-6"
+              style={{
+                background: 'rgba(100, 120, 140, 0.15)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                border: '1px solid rgba(255,255,255,0.12)'
+              }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-lg">Select Featured Game</h3>
+                <button 
+                  onClick={() => setShowBannerPicker(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {bannerGames.map((game) => (
+                  <div
+                    key={game.id}
+                    onClick={() => { setSelectedBannerGame(game); setShowBannerPicker(false); }}
+                    className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all"
+                  >
+                    <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="absolute bottom-2 left-2">
+                      <p className="text-white font-bold text-xs">{game.title}</p>
+                      <p className="text-white/50 text-[10px]">{game.genre}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
