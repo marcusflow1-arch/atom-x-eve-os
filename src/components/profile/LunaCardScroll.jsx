@@ -177,7 +177,7 @@ const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
           filteredCards.map((card, i) => (
             <div
               key={card.id}
-              className="flex-shrink-0 w-[30%] min-w-[80px]"
+              className="flex-shrink-0 w-[30%] min-w-[72px]"
               draggable
               onDragStart={(e) => {
                 const payload = {
@@ -274,7 +274,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
   };
 
   return (
-    <div className="w-72 h-[175px] flex flex-col mt-6">
+    <div className="w-64 h-[156px] flex flex-col mt-6">
       <DragDropContext onDragEnd={handleOnDragEnd}>
         {/* Scroll Container with custom scrollbar */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
