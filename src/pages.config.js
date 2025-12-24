@@ -1,11 +1,9 @@
 import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AbilityAchievements from './pages/AbilityAchievements';
-import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AvatarStudio from './pages/AvatarStudio';
-import Blacksmith from './pages/Blacksmith';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
@@ -20,7 +18,6 @@ import GenreMastery from './pages/GenreMastery';
 import Home from './pages/Home';
 import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
-import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
@@ -37,6 +34,9 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
+import Blacksmith from './pages/Blacksmith';
+import Library from './pages/Library';
+import Achievements from './pages/Achievements';
 import __Layout from './Layout.jsx';
 
 
@@ -44,11 +44,9 @@ export const PAGES = {
     "AIConsole": AIConsole,
     "AINews": AINews,
     "AbilityAchievements": AbilityAchievements,
-    "Achievements": Achievements,
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AvatarStudio": AvatarStudio,
-    "Blacksmith": Blacksmith,
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
@@ -63,7 +61,6 @@ export const PAGES = {
     "Home": Home,
     "Ideals": Ideals,
     "InstallApp": InstallApp,
-    "Library": Library,
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
@@ -80,6 +77,9 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
+    "Blacksmith": Blacksmith,
+    "Library": Library,
+    "Achievements": Achievements,
 }
 
 export const pagesConfig = {
