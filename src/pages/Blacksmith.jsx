@@ -526,7 +526,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
       >
         
         {/* Top Navigation Bar - Translucent */}
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-8 relative">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
               <h1 className="ml-4 text-2xl font-bold tracking-wide text-white/70 flex items-center gap-3">
