@@ -14,6 +14,7 @@ import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
 import UpcomingEventsSection from './UpcomingEventsSection';
+import LunaCardScroll from '../profile/LunaCardScroll';
 
 
 // Mock pinned games
