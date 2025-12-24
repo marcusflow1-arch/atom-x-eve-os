@@ -2268,8 +2268,11 @@ export default function FocusModePanel() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Library Games (full width) */}
-      <div className="pt-4">
+      {/* Spacer to push library to bottom */}
+      <div className="flex-1" />
+
+      {/* Bottom Section - Library Games (fixed to very bottom) */}
+      <div className="mt-auto pt-4">
         <LibraryGamesSection 
           onSelectGame={setSelectedGame}
           selectedGame={selectedGame}
