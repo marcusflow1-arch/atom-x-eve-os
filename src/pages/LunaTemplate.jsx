@@ -871,6 +871,7 @@ export default function LunaTemplate() {
   const [clickedSlot, setClickedSlot] = useState(null);
   const [equippedItems, setEquippedItems] = useState({});
   const [weaponModelUrl, setWeaponModelUrl] = useState(null);
+  const [customBackground, setCustomBackground] = useState(null);
 
   const { mode } = useDashboardMode();
 
