@@ -2153,16 +2153,6 @@ export default function LunaTemplate() {
                     </div>
                     </div>
                   
-                  {/* Divider Line */}
-                  <div className="w-full flex items-center gap-4 mt-12 mb-6">
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                    <span className="text-white/30 text-xs font-medium uppercase tracking-widest">What's Happening</span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                  </div>
-                  
-                  {/* Upcoming Events Section */}
-                  <UpcomingEventsSection />
-                  
                   {/* Library Section - Bottom Docked, Secondary */}
                   <div className="w-full mt-6">
                     <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
