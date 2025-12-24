@@ -2525,7 +2525,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
-      <div className="flex gap-6 min-h-0 w-full" style={{ height: '280px', maxHeight: '280px' }}>
+      <div className="flex gap-6 w-full">
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
@@ -2535,12 +2535,12 @@ export default function FocusModePanel({ onBackgroundChange }) {
         </div>
 
         {/* Right of 3D Viewer - News & Updates Feed */}
-        <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
+        <div className="flex-1 flex gap-4">
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
           {/* Content Area - Live Panel (unified) */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex-1 flex flex-col pr-2">
             <LivePanel 
               upcomingCards={upcomingCards}
             />
