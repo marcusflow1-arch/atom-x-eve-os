@@ -586,36 +586,53 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
           </div>
 
           {/* Centered Navigation */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6">
-            {[
-              { id: 'forge', label: 'Forge', icon: Hammer },
-              { id: 'materials', label: 'Materials', icon: Package },
-              { id: 'collab', label: 'Collaborations', icon: Users },
-              ...(showItemDetail && selectedForgeAction === 'enhance' ? [
-                { id: 'enchantment', label: 'Enchantment', icon: Sparkles, isSubpage: true },
-                { id: 'combine', label: 'Combine Stage', icon: ArrowLeftRight, isSubpage: true },
-              ] : [])
-            ].map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => {
-                  if (mode.isSubpage) {
-                    setSelectedEnhanceSubpage(mode.id);
-                  } else {
-                    setViewMode(mode.id);
-                  }
-                }}
-                className={`flex items-center gap-2 text-xs font-medium transition-all ${
-                  (mode.isSubpage ? selectedEnhanceSubpage === mode.id : viewMode === mode.id)
-                    ? 'text-white' 
-                    : 'text-white/40 hover:text-white/70'
-                }`}
-                style={{ transform: 'scale(0.85)' }}
-              >
-                <mode.icon className="w-4 h-4" />
-                <span>{mode.label}</span>
-              </button>
-            ))}
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+            {/* Main Nav Row */}
+            <div className="flex items-center gap-6">
+              {[
+                { id: 'forge', label: 'Forge', icon: Hammer },
+                { id: 'materials', label: 'Materials', icon: Package },
+                { id: 'collab', label: 'Collaborations', icon: Users },
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setViewMode(mode.id)}
+                  className={`flex items-center gap-2 text-xs font-medium transition-all ${
+                    viewMode === mode.id
+                      ? 'text-white' 
+                      : 'text-white/40 hover:text-white/70'
+                  }`}
+                  style={{ transform: 'scale(0.85)' }}
+                >
+                  <mode.icon className="w-4 h-4" />
+                  <span>{mode.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Subpage Nav Row - Only shows when Enhance is selected */}
+            {showItemDetail && selectedForgeAction === 'enhance' && (
+              <div className="flex items-center gap-6">
+                {[
+                  { id: 'enchantment', label: 'Enchantment', icon: Sparkles },
+                  { id: 'combine', label: 'Combine Stage', icon: ArrowLeftRight },
+                ].map((subpage) => (
+                  <button
+                    key={subpage.id}
+                    onClick={() => setSelectedEnhanceSubpage(subpage.id)}
+                    className={`flex items-center gap-2 text-xs font-medium transition-all ${
+                      selectedEnhanceSubpage === subpage.id
+                        ? 'text-white' 
+                        : 'text-white/40 hover:text-white/70'
+                    }`}
+                    style={{ transform: 'scale(0.85)' }}
+                  >
+                    <subpage.icon className="w-4 h-4" />
+                    <span>{subpage.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-6 items-center">
