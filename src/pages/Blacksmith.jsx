@@ -604,447 +604,310 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
         <div className="flex-1 flex gap-8 overflow-hidden">
           
           {viewMode === 'forge' ? (
-            <>
-              {/* LEFT SIDEBAR (Shiny Box Style) */}
-              <div className="w-[300px] flex-shrink-0 h-full overflow-hidden">
-                  <ShinySidebarBox className="h-full p-6 flex flex-col">
-                       {/* Search */}
-                       <div className="relative group mb-6">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search games..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-                            />
-                            <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                                <Mic className="w-4 h-4" />
-                            </button>
-                       </div>
+            <AnimatePresence mode="wait">
+              {!showItemDetail ? (
+                /* CROSS INTERFACE - Games vertical, Items horizontal */
+                <motion.div
+                  key="cross-interface"
+                  className="w-full h-full relative"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {/* Dynamic Background */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentCrossGame?.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6 }}
+                      className="absolute inset-0 z-0"
+                    >
+                      {currentCrossGame?.id && mockItems.find(i => i.game_id === currentCrossGame.id)?.preview_image_url && (
+                        <>
+                          <img
+                            src={mockItems.find(i => i.game_id === currentCrossGame.id)?.preview_image_url}
+                            alt="bg"
+                            className="w-full h-full object-cover opacity-30 blur-sm scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                        </>
+                      )}
+                      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                    </motion.div>
+                  </AnimatePresence>
 
-                       {/* Game List with Genres */}
-                       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <button
-                                onClick={() => setIsGenreOpen(!isGenreOpen)}
-                                className="w-full flex items-center justify-between text-white/40 text-xs font-bold uppercase tracking-widest mb-4 hover:text-white transition-colors px-1"
+                  {/* Interface Layer */}
+                  <div className="relative z-10 w-full h-full">
+                    
+                    {/* Header with Game Name */}
+                    <div className="absolute top-8 left-12 flex items-center gap-4 z-30">
+                      <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
+                        {currentCrossGame?.title || 'Select a Game'}
+                      </span>
+                    </div>
+
+                    {/* VERTICAL AXIS (Games) */}
+                    <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
+                      <motion.div
+                        className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+                        animate={{
+                          y: `calc(40vh - ${activeGameIndex * 104}px - 40px)`
+                        }}
+                        transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                      >
+                        {allGames.map((game, idx) => {
+                          const isActive = idx === activeGameIndex;
+                          return (
+                            <motion.div
+                              key={game.id}
+                              onClick={() => {
+                                setActiveGameIndex(idx);
+                                setActiveCardIndex(0);
+                              }}
+                              animate={{
+                                scale: isActive ? 1.2 : 0.9,
+                                opacity: isActive ? 1 : 0.3,
+                                x: isActive ? 20 : 0
+                              }}
+                              className="flex flex-col items-center gap-2 cursor-pointer w-32"
                             >
-                                <span>Categories</span>
-                                {isGenreOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                            </button>
+                              <div className={`
+                                w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300
+                                ${isActive
+                                  ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40'
+                                  : 'border border-white/10'
+                                }
+                              `}>
+                                <img
+                                  src={game.cover_image || game.cover}
+                                  alt={game.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
+                                {game.title}
+                              </span>
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    </div>
 
-                            <AnimatePresence>
-                                {isGenreOpen && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="space-y-6"
-                                    >
-                                        {Object.entries(gamesByGenre).map(([genre, games]) => (
-                                            <div key={genre}>
-                                                <h4 className="text-white/60 text-xs font-semibold mb-2 flex items-center gap-2 pl-2">
-                                                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                                                    {genre}
-                                                </h4>
-                                                <div className="space-y-1 border-l border-white/5 pl-2 ml-0.5">
-                                                    {games.filter(g => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map(game => (
-                                                        <button
-                                                            key={game.id}
-                                                            onClick={() => {
-                                                                setSelectedGame(game);
-                                                                setSelectedItem(null);
-                                                            }}
-                                                            className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group border ${selectedGame?.id === game.id ? 'border-cyan-400/30' : 'hover:border-cyan-400/20 border-transparent'}`}
-                                               style={selectedGame?.id === game.id ? {
-                                                 background: 'rgba(34, 211, 238, 0.12)',
-                                                 boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                                               } : {}}
-                                                        >
-                                                            <div className="w-8 h-8 rounded bg-slate-800 flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-white/30">
-                                                                <img src={game.image} alt="" className="w-full h-full object-cover" />
-                                                            </div>
-                                                            <span className={`text-sm truncate ${selectedGame?.id === game.id ? 'text-white font-medium' : 'text-slate-400 group-hover:text-white'}`}>
-                                                                {game.title}
-                                                            </span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                       </div>
-                  </ShinySidebarBox>
-              </div>
+                    {/* HORIZONTAL AXIS (Items as Cards) */}
+                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+                      <motion.div
+                        className="flex items-center gap-8 pl-64 pointer-events-auto"
+                        animate={{
+                          x: -activeCardIndex * (200 + 32)
+                        }}
+                        transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                      >
+                        {currentCrossItems.map((item, idx) => {
+                          const isActive = idx === activeCardIndex;
+                          const style = rarityStyles[item.rarity] || rarityStyles.Common;
+                          
+                          return (
+                            <motion.div
+                              key={item.id}
+                              onClick={() => {
+                                setActiveCardIndex(idx);
+                                if (isActive) {
+                                  setSelectedItem(item);
+                                  setShowItemDetail(true);
+                                }
+                              }}
+                              animate={{
+                                scale: isActive ? 1.1 : 0.9,
+                                opacity: isActive ? 1 : 0.4,
+                                y: isActive ? 0 : 20
+                              }}
+                              className={`
+                                w-[200px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                                border-2 transition-all duration-300 shadow-2xl
+                                ${isActive
+                                  ? `${style.border} shadow-blue-500/20`
+                                  : 'border-white/5 bg-black/40'
+                                }
+                              `}
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                              }}
+                            >
+                              {/* Item Image */}
+                              <div className="absolute inset-0">
+                                <img src={item.preview_image_url} alt={item.name} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                              </div>
+                              
+                              {/* Item Info Overlay */}
+                              <div className="absolute inset-0 flex flex-col p-3 justify-end">
+                                <h3 className="text-white font-bold text-sm leading-tight mb-1">{item.name}</h3>
+                                <Badge variant="outline" className={`text-[9px] h-4 px-1 border w-fit ${style.border} ${style.color}`}>
+                                  {item.rarity}
+                                </Badge>
+                              </div>
+                              
+                              {isActive && (
+                                <motion.div
+                                  layoutId="item-active-border"
+                                  className="absolute inset-0 border-4 border-white/60 rounded-xl z-20 pointer-events-none"
+                                  transition={{ duration: 0.2 }}
+                                />
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </motion.div>
+                    </div>
 
-              {/* RIGHT CONTENT: Items Grid */}
-              <div className="flex-1 h-full flex flex-col overflow-hidden">
-                   {selectedGame ? (
-                       <div className="flex flex-col h-full">
-                           {/* Game Header Bar */}
-                           <div className="h-16 flex items-center justify-between px-8 border-b border-white/10 shrink-0">
-                               <div className="flex items-center gap-3">
-                                  <button 
-                                      onClick={() => setSelectedGame(null)} 
-                                      className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
-                                  >
-                                      <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                                      <span className="font-bold uppercase tracking-wider text-sm">Back to Games</span>
-                                  </button>
+                    {/* ACTIVE ITEM DETAILS */}
+                    <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
+                      <AnimatePresence mode="wait">
+                        {activeItem && (
+                          <motion.div
+                            key={activeItem.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                                {activeItem.genre}
+                              </Badge>
+                              <Badge className={`backdrop-blur-md border ${rarityStyles[activeItem.rarity]?.border || 'border-slate-500/50'} ${rarityStyles[activeItem.rarity]?.color || 'text-slate-400'} bg-black/30`}>
+                                {activeItem.rarity}
+                              </Badge>
+                              <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                                {activeItem.type}
+                              </Badge>
+                            </div>
+                            <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl">
+                              {activeItem.name}
+                            </h1>
+                            <p className="text-lg text-white/70 line-clamp-2 max-w-xl drop-shadow-md">
+                              {activeItem.description}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                /* ITEM DETAIL TRANSITIONAL PAGE */
+                <motion.div
+                  key="item-detail"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full h-full flex items-center justify-center p-8"
+                >
+                  <div className="max-w-5xl w-full">
+                    {/* Back Button */}
+                    <button
+                      onClick={() => setShowItemDetail(false)}
+                      className="mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                      <span className="font-semibold">Back to Forge</span>
+                    </button>
 
-                                  <button
-                                     onClick={() => navigate(createPageUrl('CrossGameFusion'))}
-                                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 transition-all"
-                                  >
-                                     <Shuffle className="w-4 h-4" />
-                                     <span className="text-xs font-bold">Cross-Fusion</span>
-                                  </button>
-                               </div>
-                               <Badge variant="outline" className="bg-blue-900/20 border-blue-500/30 text-blue-400">
-                                   {selectedGame.title}
-                               </Badge>
-                           </div>
+                    {/* Item Detail Content */}
+                    {selectedItem && (
+                      <div className="flex gap-8">
+                        {/* Left: Large Item Card */}
+                        <div className="flex-shrink-0">
+                          <div 
+                            className={`w-80 h-[480px] rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                              boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
+                                selectedItem.rarity === 'Legendary' ? 'rgba(251, 146, 60, 0.3)' :
+                                selectedItem.rarity === 'Mythic' ? 'rgba(244, 63, 94, 0.3)' :
+                                selectedItem.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
+                                'rgba(59, 130, 246, 0.3)'
+                              }`
+                            }}
+                          >
+                            <img src={selectedItem.preview_image_url} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-6">
+                              <h2 className="text-3xl font-black text-white mb-2">{selectedItem.name}</h2>
+                              <div className="flex items-center gap-2">
+                                <Badge className={`${rarityStyles[selectedItem.rarity].border} ${rarityStyles[selectedItem.rarity].color} bg-black/50`}>
+                                  {selectedItem.rarity}
+                                </Badge>
+                                <Badge className="bg-white/10 border-white/20 text-white">{selectedItem.type}</Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                           <div className="flex-1 flex overflow-hidden">
-                               {/* Left: Item List (Vertical) */}
-                               <div className="w-72 flex-shrink-0 border-r border-white/10 flex flex-col">
-                                   {/* Tabs */}
-                                   <div className="flex items-center gap-4 px-4 py-4 border-b border-white/5">
-                                       {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
-                                           <button
-                                               key={cat}
-                                               onClick={() => setCategoryFilter(cat)}
-                                               className={`text-xs font-bold uppercase tracking-wider transition-colors ${
-                                                   categoryFilter === cat ? 'text-blue-400 border-b-2 border-blue-400 pb-1' : 'text-slate-500 hover:text-slate-300 pb-1 border-b-2 border-transparent'
-                                               }`}
-                                           >
-                                               {cat === 'all' ? 'ALL' : cat.toUpperCase()}
-                                           </button>
-                                       ))}
-                                   </div>
+                        {/* Right: Item Info & Actions */}
+                        <div className="flex-1 space-y-6">
+                          <div>
+                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-2">Description</h3>
+                            <p className="text-white/80 text-lg leading-relaxed italic">"{selectedItem.description}"</p>
+                          </div>
 
-                                   {/* Vertical Item List */}
-                                   <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
-                                       {displayedItems.length > 0 ? displayedItems.map(item => (
-                                           <div
-                                               key={item.id}
-                                               onClick={() => setSelectedItem(item)}
-                                               className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all ${
-                                                   item.isUnlocked 
-                                                       ? `${selectedItem?.id === item.id ? 'bg-blue-600/15 border border-blue-500/40' : 'hover:bg-white/5 border border-transparent'}`
-                                                       : 'opacity-40 grayscale hover:opacity-60 border border-transparent'
-                                               }`}
-                                           >
-                                               {/* Small Card Thumbnail */}
-                                               <div className="w-12 h-16 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 relative">
-                                                   <img src={item.preview_image_url} className="w-full h-full object-cover" />
-                                                   {!item.isUnlocked && (
-                                                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                           <Layers className="w-4 h-4 text-white/30" />
-                                                       </div>
-                                                   )}
-                                               </div>
-                                               {/* Item Info */}
-                                               <div className="min-w-0 flex-1">
-                                                   <div className={`font-bold text-sm truncate ${selectedItem?.id === item.id ? 'text-white' : item.isUnlocked ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                       {item.name}
-                                                   </div>
-                                                   <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                                       <span className={rarityStyles[item.rarity].color}>{item.rarity}</span>
-                                                       <span className="text-slate-600">•</span>
-                                                       <span>Lv.{item.level_requirement}</span>
-                                                   </div>
-                                               </div>
-                                           </div>
-                                       )) : (
-                                           <div className="text-center text-slate-500 text-sm py-8">
-                                               <Package className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                               <p>No items found.</p>
-                                           </div>
-                                       )}
-                                   </div>
-                               </div>
+                          <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-4">Base Stats</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              {Object.entries(selectedItem.base_stats).map(([stat, value]) => (
+                                <div key={stat} className="flex justify-between items-center">
+                                  <span className="text-slate-300 capitalize text-sm">{stat.replace('_', ' ')}</span>
+                                  <span className="text-white font-bold font-mono text-lg">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-                               {/* Right: Detail Panel */}
-                               <div className="flex-1 flex flex-col overflow-hidden">
-                                   {selectedItem ? (
-                                       <div className="flex-1 flex items-center p-6 gap-4">
-                                           {/* Left: Large Card */}
-                                           <div className="flex flex-col items-center flex-shrink-0">
-                                               <div 
-                                                   className={`w-48 h-64 rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
-                                                   style={{
-                                                       background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                                                       boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
-                                                           selectedItem.rarity === 'Legendary' ? 'rgba(251, 146, 60, 0.2)' :
-                                                           selectedItem.rarity === 'Mythic' ? 'rgba(244, 63, 94, 0.2)' :
-                                                           selectedItem.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.2)' :
-                                                           'rgba(59, 130, 246, 0.2)'
-                                                       }`
-                                                   }}
-                                               >
-                                                   <img src={selectedItem.preview_image_url} className="w-full h-full object-cover" />
-                                                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                                                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                       <div className={`text-lg font-black text-white mb-1`}>{selectedItem.name}</div>
-                                                       <div className="flex items-center gap-2">
-                                                           <span className={`text-xs font-bold ${rarityStyles[selectedItem.rarity].color}`}>{selectedItem.rarity}</span>
-                                                           <span className="text-xs text-slate-400">Lv.{selectedItem.level_requirement}</span>
-                                                       </div>
-                                                   </div>
-                                                   {/* Corner decorations */}
-                                                   <div className={`absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-tl-lg`} />
-                                                   <div className={`absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-tr-lg`} />
-                                                   <div className={`absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 ${rarityStyles[selectedItem.rarity].border} rounded-bl-lg`} />
-                                                   <div className={`absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 ${rarityStyles[selectedItem.rarity].border} rounded-br-lg`} />
-                                               </div>
-                                               <h2 className="text-xl font-black text-white mt-4 text-center">{selectedItem.name}</h2>
-                                               <p className="text-slate-400 text-xs mt-1">{selectedItem.type}</p>
-                                           </div>
+                          <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-4">Enhancements</h3>
+                            {selectedItem.modifiers.length > 0 ? (
+                              <div className="space-y-2">
+                                {selectedItem.modifiers.map((mod, idx) => (
+                                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-black/30">
+                                    <Zap className="w-5 h-5 text-amber-400" />
+                                    <div>
+                                      <div className="text-white font-bold">{mod.name}</div>
+                                      <div className="text-slate-400 text-sm">{mod.effect}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-slate-500 italic">No active enhancements</p>
+                            )}
+                          </div>
 
-                                           {/* Invisible vertical divider */}
-                                           <div className="w-px h-full bg-transparent mx-2" />
-
-                                           {/* Middle: Vertical Icon Menu */}
-                                           <div className="flex flex-col gap-2 flex-shrink-0">
-                                               {[
-                                                   { id: 'enchant', icon: Sparkles, label: 'Enchant', color: 'text-blue-400', hoverBg: 'hover:bg-blue-500/10' },
-                                                   { id: 'combine', icon: ArrowLeftRight, label: 'Combine', color: 'text-purple-400', hoverBg: 'hover:bg-purple-500/10' },
-                                                   { id: 'train', icon: Users, label: 'Train', color: 'text-cyan-400', hoverBg: 'hover:bg-cyan-500/10' },
-                                                   { id: 'ascend', icon: Crown, label: 'Ascend', color: 'text-amber-400', hoverBg: 'hover:bg-amber-500/10' },
-                                               ].map((action) => (
-                                                   <button
-                                                       key={action.id}
-                                                       onClick={() => setActiveAction(action.id)}
-                                                       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all border ${
-                                                           activeAction === action.id 
-                                                               ? `bg-white/10 border-white/20 ${action.color}` 
-                                                               : `border-transparent text-slate-500 ${action.hoverBg} hover:text-white`
-                                                       }`}
-                                                   >
-                                                       <action.icon className="w-5 h-5" />
-                                                       <span className="text-sm font-semibold">{action.label}</span>
-                                                   </button>
-                                               ))}
-                                           </div>
-
-                                           {/* Invisible vertical divider */}
-                                           <div className="w-px h-full bg-transparent mx-2" />
-
-                                           {/* Right: Dynamic Action Panel */}
-                                           <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                               <AnimatePresence mode="wait">
-                                                   {activeAction === 'enchant' && (
-                                                       <motion.div
-                                                           key="enchant-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Enchantment</h3>
-                                                           
-                                                           {/* Available Perks */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Available Perks</h4>
-                                                               {[
-                                                                   { name: 'Lightning Strike', effect: '+20% Electric Damage', cost: 100 },
-                                                                   { name: 'Critical Edge', effect: '+15% Crit Chance', cost: 150 },
-                                                                   { name: 'Vampiric', effect: 'Heal 5% of damage dealt', cost: 200 },
-                                                               ].map((perk, i) => (
-                                                                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400/30 cursor-pointer transition-all">
-                                                                       <div>
-                                                                           <p className="text-white text-sm font-semibold">{perk.name}</p>
-                                                                           <p className="text-slate-400 text-xs">{perk.effect}</p>
-                                                                       </div>
-                                                                       <span className="text-amber-400 text-xs font-bold">{perk.cost}G</span>
-                                                                   </div>
-                                                               ))}
-                                                           </div>
-
-                                                           {/* Enchantment Slider */}
-                                                           <div className="mt-6">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-3">Enhancement Level</h4>
-                                                               <div className="space-y-3">
-                                                                   <div className="flex items-center justify-between text-sm">
-                                                                       <span className="text-slate-400">Current</span>
-                                                                       <span className="text-white font-bold">{selectedItem.modifiers.length * 25}%</span>
-                                                                   </div>
-                                                                   <input 
-                                                                       type="range" 
-                                                                       min="0" 
-                                                                       max="100" 
-                                                                       defaultValue={selectedItem.modifiers.length * 25}
-                                                                       className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer slider"
-                                                                       style={{
-                                                                           background: `linear-gradient(to right, rgb(59, 130, 246) 0%, rgb(59, 130, 246) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) ${selectedItem.modifiers.length * 25}%, rgb(51, 65, 85) 100%)`
-                                                                       }}
-                                                                   />
-                                                                   <Button className="w-full bg-blue-600 hover:bg-blue-500 h-10 rounded-lg">
-                                                                       Apply Enchantment
-                                                                   </Button>
-                                                               </div>
-                                                           </div>
-                                                       </motion.div>
-                                                   )}
-
-                                                   {activeAction === 'combine' && (
-                                                       <motion.div
-                                                           key="combine-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Combine Stage</h3>
-                                                           
-                                                           {/* Quantity Selector */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Quantity</h4>
-                                                               <div className="flex items-center gap-3">
-                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
-                                                                       <span className="text-xl font-bold">−</span>
-                                                                   </button>
-                                                                   <div className="flex-1 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                                                                       <span className="text-white font-bold text-lg">1</span>
-                                                                   </div>
-                                                                   <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all">
-                                                                       <span className="text-xl font-bold">+</span>
-                                                                   </button>
-                                                               </div>
-                                                           </div>
-
-                                                           {/* Drag & Drop Zone */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Material Card</h4>
-                                                               <div className="h-32 rounded-xl border-2 border-dashed border-white/20 bg-white/5 flex flex-col items-center justify-center hover:border-purple-400/50 transition-all cursor-pointer">
-                                                                   <Plus className="w-8 h-8 text-white/30 mb-2" />
-                                                                   <p className="text-white/40 text-xs">Drag card here</p>
-                                                               </div>
-                                                           </div>
-
-                                                           {/* Combine Button */}
-                                                           <Button className="w-full bg-purple-600 hover:bg-purple-500 h-12 rounded-lg font-bold">
-                                                               <ArrowLeftRight className="w-4 h-4 mr-2" />
-                                                               Combine Stage
-                                                           </Button>
-                                                       </motion.div>
-                                                   )}
-
-                                                   {activeAction === 'train' && (
-                                                       <motion.div
-                                                           key="train-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Train Card</h3>
-                                                           
-                                                           {/* Current Level */}
-                                                           <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                                               <div className="flex items-center justify-between mb-2">
-                                                                   <span className="text-slate-400 text-xs uppercase">Current Level</span>
-                                                                   <span className="text-white font-bold text-2xl">{selectedItem.level_requirement}</span>
-                                                               </div>
-                                                               <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                                                   <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: '60%' }} />
-                                                               </div>
-                                                           </div>
-
-                                                           {/* Level Options */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Increase Level</h4>
-                                                               <div className="grid grid-cols-3 gap-2">
-                                                                   {[1, 5, 10].map((increment) => (
-                                                                       <button key={increment} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all">
-                                                                           +{increment}
-                                                                       </button>
-                                                                   ))}
-                                                               </div>
-                                                               <Button className="w-full bg-cyan-600 hover:bg-cyan-500 h-10 rounded-lg font-bold mt-3">
-                                                                   Max Level
-                                                               </Button>
-                                                           </div>
-                                                       </motion.div>
-                                                   )}
-
-                                                   {activeAction === 'ascend' && (
-                                                       <motion.div
-                                                           key="ascend-panel"
-                                                           initial={{ opacity: 0, x: 20 }}
-                                                           animate={{ opacity: 1, x: 0 }}
-                                                           exit={{ opacity: 0, x: -20 }}
-                                                           className="space-y-4"
-                                                       >
-                                                           <h3 className="text-white font-bold text-lg mb-4">Ascend Card</h3>
-                                                           
-                                                           {/* Ascension Info */}
-                                                           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/30">
-                                                               <p className="text-amber-300 text-xs font-semibold mb-2">Ascension unlocks powerful effects</p>
-                                                               <p className="text-white/60 text-xs">Choose an effect to permanently enhance this card.</p>
-                                                           </div>
-
-                                                           {/* Effect Selection */}
-                                                           <div className="space-y-2">
-                                                               <h4 className="text-slate-400 text-xs uppercase tracking-wider font-bold">Select Effect</h4>
-                                                               {[
-                                                                   { name: 'Divine Fury', description: '+30% All Stats', icon: Star },
-                                                                   { name: 'Eternal Guardian', description: 'Damage Reduction +25%', icon: Shield },
-                                                                   { name: 'Void Essence', description: 'Ignores 20% Defense', icon: Zap },
-                                                               ].map((effect, i) => (
-                                                                   <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/50 cursor-pointer transition-all group">
-                                                                       <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                                                                           <effect.icon className="w-5 h-5 text-amber-400" />
-                                                                       </div>
-                                                                       <div className="flex-1">
-                                                                           <p className="text-white text-sm font-semibold">{effect.name}</p>
-                                                                           <p className="text-slate-400 text-xs">{effect.description}</p>
-                                                                       </div>
-                                                                   </div>
-                                                               ))}
-                                                           </div>
-
-                                                           <Button className="w-full bg-amber-600 hover:bg-amber-500 h-12 rounded-lg font-bold mt-4">
-                                                               <Crown className="w-4 h-4 mr-2" />
-                                                               Ascend Now
-                                                           </Button>
-                                                       </motion.div>
-                                                   )}
-
-                                                   {!activeAction && (
-                                                       <motion.div
-                                                           key="no-action"
-                                                           initial={{ opacity: 0 }}
-                                                           animate={{ opacity: 1 }}
-                                                           className="flex items-center justify-center h-full text-slate-500"
-                                                       >
-                                                           <p className="text-sm">Select an action</p>
-                                                       </motion.div>
-                                                   )}
-                                               </AnimatePresence>
-                                           </div>
-                                       </div>
-                                   ) : (
-                                       <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
-                                           <Hammer className="w-16 h-16 mb-4 opacity-20" />
-                                           <p className="text-sm">Select an item to view details</p>
-                                       </div>
-                                   )}
-                               </div>
-                           </div>
-                       </div>
-                   ) : (
-                       <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
-                           <Gamepad2 className="w-20 h-20 mb-6 opacity-20" />
-                           <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                           <p className="max-w-md text-center">Choose a game from the sidebar to view your inventory.</p>
-                       </div>
-                   )}
-              </div>
-            </>
+                          <div className="flex gap-3">
+                            <Button className="flex-1 bg-blue-600 hover:bg-blue-500 h-12">
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Enchant
+                            </Button>
+                            <Button className="flex-1 bg-purple-600 hover:bg-purple-500 h-12">
+                              <ArrowLeftRight className="w-4 h-4 mr-2" />
+                              Combine
+                            </Button>
+                            <Button className="flex-1 bg-amber-600 hover:bg-amber-500 h-12">
+                              <Crown className="w-4 h-4 mr-2" />
+                              Ascend
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           ) : viewMode === 'collab' ? (
             <div className="w-full h-full overflow-y-auto">
               <CraftingCollaborations />
