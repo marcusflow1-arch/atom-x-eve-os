@@ -2147,6 +2147,7 @@ export default function LunaTemplate() {
                   <div className="w-full">
                     <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
                   </div>
+                  </motion.div>
             ) : null)}
             {showInventory && uiVisible && (
               <motion.div 
