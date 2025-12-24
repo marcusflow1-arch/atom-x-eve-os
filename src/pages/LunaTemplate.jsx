@@ -1129,7 +1129,7 @@ export default function LunaTemplate() {
             minHeight: '800px'
           }}>
 
-              <FocusModePanel />
+              <FocusModePanel onBackgroundChange={setCustomBackground} />
             </motion.div>
         }
         </AnimatePresence>
