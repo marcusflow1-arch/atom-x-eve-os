@@ -1254,6 +1254,14 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                         </div>
                       </div>
 
+                      {/* Translucent rectangle to the right of Destiny Brigades */}
+                      {game.title === 'Destiny Brigades' && (
+                        <div
+                          className="absolute left-full top-0 ml-2 h-full w-8 rounded-lg border border-white/10 pointer-events-none"
+                          style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+                        />
+                      )}
+
                       {/* Inline Options Panel to the right for Destiny Brigades */}
                       {isSelected && showGamePanel && selectedGame?.title === 'Destiny Brigades' && (
                         <div className="absolute left-full top-0 ml-2 w-[280px] z-20 scale-50 origin-top-left" data-game-panel>
