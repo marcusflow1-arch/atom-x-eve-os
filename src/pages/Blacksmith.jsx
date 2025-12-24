@@ -1104,9 +1104,9 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                                 <h3 className="text-xl font-bold text-slate-400 mb-2">Action Workspace</h3>
                                                                 <p className="text-sm text-slate-500 max-w-xs">Select an action from the card panel to begin crafting, enchanting, or evolving your items.</p>
                                                             </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
+                                                </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     ) : (
                                         <div className="flex-1 flex flex-col items-center justify-center text-slate-600 p-6">
