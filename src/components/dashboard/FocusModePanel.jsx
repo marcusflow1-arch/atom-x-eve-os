@@ -2091,32 +2091,7 @@ function LivePanel({ upcomingCards }) {
         </div>
 
         {/* Right: Demo Video Box */}
-        <div 
-          className="w-36 h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
-          style={{
-            background: 'rgba(100, 120, 140, 0.08)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)'
-          }}
-          onClick={() => setShowCardOverlay(true)}
-        >
-          {/* Demo Placeholder */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all mb-2">
-              <Play className="w-5 h-5 text-white/70 ml-0.5" />
-            </div>
-            <span className="text-[10px] text-white/40 font-medium">Demonstration</span>
-            <span className="text-[8px] text-white/30 mt-1">Click to view</span>
-          </div>
-
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-
-          {/* Demo label */}
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
-            <span className="text-[8px] text-white/60 uppercase tracking-wider">Demo</span>
-          </div>
-        </div>
+        <DemoVideoBox card={currentCard} />
       </div>
 
       {/* Card Detail Overlay */}
