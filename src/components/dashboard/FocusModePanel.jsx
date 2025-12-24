@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
+import UpcomingEventsSection from './UpcomingEventsSection';
 
 
 // Mock pinned games
@@ -2558,6 +2559,11 @@ export default function FocusModePanel({ onBackgroundChange }) {
       </AnimatePresence>
 
 
+
+      {/* Upcoming Events Section - Below New Cards */}
+      <div className="mt-6 w-full">
+        <UpcomingEventsSection />
+      </div>
 
       {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
