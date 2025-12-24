@@ -798,110 +798,26 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   </div>
                 </motion.div>
               ) : (
-                /* ITEM DETAIL TRANSITIONAL PAGE */
+                /* ITEM DETAIL TRANSITIONAL PAGE - BLANK */
                 <motion.div
                   key="item-detail"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="w-full h-full flex items-center justify-center p-8"
+                  className="w-full h-full flex flex-col"
                 >
-                  <div className="max-w-5xl w-full">
-                    {/* Back Button */}
-                    <button
-                      onClick={() => setShowItemDetail(false)}
-                      className="mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                      <span className="font-semibold">Back to Forge</span>
-                    </button>
+                  {/* Back Button */}
+                  <button
+                    onClick={() => setShowItemDetail(false)}
+                    className="mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="font-semibold">Back to Forge</span>
+                  </button>
 
-                    {/* Item Detail Content */}
-                    {selectedItem && (
-                      <div className="flex gap-8">
-                        {/* Left: Large Item Card */}
-                        <div className="flex-shrink-0">
-                          <div 
-                            className={`w-80 h-[480px] rounded-2xl border-2 overflow-hidden relative ${rarityStyles[selectedItem.rarity].border}`}
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                              boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${
-                                selectedItem.rarity === 'Legendary' ? 'rgba(251, 146, 60, 0.3)' :
-                                selectedItem.rarity === 'Mythic' ? 'rgba(244, 63, 94, 0.3)' :
-                                selectedItem.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
-                                'rgba(59, 130, 246, 0.3)'
-                              }`
-                            }}
-                          >
-                            <img src={selectedItem.preview_image_url} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-6">
-                              <h2 className="text-3xl font-black text-white mb-2">{selectedItem.name}</h2>
-                              <div className="flex items-center gap-2">
-                                <Badge className={`${rarityStyles[selectedItem.rarity].border} ${rarityStyles[selectedItem.rarity].color} bg-black/50`}>
-                                  {selectedItem.rarity}
-                                </Badge>
-                                <Badge className="bg-white/10 border-white/20 text-white">{selectedItem.type}</Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Right: Item Info & Actions */}
-                        <div className="flex-1 space-y-6">
-                          <div>
-                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-2">Description</h3>
-                            <p className="text-white/80 text-lg leading-relaxed italic">"{selectedItem.description}"</p>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-4">Base Stats</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                              {Object.entries(selectedItem.base_stats).map(([stat, value]) => (
-                                <div key={stat} className="flex justify-between items-center">
-                                  <span className="text-slate-300 capitalize text-sm">{stat.replace('_', ' ')}</span>
-                                  <span className="text-white font-bold font-mono text-lg">{value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                            <h3 className="text-white/50 text-xs uppercase tracking-wider font-bold mb-4">Enhancements</h3>
-                            {selectedItem.modifiers.length > 0 ? (
-                              <div className="space-y-2">
-                                {selectedItem.modifiers.map((mod, idx) => (
-                                  <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-black/30">
-                                    <Zap className="w-5 h-5 text-amber-400" />
-                                    <div>
-                                      <div className="text-white font-bold">{mod.name}</div>
-                                      <div className="text-slate-400 text-sm">{mod.effect}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-slate-500 italic">No active enhancements</p>
-                            )}
-                          </div>
-
-                          <div className="flex gap-3">
-                            <Button className="flex-1 bg-blue-600 hover:bg-blue-500 h-12">
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Enchant
-                            </Button>
-                            <Button className="flex-1 bg-purple-600 hover:bg-purple-500 h-12">
-                              <ArrowLeftRight className="w-4 h-4 mr-2" />
-                              Combine
-                            </Button>
-                            <Button className="flex-1 bg-amber-600 hover:bg-amber-500 h-12">
-                              <Crown className="w-4 h-4 mr-2" />
-                              Ascend
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  {/* Blank Content Area - Ready for next instructions */}
+                  <div className="flex-1 flex items-center justify-center">
+                    {/* Placeholder - will be populated with next instructions */}
                   </div>
                 </motion.div>
               )}
