@@ -2457,8 +2457,11 @@ export default function FocusModePanel() {
 
 
 
-      {/* Bottom Section - Library Games - Centered */}
+      {/* Bottom Section - Library Games with Banner - Centered */}
       <div className="mt-4 w-full max-w-4xl mx-auto">
+        {/* Library Banner Section - Line + Banner above the AI Home button, next to games */}
+        <LibraryBannerSection games={ownedGames} />
+        
         <LibraryGamesSection 
           onSelectGame={handleGameSelect}
           selectedGame={selectedGame}
