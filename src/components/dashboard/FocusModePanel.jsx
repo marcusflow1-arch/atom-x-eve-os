@@ -1367,29 +1367,46 @@ function GameOptionsPanel({ game, onClose }) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="mt-1 space-y-1.5">
-            <button
-              onClick={() => handleOptionClick('play')}
-              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all"
-            >
-              <Play className="w-4 h-4" />
-              Play Game
-            </button>
-            <button
-              onClick={() => handleOptionClick('settings')}
-              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 text-xs transition-colors border border-white/10"
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </button>
-            <button
-              onClick={() => handleOptionClick('updates')}
-              className="w-full flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs transition-colors border border-amber-400/30"
-            >
-              <Zap className="w-4 h-4" />
-              Check Updates
-            </button>
+          {/* Actions - horizontal line with inline items */}
+          <div className="relative py-3 select-none">
+            {/* Line limited to actions area (does not cross the cover) */}
+            <div className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-white/15" />
+
+            {/* Items along the line */}
+            <div className="relative flex items-center justify-between">
+              {/* Play - left */}
+              <div
+                onClick={() => handleOptionClick('play')}
+                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
+                role="button"
+                title="Play"
+              >
+                <Play className="w-4 h-4 text-green-400 transition-transform group-hover:scale-110" />
+                <span className="text-xs font-semibold text-white">Play</span>
+              </div>
+
+              {/* Check Updates - center */}
+              <div
+                onClick={() => handleOptionClick('updates')}
+                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
+                role="button"
+                title="Check updates"
+              >
+                <Zap className="w-4 h-4 text-amber-300 transition-transform group-hover:scale-110" />
+                <span className="text-xs text-white/90">Check Updates</span>
+              </div>
+
+              {/* Settings - right end */}
+              <div
+                onClick={() => handleOptionClick('settings')}
+                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
+                role="button"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4 text-white/70 transition-transform group-hover:rotate-90" />
+                <span className="text-xs text-white/80">Settings</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
