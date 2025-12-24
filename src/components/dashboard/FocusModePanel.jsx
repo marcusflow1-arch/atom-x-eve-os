@@ -1214,12 +1214,13 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           </button>
         </div>
 
-        {/* Games Grid - Rows of 10, vertical scroll */}
-        <div 
-          ref={libraryScrollRef}
-          className="flex-1 overflow-y-auto space-y-3"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
-        >
+        {/* Games Grid - Rows of 10, with options panel on the right */}
+        <div className="flex gap-3">
+          <div 
+            ref={libraryScrollRef}
+            className="flex-1 overflow-y-auto space-y-3"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
+          >
           <AnimatePresence mode="popLayout">
             {rows.map((row, rowIndex) => (
               <div key={rowIndex} className="flex gap-2">
@@ -1262,12 +1263,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                         />
                       )}
 
-                      {/* Inline Options Panel to the right for Destiny Brigades */}
-                      {isSelected && showGamePanel && selectedGame?.title === 'Destiny Brigades' && (
-                        <div className="absolute left-full top-0 ml-2 w-[280px] z-20 scale-50 origin-top-left" data-game-panel>
-                          <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
-                        </div>
-                      )}
+
                     </motion.div>
                   );
                 })}
@@ -1284,6 +1280,11 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
             </motion.div>
           )}
         </div>
+        {showGamePanel && selectedGame && (
+          <div className="w-56 self-start sticky top-0" data-game-panel>
+            <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2605,22 +2606,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
         <UpcomingEventsSection />
       </div>
 
-      {/* Game Options Panel - Below the Live Panel / Demo video */}
-      <AnimatePresence>
-        {showGamePanel && selectedGame && selectedGame.title !== 'Destiny Brigades' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="w-full max-w-4xl mx-auto mt-4"
-          >
-            <GameOptionsPanel 
-              game={selectedGame} 
-              onClose={handleCloseGamePanel}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </div>
   );
 }
