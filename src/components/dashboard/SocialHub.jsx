@@ -364,7 +364,7 @@ export default function SocialHub() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [activeView, setActiveView] = useState('feed'); // 'feed' or 'marketplace'
-  const [feedSubView, setFeedSubView] = useState('feed'); // 'feed' or 'contracts'
+
 
   // 1. Fetch Social Feed
   const { data: feedData, isLoading: isFeedLoading } = useQuery({
@@ -523,22 +523,24 @@ export default function SocialHub() {
         <h2 className="text-xl font-bold text-white/60 mr-4">Social Hub</h2>
         <div className="h-6 w-px bg-white/10" />
         <button
-          onClick={() => setActiveView('feed')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            activeView === 'feed'
-              ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
-          }`}
-          style={activeView === 'feed' ? {
+          onClick={() => setActiveView(activeView === 'feed' ? 'contracts' : 'feed')}
+          className="px-5 py-2 rounded-full text-sm font-medium transition-all text-white"
+          style={{
             background: 'rgba(255, 255, 255, 0.10)',
             border: '1px solid rgba(255, 255, 255, 0.15)'
-          } : {
-            background: 'transparent',
-            border: '1px solid transparent'
           }}
         >
-          <TrendingUp className="w-4 h-4 inline mr-2" />
-          Feed
+          {activeView === 'feed' || activeView === 'marketplace' ? (
+            <>
+              <TrendingUp className="w-4 h-4 inline mr-2" />
+              Feed
+            </>
+          ) : (
+            <>
+              <HandshakeIcon className="w-4 h-4 inline mr-2" />
+              Active Contracts
+            </>
+          )}
         </button>
         <button
           onClick={() => setActiveView('marketplace')}
@@ -562,7 +564,7 @@ export default function SocialHub() {
 
       {/* Main Content */}
       <div className="flex-1 flex gap-6 p-6 overflow-hidden">
-        {activeView === 'feed' ? (
+        {activeView === 'feed' || activeView === 'contracts' ? (
           <>
             {/* LEFT SIDEBAR - User Profile & Friends */}
             <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
@@ -694,149 +696,174 @@ export default function SocialHub() {
         </div>
       </div>
 
-      {/* CENTER COLUMN - For You Feed OR Active Contracts */}
+      {/* CENTER COLUMN - For You Feed */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        {/* Sub-view Toggle - Feed / Active Contracts */}
-        <div className="flex items-center justify-center gap-2 py-2">
-          <button
-            onClick={() => setFeedSubView(feedSubView === 'feed' ? 'contracts' : 'feed')}
-            className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all"
-            style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              color: 'white'
-            }}
-          >
-            {feedSubView === 'feed' ? (
-              <>
-                <TrendingUp className="w-4 h-4 inline mr-2" />
-                Feed
-              </>
-            ) : (
-              <>
-                <HandshakeIcon className="w-4 h-4 inline mr-2" />
-                Active Contracts
-              </>
-            )}
-          </button>
+        {/* Post Creator */}
+        <div className="backdrop-blur-xl rounded-xl p-4" style={{
+          background: 'rgba(100, 120, 140, 0.12)',
+          border: '1px solid rgba(255, 255, 255, 0.10)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+        }}>
+          <div className="flex items-start gap-3 mb-4">
+            <img 
+              src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
+              alt="You" 
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <Input
+                placeholder="What's on your mind, Gamer?"
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+                className="bg-slate-700/50 border-slate-600 mb-3"
+              />
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMedia('video')}
+                >
+                  <Video className="w-4 h-4 mr-1" />
+                  Live Video
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMedia('photo')}
+                >
+                  <Image className="w-4 h-4 mr-1" />
+                  Photo
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="ml-auto bg-blue-600 hover:bg-blue-700"
+                  onClick={handlePost}
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-1 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    'Post'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {feedSubView === 'feed' ? (
-            <motion.div
-              key="feed"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-4"
-            >
-              {/* Post Creator */}
-              <div className="backdrop-blur-xl rounded-xl p-4" style={{
-                background: 'rgba(100, 120, 140, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.10)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-              }}>
-                <div className="flex items-start gap-3 mb-4">
-                  <img 
-                    src={user?.avatar_url || 'https://i.pravatar.cc/150?u=default'} 
-                    alt="You" 
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <Input
-                      placeholder="What's on your mind, Gamer?"
-                      value={newPost}
-                      onChange={(e) => setNewPost(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600 mb-3"
-                    />
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setSelectedMedia('video')}
-                      >
-                        <Video className="w-4 h-4 mr-1" />
-                        Live Video
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => setSelectedMedia('photo')}
-                      >
-                        <Image className="w-4 h-4 mr-1" />
-                        Photo
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="ml-auto bg-blue-600 hover:bg-blue-700"
-                        onClick={handlePost}
-                        disabled={isAnalyzing}
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Sparkles className="w-4 h-4 mr-1 animate-spin" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          'Post'
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feed Posts */}
-              <div className="space-y-4">
-                {isFeedLoading ? (
-                  <div className="text-center py-16 text-slate-400">
-                    <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-                    Loading your feed...
-                  </div>
-                ) : feedData && feedData.length > 0 ? (
-                  feedData.map((post) => (
-                    <DualPost 
-                      key={post.id} 
-                      post={post} 
-                      currentUser={user}
-                      onLike={(p) => likeMutation.mutate(p)}
-                      onFollow={(id) => followMutation.mutate(id)}
-                      onUnfollow={(id) => unfollowMutation.mutate(id)}
-                      isFollowing={followingIds.includes(post.user_id)}
-                    />
-                  ))
-                ) : (
-                  <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-16 text-center">
-                    <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                    <h3 className="text-white font-bold text-xl mb-2">Welcome to the Gameverse!</h3>
-                    <p className="text-slate-400">No posts yet. Be the first to share your gaming journey!</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+        {/* Feed Posts */}
+        <div className="space-y-4">
+          {isFeedLoading ? (
+            <div className="text-center py-16 text-slate-400">
+              <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+              Loading your feed...
+            </div>
+          ) : feedData && feedData.length > 0 ? (
+            feedData.map((post) => (
+              <DualPost 
+                key={post.id} 
+                post={post} 
+                currentUser={user}
+                onLike={(p) => likeMutation.mutate(p)}
+                onFollow={(id) => followMutation.mutate(id)}
+                onUnfollow={(id) => unfollowMutation.mutate(id)}
+                isFollowing={followingIds.includes(post.user_id)}
+              />
+            ))
           ) : (
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-xl p-16 text-center">
+              <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <h3 className="text-white font-bold text-xl mb-2">Welcome to the Gameverse!</h3>
+              <p className="text-slate-400">No posts yet. Be the first to share your gaming journey!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT SIDEBAR - Active Contracts OR Feed sidebar content */}
+      <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {activeView === 'feed' ? (
             <motion.div
-              key="contracts"
+              key="feed-sidebar"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              {/* Active Contracts Full View */}
-              <div className="backdrop-blur-xl rounded-xl p-6" style={{
+              {/* The Vault - Tradeable Abilities */}
+              <div className="backdrop-blur-xl rounded-xl p-4" style={{
                 background: 'rgba(100, 120, 140, 0.12)',
                 border: '1px solid rgba(255, 255, 255, 0.10)',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
               }}>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-white font-bold text-xl flex items-center gap-3">
-                    <HandshakeIcon className="w-6 h-6 text-cyan-400" />
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold flex items-center gap-2">
+                    <Package className="w-5 h-5 text-purple-400" />
+                    The Vault
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {mockAbilities.slice(0, 4).map((ability) => (
+                    <AbilityCard key={ability.id} ability={ability} />
+                  ))}
+                </div>
+                <Button size="sm" className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300">
+                  Trade Items
+                </Button>
+              </div>
+
+              {/* Marketplace Hot Trades */}
+              <div className="backdrop-blur-xl rounded-xl p-4" style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+              }}>
+                <h3 className="text-white font-bold flex items-center gap-2 mb-3">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  Hot Trades
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
+                    <span className="text-slate-300">Stealth Pathfinding</span>
+                    <span className="text-green-400 font-bold">↑ 6 Tokens</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
+                    <span className="text-slate-300">Auto-Looting Script</span>
+                    <span className="text-red-400 font-bold">↓ 8 Tokens</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
+                    <span className="text-slate-300">Combat Prowess</span>
+                    <span className="text-green-400 font-bold">↑ 4 Tokens</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : activeView === 'contracts' ? (
+            <motion.div
+              key="contracts-sidebar"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
+            >
+              {/* Active Contracts */}
+              <div className="backdrop-blur-xl rounded-xl p-4" style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+              }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold flex items-center gap-2">
+                    <HandshakeIcon className="w-5 h-5 text-cyan-400" />
                     Active Contracts
                   </h3>
-                  <Badge className="bg-blue-600/30 text-blue-400 text-sm px-3 py-1">{mockContracts.length} Active</Badge>
+                  <Badge className="bg-blue-600/30 text-blue-400">3</Badge>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   {mockContracts.map((contract) => (
                     <ContractCard 
                       key={contract.id} 
@@ -845,120 +872,37 @@ export default function SocialHub() {
                     />
                   ))}
                 </div>
-
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <Button className="w-full bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create New Contract
-                  </Button>
-                </div>
+                <Button size="sm" className="w-full mt-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Contract
+                </Button>
               </div>
 
               {/* Contract Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="backdrop-blur-xl rounded-xl p-4 text-center" style={{
-                  background: 'rgba(100, 120, 140, 0.12)',
-                  border: '1px solid rgba(255, 255, 255, 0.10)'
-                }}>
-                  <p className="text-3xl font-bold text-green-400">12</p>
-                  <p className="text-white/60 text-sm">Completed</p>
-                </div>
-                <div className="backdrop-blur-xl rounded-xl p-4 text-center" style={{
-                  background: 'rgba(100, 120, 140, 0.12)',
-                  border: '1px solid rgba(255, 255, 255, 0.10)'
-                }}>
-                  <p className="text-3xl font-bold text-yellow-400">3</p>
-                  <p className="text-white/60 text-sm">Pending</p>
-                </div>
-                <div className="backdrop-blur-xl rounded-xl p-4 text-center" style={{
-                  background: 'rgba(100, 120, 140, 0.12)',
-                  border: '1px solid rgba(255, 255, 255, 0.10)'
-                }}>
-                  <p className="text-3xl font-bold text-blue-400">45</p>
-                  <p className="text-white/60 text-sm">Tokens Earned</p>
+              <div className="backdrop-blur-xl rounded-xl p-4" style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+              }}>
+                <h3 className="text-white font-bold mb-3">Contract Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60 text-sm">Completed</span>
+                    <span className="text-green-400 font-bold">12</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60 text-sm">Pending</span>
+                    <span className="text-yellow-400 font-bold">3</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60 text-sm">Tokens Earned</span>
+                    <span className="text-blue-400 font-bold">45</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
-      </div>
-
-      {/* RIGHT SIDEBAR - Active Contracts */}
-      <div className="w-80 space-y-4 flex-shrink-0 overflow-y-auto">
-        {/* Active Contracts */}
-        <div className="backdrop-blur-xl rounded-xl p-4" style={{
-          background: 'rgba(100, 120, 140, 0.12)',
-          border: '1px solid rgba(255, 255, 255, 0.10)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-        }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-bold flex items-center gap-2">
-              <HandshakeIcon className="w-5 h-5 text-cyan-400" />
-              Active Contracts
-            </h3>
-            <Badge className="bg-blue-600/30 text-blue-400">3</Badge>
-          </div>
-          <div className="space-y-3">
-            {mockContracts.map((contract) => (
-              <ContractCard 
-                key={contract.id} 
-                contract={contract} 
-                onAccept={() => setShowContract(true)}
-              />
-            ))}
-          </div>
-          <Button size="sm" className="w-full mt-3 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300">
-            View All Contracts
-          </Button>
-        </div>
-
-        {/* The Vault - Tradeable Abilities */}
-        <div className="backdrop-blur-xl rounded-xl p-4" style={{
-          background: 'rgba(100, 120, 140, 0.12)',
-          border: '1px solid rgba(255, 255, 255, 0.10)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-        }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-bold flex items-center gap-2">
-              <Package className="w-5 h-5 text-purple-400" />
-              The Vault
-            </h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            {mockAbilities.slice(0, 4).map((ability) => (
-              <AbilityCard key={ability.id} ability={ability} />
-            ))}
-          </div>
-          <Button size="sm" className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300">
-            Trade Items
-          </Button>
-        </div>
-
-        {/* Marketplace Hot Trades */}
-        <div className="backdrop-blur-xl rounded-xl p-4" style={{
-          background: 'rgba(100, 120, 140, 0.12)',
-          border: '1px solid rgba(255, 255, 255, 0.10)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-        }}>
-          <h3 className="text-white font-bold flex items-center gap-2 mb-3">
-            <TrendingUp className="w-5 h-5 text-green-400" />
-            Hot Trades
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
-              <span className="text-slate-300">Stealth Pathfinding</span>
-              <span className="text-green-400 font-bold">↑ 6 Tokens</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
-              <span className="text-slate-300">Auto-Looting Script</span>
-              <span className="text-red-400 font-bold">↓ 8 Tokens</span>
-            </div>
-            <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded hover:bg-slate-700/50 transition-colors cursor-pointer">
-              <span className="text-slate-300">Combat Prowess</span>
-              <span className="text-green-400 font-bold">↑ 4 Tokens</span>
-            </div>
-          </div>
-        </div>
       </div>
           </>
         ) : (
