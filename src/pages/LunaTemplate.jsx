@@ -1120,9 +1120,7 @@ export default function LunaTemplate() {
                 minHeight: '800px'
               }}
             >
-              <div style={{ minHeight: '1200px' }}>
-                <FocusModePanel />
-              </div>
+              <FocusModePanel />
             </motion.div>
           )}
         </AnimatePresence>
