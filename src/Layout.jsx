@@ -20,7 +20,6 @@ import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
 import SocialHub from './components/dashboard/SocialHub';
 import CalendarOverlay from './components/calendar/CalendarOverlay';
-import LibraryBannerSection from './components/dashboard/LibraryBannerSection';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -734,15 +733,6 @@ function LayoutContent({ children, currentPageName }) {
       })()}
 
       {/* Removed Luna header bar - now part of page content for seamless animation */}
-
-      {/* Banner + Memories under header between Season Pass and Entertainment */}
-      {showLunaHeaderBar && (
-        <div className="fixed top-24 left-4 right-4 z-30 pointer-events-none">
-          <div className="pointer-events-auto max-w-5xl mx-auto">
-            <LibraryBannerSection />
-          </div>
-        </div>
-      )}
 
       {showLunaHeaderBar && (
         <div className="fixed top-4 right-4 z-40">
