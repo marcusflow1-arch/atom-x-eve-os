@@ -668,11 +668,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
               </div>
 
               {/* RIGHT CONTENT: Three-Column Grid Layout */}
-              <div className="flex-1 h-full flex flex-col overflow-hidden rounded-2xl border border-white/10" style={{ 
-                background: 'rgba(100, 120, 140, 0.08)',
-                backdropFilter: 'blur(20px) saturate(130%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(130%)',
-              }}>
+              <div className="flex-1 h-full flex flex-col overflow-hidden">
                    {selectedGame ? (
                        <div className="flex flex-col h-full">
                            {/* Game Header Bar */}
