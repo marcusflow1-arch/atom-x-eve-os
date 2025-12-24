@@ -675,18 +675,22 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   </ShinySidebarBox>
               </div>
 
-              {/* RIGHT CONTENT: Items Grid */}
-              <div className="flex-1 h-full flex flex-col overflow-hidden">
+              {/* RIGHT CONTENT: Three-Column Grid Layout */}
+              <div className="flex-1 h-full flex flex-col overflow-hidden rounded-2xl border border-white/10" style={{ 
+                background: 'rgba(100, 120, 140, 0.08)',
+                backdropFilter: 'blur(20px) saturate(130%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+              }}>
                    {selectedGame ? (
                        <div className="flex flex-col h-full">
                            {/* Game Header Bar */}
-                           <div className="h-12 flex items-center justify-between px-4 shrink-0">
+                           <div className="h-12 flex items-center px-4 shrink-0 border-b border-white/10">
                                <Badge variant="outline" className="bg-blue-900/20 border-blue-500/30 text-blue-400">
                                    {selectedGame.title}
                                </Badge>
                            </div>
 
-                           <div className="flex-1 flex overflow-hidden">
+                           <div className="flex-1 flex overflow-hidden h-full">
                                {/* Left: Item List (Vertical) */}
                                <div className="w-64 flex-shrink-0 flex flex-col">
                                    {/* Tabs */}
