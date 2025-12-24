@@ -600,6 +600,7 @@ import CalendarOverlay from '../components/calendar/CalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
+import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
