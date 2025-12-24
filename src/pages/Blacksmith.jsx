@@ -838,7 +838,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                     {selectedItem ? (
                                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                                             <AnimatePresence mode="wait">
-                                                    {activeAction === 'enchant' && (
+                                                {activeAction === 'enchant' && (
                                                         <motion.div
                                                             key="enchant-panel"
                                                             initial={{ opacity: 0, x: 20 }}
