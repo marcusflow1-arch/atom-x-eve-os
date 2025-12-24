@@ -674,11 +674,21 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                     </div>
 
                     {/* HORIZONTAL AXIS (Items as Cards) */}
-                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+                    <div 
+                      className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-64 z-10 flex items-center pointer-events-none"
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        if (e.deltaY > 0 && activeCardIndex < currentCrossItems.length - 1) {
+                          setActiveCardIndex(activeCardIndex + 1);
+                        } else if (e.deltaY < 0 && activeCardIndex > 0) {
+                          setActiveCardIndex(activeCardIndex - 1);
+                        }
+                      }}
+                    >
                       <motion.div
-                        className="flex items-center gap-8 pl-64 pointer-events-auto"
+                        className="flex items-center gap-6 pl-64 pointer-events-auto"
                         animate={{
-                          x: -activeCardIndex * (200 + 32)
+                          x: -activeCardIndex * (160 + 24)
                         }}
                         transition={{ type: "spring", stiffness: 250, damping: 25 }}
                       >
@@ -699,10 +709,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                               animate={{
                                 scale: isActive ? 1.1 : 0.9,
                                 opacity: isActive ? 1 : 0.4,
-                                y: isActive ? 0 : 20
+                                y: isActive ? 0 : 16
                               }}
                               className={`
-                                w-[200px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                                w-[160px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                                 border-2 transition-all duration-300 shadow-2xl
                                 ${isActive
                                   ? `${style.border} shadow-blue-500/20`
@@ -720,9 +730,9 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                               </div>
                               
                               {/* Item Info Overlay */}
-                              <div className="absolute inset-0 flex flex-col p-3 justify-end">
-                                <h3 className="text-white font-bold text-sm leading-tight mb-1">{item.name}</h3>
-                                <Badge variant="outline" className={`text-[9px] h-4 px-1 border w-fit ${style.border} ${style.color}`}>
+                              <div className="absolute inset-0 flex flex-col p-2 justify-end">
+                                <h3 className="text-white font-bold text-xs leading-tight mb-1">{item.name}</h3>
+                                <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border w-fit ${style.border} ${style.color}`}>
                                   {item.rarity}
                                 </Badge>
                               </div>
