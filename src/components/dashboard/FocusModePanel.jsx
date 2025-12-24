@@ -1277,18 +1277,9 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames }) {
         </div>
       </div>
 
-      {/* Slide-out Game Options Panel */}
-      <AnimatePresence>
-        {showGamePanel && selectedGame && (
-          <GameOptionsPanel 
-            game={selectedGame} 
-            onClose={handleClosePanel}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+      </div>
+      );
+      }
 
 // Game Options Slide-out Panel
 function GameOptionsPanel({ game, onClose }) {
