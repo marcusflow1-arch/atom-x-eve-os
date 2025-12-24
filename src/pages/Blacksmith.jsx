@@ -999,10 +999,10 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                                 <ArrowLeftRight className="w-4 h-4 mr-2" />
                                                                 Combine {combineQuantity} Cards
                                                             </Button>
-                                                        </motion.div>
-                                                    )}
+                                                </motion.div>
+                                                )}
 
-                                                    {activeAction === 'train' && (
+                                                {activeAction === 'train' && (
                                                         <motion.div
                                                             key="train-panel"
                                                             initial={{ opacity: 0, x: 20 }}
