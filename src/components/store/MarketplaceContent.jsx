@@ -896,8 +896,16 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
               <h2 className="text-white font-bold mb-4">Results</h2>
               <p className="text-white/50 text-xs mb-4">Check each product page for other buying options. Price and details may vary.</p>
               
-              {/* Inner Scroll Container for Results */}
-              <div className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md p-1">
+              {/* Inner Scroll Container for Results - More translucent */}
+              <div 
+                className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                }}
+              >
                 {viewMode === 'list' ? (
                   <div className="space-y-2 p-2">
                     {filteredItems.map(item => (
@@ -941,8 +949,53 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
               </div>
             </div>
 
-            {/* Customers frequently viewed */}
-            <ProductRow title="Customers frequently viewed" items={popularItems} onItemClick={setSelectedItem} />
+            {/* Customers frequently viewed - No box around content */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-white font-bold text-lg">Customers frequently viewed</h2>
+                <button className="text-blue-400 text-sm hover:text-orange-400 flex items-center gap-1">
+                  See more <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-6 overflow-x-auto pb-8 pt-4 px-2 scrollbar-hide">
+                {popularItems.slice(0, 6).map((item) => {
+                  const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
+                  const hasDiscount = item.originalPrice && item.originalPrice > item.price;
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedItem(item)} 
+                      className="w-[180px] flex-shrink-0 cursor-pointer group"
+                    >
+                      <div className="w-full mb-3">
+                        <ShinyCard>
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-2 left-2 right-2">
+                             <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md`}>{item.rarity}</Badge>
+                          </div>
+                        </ShinyCard>
+                      </div>
+                      
+                      <h3 className="text-blue-400 text-sm font-medium line-clamp-2 mb-1 group-hover:text-orange-400 transition-colors">{item.name}</h3>
+                      <div className="flex items-center gap-1 mb-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />
+                        ))}
+                        <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-white font-bold">{(item.price || 0).toLocaleString()}</span>
+                        <span className="text-white/40 text-xs">AGP</span>
+                      </div>
+                      {hasDiscount && (
+                        <span className="text-white/40 text-xs line-through">{(item.originalPrice || 0).toLocaleString()}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             </div>
           </div>
         </div>
