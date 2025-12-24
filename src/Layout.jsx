@@ -737,7 +737,7 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Banner + Memories under header between Season Pass and Entertainment */}
       {showLunaHeaderBar && (
-        <div className="fixed top-20 left-4 right-4 z-30 pointer-events-none">
+        <div className="fixed top-24 left-4 right-4 z-30 pointer-events-none">
           <div className="pointer-events-auto max-w-5xl mx-auto">
             <LibraryBannerSection />
           </div>

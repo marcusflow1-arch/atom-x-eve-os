@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Settings } from 'lucide-react';
+import { Home, Settings, Play, Zap } from 'lucide-react';
 
 function GameReference({ reference, onClick, isActive, isHomeButton }) {
   if (isHomeButton) {
@@ -90,20 +90,23 @@ export default function LibraryBannerSection({ games, onBackgroundChange }) {
 
   return (
     <div className="flex flex-col items-center mb-4">
-      <div className="flex items-stretch gap-4 w-full">
-        <div className="flex-1" />
-        <div className="w-[200px] h-[60px] flex-shrink-0">
+      <div className="flex items-center justify-center gap-4 w-full">
+        <div className="w-[220px] h-[60px] flex-shrink-0">
           <GameBanner game={selectedBannerGame} onChangeBanner={() => setShowBannerPicker(true)} />
         </div>
-        <div ref={scrollRef} className="flex-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
-          {gameReferences.map((ref) => (
-            <GameReference key={ref.id} reference={ref} onClick={handleReferenceClick} isActive={activeReference?.id === ref.id} />
-          ))}
-          <GameReference isHomeButton={true} onClick={handleHomeClick} />
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-2 rounded-lg bg-green-500 hover:bg-green-400 text-black text-xs font-bold flex items-center gap-1">
+            <Play className="w-4 h-4" /> Play
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 text-xs font-medium flex items-center gap-1">
+            <Settings className="w-4 h-4" /> Settings
+          </button>
+          <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 text-xs font-medium flex items-center gap-1">
+            <Zap className="w-4 h-4" /> Updates
+          </button>
         </div>
       </div>
-      <div className="w-[200px] h-px bg-white/20 mt-3" />
+      <div className="w-full max-w-sm mx-auto h-px bg-white/20 mt-3" />
 
       <AnimatePresence>
         {showBannerPicker && (
