@@ -177,7 +177,7 @@ const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
           filteredCards.map((card, i) => (
             <div
               key={card.id}
-              className="flex-shrink-0 w-[30%] min-w-[90px]"
+              className="flex-shrink-0 w-[30%] min-w-[80px]"
               draggable
               onDragStart={(e) => {
                 const payload = {

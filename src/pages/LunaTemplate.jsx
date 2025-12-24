@@ -2153,10 +2153,7 @@ export default function LunaTemplate() {
                     </div>
                     </div>
                   
-                  {/* Library Section - Bottom Docked, Secondary */}
-                  <div className="w-full mt-6">
-                    <LunaCardScroll onExpand={setExpandedGenre} onCardClick={setSelectedCardForUpgrade} />
-                  </div>
+
                   </motion.div> :
               null}
             {showInventory && uiVisible &&
