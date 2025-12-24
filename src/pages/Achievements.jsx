@@ -736,25 +736,20 @@ function AchievementsView({ onExitToLibrary }) {
                       Achievements
                     </h1>
                     
-                    {/* Grid Menu Button */}
-                    <motion.button
-                      onClick={() => setShowGridMenu(true)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                    >
-                      <LayoutGrid className="w-5 h-5 text-white/80" />
-                    </motion.button>
-                    
-                    {/* Cross View Toggle */}
+                    {/* Cross View Toggle - 4 small squares grid icon */}
                     <motion.button
                       onClick={() => setViewMode('cross')}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
                       title="Switch to Cross View"
                     >
-                      <Gamepad2 className="w-5 h-5 text-white/80" />
+                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                      </div>
                     </motion.button>
                   </div>
 
