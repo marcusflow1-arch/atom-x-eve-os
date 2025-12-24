@@ -688,7 +688,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
 
                            <div className="flex-1 flex overflow-hidden">
                                {/* Left: Item List (Vertical) */}
-                               <div className="w-72 flex-shrink-0 border-r border-white/10 flex flex-col">
+                               <div className="w-64 flex-shrink-0 flex flex-col">
                                    {/* Tabs */}
                                    <div className="flex items-center gap-4 px-4 py-4 border-b border-white/5">
                                        {['all', 'Weapon', 'Armor', 'Trinket'].map(cat => (
