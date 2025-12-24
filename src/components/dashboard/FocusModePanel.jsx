@@ -2224,11 +2224,11 @@ export default function FocusModePanel() {
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="h-full flex flex-col items-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
 
       {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
-      <div className="flex gap-6 min-h-0" style={{ height: '280px', maxHeight: '280px' }}>
+      <div className="flex gap-6 min-h-0 w-full" style={{ height: '280px', maxHeight: '280px' }}>
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
           {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
