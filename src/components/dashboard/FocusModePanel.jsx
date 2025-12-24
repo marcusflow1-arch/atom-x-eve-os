@@ -2395,7 +2395,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
 }
 
 // Main Export
-export default function FocusModePanel() {
+export default function FocusModePanel({ onBackgroundChange }) {
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
   const [showGamePanel, setShowGamePanel] = useState(false);
