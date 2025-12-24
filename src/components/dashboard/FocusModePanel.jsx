@@ -1256,7 +1256,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
 
                       {/* Inline Options Panel to the right for Destiny Brigades */}
                       {isSelected && showGamePanel && selectedGame?.title === 'Destiny Brigades' && (
-                        <div className="absolute left-full top-0 ml-2 w-[280px] z-20" data-game-panel>
+                        <div className="absolute left-full top-0 ml-2 w-[280px] z-20 scale-50 origin-top-left" data-game-panel>
                           <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
                         </div>
                       )}
@@ -2521,8 +2521,8 @@ export default function FocusModePanel({ onBackgroundChange }) {
   };
 
   return (
-    <div className="h-full flex flex-col items-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      <style>{`.focus-panel-scroll::-webkit-scrollbar { display: none; }`}</style>
+    <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - News Feed & Content (right of 3D viewer) - Reduced by 30% */}
       <div className="flex gap-6 min-h-0 w-full" style={{ height: '280px', maxHeight: '280px' }}>
