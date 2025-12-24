@@ -208,6 +208,14 @@ const AchievementsCrossMenu = ({ games, localAchievements, onCardClick, user, on
         
         {/* Top Left Controls - Grid Toggle Only */}
         <div className="absolute top-6 left-6 flex items-center gap-3 z-30">
+          {/* Controller Icon */}
+          <Link to={createPageUrl('Library')} title="Go to Library">
+            <button 
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+            >
+              <Gamepad2 className="w-5 h-5 text-white/70 hover:text-white" />
+            </button>
+          </Link>
           {/* Grid/List Toggle */}
           <button 
             onClick={() => onSwitchViewMode?.()}
