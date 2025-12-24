@@ -820,9 +820,20 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                                                 </div>
                                             </div>
 
-                                            {/* Right: Dynamic Action Panel - More Space */}
-                                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                                <AnimatePresence mode="wait">
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600">
+                                            <Hammer className="w-16 h-16 mb-4 opacity-20" />
+                                            <p className="text-sm">Select an item to view details</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                               {/* Right: Action Workspace - Full Height Primary Panel */}
+                                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                                    {selectedItem ? (
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                            <AnimatePresence mode="wait">
                                                     {activeAction === 'enchant' && (
                                                         <motion.div
                                                             key="enchant-panel"
