@@ -1292,7 +1292,7 @@ export default function LunaTemplate() {
             }}
             title="AI Home"
           >
-            <Bot className="w-6 h-6 text-white" />
+            <Home className="w-6 h-6 text-white" />
           </motion.button>
 
           {/* Right Items */}
