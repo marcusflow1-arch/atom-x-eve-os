@@ -798,7 +798,7 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   </div>
                 </motion.div>
               ) : (
-                /* ITEM DETAIL TRANSITIONAL PAGE - BLANK */
+                /* ITEM DETAIL TRANSITIONAL PAGE */
                 <motion.div
                   key="item-detail"
                   initial={{ opacity: 0 }}
@@ -815,9 +815,69 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                     <span className="font-semibold">Back to Forge</span>
                   </button>
 
-                  {/* Blank Content Area - Ready for next instructions */}
+                  {/* Four Action Options */}
                   <div className="flex-1 flex items-center justify-center">
-                    {/* Placeholder - will be populated with next instructions */}
+                    <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
+                      {/* Enhance + Combined Stage */}
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all flex flex-col items-center gap-4 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                          <ArrowLeftRight className="w-8 h-8 text-blue-400" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-white font-bold text-lg">Enhance</h3>
+                          <p className="text-white/40 text-sm mt-1">Combined Stage</p>
+                        </div>
+                      </motion.button>
+
+                      {/* Enhance 0-120 */}
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-purple-500/50 transition-all flex flex-col items-center gap-4 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                          <Sparkles className="w-8 h-8 text-purple-400" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-white font-bold text-lg">Enhance</h3>
+                          <p className="text-white/40 text-sm mt-1">0 → 120</p>
+                        </div>
+                      </motion.button>
+
+                      {/* Ascend */}
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/50 transition-all flex flex-col items-center gap-4 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/30 transition-colors">
+                          <Crown className="w-8 h-8 text-amber-400" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-white font-bold text-lg">Ascend</h3>
+                          <p className="text-white/40 text-sm mt-1">Unlock potential</p>
+                        </div>
+                      </motion.button>
+
+                      {/* Level Up */}
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center gap-4 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
+                          <Zap className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-white font-bold text-lg">Level Up</h3>
+                          <p className="text-white/40 text-sm mt-1">Increase power</p>
+                        </div>
+                      </motion.button>
+                    </div>
                   </div>
                 </motion.div>
               )}
