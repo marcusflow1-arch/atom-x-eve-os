@@ -1219,7 +1219,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           <div 
             ref={libraryScrollRef}
             className="flex-1 overflow-y-auto space-y-3"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '200px' }}
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '420px' }}
           >
           <AnimatePresence mode="popLayout">
             {rows.map((row, rowIndex) => (
@@ -1562,7 +1562,7 @@ function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
         ref={scrollRef}
         onWheel={handleWheel}
         className="overflow-y-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '168px' }}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '300px' }}
       >
         {displayGenres.map((genre) => {
           const gameCount = gamesByGenre[genre]?.length || 0;
