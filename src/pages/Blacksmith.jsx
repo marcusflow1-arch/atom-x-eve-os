@@ -1168,7 +1168,29 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
           </div>
         </div>
 
-        {/* Modal removed - using inline detail view */}
+        {/* Item Detail Modal */}
+        <AnimatePresence>
+          {showItemModal && selectedItem && (
+            <ItemDetailModal
+              item={selectedItem}
+              onClose={() => setShowItemModal(false)}
+              onEnchant={(item) => {
+                setShowItemModal(false);
+                setActiveAction('enchant');
+              }}
+              onCombine={(item) => {
+                setShowItemModal(false);
+                setActiveAction('combine');
+              }}
+              onSalvage={(item) => {
+                console.log('Salvaging:', item.name);
+                setShowItemModal(false);
+              }}
+              rarityStyles={rarityStyles}
+              associatedSet={mockSets.find(s => s.piece_ids.includes(selectedItem.id))}
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Workstation Overlay */}
