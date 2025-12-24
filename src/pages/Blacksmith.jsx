@@ -806,80 +806,134 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="w-full h-full flex flex-col"
+                  className="w-full h-full flex"
                 >
-                  {/* Back Button */}
-                  <button
-                    onClick={() => setShowItemDetail(false)}
-                    className="mb-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                    <span className="font-semibold">Back to Forge</span>
-                  </button>
+                  {/* Left Side - Action Menu */}
+                  <div className="w-64 flex-shrink-0 flex flex-col pt-8 pl-8">
+                    {/* Back Button */}
+                    <button
+                      onClick={() => {
+                        if (selectedEnhanceSubpage) {
+                          setSelectedEnhanceSubpage(null);
+                        } else if (selectedForgeAction) {
+                          setSelectedForgeAction(null);
+                        } else {
+                          setShowItemDetail(false);
+                        }
+                      }}
+                      className="mb-8 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                      <span className="font-semibold">Back</span>
+                    </button>
 
-                  {/* Four Action Options */}
+                    {/* Main Actions or Sub-actions */}
+                    {!selectedForgeAction ? (
+                      /* Main Action List */
+                      <div className="flex flex-col gap-4">
+                        {/* Enhance */}
+                        <button
+                          onClick={() => setSelectedForgeAction('enhance')}
+                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
+                        >
+                          <Sparkles className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
+                          <span className="font-medium">Enhance</span>
+                        </button>
+
+                        {/* Level Up */}
+                        <button
+                          onClick={() => setSelectedForgeAction('levelup')}
+                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
+                        >
+                          <Zap className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300" />
+                          <span className="font-medium">Level Up</span>
+                        </button>
+
+                        {/* Ascend */}
+                        <button
+                          onClick={() => setSelectedForgeAction('ascend')}
+                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
+                        >
+                          <Crown className="w-5 h-5 text-amber-400 group-hover:text-amber-300" />
+                          <span className="font-medium">Ascend</span>
+                        </button>
+                      </div>
+                    ) : selectedForgeAction === 'enhance' && !selectedEnhanceSubpage ? (
+                      /* Enhance Sub-actions */
+                      <div className="flex flex-col gap-4">
+                        <button
+                          onClick={() => setSelectedEnhanceSubpage('enchantment')}
+                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
+                        >
+                          <Sparkles className="w-5 h-5 text-purple-400 group-hover:text-purple-300" />
+                          <span className="font-medium">Enchantment</span>
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedEnhanceSubpage('combine')}
+                          className="flex items-center gap-3 text-white/70 hover:text-white transition-colors group"
+                        >
+                          <ArrowLeftRight className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
+                          <span className="font-medium">Combine Stage</span>
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Right Side - Content Area */}
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
-                      {/* Enhance + Combined Stage */}
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all flex flex-col items-center gap-4 group"
-                      >
-                        <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                          <ArrowLeftRight className="w-8 h-8 text-blue-400" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg">Enhance</h3>
-                          <p className="text-white/40 text-sm mt-1">Combined Stage</p>
-                        </div>
-                      </motion.button>
+                    <AnimatePresence mode="wait">
+                      {/* Enhance Subpages */}
+                      {selectedForgeAction === 'enhance' && selectedEnhanceSubpage === 'enchantment' && (
+                        <motion.div
+                          key="enchantment-page"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="text-center text-white/40"
+                        >
+                          {/* Enchantment Page - Empty */}
+                        </motion.div>
+                      )}
 
-                      {/* Enhance 0-120 */}
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-purple-500/50 transition-all flex flex-col items-center gap-4 group"
-                      >
-                        <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                          <Sparkles className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg">Enhance</h3>
-                          <p className="text-white/40 text-sm mt-1">0 → 120</p>
-                        </div>
-                      </motion.button>
+                      {selectedForgeAction === 'enhance' && selectedEnhanceSubpage === 'combine' && (
+                        <motion.div
+                          key="combine-page"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="text-center text-white/40"
+                        >
+                          {/* Combine Stage Page - Empty */}
+                        </motion.div>
+                      )}
 
-                      {/* Ascend */}
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/50 transition-all flex flex-col items-center gap-4 group"
-                      >
-                        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/30 transition-colors">
-                          <Crown className="w-8 h-8 text-amber-400" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg">Ascend</h3>
-                          <p className="text-white/40 text-sm mt-1">Unlock potential</p>
-                        </div>
-                      </motion.button>
+                      {/* Level Up Page */}
+                      {selectedForgeAction === 'levelup' && (
+                        <motion.div
+                          key="levelup-page"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="text-center text-white/40"
+                        >
+                          {/* Level Up Page - Empty */}
+                        </motion.div>
+                      )}
 
-                      {/* Level Up */}
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all flex flex-col items-center gap-4 group"
-                      >
-                        <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
-                          <Zap className="w-8 h-8 text-cyan-400" />
-                        </div>
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg">Level Up</h3>
-                          <p className="text-white/40 text-sm mt-1">Increase power</p>
-                        </div>
-                      </motion.button>
-                    </div>
+                      {/* Ascend Page */}
+                      {selectedForgeAction === 'ascend' && (
+                        <motion.div
+                          key="ascend-page"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="text-center text-white/40"
+                        >
+                          {/* Ascend Page - Empty */}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               )}
