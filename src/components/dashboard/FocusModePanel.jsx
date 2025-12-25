@@ -2197,88 +2197,101 @@ function LivePanel({ upcomingCards }) {
   if (!currentCard) return null;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
-          <Radio className="w-4 h-4 text-green-400 animate-pulse" />
-          New Cards
-        </h3>
-        <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
+    <div className="h-full flex gap-6">
+      {/* Left: Upcoming Events (Scaled to 50%) */}
+      <div className="w-[240px] flex-shrink-0 relative">
+         <div className="origin-top-left scale-50 w-[480px]">
+            <UpcomingEventsSection />
+         </div>
       </div>
 
-      {/* Main Content - Demo (left) + Card (center) + Description (right) */}
-      <div className="flex-1 flex items-start gap-4">
-        {/* Far Left: Demo Video Box next to left arrow */}
-        <DemoVideoBox card={currentCard} />
+      {/* Vertical Divider */}
+      <div className="w-px bg-white/10 h-full self-stretch" />
 
-        {/* Center: 3D Card with Arrows */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Left Arrow */}
-          <button 
-            onClick={prevCard}
-            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-          >
-            <ChevronLeft className="w-3 h-3 text-white/60" />
-          </button>
-
-          {/* 3D Card */}
-          <Large3DCard card={currentCard} isActive={true} />
-
-          {/* Right Arrow */}
-          <button 
-            onClick={nextCard}
-            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-          >
-            <ChevronRight className="w-3 h-3 text-white/60" />
-          </button>
+      {/* Right: New Cards (Existing content shifted) */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+            <Radio className="w-4 h-4 text-green-400 animate-pulse" />
+            New Cards
+          </h3>
+          <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
         </div>
 
-        {/* Far Right: Card Description */}
-        <div className="flex-1 min-w-0 h-44 flex flex-col">
-          {/* Card Title & Meta */}
-          <div className="mb-2">
-            <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                'bg-blue-500/20 text-blue-300 border-blue-500/30'
-              }`}>{currentCard.rarity}</span>
-              <span className="text-[9px] text-white/40">{currentCard.type}</span>
-              <span className="text-[9px] text-white/30">•</span>
-              <span className="text-[9px] text-white/40">{currentCard.genre}</span>
+        {/* Main Content - Demo (left) + Card (center) + Description (right) */}
+        <div className="flex-1 flex items-start gap-4">
+          {/* Far Left: Demo Video Box next to left arrow */}
+          <DemoVideoBox card={currentCard} />
+
+          {/* Center: 3D Card with Arrows */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Left Arrow */}
+            <button 
+              onClick={prevCard}
+              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+            >
+              <ChevronLeft className="w-3 h-3 text-white/60" />
+            </button>
+
+            {/* 3D Card */}
+            <Large3DCard card={currentCard} isActive={true} />
+
+            {/* Right Arrow */}
+            <button 
+              onClick={nextCard}
+              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+            >
+              <ChevronRight className="w-3 h-3 text-white/60" />
+            </button>
+          </div>
+
+          {/* Far Right: Card Description */}
+          <div className="flex-1 min-w-0 h-44 flex flex-col">
+            {/* Card Title & Meta */}
+            <div className="mb-2">
+              <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[9px] px-2 py-0.5 rounded border ${
+                  currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                  currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                  'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                }`}>{currentCard.rarity}</span>
+                <span className="text-[9px] text-white/40">{currentCard.type}</span>
+                <span className="text-[9px] text-white/30">•</span>
+                <span className="text-[9px] text-white/40">{currentCard.genre}</span>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
+              {currentCard.description}
+            </p>
+
+            {/* Stats Row */}
+            <div className="flex gap-2 mb-2">
+              {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
+                <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
+                  <span className="text-[8px] text-white/40 uppercase">{key}</span>
+                  <span className="text-[10px] text-white font-bold ml-1">{val}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Unlock Condition */}
+            <div className="mt-auto flex items-center gap-2 text-[9px]">
+              <Trophy className="w-3 h-3 text-amber-400" />
+              <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
             </div>
           </div>
+        </div>
 
-          {/* Description */}
-          <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
-            {currentCard.description}
-          </p>
-
-          {/* Stats Row */}
-          <div className="flex gap-2 mb-2">
-            {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
-              <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
-                <span className="text-[8px] text-white/40 uppercase">{key}</span>
-                <span className="text-[10px] text-white font-bold ml-1">{val}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Unlock Condition */}
-          <div className="mt-auto flex items-center gap-2 text-[9px]">
-            <Trophy className="w-3 h-3 text-amber-400" />
-            <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
-          </div>
-          </div>
-          </div>
-
-          {/* Separator Line */}
-          <div className="w-full h-px bg-white/20 mt-2" />
-          </div>
-          );
-          }
+        {/* Separator Line */}
+        <div className="w-full h-px bg-white/20 mt-2" />
+      </div>
+    </div>
+  );
+}
 
 // Game Reference - clickable scene moments from games that change the Luna dashboard background
 function GameReference({ reference, onClick, isActive, isHomeButton }) {
@@ -2634,12 +2647,6 @@ export default function FocusModePanel({ onBackgroundChange }) {
           </div>
         </div>
 
-        {/* Far Right Column - Upcoming Events (Scaled down 50%) */}
-        <div className="w-[450px] flex-shrink-0 relative h-[300px]">
-          <div className="absolute top-0 left-0 w-[900px] origin-top-left scale-50">
-            <UpcomingEventsSection />
-          </div>
-        </div>
       </div>
 
 
