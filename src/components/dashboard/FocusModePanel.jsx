@@ -2326,7 +2326,7 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
   );
 }
 
-// Library Banner Section - Banner centered, line below, references to the right
+// Library Banner Section - Banner aligned to top gap, references to the right
 function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
@@ -2365,13 +2365,12 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   };
 
   return (
-    <div className="flex flex-col items-center mb-4">
-      {/* Top Row: Banner (50% smaller, centered) + References to the right */}
-      <div className="flex items-stretch gap-4 w-full">
-        {/* Spacer for centering */}
-        <div className="flex-1" />
+    <div className="flex flex-col items-start mb-4">
+      {/* Top Row: Banner + References to the right */}
+      {/* pl-[168px] aligns banner center with the gap between Demo (260px) and Card in the row above */}
+      <div className="flex items-stretch gap-4 w-full pl-[168px]">
         
-        {/* Game Banner - 50% smaller, centered */}
+        {/* Game Banner */}
         <div className="w-[200px] h-[60px] flex-shrink-0">
           <GameBanner 
             game={selectedBannerGame} 
@@ -2379,7 +2378,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
           />
         </div>
 
-        {/* References Section - Horizontal scroll with Home button at end */}
+        {/* References Section */}
         <div 
           ref={scrollRef}
           className="flex-1 flex items-center gap-2 overflow-x-auto" 
@@ -2394,7 +2393,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
               isActive={activeReference?.id === ref.id}
             />
           ))}
-          {/* Home Button - Returns to default background */}
+          {/* Home Button */}
           <GameReference 
             isHomeButton={true}
             onClick={handleHomeClick}
@@ -2402,8 +2401,8 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         </div>
       </div>
 
-      {/* Horizontal Line below banner - between banner and AI Home button */}
-      <div className="w-[200px] h-px bg-white/20 mt-3" />
+      {/* Horizontal Line below banner - Aligned with banner */}
+      <div className="w-[200px] h-px bg-white/20 mt-3 ml-[168px]" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
@@ -2593,20 +2592,23 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Bottom Section */}
-      <div className="mt-6 w-full flex items-start px-6 relative">
-        {/* Left: LunaCardScroll - Far Left */}
-        <div className="absolute left-6 top-0 z-10">
-          <div className="origin-top-left scale-[0.8]">
-            <LunaCardScroll />
+      {/* Bottom Section - Grid layout matching Top Section */}
+      <div className="mt-6 w-full flex gap-6 items-start">
+        {/* Left Column - Matches top section's 220px viewer space */}
+        <div className="w-[220px] flex-shrink-0 relative">
+          {/* LunaCardScroll - Far Left (scaled down) */}
+          <div className="absolute left-0 top-0 z-10">
+            <div className="origin-top-left scale-[0.8]">
+              <LunaCardScroll />
+            </div>
           </div>
         </div>
 
-        {/* Center: Banner + Library */}
-        <div className="w-full flex flex-col items-center">
-          <div className="w-full max-w-4xl flex flex-col">
-            {/* Library Banner Section - Centered */}
-            <div className="w-full mb-4">
+        {/* Right Column - Library Content */}
+        <div className="flex-1 flex flex-col min-w-0 pr-6">
+          <div className="w-full flex flex-col gap-4">
+            {/* Library Banner Section - Left aligned via internal margin */}
+            <div className="w-full">
               <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
             </div>
             
