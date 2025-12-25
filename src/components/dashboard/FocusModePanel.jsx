@@ -5,7 +5,7 @@ import {
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
   Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
   Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-  Heart, BookOpen, Bell, Settings, Book, Home
+  Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -14,7 +14,15 @@ import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
 import LunaCardScroll from '../profile/LunaCardScroll';
-import { Download, Ticket, Users } from 'lucide-react';
+
+// Mock pinned games
+const pinnedGames = [
+  { id: 1, title: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', lastPlayed: '2 hours ago', progress: 68 },
+  { id: 2, title: 'Elden Ring', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400', lastPlayed: 'Yesterday', progress: 45 },
+  { id: 3, title: 'Stellar Odyssey', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', lastPlayed: '3 days ago', progress: 92 },
+  { id: 4, title: 'Shadow Realm', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', lastPlayed: 'Last week', progress: 23 },
+  { id: 5, title: 'Neon Legends', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', lastPlayed: '2 days ago', progress: 55 },
+];
 
 const MOCK_EVENTS = [
   {
@@ -43,7 +51,7 @@ const MOCK_EVENTS = [
   {
     id: 3,
     type: 'developer',
-    title: 'Dev Stream: Behind the Scenes',
+    title: 'Dev Stream',
     subtitle: 'Neon Legends Studio',
     date: 'Dec 29',
     time: '3:00 PM',
@@ -90,14 +98,12 @@ const FeaturedEventCard = ({ event }) => {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Background Image */}
       <div className="absolute inset-0">
         <img src={event.image} alt="" className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
         <div className={`absolute inset-0 bg-gradient-to-br ${event.color}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
       </div>
       
-      {/* Content */}
       <div className="relative h-full flex flex-col justify-between p-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
@@ -118,9 +124,6 @@ const FeaturedEventCard = ({ event }) => {
             <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
               <CalendarIcon className="w-4 h-4" />
               Add to Calendar
-            </button>
-            <button className="w-10 h-10 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center transition-all">
-              <ChevronRight className="w-5 h-5 text-cyan-400" />
             </button>
           </div>
         </div>
@@ -145,7 +148,6 @@ const SmallEventCard = ({ event }) => {
       }}
     >
       <div className="flex items-center gap-3 p-3">
-        {/* Image Thumbnail */}
         <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img src={event.image} alt="" className="w-full h-full object-cover" />
           <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-60`} />
@@ -154,7 +156,6 @@ const SmallEventCard = ({ event }) => {
           </div>
         </div>
         
-        {/* Info */}
         <div className="flex-1 min-w-0">
           <h4 className="text-white font-semibold text-sm truncate group-hover:text-cyan-300 transition-colors">{event.title}</h4>
           <p className="text-white/40 text-xs truncate">{event.subtitle}</p>
@@ -164,22 +165,11 @@ const SmallEventCard = ({ event }) => {
           </div>
         </div>
         
-        {/* Arrow */}
         <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
       </div>
     </motion.div>
   );
 };
-
-
-// Mock pinned games
-const pinnedGames = [
-  { id: 1, title: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', lastPlayed: '2 hours ago', progress: 68 },
-  { id: 2, title: 'Elden Ring', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400', lastPlayed: 'Yesterday', progress: 45 },
-  { id: 3, title: 'Stellar Odyssey', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', lastPlayed: '3 days ago', progress: 92 },
-  { id: 4, title: 'Shadow Realm', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', lastPlayed: 'Last week', progress: 23 },
-  { id: 5, title: 'Neon Legends', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', lastPlayed: '2 days ago', progress: 55 },
-];
 
 // Upcoming cards with achievement-style design - organized by genre
 const upcomingCards = [
@@ -252,76 +242,6 @@ const upcomingCards = [
     unlockCondition: 'Defeat 10 dragons across all games',
     releaseDate: 'Season 4',
     lore: 'Only those who have faced the mightiest beasts and emerged victorious can channel their primal fury.'
-  },
-  { 
-    id: 6, 
-    name: 'Shadow Step', 
-    type: 'Ability', 
-    rarity: 'Rare', 
-    genre: 'Action',
-    game: 'Shadow Realm', 
-    icon: '👁️',
-    description: 'Teleport through shadows to strike from behind.',
-    stats: { Range: '15m', Damage: '+50%', Cooldown: '8s' },
-    unlockCondition: 'Perform 500 stealth kills',
-    releaseDate: 'Available Now',
-    lore: 'The shadow realm exists in parallel to our own. Those attuned to its frequency can slip between worlds at will.'
-  },
-  { 
-    id: 7, 
-    name: 'Chrono Freeze', 
-    type: 'Ability', 
-    rarity: 'Legendary', 
-    genre: 'Sci-Fi',
-    game: 'Temporal Wars', 
-    icon: '⏱️',
-    description: 'Stop time in a localized area, freezing all enemies for 3 seconds.',
-    stats: { Duration: '3s', Area: '10m', Cooldown: '30s' },
-    unlockCondition: 'Complete all Sci-Fi genre challenges',
-    releaseDate: 'Season 4',
-    lore: 'Manipulating the fourth dimension requires immense focus. One wrong calculation and you cease to exist.'
-  },
-  { 
-    id: 8, 
-    name: 'Berserker Rage', 
-    type: 'Passive', 
-    rarity: 'Epic', 
-    genre: 'Action',
-    game: 'Viking Conquest', 
-    icon: '🪓',
-    description: 'Enter a frenzied state when health drops below 30%. Massive damage boost.',
-    stats: { Damage: '+100%', Defense: '-25%', Duration: 'Until healed' },
-    unlockCondition: 'Survive 100 near-death encounters',
-    releaseDate: 'Season 3',
-    lore: 'The old gods favor those who fight without fear of death. In this state, warriors become unstoppable forces of destruction.'
-  },
-  { 
-    id: 9, 
-    name: 'Starship Command', 
-    type: 'Equipment', 
-    rarity: 'Legendary', 
-    genre: 'Sci-Fi',
-    game: 'Stellar Odyssey', 
-    icon: '🚀',
-    description: 'Summon your personal starship for orbital support strikes.',
-    stats: { Damage: 200, Cooldown: '60s', Range: 'Global' },
-    unlockCondition: 'Own 5 Sci-Fi games',
-    releaseDate: 'Season 4',
-    lore: 'Command-linked neural interfaces allow pilots to call upon their vessels from anywhere in the galaxy.'
-  },
-  { 
-    id: 10, 
-    name: 'Nature\'s Wrath', 
-    type: 'Ability', 
-    rarity: 'Rare', 
-    genre: 'RPG',
-    game: 'Druid Chronicles', 
-    icon: '🌿',
-    description: 'Command the forces of nature to entangle and damage enemies.',
-    stats: { Damage: 45, Root: '4s', Area: 'Medium' },
-    unlockCondition: 'Complete 25 nature-themed quests',
-    releaseDate: 'Available Now',
-    lore: 'The earth remembers those who protect it. In times of need, it rises to defend its champions.'
   },
 ];
 
@@ -428,100 +348,6 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
         <div className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${style.border} rounded-br-lg`} />
       </div>
     </motion.div>
-  );
-}
-
-// Mini Calendar Component - 20% smaller
-function MiniCalendar({ onDayClick, events }) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const today = new Date();
-  
-  const getDaysInMonth = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-    return days;
-  };
-
-  const hasEvent = (day) => {
-    if (!day || !events) return false;
-    const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toDateString();
-    return events.some(e => new Date(e.date).toDateString() === dateStr);
-  };
-
-  const isToday = (day) => {
-    if (!day) return false;
-    return today.getDate() === day && 
-           today.getMonth() === currentDate.getMonth() && 
-           today.getFullYear() === currentDate.getFullYear();
-  };
-
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
-
-  return (
-    <div className="mt-2" style={{ transform: 'scale(0.8)', transformOrigin: 'top left', width: '125%' }}>
-      {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-1.5">
-        <button 
-          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-          className="w-4 h-4 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-        >
-          <ChevronLeft className="w-2.5 h-2.5 text-white/60" />
-        </button>
-        <span className="text-[10px] text-white/80 font-medium">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </span>
-        <button 
-          onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-          className="w-4 h-4 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-        >
-          <ChevronRight className="w-2.5 h-2.5 text-white/60" />
-        </button>
-      </div>
-
-      {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-0.5 mb-0.5">
-        {dayNames.map((day, i) => (
-          <div key={i} className="text-center text-[7px] text-white/40 font-medium py-0.5">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Days Grid */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {getDaysInMonth().map((day, index) => (
-          <div
-            key={index}
-            onClick={() => day && onDayClick(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))}
-            className={`aspect-square flex items-center justify-center text-[8px] rounded transition-all relative ${
-              day
-                ? isToday(day)
-                  ? 'bg-cyan-500 text-white font-bold cursor-pointer'
-                  : 'text-white/70 hover:bg-white/10 cursor-pointer'
-                : ''
-            }`}
-          >
-            {day}
-            {hasEvent(day) && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-amber-400" />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -805,174 +631,6 @@ function CalendarModal({ isOpen, onClose, selectedDate, events, onAddEvent, onDe
   );
 }
 
-// Time & Date Component
-function TimeDisplay({ onCalendarClick, events }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="text-left">
-      <div className="text-3xl font-bold text-white font-mono tracking-wider">
-        {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-      </div>
-      <div className="text-sm text-white/60">
-        {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-      </div>
-      <MiniCalendar onDayClick={onCalendarClick} events={events} />
-    </div>
-  );
-}
-
-// Goals Component
-function GoalsPanel({ onAddGoal }) {
-  const [goals, setGoals] = useState([
-    { id: 1, text: 'Complete 5 achievements', completed: true },
-    { id: 2, text: 'Reach RPG level 20', completed: false },
-    { id: 3, text: 'Win 5 battles', completed: false },
-  ]);
-  const [showAddGoal, setShowAddGoal] = useState(false);
-  const [newGoalText, setNewGoalText] = useState('');
-
-  const toggleGoal = (id) => {
-    setGoals(goals.map(g => g.id === id ? { ...g, completed: !g.completed } : g));
-  };
-
-  const addGoal = () => {
-    if (!newGoalText.trim()) return;
-    setGoals([...goals, { id: Date.now(), text: newGoalText, completed: false }]);
-    setNewGoalText('');
-    setShowAddGoal(false);
-  };
-
-  const deleteGoal = (id) => {
-    setGoals(goals.filter(g => g.id !== id));
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-white font-bold text-sm flex items-center gap-2">
-          <Target className="w-4 h-4 text-cyan-400" />
-          Today's Goals
-        </h3>
-        <button
-          onClick={() => setShowAddGoal(!showAddGoal)}
-          className="w-5 h-5 rounded-full bg-white/10 hover:bg-cyan-500/30 flex items-center justify-center transition-colors"
-        >
-          <Plus className="w-3 h-3 text-white/60" />
-        </button>
-      </div>
-
-      {/* Add Goal Form */}
-      <AnimatePresence>
-        {showAddGoal && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex gap-2"
-          >
-            <input
-              type="text"
-              placeholder="New goal..."
-              value={newGoalText}
-              onChange={(e) => setNewGoalText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addGoal()}
-              className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-white/40 focus:outline-none focus:border-cyan-400"
-            />
-            <button
-              onClick={addGoal}
-              className="px-2 py-1 bg-cyan-500/30 hover:bg-cyan-500/50 rounded-lg text-cyan-300 text-xs transition-colors"
-            >
-              Add
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="space-y-1.5">
-        {goals.map((goal) => (
-          <div 
-            key={goal.id}
-            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all text-xs group ${
-              goal.completed ? 'bg-green-500/10 text-white/50' : 'bg-white/5 text-white hover:bg-white/10'
-            }`}
-          >
-            <div 
-              onClick={() => toggleGoal(goal.id)}
-              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                goal.completed ? 'bg-green-500 border-green-500' : 'border-white/30'
-              }`}
-            >
-              {goal.completed && <Check className="w-2.5 h-2.5 text-white" />}
-            </div>
-            <span 
-              onClick={() => toggleGoal(goal.id)}
-              className={`flex-1 ${goal.completed ? 'line-through' : ''}`}
-            >
-              {goal.text}
-            </span>
-            <button
-              onClick={() => deleteGoal(goal.id)}
-              className="w-4 h-4 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 className="w-2.5 h-2.5 text-red-400" />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Game Boxes Component (next to 3D viewer)
-function GameBoxes() {
-  return (
-    <div className="flex flex-col gap-2">
-      {pinnedGames.slice(0, 4).map((game) => (
-        <div 
-          key={game.id}
-          className="flex items-center gap-2 p-2 rounded-lg border hover:border-cyan-400/40 transition-all cursor-pointer group w-40"
-          style={{
-            background: 'rgba(100, 120, 140, 0.10)',
-            backdropFilter: 'blur(12px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-            borderColor: 'rgba(255, 255, 255, 0.08)'
-          }}
-        >
-          <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0">
-            <img src={game.image} alt={game.title} className="w-full h-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-semibold truncate">{game.title}</p>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden mt-1">
-              <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${game.progress}%` }} />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Game filter list for New Content (SAVED FOR LATER)
-const gameFilterList = [
-  { id: 'all', name: 'All Games', icon: '🎮' },
-  { id: 'elden-ring', name: 'Elden Ring', icon: '⚔️' },
-  { id: 'cyberpunk', name: 'Cyberpunk 2088', icon: '🌃' },
-  { id: 'baldurs-gate', name: "Baldur's Gate 3", icon: '🧙' },
-  { id: 'neon-legends', name: 'Neon Legends', icon: '⚡' },
-  { id: 'dragon-age', name: 'Dragon Age', icon: '🐉' },
-  { id: 'shadow-realm', name: 'Shadow Realm', icon: '👁️' },
-  { id: 'stellar-odyssey', name: 'Stellar Odyssey', icon: '🚀' },
-  { id: 'final-fantasy', name: 'Final Fantasy', icon: '✨' },
-  { id: 'dark-souls', name: 'Dark Souls', icon: '🔥' },
-];
-
 // Library Game Card Component
 function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -1039,90 +697,6 @@ function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-// Genre Row Component with horizontal scroll and arrows
-function GenreRow({ genre, games, onSelectGame, selectedGame, onPlayGame }) {
-  const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const checkScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    checkScroll();
-    const ref = scrollRef.current;
-    if (ref) {
-      ref.addEventListener('scroll', checkScroll);
-      return () => ref.removeEventListener('scroll', checkScroll);
-    }
-  }, [games]);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 300;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  if (!games || games.length === 0) return null;
-
-  return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
-          <Gamepad2 className="w-4 h-4 text-cyan-400" />
-          {genre}
-          <span className="text-white/40 font-normal text-xs ml-2">({games.length})</span>
-        </h3>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => scroll('left')}
-            disabled={!canScrollLeft}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              canScrollLeft ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/5 text-white/20 cursor-not-allowed'
-            }`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            disabled={!canScrollRight}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-              canScrollRight ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/5 text-white/20 cursor-not-allowed'
-            }`}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      
-      <div 
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto pb-2"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {games.map((game, idx) => (
-          <LibraryGameCard
-            key={game.id || idx}
-            game={game}
-            isSelected={selectedGame?.id === game.id}
-            onClick={() => onSelectGame(game)}
-            onPlay={onPlayGame}
-          />
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -1569,209 +1143,6 @@ function GameOptionsPanel({ game, onClose }) {
   );
 }
 
-// All available genres (master list) - Expanded full list
-const ALL_GENRES = [
-  'All',
-  'Action',
-  'Adventure', 
-  'RPG',
-  'MMORPG',
-  'First-Person Shooter',
-  'Third-Person Shooter',
-  'Fighting',
-  'Racing',
-  'Sports',
-  'Strategy',
-  'Real-Time Strategy',
-  'Turn-Based Strategy',
-  'Simulation',
-  'Life Simulation',
-  'Horror',
-  'Survival Horror',
-  'Puzzle',
-  'Platformer',
-  'Metroidvania',
-  'Open World',
-  'Sandbox',
-  'MMO',
-  'Battle Royale',
-  'Roguelike',
-  'Roguelite',
-  'Stealth',
-  'Tactical',
-  'Tower Defense',
-  'Visual Novel',
-  'Dating Sim',
-  'Card Game',
-  'Board Game',
-  'Rhythm',
-  'Music',
-  'Educational',
-  'Trivia',
-  'Party',
-  'Arcade',
-  'Shoot Em Up',
-  'Beat Em Up',
-  'Hack and Slash',
-  'Soulslike',
-  'Survival',
-  'Crafting',
-  'Building',
-  'City Builder',
-  'Management',
-  'Farming',
-  'Fishing',
-  'Hunting',
-  'Flight Sim',
-  'Space Sim',
-  'Mech',
-  'Vehicular Combat',
-  'Wrestling',
-  'Boxing',
-  'Golf',
-  'Tennis',
-  'Baseball',
-  'Basketball',
-  'Football',
-  'Soccer',
-  'Hockey',
-  'Skateboarding',
-  'Snowboarding',
-  'Extreme Sports',
-  'Indie',
-  'Casual',
-  'Hardcore',
-  'Retro',
-  'Classic',
-  'Remaster',
-  'Remake',
-  'Early Access',
-  'Free to Play',
-  'Premium',
-  'VR',
-  'AR',
-  'Co-op',
-  'Multiplayer',
-  'Single Player',
-  'Local Multiplayer',
-  'Online Multiplayer',
-  'Cross-Platform',
-  'Sci-Fi',
-  'Fantasy',
-  'Cyberpunk',
-  'Steampunk',
-  'Post-Apocalyptic',
-  'Historical',
-  'Military',
-  'Western',
-  'Anime',
-  'Cartoon',
-  'Realistic',
-  'Abstract'
-];
-
-// Compact Vertical Genre Scroll Selector (next to Library) - Fixed height showing ~7 items
-function MiniGenreSelector({ activeGenre, onGenreChange, gamesByGenre }) {
-  const scrollRef = useRef(null);
-  const genreRefs = useRef({});
-  const currentIndexRef = useRef(0);
-
-  const displayGenres = ALL_GENRES;
-
-  // Initialize currentIndex based on activeGenre
-  useEffect(() => {
-    const idx = displayGenres.indexOf(activeGenre);
-    if (idx !== -1) {
-      currentIndexRef.current = idx;
-    }
-  }, [activeGenre, displayGenres]);
-
-  // Scroll to Action genre on mount
-  useEffect(() => {
-    const actionIndex = displayGenres.indexOf('Action');
-    if (actionIndex !== -1 && scrollRef.current && genreRefs.current['Action']) {
-      currentIndexRef.current = actionIndex;
-      genreRefs.current['Action'].scrollIntoView({ block: 'start' });
-    }
-  }, []);
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    
-    // Determine scroll direction and move one genre at a time
-    const direction = e.deltaY > 0 ? 1 : -1;
-    const newIndex = Math.max(0, Math.min(displayGenres.length - 1, currentIndexRef.current + direction));
-    
-    if (newIndex !== currentIndexRef.current) {
-      currentIndexRef.current = newIndex;
-      const newGenre = displayGenres[newIndex];
-      onGenreChange(newGenre);
-      
-      const el = genreRefs.current[newGenre];
-      if (el && scrollRef.current) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }
-  };
-
-  const handleGenreClick = (genre) => {
-    const idx = displayGenres.indexOf(genre);
-    if (idx !== -1) {
-      currentIndexRef.current = idx;
-    }
-    onGenreChange(genre);
-  };
-
-  return (
-    <div className="flex flex-col w-28 flex-shrink-0">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-1">
-        <h3 className="text-white/50 text-[9px] font-bold uppercase tracking-wider">Genres</h3>
-      </div>
-      
-      {/* Vertical Scroll Genre List - Fixed height for ~7 items */}
-      <div 
-        ref={scrollRef}
-        onWheel={handleWheel}
-        className="overflow-y-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '300px' }}
-      >
-        {displayGenres.map((genre) => {
-          const gameCount = gamesByGenre[genre]?.length || 0;
-          const hasGames = gameCount > 0;
-          const isActive = activeGenre === genre;
-          
-          return (
-            <div
-              key={genre}
-              ref={(el) => genreRefs.current[genre] = el}
-              onClick={() => handleGenreClick(genre)}
-              className={`relative py-1 pl-2 pr-1 cursor-pointer transition-all rounded-sm ${
-                isActive 
-                  ? 'text-cyan-300' 
-                  : hasGames
-                    ? 'text-white/50 hover:text-white/80'
-                    : 'text-white/20 hover:text-white/30'
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="genreActiveLine"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-cyan-400 rounded-full"
-                />
-              )}
-              <span className={`text-[10px] font-medium ${isActive ? 'text-cyan-300' : ''}`}>{genre}</span>
-              {hasGames && (
-                <span className={`ml-1 text-[8px] ${isActive ? 'text-cyan-400' : 'text-white/30'}`}>({gameCount})</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // Card Detail Overlay - Translucent Achievement style (like Destiny cards)
 function CardDetailOverlay({ card, onClose }) {
   if (!card) return null;
@@ -1953,141 +1324,6 @@ function CardDetailOverlay({ card, onClose }) {
           'bg-gradient-to-r from-transparent via-blue-400/50 to-transparent'
         }`} />
       </motion.div>
-    </motion.div>
-  );
-}
-
-// New Cards Section - Genre-based layout like Library
-function NewCardsSection({ upcomingCards }) {
-  const [activeCardGenre, setActiveCardGenre] = useState('All');
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [showCardOverlay, setShowCardOverlay] = useState(false);
-  const cardScrollRef = useRef(null);
-  const genreRefs = useRef({});
-
-  // Filter cards by genre
-  const filteredCards = useMemo(() => {
-    if (activeCardGenre === 'All') return upcomingCards;
-    return upcomingCards.filter(card => card.genre === activeCardGenre);
-  }, [upcomingCards, activeCardGenre]);
-
-  // Handle card click - show overlay
-  const handleCardClick = (card) => {
-    setSelectedCard(card);
-    setShowCardOverlay(true);
-  };
-
-  // Handle genre scroll
-  const handleGenreScroll = () => {
-    // Similar to library genre scroll
-  };
-
-
-
-  return (
-    <motion.div
-      key="cards"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="h-full flex flex-col"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Upcoming Cards</h4>
-        <span className="text-amber-400 text-xs font-semibold">{filteredCards.length} Cards</span>
-      </div>
-
-      {/* Main Content - Genre selector left, Cards + Details right */}
-      <div className="flex gap-4 flex-1 min-h-0">
-        {/* Genre Selector - Vertical scroll */}
-        <div className="w-24 flex-shrink-0 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
-          {CARD_GENRES.map((genre) => {
-            const count = genre === 'All' ? upcomingCards.length : upcomingCards.filter(c => c.genre === genre).length;
-            const isActive = activeCardGenre === genre;
-            
-            return (
-              <div
-                key={genre}
-                ref={(el) => genreRefs.current[genre] = el}
-                onClick={() => setActiveCardGenre(genre)}
-                className={`relative py-2 px-2 cursor-pointer rounded-lg mb-1 transition-all ${
-                  isActive ? 'bg-white/10' : 'hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`font-medium transition-all ${
-                    isActive ? 'text-cyan-300 text-xs' : 'text-white/40 text-[10px]'
-                  }`}>
-                    {genre}
-                  </span>
-                  <span className={`text-[9px] ${isActive ? 'text-cyan-400' : 'text-white/20'}`}>
-                    {count}
-                  </span>
-                </div>
-                
-                {isActive && (
-                  <motion.div
-                    layoutId="cardGenreActiveLine"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-cyan-400 rounded-full"
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Vertical Divider */}
-        <div className="w-px bg-white/10 self-stretch" />
-
-        {/* Cards Row + Selected Card Details */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Cards Horizontal Scroll */}
-          <div 
-            ref={cardScrollRef}
-            className="flex gap-3 overflow-x-auto pb-3 mb-3"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredCards.map((card, idx) => (
-                <motion.div
-                  key={card.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ delay: idx * 0.03 }}
-                >
-                  <AchievementStyleCard
-                    card={card}
-                    isSelected={selectedCard?.id === card.id}
-                    onClick={() => { setSelectedCard(card); setShowCardOverlay(true); }}
-                    size="small"
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            
-            {filteredCards.length === 0 && (
-              <div className="flex items-center justify-center w-full h-28 text-white/30 text-xs">
-                No cards in {activeCardGenre}
-              </div>
-            )}
-          </div>
-
-          {/* Selected Card Quick Details removed per request; overlay handles details/tutorials */}
-        </div>
-      </div>
-
-      {/* Full Card Detail Overlay - with tutorial subpage */}
-      <AnimatePresence>
-        {showCardOverlay && selectedCard && (
-          <CardTutorialOverlay 
-            card={selectedCard}
-            onClose={() => setShowCardOverlay(false)}
-          />
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
@@ -2337,9 +1573,12 @@ function GameBanner({ game, onChangeBanner }) {
 // Live Panel - Redesigned with large 3D card showcase
 function LivePanel({ upcomingCards }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'events'
 
   const currentCard = upcomingCards[currentCardIndex];
   const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
+  const featuredEvent = MOCK_EVENTS.find(e => e.featured);
+  const otherEvents = MOCK_EVENTS.filter(e => !e.featured).slice(0, 4);
 
   const nextCard = () => {
     setCurrentCardIndex((prev) => (prev + 1) % upcomingCards.length);
@@ -2352,92 +1591,123 @@ function LivePanel({ upcomingCards }) {
   if (!currentCard) return null;
 
   return (
-    <div className="h-full flex flex-col min-w-0">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
-          <Radio className="w-4 h-4 text-green-400 animate-pulse" />
-          New Cards
-        </h3>
-        <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
-      </div>
-
-      {/* Main Content - Demo (left) + Card (center) + Description (right) */}
-      <div className="flex-1 flex flex-col gap-6">
-        <div className="flex items-start gap-4">
-          {/* Far Left: Demo Video Box */}
-          <DemoVideoBox card={currentCard} />
-
-          {/* Center: 3D Card with Arrows */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Left Arrow */}
+    <div className="h-full flex gap-4">
+      {/* Left Column (Main Content - Toggleable) */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header Toggle */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-4">
             <button 
-              onClick={prevCard}
-              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+              onClick={() => setViewMode('cards')}
+              className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+                viewMode === 'cards' ? 'text-white' : 'text-white/40 hover:text-white/70'
+              }`}
             >
-              <ChevronLeft className="w-3 h-3 text-white/60" />
+              <Radio className={`w-4 h-4 ${viewMode === 'cards' ? 'text-green-400 animate-pulse' : ''}`} />
+              New Cards
             </button>
-
-            {/* 3D Card */}
-            <Large3DCard card={currentCard} isActive={true} />
-
-            {/* Right Arrow */}
             <button 
-              onClick={nextCard}
-              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+              onClick={() => setViewMode('events')}
+              className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+                viewMode === 'events' ? 'text-white' : 'text-white/40 hover:text-white/70'
+              }`}
             >
-              <ChevronRight className="w-3 h-3 text-white/60" />
+              <CalendarIcon className={`w-4 h-4 ${viewMode === 'events' ? 'text-cyan-400' : ''}`} />
+              Upcoming Events
             </button>
           </div>
+          
+          {viewMode === 'cards' && (
+            <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
+          )}
+        </div>
 
-          {/* Far Right: Card Description */}
-          <div className="flex-1 min-w-0 h-44 flex flex-col">
-            {/* Card Title & Meta */}
-            <div className="mb-2">
-              <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                  currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                  currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                  'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                }`}>{currentCard.rarity}</span>
-                <span className="text-[9px] text-white/40">{currentCard.type}</span>
-                <span className="text-[9px] text-white/30">•</span>
-                <span className="text-[9px] text-white/40">{currentCard.genre}</span>
-              </div>
-            </div>
+        {/* Content Area */}
+        <div className="flex-1 relative">
+          <AnimatePresence mode="wait">
+            {viewMode === 'cards' ? (
+              <motion.div
+                key="cards"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute inset-0 flex items-start gap-4"
+              >
+                {/* Demo Video Box */}
+                <DemoVideoBox card={currentCard} />
 
-            {/* Description */}
-            <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
-              {currentCard.description}
-            </p>
+                {/* Center: 3D Card with Arrows */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button 
+                    onClick={prevCard}
+                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+                  >
+                    <ChevronLeft className="w-3 h-3 text-white/60" />
+                  </button>
 
-            {/* Stats Row */}
-            <div className="flex gap-2 mb-2">
-              {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
-                <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
-                  <span className="text-[8px] text-white/40 uppercase">{key}</span>
-                  <span className="text-[10px] text-white font-bold ml-1">{val}</span>
+                  <Large3DCard card={currentCard} isActive={true} />
+
+                  <button 
+                    onClick={nextCard}
+                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+                  >
+                    <ChevronRight className="w-3 h-3 text-white/60" />
+                  </button>
                 </div>
-              ))}
-            </div>
 
-            {/* Unlock Condition */}
-            <div className="mt-auto flex items-center gap-2 text-[9px]">
-              <Trophy className="w-3 h-3 text-amber-400" />
-              <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
-            </div>
-          </div>
+                {/* Description */}
+                <div className="flex-1 min-w-0 h-44 flex flex-col">
+                  <div className="mb-2">
+                    <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] px-2 py-0.5 rounded border ${
+                        currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                        currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                        'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                      }`}>{currentCard.rarity}</span>
+                      <span className="text-[9px] text-white/40">{currentCard.type}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
+                    {currentCard.description}
+                  </p>
+
+                  <div className="mt-auto flex items-center gap-2 text-[9px]">
+                    <Trophy className="w-3 h-3 text-amber-400" />
+                    <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="events"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute inset-0 overflow-y-auto pr-2"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  {otherEvents.map(event => (
+                    <SmallEventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Upcoming Events - Full Width */}
-        <div className="w-full">
-           <UpcomingEventsSection />
-        </div>
+        {/* Separator Line */}
+        <div className="w-full h-px bg-white/20 mt-2" />
       </div>
 
-      {/* Separator Line */}
-      <div className="w-full h-px bg-white/20 mt-2" />
+      {/* Right Column: Featured Event "Calendar" (Fixed Width) */}
+      <div className="w-[280px] flex-shrink-0 flex flex-col">
+         <div className="flex-1">
+            {featuredEvent && <FeaturedEventCard event={featuredEvent} />}
+         </div>
+      </div>
     </div>
   );
 }
@@ -2714,21 +1984,22 @@ export default function FocusModePanel({ onBackgroundChange }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
-      {/* Top Section - News Feed & Content */}
+      {/* Top Section - News Feed & Content (right of 3D viewer) */}
       <div className="flex gap-6 w-full">
         {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
         <div className="w-[220px] flex-shrink-0 flex flex-col">
+          {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
           <div className="relative flex-1 min-h-[180px]">
             {/* Invisible boundary - 3D viewer floats above this space */}
           </div>
         </div>
 
-        {/* Right of 3D Viewer */}
+        {/* Right of 3D Viewer - News & Updates Feed */}
         <div className="flex-1 flex gap-4">
           {/* Vertical Divider */}
           <div className="w-px bg-white/10 self-stretch" />
 
-          {/* Content Area - Live Panel (Split: Calendar | New Cards/Events) */}
+          {/* Content Area - Live Panel (Split: New Cards Toggle | Featured Event) */}
           <div className="flex-1 flex flex-col pr-2">
             <LivePanel 
               upcomingCards={upcomingCards}
