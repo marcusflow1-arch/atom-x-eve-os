@@ -2600,16 +2600,16 @@ export default function FocusModePanel({ onBackgroundChange }) {
         <div className="w-[220px] flex-shrink-0 relative">
           {/* LunaCardScroll - Far Left (scaled down) */}
           <div className="absolute left-0 top-0 z-10">
-            <h3 className="text-sm font-extrabold uppercase tracking-widest mb-2 ml-1" 
-                style={{ 
-                  background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-                }}>
-              Card Collection
-            </h3>
             <div className="origin-top-left scale-[0.8]">
+              <h3 className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full" 
+                  style={{ 
+                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                  }}>
+                Card Collection
+              </h3>
               <LunaCardScroll />
             </div>
           </div>
