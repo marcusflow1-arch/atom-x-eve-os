@@ -2616,7 +2616,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
         </div>
 
         {/* Right Column - Library Content */}
-        <div className="flex-1 flex flex-col min-w-0 pr-6">
+        <div className="flex-1 flex flex-col min-w-0">
           <div className="w-full flex flex-col gap-4">
             {/* Library Banner Section - Left aligned via internal margin */}
             <div className="w-full">
@@ -2633,11 +2633,13 @@ export default function FocusModePanel({ onBackgroundChange }) {
             />
           </div>
         </div>
-      </div>
 
-      {/* Upcoming Events Section - Below New Cards */}
-      <div className="mt-6 w-full">
-        <UpcomingEventsSection />
+        {/* Far Right Column - Upcoming Events (Scaled down 50%) */}
+        <div className="w-[450px] flex-shrink-0 relative h-[300px]">
+          <div className="absolute top-0 left-0 w-[900px] origin-top-left scale-50">
+            <UpcomingEventsSection />
+          </div>
+        </div>
       </div>
 
 
