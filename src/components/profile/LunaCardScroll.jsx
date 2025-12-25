@@ -274,7 +274,7 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
   };
 
   return (
-            <div className="w-72 h-[360px] flex flex-col">
+            <div className="w-72 h-[360px] flex flex-col mt-6">
       <DragDropContext onDragEnd={handleOnDragEnd}>
         {/* Scroll Container with custom scrollbar */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
