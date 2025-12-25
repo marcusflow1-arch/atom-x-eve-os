@@ -2563,8 +2563,8 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
         {/* Right of 3D Viewer - News & Updates Feed */}
         <div className="flex-1 flex gap-4">
-          {/* Vertical Divider */}
-          <div className="w-px bg-white/10 self-stretch" />
+          {/* Vertical Divider (match demo/card height) */}
+          <div className="w-px h-44 bg-white/10 self-center" />
 
           {/* Content Area - Live Panel (unified) */}
           <div className="flex-1 flex flex-col pr-2">
