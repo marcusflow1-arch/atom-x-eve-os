@@ -2594,9 +2594,9 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
       {/* Bottom Section - Library + LunaCardScroll (right) */}
-      <div className="mt-6 w-full grid grid-cols-12 gap-6 items-start">
+      <div className="mt-6 w-full flex gap-6 items-start">
         {/* Left: Library (banner + games) */}
-        <div className="col-span-12 max-w-4xl">
+        <div className="flex-1 max-w-4xl">
           {/* Library Banner Section - Banner centered, line below, references to the right */}
           <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
           
@@ -2609,7 +2609,10 @@ export default function FocusModePanel({ onBackgroundChange }) {
           />
         </div>
 
-
+        {/* Right: LunaCardScroll */}
+        <div className="w-72 flex-shrink-0">
+          <LunaCardScroll />
+        </div>
       </div>
 
       {/* Upcoming Events Section - Below New Cards */}
