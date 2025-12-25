@@ -2593,25 +2593,31 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Bottom Section - LunaCardScroll (left) + Library (right) */}
-      <div className="mt-6 w-full flex gap-6 items-start">
-        {/* Left: LunaCardScroll */}
-        <div className="w-72 flex-shrink-0">
-          <LunaCardScroll />
+      {/* Bottom Section */}
+      <div className="mt-6 w-full flex flex-col items-center">
+        {/* Library Banner Section - Centered */}
+        <div className="w-full max-w-4xl mb-4">
+          <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
         </div>
 
-        {/* Right: Library (banner + games) */}
-        <div className="flex-1 max-w-4xl">
-          {/* Library Banner Section - Banner centered, line below, references to the right */}
-          <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-          
-          <LibraryGamesSection 
-            onSelectGame={handleGameSelect}
-            selectedGame={selectedGame}
-            allGames={ownedGames}
-            showGamePanel={showGamePanel}
-            onClosePanel={handleCloseGamePanel}
-          />
+        <div className="w-full flex gap-6 items-start justify-center">
+          {/* Left: LunaCardScroll - Reduced by 20% */}
+          <div className="w-[14.4rem] flex-shrink-0">
+            <div className="origin-top-left scale-[0.8]">
+              <LunaCardScroll />
+            </div>
+          </div>
+
+          {/* Right: Library Games */}
+          <div className="flex-1 max-w-4xl">
+            <LibraryGamesSection 
+              onSelectGame={handleGameSelect}
+              selectedGame={selectedGame}
+              allGames={ownedGames}
+              showGamePanel={showGamePanel}
+              onClosePanel={handleCloseGamePanel}
+            />
+          </div>
         </div>
       </div>
 
