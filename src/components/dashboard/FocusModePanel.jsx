@@ -2370,11 +2370,10 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   return (
     <div className="flex flex-col items-start mb-4">
       {/* Top Row: Banner + References to the right */}
-      {/* pl-[168px] aligns banner center with the gap between Demo (260px) and Card in the row above */}
-      <div className="flex items-stretch gap-4 w-full pl-[168px]">
-        
+      <div className="flex items-stretch gap-4 w-full">
+
         {/* Game Banner */}
-        <div className="w-[200px] h-[60px] flex-shrink-0">
+        <div className="w-[368px] h-[60px] flex-shrink-0">
           <GameBanner 
             game={selectedBannerGame} 
             onChangeBanner={() => setShowBannerPicker(true)} 
@@ -2405,7 +2404,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
       </div>
 
       {/* Horizontal Line below banner - Aligned with banner */}
-      <div className="w-[200px] h-px bg-white/20 mt-3 ml-[168px]" />
+      <div className="w-[368px] h-px bg-white/20 mt-3" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
