@@ -1022,126 +1022,137 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
   );
 }
 
-// Game Options Panel - Horizontal layout below Demo video
-function GameOptionsPanel({ game, onClose }) {
-  const navigate = useNavigate();
+// Game Side Menu - Slide-out from right
+function GameSideMenu({ game, onClose }) {
+  const menuRef = useRef(null);
 
-  const menuOptions = [
-    { id: 'play', label: 'Play Game', icon: Play, isButton: true },
-    { id: 'settings', label: 'Settings', icon: Settings, isButton: false },
-    { id: 'updates', label: 'Check Updates', icon: Zap, isButton: false },
-  ];
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
 
-  const handleOptionClick = (optionId) => {
-    switch(optionId) {
-      case 'play':
-        console.log('Launching game:', game.title);
-        break;
-      case 'settings':
-        console.log('Opening settings for:', game.title);
-        break;
-      case 'updates':
-        console.log('Checking updates for:', game.title);
-        break;
-      default:
-        break;
-    }
-  };
+  if (!game) return null;
 
   return (
-    <div 
-      className="w-full rounded-xl border px-4 py-1.5"
-      data-game-panel
-      onClick={(e) => e.stopPropagation()}
-      style={{
-        background: 'rgba(100, 120, 140, 0.12)',
-        backdropFilter: 'blur(16px) saturate(130%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(130%)',
-        borderColor: 'rgba(255, 255, 255, 0.10)',
-        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-      }}
-    >
-      <div className="flex items-center gap-3">
-        {/* Game Cover */}
-        <div className="w-12 h-14 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+    <>
+      {/* Dimming Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+        onClick={onClose}
+      />
+
+      {/* Slide-out Menu */}
+      <motion.div
+        ref={menuRef}
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="fixed top-0 right-0 bottom-0 w-[300px] z-[101] border-l border-white/10 flex flex-col shadow-2xl"
+        style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(20px) saturate(150%)'
+        }}
+      >
+        {/* Header - Game Cover Area */}
+        <div className="relative h-48 flex-shrink-0">
           <img 
             src={game.cover_image || game.cover} 
             alt={game.title} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-60"
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/50 to-slate-900" />
+          
+          <button 
+            onClick={onClose}
+            className="absolute top-4 left-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors border border-white/10"
+          >
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+
+          <div className="absolute bottom-4 left-6 right-6">
+            <h2 className="text-2xl font-bold text-white mb-1 shadow-lg">{game.title}</h2>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-white/10 border border-white/10 text-[10px] font-medium text-white/80">
+                {game.genre || 'Action'}
+              </span>
+              <span className="text-[10px] text-white/50">Version 1.2.0</span>
+            </div>
+          </div>
         </div>
 
-        {/* Game Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <h3 className="text-white font-bold text-xs truncate">{game.title}</h3>
-              <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
-            </div>
-            <button 
-              onClick={onClose}
-              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-            >
-              <X className="w-3 h-3 text-white/60" />
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Main Actions */}
+          <div className="space-y-3">
+            <button className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-white/10">
+              <Play className="w-5 h-5 fill-current" />
+              Play Now
             </button>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button className="py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-1">
+                <Settings className="w-5 h-5 text-white/70" />
+                <span className="text-xs font-medium text-white/70">Settings</span>
+              </button>
+              <button className="py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-1">
+                <Zap className="w-5 h-5 text-amber-400" />
+                <span className="text-xs font-medium text-white/70">Update</span>
+              </button>
+            </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="flex gap-2 mb-1">
-            <div className="flex items-center gap-1.5 text-xs">
-              <Clock className="w-3 h-3 text-blue-400" />
-              <span className="text-white/70">12.5h</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs">
-              <Trophy className="w-3 h-3 text-yellow-400" />
-              <span className="text-white/70">8/15</span>
-            </div>
+          <div className="w-full h-px bg-white/10" />
+
+          {/* Stats */}
+          <div>
+             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Your Progress</h3>
+             <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                   <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-blue-400" />
+                      <span className="text-sm text-white/80">Time Played</span>
+                   </div>
+                   <span className="text-sm font-bold text-white">12.5h</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                   <div className="flex items-center gap-3">
+                      <Trophy className="w-4 h-4 text-yellow-400" />
+                      <span className="text-sm text-white/80">Achievements</span>
+                   </div>
+                   <span className="text-sm font-bold text-white">8/15</span>
+                </div>
+             </div>
           </div>
 
-          {/* Actions - horizontal line with inline items */}
-          <div className="relative py-3 select-none">
-            {/* Line limited to actions area (does not cross the cover) */}
-            <div className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-white/15" />
+          <div className="w-full h-px bg-white/10" />
 
-            {/* Items along the line */}
-            <div className="relative flex items-center justify-between">
-              {/* Play - left */}
-              <div
-                onClick={() => handleOptionClick('play')}
-                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
-                role="button"
-                title="Play"
-              >
-                <Play className="w-4 h-4 text-green-400 transition-transform group-hover:scale-110" />
-                <span className="text-xs font-semibold text-white">Play</span>
-              </div>
-
-              {/* Check Updates - center */}
-              <div
-                onClick={() => handleOptionClick('updates')}
-                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
-                role="button"
-                title="Check updates"
-              >
-                <Zap className="w-4 h-4 text-amber-300 transition-transform group-hover:scale-110" />
-                <span className="text-xs text-white/90">Check Updates</span>
-              </div>
-
-              {/* Settings - right end */}
-              <div
-                onClick={() => handleOptionClick('settings')}
-                className="-mt-2 inline-flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-all group hover:bg-white/5"
-                role="button"
-                title="Settings"
-              >
-                <Settings className="w-4 h-4 text-white/70 transition-transform group-hover:rotate-90" />
-                <span className="text-xs text-white/80">Settings</span>
-              </div>
-            </div>
+          {/* About */}
+          <div>
+            <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">About</h3>
+            <p className="text-sm text-white/60 leading-relaxed">
+              {game.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets.'}
+            </p>
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/10 bg-black/20">
+           <button className="w-full py-2 text-xs text-red-400 hover:text-red-300 transition-colors flex items-center justify-center gap-2">
+              <Trash2 className="w-3 h-3" />
+              Uninstall Game
+           </button>
+        </div>
+      </motion.div>
+    </>
   );
 }
 
