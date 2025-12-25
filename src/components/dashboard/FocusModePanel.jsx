@@ -1752,7 +1752,7 @@ function LivePanel({ upcomingCards, onOpenCalendar }) {
 
       {/* Right Column: Featured Event "Calendar" (Fixed Width) */}
       <div className="w-[280px] flex-shrink-0 flex flex-col">
-         <div className="flex-1">
+         <div className="h-[75%]">
             {featuredEvent && <FeaturedEventCard event={featuredEvent} onClick={onOpenCalendar} />}
          </div>
       </div>
