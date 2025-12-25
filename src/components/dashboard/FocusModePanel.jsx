@@ -1180,7 +1180,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
   const currentGames = allGames;
 
   const handleLibraryClick = () => {
-    navigate(createPageUrl('Store'));
+    navigate(createPageUrl('Library'));
   };
 
   const handleGameClick = (game) => {
@@ -1201,8 +1201,8 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
       }
     }}>
       {/* Main Games Grid */}
-      <div className="flex-1 flex flex-col transition-all duration-300 pl-[168px]">
-        {/* Clickable Title - Transitions to Store */}
+      <div className="flex-1 flex flex-col transition-all duration-300">
+        {/* Clickable Title - Transitions to Library */}
         <div className="flex items-center justify-between mb-3">
           <button 
             onClick={handleLibraryClick}
