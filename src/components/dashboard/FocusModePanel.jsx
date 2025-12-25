@@ -2208,77 +2208,76 @@ function LivePanel({ upcomingCards }) {
       </div>
 
       {/* Main Content - Demo (left) + Card (center) + Description (right) */}
-      <div className="flex-1 flex items-start gap-4">
-        {/* Far Left: Demo Video Box + Upcoming Events */}
-        <div className="flex flex-col gap-2">
+      <div className="flex-1 flex flex-col gap-6">
+        <div className="flex items-start gap-4">
+          {/* Far Left: Demo Video Box */}
           <DemoVideoBox card={currentCard} />
-          {/* Upcoming Events - Scaled to fit width of demo box */}
-          <div className="w-[260px] h-[180px] relative overflow-hidden rounded-xl border border-white/10 bg-black/20">
-             <div className="absolute top-0 left-0 w-[520px] origin-top-left scale-50">
-                <UpcomingEventsSection />
-             </div>
+
+          {/* Center: 3D Card with Arrows */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Left Arrow */}
+            <button 
+              onClick={prevCard}
+              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+            >
+              <ChevronLeft className="w-3 h-3 text-white/60" />
+            </button>
+
+            {/* 3D Card */}
+            <Large3DCard card={currentCard} isActive={true} />
+
+            {/* Right Arrow */}
+            <button 
+              onClick={nextCard}
+              className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
+            >
+              <ChevronRight className="w-3 h-3 text-white/60" />
+            </button>
           </div>
-        </div>
 
-        {/* Center: 3D Card with Arrows */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Left Arrow */}
-          <button 
-            onClick={prevCard}
-            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-          >
-            <ChevronLeft className="w-3 h-3 text-white/60" />
-          </button>
+          {/* Far Right: Card Description */}
+          <div className="flex-1 min-w-0 h-44 flex flex-col">
+            {/* Card Title & Meta */}
+            <div className="mb-2">
+              <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[9px] px-2 py-0.5 rounded border ${
+                  currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                  currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                  'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                }`}>{currentCard.rarity}</span>
+                <span className="text-[9px] text-white/40">{currentCard.type}</span>
+                <span className="text-[9px] text-white/30">•</span>
+                <span className="text-[9px] text-white/40">{currentCard.genre}</span>
+              </div>
+            </div>
 
-          {/* 3D Card */}
-          <Large3DCard card={currentCard} isActive={true} />
+            {/* Description */}
+            <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
+              {currentCard.description}
+            </p>
 
-          {/* Right Arrow */}
-          <button 
-            onClick={nextCard}
-            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-          >
-            <ChevronRight className="w-3 h-3 text-white/60" />
-          </button>
-        </div>
+            {/* Stats Row */}
+            <div className="flex gap-2 mb-2">
+              {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
+                <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
+                  <span className="text-[8px] text-white/40 uppercase">{key}</span>
+                  <span className="text-[10px] text-white font-bold ml-1">{val}</span>
+                </div>
+              ))}
+            </div>
 
-        {/* Far Right: Card Description */}
-        <div className="flex-1 min-w-0 h-44 flex flex-col">
-          {/* Card Title & Meta */}
-          <div className="mb-2">
-            <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                'bg-blue-500/20 text-blue-300 border-blue-500/30'
-              }`}>{currentCard.rarity}</span>
-              <span className="text-[9px] text-white/40">{currentCard.type}</span>
-              <span className="text-[9px] text-white/30">•</span>
-              <span className="text-[9px] text-white/40">{currentCard.genre}</span>
+            {/* Unlock Condition */}
+            <div className="mt-auto flex items-center gap-2 text-[9px]">
+              <Trophy className="w-3 h-3 text-amber-400" />
+              <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
             </div>
           </div>
+        </div>
 
-          {/* Description */}
-          <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
-            {currentCard.description}
-          </p>
-
-          {/* Stats Row */}
-          <div className="flex gap-2 mb-2">
-            {Object.entries(currentCard.stats).slice(0, 3).map(([key, val]) => (
-              <div key={key} className="px-2 py-1 rounded bg-white/5 border border-white/10">
-                <span className="text-[8px] text-white/40 uppercase">{key}</span>
-                <span className="text-[10px] text-white font-bold ml-1">{val}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Unlock Condition */}
-          <div className="mt-auto flex items-center gap-2 text-[9px]">
-            <Trophy className="w-3 h-3 text-amber-400" />
-            <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
-          </div>
+        {/* Upcoming Events - Full Width */}
+        <div className="w-full">
+           <UpcomingEventsSection />
         </div>
       </div>
 
