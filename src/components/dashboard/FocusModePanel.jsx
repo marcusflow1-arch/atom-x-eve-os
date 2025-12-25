@@ -1011,11 +1011,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
             </motion.div>
           )}
         </div>
-        {showGamePanel && selectedGame && (
-          <div className="w-[32rem] -ml-8 self-start sticky top-0" data-game-panel>
-            <GameOptionsPanel game={selectedGame} onClose={onClosePanel} />
-          </div>
-        )}
+
       </div>
     </div>
   </div>
