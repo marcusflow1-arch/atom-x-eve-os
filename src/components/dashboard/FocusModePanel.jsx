@@ -2271,11 +2271,14 @@ function LivePanel({ upcomingCards }) {
             <Trophy className="w-3 h-3 text-amber-400" />
             <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+          </div>
+          </div>
+
+          {/* Separator Line */}
+          <div className="w-full h-px bg-white/20 mt-2" />
+          </div>
+          );
+          }
 
 // Game Reference - clickable scene moments from games that change the Luna dashboard background
 function GameReference({ reference, onClick, isActive, isHomeButton }) {
