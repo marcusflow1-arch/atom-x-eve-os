@@ -2033,7 +2033,15 @@ export default function FocusModePanel({ onBackgroundChange }) {
         )}
       </AnimatePresence>
 
-
+      {/* Game Side Menu Overlay */}
+      <AnimatePresence>
+        {showGamePanel && selectedGame && (
+          <GameSideMenu 
+            game={selectedGame} 
+            onClose={handleCloseGamePanel} 
+          />
+        )}
+      </AnimatePresence>
 
       {/* Bottom Section - Grid layout matching Top Section */}
       <div className="mt-6 w-full flex gap-6 items-start">
