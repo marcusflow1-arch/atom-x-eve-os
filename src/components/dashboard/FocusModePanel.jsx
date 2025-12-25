@@ -83,92 +83,49 @@ const MOCK_EVENTS = [
   }
 ];
 
-const FeaturedEventCard = ({ event, onClick }) => {
-  // Generate a simple calendar grid for visual
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const eventDay = parseInt(event.date.split(' ')[1]) || 26; // Default to 26 if parsing fails
-  const currentMonth = "December"; // Using December based on mock data context
+const FeaturedEventCard = ({ event }) => {
+  const Icon = event.icon;
   
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="relative h-full rounded-2xl overflow-hidden cursor-pointer group flex flex-col"
+      whileHover={{ scale: 1.02, y: -4 }}
+      className="relative h-full rounded-2xl overflow-hidden cursor-pointer group"
       style={{
-        background: 'rgba(255, 255, 255, 0.03)',
+        background: 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(20px) saturate(150%)',
         WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.02)'
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Liquid Glass Shine */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+      <div className="absolute inset-0">
+        <img src={event.image} alt="" className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
+        <div className={`absolute inset-0 bg-gradient-to-br ${event.color}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      </div>
       
-      {/* Calendar Header */}
-      <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
-        <div className="flex items-center gap-2">
-           <span className="text-sm font-bold text-white tracking-wider uppercase">{currentMonth}</span>
-           <span className="text-xs text-white/40 font-mono">2025</span>
-        </div>
-        <div className="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">
-           Featured
-        </div>
-      </div>
-
-      {/* Calendar Grid Visual */}
-      <div className="flex-1 p-3 flex flex-col">
-         {/* Days Header */}
-         <div className="grid grid-cols-7 gap-1 mb-2">
-            {['S','M','T','W','T','F','S'].map(d => (
-              <div key={d} className="text-center text-[9px] text-white/30 font-bold">{d}</div>
-            ))}
-         </div>
-         
-         {/* Days Grid */}
-         <div className="grid grid-cols-7 gap-1 flex-1 content-start">
-            {/* Padding days */}
-            {[...Array(3)].map((_, i) => <div key={`pad-${i}`} />)}
-            {days.map(d => (
-              <div 
-                key={d} 
-                className={`aspect-square flex items-center justify-center rounded-full text-[10px] font-medium relative transition-all ${
-                  d === eventDay 
-                    ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-lg shadow-cyan-500/30 scale-110 z-10' 
-                    : 'text-white/50 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {d}
-                {d === eventDay && (
-                  <motion.div 
-                    layoutId="activeDayGlow"
-                    className="absolute inset-0 rounded-full bg-cyan-400 blur-md opacity-50" 
-                    transition={{ repeat: Infinity, duration: 2, repeatType: "reverse" }}
-                  />
-                )}
-              </div>
-            ))}
-         </div>
-      </div>
-
-      {/* Bottom Info & Action */}
-      <div className="p-3 bg-black/20 border-t border-white/5 backdrop-blur-md relative z-10">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col">
-             <span className="text-white font-bold text-sm truncate">{event.title}</span>
-             <span className="text-white/40 text-[10px]">{event.subtitle}</span>
+      <div className="relative h-full flex flex-col justify-between p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+            <Icon className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider">Featured</span>
           </div>
+          <div className="text-right">
+            <div className="text-white font-bold text-lg">{event.date}</div>
+            <div className="text-white/50 text-xs">{event.time}</div>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-white font-bold text-xl mb-1 group-hover:text-cyan-300 transition-colors">{event.title}</h3>
+          <p className="text-white/60 text-sm">{event.subtitle}</p>
           
-          <button 
-            className="flex items-center gap-2 text-cyan-300 hover:text-white text-xs font-bold transition-colors group/btn w-fit"
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-          >
-            <div className="w-5 h-5 rounded-full bg-cyan-500/20 group-hover/btn:bg-white/20 flex items-center justify-center transition-colors">
-               <Plus className="w-3 h-3" />
-            </div>
-            <span>Add to Calendar</span>
-          </button>
+          <div className="flex items-center gap-2 mt-4">
+            <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+              <CalendarIcon className="w-4 h-4" />
+              Add to Calendar
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -486,18 +443,15 @@ function CalendarModal({ isOpen, onClose, selectedDate, events, onAddEvent, onDe
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-4xl rounded-[32px] overflow-hidden"
+        className="relative w-full max-w-3xl rounded-3xl overflow-hidden"
         style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          backdropFilter: 'blur(50px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 40px 100px rgba(0,0,0,0.6), inset 0 0 60px rgba(255,255,255,0.05)'
+          background: 'linear-gradient(135deg, rgba(100, 120, 140, 0.15) 0%, rgba(80, 100, 120, 0.10) 100%)',
+          backdropFilter: 'blur(30px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
         }}
       >
-        {/* Liquid Glass Blobs */}
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1619,7 +1573,7 @@ function GameBanner({ game, onChangeBanner }) {
 }
 
 // Live Panel - Redesigned with large 3D card showcase
-function LivePanel({ upcomingCards, onOpenCalendar }) {
+function LivePanel({ upcomingCards }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'events'
 
@@ -1752,8 +1706,8 @@ function LivePanel({ upcomingCards, onOpenCalendar }) {
 
       {/* Right Column: Featured Event "Calendar" (Fixed Width) */}
       <div className="w-[280px] flex-shrink-0 flex flex-col">
-         <div className="h-[75%]">
-            {featuredEvent && <FeaturedEventCard event={featuredEvent} onClick={onOpenCalendar} />}
+         <div className="flex-1">
+            {featuredEvent && <FeaturedEventCard event={featuredEvent} />}
          </div>
       </div>
     </div>
@@ -2051,7 +2005,6 @@ export default function FocusModePanel({ onBackgroundChange }) {
           <div className="flex-1 flex flex-col pr-2">
             <LivePanel 
               upcomingCards={upcomingCards}
-              onOpenCalendar={() => setShowCalendarModal(true)}
             />
           </div>
         </div>
