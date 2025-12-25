@@ -1964,7 +1964,7 @@ function DemoVideoBox({ card }) {
 
   return (
     <div 
-      className="w-[260px] h-full flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
+      className="w-[260px] h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(10px)',
