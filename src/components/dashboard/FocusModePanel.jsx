@@ -1175,7 +1175,7 @@ function GameDetailPanel({ game, onClose }) {
 function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePanel, onClosePanel }) {
   const navigate = useNavigate();
   const libraryScrollRef = useRef(null);
-  
+
   // Show all games
   const currentGames = allGames;
 
@@ -1201,7 +1201,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
       }
     }}>
       {/* Main Games Grid */}
-      <div className="flex-1 flex flex-col transition-all duration-300">
+      <div className="flex-1 flex flex-col transition-all duration-300 pl-[168px]">
         {/* Clickable Title - Transitions to Store */}
         <div className="flex items-center justify-between mb-3">
           <button 
