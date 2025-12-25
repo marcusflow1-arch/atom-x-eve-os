@@ -214,7 +214,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
     const topLevelTabs = [
         { id: 'game_detail', label: 'Game Detail', icon: <Info className="w-4 h-4" /> },
         { id: 'progression', label: 'Progression', icon: <BookOpen className="w-4 h-4" /> },
-        { id: 'achievements', label: 'Achievements', icon: <Trophy className="w-4 h-4" /> },
+        { id: 'dlc', label: 'DLC', icon: <Package className="w-4 h-4" /> },
         { id: 'equipment', label: 'Equipment', icon: <Shield className="w-4 h-4" /> },
         { id: 'community', label: 'Community', icon: <MessageSquare className="w-4 h-4" /> },
     ];
@@ -262,23 +262,38 @@ export default function GameDetailPanel({ game, onPurchase }) {
         </div>
     );
 
-    // Content for the "Achievements" tab
-    const AchievementsContent = () => (
+    // Content for the "DLC" tab
+    const DlcContent = () => (
         <div className="p-4 overflow-y-auto h-full">
-            <h3 className="text-xl font-bold mb-4">Unlockable Achievements</h3>
-            {(game.achievements && game.achievements.length > 0) ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {game.achievements.map(ach => (
-                        <AchievementCard 
-                            key={ach.id} 
-                            achievement={ach} 
-                            isUnlocked={ach.status === 'unlocked'}
-                            onClick={(ach) => console.log('Achievement clicked:', ach)}
-                        />
+            <h3 className="text-xl font-bold mb-4">Downloadable Content (DLC)</h3>
+            {(game.dlcs && game.dlcs.length > 0) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {game.dlcs.map((dlc, idx) => (
+                        <div key={dlc.id || idx} className="rounded-lg border border-slate-700/50 bg-slate-800/40 overflow-hidden flex flex-col">
+                            {(dlc.image || dlc.cover_image) && (
+                                <div className="aspect-video w-full overflow-hidden">
+                                    <img src={dlc.image || dlc.cover_image} alt={dlc.title} className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <div className="p-3 flex-1 flex flex-col">
+                                <h4 className="font-bold text-white text-sm mb-1">{dlc.title}</h4>
+                                {dlc.description && <p className="text-slate-400 text-xs line-clamp-3 mb-3">{dlc.description}</p>}
+                                <div className="mt-auto flex items-center justify-between">
+                                    <span className="text-blue-400 font-semibold text-sm">{dlc.price ? `$${dlc.price}` : 'Free'}</span>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm">Details</Button>
+                                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => console.log('Buy DLC', dlc)}>
+                                            <ShoppingCart className="w-3 h-3 mr-1" />
+                                            Buy
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : (
-                <p className="text-slate-400">No achievements available for this game yet.</p>
+                <p className="text-slate-400">No DLCs available for this game yet.</p>
             )}
         </div>
     );
@@ -382,7 +397,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                     >
                         {activeTab === 'game_detail' && <GameDetailContent />}
                         {activeTab === 'progression' && <ProgressionContent />}
-                        {activeTab === 'achievements' && <AchievementsContent />}
+                        {activeTab === 'dlc' && <DlcContent />}
                         {activeTab === 'equipment' && <EquipmentContent />}
                         {activeTab === 'community' && <CommunityContent />}
                     </motion.div>
