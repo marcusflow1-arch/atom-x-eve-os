@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Shield, Cpu, ChevronRight, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
-  Download, Play
+  Download, Play, CreditCard, Check, X, Loader2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -107,6 +107,104 @@ const SpecsTab = ({ game }) => {
   );
 };
 
+const PurchaseModal = ({ game, onClose, onConfirm, isProcessing }) => {
+  const [step, setStep] = useState('review'); // review, processing, success
+
+  useEffect(() => {
+    if (isProcessing) setStep('processing');
+  }, [isProcessing]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-zinc-950 rounded-3xl border border-white/10 overflow-hidden shadow-2xl relative"
+      >
+        {/* Glass Header */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+        
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-white/60" />
+              Secure Checkout
+            </h3>
+            {!isProcessing && (
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <X className="w-5 h-5 text-white/40" />
+              </button>
+            )}
+          </div>
+
+          {step === 'review' && (
+            <div className="space-y-6">
+              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex gap-4">
+                <img src={game.cover_image} alt={game.title} className="w-16 h-20 object-cover rounded-lg shadow-lg" />
+                <div>
+                  <h4 className="font-bold text-white mb-1">{game.title}</h4>
+                  <span className="text-xs text-white/40 uppercase tracking-wider">Standard License</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/40">Subtotal</span>
+                  <span className="text-white">${game.price?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/40">System Fee</span>
+                  <span className="text-white">$0.00</span>
+                </div>
+                <div className="h-px bg-white/10 my-2" />
+                <div className="flex justify-between text-lg font-bold">
+                  <span className="text-white">Total</span>
+                  <span className="text-green-400">${game.price?.toFixed(2) || '0.00'}</span>
+                </div>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl flex gap-3 items-start">
+                <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-200/80 leading-relaxed">
+                  Purchase includes immediate system access, unlocked ability pool, and specialized blacksmithing rights for this title.
+                </p>
+              </div>
+
+              <button
+                onClick={onConfirm}
+                className="w-full py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-white/10"
+              >
+                Confirm Transaction
+              </button>
+            </div>
+          )}
+
+          {step === 'processing' && (
+            <div className="py-12 flex flex-col items-center text-center">
+              <div className="relative mb-6">
+                <div className="w-16 h-16 rounded-full border-4 border-white/10 border-t-white animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Cpu className="w-6 h-6 text-white/40" />
+                </div>
+              </div>
+              <h4 className="text-lg font-bold text-white mb-2">Processing Protocol</h4>
+              <p className="text-sm text-white/40 animate-pulse">Establishing secure link...</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export default function GameDetailPanel({ gameId, onClose }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -115,13 +213,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [unlocking, setUnlocking] = useState(false);
   const [activeTab, setActiveTab] = useState('system'); // 'system' or 'specs'
   const [owned, setOwned] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   useEffect(() => {
     const fetchGame = async () => {
       if (!gameId) return;
       try {
-        // In a real app we'd fetch from API, assuming mock or passed via prop in page
-        // For now, let's try to fetch from base44
         const fetchedGame = await base44.entities.Game.get(gameId);
         setGame(fetchedGame);
         
@@ -137,26 +234,31 @@ export default function GameDetailPanel({ gameId, onClose }) {
     fetchGame();
   }, [gameId, user]);
 
-  const handleUnlock = async () => {
+  const handleTransactionStart = () => {
     if (!isAuthenticated) {
-        // Trigger login or show message
         alert("Authentication Required Identity Protocol.");
         return;
     }
+    setShowPurchaseModal(true);
+  };
+
+  const handleTransactionConfirm = async () => {
     setUnlocking(true);
     try {
         await base44.functions.invoke('unlockGameSystem', { gameId });
         setOwned(true);
-        // Maybe show a success animation or toast
+        setShowPurchaseModal(false);
     } catch (err) {
         console.error("Unlock failed", err);
+        setUnlocking(false); // Stop processing if error
     } finally {
+        // We keep unlocking true for a moment if successful to transition? 
+        // Actually setOwned(true) will re-render the main view.
         setUnlocking(false);
     }
   };
 
   const handlePlay = () => {
-      // In real scenario, launch game or navigate to library
       navigate(createPageUrl('Library'));
   };
 
@@ -272,19 +374,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   ) : (
                     <div className="flex items-center gap-6">
                       <button 
-                        onClick={handleUnlock}
-                        disabled={unlocking}
+                        onClick={handleTransactionStart}
                         className="group relative px-10 py-5 bg-white text-black rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)]"
                       >
                         <span className="relative flex items-center gap-3">
-                          {unlocking ? (
-                            <span className="animate-pulse">Initializing...</span>
-                          ) : (
-                            <>
-                              <Download className="w-5 h-5" />
-                              Initialize System • ${game.price || '0.00'}
-                            </>
-                          )}
+                          <Download className="w-5 h-5" />
+                          Initialize System • ${game.price?.toFixed(2) || '0.00'}
                         </span>
                       </button>
                       <div className="text-xs text-white/40 max-w-[150px] leading-tight">
@@ -331,6 +426,18 @@ export default function GameDetailPanel({ gameId, onClose }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Transaction Modal */}
+      <AnimatePresence>
+        {showPurchaseModal && (
+          <PurchaseModal 
+            game={game} 
+            onClose={() => setShowPurchaseModal(false)}
+            onConfirm={handleTransactionConfirm}
+            isProcessing={unlocking}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

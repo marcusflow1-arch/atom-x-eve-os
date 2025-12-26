@@ -27,11 +27,24 @@ Deno.serve(async (req) => {
              return Response.json({ message: 'System already unlocked', alreadyOwned: true });
         }
 
-        // 3. Update User Ownership
+        // 3. Record Transaction
+        const transactionHash = crypto.randomUUID().split('-').join('').toUpperCase();
+        await base44.entities.Transaction.create({
+            user_id: user.id,
+            item_id: gameId,
+            item_type: 'game',
+            amount: game.price || 0,
+            currency: 'USD',
+            status: 'completed',
+            transaction_hash: transactionHash,
+            payment_method: 'system_credits'
+        });
+
+        // 4. Update User Ownership
         const newPurchases = [...currentPurchases, gameId];
         await base44.auth.updateMe({ purchased_items: newPurchases });
 
-        // 4. "Seed" the System
+        // 5. "Seed" the System
         // Fetch templates for this game
         const templates = await base44.entities.CardTemplate.filter({ source_game_id: gameId });
         
@@ -60,7 +73,7 @@ Deno.serve(async (req) => {
             await base44.entities.UserCard.create(newCards); // Assuming bulk create works or use loop
         }
 
-        // 5. Seed Achievements (Locked)
+        // 6. Seed Achievements (Locked)
         const achievements = await base44.entities.Achievement.filter({ game: game.title }); // Assuming linkage by game title or ID
         const userAchievements = achievements.map(ach => ({
             user_id: user.id,
@@ -77,7 +90,8 @@ Deno.serve(async (req) => {
             success: true, 
             message: `System unlocked: ${game.title}`,
             cards_unlocked: newCards.length,
-            achievements_seeded: userAchievements.length
+            achievements_seeded: userAchievements.length,
+            transaction_id: transactionHash
         });
 
     } catch (error) {
