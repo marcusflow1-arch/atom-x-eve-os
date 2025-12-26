@@ -20,7 +20,7 @@ const SYSTEM_ICONS = {
 // --- Left Column: Filter & Selection ---
 const SidebarFilter = ({ onFilterChange, activeFilter }) => {
   return (
-    <div className="w-64 backdrop-blur-xl bg-black/20 border-r border-white/5 flex flex-col h-full">
+    <div className="w-64 backdrop-blur-xl bg-black/20 flex flex-col h-full">
       <div className="p-6">
         <h2 className="text-white/60 font-medium text-xs tracking-widest uppercase mb-4 pl-2">
           Repositories
@@ -566,14 +566,14 @@ export default function BlacksmithPage() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#050505] flex flex-col overflow-hidden text-white font-sans relative">
+    <div className="h-full w-full bg-[#050505] flex flex-col overflow-hidden text-white font-sans relative pt-20">
       {/* Global Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/20 via-purple-900/10 to-blue-900/20 pointer-events-none" />
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Top Navigation Bar */}
-      <div className="h-20 flex items-center px-8 justify-between flex-shrink-0 z-20 backdrop-blur-md bg-black/10 border-b border-white/5">
+      <div className="h-20 flex items-center px-8 justify-between flex-shrink-0 z-20 backdrop-blur-sm bg-transparent">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
             <Hammer className="w-5 h-5 text-white" />
@@ -582,7 +582,7 @@ export default function BlacksmithPage() {
         </div>
         
         {/* System Tabs - Pill Style */}
-        <div className="flex items-center bg-white/5 p-1.5 rounded-full border border-white/5 backdrop-blur-md">
+        <div className="flex items-center bg-white/5 p-1.5 rounded-full backdrop-blur-md">
           {Object.entries(SYSTEM_ICONS).map(([key, Icon]) => (
             <button
               key={key}
@@ -601,11 +601,11 @@ export default function BlacksmithPage() {
 
         {/* User Stats - Glass Cards */}
         <div className="flex items-center gap-4">
-          <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 backdrop-blur-md flex flex-col items-end min-w-[100px]">
+          <div className="px-4 py-2 rounded-xl bg-white/5 backdrop-blur-md flex flex-col items-end min-w-[100px]">
             <span className="text-white/40 uppercase tracking-wider text-[9px] font-bold mb-0.5">APS Balance</span>
             <span className="text-green-400 font-bold font-mono text-lg leading-none">{currentUser?.aps || 0}</span>
           </div>
-          <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 backdrop-blur-md flex flex-col items-end min-w-[100px]">
+          <div className="px-4 py-2 rounded-xl bg-white/5 backdrop-blur-md flex flex-col items-end min-w-[100px]">
             <span className="text-white/40 uppercase tracking-wider text-[9px] font-bold mb-0.5">Smith Rank</span>
             <span className="text-amber-400 font-bold font-mono text-lg leading-none">{currentUser?.blacksmith_rank || 1}</span>
           </div>
@@ -613,15 +613,17 @@ export default function BlacksmithPage() {
       </div>
 
       {/* Main 3-Column Layout */}
-      <div className="flex-1 flex overflow-hidden relative z-10">
+      <div className="flex-1 flex overflow-hidden relative z-10 px-6 pb-6 gap-6">
         {/* Column 1: Filter - Glass Sidebar */}
-        <SidebarFilter 
-          activeFilter={activeFilter} 
-          onFilterChange={setActiveFilter} 
-        />
+        <div className="rounded-3xl overflow-hidden border border-white/5">
+          <SidebarFilter 
+            activeFilter={activeFilter} 
+            onFilterChange={setActiveFilter} 
+          />
+        </div>
 
         {/* Column 2: Library - Clean Grid */}
-        <div className="flex-1 min-w-[400px] border-r border-white/5 flex flex-col backdrop-blur-sm bg-white/[0.01]">
+        <div className="flex-1 min-w-[400px] flex flex-col backdrop-blur-sm bg-white/[0.01] rounded-3xl overflow-hidden border border-white/5">
           <CardLibrary 
             cards={cards} 
             selectedCard={selectedCard}
@@ -630,7 +632,7 @@ export default function BlacksmithPage() {
         </div>
 
         {/* Column 3: Workspace (Persistent Right Panel) - Frosted Glass */}
-        <div className="w-[500px] flex-shrink-0 border-l border-white/5 shadow-2xl relative z-20 backdrop-blur-2xl bg-black/40">
+        <div className="w-[500px] flex-shrink-0 shadow-2xl relative z-20 backdrop-blur-2xl bg-black/20 rounded-3xl overflow-hidden border border-white/5">
           <Workspace 
             activeSystem={activeSystem} 
             card={selectedCard} 
