@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { Post } from '@/entities/Post';
 import CreatePostForm from '../community/CreatePostForm';
+import GameCardShowcase from './GameCardShowcase';
 
 // --- Components ---
 
@@ -537,6 +538,10 @@ export default function GameDetailPanel({ game, onPurchase }) {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        {/* CARD SHOWCASE SECTION (Scroll Revealed) */}
+        <GameCardShowcase game={game} />
+        
       </div>
     </div>
   );
