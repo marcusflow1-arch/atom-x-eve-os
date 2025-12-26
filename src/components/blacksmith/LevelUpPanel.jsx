@@ -14,24 +14,29 @@ const rarityGlowColors = {
   Mythic: 'rgba(239, 68, 68, 0.8)',
 };
 
-export default function LevelUpPanel({ item, onLevelUp }) {
-  const [selectedExpPercent, setSelectedExpPercent] = useState(25);
-  const [expMultiplier, setExpMultiplier] = useState(1);
+export default function LevelUpPanel({ item, onLevelUp, userEnergy = 0 }) {
+  const [energyInput, setEnergyInput] = useState(50);
   const [currentLevel, setCurrentLevel] = useState(item?.level || 1);
-  const [currentExp, setCurrentExp] = useState(0);
+  const [currentExp, setCurrentExp] = useState(item?.xp || 0);
   const [isLeveling, setIsLeveling] = useState(false);
-  const maxLevel = 20;
-  const expPerLevel = 100;
+  
+  const maxLevel = 100;
+  const expPerLevel = 100 * (currentLevel); // Scaling XP requirement
 
   const glowColor = rarityGlowColors[item?.rarity] || rarityGlowColors.Common;
 
-  const handleAddExp = async () => {
-    if (currentLevel >= maxLevel) return;
+  const xpGain = energyInput * 10; // 1 Energy = 10 XP (example rate)
+  const canAfford = userEnergy >= energyInput;
+
+  const handleFinalizeLevel = async () => {
+    if (currentLevel >= maxLevel || !canAfford) return;
     
     setIsLeveling(true);
     
-    const expToAdd = (selectedExpPercent / 100) * expPerLevel * expMultiplier;
-    let newExp = currentExp + expToAdd;
+    // Simulate backend call
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    let newExp = currentExp + xpGain;
     let newLevel = currentLevel;
     
     // Level up logic
@@ -39,12 +44,6 @@ export default function LevelUpPanel({ item, onLevelUp }) {
       newExp -= expPerLevel;
       newLevel++;
     }
-    
-    if (newLevel >= maxLevel) {
-      newExp = expPerLevel;
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
     
     setCurrentExp(newExp);
     setCurrentLevel(newLevel);
@@ -54,31 +53,6 @@ export default function LevelUpPanel({ item, onLevelUp }) {
     }
     
     setIsLeveling(false);
-  };
-
-  const handleAddOneLevel = () => {
-    if (currentLevel >= maxLevel) return;
-    setCurrentLevel(prev => Math.min(prev + 1, maxLevel));
-    setCurrentExp(0);
-  };
-
-  const handleRemoveOneLevel = () => {
-    if (currentLevel <= 1) return;
-    setCurrentLevel(prev => Math.max(prev - 1, 1));
-    setCurrentExp(0);
-  };
-
-  const handleMaxLevel = () => {
-    setCurrentLevel(maxLevel);
-    setCurrentExp(expPerLevel);
-  };
-
-  const handleIncrementMultiplier = () => {
-    if (expMultiplier < 20) setExpMultiplier(prev => prev + 1);
-  };
-
-  const handleDecrementMultiplier = () => {
-    if (expMultiplier > 1) setExpMultiplier(prev => prev - 1);
   };
 
   if (!item) {
