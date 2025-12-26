@@ -173,6 +173,120 @@ Deno.serve(async (req) => {
              return new Response(JSON.stringify({ success: true, channel: newChannel }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- JOIN CLAN ---
+        if (action === 'join_clan') {
+            const { divisionId } = data;
+            const division = await base44.entities.Division.get(divisionId);
+            if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
+
+            // Check if already a member
+            const existingMember = await base44.entities.ClanMember.filter({ userId: user.id, divisionId });
+            if (existingMember.length > 0) {
+                return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
+            }
+
+            if (division.isPrivate) {
+                 return new Response(JSON.stringify({ error: 'Clan is private' }), { status: 403, headers: corsHeaders });
+            }
+
+            await base44.entities.ClanMember.create({
+                divisionId,
+                userId: user.id,
+                role: 'member',
+                joinedAt: new Date().toISOString(),
+                contributionPoints: 0
+            });
+
+            // Update member count
+            await base44.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- LEAVE CLAN ---
+        if (action === 'leave_clan') {
+            const { divisionId } = data;
+            
+            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!member.length) {
+                return new Response(JSON.stringify({ error: 'Not a member' }), { status: 404, headers: corsHeaders });
+            }
+
+            if (member[0].role === 'leader') {
+                 return new Response(JSON.stringify({ error: 'Leader cannot leave. Transfer ownership or dismantle clan.' }), { status: 400, headers: corsHeaders });
+            }
+
+            await base44.entities.ClanMember.delete(member[0].id);
+
+            // Update member count
+            const division = await base44.entities.Division.get(divisionId);
+            if (division) {
+                await base44.entities.Division.update(divisionId, { memberCount: Math.max(0, (division.memberCount || 1) - 1) });
+            }
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- KICK MEMBER ---
+        if (action === 'kick_member') {
+            const { divisionId, targetUserId } = data;
+
+            // Verify permissions (leader/officer)
+            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                 return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            const target = await base44.entities.ClanMember.filter({ divisionId, userId: targetUserId });
+            if (!target.length) {
+                return new Response(JSON.stringify({ error: 'Target not found' }), { status: 404, headers: corsHeaders });
+            }
+
+            // Cannot kick leader
+            if (target[0].role === 'leader') {
+                return new Response(JSON.stringify({ error: 'Cannot kick leader' }), { status: 403, headers: corsHeaders });
+            }
+
+            // Officer cannot kick officer
+            if (actor[0].role === 'officer' && target[0].role === 'officer') {
+                return new Response(JSON.stringify({ error: 'Officers cannot kick other officers' }), { status: 403, headers: corsHeaders });
+            }
+
+            await base44.entities.ClanMember.delete(target[0].id);
+
+            // Update member count
+            const division = await base44.entities.Division.get(divisionId);
+            if (division) {
+                await base44.entities.Division.update(divisionId, { memberCount: Math.max(0, (division.memberCount || 1) - 1) });
+            }
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- PROMOTE / DEMOTE MEMBER ---
+        if (action === 'promote_member') {
+            const { divisionId, targetUserId, newRole } = data; // newRole: 'officer' or 'member'
+
+            // Verify permissions (leader only)
+            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!actor.length || actor[0].role !== 'leader') {
+                 return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            const target = await base44.entities.ClanMember.filter({ divisionId, userId: targetUserId });
+            if (!target.length) {
+                return new Response(JSON.stringify({ error: 'Target not found' }), { status: 404, headers: corsHeaders });
+            }
+
+            if (target[0].role === 'leader') {
+                 return new Response(JSON.stringify({ error: 'Cannot change leader role this way' }), { status: 400, headers: corsHeaders });
+            }
+
+            await base44.entities.ClanMember.update(target[0].id, { role: newRole });
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
     } catch (error) {
