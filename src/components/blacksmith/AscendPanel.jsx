@@ -345,7 +345,7 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/50"
             >
               <Crown className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-400 font-bold">MAX ASCENSION</span>
+              <span className="text-pink-400 font-bold">MAX EVOLUTION</span>
             </motion.div>
           </div>
         ) : showConfirm ? (
@@ -367,18 +367,45 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
                   <Crown className="w-5 h-5" />
                 </motion.div>
               ) : (
-                <>Confirm Ascend</>
+                <>Confirm Evolution</>
               )}
             </Button>
           </div>
         ) : (
-          <Button
-            onClick={() => setShowConfirm(true)}
-            className="w-full h-14 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-lg rounded-xl"
-          >
-            <Crown className="w-5 h-5 mr-2" />
-            Ascend to {nextAscensionData.name}
-          </Button>
+          <div className="space-y-2">
+             <div className="flex items-center justify-between text-xs px-2 mb-1">
+                <span className="text-white/40">Milestone Requirement</span>
+                <span className={canAscend ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
+                   {userScore} / {scoreRequirement} Score
+                </span>
+             </div>
+             {/* Progress Bar for Score */}
+             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-3">
+                <div 
+                   className={`h-full ${canAscend ? 'bg-green-500' : 'bg-red-500'}`} 
+                   style={{ width: `${Math.min(100, (userScore / scoreRequirement) * 100)}%` }}
+                />
+             </div>
+
+             <Button
+               onClick={() => setShowConfirm(true)}
+               disabled={!canAscend}
+               className={`w-full h-14 font-bold text-lg rounded-xl transition-all ${
+                  canAscend 
+                     ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white shadow-lg shadow-amber-500/20' 
+                     : 'bg-slate-800 text-slate-500 border border-white/5'
+               }`}
+             >
+               {canAscend ? (
+                  <>
+                     <Crown className="w-5 h-5 mr-2" />
+                     Evolve to {nextAscensionData.name}
+                  </>
+               ) : (
+                  'LOCKED (Milestone Not Met)'
+               )}
+             </Button>
+          </div>
         )}
       </div>
     </motion.div>
