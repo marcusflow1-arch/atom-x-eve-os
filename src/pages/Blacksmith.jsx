@@ -589,65 +589,25 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
             </div>
           </div>
 
-          {/* Centered Navigation */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-            {/* Main Nav Row */}
-            <div className="flex items-center gap-6">
-              {[
-                { id: 'forge', label: 'Forge', icon: Hammer },
-                { id: 'materials', label: 'Materials', icon: Package },
-                { id: 'collab', label: 'Collaborations', icon: Users },
-              ].map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setViewMode(mode.id)}
-                  className={`flex items-center gap-2 text-xs font-medium transition-all ${
-                    viewMode === mode.id
-                      ? 'text-white' 
-                      : 'text-white/40 hover:text-white/70'
-                  }`}
-                  style={{ transform: 'scale(0.85)' }}
-                >
-                  <mode.icon className="w-4 h-4" />
-                  <span>{mode.label}</span>
-                </button>
-              ))}
-            </div>
-            
-            {/* Subpage Nav Row - Only shows when Enhance is selected */}
-            {showItemDetail && selectedForgeAction === 'enhance' && (
-              <div className="flex items-center gap-6">
-                {[
-                  { id: 'enchantment', label: 'Enchantment', icon: Sparkles },
-                  { id: 'combine', label: 'Combine Stage', icon: ArrowLeftRight },
-                ].map((subpage) => (
-                  <button
-                    key={subpage.id}
-                    onClick={() => setSelectedEnhanceSubpage(subpage.id)}
-                    className={`flex items-center gap-2 text-xs font-medium transition-all ${
-                      selectedEnhanceSubpage === subpage.id
-                        ? 'text-white' 
-                        : 'text-white/40 hover:text-white/70'
-                    }`}
-                    style={{ transform: 'scale(0.85)' }}
-                  >
-                    <subpage.icon className="w-4 h-4" />
-                    <span>{subpage.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Centered Navigation - Only Main Section Toggles */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-6">
+             {/* Removed complex nav, focusing on context-aware actions inside the forge */}
           </div>
 
           <div className="flex gap-6 items-center">
-            {(user?.materials || []).slice(0, 2).map(mat => (
-              <div key={mat.id} className="flex items-center gap-3 bg-white/[0.03] px-4 py-2 rounded-2xl border border-white/10">
-                <div className={`w-2 h-2 rounded-full ${rarityStyles[mat.rarity]?.color.replace('text-', 'bg-') || 'bg-slate-500'}`} />
-                <span className="text-white/60 text-sm font-medium">{mat.name}</span>
-                <span className="text-white/80 font-bold font-mono">{mat.quantity}</span>
-              </div>
-            ))}
+            {/* Achievement Energy Display */}
+            <div className="flex items-center gap-3 bg-cyan-500/10 px-4 py-2 rounded-2xl border border-cyan-500/30">
+               <Zap className="w-4 h-4 text-cyan-400" />
+               <span className="text-cyan-100/60 text-sm font-medium">Energy</span>
+               <span className="text-cyan-100 font-bold font-mono">{user?.achievement_energy || 0}</span>
+            </div>
 
+            {/* Achievement Score Display */}
+            <div className="flex items-center gap-3 bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30">
+               <Crown className="w-4 h-4 text-amber-400" />
+               <span className="text-amber-100/60 text-sm font-medium">Score</span>
+               <span className="text-amber-100 font-bold font-mono">{user?.achievement_score || 0}</span>
+            </div>
           </div>
         </header>
 
