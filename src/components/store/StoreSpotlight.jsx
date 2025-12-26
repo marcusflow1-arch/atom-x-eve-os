@@ -58,7 +58,7 @@ export default function StoreSpotlight({ games }) {
         <span>Use A / D to browse spotlight</span>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8 h-[600px] xl:h-[500px]">
+      <div className="flex flex-col xl:flex-row gap-8 h-[300px] xl:h-[250px]">
         
         {/* BIG BOX: Main Media (Left) */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
@@ -68,7 +68,7 @@ export default function StoreSpotlight({ games }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="relative flex-1 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group/media"
+            className="relative flex-1 rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 group/media"
             onClick={() => navigate(createPageUrl(`GameDetail?id=${activeGame.id}`))}
           >
             {/* Main Image/Video */}
@@ -83,14 +83,14 @@ export default function StoreSpotlight({ games }) {
             
             {/* Play Button Overlay (Simulated) */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/media:opacity-100 transition-opacity duration-300">
-                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 text-white fill-white" />
+                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+                    <Play className="w-4 h-4 text-white fill-white" />
                 </div>
             </div>
           </motion.div>
 
           {/* Thumbnails (Screenshots/Videos) */}
-          <div className="h-24 flex gap-4">
+          <div className="h-12 flex gap-4">
              {/* Fake Video Thumb 1 */}
              <div className="aspect-video h-full rounded-lg overflow-hidden border border-white/10 relative cursor-pointer hover:border-blue-500 transition-colors">
                  <img src={activeGame.cover_image} className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity" />
@@ -139,39 +139,39 @@ export default function StoreSpotlight({ games }) {
                         </Badge>
                     </div>
 
-                    <h2 className="text-4xl font-black text-white mb-4 leading-tight tracking-tight">
+                    <h2 className="text-2xl font-black text-white mb-2 leading-tight tracking-tight">
                         {activeGame.title}
                     </h2>
 
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex items-center gap-4 mb-3">
                         <div className="flex items-center gap-1 text-yellow-400">
                             {[...Array(5)].map((_, i) => (
                                 <Star 
                                     key={i} 
-                                    className={`w-4 h-4 ${i < Math.floor(activeGame.rating) ? 'fill-current' : 'text-white/20'}`} 
+                                    className={`w-3 h-3 ${i < Math.floor(activeGame.rating) ? 'fill-current' : 'text-white/20'}`} 
                                 />
                             ))}
-                            <span className="ml-2 font-bold text-white">{activeGame.rating}</span>
+                            <span className="ml-2 font-bold text-white text-sm">{activeGame.rating}</span>
                         </div>
                         <span className="text-white/20">|</span>
-                        <span className="text-green-400 font-bold text-xl">${activeGame.price}</span>
+                        <span className="text-green-400 font-bold text-lg">${activeGame.price}</span>
                     </div>
 
-                    <p className="text-slate-300 leading-relaxed mb-6 line-clamp-4">
+                    <p className="text-slate-300 leading-relaxed mb-3 line-clamp-2 text-sm">
                         {activeGame.description}
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-3 mt-4">
+                <div className="flex flex-col gap-2 mt-2">
                     <Button 
                         onClick={() => navigate(createPageUrl(`GameDetail?id=${activeGame.id}`))}
-                        className="w-full h-12 text-lg font-bold bg-white text-black hover:bg-slate-200"
+                        className="w-full h-9 text-sm font-bold bg-white text-black hover:bg-slate-200"
                     >
                         View Details
                     </Button>
                     <Button 
                         variant="outline"
-                        className="w-full h-12 border-white/10 hover:bg-white/5 text-white"
+                        className="w-full h-9 text-xs border-white/10 hover:bg-white/5 text-white"
                     >
                         <span className="mr-2">+</span> Add to Wishlist
                     </Button>
