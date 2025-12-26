@@ -234,16 +234,16 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
       {/* Ascension Controls */}
       <div className="flex flex-col gap-6 max-w-sm">
         <div>
-          <h3 className="text-white font-bold text-2xl mb-2">Ascension</h3>
+          <h3 className="text-white font-bold text-2xl mb-2">Evolution</h3>
           <p className="text-white/50 text-sm">
-            Reset card level to gain permanent stat bonuses and unique perks.
+            Evolve card to unlock permanent perks. Requires Achievement Score milestones.
           </p>
         </div>
 
         {/* Current Ascension Status */}
         <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-white/60 text-sm">Current Ascension</span>
+            <span className="text-white/60 text-sm">Current Stage</span>
             <div className="flex items-center gap-1">
               {currentAscension > 0 ? (
                 <>
@@ -255,7 +255,7 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
                   ))}
                 </>
               ) : (
-                <span className="text-white/40 text-sm">Not Ascended</span>
+                <span className="text-white/40 text-sm">Base Stage</span>
               )}
             </div>
           </div>
@@ -276,7 +276,7 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
 
         {/* Ascension Levels Preview */}
         <div className="space-y-2">
-          <span className="text-white/60 text-sm">Ascension Tiers</span>
+          <span className="text-white/60 text-sm">Evolution Tiers</span>
           <div className="space-y-1.5">
             {ASCENSION_LEVELS.map((asc, idx) => (
               <motion.div
@@ -329,8 +329,8 @@ export default function AscendPanel({ item, onAscend, userScore = 0 }) {
             <div className="flex items-start gap-2">
               <RotateCcw className="w-4 h-4 text-amber-400 mt-0.5" />
               <div>
-                <p className="text-amber-400 text-xs font-bold">Level Reset Warning</p>
-                <p className="text-amber-400/70 text-xs">Ascending will reset your card to Level 1</p>
+                <p className="text-amber-400 text-xs font-bold">Evolution Warning</p>
+                <p className="text-amber-400/70 text-xs">Evolution is permanent and consumes resources.</p>
               </div>
             </div>
           </div>
