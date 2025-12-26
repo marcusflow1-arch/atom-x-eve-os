@@ -344,7 +344,7 @@ export default function CombineStagePanel({ item, onCombine }) {
 
       {/* Right Side - Drop Zone and Result */}
       <div className="flex flex-col items-center gap-6 pt-8">
-        <h3 className="text-white font-bold text-lg">Combine Stage</h3>
+        <h3 className="text-white font-bold text-lg">Refinement & Fusion</h3>
         
         <div className="flex items-center gap-8">
           {/* Drop Zone */}
