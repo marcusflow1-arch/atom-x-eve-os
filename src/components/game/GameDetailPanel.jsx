@@ -379,9 +379,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     <div className="flex items-center gap-6">
                       <button 
                         onClick={handleTransactionStart}
-                        className="group relative px-10 py-5 bg-white text-black rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)]"
+                        className="group relative px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.2)]"
                       >
-                        <span className="relative flex items-center gap-3">
+                        <div className="absolute inset-0 bg-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                        <span className="relative flex items-center gap-3 text-white drop-shadow-lg">
                           <Download className="w-5 h-5" />
                           Initialize System • ${game.price?.toFixed(2) || '0.00'}
                         </span>
