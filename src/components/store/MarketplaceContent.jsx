@@ -147,6 +147,19 @@ const ListItemCard = ({ item, onClick }) => {
 };
 
 // Filter Sidebar
+const FilterSection = ({ title, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-white/10 py-4">
+      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-left">
+        <h3 className="text-white font-bold text-sm">{title}</h3>
+        <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && <div className="mt-3">{children}</div>}
+    </div>
+  );
+};
+
 const FilterSidebar = ({ filters, setFilters }) => {
   const { category, game, priceRange, rarities, rating, prime, deals, playstyle } = filters;
 
@@ -155,19 +168,6 @@ const FilterSidebar = ({ filters, setFilters }) => {
       ...prev,
       rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
     }));
-  };
-
-  const FilterSection = ({ title, children, defaultOpen = true }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    return (
-      <div className="border-b border-white/10 py-4">
-        <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-left">
-          <h3 className="text-white font-bold text-sm">{title}</h3>
-          <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
-        {isOpen && <div className="mt-3">{children}</div>}
-      </div>
-    );
   };
 
   return (
@@ -260,9 +260,8 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
 
-  if (!item) return null;
-  const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
-  const hasDiscount = item.originalPrice && item.originalPrice > item.price;
+  const rarity = item ? (rarityStyles[item.rarity] || rarityStyles.Common) : rarityStyles.Common;
+  const hasDiscount = item ? (item.originalPrice && item.originalPrice > item.price) : false;
 
   const availableOffers = useMemo(() => {
     if (!item) return [];
@@ -282,7 +281,12 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
   }, [availableOffers, offerSort, offerTypeFilter]);
 
   // Mock Recommendations
-  const relatedItems = MARKETPLACE_ITEMS.filter(i => i.id !== item.id && (i.category === item.category || i.game === item.game)).slice(0, 3);
+  const relatedItems = useMemo(() => {
+    if (!item) return [];
+    return MARKETPLACE_ITEMS.filter(i => i.id !== item.id && (i.category === item.category || i.game === item.game)).slice(0, 3);
+  }, [item]);
+
+  if (!item) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
