@@ -179,97 +179,50 @@ export default function LevelUpPanel({ item, onLevelUp, userEnergy = 0 }) {
       </div>
 
       {/* Controls Section */}
-      <div className="flex flex-col items-center gap-6 w-full max-w-md">
+      <div className="flex flex-col items-center gap-6 w-full max-w-md bg-white/5 p-6 rounded-2xl border border-white/10">
         
-        {/* EXP Percentage Options */}
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-white/50 text-sm">Select EXP Amount</p>
-          <div className="flex gap-3">
-            {EXP_OPTIONS.map((percent) => (
-              <button
-                key={percent}
-                onClick={() => setSelectedExpPercent(percent)}
-                disabled={currentLevel >= maxLevel}
-                className={`w-16 h-12 rounded-xl border-2 transition-all flex items-center justify-center ${
-                  selectedExpPercent === percent
-                    ? 'border-cyan-500 bg-cyan-500/20 text-white'
-                    : 'border-white/20 bg-white/5 text-white/60 hover:border-white/40 hover:bg-white/10'
-                } ${currentLevel >= maxLevel ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <span className="font-bold text-sm">{percent}%</span>
-              </button>
-            ))}
+        {/* Energy Cost Selector */}
+        <div className="w-full">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-bold text-cyan-300">Spend Energy</span>
+            <span className="text-xs text-white/60">Balance: {userEnergy}</span>
+          </div>
+          
+          <input 
+            type="range" 
+            min="10" 
+            max={Math.max(10, Math.min(userEnergy, 500))} 
+            step="10"
+            value={energyInput}
+            onChange={(e) => setEnergyInput(parseInt(e.target.value))}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+          />
+          
+          <div className="flex justify-between mt-2 text-xs">
+            <span className="text-white/40">10</span>
+            <span className="text-cyan-400 font-bold">{energyInput} Energy</span>
+            <span className="text-white/40">{Math.max(10, Math.min(userEnergy, 500))}</span>
           </div>
         </div>
 
-        {/* Multiplier and Level Controls */}
-        <div className="flex items-center gap-8">
-          {/* Multiplier */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleDecrementMultiplier}
-              disabled={expMultiplier <= 1}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center text-white transition-colors"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <div className="text-center">
-              <span className="text-white font-bold text-xl">x{expMultiplier}</span>
-            </div>
-            <button
-              onClick={handleIncrementMultiplier}
-              disabled={expMultiplier >= 20}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center text-white transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-10 bg-white/20" />
-
-          {/* Level +/- */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleRemoveOneLevel}
-              disabled={currentLevel <= 1}
-              className="w-10 h-10 rounded-xl bg-red-500/20 hover:bg-red-500/30 disabled:opacity-30 flex items-center justify-center text-red-400 transition-colors border border-red-500/30"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <span className="text-white/50 text-xs">LVL</span>
-            <button
-              onClick={handleAddOneLevel}
-              disabled={currentLevel >= maxLevel}
-              className="w-10 h-10 rounded-xl bg-green-500/20 hover:bg-green-500/30 disabled:opacity-30 flex items-center justify-center text-green-400 transition-colors border border-green-500/30"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-10 bg-white/20" />
-
-          {/* Max Level Button */}
-          <button
-            onClick={handleMaxLevel}
-            disabled={currentLevel >= maxLevel}
-            className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-2 ${
-              currentLevel >= maxLevel 
-                ? 'border-amber-500/50 bg-amber-500/20 text-amber-400'
-                : 'border-white/20 bg-white/5 text-white/60 hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-400'
-            }`}
-          >
-            <Star className="w-4 h-4" />
-            <span className="font-bold text-sm">{currentLevel >= maxLevel ? 'MAXED' : 'MAX'}</span>
-          </button>
+        {/* Prediction Preview */}
+        <div className="w-full bg-black/40 rounded-xl p-3 border border-white/5 flex items-center justify-between">
+           <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm text-white/80">XP Gain</span>
+           </div>
+           <span className="text-lg font-bold text-green-400">+{xpGain} XP</span>
         </div>
 
-        {/* Add EXP Button */}
+        {/* Finalize Button */}
         <Button
-          onClick={handleAddExp}
-          disabled={isLeveling || currentLevel >= maxLevel}
-          className="w-full h-14 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-lg rounded-xl disabled:opacity-50"
+          onClick={handleFinalizeLevel}
+          disabled={isLeveling || currentLevel >= maxLevel || !canAfford}
+          className={`w-full h-14 font-bold text-lg rounded-xl disabled:opacity-50 transition-all ${
+            canAfford 
+              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/20' 
+              : 'bg-slate-700 text-slate-400'
+          }`}
         >
           {isLeveling ? (
             <motion.div
@@ -280,10 +233,12 @@ export default function LevelUpPanel({ item, onLevelUp, userEnergy = 0 }) {
             </motion.div>
           ) : currentLevel >= maxLevel ? (
             'MAX LEVEL REACHED'
+          ) : !canAfford ? (
+            'NOT ENOUGH ENERGY'
           ) : (
             <>
-              <Zap className="w-5 h-5 mr-2" />
-              Add EXP (+{selectedExpPercent * expMultiplier}%)
+              <Zap className="w-5 h-5 mr-2 fill-current" />
+              Finalize Level
             </>
           )}
         </Button>
