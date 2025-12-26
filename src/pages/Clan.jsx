@@ -58,13 +58,16 @@ export default function ClanPage() {
         enabled: !!activeClan
     });
 
-    // Default to 'general' channel if available
+    // Default to 'general' channel if available or ensure valid selection
     useEffect(() => {
-        if (channels?.length > 0 && !activeChannelId) {
-            const general = channels.find(c => c.name === 'general') || channels[0];
-            setActiveChannelId(general.id);
+        if (channels?.length > 0) {
+            const isValid = activeChannelId && channels.find(c => c.id === activeChannelId);
+            if (!isValid) {
+                const general = channels.find(c => c.name === 'general') || channels[0];
+                setActiveChannelId(general.id);
+            }
         }
-    }, [channels, activeClan]);
+    }, [channels, activeChannelId]);
 
     // 4. Create Mutation
     const createClanMutation = useMutation({
@@ -196,7 +199,7 @@ export default function ClanPage() {
                                 {activeTab === 'overview' && (
                                     <ClanOverview clan={activeClan} onChangeTab={setActiveTab} />
                                 )}
-                                {activeTab === 'chat' && channels && activeChannelId && (
+                                {activeTab === 'chat' && channels && (
                                     <div className="flex h-full">
                                         <div className="w-48 border-r border-white/5 bg-slate-900/30 flex flex-col p-2 gap-1">
                                             {channels.map(channel => (
@@ -215,7 +218,11 @@ export default function ClanPage() {
                                             ))}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <ClanChat clan={activeClan} channel={channels.find(c => c.id === activeChannelId)} />
+                                            {channels.find(c => c.id === activeChannelId) ? (
+                                                <ClanChat clan={activeClan} channel={channels.find(c => c.id === activeChannelId)} />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-white/30">Loading Channel...</div>
+                                            )}
                                         </div>
                                     </div>
                                 )}

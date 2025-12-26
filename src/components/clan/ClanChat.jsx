@@ -15,12 +15,13 @@ export default function ClanChat({ clan, channel }) {
     const scrollRef = useRef(null);
 
     const { data: messages } = useQuery({
-        queryKey: ['clanMessages', channel.id],
+        queryKey: ['clanMessages', channel?.id],
         queryFn: async () => {
+            if (!channel?.id) return [];
             const msgs = await base44.entities.ClanMessage.filter({ channelId: channel.id });
             return msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
         },
-        enabled: !!channel.id,
+        enabled: !!channel?.id,
         refetchInterval: 3000 // Simple polling for now
     });
 
