@@ -817,94 +817,98 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                   exit={{ opacity: 0 }}
                   className="w-full h-full flex"
                 >
-                  {/* Left Side - Action Menu */}
-                  <div className="w-64 flex-shrink-0 flex flex-col pt-8 pl-8">
-                    {/* Main Actions */}
-                    <div className="flex flex-col gap-4">
-                      {/* Enhance */}
+                  {/* Left Side - Progression Hub Menu */}
+                  <div className="w-64 flex-shrink-0 flex flex-col pt-8 pl-8 border-r border-white/5 bg-black/20 backdrop-blur-sm rounded-l-2xl h-full">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-6 px-4">Progression Hub</h3>
+                    <div className="flex flex-col gap-2 pr-4">
+                      
+                      {/* Level Finalization */}
                       <button
-                        onClick={() => setSelectedForgeAction('enhance')}
-                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'enhance' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                        onClick={() => setSelectedForgeAction('levelup')}
+                        className={`flex items-center gap-3 p-3 rounded-xl transition-all group relative overflow-hidden ${
+                          selectedForgeAction === 'levelup' 
+                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+                            : 'hover:bg-white/5 text-white/60 hover:text-white border border-transparent'
+                        }`}
                       >
-                        <Sparkles className={`w-5 h-5 ${selectedForgeAction === 'enhance' ? 'text-purple-300' : 'text-purple-400 group-hover:text-purple-300'}`} />
-                        <span className="font-medium">Enhance</span>
+                        <Zap className={`w-5 h-5 ${selectedForgeAction === 'levelup' ? 'text-cyan-400' : 'text-white/40'}`} />
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">Level Finalization</span>
+                          <span className="text-[10px] opacity-60">Spend Achievement Energy</span>
+                        </div>
+                        {selectedForgeAction === 'levelup' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500" />}
                       </button>
 
-                      {/* Level Up */}
+                      {/* Enchanting */}
                       <button
-                        onClick={() => {
-                          setSelectedForgeAction('levelup');
-                          setSelectedEnhanceSubpage(null);
-                        }}
-                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'levelup' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                        onClick={() => setSelectedForgeAction('enchantment')}
+                        className={`flex items-center gap-3 p-3 rounded-xl transition-all group relative overflow-hidden ${
+                          selectedForgeAction === 'enchantment' 
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
+                            : 'hover:bg-white/5 text-white/60 hover:text-white border border-transparent'
+                        }`}
                       >
-                        <Zap className={`w-5 h-5 ${selectedForgeAction === 'levelup' ? 'text-cyan-300' : 'text-cyan-400 group-hover:text-cyan-300'}`} />
-                        <span className="font-medium">Level Up</span>
+                        <Sparkles className={`w-5 h-5 ${selectedForgeAction === 'enchantment' ? 'text-purple-400' : 'text-white/40'}`} />
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">Enchanting</span>
+                          <span className="text-[10px] opacity-60">Roll Stats with Materials</span>
+                        </div>
+                        {selectedForgeAction === 'enchantment' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />}
                       </button>
 
-                      {/* Ascend */}
+                      {/* Refinement */}
                       <button
-                        onClick={() => {
-                          setSelectedForgeAction('ascend');
-                          setSelectedEnhanceSubpage(null);
-                        }}
-                        className={`flex items-center gap-3 transition-colors group ${selectedForgeAction === 'ascend' ? 'text-white' : 'text-white/70 hover:text-white'}`}
+                        onClick={() => setSelectedForgeAction('refinement')}
+                        className={`flex items-center gap-3 p-3 rounded-xl transition-all group relative overflow-hidden ${
+                          selectedForgeAction === 'refinement' 
+                            ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                            : 'hover:bg-white/5 text-white/60 hover:text-white border border-transparent'
+                        }`}
                       >
-                        <Crown className={`w-5 h-5 ${selectedForgeAction === 'ascend' ? 'text-amber-300' : 'text-amber-400 group-hover:text-amber-300'}`} />
-                        <span className="font-medium">Ascend</span>
+                        <RotateCw className={`w-5 h-5 ${selectedForgeAction === 'refinement' ? 'text-green-400' : 'text-white/40'}`} />
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">Refinement</span>
+                          <span className="text-[10px] opacity-60">Fusion & Dismantling</span>
+                        </div>
+                        {selectedForgeAction === 'refinement' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" />}
                       </button>
+
+                      {/* Evolution */}
+                      <button
+                        onClick={() => setSelectedForgeAction('evolution')}
+                        className={`flex items-center gap-3 p-3 rounded-xl transition-all group relative overflow-hidden ${
+                          selectedForgeAction === 'evolution' 
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                            : 'hover:bg-white/5 text-white/60 hover:text-white border border-transparent'
+                        }`}
+                      >
+                        <Crown className={`w-5 h-5 ${selectedForgeAction === 'evolution' ? 'text-amber-400' : 'text-white/40'}`} />
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">Evolution</span>
+                          <span className="text-[10px] opacity-60">Milestone Gated</span>
+                        </div>
+                        {selectedForgeAction === 'evolution' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />}
+                      </button>
+
                     </div>
                   </div>
 
                   {/* Right Side - Content Area */}
-                  <div className="flex-1 flex items-center justify-center overflow-hidden">
+                  <div className="flex-1 flex items-center justify-center overflow-hidden bg-black/10 h-full">
                     <AnimatePresence mode="wait">
-                      {/* Enhance Subpages */}
-                      {selectedForgeAction === 'enhance' && selectedEnhanceSubpage === 'enchantment' && (
-                        <motion.div
-                          key="enchantment-page"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="w-full h-full"
-                        >
-                          <EnchantmentPanel 
-                            item={activeItem} 
-                            onEnhance={(item, newLevel) => {
-                              console.log('Enhanced:', item.name, 'to', newLevel);
-                            }}
-                          />
-                        </motion.div>
-                      )}
-
-                      {selectedForgeAction === 'enhance' && selectedEnhanceSubpage === 'combine' && (
-                        <motion.div
-                          key="combine-page"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="w-full h-full"
-                        >
-                          <CombineStagePanel 
-                            item={activeItem}
-                            onCombine={(card, selectedCards) => {
-                              console.log('Combined:', card.name, 'with', selectedCards.length, 'cards');
-                            }}
-                          />
-                        </motion.div>
-                      )}
-
-                      {/* Level Up Page */}
+                      
+                      {/* Level Finalization Panel */}
                       {selectedForgeAction === 'levelup' && (
                         <motion.div
                           key="levelup-page"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
                           className="w-full h-full"
                         >
                           <LevelUpPanel 
                             item={activeItem}
+                            userEnergy={user?.achievement_energy || 0}
                             onLevelUp={(item, newLevel) => {
                               console.log('Leveled up:', item.name, 'to level', newLevel);
                             }}
@@ -912,19 +916,57 @@ export default function BlacksmithPage({ isEmbedded, onToggleView }) {
                         </motion.div>
                       )}
 
-                      {/* Ascend Page */}
-                      {selectedForgeAction === 'ascend' && (
+                      {/* Enchanting Panel */}
+                      {selectedForgeAction === 'enchantment' && (
                         <motion.div
-                          key="ascend-page"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
+                          key="enchantment-page"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="w-full h-full"
+                        >
+                          <EnchantmentPanel 
+                            item={activeItem}
+                            userMaterials={user?.materials || []}
+                            onEnhance={(item, newLevel) => {
+                              console.log('Enhanced:', item.name, 'to', newLevel);
+                            }}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Refinement Panel (Reuse CombineStagePanel) */}
+                      {selectedForgeAction === 'refinement' && (
+                        <motion.div
+                          key="refinement-page"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="w-full h-full"
+                        >
+                          <CombineStagePanel 
+                            item={activeItem}
+                            onCombine={(card, selectedCards) => {
+                              console.log('Refined:', card.name, 'with', selectedCards.length, 'cards');
+                            }}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Evolution Panel (Reuse AscendPanel) */}
+                      {selectedForgeAction === 'evolution' && (
+                        <motion.div
+                          key="evolution-page"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
                           className="w-full h-full"
                         >
                           <AscendPanel 
                             item={activeItem}
+                            userScore={user?.achievement_score || 0}
                             onAscend={(item, newAscension) => {
-                              console.log('Ascended:', item.name, 'to level', newAscension);
+                              console.log('Evolved:', item.name, 'to stage', newAscension);
                             }}
                           />
                         </motion.div>
