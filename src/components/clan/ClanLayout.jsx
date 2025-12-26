@@ -14,7 +14,7 @@ export default function ClanLayout({
     userMemberships 
 }) {
     return (
-        <div className="flex h-screen w-full bg-[#0f1419] overflow-hidden text-white font-sans relative">
+        <div className="flex h-screen w-full bg-[#0f1419] overflow-hidden text-white font-sans relative pt-28">
             {/* Background Ambience */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/20 blur-[120px] rounded-full" />
