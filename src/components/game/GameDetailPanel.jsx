@@ -127,7 +127,8 @@ const PurchaseModal = ({ game, onClose, onConfirm, isProcessing }) => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-zinc-950 rounded-3xl border border-white/10 overflow-hidden shadow-2xl relative"
+        className="w-full max-w-md bg-black/60 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative"
+      style={{ boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05)' }}
       >
         {/* Glass Header */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
@@ -180,9 +181,11 @@ const PurchaseModal = ({ game, onClose, onConfirm, isProcessing }) => {
 
               <button
                 onClick={onConfirm}
-                className="w-full py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-white/10"
+                className="w-full py-4 relative overflow-hidden group rounded-xl font-bold uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
               >
-                Confirm Transaction
+                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors backdrop-blur-md" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <span className="relative z-10 text-white drop-shadow-md">Confirm Transaction</span>
               </button>
             </div>
           )}
@@ -363,11 +366,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   {owned ? (
                     <button 
                       onClick={handlePlay}
-                      className="group relative px-10 py-5 bg-white text-black rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform"
+                      className="group relative px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform border border-green-400/30 shadow-[0_0_30px_rgba(74,222,128,0.2)]"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 group-hover:opacity-20 transition-opacity" />
-                      <span className="relative flex items-center gap-3">
-                        <Play className="w-5 h-5 fill-black" />
+                      <div className="absolute inset-0 bg-green-500/10 backdrop-blur-md group-hover:bg-green-500/20 transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/10 to-green-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                      <span className="relative flex items-center gap-3 text-green-300 group-hover:text-green-200 drop-shadow-[0_2px_10px_rgba(74,222,128,0.5)]">
+                        <Play className="w-5 h-5 fill-green-400 text-green-400 drop-shadow-lg" />
                         Execute Launch Sequence
                       </span>
                     </button>
