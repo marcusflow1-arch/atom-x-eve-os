@@ -20,6 +20,8 @@ import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
 import SocialHub from './components/dashboard/SocialHub';
 import CalendarOverlay from './components/calendar/CalendarOverlay';
+import CartDrawer from './components/cart/CartDrawer';
+import { useCart } from './components/CartContext';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -89,6 +91,7 @@ function LayoutContent({ children, currentPageName }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const { openCart, getCartCount } = useCart();
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
@@ -763,6 +766,20 @@ function LayoutContent({ children, currentPageName }) {
                   className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10 relative"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={openCart}
+                  title="Cart"
+                >
+                  <ShoppingBag className="w-5 h-5 text-white/80" />
+                  {getCartCount() > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {getCartCount()}
+                    </span>
+                  )}
+                </motion.button>
+                <motion.button
+                  className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.15] flex items-center justify-center transition-all border border-white/10 relative"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=notifications')}
                   title="Notifications"
                 >
@@ -858,6 +875,9 @@ function LayoutContent({ children, currentPageName }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Cart Drawer */}
+      <CartDrawer />
 
 
 

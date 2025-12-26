@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -107,127 +108,24 @@ const SpecsTab = ({ game }) => {
   );
 };
 
-const PurchaseModal = ({ game, onClose, onConfirm, isProcessing }) => {
-  const [step, setStep] = useState('review'); // review, processing, success
-
-  useEffect(() => {
-    if (isProcessing) setStep('processing');
-  }, [isProcessing]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-black/60 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative"
-      style={{ boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05)' }}
-      >
-        {/* Glass Header */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-        
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-white/60" />
-              Secure Checkout
-            </h3>
-            {!isProcessing && (
-              <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                <X className="w-5 h-5 text-white/40" />
-              </button>
-            )}
-          </div>
-
-          {step === 'review' && (
-            <div className="space-y-6">
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex gap-4">
-                <img src={game.cover_image} alt={game.title} className="w-16 h-20 object-cover rounded-lg shadow-lg" />
-                <div>
-                  <h4 className="font-bold text-white mb-1">{game.title}</h4>
-                  <span className="text-xs text-white/40 uppercase tracking-wider">Standard License</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">Subtotal</span>
-                  <span className="text-white">${game.price?.toFixed(2) || '0.00'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/40">System Fee</span>
-                  <span className="text-white">$0.00</span>
-                </div>
-                <div className="h-px bg-white/10 my-2" />
-                <div className="flex justify-between text-lg font-bold">
-                  <span className="text-white">Total</span>
-                  <span className="text-green-400">${game.price?.toFixed(2) || '0.00'}</span>
-                </div>
-              </div>
-
-              <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl flex gap-3 items-start">
-                <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-200/80 leading-relaxed">
-                  Purchase includes immediate system access, unlocked ability pool, and specialized blacksmithing rights for this title.
-                </p>
-              </div>
-
-              <button
-                onClick={onConfirm}
-                className="w-full py-4 relative overflow-hidden group rounded-xl font-bold uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-              >
-                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors backdrop-blur-md" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <span className="relative z-10 text-white drop-shadow-md">Confirm Transaction</span>
-              </button>
-            </div>
-          )}
-
-          {step === 'processing' && (
-            <div className="py-12 flex flex-col items-center text-center">
-              <div className="relative mb-6">
-                <div className="w-16 h-16 rounded-full border-4 border-white/10 border-t-white animate-spin" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Cpu className="w-6 h-6 text-white/40" />
-                </div>
-              </div>
-              <h4 className="text-lg font-bold text-white mb-2">Processing Protocol</h4>
-              <p className="text-sm text-white/40 animate-pulse">Establishing secure link...</p>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
+// PurchaseModal component removed - now using global CartDrawer
 
 export default function GameDetailPanel({ gameId, onClose }) {
   const { user, isAuthenticated } = useAuth();
+  const { addToCart, isPurchased } = useCart();
   const navigate = useNavigate();
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
   const [activeTab, setActiveTab] = useState('system'); // 'system' or 'specs'
-  const [owned, setOwned] = useState(false);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-
+  const owned = isPurchased(gameId); // Use CartContext check or local state if preferred, but context is better for syncing.
+  
   useEffect(() => {
     const fetchGame = async () => {
       if (!gameId) return;
       try {
         const fetchedGame = await base44.entities.Game.get(gameId);
         setGame(fetchedGame);
-        
-        if (user?.purchased_items?.includes(gameId)) {
-          setOwned(true);
-        }
       } catch (err) {
         console.error("Failed to fetch game", err);
       } finally {
@@ -235,14 +133,20 @@ export default function GameDetailPanel({ gameId, onClose }) {
       }
     };
     fetchGame();
-  }, [gameId, user]);
+  }, [gameId]);
 
-  const handleTransactionStart = () => {
+  const handleAddToCart = () => {
     if (!isAuthenticated) {
         alert("Authentication Required Identity Protocol.");
         return;
     }
-    setShowPurchaseModal(true);
+    addToCart({
+        id: game.id,
+        type: 'game',
+        title: game.title,
+        price: game.price,
+        image: game.cover_image
+    });
   };
 
   const handleTransactionConfirm = async () => {
@@ -378,14 +282,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   ) : (
                     <div className="flex items-center gap-6">
                       <button 
-                        onClick={handleTransactionStart}
+                        onClick={handleAddToCart}
                         className="group relative px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.2)]"
                       >
                         <div className="absolute inset-0 bg-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                         <span className="relative flex items-center gap-3 text-white drop-shadow-lg">
                           <Download className="w-5 h-5" />
-                          Initialize System • ${game.price?.toFixed(2) || '0.00'}
+                          Add to Cart • ${game.price?.toFixed(2) || '0.00'}
                         </span>
                       </button>
                       <div className="text-xs text-white/40 max-w-[150px] leading-tight">
@@ -433,17 +337,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Transaction Modal */}
-      <AnimatePresence>
-        {showPurchaseModal && (
-          <PurchaseModal 
-            game={game} 
-            onClose={() => setShowPurchaseModal(false)}
-            onConfirm={handleTransactionConfirm}
-            isProcessing={unlocking}
-          />
-        )}
-      </AnimatePresence>
+      {/* Transaction Modal removed in favor of global Cart */}
     </div>
   );
 }
