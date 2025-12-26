@@ -14,31 +14,42 @@ const rarityGlowColors = {
   Mythic: 'rgba(239, 68, 68, 0.8)',
 };
 
-export default function EnchantmentPanel({ item, onEnhance }) {
-  const [selectedPercentage, setSelectedPercentage] = useState(9);
-  const [currentEnhancement, setCurrentEnhancement] = useState(item?.enhancement_level || 0);
+export default function EnchantmentPanel({ item, onEnhance, userMaterials = [] }) {
+  const [selectedMaterialId, setSelectedMaterialId] = useState(null);
+  const [currentEnhancement, setCurrentEnhancement] = useState(item?.enchant_level || 0);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [glowHeight, setGlowHeight] = useState((currentEnhancement / 120) * 100);
 
   const glowColor = rarityGlowColors[item?.rarity] || rarityGlowColors.Common;
+
+  // Filter relevant materials (e.g., matching genre or universal)
+  const relevantMaterials = userMaterials.filter(mat => mat.quantity > 0);
+
+  const selectedMaterial = relevantMaterials.find(m => m.id === selectedMaterialId);
+  // Example logic: Higher rarity material = better chance/more stats
+  const successChance = selectedMaterial ? (selectedMaterial.rarity === 'Legendary' ? 100 : selectedMaterial.rarity === 'Epic' ? 80 : 50) : 0;
+  const statGain = selectedMaterial ? (selectedMaterial.rarity === 'Legendary' ? 5 : 2) : 0;
 
   useEffect(() => {
     setGlowHeight((currentEnhancement / 120) * 100);
   }, [currentEnhancement]);
 
   const handleEnhance = async () => {
-    if (currentEnhancement >= 120) return;
+    if (currentEnhancement >= 120 || !selectedMaterial) return;
     
     setIsEnhancing(true);
     
-    // Simulate enhancement
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate outcome
+    await new Promise(resolve => setTimeout(resolve, 1200));
     
-    const newLevel = Math.min(currentEnhancement + selectedPercentage, 120);
-    setCurrentEnhancement(newLevel);
+    const success = Math.random() * 100 < successChance;
     
-    if (onEnhance) {
-      onEnhance(item, newLevel);
+    if (success) {
+       const newLevel = Math.min(currentEnhancement + statGain, 120);
+       setCurrentEnhancement(newLevel);
+       if (onEnhance) onEnhance(item, newLevel);
+    } else {
+       // Fail logic could be added here
     }
     
     setIsEnhancing(false);
