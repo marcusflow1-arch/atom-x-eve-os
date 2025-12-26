@@ -310,7 +310,15 @@ const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) =>
       <h3 className={`font-semibold text-sm truncate transition-colors ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
         {game.title}
       </h3>
-      <p className="text-white/30 text-xs capitalize">{game.genre}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-white/30 text-xs capitalize">{game.genre}</p>
+        {(game.card_rewards?.length > 0 || game.ability_unlocks?.length > 0) && (
+          <div className="flex items-center gap-0.5 text-cyan-400/60" title="Cards & Abilities">
+            <Sparkles className="w-2.5 h-2.5" />
+            <span className="text-[9px]">{ (game.card_rewards?.length || 0) + (game.ability_unlocks?.length || 0) }</span>
+          </div>
+        )}
+      </div>
     </div>
 
     {/* Quick Play Button */}
@@ -355,10 +363,13 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Eye },
-    { id: 'community', label: 'Community', icon: Users },
+    { id: 'cards_abilities', label: 'Cards & Abilities', icon: Sparkles },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
+    { id: 'community', label: 'Community', icon: Users },
     { id: 'streamer_affiliate', label: 'Streamer Affiliate', icon: Radio },
   ];
+
+  const [videoMode, setVideoMode] = useState('gameplay'); // 'gameplay', 'card_demo', 'ability_preview'
 
   return (
     <div className="h-full flex flex-col">
@@ -474,23 +485,81 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
               exit={{ opacity: 0, y: -20 }}
               className="space-y-8"
             >
-              {/* About */}
+              {/* Rewards Summary - Identity First */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 p-4 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400"><Sparkles className="w-4 h-4" /></div>
+                    <h4 className="font-bold text-white">Progression</h4>
+                  </div>
+                  <p className="text-sm text-white/60">Unlocks <span className="text-white font-bold">3 Abilities</span> & <span className="text-white font-bold">5 Cards</span> for your Avatar.</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400"><Bot className="w-4 h-4" /></div>
+                    <h4 className="font-bold text-white">AI Evolution</h4>
+                  </div>
+                  <p className="text-sm text-white/60">Trains <span className="text-white font-bold">Combat Tactics</span> & <span className="text-white font-bold">Stealth</span> traits.</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-green-500/20 rounded-lg text-green-400"><Shield className="w-4 h-4" /></div>
+                    <h4 className="font-bold text-white">Synergy</h4>
+                  </div>
+                  <p className="text-sm text-white/60">Compatible with <span className="text-white font-bold">RPG</span> & <span className="text-white font-bold">Sci-Fi</span> decks.</p>
+                </div>
+              </div>
+
+              {/* Game Media & Demonstration */}
               <div className="p-1">
-                <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-blue-400" />
-                  About This Game
-                </h3>
-                <p className="text-white/60 leading-relaxed">
-                  {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, engage in intense combat, and uncover secrets that will change everything.'}
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold text-lg">Identity Preview</h3>
+                  <div className="flex bg-white/5 rounded-lg p-1">
+                    {['gameplay', 'card_demo', 'ability_preview'].map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => setVideoMode(mode)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                          videoMode === mode ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                        }`}
+                      >
+                        {mode.replace('_', ' ').toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 group">
+                  <video 
+                    key={videoMode}
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    poster={game.banner || game.cover_image}
+                  >
+                    <source src={
+                      videoMode === 'card_demo' ? "https://cdn.coverr.co/videos/coverr-playing-cards-on-a-table-5388/1080p.mp4" :
+                      videoMode === 'ability_preview' ? "https://cdn.coverr.co/videos/coverr-fire-burning-in-slow-motion-5358/1080p.mp4" :
+                      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    } type="video/mp4" />
+                  </video>
+                  <div className="absolute bottom-4 left-4 right-4 p-4 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                    <p className="text-sm text-white font-medium">
+                      {videoMode === 'gameplay' ? 'Experience the immersive world.' : 
+                       videoMode === 'card_demo' ? 'See how cards interact with your deck.' : 
+                       'Preview ability effects on your Avatar.'}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-8">
                 {[
-                  { icon: Clock, value: '12.5h', label: 'Playtime', color: 'text-blue-400' },
+                  { icon: Sparkles, value: '5/12', label: 'Cards Unlocked', color: 'text-cyan-400' },
+                  { icon: Zap, value: '3', label: 'Active Abilities', color: 'text-purple-400' },
                   { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
-                  { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
                 ].map((stat, i) => (
                   <div key={i} className="text-center">
                     <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
@@ -500,17 +569,82 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
                 ))}
               </div>
 
-              {/* Game Trailer */}
-              <div className="p-1">
-                <h3 className="text-white font-bold text-lg mb-4">Game Trailer</h3>
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
-                  <video 
-                    className="w-full h-full object-cover"
-                    controls
-                    poster={game.banner || game.cover_image}
-                  >
-                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-                  </video>
+              {/* About - De-emphasized */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                <h3 className="text-white/60 font-bold text-sm mb-2 uppercase tracking-wider">About This Game</h3>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  {game.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre.'}
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'cards_abilities' && (
+            <motion.div 
+              key="cards_abilities"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              {/* Avatar Integration Placeholder */}
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 border border-white/10 relative overflow-hidden">
+                <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-blue-500/5 blur-3xl"></div>
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                    <Bot className="w-8 h-8 text-white/50" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">Your Avatar Uses These Cards</h3>
+                    <p className="text-white/50 text-sm">Cards earned in {game.title} are equipped to your global Avatar profile.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-white font-bold text-lg mb-4">Unlockable Cards</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="aspect-[3/4] bg-white/5 rounded-xl border border-white/10 p-4 flex flex-col justify-between group hover:border-cyan-500/30 transition-colors cursor-pointer">
+                      <div className="flex justify-between items-start">
+                        <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 text-[10px]">
+                          Rare
+                        </Badge>
+                        <Shield className="w-4 h-4 text-white/20 group-hover:text-cyan-400 transition-colors" />
+                      </div>
+                      <div className="text-center">
+                        <div className="w-12 h-12 mx-auto bg-white/5 rounded-full mb-3 flex items-center justify-center">
+                          <Sparkles className="w-6 h-6 text-cyan-400" />
+                        </div>
+                        <h4 className="text-white font-bold text-sm">Plasma Shield</h4>
+                        <p className="text-white/40 text-xs mt-1">Defense +15</p>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-[10px] text-white/30 uppercase tracking-wider">Tradable</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-white font-bold text-lg mb-4">Abilities</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2].map(i => (
+                    <div key={i} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                      <div className="w-12 h-12 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold">Neural Overload</h4>
+                        <p className="text-white/50 text-sm mt-1">Stuns enemies in a 10m radius. Cooldown: 45s.</p>
+                        <div className="mt-2 flex gap-2">
+                          <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">Active</Badge>
+                          <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-400">Epic</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
