@@ -781,7 +781,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
       type: 'marketplace'
     });
     setSelectedItem(null);
-    navigate(createPageUrl('Checkout'));
+    // Cart automatically opens, no need to navigate to separate checkout page
   };
 
   return (
