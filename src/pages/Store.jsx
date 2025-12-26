@@ -1257,6 +1257,17 @@ export default function Store() {
                                             <Smartphone className="w-3.5 h-3.5" />
                                         </button>
 
+                                        <div className="relative group/search ml-2">
+                                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
+                                            <input 
+                                                type="text" 
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder="Search..." 
+                                                className="bg-white/10 hover:bg-white/20 focus:bg-white/20 border border-white/10 focus:border-white/30 rounded-lg pl-7 pr-3 py-1 text-xs text-white placeholder:text-white/30 w-24 focus:w-40 transition-all outline-none"
+                                            />
+                                        </div>
+
                                         {/* Classic UI Toggle Button */}
                                         <button 
                                             onClick={() => setViewMode('classic')}
@@ -1415,7 +1426,7 @@ export default function Store() {
                         exit={{ opacity: 0 }}
                         className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
                     >
-                        <MarketplaceContent searchTerm={marketplaceSearchTerm} />
+                        <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
                     </motion.div>
                 ) : (
                     <motion.div

@@ -469,7 +469,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
   );
 };
 
-export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
+export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearchChange }) {
   const { user } = useAuth();
   const { addToCart, getCartCount } = useCart();
   const navigate = useNavigate();
@@ -569,6 +569,19 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm }) {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <div className="relative group/search">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
+                  <input 
+                    type="text" 
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setInternalSearchTerm(e.target.value);
+                      if (onSearchChange) onSearchChange(e.target.value);
+                    }}
+                    placeholder="Search..." 
+                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder:text-white/30 w-32 focus:w-48 transition-all outline-none"
+                  />
+                </div>
                 <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
                   <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
                     <List className="w-4 h-4" />
