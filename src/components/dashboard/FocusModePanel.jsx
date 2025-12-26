@@ -1094,6 +1094,11 @@ function GameSideMenu({ game, onClose }) {
               Play Now
             </button>
             
+            <button className="w-full py-3 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-semibold rounded-xl hover:bg-cyan-500/30 transition-all flex items-center justify-center gap-2">
+              <Book className="w-4 h-4" />
+              Manage Cards
+            </button>
+
             <div className="grid grid-cols-2 gap-3">
               <button className="py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-1">
                 <Settings className="w-5 h-5 text-white/70" />
@@ -1107,6 +1112,17 @@ function GameSideMenu({ game, onClose }) {
           </div>
 
           <div className="w-full h-px bg-white/10" />
+
+          {/* Season Eligibility */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+            <div className="flex items-center gap-3 mb-2">
+              <Crown className="w-5 h-5 text-purple-400" />
+              <h3 className="text-sm font-bold text-white">Season Eligible</h3>
+            </div>
+            <p className="text-xs text-white/60">
+              Earn XP and Cards for the <span className="text-purple-300">Winter Season</span> by playing this game.
+            </p>
+          </div>
 
           {/* Stats */}
           <div>
@@ -1130,6 +1146,23 @@ function GameSideMenu({ game, onClose }) {
           </div>
 
           <div className="w-full h-px bg-white/10" />
+
+          {/* Related Cards Preview */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider">Related Cards</h3>
+              <button className="text-[10px] text-cyan-400 hover:text-cyan-300">View All</button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-16 h-20 rounded border border-white/10 bg-white/5 flex-shrink-0 flex items-center justify-center">
+                   <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-white/40" />
+                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* About */}
           <div>
