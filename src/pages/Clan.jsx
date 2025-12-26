@@ -16,6 +16,7 @@ import ClanMembers from '../components/clan/ClanMembers';
 import ClanEvents from '../components/clan/ClanEvents';
 import ClanQuests from '../components/clan/ClanQuests';
 import ClanVoting from '../components/clan/ClanVoting';
+import ClanSearch from '../components/clan/ClanSearch';
 
 export default function ClanPage() {
     const { user } = useAuth();
@@ -25,6 +26,7 @@ export default function ClanPage() {
     const [activeChannelId, setActiveChannelId] = useState(null); // For chat tab
     
     const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
 
     // 1. Fetch Memberships
@@ -106,13 +108,29 @@ export default function ClanPage() {
                     <p className="text-white/50 text-lg mb-8 leading-relaxed">
                         You are not currently affiliated with any operational units. Initialize a new division to begin.
                     </p>
-                    <Button 
-                        onClick={() => setIsCreateClanOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-6 text-lg rounded-xl font-bold shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all hover:scale-105"
-                    >
-                        Initialize Division
-                    </Button>
+                    <div className="flex gap-4">
+                        <Button 
+                            onClick={() => setIsCreateClanOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-xl font-bold shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all hover:scale-105"
+                        >
+                            Initialize Division
+                        </Button>
+                        <Button 
+                            onClick={() => setIsSearchOpen(true)}
+                            variant="outline"
+                            className="bg-white/5 border-white/10 hover:bg-white/10 text-white px-8 py-6 text-lg rounded-xl font-bold transition-all hover:scale-105"
+                        >
+                            Find a Division
+                        </Button>
+                    </div>
                 </div>
+
+                {/* Search Modal (for empty state) */}
+                <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                    <DialogContent className="bg-slate-900/95 border-white/10 text-white max-w-4xl h-[80vh] p-0 overflow-hidden">
+                        <ClanSearch onJoinSuccess={() => setIsSearchOpen(false)} />
+                    </DialogContent>
+                </Dialog>
 
                 {/* Create Modal */}
                 <Dialog open={isCreateClanOpen} onOpenChange={setIsCreateClanOpen}>
@@ -178,7 +196,14 @@ export default function ClanPage() {
                         
                         {/* Context Actions (Right) */}
                         <div className="flex items-center gap-2">
-                            {/* Maybe status indicators or quick actions here */}
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setIsSearchOpen(true)}
+                                className="text-white/40 hover:text-white mr-2"
+                            >
+                                Find Division
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-white">
                                 <Settings className="w-4 h-4" />
                             </Button>
@@ -239,6 +264,13 @@ export default function ClanPage() {
                     <p>Select a Division</p>
                 </div>
             )}
+
+            {/* Search Modal Re-used */}
+            <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+                <DialogContent className="bg-slate-900/95 border-white/10 text-white max-w-4xl h-[80vh] p-0 overflow-hidden">
+                    <ClanSearch onJoinSuccess={() => setIsSearchOpen(false)} />
+                </DialogContent>
+            </Dialog>
 
             {/* Create Modal Re-used */}
             <Dialog open={isCreateClanOpen} onOpenChange={setIsCreateClanOpen}>

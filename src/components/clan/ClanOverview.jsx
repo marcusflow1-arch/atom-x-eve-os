@@ -1,11 +1,13 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { motion } from 'framer-motion';
-import { Crown, Trophy, Target, Calendar, ArrowRight, Sword } from 'lucide-react';
+import { Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 const GlassCard = ({ children, className = "" }) => (
     <div className={`bg-slate-800/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 ${className}`}>
@@ -14,6 +16,11 @@ const GlassCard = ({ children, className = "" }) => (
 );
 
 export default function ClanOverview({ clan, onChangeTab }) {
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const [isDismantleOpen, setIsDismantleOpen] = useState(false);
+    const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+
     const { data: upcomingEvents } = useQuery({
         queryKey: ['clanOverviewEvents', clan.id],
         queryFn: async () => {
@@ -32,7 +39,40 @@ export default function ClanOverview({ clan, onChangeTab }) {
         enabled: !!clan.id
     });
 
+    const { data: myMemberRecord } = useQuery({
+        queryKey: ['myClanRole', clan.id],
+        queryFn: async () => {
+            const members = await base44.entities.ClanMember.filter({ divisionId: clan.id, userId: user.id });
+            return members[0];
+        },
+        enabled: !!clan.id && !!user
+    });
+
+    const leaveMutation = useMutation({
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'leave_clan', data: { divisionId: clan.id } }),
+        onSuccess: (res) => {
+            if (res.data.success) {
+                queryClient.invalidateQueries(['myClanMemberships']);
+                // Parent component will handle redirect if needed as membership list updates
+            } else {
+                alert(res.data.error);
+            }
+        }
+    });
+
+    const dismantleMutation = useMutation({
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'delete_clan', data: { divisionId: clan.id } }),
+        onSuccess: (res) => {
+            if (res.data.success) {
+                queryClient.invalidateQueries(['myClanMemberships']);
+            } else {
+                alert(res.data.error);
+            }
+        }
+    });
+
     const progress = (clan.xp / 10000) * 100;
+    const isLeader = myMemberRecord?.role === 'leader';
 
     return (
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar h-full">
@@ -176,6 +216,64 @@ export default function ClanOverview({ clan, onChangeTab }) {
                     </div>
                 </div>
             </div>
+
+            {/* Danger Zone */}
+            <div className="pt-8 border-t border-white/10">
+                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-white/40" /> Membership Settings
+                </h3>
+                <div className="flex gap-4">
+                    {isLeader ? (
+                        <Button 
+                            variant="destructive" 
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
+                            onClick={() => setIsDismantleOpen(true)}
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" /> Dismantle Division
+                        </Button>
+                    ) : (
+                        <Button 
+                            variant="destructive" 
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20"
+                            onClick={() => setIsLeaveOpen(true)}
+                        >
+                            <LogOut className="w-4 h-4 mr-2" /> Leave Division
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {/* Dismantle Dialog */}
+            <Dialog open={isDismantleOpen} onOpenChange={setIsDismantleOpen}>
+                <DialogContent className="bg-slate-900 border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Dismantle Division?</DialogTitle>
+                        <DialogDescription className="text-white/60">
+                            This action cannot be undone. This will permanently delete the clan and remove all members.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsDismantleOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={() => dismantleMutation.mutate()}>Confirm Dismantle</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Leave Dialog */}
+            <Dialog open={isLeaveOpen} onOpenChange={setIsLeaveOpen}>
+                <DialogContent className="bg-slate-900 border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Leave Division?</DialogTitle>
+                        <DialogDescription className="text-white/60">
+                            Are you sure you want to leave {clan.name}? You will lose access to clan chat and events.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsLeaveOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={() => leaveMutation.mutate()}>Confirm Leave</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

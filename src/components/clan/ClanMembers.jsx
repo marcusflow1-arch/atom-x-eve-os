@@ -4,8 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Shield, Crown, User, Dot, UserPlus, Search, MoreHorizontal } from 'lucide-react';
+import { Shield, Crown, User, Dot, UserPlus, Search, MoreHorizontal, UserMinus, ChevronUp, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
 
 export default function ClanMembers({ clan }) {
@@ -33,9 +34,23 @@ export default function ClanMembers({ clan }) {
         onSuccess: () => {
             setIsInviteOpen(false);
             setInviteEmail('');
-            // Show toast
         }
     });
+
+    const kickMutation = useMutation({
+        mutationFn: (targetUserId) => base44.functions.invoke('clanSystem', { action: 'kick_member', data: { divisionId: clan.id, targetUserId } }),
+        onSuccess: () => queryClient.invalidateQueries(['clanMembers'])
+    });
+
+    const promoteMutation = useMutation({
+        mutationFn: ({ targetUserId, newRole }) => base44.functions.invoke('clanSystem', { action: 'promote_member', data: { divisionId: clan.id, targetUserId, newRole } }),
+        onSuccess: () => queryClient.invalidateQueries(['clanMembers'])
+    });
+
+    // Check my role
+    const myRole = members?.find(m => m.userId === user.id)?.role || 'member';
+    const isLeader = myRole === 'leader';
+    const isOfficer = myRole === 'officer';
 
     const filteredMembers = members?.filter(m => 
         m.user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -109,9 +124,34 @@ export default function ClanMembers({ clan }) {
                         </div>
 
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40 hover:text-white">
-                                <MoreHorizontal className="w-4 h-4" />
-                            </Button>
+                            {(isLeader || (isOfficer && member.role === 'member')) && member.userId !== user.id && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-white/40 hover:text-white">
+                                            <MoreHorizontal className="w-4 h-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="bg-slate-900 border-white/10 text-white">
+                                        {isLeader && (
+                                            <>
+                                                {member.role !== 'officer' && (
+                                                    <DropdownMenuItem onClick={() => promoteMutation.mutate({ targetUserId: member.userId, newRole: 'officer' })}>
+                                                        <ChevronUp className="w-4 h-4 mr-2" /> Promote to Officer
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {member.role === 'officer' && (
+                                                    <DropdownMenuItem onClick={() => promoteMutation.mutate({ targetUserId: member.userId, newRole: 'member' })}>
+                                                        <ChevronDown className="w-4 h-4 mr-2" /> Demote to Member
+                                                    </DropdownMenuItem>
+                                                )}
+                                            </>
+                                        )}
+                                        <DropdownMenuItem onClick={() => kickMutation.mutate(member.userId)} className="text-red-400 focus:text-red-400">
+                                            <UserMinus className="w-4 h-4 mr-2" /> Kick Member
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
                         </div>
                     </motion.div>
                 ))}
