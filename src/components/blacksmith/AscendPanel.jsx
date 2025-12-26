@@ -49,8 +49,8 @@ const StarDustParticle = ({ delay, ascensionColor }) => (
   />
 );
 
-export default function AscendPanel({ item, onAscend }) {
-  const [currentAscension, setCurrentAscension] = useState(item?.ascension_level || 0);
+export default function AscendPanel({ item, onAscend, userScore = 0 }) {
+  const [currentAscension, setCurrentAscension] = useState(item?.evolution_stage || 0);
   const [isAscending, setIsAscending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -59,8 +59,12 @@ export default function AscendPanel({ item, onAscend }) {
   const nextAscensionData = ASCENSION_LEVELS[currentAscension] || ASCENSION_LEVELS[0];
   const ascensionColor = ascensionData?.color || baseGlowColor;
 
+  // Milestone requirement (example: 1000 score per tier)
+  const scoreRequirement = (currentAscension + 1) * 1000;
+  const canAscend = userScore >= scoreRequirement;
+
   const handleAscend = async () => {
-    if (currentAscension >= 5) return;
+    if (currentAscension >= 5 || !canAscend) return;
     
     setIsAscending(true);
     setShowConfirm(false);
