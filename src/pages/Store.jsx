@@ -1084,7 +1084,7 @@ export default function Store() {
                                                     key={game.id}
                                                     whileHover={{ scale: 1.02, y: -5 }}
                                                     onClick={() => handleNavigateToGame(game.id)}
-                                                    className="w-[380px] flex-shrink-0 aspect-video rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
+                                                    className="w-[285px] flex-shrink-0 aspect-video rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
                                                 >
                                                     <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90" />
@@ -1124,7 +1124,7 @@ export default function Store() {
                                                     <span className="text-white/20 text-sm ml-auto">{genre.items.length} titles</span>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                                                <div className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
                                                     {genre.items.map((game, itemIdx) => {
                                                         const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
                                                         return (
@@ -1316,7 +1316,7 @@ export default function Store() {
                                         <motion.div 
                                             className="flex items-center gap-8 pl-64 pointer-events-auto"
                                             animate={{ 
-                                                x: -activeGameIndex * (280 + 32)
+                                                x: -activeGameIndex * (210 + 32)
                                             }}
                                             transition={{ type: "spring", stiffness: 250, damping: 25 }}
                                         >
@@ -1336,7 +1336,7 @@ export default function Store() {
                                                             y: isActive ? 0 : 20
                                                         }}
                                                         className={`
-                                                            w-[280px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                                                            w-[210px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                                                             border transition-all duration-300 shadow-2xl
                                                             ${isActive 
                                                                 ? 'border-white/40 shadow-blue-500/20' 
