@@ -180,47 +180,64 @@ export default function EnchantmentPanel({ item, onEnhance, userMaterials = [] }
       </div>
 
       {/* Enhancement Controls */}
-      <div className="flex flex-col items-center gap-6">
-        <h3 className="text-white font-bold text-lg">Enchant Card</h3>
-        <p className="text-white/50 text-sm text-center max-w-[200px]">
-          Select enhancement percentage and click Enchant
-        </p>
+      <div className="flex flex-col items-center gap-6 w-80 bg-white/5 p-6 rounded-2xl border border-white/10">
+        <h3 className="text-white font-bold text-lg flex items-center gap-2">
+           <Sparkles className="w-5 h-5 text-purple-400" /> Enchantment
+        </h3>
         
-        {/* Current Progress */}
-        <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden border border-white/10">
-          <motion.div 
-            className="h-full rounded-full"
-            style={{ background: `linear-gradient(90deg, ${glowColor}, ${glowColor.replace('0.8', '1')})` }}
-            animate={{ width: `${(currentEnhancement / 120) * 100}%` }}
-            transition={{ duration: 0.5 }}
-          />
+        {/* Material Selection Grid */}
+        <div className="w-full">
+           <p className="text-xs text-white/40 mb-2 uppercase tracking-wider font-bold">Select Material</p>
+           {relevantMaterials.length === 0 ? (
+              <div className="text-center p-4 border border-dashed border-white/10 rounded-xl text-white/30 text-xs">
+                 No materials available
+              </div>
+           ) : (
+              <div className="grid grid-cols-4 gap-2">
+                 {relevantMaterials.map(mat => (
+                    <button
+                       key={mat.id}
+                       onClick={() => setSelectedMaterialId(mat.id)}
+                       className={`aspect-square rounded-lg border-2 relative overflow-hidden transition-all ${
+                          selectedMaterialId === mat.id 
+                             ? 'border-purple-500 bg-purple-500/20' 
+                             : 'border-white/10 bg-white/5 hover:border-white/30'
+                       }`}
+                       title={mat.name}
+                    >
+                       <div className={`w-3 h-3 rounded-full absolute top-1 right-1 ${rarityGlowColors[mat.rarity]?.replace('0.8', '1') || 'bg-slate-500'}`} />
+                       <div className="absolute bottom-1 right-1 text-[10px] font-mono text-white/80">{mat.quantity}</div>
+                    </button>
+                 ))}
+              </div>
+           )}
         </div>
-        <p className="text-white/60 text-xs">{currentEnhancement}% / 120%</p>
-        
-        {/* Percentage Options */}
-        <div className="flex gap-3">
-          {ENHANCEMENT_OPTIONS.map((percent) => (
-            <button
-              key={percent}
-              onClick={() => setSelectedPercentage(percent)}
-              disabled={currentEnhancement >= 120}
-              className={`w-14 h-14 rounded-xl border-2 transition-all flex flex-col items-center justify-center ${
-                selectedPercentage === percent
-                  ? 'border-purple-500 bg-purple-500/20 text-white'
-                  : 'border-white/20 bg-white/5 text-white/60 hover:border-white/40 hover:bg-white/10'
-              } ${currentEnhancement >= 120 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Plus className="w-3 h-3 mb-0.5" />
-              <span className="font-bold text-sm">{percent}%</span>
-            </button>
-          ))}
-        </div>
+
+        {/* Stats Preview */}
+        {selectedMaterial && (
+           <div className="w-full space-y-2">
+              <div className="flex justify-between items-center bg-black/40 p-2 rounded-lg border border-white/5">
+                 <span className="text-xs text-white/60">Success Chance</span>
+                 <span className={`font-bold text-sm ${successChance >= 80 ? 'text-green-400' : successChance >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    {successChance}%
+                 </span>
+              </div>
+              <div className="flex justify-between items-center bg-black/40 p-2 rounded-lg border border-white/5">
+                 <span className="text-xs text-white/60">Stat Gain</span>
+                 <span className="font-bold text-sm text-purple-400">+{statGain}%</span>
+              </div>
+           </div>
+        )}
 
         {/* Enhance Button */}
         <Button
           onClick={handleEnhance}
-          disabled={isEnhancing || currentEnhancement >= 120}
-          className="w-full h-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-lg rounded-xl disabled:opacity-50"
+          disabled={isEnhancing || currentEnhancement >= 120 || !selectedMaterial}
+          className={`w-full h-14 font-bold text-lg rounded-xl disabled:opacity-50 transition-all ${
+             selectedMaterial 
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-lg shadow-purple-500/20'
+                : 'bg-slate-700 text-slate-400'
+          }`}
         >
           {isEnhancing ? (
             <motion.div
@@ -230,11 +247,13 @@ export default function EnchantmentPanel({ item, onEnhance, userMaterials = [] }
               <Sparkles className="w-6 h-6" />
             </motion.div>
           ) : currentEnhancement >= 120 ? (
-            'MAX LEVEL'
+            'MAX TIER REACHED'
+          ) : !selectedMaterial ? (
+            'SELECT MATERIAL'
           ) : (
             <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Enchant +{selectedPercentage}%
+              <Sparkles className="w-5 h-5 mr-2 fill-current" />
+              Confirm Enchant
             </>
           )}
         </Button>
