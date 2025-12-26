@@ -1,408 +1,543 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, ShoppingCart, ThumbsUp, ThumbsDown, Package, BrainCircuit, Heart, Award, Shield, User, Info, Trophy, MessageSquare, BookOpen } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Post } from '@/entities/Post'; // Assuming Post entity is available
-import CreatePostForm from '../community/CreatePostForm'; // Import form
+import { 
+  Star, ShoppingCart, Shield, BrainCircuit, Heart, Award, 
+  Package, Info, Trophy, MessageSquare, Gamepad2, Zap, 
+  Swords, Target, Sparkles, Check, Lock, ChevronRight,
+  Play, Pause, Volume2, VolumeX, Eye
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ShinyCard from '@/components/shared/ShinyCard';
+import { Post } from '@/entities/Post';
+import CreatePostForm from '../community/CreatePostForm';
 
-const categoryIcons = {
-    equipment: <Shield className="w-4 h-4" />,
-    ability: <BrainCircuit className="w-4 h-4" />,
-    companion: <Heart className="w-4 h-4" />,
-    ui: <Package className="w-4 h-4" />,
-    ai_teacher: <Award className="w-4 h-4" />
-};
+// --- Components ---
 
-const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
-  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [20, -20]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-20, 20]);
+const ValueHighlight = ({ icon: Icon, text, subtext }) => (
+  <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+      <Icon className="w-4 h-4 text-blue-400" />
+    </div>
+    <div>
+      <p className="text-xs font-bold text-white leading-none">{text}</p>
+      <p className="text-[10px] text-white/50 leading-none mt-1">{subtext}</p>
+    </div>
+  </div>
+);
 
-  function handleMouseMove(event) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseXPos = event.clientX - rect.left;
-    const mouseYPos = event.clientY - rect.top;
-    x.set(mouseXPos / width - 0.5);
-    y.set(mouseYPos / height - 0.5);
-  }
+const GainBlock = ({ icon: Icon, title, description }) => (
+  <div className="flex gap-4 p-4 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/5">
+    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0 border border-cyan-500/20">
+      <Icon className="w-5 h-5 text-cyan-400" />
+    </div>
+    <div>
+      <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
+      <p className="text-xs text-white/60 leading-relaxed">{description}</p>
+    </div>
+  </div>
+);
 
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-  }
-
-  const rarityColors = {
-    Common: "border-slate-600 shadow-slate-500/20",
-    Uncommon: "border-green-500 shadow-green-500/20",
-    Rare: "border-blue-500 shadow-blue-500/20",
-    Epic: "border-purple-500 shadow-purple-500/20",
-    Legendary: "border-orange-500 shadow-orange-500/20",
-    Mythical: "border-red-500 shadow-red-500/20",
-    Unique: "border-yellow-400 shadow-yellow-500/40",
-    Limitless: "border-pink-400 shadow-pink-500/40"
-  };
-
-  const rarityColor = rarityColors[achievement.rarity] || rarityColors.Common;
-
-  return (
-    <motion.div
-      onClick={() => onClick && onClick(achievement)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ 
-        rotateX, 
-        rotateY, 
-        transformStyle: "preserve-3d" 
-      }}
-      whileHover={{ scale: 1.05 }}
-      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
-    >
-      {/* Card Content */}
-      <div className="absolute inset-0 flex flex-col items-center p-4 transform-style-3d">
-        {/* Header */}
-        <div className="w-full flex justify-between items-start mb-2" style={{ transform: "translateZ(20px)" }}>
-          <Badge variant="outline" className="bg-black/50 border-white/10 text-[10px]">
-            {achievement.category || 'General'}
+const AbilityCard = ({ ability }) => (
+  <div className="w-full h-full">
+    <ShinyCard>
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
+      <img 
+        src={ability.image || `https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop`} 
+        alt={ability.name}
+        className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" 
+      />
+      
+      <div className="absolute inset-0 p-4 flex flex-col justify-between z-20">
+        <div className="flex justify-between items-start">
+          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px] uppercase">
+            {ability.tier || 'Rare'}
           </Badge>
-          <div className="text-yellow-400 font-bold text-xs">{achievement.points} pts</div>
-        </div>
-
-        {/* Icon / Image Area */}
-        <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(30px)" }}>
-          <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
-            {achievement.icon || '🏆'}
+          <div className="w-6 h-6 rounded-full bg-black/40 flex items-center justify-center border border-white/10">
+            <Zap className="w-3 h-3 text-yellow-400" />
           </div>
         </div>
 
-        {/* Info */}
-        <div className="w-full text-center mt-auto" style={{ transform: "translateZ(25px)" }}>
-          <h3 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
-          <p className="text-slate-400 text-xs line-clamp-2">{achievement.description}</p>
-        </div>
-
-        {/* Rarity Label */}
-        <div className="mt-3 w-full border-t border-white/10 pt-2 flex justify-between items-center" style={{ transform: "translateZ(20px)" }}>
-          <span className={`text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
-            {achievement.rarity}
-          </span>
-          {isUnlocked && <Check className="w-4 h-4 text-green-400" />}
+        <div>
+          <h4 className="text-lg font-bold text-white leading-tight mb-1">{ability.name}</h4>
+          <p className="text-[10px] text-white/60 line-clamp-3 mb-3">{ability.description}</p>
+          
+          <div className="grid grid-cols-2 gap-1">
+            <div className="bg-black/40 rounded px-2 py-1">
+              <span className="text-[8px] text-white/40 block">COOLDOWN</span>
+              <span className="text-[10px] text-white font-mono">{ability.cooldown || 'N/A'}</span>
+            </div>
+            <div className="bg-black/40 rounded px-2 py-1">
+              <span className="text-[8px] text-white/40 block">TYPE</span>
+              <span className="text-[10px] text-white font-mono">{ability.type || 'Active'}</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Shine Effect */}
-      <motion.div 
-        style={{
-          opacity: useTransform(rotateX, (val) => Math.abs(val) / 30 + 0.1),
-          background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%)",
-          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
-        }}
-        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
-      />
-    </motion.div>
-  );
-};
-
-const ReviewItem = ({ review }) => (
-    <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-        <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span className="font-semibold">{review.user}</span>
-                {review.verified && <Badge variant="secondary" className="text-xs bg-blue-600/30 text-blue-300 border-blue-500/50">Verified Buyer</Badge>}
-            </div>
-            <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-slate-600'}`} />)}
-            </div>
-        </div>
-        <p className="text-slate-300 mb-2">{review.content}</p>
-        <div className="flex justify-between items-center text-xs text-slate-500">
-            <span>Playtime: {review.playtime}</span>
-            <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="flex items-center gap-1"><ThumbsUp className="w-3 h-3"/> 12</Button>
-                <Button variant="ghost" size="sm"><ThumbsDown className="w-3 h-3"/></Button>
-            </div>
-        </div>
-    </div>
+    </ShinyCard>
+  </div>
 );
 
-const AchievementRewardItem = ({ achievement }) => (
-    <div className="flex items-center gap-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-        <div className={`w-12 h-12 flex-shrink-0 rounded-md flex items-center justify-center ${achievement.status === 'unlocked' ? 'bg-green-600/30' : 'bg-slate-700'}`}>
-            {categoryIcons[achievement.type] || <Star className="w-6 h-6"/>}
+const EquipmentCard = ({ item }) => (
+  <div className="w-full h-full">
+    <ShinyCard>
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
+      <img 
+        src={item.image || `https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=600&fit=crop`} 
+        alt={item.name}
+        className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" 
+      />
+      
+      <div className="absolute inset-0 p-4 flex flex-col justify-between z-20">
+        <div className="flex justify-between items-start">
+          <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-[10px] uppercase">
+            {item.rarity || 'Legendary'}
+          </Badge>
+          {item.stats && (
+            <div className="flex flex-col gap-1 text-right">
+              {Object.entries(item.stats).slice(0,2).map(([key, val]) => (
+                <span key={key} className="text-[9px] font-mono text-green-400">
+                  +{val} {key.substr(0,3).toUpperCase()}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
+
         <div>
-            <h4 className={`font-bold ${achievement.status === 'unlocked' ? 'text-green-400' : 'text-white'}`}>{achievement.title}</h4>
-            <p className="text-sm text-slate-400">{achievement.description}</p>
+          <h4 className="text-lg font-bold text-white leading-tight mb-1">{item.name}</h4>
+          <p className="text-[10px] text-white/60 line-clamp-2 mb-3">{item.description}</p>
+          
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className="border-white/10 text-white/40 text-[9px]">
+              {item.type || 'Gear'}
+            </Badge>
+            <span className="text-[9px] text-white/30 ml-auto">Tradable</span>
+          </div>
         </div>
-        <Badge variant={achievement.status === 'unlocked' ? 'default' : 'secondary'} className={`ml-auto ${achievement.status === 'unlocked' ? 'bg-green-600' : ''}`}>
-            {achievement.status}
-        </Badge>
-    </div>
+      </div>
+    </ShinyCard>
+  </div>
 );
 
 export default function GameDetailPanel({ game, onPurchase }) {
-    const [activeTab, setActiveTab] = useState('game_detail');
-    const [activeMedia, setActiveMedia] = useState(() => {
-        // Safely initialize activeMedia with fallback
-        if (game?.media && game.media.length > 0) {
-            return game.media[0];
-        }
-        // Fallback media object if game.media is undefined or empty
-        return {
-            type: 'image',
-            url: game?.cover_image || game?.image || '/placeholder.jpg'
-        };
-    });
-    const [communityPosts, setCommunityPosts] = useState([]);
-    const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-    const [showCreatePost, setShowCreatePost] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [activeMedia, setActiveMedia] = useState(null);
+  const [communityPosts, setCommunityPosts] = useState([]);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
-    useEffect(() => {
-        if (activeTab === 'community' && game?.title) {
-            const fetchPosts = async () => {
-                setIsLoadingPosts(true);
-                try {
-                    // Assuming Post.filter takes filter object, sort field, and limit
-                    const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
-                    setCommunityPosts(posts);
-                } catch (error) {
-                    console.error("Failed to fetch community posts:", error);
-                }
-                setIsLoadingPosts(false);
-            };
-            fetchPosts();
-        }
-    }, [activeTab, game?.title]);
-    
-    const handleCreatePost = async (postData) => {
-      try {
-        // Add game_title to postData
-        const newPost = { ...postData, game_title: game.title };
-        await Post.create(newPost);
-        setShowCreatePost(false);
-        // Refetch posts to update the list
-        const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
-        setCommunityPosts(posts);
-      } catch (error) {
-        console.error("Failed to create post:", error);
-      }
-    };
-
-    if (!game) {
-        return (
-            <div className="flex items-center justify-center h-full text-slate-500 p-4">
-                <p>Select a game to see the details.</p>
-            </div>
-        );
+  // Initialize media
+  useEffect(() => {
+    if (game?.media && game.media.length > 0) {
+      setActiveMedia(game.media[0]);
+    } else {
+      setActiveMedia({
+        type: 'image',
+        url: game?.cover_image || game?.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=600&fit=crop'
+      });
     }
+  }, [game]);
 
-    // Safely handle media array with fallbacks
-    const gameMedia = game.media && Array.isArray(game.media) && game.media.length > 0 
-        ? game.media 
-        : [{ 
-            type: 'image', 
-            url: game.cover_image || game.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop',
-            alt: game.title || 'Game image'
-        }];
+  // Fetch posts if community tab active
+  useEffect(() => {
+    if (activeTab === 'community' && game?.title) {
+      const fetchPosts = async () => {
+        try {
+          const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
+          setCommunityPosts(posts);
+        } catch (error) {
+          console.error("Failed to fetch posts:", error);
+        }
+      };
+      fetchPosts();
+    }
+  }, [activeTab, game?.title]);
 
-    const topLevelTabs = [
-        { id: 'game_detail', label: 'Game Detail', icon: <Info className="w-4 h-4" /> },
-        { id: 'progression', label: 'Progression', icon: <BookOpen className="w-4 h-4" /> },
-        { id: 'dlc', label: 'DLC', icon: <Package className="w-4 h-4" /> },
-        { id: 'equipment', label: 'Equipment', icon: <Shield className="w-4 h-4" /> },
-        { id: 'community', label: 'Community', icon: <MessageSquare className="w-4 h-4" /> },
-    ];
-    
-    // Content for the "Game Detail" tab
-    const GameDetailContent = () => (
-        <div className="h-full flex flex-col overflow-hidden">
-            {/* Media Section */}
-            <div className="p-4 flex-shrink-0">
-                <div className="aspect-video rounded-lg overflow-hidden mb-2 bg-black">
-                    {activeMedia.type === 'video' ? (
-                        <video src={activeMedia.url} autoPlay muted loop className="w-full h-full object-cover"></video>
-                    ) : (
-                        <img src={activeMedia.url} alt={activeMedia.alt || "Main Media"} className="w-full h-full object-cover" />
-                    )}
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                    {gameMedia.map((media, index) => (
-                        <div key={index} 
-                             className={`aspect-video rounded-md overflow-hidden cursor-pointer border-2 ${activeMedia.url === media.url ? 'border-blue-500' : 'border-transparent'}`}
-                             onClick={() => setActiveMedia(media)}>
-                            <img src={media.url} alt={media.alt || `thumbnail ${index}`} className="w-full h-full object-cover" />
-                        </div>
-                    ))}
-                </div>
-            </div>
+  if (!game) return <div className="p-8 text-center text-white/40">Select a game to view details.</div>;
+
+  const gameMedia = game.media && game.media.length > 0 ? game.media : [activeMedia];
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: Info },
+    { id: 'abilities', label: 'Abilities', icon: BrainCircuit },
+    { id: 'equipment', label: 'Equipment', icon: Shield },
+    { id: 'achievements', label: 'Achievements', icon: Trophy },
+    { id: 'community', label: 'Community', icon: MessageSquare },
+  ];
+
+  const handleCreatePost = async (postData) => {
+    try {
+      const newPost = { ...postData, game_title: game.title };
+      await Post.create(newPost);
+      setShowCreatePost(false);
+      const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
+      setCommunityPosts(posts);
+    } catch (error) {
+      console.error("Failed to create post:", error);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-[#0a0c10] text-white overflow-hidden relative">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-900/10 via-purple-900/5 to-[#0a0c10]" />
+        <img 
+          src={game.cover_image} 
+          className="absolute top-0 left-0 w-full h-[500px] object-cover opacity-10 mask-image-gradient-b"
+          alt="bg"
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
+        {/* TOP SECTION: Hero & Decision Anchor */}
+        <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
+          <div className="flex flex-col lg:flex-row gap-8">
             
-            {/* Info Section */}
-            <div className="px-4 pb-4 flex-grow overflow-y-auto">
-                <h2 className="text-2xl font-bold mb-1">{game.title}</h2>
-                <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
-                    <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span>{game.rating || '4.5'} ({(game.reviewsCount || 1250)?.toLocaleString()} reviews)</span>
+            {/* Left: Media Gallery */}
+            <div className="w-full lg:w-[60%] flex flex-col gap-4">
+              <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10 relative group">
+                {activeMedia?.type === 'video' ? (
+                  <video src={activeMedia.url} autoPlay muted loop className="w-full h-full object-cover" />
+                ) : (
+                  <img src={activeMedia?.url} alt="Main" className="w-full h-full object-cover" />
+                )}
+                
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                
+                {/* Game Logo/Title Overlay */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">
+                    {game.title}
+                  </h1>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                      {game.genre}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-yellow-400">
+                      <Star className="w-4 h-4 fill-current" />
+                      <span className="font-bold">{game.rating || 4.5}</span>
                     </div>
-                    <span>{game.developer || 'AtomXEve Studios'}</span>
-                    <span>{game.original_year ? new Date(game.original_year, 0).toLocaleDateString() : 'TBA'}</span>
-                </div>
-                <p className="text-sm text-slate-300 mb-4">{game.description}</p>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => onPurchase(game)}>
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Buy Now - {game.price ? `$${game.price.toLocaleString()}` : 'Free'}
-                </Button>
-            </div>
-        </div>
-    );
-
-    // Content for the "DLC" tab
-    const DlcContent = () => (
-        <div className="p-4 overflow-y-auto h-full">
-            <h3 className="text-xl font-bold mb-4">Downloadable Content (DLC)</h3>
-            {(game.dlcs && game.dlcs.length > 0) ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {game.dlcs.map((dlc, idx) => (
-                        <div key={dlc.id || idx} className="rounded-lg border border-slate-700/50 bg-slate-800/40 overflow-hidden flex flex-col">
-                            {(dlc.image || dlc.cover_image) && (
-                                <div className="aspect-video w-full overflow-hidden">
-                                    <img src={dlc.image || dlc.cover_image} alt={dlc.title} className="w-full h-full object-cover" />
-                                </div>
-                            )}
-                            <div className="p-3 flex-1 flex flex-col">
-                                <h4 className="font-bold text-white text-sm mb-1">{dlc.title}</h4>
-                                {dlc.description && <p className="text-slate-400 text-xs line-clamp-3 mb-3">{dlc.description}</p>}
-                                <div className="mt-auto flex items-center justify-between">
-                                    <span className="text-blue-400 font-semibold text-sm">{dlc.price ? `$${dlc.price}` : 'Free'}</span>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm">Details</Button>
-                                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => console.log('Buy DLC', dlc)}>
-                                            <ShoppingCart className="w-3 h-3 mr-1" />
-                                            Buy
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <p className="text-slate-400">No DLCs available for this game yet.</p>
-            )}
-        </div>
-    );
-
-    // Content for the "Equipment" tab
-    const EquipmentContent = () => (
-        <div className="p-4 overflow-y-auto h-full space-y-3">
-            <h3 className="text-xl font-bold mb-2">In-Game Equipment</h3>
-            {(game.equipment && game.equipment.length > 0) ? 
-                game.equipment.map(eq => (
-                    <div key={eq.id} className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                        <h4 className="font-bold text-white">{eq.name}</h4>
-                        <p className="text-sm text-green-400">{eq.statBonus}</p>
-                        <p className="text-xs text-slate-400 mt-1">Unlock: Complete "{eq.unlockAchievement}"</p>
-                    </div>
-                )) :
-                <p className="text-slate-400">No equipment information available for this game yet.</p>
-            }
-        </div>
-    );
-
-    // Content for the new Progression Tab
-    const ProgressionContent = () => (
-        <div className="p-4 overflow-y-auto h-full space-y-4">
-            <h3 className="text-xl font-bold mb-2">Achievement Progression Path</h3>
-            <p className="text-slate-400 text-sm mb-4">Complete achievements to unlock powerful rewards.</p>
-            <div className="space-y-3">
-                {(game.achievements && game.achievements.length > 0) ? 
-                    game.achievements.map(ach => <AchievementRewardItem key={ach.id} achievement={ach} />) :
-                    <p className="text-slate-400">No progression data available for this game yet.</p>
-                }
-            </div>
-        </div>
-    );
-    
-    // Content for the "Community" tab
-    const CommunityContent = () => (
-         <div className="p-4 overflow-y-auto h-full space-y-3">
-            <div className="flex justify-between items-center mb-2">
-                <h3 className="text-xl font-bold">Community Feed</h3>
-                <Button variant="outline" onClick={() => setShowCreatePost(true)}>Ask for Help</Button>
-            </div>
-            {isLoadingPosts ? <p>Loading posts...</p> : 
-              communityPosts.length > 0 ? (
-                communityPosts.map(post => (
-                  <div key={post.id} className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                    <p className="font-bold text-white text-sm">{post.title}</p>
-                    <p className="text-xs text-slate-400 line-clamp-2">{post.content}</p>
-                    <span className="text-xs text-slate-500">by {post.created_by?.split('@')[0] || 'Unknown User'}</span>
                   </div>
-                ))
-              ) : <p className="text-slate-400">No community posts for this game yet.</p>
-            }
-            <h3 className="text-xl font-bold mb-2 pt-4">Community Reviews</h3>
-            {(game.reviews && game.reviews.length > 0) ? 
-                game.reviews.map(rev => <ReviewItem key={rev.id} review={rev} />) :
-                <p className="text-slate-400">No reviews yet. Be the first to review this game!</p>
-            }
-        </div>
-    );
-
-    return (
-        <div className="h-full flex flex-col bg-slate-900/50 text-white rounded-2xl">
-            {showCreatePost && (
-              <CreatePostForm
-                onSubmit={handleCreatePost}
-                onCancel={() => setShowCreatePost(false)}
-                initialType="game_discussion"
-              />
-            )}
-            {/* Top Level Tab Navigation */}
-            <div className="flex-shrink-0 px-4 pt-4 border-b border-slate-700/50 overflow-x-auto">
-                <div className="flex items-center gap-2">
-                    {topLevelTabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative -mb-px ${
-                                activeTab === tab.id
-                                    ? 'text-blue-400 border-b-2 border-blue-400'
-                                    : 'text-slate-400 hover:text-slate-200'
-                            }`}
-                        >
-                            {tab.icon}
-                            <span>{tab.label}</span>
-                        </button>
-                    ))}
                 </div>
+              </div>
+
+              {/* Thumbnails */}
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {gameMedia.map((m, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => setActiveMedia(m)}
+                    className={`relative w-24 aspect-video rounded-lg overflow-hidden border-2 transition-all ${activeMedia?.url === m.url ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                  >
+                    <img src={m.url} className="w-full h-full object-cover" />
+                    {m.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-grow overflow-hidden">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="h-full"
-                    >
-                        {activeTab === 'game_detail' && <GameDetailContent />}
-                        {activeTab === 'progression' && <ProgressionContent />}
-                        {activeTab === 'dlc' && <DlcContent />}
-                        {activeTab === 'equipment' && <EquipmentContent />}
-                        {activeTab === 'community' && <CommunityContent />}
-                    </motion.div>
-                </AnimatePresence>
+            {/* Right: Info & Purchase */}
+            <div className="w-full lg:w-[40%] flex flex-col gap-6">
+              {/* Branding */}
+              <div className="flex items-center gap-3 opacity-80">
+                <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold text-xs">
+                  {game.developer?.[0] || 'A'}
+                </div>
+                <div className="text-sm">
+                  <p className="text-white font-bold">{game.developer}</p>
+                  <p className="text-white/50">Publisher</p>
+                </div>
+              </div>
+
+              {/* Price & CTA */}
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-3xl font-bold text-white">${game.price}</span>
+                  {game.originalPrice && (
+                    <span className="text-sm text-white/40 line-through">${game.originalPrice}</span>
+                  )}
+                </div>
+                
+                <Button 
+                  onClick={() => onPurchase(game)}
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-[0_0_20px_rgba(37,99,235,0.3)] mb-3"
+                >
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  Add to Cart
+                </Button>
+                <div className="text-center text-[10px] text-white/30">
+                  Instant digital delivery • Atom XE Secure
+                </div>
+              </div>
+
+              {/* Quick Value Highlights */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included in Atom XE</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <ValueHighlight 
+                    icon={BrainCircuit} 
+                    text={`Unlocks ${game.abilities?.length || 3} Abilities`} 
+                    subtext="Permanent Avatar Upgrades" 
+                  />
+                  <ValueHighlight 
+                    icon={Shield} 
+                    text={`Includes ${game.equipment?.length || 5} Cards`} 
+                    subtext="Tradable Equipment" 
+                  />
+                  <ValueHighlight 
+                    icon={Trophy} 
+                    text="Genre XP Boost" 
+                    subtext="Progress Seasonal Pass" 
+                  />
+                  <ValueHighlight 
+                    icon={Sparkles} 
+                    text="Exclusive Badge" 
+                    subtext="Early Adopter Reward" 
+                  />
+                </div>
+              </div>
             </div>
+          </div>
         </div>
-    );
+
+        {/* STICKY NAV */}
+        <div className="sticky top-0 z-30 bg-[#0a0c10]/90 backdrop-blur-xl border-y border-white/5">
+          <div className="max-w-7xl mx-auto px-6 md:px-10 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-8 h-14">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 h-full text-sm font-bold transition-all relative ${
+                    activeTab === tab.id 
+                      ? 'text-white' 
+                      : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <motion.div 
+                      layoutId="activeTab"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" 
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* TAB CONTENT */}
+        <div className="max-w-7xl mx-auto w-full p-6 md:p-10 min-h-[500px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* OVERVIEW TAB */}
+              {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                  <div className="lg:col-span-2 space-y-8">
+                    <section>
+                      <h2 className="text-2xl font-bold text-white mb-4">About the Game</h2>
+                      <p className="text-slate-300 leading-relaxed text-sm md:text-base">
+                        {game.description || "Immerse yourself in a world of endless possibilities. Experience groundbreaking gameplay, stunning visuals, and a narrative that adapts to your choices."}
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className="text-2xl font-bold text-white mb-4">Atom XE Platform Gains</h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <GainBlock 
+                          icon={BrainCircuit}
+                          title="Neural Expansion"
+                          description="Unlocks the 'Tactical Awareness' ability tree for your global AI Avatar."
+                        />
+                        <GainBlock 
+                          icon={Target}
+                          title="Skill Mastery"
+                          description="Contributes 1500 XP towards your RPG Genre Mastery level."
+                        />
+                        <GainBlock 
+                          icon={Swords}
+                          title="Combat Data"
+                          description="Feeds combat decision data to train your AI's PvP behavior model."
+                        />
+                        <GainBlock 
+                          icon={Package}
+                          title="Asset Library"
+                          description="All 3D assets in this game can be viewed in the Holodeck."
+                        />
+                      </div>
+                    </section>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                      <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <Info className="w-4 h-4 text-blue-400" />
+                        System Specs
+                      </h3>
+                      <div className="space-y-3 text-xs text-slate-400">
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span>OS</span>
+                          <span className="text-white text-right">Win 10/11</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span>Processor</span>
+                          <span className="text-white text-right">Intel i5 / AMD Ryzen 5</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span>Memory</span>
+                          <span className="text-white text-right">16 GB RAM</span>
+                        </div>
+                        <div className="flex justify-between border-b border-white/5 pb-2">
+                          <span>Storage</span>
+                          <span className="text-white text-right">50 GB SSD</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ABILITIES TAB */}
+              {activeTab === 'abilities' && (
+                <div>
+                  <div className="flex justify-between items-end mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-1">Unlockable Abilities</h2>
+                      <p className="text-slate-400 text-sm">Purchase this game to add these abilities to your global deck.</p>
+                    </div>
+                    <Badge variant="outline" className="border-purple-500/30 text-purple-400">
+                      {game.abilities?.length || 3} Abilities Included
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {(game.abilities || [
+                      { id: 1, name: 'Neural Overload', description: 'Stuns enemies in a 10m radius.', tier: 'Rare', type: 'Active' },
+                      { id: 2, name: 'Cyber Stealth', description: 'Become invisible to AI detection for 30s.', tier: 'Epic', type: 'Passive' },
+                      { id: 3, name: 'Data Siphon', description: 'Steal energy from robotic enemies on hit.', tier: 'Legendary', type: 'Passive' }
+                    ]).map((ability, idx) => (
+                      <div key={idx} className="aspect-[3/4]">
+                        <AbilityCard ability={ability} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* EQUIPMENT TAB */}
+              {activeTab === 'equipment' && (
+                <div>
+                  <div className="flex justify-between items-end mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-1">Equipment Cards</h2>
+                      <p className="text-slate-400 text-sm">Exclusive gear that can be equipped or traded on the marketplace.</p>
+                    </div>
+                    <Badge variant="outline" className="border-orange-500/30 text-orange-400">
+                      Tradable Assets
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {(game.equipment || [
+                      { id: 1, name: 'Void Rifle', description: 'High caliber energy weapon.', rarity: 'Epic', type: 'Weapon', stats: { atk: 45, rng: 80 } },
+                      { id: 2, name: 'Nano Weave Suit', description: 'Lightweight armor with regeneration.', rarity: 'Rare', type: 'Armor', stats: { def: 30, spd: 10 } },
+                      { id: 3, name: 'Quantum Visor', description: 'Highlights enemy weak points.', rarity: 'Legendary', type: 'Accessory', stats: { crt: 15, acc: 20 } }
+                    ]).map((item, idx) => (
+                      <div key={idx} className="aspect-[3/4]">
+                        <EquipmentCard item={item} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ACHIEVEMENTS TAB */}
+              {activeTab === 'achievements' && (
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-6">Achievement Rewards</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(game.achievements || [
+                      { id: 1, title: 'First Steps', description: 'Complete the tutorial mission.', points: 100, rarity: 'Common' },
+                      { id: 2, title: 'Master of War', description: 'Win 50 PvP matches.', points: 500, rarity: 'Epic' },
+                      { id: 3, title: 'Collector', description: 'Find all hidden data drives.', points: 300, rarity: 'Rare' }
+                    ]).map((ach, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center font-bold text-yellow-500">
+                          {ach.points}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-white">{ach.title || ach.name}</h4>
+                          <p className="text-sm text-slate-400">{ach.description}</p>
+                        </div>
+                        <Badge variant="outline" className="bg-black/30 border-white/10 text-white/60">
+                          {ach.rarity || 'Common'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* COMMUNITY TAB */}
+              {activeTab === 'community' && (
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white">Community Feed</h2>
+                    <Button variant="outline" onClick={() => setShowCreatePost(true)}>Create Post</Button>
+                  </div>
+                  
+                  {showCreatePost && (
+                    <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10">
+                      <CreatePostForm
+                        onSubmit={handleCreatePost}
+                        onCancel={() => setShowCreatePost(false)}
+                        initialType="game_discussion"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {communityPosts.length > 0 ? (
+                      communityPosts.map(post => (
+                        <div key={post.id} className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-white">{post.title}</h4>
+                            <span className="text-xs text-slate-500">{new Date(post.created_date).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-sm text-slate-300 line-clamp-3">{post.content}</p>
+                          <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
+                            <span className="flex items-center gap-1"><User className="w-3 h-3"/> {post.created_by?.split('@')[0] || 'User'}</span>
+                            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3"/> {post.comments?.length || 0} Comments</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-slate-500">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                        <p>No community posts yet. Be the first to start a discussion!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
 }
