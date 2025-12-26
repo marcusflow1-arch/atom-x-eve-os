@@ -98,9 +98,19 @@ const FeaturedEventCard = ({ event }) => {
         
         <div>
           <h3 className="text-white font-bold text-xl mb-1 group-hover:text-cyan-300 transition-colors">{event.title}</h3>
-          <p className="text-white/60 text-sm">{event.subtitle}</p>
+          <p className="text-white/60 text-sm mb-3">{event.subtitle}</p>
           
-          <div className="flex items-center gap-2 mt-4">
+          {/* Semantic Labels */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <div className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[10px] text-cyan-300 font-mono">
+              UNLOCKS: {event.featured ? 'LEGENDARY_MEMORY' : 'RARE_CARD'}
+            </div>
+            <div className="px-2 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-[10px] text-purple-300 font-mono">
+              SYSTEM: {event.featured ? 'AI_NARRATIVE' : 'COMBAT_LOGIC'}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-auto">
             <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
               <Calendar className="w-4 h-4" />
               Add to Calendar

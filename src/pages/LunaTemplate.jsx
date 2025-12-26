@@ -872,6 +872,22 @@ export default function LunaTemplate() {
   const [equippedItems, setEquippedItems] = useState({});
   const [weaponModelUrl, setWeaponModelUrl] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
+  // Memory System State
+  const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
+  const MEMORIES = [
+    { id: 1, url: null, name: 'Default Void' }, // Null uses default gradient
+    { id: 2, url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1600', name: 'Cyberpunk District' },
+    { id: 3, url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600', name: 'Highlands Battle' },
+    { id: 4, url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1600', name: 'Deep Space' }
+  ];
+
+  const cycleMemory = (direction) => {
+    let nextIndex = direction === 'next' ? activeMemoryIndex + 1 : activeMemoryIndex - 1;
+    if (nextIndex >= MEMORIES.length) nextIndex = 0;
+    if (nextIndex < 0) nextIndex = MEMORIES.length - 1;
+    setActiveMemoryIndex(nextIndex);
+    setCustomBackground(MEMORIES[nextIndex].url);
+  };
 
   const { mode } = useDashboardMode();
 
@@ -1273,37 +1289,39 @@ export default function LunaTemplate() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveDrawer(ORBITAL_ITEMS.find((item) => item.id === 'skill-tree'))}
-            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-            }}
-            title="Skill Tree">
-
+            }}>
               <Layers className="w-5 h-5 text-white" />
+              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
+                Skill Tree - Unlock Core Capabilities
+              </div>
             </motion.button>
             <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveDrawer(ORBITAL_ITEMS.find((item) => item.id === 'battle'))}
-            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-            }}
-            title="Battle Mode">
-
+            }}>
               <Swords className="w-5 h-5 text-white" />
+              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
+                Battle Mode - Train Combat Intelligence
+              </div>
             </motion.button>
           </div>
 
           {/* Center Home Button - Click disabled, hover menu removed */}
           <div
-          className="my-5 rounded-2xl w-14 h-14 flex items-center justify-center border border-white/20 pointer-events-none"
+          className="my-5 rounded-2xl w-14 h-14 flex items-center justify-center border border-white/20 pointer-events-none relative"
           style={{
             background: 'rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(20px)',
@@ -1311,6 +1329,13 @@ export default function LunaTemplate() {
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
           }}>
             <Home className="w-6 h-6 text-white" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+               <button onClick={() => cycleMemory('prev')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronLeft size={16}/></button>
+               <span className="text-[9px] uppercase tracking-widest text-white/60 font-mono bg-black/40 px-2 py-1 rounded border border-white/5">
+                 {MEMORIES[activeMemoryIndex].name}
+               </span>
+               <button onClick={() => cycleMemory('next')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronRight size={16}/></button>
+            </div>
           </div>
 
           {/* Right Items */}
@@ -1319,31 +1344,33 @@ export default function LunaTemplate() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveDrawer(ORBITAL_ITEMS.find((item) => item.id === 'story'))}
-            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-            }}
-            title="AI Story">
-
+            }}>
               <BookOpen className="w-5 h-5 text-white" />
+              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
+                AI Story - Evolve Narrative Personality
+              </div>
             </motion.button>
             <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
-            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all"
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-            }}
-            title="Library">
-
+            }}>
               <Gamepad2 className="w-5 h-5 text-white" />
+              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
+                Library - Access Active Worlds
+              </div>
             </motion.button>
           </div>
         </div>

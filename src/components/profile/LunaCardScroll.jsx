@@ -86,10 +86,13 @@ const GamesCarousel = ({ games, onSelectGame }) => {
               <div className="absolute bottom-2 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2">
                 {game.title}
               </div>
-            </div>
-          </div>
-        ))}
-      </motion.div>
+              </div>
+              <div className="text-[9px] text-cyan-400/80 text-center mt-1 font-mono opacity-0 group-hover/game:opacity-100 transition-opacity">
+              AI_SYNERGY: HIGH
+              </div>
+              </div>
+              ))}
+              </motion.div>
       
       {/* Left Arrow */}
       <button 
@@ -196,14 +199,21 @@ const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
                 e.dataTransfer.effectAllowed = 'copy';
               }}
             >
-              <ShinyCard 
-                onClick={() => onCardClick && onCardClick({ 
-                  title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
-                  id: `${genre}-${i}`,
-                  image: activeGame?.image,
-                  type: card.type
-                })}
-              />
+              <div className="group/card relative">
+                <ShinyCard 
+                  onClick={() => onCardClick && onCardClick({ 
+                    title: activeGame ? `${activeGame.title} Card ${i+1}` : `${genre} Card ${i+1}`, 
+                    id: `${genre}-${i}`,
+                    image: activeGame?.image,
+                    type: card.type
+                  })}
+                />
+                <div className="absolute -bottom-6 left-0 right-0 text-center opacity-0 group-hover/card:opacity-100 transition-all duration-300 z-20">
+                  <span className="text-[9px] bg-black/80 text-cyan-300 px-2 py-1 rounded-full border border-cyan-500/30 whitespace-nowrap">
+                    Recommended for your AI path
+                  </span>
+                </div>
+              </div>
             </div>
           ))
         ) : (

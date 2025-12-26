@@ -417,8 +417,19 @@ function GameListItem({ game, isActive, onClick, isFavorite, onToggleFavorite })
                 <div className={`text-sm font-medium truncate ${isActive ? 'text-white' : ''}`}>
                     {game.title}
                 </div>
+                {/* Resume State Indicator */}
+                <div className="flex items-center gap-2 mt-0.5">
+                    {game.last_session_state && (
+                        <span className="text-[10px] text-cyan-400 font-mono uppercase">
+                            RESUME: {game.last_session_state}
+                        </span>
+                    )}
+                    {game.ai_active && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" title="AI Progression Active" />
+                    )}
+                </div>
                 {game.downloading && (
-                    <div className="text-[10px] text-blue-400 flex items-center gap-1">
+                    <div className="text-[10px] text-blue-400 flex items-center gap-1 mt-0.5">
                         <Download className="w-3 h-3" /> Downloading...
                     </div>
                 )}
