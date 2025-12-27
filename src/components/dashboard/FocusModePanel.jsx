@@ -83,7 +83,7 @@ const MOCK_EVENTS = [
   }
 ];
 
-const FeaturedEventCard = ({ event }) => {
+const FeaturedEventCard = ({ event, onOpenCalendar }) => {
   const Icon = event.icon;
   
   return (
@@ -121,7 +121,10 @@ const FeaturedEventCard = ({ event }) => {
           <p className="text-white/60 text-sm">{event.subtitle}</p>
           
           <div className="flex items-center gap-2 mt-4">
-            <button className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+            <button 
+              onClick={onOpenCalendar}
+              className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
+            >
               <CalendarIcon className="w-4 h-4" />
               Add to Calendar
             </button>
@@ -353,285 +356,7 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
   );
 }
 
-// Calendar Modal Component
-function CalendarModal({ isOpen, onClose, selectedDate, events, onAddEvent, onDeleteEvent }) {
-  const [viewDate, setViewDate] = useState(selectedDate || new Date());
-  const [selectedDay, setSelectedDay] = useState(selectedDate);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: '', type: 'event', time: '' });
-
-  useEffect(() => {
-    if (selectedDate) {
-      setViewDate(selectedDate);
-      setSelectedDay(selectedDate);
-    }
-  }, [selectedDate]);
-
-  if (!isOpen) return null;
-
-  const getDaysInMonth = () => {
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-    return days;
-  };
-
-  const getEventsForDay = (day) => {
-    if (!day || !events) return [];
-    const dateStr = new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toDateString();
-    return events.filter(e => new Date(e.date).toDateString() === dateStr);
-  };
-
-  const isToday = (day) => {
-    if (!day) return false;
-    const today = new Date();
-    return today.getDate() === day && 
-           today.getMonth() === viewDate.getMonth() && 
-           today.getFullYear() === viewDate.getFullYear();
-  };
-
-  const isSelected = (day) => {
-    if (!day || !selectedDay) return false;
-    return selectedDay.getDate() === day && 
-           selectedDay.getMonth() === viewDate.getMonth() && 
-           selectedDay.getFullYear() === viewDate.getFullYear();
-  };
-
-  const handleAddEvent = () => {
-    if (!newEvent.title.trim() || !selectedDay) return;
-    onAddEvent({
-      id: Date.now(),
-      title: newEvent.title,
-      type: newEvent.type,
-      time: newEvent.time,
-      date: selectedDay.toISOString()
-    });
-    setNewEvent({ title: '', type: 'event', time: '' });
-    setShowAddForm(false);
-  };
-
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  const selectedDayEvents = selectedDay ? getEventsForDay(selectedDay.getDate()) : [];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-      {/* Modal */}
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl rounded-3xl overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(100, 120, 140, 0.15) 0%, rgba(80, 100, 120, 0.10) 100%)',
-          backdropFilter: 'blur(30px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-        }}
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-2xl font-bold text-white">Calendar</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-xl text-cyan-300 text-sm font-medium transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Event
-            </button>
-            <button 
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-            >
-              <X className="w-5 h-5 text-white/60" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex">
-          {/* Calendar Grid */}
-          <div className="flex-1 p-6">
-            {/* Month Navigation */}
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
-                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-white" />
-              </button>
-              <h3 className="text-xl font-bold text-white">
-                {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
-              </h3>
-              <button
-                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
-                className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-white" />
-              </button>
-            </div>
-
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-2 mb-2">
-              {dayNames.map(day => (
-                <div key={day} className="text-center text-xs font-bold text-white/40 uppercase py-2">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-2">
-              {getDaysInMonth().map((day, index) => {
-                const dayEvents = getEventsForDay(day);
-                return (
-                  <div
-                    key={index}
-                    onClick={() => day && setSelectedDay(new Date(viewDate.getFullYear(), viewDate.getMonth(), day))}
-                    className={`aspect-square rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center relative ${
-                      day
-                        ? isSelected(day)
-                          ? 'border-cyan-400 bg-cyan-500/20'
-                          : isToday(day)
-                          ? 'border-amber-400 bg-amber-500/20'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10'
-                        : 'border-transparent'
-                    }`}
-                  >
-                    {day && (
-                      <>
-                        <span className="text-white text-sm font-semibold">{day}</span>
-                        {dayEvents.length > 0 && (
-                          <div className="flex gap-0.5 mt-1">
-                            {dayEvents.slice(0, 3).map((_, i) => (
-                              <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Events Sidebar */}
-          <div className="w-72 border-l border-white/10 p-6 bg-black/20">
-            <h4 className="text-white font-bold mb-4">
-              {selectedDay ? selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Select a day'}
-            </h4>
-
-            {/* Add Event Form */}
-            <AnimatePresence>
-              {showAddForm && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mb-4 space-y-3"
-                >
-                  <input
-                    type="text"
-                    placeholder="Event title..."
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-400"
-                  />
-                  <div className="flex gap-2">
-                    <select
-                      value={newEvent.type}
-                      onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400"
-                    >
-                      <option value="event">Event</option>
-                      <option value="goal">Goal</option>
-                      <option value="reminder">Reminder</option>
-                    </select>
-                    <input
-                      type="time"
-                      value={newEvent.time}
-                      onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                      className="w-24 px-2 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowAddForm(false)}
-                      className="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 text-sm transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAddEvent}
-                      className="flex-1 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-white text-sm transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Events List */}
-            <div className="space-y-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-              {selectedDayEvents.length > 0 ? (
-                selectedDayEvents.map((event) => (
-                  <div 
-                    key={event.id} 
-                    className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 group"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${
-                      event.type === 'goal' ? 'bg-amber-400' : event.type === 'reminder' ? 'bg-purple-400' : 'bg-cyan-400'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{event.title}</p>
-                      {event.time && <p className="text-white/40 text-xs">{event.time}</p>}
-                    </div>
-                    <button
-                      onClick={() => onDeleteEvent(event.id)}
-                      className="w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-400" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-white/40 text-sm text-center py-4">No events for this day</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
+// CalendarModal removed in favor of IntelligentCalendarOverlay
 
 // Library Game Card Component
 function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
@@ -1613,7 +1338,7 @@ function GameBanner({ game, onChangeBanner }) {
 }
 
 // Live Panel - Redesigned with large 3D card showcase
-function LivePanel({ upcomingCards }) {
+function LivePanel({ upcomingCards, onOpenCalendar }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'events'
 
@@ -1747,7 +1472,7 @@ function LivePanel({ upcomingCards }) {
       {/* Right Column: Featured Event "Calendar" (Fixed Width) */}
       <div className="w-[280px] flex-shrink-0 flex flex-col">
          <div className="flex-1">
-            {featuredEvent && <FeaturedEventCard event={featuredEvent} />}
+            {featuredEvent && <FeaturedEventCard event={featuredEvent} onOpenCalendar={onOpenCalendar} />}
          </div>
       </div>
     </div>
@@ -1939,18 +1664,12 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
 }
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
   const [showGamePanel, setShowGamePanel] = useState(false);
   const [activeGenre, setActiveGenre] = useState('Action');
-  const [showCalendarModal, setShowCalendarModal] = useState(false);
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
-  const [calendarEvents, setCalendarEvents] = useState([
-    { id: 1, title: 'Guild Raid Night', type: 'event', time: '20:00', date: new Date().toISOString() },
-    { id: 2, title: 'Complete daily quests', type: 'goal', time: '', date: new Date().toISOString() },
-  ]);
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -2010,18 +1729,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
     return result;
   }, [ownedGames]);
 
-  const handleCalendarDayClick = (date) => {
-    setSelectedCalendarDate(date);
-    setShowCalendarModal(true);
-  };
-
-  const handleAddEvent = (event) => {
-    setCalendarEvents([...calendarEvents, event]);
-  };
-
-  const handleDeleteEvent = (eventId) => {
-    setCalendarEvents(calendarEvents.filter(e => e.id !== eventId));
-  };
+  // Removed internal calendar logic in favor of global IntelligentCalendarOverlay
 
   return (
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -2046,6 +1754,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
           <div className="flex-1 flex flex-col pr-2">
             <LivePanel 
               upcomingCards={upcomingCards}
+              onOpenCalendar={onOpenCalendar}
             />
           </div>
         </div>
@@ -2053,19 +1762,7 @@ export default function FocusModePanel({ onBackgroundChange }) {
 
 
 
-      {/* Calendar Modal */}
-      <AnimatePresence>
-        {showCalendarModal && (
-          <CalendarModal
-            isOpen={showCalendarModal}
-            onClose={() => setShowCalendarModal(false)}
-            selectedDate={selectedCalendarDate}
-            events={calendarEvents}
-            onAddEvent={handleAddEvent}
-            onDeleteEvent={handleDeleteEvent}
-          />
-        )}
-      </AnimatePresence>
+      {/* Calendar Modal removed - using global overlay */}
 
       {/* Game Side Menu Overlay */}
       <AnimatePresence>
