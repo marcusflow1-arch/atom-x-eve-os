@@ -1544,6 +1544,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
     { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
     { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
     { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
+    { id: 6, title: 'Plasma Water', thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=1920', game: 'Hero Theme' },
   ];
 
   // Sample games for banner picker
