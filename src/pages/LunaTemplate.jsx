@@ -1102,15 +1102,28 @@ export default function LunaTemplate() {
       </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
       {customBackground && (
-        <div 
-          className="absolute inset-0 z-[5]"
-          style={{
-            backgroundImage: `url(${customBackground})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
-        />
+        <div className="absolute inset-0 z-[5]">
+          {customBackground.endsWith('.mp4') || customBackground.includes('base44.app') ? (
+            <video
+              src={customBackground}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-full h-full"
+              style={{
+                backgroundImage: `url(${customBackground})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            />
+          )}
+        </div>
       )}
       {/* Very light overlay to maintain some readability */}
       {customBackground && (

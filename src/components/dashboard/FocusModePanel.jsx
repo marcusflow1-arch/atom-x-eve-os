@@ -1535,17 +1535,47 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
+  const [references, setReferences] = useState([]);
   const scrollRef = useRef(null);
 
-  // Mock game references - scenes from games featuring AI avatar
-  const gameReferences = [
-    { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
-    { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
-    { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
-    { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
-    { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
-    { id: 6, title: 'Plasma Water', thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=1920', game: 'Hero Theme' },
-  ];
+  useEffect(() => {
+    const fetchBackgrounds = async () => {
+      try {
+        const backgrounds = await base44.entities.HeroBackground.list();
+        
+        // Initial mock data
+        let initialRefs = [
+          { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
+          { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
+          { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
+          { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
+          { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
+        ];
+
+        // Add fetched backgrounds
+        if (backgrounds && backgrounds.data) {
+          const plasmaWater = backgrounds.data.find(bg => bg.title === 'Plasma-Water' || bg.title === 'Plasma Water');
+          if (plasmaWater) {
+            initialRefs.push({
+              id: plasmaWater.id,
+              title: 'Plasma Water',
+              thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200', // Still need a thumbnail, using placeholder or maybe video frame if possible (video thumb not easy)
+              type: 'victory', // arbitrary type for style
+              background: plasmaWater.video_url, // Use the video URL
+              game: 'Hero Theme',
+              isVideo: true
+            });
+          }
+        }
+        
+        setReferences(initialRefs);
+      } catch (error) {
+        console.error("Failed to fetch backgrounds", error);
+      }
+    };
+    
+    fetchBackgrounds();
+  }, []);
 
   // Sample games for banner picker
   const bannerGames = games?.slice(0, 8) || [
@@ -1589,7 +1619,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
           style={{ scrollbarWidth: 'none' }}
         >
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
-          {gameReferences.map((ref) => (
+          {references.map((ref) => (
             <GameReference 
               key={ref.id} 
               reference={ref} 
