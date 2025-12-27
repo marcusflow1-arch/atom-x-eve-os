@@ -1359,7 +1359,7 @@ export default function LunaTemplate() {
             <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
+            onClick={() => navigate(createPageUrl('Store') + '?mode=store&subview=library')}
             className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
@@ -1370,6 +1370,22 @@ export default function LunaTemplate() {
               <Gamepad2 className="w-5 h-5 text-white" />
               <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
                 Library - Access Active Worlds
+              </div>
+            </motion.button>
+            <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(createPageUrl('Store') + '?mode=store&subview=achievements')}
+            className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+            }}>
+              <Trophy className="w-5 h-5 text-white" />
+              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/tooltip:opacity-100 whitespace-nowrap border border-white/10 pointer-events-none">
+                Card Collaboration - View Achievements
               </div>
             </motion.button>
           </div>
