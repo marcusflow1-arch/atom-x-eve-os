@@ -290,10 +290,10 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/10 max-w-5xl text-white p-0 overflow-hidden">
+      <DialogContent className="bg-blue-950/30 backdrop-blur-xl border-white/20 max-w-5xl text-white p-0 overflow-hidden shadow-[0_0_50px_rgba(0,0,100,0.5)]">
         <div className="flex flex-col md:flex-row h-[85vh]">
           {/* Left Media Column */}
-          <div className="md:w-[350px] flex-shrink-0 bg-slate-800 p-6 flex flex-col gap-4">
+          <div className="md:w-[350px] flex-shrink-0 bg-transparent p-6 flex flex-col gap-4">
             <div className="relative aspect-square rounded-lg overflow-hidden border border-white/10 shadow-xl group">
               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               {item.isNew && (
@@ -321,7 +321,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
 
             {/* Developer Info */}
             {item.developer && (
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+              <div className="p-3">
                 <p className="text-white/40 text-xs mb-1">Created By</p>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-300">
@@ -371,7 +371,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
                   </div>
 
                   {/* Pricing Block */}
-                  <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between">
+                  <div className="p-4 flex items-center justify-between">
                     <div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-bold text-white">{(item.price || 0).toLocaleString()}</span>
@@ -396,7 +396,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-4">
                     {item.stats && Object.entries(item.stats).map(([key, value]) => (
-                      <div key={key} className="flex justify-between p-3 bg-black/20 rounded-lg border border-white/5">
+                      <div key={key} className="flex justify-between p-3">
                         <span className="text-white/40 text-sm">{key}</span>
                         <span className="text-white font-bold">{value}</span>
                       </div>
@@ -427,7 +427,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
               )}
 
               {activeTab === 'preview' && (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-black/40 rounded-xl border border-white/5">
+                <div className="h-full flex flex-col items-center justify-center text-center p-8">
                   {item.previewUrl ? (
                     <div className="w-full aspect-video bg-black rounded-lg overflow-hidden relative">
                        {/* Placeholder for video player - in real app would use a video tag */}
@@ -448,7 +448,7 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
               {activeTab === 'offers' && (
                 <div className="space-y-3">
                   {filteredOffers.map((offer) => (
-                    <div key={offer.id} className="bg-white/5 p-4 rounded-xl border border-white/10 flex justify-between items-center">
+                    <div key={offer.id} className="p-4 flex justify-between items-center border-b border-white/10">
                        <div>
                           <div className="font-bold text-white">{offer.seller}</div>
                           <div className="text-xs text-white/40">{offer.condition} • {offer.stock} in stock</div>
