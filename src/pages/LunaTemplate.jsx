@@ -596,7 +596,7 @@ import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
 import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
 import { useAuth } from '../components/auth/AuthContext';
-import CalendarOverlay from '../components/calendar/CalendarOverlay';
+import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
@@ -2605,7 +2605,7 @@ export default function LunaTemplate() {
       {/* Calendar Overlay */}
       <AnimatePresence>
         {showCalendar &&
-        <CalendarOverlay
+        <IntelligentCalendarOverlay
           currentUserId={user?.id}
           onClose={() => setShowCalendar(false)} />
 
