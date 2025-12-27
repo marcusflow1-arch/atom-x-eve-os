@@ -1159,7 +1159,10 @@ export default function LunaTemplate() {
             minHeight: '800px'
           }}>
 
-              <FocusModePanel onBackgroundChange={setCustomBackground} />
+              <FocusModePanel 
+                onBackgroundChange={setCustomBackground} 
+                onOpenCalendar={() => setShowCalendar(true)}
+              />
             </motion.div>
         }
         </AnimatePresence>
