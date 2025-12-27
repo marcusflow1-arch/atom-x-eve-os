@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight, Shield, Sword, Gem, Zap, Scroll, ChevronDown, Hexagon } from 'lucide-react';
+import { Maximize2, ArrowRight, GripVertical, Gamepad2, ChevronLeft, ChevronRight, Shield, Sword, Gem, Zap, Scroll, ChevronDown, Hexagon, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useRef } from 'react';
 import ShinyCard from '../shared/ShinyCard';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const INITIAL_GENRES = [
   "MMORPG", "RPG", "Fear", "Shooter", "Action",
@@ -46,6 +47,7 @@ const MOCK_GAMES = INITIAL_GENRES.reduce((acc, genre) => {
 
 const GamesCarousel = ({ games, onSelectGame }) => {
   const scrollRef = useRef(null);
+  const navigate = useNavigate();
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -86,13 +88,27 @@ const GamesCarousel = ({ games, onSelectGame }) => {
               <div className="absolute bottom-2 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2">
                 {game.title}
               </div>
+              
+              {/* Hover Overlay for Achievements */}
+              <div 
+                className="absolute inset-0 bg-black/60 opacity-0 group-hover/game:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(createPageUrl('Achievements') + '?gameId=' + game.id);
+                }}
+              >
+                <div className="flex flex-col items-center gap-1 text-yellow-400 hover:scale-110 transition-transform">
+                  <Trophy size={20} />
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Achievements</span>
+                </div>
               </div>
-              <div className="text-[9px] text-cyan-400/80 text-center mt-1 font-mono opacity-0 group-hover/game:opacity-100 transition-opacity">
+            </div>
+            <div className="text-[9px] text-cyan-400/80 text-center mt-1 font-mono opacity-0 group-hover/game:opacity-100 transition-opacity">
               AI_SYNERGY: HIGH
-              </div>
-              </div>
-              ))}
-              </motion.div>
+            </div>
+          </div>
+        ))}
+      </motion.div>
       
       {/* Left Arrow */}
       <button 

@@ -1488,10 +1488,22 @@ export default function LunaTemplate() {
                             </div>
 
                             {/* Game Info - Only on hover */}
-                            <div className="absolute inset-0 flex flex-col justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute inset-0 flex flex-col justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                               <p className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">{game.genre}</p>
                               <h4 className="text-white font-bold text-[10px] mb-1 truncate">{game.title}</h4>
                             </div>
+
+                            {/* Achievements Link - Top Right on Hover */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(createPageUrl('Achievements') + '?gameId=' + game.title);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
+                              title="View Achievements"
+                            >
+                              <Trophy size={12} />
+                            </button>
                           </motion.div>
                   )}
                       </div>
