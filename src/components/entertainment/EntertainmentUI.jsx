@@ -49,7 +49,7 @@ export default function EntertainmentUI() {
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
       </div>
       {/* Header - Translucent */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 relative z-10">
         <div className="flex items-center gap-6">
           <h2 className="text-2xl font-bold text-white/60">User Interface</h2>
           <div className="h-8 w-px bg-white/10" />
@@ -81,7 +81,7 @@ export default function EntertainmentUI() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
