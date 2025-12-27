@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 
 export default function IntroScreen({ onComplete }) {
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
     // Sequence Timeline
-    // 0: Moon (0-3s)
-    // 1: "Flawless Creativity" (3-6s)
-    // 2: "ATOM X Eve" (6s+)
+    // 0: Start (0-100ms)
+    // 1: Stage 2 (Wait/Intro)
+    // 2: "Flawless Creativity"
+    // 3: "ATOM X Eve"
     
     const sequence = [
-      { time: 100, stage: 2 }, // Start immediately at moon phase
+      { time: 100, stage: 2 },
       { time: 3000, stage: 3 },
       { time: 3000, stage: 4 }
     ];
@@ -34,107 +34,24 @@ export default function IntroScreen({ onComplete }) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#f4f1ea] cursor-pointer font-sans"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black cursor-pointer font-sans"
       onClick={onComplete}
     >
-      {/* SVG Filters for Watercolor Effect */}
-      <svg className="hidden">
-        <filter id="watercolor">
-          <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" />
-          <feGaussianBlur stdDeviation="0.5" />
-        </filter>
-        <filter id="paper">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" />
-        </filter>
-      </svg>
-
-      {/* Paper Texture Overlay */}
-      <div className="absolute inset-0 opacity-40 mix-blend-multiply pointer-events-none z-50" 
-           style={{ filter: 'url(#paper)' }} />
-
       {/* SCENE CONTAINER */}
-      <div className="relative w-full h-full overflow-hidden">
+      <div className="relative w-full h-full overflow-hidden bg-black">
         
-        {/* BACKGROUNDS */}
-        <div className="absolute inset-0 transition-colors duration-[3000ms] ease-in-out"
-             style={{ backgroundColor: stage >= 2 ? '#0f172a' : '#fdfbf7' }}>
-          
-          {/* Grass (Day) */}
-          <motion.div 
-            className="absolute bottom-0 left-0 w-full h-1/3 bg-green-200/50 blur-3xl mix-blend-multiply origin-bottom"
-            initial={{ scaleY: 1, opacity: 1 }}
-            animate={{ 
-              scaleY: stage >= 2 ? 0 : 1, 
-              opacity: stage >= 2 ? 0 : 1 
-            }}
-            transition={{ duration: 2 }}
+        {/* Background Video */}
+        <div className="absolute inset-0">
+          <video 
+            src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/1aeb3b2cd_AI_Intro_Concept_and_Video_Generation.mp4"
+            className="w-full h-full object-cover opacity-90"
+            autoPlay 
+            loop 
+            muted 
+            playsInline
           />
-
-          {/* Sky (Night) */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900 opacity-0"
-            animate={{ opacity: stage >= 2 ? 1 : 0 }}
-            transition={{ duration: 3 }}
-          >
-             {/* Stars */}
-             {[...Array(20)].map((_, i) => (
-                <motion.div 
-                  key={i}
-                  className="absolute bg-white rounded-full w-1 h-1"
-                  initial={{ opacity: 0, x: Math.random() * 1000, y: Math.random() * 500 }}
-                  animate={{ opacity: [0.2, 0.8, 0.2], scale: [1, 1.5, 1] }}
-                  transition={{ duration: Math.random() * 3 + 2, repeat: Infinity, delay: Math.random() }}
-                />
-             ))}
-          </motion.div>
+          <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for text readability */}
         </div>
-
-
-        {/* THE CHARACTER (Walker) - Removed */}
-
-
-        {/* THE TRANSFORMATION (Moon) */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 flex items-center justify-center">
-          {/* Expansion Ring (The "Poof") */}
-          <AnimatePresence>
-            {stage === 2 && (
-               <motion.div 
-                 className="absolute inset-0 rounded-full border-4 border-white/50"
-                 initial={{ scale: 0, opacity: 0 }}
-                 animate={{ scale: 2, opacity: 0 }}
-                 transition={{ duration: 1.5 }}
-               />
-            )}
-          </AnimatePresence>
-
-          {/* The Moon */}
-          <motion.div
-            className="relative w-full h-full"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ 
-              scale: stage >= 2 ? 1 : 0, 
-              opacity: stage >= 2 ? 1 : 0,
-              y: stage >= 4 ? -100 : 0 // Move up slightly for text
-            }}
-            transition={{ duration: 2, type: "spring", bounce: 0.3 }}
-          >
-            {/* Watercolor Moon Base */}
-            <div className="w-full h-full rounded-full bg-slate-100 shadow-[0_0_80px_rgba(255,255,255,0.3)] overflow-hidden relative">
-              <div className="absolute inset-0 bg-blue-100/30 mix-blend-overlay" />
-              {/* Craters as watercolor blots */}
-              <div className="absolute top-[20%] right-[30%] w-16 h-12 bg-indigo-200/40 blur-xl rounded-full" />
-              <div className="absolute bottom-[30%] left-[20%] w-20 h-20 bg-purple-200/30 blur-xl rounded-full" />
-            </div>
-            {/* Glow */}
-            <motion.div 
-              className="absolute inset-0 rounded-full bg-white/20 blur-2xl"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-          </motion.div>
-        </div>
-
 
         {/* TEXT SEQUENCE */}
         <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 z-20 pointer-events-none">
@@ -185,7 +102,7 @@ export default function IntroScreen({ onComplete }) {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.3 }}
-        transition={{ delay: 13 }}
+        transition={{ delay: 8 }}
         className="absolute bottom-8 w-full text-center text-white/50 text-xs tracking-[0.5em] uppercase"
       >
         Click to Enter
