@@ -47,7 +47,6 @@ export default function IntroScreen({ onComplete }) {
             className="w-full h-full object-cover opacity-90"
             autoPlay 
             loop 
-            muted 
             playsInline
           />
           <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for text readability */}
@@ -73,40 +72,14 @@ export default function IntroScreen({ onComplete }) {
               </motion.div>
             )}
 
-            {/* Stage 4: ATOM X Eve */}
-            {stage >= 4 && (
-              <motion.div
-                key="text-logo"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="w-full text-center mt-48"
-              >
-                <h1 className="text-5xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-white to-purple-200 drop-shadow-[0_0_30px_rgba(255,255,255,0.5)] tracking-tighter">
-                  ATOM <span className="text-blue-400 font-light mx-2">X</span> Eve
-                </h1>
-                <motion.div 
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
-                  transition={{ delay: 1, duration: 1.5 }}
-                  className="h-px bg-gradient-to-r from-transparent via-white to-transparent mx-auto mt-6"
-                />
-              </motion.div>
-            )}
+            {/* Stage 4 Removed - Text is in video */}
 
           </AnimatePresence>
         </div>
 
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 8 }}
-        className="absolute bottom-8 w-full text-center text-white/50 text-xs tracking-[0.5em] uppercase"
-      >
-        Click to Enter
-      </motion.div>
+      {/* Click to enter removed */}
     </div>
   );
 }
