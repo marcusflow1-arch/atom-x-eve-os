@@ -56,21 +56,7 @@ export default function IntroScreen({ onComplete }) {
         <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 z-20 pointer-events-none">
           <AnimatePresence mode="wait">
             
-            {/* Stage 3: Flawless Creativity */}
-            {stage === 3 && (
-              <motion.div
-                key="text-flawless"
-                initial={{ opacity: 0, filter: 'blur(20px)', scale: 1.5 }}
-                animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-                exit={{ opacity: 0, filter: 'blur(10px)', scale: 0.8 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="w-full text-center mt-32"
-              >
-                <h2 className="text-4xl md:text-6xl text-white font-light tracking-[0.2em] uppercase mix-blend-overlay" style={{ fontFamily: 'serif' }}>
-                  Flawless Creativity
-                </h2>
-              </motion.div>
-            )}
+            {/* Stage 3 Removed */}
 
             {/* Stage 4 Removed - Text is in video */}
 
