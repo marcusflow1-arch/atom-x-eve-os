@@ -528,7 +528,7 @@ export default function SocialHub() {
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
       </div>
       {/* Top Navigation Bar - Translucent */}
-      <div className="flex items-center gap-4 px-6 py-4" style={{
+      <div className="flex items-center gap-4 px-6 py-4 relative z-10" style={{
         background: 'transparent',
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
@@ -575,7 +575,7 @@ export default function SocialHub() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+      <div className="flex-1 flex gap-6 p-6 overflow-hidden relative z-10">
         {activeView === 'feed' || activeView === 'contracts' ? (
           <>
             {/* LEFT SIDEBAR - User Profile & Friends */}
