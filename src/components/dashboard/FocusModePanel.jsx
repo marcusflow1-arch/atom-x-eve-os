@@ -14,6 +14,7 @@ import { createPageUrl } from '@/utils';
 import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
 import LunaCardScroll from '../profile/LunaCardScroll';
+import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 
 // Mock pinned games
 const pinnedGames = [
@@ -1338,13 +1339,12 @@ function GameBanner({ game, onChangeBanner }) {
 }
 
 // Live Panel - Redesigned with large 3D card showcase
-function LivePanel({ upcomingCards, onOpenCalendar }) {
+function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'events'
 
   const currentCard = upcomingCards[currentCardIndex];
   const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
-  const featuredEvent = MOCK_EVENTS.find(e => e.featured);
   const otherEvents = MOCK_EVENTS.filter(e => !e.featured).slice(0, 4);
 
   const nextCard = () => {
@@ -1469,11 +1469,10 @@ function LivePanel({ upcomingCards, onOpenCalendar }) {
         <div className="w-full h-px bg-white/20 mt-2" />
       </div>
 
-      {/* Right Column: Featured Event "Calendar" (Fixed Width) */}
-      <div className="w-[280px] flex-shrink-0 flex flex-col">
-         <div className="flex-1">
-            {featuredEvent && <FeaturedEventCard event={featuredEvent} onOpenCalendar={onOpenCalendar} />}
-         </div>
+      {/* Right Column: System Status & Calendar Hub */}
+      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
+         <DateTimeTile onClick={onDateTimeClick} />
+         <AddToCalendarButton onClick={onOpenCalendar} />
       </div>
     </div>
   );
@@ -1663,6 +1662,76 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   );
 }
 
+// Date & Time Tile Component
+const DateTimeTile = ({ onClick }) => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const dateString = time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const yearString = time.getFullYear();
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="w-full flex-1 rounded-2xl relative overflow-hidden group border border-white/10"
+      style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+      
+      <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">
+          {timeString}
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="text-sm font-bold text-cyan-300 uppercase tracking-widest">
+            {dateString}
+          </div>
+          <div className="text-xs text-white/40 font-mono">
+            {yearString}
+          </div>
+        </div>
+        
+        {/* Update Indicator */}
+        <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+          <span className="text-[10px] text-white/60 font-medium">System Online</span>
+        </div>
+      </div>
+    </motion.button>
+  );
+};
+
+// Add to Calendar Button Component
+const AddToCalendarButton = ({ onClick }) => (
+  <motion.button
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={onClick}
+    className="w-full h-16 rounded-xl relative overflow-hidden group border border-white/10 flex items-center justify-center gap-3 transition-all"
+    style={{
+      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)'
+    }}
+  >
+    <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <CalendarIcon className="w-5 h-5 text-blue-300" />
+    <span className="text-sm font-bold text-white tracking-wide">Add to Calendar</span>
+  </motion.button>
+);
+
 // Main Export
 export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const navigate = useNavigate();
@@ -1672,6 +1741,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [activeGenre, setActiveGenre] = useState('Action');
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Transition State
+  const [showScrollTransition, setShowScrollTransition] = useState(false);
+  const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1680,6 +1753,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
   const handleCloseGamePanel = () => {
     setShowGamePanel(false);
+  };
+
+  const handleDateTimeClick = () => {
+    setPendingNavigateUrl(createPageUrl('Notifications'));
+    setShowScrollTransition(true);
   };
 
   // Fetch games for bottom Library section
@@ -1755,6 +1833,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             <LivePanel 
               upcomingCards={upcomingCards}
               onOpenCalendar={onOpenCalendar}
+              onDateTimeClick={handleDateTimeClick}
             />
           </div>
         </div>
@@ -1763,6 +1842,18 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
 
       {/* Calendar Modal removed - using global overlay */}
+
+      {/* Scroll Transition Overlay */}
+      <AnimatePresence>
+        {showScrollTransition && (
+          <ScrollTransitionOverlay 
+            onComplete={() => {
+              navigate(pendingNavigateUrl);
+              setShowScrollTransition(false);
+            }} 
+          />
+        )}
+      </AnimatePresence>
 
       {/* Game Side Menu Overlay */}
       <AnimatePresence>
