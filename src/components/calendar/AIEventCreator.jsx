@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, X, Clock, Calendar, Repeat, User } from 'lucide-react';
+import { Sparkles, Send, X, Clock, Calendar, Repeat, User, Bot } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function AIEventCreator({ mode, selectedDate, onClose, onSuccess, currentUserId }) {
