@@ -1086,6 +1086,20 @@ export default function LunaTemplate() {
       style={{ 
         background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
       }}>
+      {/* Liquid Glass Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background: 'rgba(255, 255, 255, 0.01)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        }}
+      />
+      {/* Ambient Effects */}
+      <div className="absolute inset-0 pointer-events-none z-[1]">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
+      </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
       {customBackground && (
         <div 

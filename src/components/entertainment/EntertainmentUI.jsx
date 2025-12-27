@@ -29,12 +29,25 @@ export default function EntertainmentUI() {
 
   return (
     <div
-      className="min-h-screen w-full p-8 text-white"
+      className="min-h-screen w-full p-8 text-white relative overflow-hidden"
       style={{
-        background:
-          "linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)",
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
       }}
     >
+      {/* Liquid Glass Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'rgba(255, 255, 255, 0.01)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        }}
+      />
+      {/* Ambient Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
+      </div>
       {/* Header - Translucent */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-6">

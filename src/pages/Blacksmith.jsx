@@ -566,11 +566,26 @@ export default function BlacksmithPage() {
   };
 
   return (
-    <div className="h-full w-full bg-[#050505] flex flex-col overflow-hidden text-white font-sans relative pt-20">
-      {/* Global Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/20 via-purple-900/10 to-blue-900/20 pointer-events-none" />
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+    <div 
+      className="h-full w-full flex flex-col overflow-hidden text-white font-sans relative pt-20"
+      style={{ 
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
+      }}
+    >
+      {/* Liquid Glass Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'rgba(255, 255, 255, 0.01)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        }}
+      />
+      {/* Ambient Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
+      </div>
 
       {/* Top Navigation Bar */}
       <div className="h-20 flex items-center px-8 justify-between flex-shrink-0 z-20 backdrop-blur-sm bg-transparent">
