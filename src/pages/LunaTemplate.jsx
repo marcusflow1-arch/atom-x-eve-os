@@ -1359,7 +1359,7 @@ export default function LunaTemplate() {
             <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
+            onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
             className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer border border-white/20 hover:border-white/40 transition-all relative group/tooltip"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
@@ -1497,7 +1497,7 @@ export default function LunaTemplate() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(createPageUrl('Achievements') + '?gameId=' + game.title);
+                                navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
                               }}
                               className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
                               title="View Achievements"
