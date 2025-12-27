@@ -19,7 +19,7 @@ import ServiceWorker from './components/desktop/ServiceWorker';
 import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
 import SocialHub from './components/dashboard/SocialHub';
-import CalendarOverlay from './components/calendar/CalendarOverlay';
+import IntelligentCalendarOverlay from './components/calendar/IntelligentCalendarOverlay';
 import CartDrawer from './components/cart/CartDrawer';
 import { useCart } from './components/CartContext';
 
@@ -869,7 +869,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Calendar Overlay */}
       <AnimatePresence>
         {calendarOpen && (
-          <CalendarOverlay 
+          <IntelligentCalendarOverlay 
             onClose={() => setCalendarOpen(false)} 
             currentUserId={user?.id} 
           />
