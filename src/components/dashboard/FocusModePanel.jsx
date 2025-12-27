@@ -1472,7 +1472,10 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
       {/* Right Column: System Status & Calendar Hub */}
       <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
          <DateTimeTile onClick={onDateTimeClick} />
-         <AddToCalendarButton onClick={onOpenCalendar} />
+         <AddToCalendarButton 
+           onClick={onOpenCalendar} 
+           clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
+         />
       </div>
     </div>
   );
@@ -1714,7 +1717,7 @@ const DateTimeTile = ({ onClick }) => {
 };
 
 // Add to Calendar Button Component
-const AddToCalendarButton = ({ onClick }) => (
+const AddToCalendarButton = ({ onClick, clanIcon }) => (
   <motion.button
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
@@ -1727,8 +1730,16 @@ const AddToCalendarButton = ({ onClick }) => (
     }}
   >
     <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-    <CalendarIcon className="w-5 h-5 text-blue-300" />
-    <span className="text-sm font-bold text-white tracking-wide">Add to Calendar</span>
+    
+    {clanIcon ? (
+      <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-lg relative z-10">
+        <img src={clanIcon} alt="Clan" className="w-full h-full object-cover" />
+      </div>
+    ) : (
+      <CalendarIcon className="w-5 h-5 text-blue-300 relative z-10" />
+    )}
+    
+    <span className="text-sm font-bold text-white tracking-wide relative z-10">Add to Calendar</span>
   </motion.button>
 );
 
