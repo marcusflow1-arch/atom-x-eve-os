@@ -60,6 +60,7 @@ export default function AIStoryOverlay({ onClose }) {
     { label: "BEGIN", action: () => console.log("Begin new story"), icon: Play },
     { label: "CONTINUE STORY", action: () => console.log("Continue"), icon: BookOpen },
     { label: "TIMELINE", action: () => setView('timeline'), icon: Clock },
+    { label: "MEMORY", action: () => setView('memory'), icon: Clock },
     { label: "SETTINGS", action: () => setView('settings'), icon: Settings },
   ];
 
@@ -187,6 +188,68 @@ export default function AIStoryOverlay({ onClose }) {
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {view === 'memory' && (
+              <motion.div 
+                key="memory"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                className="w-full max-w-md"
+              >
+                <button 
+                  onClick={() => setView('menu')}
+                  className="mb-12 flex items-center gap-3 text-white/60 hover:text-white transition-colors uppercase tracking-widest text-sm drop-shadow"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back to Menu
+                </button>
+                
+                <h2 className="text-2xl font-light text-white mb-6 uppercase tracking-widest">Memory Core</h2>
+                
+                <div className="space-y-4 bg-black/20 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-2xl">
+                  <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Background Simulation</h3>
+                  
+                  <div className="space-y-2">
+                    {/* Hero's Background Plasma Water Option */}
+                    <button 
+                      onClick={() => {
+                        // Logic to set active background would go here
+                        // For now, we assume selecting it updates the plasmaVideo logic or state
+                        console.log("Selected Plasma Background");
+                      }}
+                      className="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-white/10 overflow-hidden">
+                           {/* Preview Thumbnail for Plasma */}
+                           <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600" />
+                        </div>
+                        <div className="text-left">
+                          <span className="block text-white font-medium text-sm group-hover:text-cyan-400 transition-colors">Hero's Background Plasma Water</span>
+                          <span className="block text-white/40 text-xs">High Fidelity • Loop</span>
+                        </div>
+                      </div>
+                      <div className="w-4 h-4 rounded-full border border-white/30 flex items-center justify-center group-hover:border-cyan-400">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full opacity-100" />
+                      </div>
+                    </button>
+
+                    {/* Other mock options */}
+                    <button className="w-full flex items-center justify-between p-4 rounded-xl bg-transparent hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group opacity-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center border border-white/10">
+                           <div className="w-full h-full bg-slate-900" />
+                        </div>
+                        <div className="text-left">
+                          <span className="block text-white font-medium text-sm">Standard Void</span>
+                          <span className="block text-white/40 text-xs">Default • Static</span>
+                        </div>
+                      </div>
+                    </button>
                   </div>
                 </div>
               </motion.div>
