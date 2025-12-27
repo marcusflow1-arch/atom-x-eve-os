@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Clock, Brain, AlertCircle } from 'lucide-react';
 
-export default function DayPlanningView({ date, events, tasks, onAddEvent }) {
+export default function DayPlanningView({ date, events, tasks, onAddEvent, onAiAssist }) {
   // Generate time slots 6 AM to 12 AM
   const timeSlots = Array.from({ length: 19 }, (_, i) => i + 6);
 
@@ -28,11 +28,21 @@ export default function DayPlanningView({ date, events, tasks, onAddEvent }) {
           {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </div>
         <div className="flex gap-2">
-          {/* AI Insight Chip */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-            <Brain className="w-3 h-3 text-indigo-400" />
-            <span className="text-xs text-indigo-200">You usually play RPGs around 8 PM</span>
-          </div>
+          <button 
+            onClick={onAiAssist}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 hover:border-indigo-400/50 transition-all group"
+          >
+            <Brain className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300" />
+            <span className="text-xs text-indigo-200 group-hover:text-white">Ask AI Assistant</span>
+          </button>
+          
+          <button 
+            onClick={onAddEvent}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+          >
+            <Plus className="w-3.5 h-3.5 text-white/60" />
+            <span className="text-xs text-white/80">Create Event</span>
+          </button>
         </div>
       </div>
 

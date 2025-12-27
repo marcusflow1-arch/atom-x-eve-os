@@ -45,8 +45,7 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
 
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    // If double click or specific action, maybe switch to day view?
-    // For now just select.
+    setViewMode('day');
   };
 
   const getDaysInMonth = () => {
@@ -231,8 +230,9 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
               <DayPlanningView 
                 date={selectedDate} 
                 events={events.filter(e => new Date(e.start_time).toDateString() === selectedDate.toDateString())}
-                tasks={tasks} // Filter tasks relevant to day?
+                tasks={tasks}
                 onAddEvent={() => { setShowCreator(true); setCreatorMode('manual'); }}
+                onAiAssist={() => { setShowCreator(true); setCreatorMode('ai'); }}
               />
             )}
           </div>
