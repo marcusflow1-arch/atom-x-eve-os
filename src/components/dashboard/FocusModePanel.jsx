@@ -911,7 +911,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
   const currentGames = allGames;
 
   const handleLibraryClick = () => {
-    navigate(createPageUrl('Library'));
+    navigate(createPageUrl('Store') + '?subview=library');
   };
 
   const handleGameClick = (game) => {
