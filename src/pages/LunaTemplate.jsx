@@ -2220,6 +2220,7 @@ export default function LunaTemplate() {
                     {/* Right Side Stats Panel */}
                     <div className="flex-shrink-0 pt-6 flex flex-col relative z-40">
                       <LunaStatsPanel />
+                      <LimitedEditionDisplay />
                     </div>
                     </div>
                   
