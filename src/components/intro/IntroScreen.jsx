@@ -46,8 +46,8 @@ export default function IntroScreen({ onComplete }) {
             src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/1aeb3b2cd_AI_Intro_Concept_and_Video_Generation.mp4"
             className="w-full h-full object-cover opacity-90"
             autoPlay 
-            loop 
             playsInline
+            onEnded={onComplete}
           />
           <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for text readability */}
         </div>
