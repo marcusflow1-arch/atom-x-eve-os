@@ -918,9 +918,11 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const handleIntroComplete = () => {
-    setShowIntro(false);
-    sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-    navigate(createPageUrl('LunaTemplate'));
+    setTimeout(() => {
+      setShowIntro(false);
+      sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
+      navigate(createPageUrl('LunaTemplate'));
+    }, 400);
   };
 
   if (showIntro) {
