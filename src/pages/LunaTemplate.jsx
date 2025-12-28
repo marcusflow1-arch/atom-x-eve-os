@@ -601,6 +601,7 @@ import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
+import LimitedEditionDisplay from '../components/dashboard/LimitedEditionDisplay';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
