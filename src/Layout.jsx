@@ -578,7 +578,7 @@ function LayoutContent({ children, currentPageName }) {
 
         return (
           <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
-            {headerConfig.showMenu && isEditorMode && (
+            {headerConfig.showMenu && (
                                 <div className="flex items-center gap-3">
                                   <button
                                     onClick={() => setDrawerOpen(true)}
