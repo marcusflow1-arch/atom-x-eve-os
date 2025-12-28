@@ -1477,7 +1477,6 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
            onClick={onOpenCalendar} 
            clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
          />
-         <LimitedEditionDisplay />
       </div>
     </div>
   );
@@ -1932,15 +1931,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           </div>
         </div>
 
-        {/* Right Column - Library Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="w-full flex flex-col gap-4">
-            {/* Library Banner Section - Left aligned via internal margin */}
+        {/* Right Column - Library Content & Limited Edition */}
+        <div className="flex-1 flex gap-6 min-w-0">
+          {/* Library Area */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
             <div className="w-full">
               <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
             </div>
-            
-            {/* Library Games */}
             <LibraryGamesSection 
               onSelectGame={handleGameSelect}
               selectedGame={selectedGame}
@@ -1948,6 +1945,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
               showGamePanel={showGamePanel}
               onClosePanel={handleCloseGamePanel}
             />
+          </div>
+
+          {/* Limited Edition Area - Moved from Top */}
+          <div className="w-[280px] flex-shrink-0">
+             <LimitedEditionDisplay />
           </div>
         </div>
 
