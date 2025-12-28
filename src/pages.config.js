@@ -83,7 +83,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Achievements",
+    mainPage: "LunaTemplate",
     Pages: PAGES,
     Layout: __Layout,
 };

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Maximize2, Shield } from 'lucide-react';
+import { X, Shield } from 'lucide-react';
 
 export default function LimitedEditionDisplay() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Default equipped state as requested
   const [equippedProp, setEquippedProp] = useState({
     id: 'atom-x-eve-limited',
     type: 'Display Card',
@@ -17,104 +16,93 @@ export default function LimitedEditionDisplay() {
 
   return (
     <>
-      <div className="w-80 rounded-2xl bg-slate-900/30 backdrop-blur-xl border border-white/10 overflow-hidden flex flex-col shadow-2xl mt-6">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-white/5">
-          <h3 className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase">Limited Edition Display</h3>
-          <p className="text-[10px] text-white/30 mt-1">Showcase a featured prop</p>
+      <div className="w-full mt-2">
+        {/* Header - Minimal */}
+        <div className="flex items-center justify-between px-1 mb-2">
+          <h3 className="text-[9px] font-bold tracking-[0.2em] text-white/40 uppercase">Showcase</h3>
+          {equippedProp && <span className="text-[8px] text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10 shadow-[0_0_10px_rgba(34,211,238,0.2)]">Limited</span>}
         </div>
 
-        {/* Display Slot */}
-        <div className="p-6 flex justify-center">
-          {equippedProp ? (
-            <motion.div 
-              whileHover={{ scale: 1.02, rotateX: 5, rotateY: 5 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              onClick={() => setIsModalOpen(true)}
-              className="relative w-full aspect-[3/4] rounded-xl cursor-pointer group perspective-1000"
-            >
-              {/* Glass Frame */}
-              <div className="absolute inset-0 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm z-20 pointer-events-none shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] group-hover:border-white/40 transition-colors" />
-              
-              {/* Shine Effect */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 z-30 transition-opacity duration-500 pointer-events-none" />
-
-              {/* Image */}
-              <div className="absolute inset-2 rounded-lg overflow-hidden bg-black/50 z-10">
+        {/* Clear Glass Case */}
+        <div 
+          className="relative w-full aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group perspective-1000" 
+          onClick={() => setIsModalOpen(true)}
+        >
+          {/* Glass Container - Ultra clear */}
+          <div className="absolute inset-0 rounded-xl border border-white/20 bg-gradient-to-br from-white/[0.05] to-transparent backdrop-blur-[1px] transition-all duration-500 group-hover:border-white/40 group-hover:bg-white/[0.08]" />
+          
+          {/* Content */}
+          <div className="absolute inset-3 z-10 flex items-center justify-center">
+            {equippedProp ? (
+              <motion.div 
+                className="w-full h-full relative transform-gpu"
+                whileHover={{ scale: 1.05, rotateY: 5, z: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
                 <img 
                   src={equippedProp.image} 
                   alt={equippedProp.name} 
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                  className="w-full h-full object-cover rounded-lg shadow-2xl opacity-100"
                 />
+                {/* Card Gloss */}
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-50 pointer-events-none" />
+                {/* Inner Border */}
+                <div className="absolute inset-0 rounded-lg border border-white/10" />
+              </motion.div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-white/20">
+                <Shield className="w-6 h-6 mb-1 opacity-50" />
+                <span className="text-[9px]">Empty</span>
               </div>
-              
-              {/* Reflection/Depth Hint */}
-              <div className="absolute inset-0 rounded-xl shadow-2xl z-0" />
-            </motion.div>
-          ) : (
-            <div className="w-full aspect-[3/4] rounded-xl border border-white/10 border-dashed flex flex-col items-center justify-center text-white/20 bg-white/[0.02]">
-              <Shield className="w-8 h-8 mb-2 opacity-50" />
-              <span className="text-xs font-medium">No prop selected</span>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Glass Reflections */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Top Shine */}
+            <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/[0.05] to-transparent" />
+            {/* Diagonal Reflection */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent transform -skew-x-12" />
+          </div>
         </div>
       </div>
 
       {/* Modal Viewer */}
       <AnimatePresence>
         {isModalOpen && equippedProp && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
             />
-            
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-slate-900/90 border border-white/10 rounded-2xl overflow-hidden shadow-2xl p-1"
+              className="relative z-10 w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
             >
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-black/50">
-                <img 
-                  src={equippedProp.image} 
-                  alt={equippedProp.name} 
-                  className="w-full h-full object-contain"
-                />
-                
-                {/* Close Button */}
+              <div className="relative aspect-[3/4] bg-black/50">
+                <img src={equippedProp.image} alt={equippedProp.name} className="w-full h-full object-contain" />
                 <button 
-                  onClick={() => setIsModalOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white/70 hover:text-white backdrop-blur-md transition-colors border border-white/10"
+                  onClick={() => setIsModalOpen(false)} 
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 hover:bg-white/20 text-white/70 hover:text-white backdrop-blur-md flex items-center justify-center transition-colors border border-white/10"
                 >
-                  <X className="w-5 h-5" />
+                  <X size={16} />
                 </button>
               </div>
-
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h2 className="text-xl font-bold text-white">{equippedProp.name}</h2>
-                    <p className="text-sm text-cyan-400 font-medium tracking-wide">{equippedProp.status}</p>
-                  </div>
-                  <div className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-xs text-white/70">
-                    {equippedProp.type}
-                  </div>
+              <div className="p-6 bg-slate-900/50 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-bold text-white">{equippedProp.name}</h2>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 uppercase tracking-wider">
+                    {equippedProp.status}
+                  </span>
                 </div>
-                
-                <p className="text-white/50 text-sm leading-relaxed mb-6">
+                <p className="text-xs text-white/50 leading-relaxed">
                   {equippedProp.description}
                 </p>
-
-                <button 
-                  className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-medium transition-all"
-                  onClick={() => setIsModalOpen(false)} // Placeholder for "Change Display"
-                >
-                  Change Display
-                </button>
               </div>
             </motion.div>
           </div>

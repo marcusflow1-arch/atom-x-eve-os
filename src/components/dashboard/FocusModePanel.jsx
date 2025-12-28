@@ -15,6 +15,7 @@ import { allMockGames } from '../store/mockData';
 import CardTutorialOverlay from '../cards/CardTutorialOverlay';
 import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
+import LimitedEditionDisplay from './LimitedEditionDisplay';
 
 // Mock pinned games
 const pinnedGames = [
@@ -1476,6 +1477,7 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
            onClick={onOpenCalendar} 
            clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
          />
+         <LimitedEditionDisplay />
       </div>
     </div>
   );
