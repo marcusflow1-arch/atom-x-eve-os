@@ -43,24 +43,13 @@ export default function IntroScreen({ onComplete }) {
         {/* Background Video */}
         <div className="absolute inset-0">
           <video 
-            src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/1aeb3b2cd_AI_Intro_Concept_and_Video_Generation.mp4"
+            src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/e15ddf60a_Crafting_Premium_AI_Intro_Screen_Prompt.mp4"
             className="w-full h-full object-cover opacity-90"
             autoPlay 
+            muted={false}
             playsInline
             onEnded={onComplete}
           />
-          <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for text readability */}
-        </div>
-
-        {/* TEXT SEQUENCE */}
-        <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 z-20 pointer-events-none">
-          <AnimatePresence mode="wait">
-            
-            {/* Stage 3 Removed */}
-
-            {/* Stage 4 Removed - Text is in video */}
-
-          </AnimatePresence>
         </div>
 
       </div>

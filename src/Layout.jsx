@@ -912,6 +912,7 @@ function LayoutContent({ children, currentPageName }) {
 }
 
 export default function Layout({ children, currentPageName }) {
+  const navigate = useNavigate();
   const [showIntro, setShowIntro] = useState(() => {
     return !sessionStorage.getItem('atom_eve_intro_seen_session');
   });
@@ -919,6 +920,7 @@ export default function Layout({ children, currentPageName }) {
   const handleIntroComplete = () => {
     setShowIntro(false);
     sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
+    navigate(createPageUrl('LunaTemplate'));
   };
 
   if (showIntro) {
