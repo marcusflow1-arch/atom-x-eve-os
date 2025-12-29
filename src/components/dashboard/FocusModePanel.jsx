@@ -1915,10 +1915,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           {/* Empty spacer to maintain layout alignment */}
         </div>
 
-        {/* Right Column - Library Content & Limited Edition */}
-        <div className="w-full flex gap-6 items-start">
-          {/* Library Area - Constrained width to match banner+memories alignment (~700px) */}
-          <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[700px]">
+        {/* Right Column - Library Content & Card Collection */}
+        <div className="flex-1 flex gap-6 items-start justify-between min-w-0">
+          {/* Library Area - Flexible width */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
             <div className="w-full">
               <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
             </div>
@@ -1931,8 +1931,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             />
           </div>
 
-          {/* Card Collection - Bottom Right */}
-          <div className="flex-1 min-w-[280px] flex flex-col items-center">
+          {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
+          <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
             <div className="w-full">
               <h3 
                   onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
@@ -1941,7 +1941,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                     background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                    textAlign: 'center'
                   }}>
                 Card Collection
               </h3>
