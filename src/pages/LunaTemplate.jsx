@@ -78,7 +78,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 2.5, 5);
+    camera.position.set(0, 1.5, 5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
@@ -526,7 +526,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         }
 
         // Keep camera following model
-        const offset = new THREE.Vector3(0, 2.5, 5);
+        const offset = new THREE.Vector3(0, 1.5, 5);
         camera.position.x = modelRef.current.position.x + offset.x;
         camera.position.y = modelRef.current.position.y + offset.y;
         camera.position.z = modelRef.current.position.z + offset.z;
@@ -570,7 +570,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     }
   }, [triggerAnimation]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return <div ref={containerRef} className="py-32 w-full h-full" />;
 }
 import InventoryPanel from '../components/profile/InventoryPanel';
 import LunaStatsPanel from '../components/profile/LunaStatsPanel';
@@ -876,11 +876,11 @@ export default function LunaTemplate() {
   // Memory System State
   const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
   const MEMORIES = [
-    { id: 1, url: null, name: 'Default Void' }, // Null uses default gradient
-    { id: 2, url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1600', name: 'Cyberpunk District' },
-    { id: 3, url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600', name: 'Highlands Battle' },
-    { id: 4, url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1600', name: 'Deep Space' }
-  ];
+  { id: 1, url: null, name: 'Default Void' }, // Null uses default gradient
+  { id: 2, url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1600', name: 'Cyberpunk District' },
+  { id: 3, url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600', name: 'Highlands Battle' },
+  { id: 4, url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1600', name: 'Deep Space' }];
+
 
   const cycleMemory = (direction) => {
     let nextIndex = direction === 'next' ? activeMemoryIndex + 1 : activeMemoryIndex - 1;
@@ -1084,52 +1084,52 @@ export default function LunaTemplate() {
 
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
-      style={{ 
-        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' 
+      style={{
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
       }}>
       {/* Liquid Glass Overlay */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
           background: 'rgba(255, 255, 255, 0.01)',
           backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-        }}
-      />
+          WebkitBackdropFilter: 'blur(10px)'
+        }} />
+
       {/* Ambient Effects */}
       <div className="absolute inset-0 pointer-events-none z-[1]">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
       </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
-      {customBackground && (
-        <div className="absolute inset-0 z-[5]">
-          {customBackground.endsWith('.mp4') || customBackground.includes('base44.app') ? (
-            <video
-              src={customBackground}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div 
-              className="w-full h-full"
-              style={{
-                backgroundImage: `url(${customBackground})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-              }}
-            />
-          )}
+      {customBackground &&
+      <div className="absolute inset-0 z-[5]">
+          {customBackground.endsWith('.mp4') || customBackground.includes('base44.app') ?
+        <video
+          src={customBackground}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover" /> :
+
+
+        <div
+          className="w-full h-full"
+          style={{
+            backgroundImage: `url(${customBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }} />
+
+        }
         </div>
-      )}
+      }
       {/* Very light overlay to maintain some readability */}
-      {customBackground && (
-        <div className="absolute inset-0 bg-black/20 z-[6]" />
-      )}
+      {customBackground &&
+      <div className="absolute inset-0 bg-black/20 z-[6]" />
+      }
 
         {/* 3D Model Viewer - Fixed floating element in top-left, separate from page scroll */}
         {modelUrl &&
@@ -1137,14 +1137,12 @@ export default function LunaTemplate() {
         className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${
         uiVisible ?
         'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' :
-        'top-0 left-0 bottom-0 w-[300px] z-[35]'}`
+        'top-20 left-8 w-[200px] h-[180px] z-[35]'}`
         }
         style={!uiVisible ? {
-          /* Full height left sidebar */
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          /* Constrained to reduced area */
+          maxWidth: '200px',
+          maxHeight: '180px'
         } : {}}>
 
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
@@ -1181,19 +1179,18 @@ export default function LunaTemplate() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="fixed right-8 z-30 overflow-y-auto"
+          className="fixed left-8 right-8 z-30 overflow-y-auto"
           style={{
-            left: '320px', /* Offset for the 3D viewer sidebar */
             top: '80px',
             bottom: '32px',
             maxHeight: 'calc(100vh - 112px)',
             minHeight: '800px'
           }}>
 
-              <FocusModePanel 
-                onBackgroundChange={setCustomBackground} 
-                onOpenCalendar={() => setShowCalendar(true)}
-              />
+              <FocusModePanel
+            onBackgroundChange={setCustomBackground}
+            onOpenCalendar={() => setShowCalendar(true)} />
+
             </motion.div>
         }
         </AnimatePresence>
@@ -1364,11 +1361,11 @@ export default function LunaTemplate() {
           }}>
             <Home className="w-6 h-6 text-white" />
             <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-               <button onClick={() => cycleMemory('prev')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronLeft size={16}/></button>
+               <button onClick={() => cycleMemory('prev')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronLeft size={16} /></button>
                <span className="text-[9px] uppercase tracking-widest text-white/60 font-mono bg-black/40 px-2 py-1 rounded border border-white/5">
                  {MEMORIES[activeMemoryIndex].name}
                </span>
-               <button onClick={() => cycleMemory('next')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronRight size={16}/></button>
+               <button onClick={() => cycleMemory('next')} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white"><ChevronRight size={16} /></button>
             </div>
           </div>
 
@@ -1529,13 +1526,13 @@ export default function LunaTemplate() {
 
                             {/* Achievements Link - Top Right on Hover */}
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
-                              }}
-                              className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
-                              title="View Achievements"
-                            >
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
+                      title="View Achievements">
+
                               <Trophy size={12} />
                             </button>
                           </motion.div>
