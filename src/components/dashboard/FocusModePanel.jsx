@@ -1603,7 +1603,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   return (
     <div className="flex flex-col items-start mb-4">
       {/* Top Row: Banner + References to the right */}
-      <div className="flex items-stretch gap-4 w-full">
+      <div className="flex items-stretch gap-4">
 
         {/* Game Banner */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
@@ -1616,7 +1616,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         {/* References Section */}
         <div 
           ref={scrollRef}
-          className="flex-1 flex items-center gap-2 overflow-x-auto" 
+          className="flex items-center gap-2 overflow-x-auto" 
           style={{ scrollbarWidth: 'none' }}
         >
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
@@ -1932,9 +1932,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         </div>
 
         {/* Right Column - Library Content & Limited Edition */}
-        <div className="flex-1 flex gap-6 min-w-0">
+        <div className="w-full flex gap-6 items-start">
           {/* Library Area */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
+          <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[850px]">
             <div className="w-full">
               <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
             </div>
@@ -1948,7 +1948,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           </div>
 
           {/* Limited Edition Area - Moved from Top */}
-          <div className="w-[280px] flex-shrink-0">
+          <div className="flex-1 min-w-[280px]">
              <LimitedEditionDisplay />
           </div>
         </div>
