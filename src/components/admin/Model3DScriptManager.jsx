@@ -13,6 +13,8 @@ export default function Model3DScriptManager() {
   const queryClient = useQueryClient();
   const [showNewForm, setShowNewForm] = useState(false);
   const [expandedScripts, setExpandedScripts] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editCode, setEditCode] = useState('');
   const [newScript, setNewScript] = useState({
     name: '',
     description: '',
@@ -77,6 +79,21 @@ export default function Model3DScriptManager() {
 
   const toggleExpanded = (id) => {
     setExpandedScripts(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const startEditing = (script) => {
+    setEditingId(script.id);
+    setEditCode(script.script_code);
+  };
+
+  const saveEdit = (id) => {
+    updateMutation.mutate({ id, data: { script_code: editCode } });
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditCode('');
   };
 
   const scriptTypeColors = {
@@ -294,10 +311,28 @@ export default function Model3DScriptManager() {
                               </a>
                             </div>
                           )}
-                          <p className="text-xs text-slate-400 mb-2">Script Code:</p>
-                          <pre className="bg-black/40 border border-slate-700 rounded-lg p-4 overflow-x-auto text-xs text-green-400 font-mono max-h-96 overflow-y-auto">
-                            {script.script_code}
-                          </pre>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs text-slate-400">Script Code:</p>
+                            {editingId === script.id ? (
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                                <Button size="sm" onClick={() => saveEdit(script.id)} className="bg-green-600 hover:bg-green-700">Save Changes</Button>
+                              </div>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => startEditing(script)}>Edit Code</Button>
+                            )}
+                          </div>
+                          {editingId === script.id ? (
+                            <Textarea
+                              value={editCode}
+                              onChange={(e) => setEditCode(e.target.value)}
+                              className="bg-black/40 border-slate-700 font-mono text-xs text-green-400 min-h-[300px]"
+                            />
+                          ) : (
+                            <pre className="bg-black/40 border border-slate-700 rounded-lg p-4 overflow-x-auto text-xs text-green-400 font-mono max-h-96 overflow-y-auto">
+                              {script.script_code}
+                            </pre>
+                          )}
                         </div>
                       </motion.div>
                     )}
