@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
   Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
   Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
   Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-  Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users
-} from 'lucide-react';
+  Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users } from
+'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,75 +19,75 @@ import LimitedEditionDisplay from './LimitedEditionDisplay';
 
 // Mock pinned games
 const pinnedGames = [
-  { id: 1, title: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', lastPlayed: '2 hours ago', progress: 68 },
-  { id: 2, title: 'Elden Ring', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400', lastPlayed: 'Yesterday', progress: 45 },
-  { id: 3, title: 'Stellar Odyssey', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', lastPlayed: '3 days ago', progress: 92 },
-  { id: 4, title: 'Shadow Realm', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', lastPlayed: 'Last week', progress: 23 },
-  { id: 5, title: 'Neon Legends', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', lastPlayed: '2 days ago', progress: 55 },
-];
+{ id: 1, title: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', lastPlayed: '2 hours ago', progress: 68 },
+{ id: 2, title: 'Elden Ring', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400', lastPlayed: 'Yesterday', progress: 45 },
+{ id: 3, title: 'Stellar Odyssey', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', lastPlayed: '3 days ago', progress: 92 },
+{ id: 4, title: 'Shadow Realm', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', lastPlayed: 'Last week', progress: 23 },
+{ id: 5, title: 'Neon Legends', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', lastPlayed: '2 days ago', progress: 55 }];
+
 
 const MOCK_EVENTS = [
-  {
-    id: 1,
-    type: 'game_update',
-    title: 'Cyberpunk 2088 Patch 2.1',
-    subtitle: 'New story expansion',
-    date: 'Dec 26',
-    time: '10:00 AM',
-    image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
-    color: 'from-cyan-500/20 to-blue-500/20',
-    icon: Download,
-    featured: true
-  },
-  {
-    id: 2,
-    type: 'live_event',
-    title: 'Winter Gaming Festival',
-    subtitle: 'Live tournaments & prizes',
-    date: 'Dec 28',
-    time: '6:00 PM',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
-    color: 'from-purple-500/20 to-pink-500/20',
-    icon: Ticket
-  },
-  {
-    id: 3,
-    type: 'developer',
-    title: 'Dev Stream',
-    subtitle: 'Neon Legends Studio',
-    date: 'Dec 29',
-    time: '3:00 PM',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400',
-    color: 'from-orange-500/20 to-amber-500/20',
-    icon: Users
-  },
-  {
-    id: 4,
-    type: 'seasonal',
-    title: 'New Year Challenge',
-    subtitle: 'Limited rewards available',
-    date: 'Jan 1',
-    time: '12:00 AM',
-    image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400',
-    color: 'from-emerald-500/20 to-teal-500/20',
-    icon: Star
-  },
-  {
-    id: 5,
-    type: 'community',
-    title: 'Clan Wars Season 4',
-    subtitle: 'Registration opens',
-    date: 'Jan 3',
-    time: '9:00 AM',
-    image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400',
-    color: 'from-red-500/20 to-rose-500/20',
-    icon: Gamepad2
-  }
-];
+{
+  id: 1,
+  type: 'game_update',
+  title: 'Cyberpunk 2088 Patch 2.1',
+  subtitle: 'New story expansion',
+  date: 'Dec 26',
+  time: '10:00 AM',
+  image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
+  color: 'from-cyan-500/20 to-blue-500/20',
+  icon: Download,
+  featured: true
+},
+{
+  id: 2,
+  type: 'live_event',
+  title: 'Winter Gaming Festival',
+  subtitle: 'Live tournaments & prizes',
+  date: 'Dec 28',
+  time: '6:00 PM',
+  image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+  color: 'from-purple-500/20 to-pink-500/20',
+  icon: Ticket
+},
+{
+  id: 3,
+  type: 'developer',
+  title: 'Dev Stream',
+  subtitle: 'Neon Legends Studio',
+  date: 'Dec 29',
+  time: '3:00 PM',
+  image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400',
+  color: 'from-orange-500/20 to-amber-500/20',
+  icon: Users
+},
+{
+  id: 4,
+  type: 'seasonal',
+  title: 'New Year Challenge',
+  subtitle: 'Limited rewards available',
+  date: 'Jan 1',
+  time: '12:00 AM',
+  image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400',
+  color: 'from-emerald-500/20 to-teal-500/20',
+  icon: Star
+},
+{
+  id: 5,
+  type: 'community',
+  title: 'Clan Wars Season 4',
+  subtitle: 'Registration opens',
+  date: 'Jan 3',
+  time: '9:00 AM',
+  image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400',
+  color: 'from-red-500/20 to-rose-500/20',
+  icon: Gamepad2
+}];
+
 
 const FeaturedEventCard = ({ event, onOpenCalendar }) => {
   const Icon = event.icon;
-  
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -4 }}
@@ -98,8 +98,8 @@ const FeaturedEventCard = ({ event, onOpenCalendar }) => {
         WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-      }}
-    >
+      }}>
+
       <div className="absolute inset-0">
         <img src={event.image} alt="" className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
         <div className={`absolute inset-0 bg-gradient-to-br ${event.color}`} />
@@ -123,23 +123,23 @@ const FeaturedEventCard = ({ event, onOpenCalendar }) => {
           <p className="text-white/60 text-sm">{event.subtitle}</p>
           
           <div className="flex items-center gap-2 mt-4">
-            <button 
+            <button
               onClick={onOpenCalendar}
-              className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
-            >
+              className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-xl py-2.5 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2">
+
               <CalendarIcon className="w-4 h-4" />
               Add to Calendar
             </button>
           </div>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const SmallEventCard = ({ event }) => {
   const Icon = event.icon;
-  
+
   return (
     <motion.div
       whileHover={{ scale: 1.03, y: -2 }}
@@ -150,8 +150,8 @@ const SmallEventCard = ({ event }) => {
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
-      }}
-    >
+      }}>
+
       <div className="flex items-center gap-3 p-3">
         <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 relative">
           <img src={event.image} alt="" className="w-full h-full object-cover" />
@@ -172,83 +172,83 @@ const SmallEventCard = ({ event }) => {
         
         <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 // Upcoming cards with achievement-style design - organized by genre
 const upcomingCards = [
-  { 
-    id: 1, 
-    name: 'Voidtech Slayer', 
-    type: 'Ability', 
-    rarity: 'Legendary', 
-    genre: 'RPG',
-    game: 'Elden Ring: Nightreign', 
-    icon: '⚔️',
-    description: 'A devastating attack that rips through dimensional barriers, dealing massive damage to all enemies in a cone.',
-    stats: { Power: 95, Cooldown: '12s', Range: 'Medium' },
-    unlockCondition: 'Complete "The Eternal Night" questline',
-    releaseDate: 'Season 3',
-    lore: 'Forged in the void between worlds, this technique was mastered by the Nightreign Knights who guard the boundary between realms.'
-  },
-  { 
-    id: 2, 
-    name: 'Quantum Shield', 
-    type: 'Equipment', 
-    rarity: 'Epic', 
-    genre: 'Sci-Fi',
-    game: 'Cyberpunk 2088', 
-    icon: '🛡️',
-    description: 'Advanced nano-tech protection from the Night City underworld. Absorbs incoming damage.',
-    stats: { Defense: 78, Duration: '8s', Absorption: '40%' },
-    unlockCondition: 'Reach Cyberpunk genre level 15',
-    releaseDate: 'Season 3',
-    lore: 'Developed by Arasaka\'s black ops division, this shield creates a quantum probability field that deflects incoming projectiles.'
-  },
-  { 
-    id: 3, 
-    name: 'Arcane Surge', 
-    type: 'Passive', 
-    rarity: 'Rare', 
-    genre: 'RPG',
-    game: 'Baldur\'s Gate 3', 
-    icon: '✨',
-    description: 'Channel the Weave to amplify magical abilities. Each spell increases power.',
-    stats: { Bonus: '+25%', Stack: '5x', Duration: '10s' },
-    unlockCondition: 'Cast 1000 spells across RPG games',
-    releaseDate: 'Available Now',
-    lore: 'The Weave responds to those who show dedication. Masters of this technique can feel the very fabric of magic bend to their will.'
-  },
-  { 
-    id: 4, 
-    name: 'Neon Rush', 
-    type: 'Ability', 
-    rarity: 'Epic', 
-    genre: 'Action',
-    game: 'Neon Legends', 
-    icon: '⚡',
-    description: 'Burst of speed through the neon-lit streets. Become untargetable while dashing.',
-    stats: { Speed: '+300%', Duration: '2s', Damage: '45' },
-    unlockCondition: 'Win 50 races in Action games',
-    releaseDate: 'Season 3',
-    lore: 'Street racers who master this technique become living lightning, leaving only afterimages in their wake.'
-  },
-  { 
-    id: 5, 
-    name: 'Dragon\'s Breath', 
-    type: 'Ability', 
-    rarity: 'Legendary', 
-    genre: 'RPG',
-    game: 'Dragon Age', 
-    icon: '🔥',
-    description: 'Unleash the fury of an ancient dragon, breathing fire in a massive area.',
-    stats: { Power: 120, Area: 'Large', Burn: '6s' },
-    unlockCondition: 'Defeat 10 dragons across all games',
-    releaseDate: 'Season 4',
-    lore: 'Only those who have faced the mightiest beasts and emerged victorious can channel their primal fury.'
-  },
-];
+{
+  id: 1,
+  name: 'Voidtech Slayer',
+  type: 'Ability',
+  rarity: 'Legendary',
+  genre: 'RPG',
+  game: 'Elden Ring: Nightreign',
+  icon: '⚔️',
+  description: 'A devastating attack that rips through dimensional barriers, dealing massive damage to all enemies in a cone.',
+  stats: { Power: 95, Cooldown: '12s', Range: 'Medium' },
+  unlockCondition: 'Complete "The Eternal Night" questline',
+  releaseDate: 'Season 3',
+  lore: 'Forged in the void between worlds, this technique was mastered by the Nightreign Knights who guard the boundary between realms.'
+},
+{
+  id: 2,
+  name: 'Quantum Shield',
+  type: 'Equipment',
+  rarity: 'Epic',
+  genre: 'Sci-Fi',
+  game: 'Cyberpunk 2088',
+  icon: '🛡️',
+  description: 'Advanced nano-tech protection from the Night City underworld. Absorbs incoming damage.',
+  stats: { Defense: 78, Duration: '8s', Absorption: '40%' },
+  unlockCondition: 'Reach Cyberpunk genre level 15',
+  releaseDate: 'Season 3',
+  lore: 'Developed by Arasaka\'s black ops division, this shield creates a quantum probability field that deflects incoming projectiles.'
+},
+{
+  id: 3,
+  name: 'Arcane Surge',
+  type: 'Passive',
+  rarity: 'Rare',
+  genre: 'RPG',
+  game: 'Baldur\'s Gate 3',
+  icon: '✨',
+  description: 'Channel the Weave to amplify magical abilities. Each spell increases power.',
+  stats: { Bonus: '+25%', Stack: '5x', Duration: '10s' },
+  unlockCondition: 'Cast 1000 spells across RPG games',
+  releaseDate: 'Available Now',
+  lore: 'The Weave responds to those who show dedication. Masters of this technique can feel the very fabric of magic bend to their will.'
+},
+{
+  id: 4,
+  name: 'Neon Rush',
+  type: 'Ability',
+  rarity: 'Epic',
+  genre: 'Action',
+  game: 'Neon Legends',
+  icon: '⚡',
+  description: 'Burst of speed through the neon-lit streets. Become untargetable while dashing.',
+  stats: { Speed: '+300%', Duration: '2s', Damage: '45' },
+  unlockCondition: 'Win 50 races in Action games',
+  releaseDate: 'Season 3',
+  lore: 'Street racers who master this technique become living lightning, leaving only afterimages in their wake.'
+},
+{
+  id: 5,
+  name: 'Dragon\'s Breath',
+  type: 'Ability',
+  rarity: 'Legendary',
+  genre: 'RPG',
+  game: 'Dragon Age',
+  icon: '🔥',
+  description: 'Unleash the fury of an ancient dragon, breathing fire in a massive area.',
+  stats: { Power: 120, Area: 'Large', Burn: '6s' },
+  unlockCondition: 'Defeat 10 dragons across all games',
+  releaseDate: 'Season 4',
+  lore: 'Only those who have faced the mightiest beasts and emerged victorious can channel their primal fury.'
+}];
+
 
 // Card genres for filtering
 const CARD_GENRES = ['All', 'RPG', 'Action', 'Sci-Fi', 'Horror', 'Strategy'];
@@ -259,7 +259,7 @@ const rarityStyles = {
   Common: { border: 'border-slate-400', glow: '', ring: 'ring-slate-400/30', text: 'text-slate-300' },
   Rare: { border: 'border-blue-400', glow: 'shadow-[0_0_15px_rgba(59,130,246,0.4)]', ring: 'ring-blue-400/40', text: 'text-blue-300' },
   Epic: { border: 'border-purple-400', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.5)]', ring: 'ring-purple-400/50', text: 'text-purple-300' },
-  Legendary: { border: 'border-amber-400', glow: 'shadow-[0_0_25px_rgba(251,191,36,0.6)]', ring: 'ring-amber-400/60', text: 'text-amber-300' },
+  Legendary: { border: 'border-amber-400', glow: 'shadow-[0_0_25px_rgba(251,191,36,0.6)]', ring: 'ring-amber-400/60', text: 'text-amber-300' }
 };
 
 // Achievement-style Card Component with tilt effect
@@ -285,13 +285,13 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
     setIsHovered(false);
   };
 
-  const sizeClasses = size === 'small' 
-    ? 'w-20 h-28' 
-    : size === 'medium'
-    ? 'w-28 h-40'
-    : size === 'large' 
-    ? 'w-40 h-56' 
-    : 'w-28 h-40';
+  const sizeClasses = size === 'small' ?
+  'w-20 h-28' :
+  size === 'medium' ?
+  'w-28 h-40' :
+  size === 'large' ?
+  'w-40 h-56' :
+  'w-28 h-40';
 
   return (
     <motion.div
@@ -307,24 +307,24 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
       }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className={`${sizeClasses} relative cursor-pointer perspective-1000 flex-shrink-0`}
-      style={{ transformStyle: 'preserve-3d' }}
-    >
+      style={{ transformStyle: 'preserve-3d' }}>
+
       {/* Card Base */}
-      <div 
+      <div
         className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isSelected || isHovered ? style.glow : ''} overflow-hidden transition-shadow duration-300`}
         style={{
           background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)'
-        }}
-      >
+        }}>
+
         {/* Animated shine line */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)`,
-          }}
-        />
+            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)`
+          }} />
+
         
         {/* Content */}
         <div className="relative h-full flex flex-col p-2">
@@ -354,8 +354,8 @@ function AchievementStyleCard({ card, isSelected, onClick, size = 'normal' }) {
         <div className={`absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 ${style.border} rounded-bl-lg`} />
         <div className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${style.border} rounded-br-lg`} />
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // CalendarModal removed in favor of IntelligentCalendarOverlay
@@ -370,44 +370,44 @@ function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={onClick}
-      className={`relative flex-shrink-0 w-32 cursor-pointer group ${isSelected ? 'ring-2 ring-cyan-400 rounded-xl' : ''}`}
-    >
-      <div 
+      className={`relative flex-shrink-0 w-32 cursor-pointer group ${isSelected ? 'ring-2 ring-cyan-400 rounded-xl' : ''}`}>
+
+      <div
         className="relative aspect-[3/4] rounded-xl overflow-hidden"
         style={{
-          boxShadow: isHovered 
-            ? '0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(100,150,255,0.2)' 
-            : '0 8px 20px rgba(0,0,0,0.3)',
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <img 
-          src={game.cover_image || game.cover} 
+          boxShadow: isHovered ?
+          '0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(100,150,255,0.2)' :
+          '0 8px 20px rgba(0,0,0,0.3)',
+          transition: 'all 0.3s ease'
+        }}>
+
+        <img
+          src={game.cover_image || game.cover}
           alt={game.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+          className="absolute inset-0 w-full h-full object-cover" />
+
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80" />
         
         {/* Hover Play Button */}
         <AnimatePresence>
-          {isHovered && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            >
+          {isHovered &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
               <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                onClick={(e) => { e.stopPropagation(); onPlay?.(game); }}
-                className="w-12 h-12 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-xl"
-              >
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              onClick={(e) => {e.stopPropagation();onPlay?.(game);}}
+              className="w-12 h-12 rounded-full bg-white hover:bg-white/90 flex items-center justify-center transition-colors shadow-xl">
+
                 <Play className="w-5 h-5 text-black fill-black ml-0.5" />
               </motion.button>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
 
         {/* Game Info */}
@@ -425,33 +425,33 @@ function LibraryGameCard({ game, isSelected, onClick, onPlay }) {
           </div>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Game Detail Panel for selected game
 function GameDetailPanel({ game, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   if (!game) return null;
 
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'discussion', label: 'Discussion' },
-    { id: 'streamers', label: 'Streamers' },
-    { id: 'guide', label: 'Guide' },
-    { id: 'support', label: 'Support' },
-    { id: 'achievements', label: 'Achievements' },
-    { id: 'affiliate', label: 'Affiliate' },
-  ];
+  { id: 'overview', label: 'Overview' },
+  { id: 'discussion', label: 'Discussion' },
+  { id: 'streamers', label: 'Streamers' },
+  { id: 'guide', label: 'Guide' },
+  { id: 'support', label: 'Support' },
+  { id: 'achievements', label: 'Achievements' },
+  { id: 'affiliate', label: 'Affiliate' }];
+
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="h-full flex flex-col"
-    >
+      className="h-full flex flex-col">
+
       {/* Game Header */}
       <div className="flex gap-3 mb-3">
         <div className="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
@@ -463,10 +463,10 @@ function GameDetailPanel({ game, onClose }) {
               <h2 className="text-white font-bold text-base leading-tight">{game.title}</h2>
               <p className="text-white/40 text-[10px] capitalize">{game.genre}</p>
             </div>
-            <button 
+            <button
               onClick={onClose}
-              className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-            >
+              className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+
               <X className="w-2.5 h-2.5 text-white/60" />
             </button>
           </div>
@@ -499,32 +499,32 @@ function GameDetailPanel({ game, onClose }) {
 
       {/* Tab Navigation */}
       <div className="flex items-center gap-1 mb-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-2 py-1 rounded-md text-[9px] font-medium whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-white/10 text-white border border-white/15'
-                : 'text-white/40 hover:text-white hover:bg-white/5'
-            }`}
-          >
+        {tabs.map((tab) =>
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id)}
+          className={`px-2 py-1 rounded-md text-[9px] font-medium whitespace-nowrap transition-all ${
+          activeTab === tab.id ?
+          'bg-white/10 text-white border border-white/15' :
+          'text-white/40 hover:text-white hover:bg-white/5'}`
+          }>
+
             {tab.label}
           </button>
-        ))}
+        )}
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence mode="wait">
-          {activeTab === 'overview' && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-            >
+          {activeTab === 'overview' &&
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-3">
+
               <div>
                 <h3 className="text-white font-semibold text-xs mb-1.5 flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-cyan-400" />
@@ -538,95 +538,95 @@ function GameDetailPanel({ game, onClose }) {
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { icon: Clock, value: '12.5h', label: 'Played', color: 'text-blue-400' },
-                  { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
-                  { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' },
-                ].map((stat, i) => (
-                  <div key={i} className="text-center p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+              { icon: Clock, value: '12.5h', label: 'Played', color: 'text-blue-400' },
+              { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400' },
+              { icon: Zap, value: '2h ago', label: 'Last Played', color: 'text-green-400' }].
+              map((stat, i) =>
+              <div key={i} className="text-center p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                     <stat.icon className={`w-3 h-3 ${stat.color} mx-auto mb-1`} />
                     <p className="text-white font-bold text-xs">{stat.value}</p>
                     <p className="text-white/30 text-[8px]">{stat.label}</p>
                   </div>
-                ))}
+              )}
               </div>
             </motion.div>
-          )}
+          }
 
-          {activeTab === 'discussion' && (
-            <motion.div
-              key="discussion"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-2"
-            >
+          {activeTab === 'discussion' &&
+          <motion.div
+            key="discussion"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-2">
+
               {[
-                { title: 'Best build for endgame?', replies: 45, user: 'DragonSlayer' },
-                { title: 'Hidden easter eggs found!', replies: 23, user: 'MysticMage' },
-                { title: 'Looking for raid group', replies: 12, user: 'ShadowNinja' },
-              ].map((topic, i) => (
-                <div key={i} className="p-2 rounded-lg border cursor-pointer transition-colors hover:border-cyan-400/20" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+            { title: 'Best build for endgame?', replies: 45, user: 'DragonSlayer' },
+            { title: 'Hidden easter eggs found!', replies: 23, user: 'MysticMage' },
+            { title: 'Looking for raid group', replies: 12, user: 'ShadowNinja' }].
+            map((topic, i) =>
+            <div key={i} className="p-2 rounded-lg border cursor-pointer transition-colors hover:border-cyan-400/20" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                   <h4 className="text-white text-[10px] font-medium mb-0.5">{topic.title}</h4>
                   <p className="text-white/30 text-[8px]">by {topic.user} • {topic.replies} replies</p>
                 </div>
-              ))}
+            )}
             </motion.div>
-          )}
+          }
 
-          {activeTab === 'achievements' && (
-            <motion.div
-              key="achievements"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-2"
-            >
+          {activeTab === 'achievements' &&
+          <motion.div
+            key="achievements"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-2">
+
               {[
-                { name: 'Dragon Slayer', icon: '🐉', progress: 100, rarity: 'Legendary' },
-                { name: 'Master Thief', icon: '💰', progress: 75, rarity: 'Epic' },
-                { name: 'Arena Champion', icon: '⚔️', progress: 50, rarity: 'Rare' },
-                { name: 'Explorer', icon: '🗺️', progress: 30, rarity: 'Common' },
-              ].map((ach, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+            { name: 'Dragon Slayer', icon: '🐉', progress: 100, rarity: 'Legendary' },
+            { name: 'Master Thief', icon: '💰', progress: 75, rarity: 'Epic' },
+            { name: 'Arena Champion', icon: '⚔️', progress: 50, rarity: 'Rare' },
+            { name: 'Explorer', icon: '🗺️', progress: 30, rarity: 'Common' }].
+            map((ach, i) =>
+            <div key={i} className="flex items-center gap-2 p-2 rounded-lg border" style={{ background: 'rgba(100, 120, 140, 0.08)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                   <span className="text-lg">{ach.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-white text-[10px] font-medium">{ach.name}</span>
                       <span className={`text-[8px] px-1.5 py-0.5 rounded ${
-                        ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400' :
-                        ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
-                        ach.rarity === 'Rare' ? 'bg-cyan-500/20 text-cyan-400' :
-                        'bg-white/10 text-white/50'
-                      }`}>{ach.rarity}</span>
+                  ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400' :
+                  ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400' :
+                  ach.rarity === 'Rare' ? 'bg-cyan-500/20 text-cyan-400' :
+                  'bg-white/10 text-white/50'}`
+                  }>{ach.rarity}</span>
                     </div>
                     <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full"
-                        style={{ width: `${ach.progress}%` }}
-                      />
+                      <div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full"
+                    style={{ width: `${ach.progress}%` }} />
+
                     </div>
                   </div>
                 </div>
-              ))}
+            )}
             </motion.div>
-          )}
+          }
 
-          {['streamers', 'guide', 'support', 'affiliate'].includes(activeTab) && (
-            <motion.div
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-24 text-white/20"
-            >
+          {['streamers', 'guide', 'support', 'affiliate'].includes(activeTab) &&
+          <motion.div
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center h-24 text-white/20">
+
               <Eye className="w-6 h-6 mb-2 opacity-50" />
               <p className="text-[10px] capitalize">{activeTab} coming soon</p>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Library Games Section (Bottom) - shows all games
@@ -645,10 +645,10 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
     onSelectGame(game);
   };
 
-  // Split games into rows of 8 (narrower grid)
+  // Split games into rows of 10
   const rows = [];
-  for (let i = 0; i < currentGames.length; i += 8) {
-    rows.push(currentGames.slice(i, i + 8));
+  for (let i = 0; i < currentGames.length; i += 10) {
+    rows.push(currentGames.slice(i, i + 10));
   }
 
   return (
@@ -662,25 +662,25 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
       <div className="flex-1 flex flex-col transition-all duration-300">
         {/* Clickable Title - Transitions to Library */}
         <div className="flex items-center justify-between mb-3">
-          <button 
+          <button
             onClick={handleLibraryClick}
-            className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
-          >
+            className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group">
+
             <Book className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
             Library
             <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 
-        {/* Games Grid - Rows of 8, with options panel on the right */}
+        {/* Games Grid - Rows of 10, with options panel on the right */}
         <div className="flex gap-3">
-          <div 
+          <div
             ref={libraryScrollRef}
             className="flex-1 overflow-y-auto space-y-3"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '420px' }}
-          >
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '420px' }}>
+
           <AnimatePresence mode="popLayout">
-            {rows.map((row, rowIndex) => (
+            {rows.map((row, rowIndex) =>
               <div key={rowIndex} className="flex gap-2">
                 {row.map((game, index) => {
                   const isSelected = selectedGame?.id === game.id && showGamePanel;
@@ -692,15 +692,15 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                      transition={{ delay: (rowIndex * 8 + index) * 0.02, duration: 0.3 }}
-                      className="relative flex-shrink-0 w-[calc(12.5%-7px)] min-w-[69px] group cursor-pointer"
-                      onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
-                      >
+                      transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
+                      className="relative flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
+                      onClick={(e) => {e.stopPropagation();handleGameClick(game);}}>
+
                       <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
-                        isSelected 
-                          ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' 
-                          : 'border-white/10 hover:border-cyan-400/50'
-                      }`}>
+                      isSelected ?
+                      'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' :
+                      'border-white/10 hover:border-cyan-400/50'}`
+                      }>
                         <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -714,35 +714,35 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                       </div>
 
                       {/* Translucent rectangle to the right of Destiny Brigades */}
-                      {game.title === 'Destiny Brigades' && (
-                        <div
-                          className="absolute left-full top-0 ml-2 h-full w-8 rounded-lg border border-white/10 pointer-events-none"
-                          style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-                        />
-                      )}
+                      {game.title === 'Destiny Brigades' &&
+                      <div
+                        className="absolute left-full top-0 ml-2 h-full w-8 rounded-lg border border-white/10 pointer-events-none"
+                        style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} />
+
+                      }
 
 
-                    </motion.div>
-                  );
+                    </motion.div>);
+
                 })}
               </div>
-            ))}
+              )}
           </AnimatePresence>
-          {currentGames.length === 0 && (
-            <motion.div 
+          {currentGames.length === 0 &&
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-center justify-center w-full h-20 text-white/30 text-xs"
-            >
+              className="flex items-center justify-center w-full h-20 text-white/30 text-xs">
+
               No games in library
             </motion.div>
-          )}
+            }
         </div>
 
       </div>
     </div>
-  </div>
-  );
+  </div>);
+
 }
 
 // Game Side Menu - Slide-out from right
@@ -769,8 +769,8 @@ function GameSideMenu({ game, onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
-        onClick={onClose}
-      />
+        onClick={onClose} />
+
 
       {/* Slide-out Menu */}
       <motion.div
@@ -783,21 +783,21 @@ function GameSideMenu({ game, onClose }) {
         style={{
           background: 'rgba(15, 23, 42, 0.95)',
           backdropFilter: 'blur(20px) saturate(150%)'
-        }}
-      >
+        }}>
+
         {/* Header - Game Cover Area */}
         <div className="relative h-48 flex-shrink-0">
-          <img 
-            src={game.cover_image || game.cover} 
-            alt={game.title} 
-            className="w-full h-full object-cover opacity-60"
-          />
+          <img
+            src={game.cover_image || game.cover}
+            alt={game.title}
+            className="w-full h-full object-cover opacity-60" />
+
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/50 to-slate-900" />
           
-          <button 
+          <button
             onClick={onClose}
-            className="absolute top-4 left-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors border border-white/10"
-          >
+            className="absolute top-4 left-4 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors border border-white/10">
+
             <ChevronRight className="w-5 h-5 text-white" />
           </button>
 
@@ -881,13 +881,13 @@ function GameSideMenu({ game, onClose }) {
               <button className="text-[10px] text-cyan-400 hover:text-cyan-300">View All</button>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-16 h-20 rounded border border-white/10 bg-white/5 flex-shrink-0 flex items-center justify-center">
+              {[1, 2, 3].map((i) =>
+              <div key={i} className="w-16 h-20 rounded border border-white/10 bg-white/5 flex-shrink-0 flex items-center justify-center">
                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                       <Star className="w-4 h-4 text-white/40" />
                    </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -908,16 +908,16 @@ function GameSideMenu({ game, onClose }) {
            </button>
         </div>
       </motion.div>
-    </>
-  );
+    </>);
+
 }
 
 // Card Detail Overlay - Translucent Achievement style (like Destiny cards)
 function CardDetailOverlay({ card, onClose }) {
   if (!card) return null;
-  
+
   const style = rarityStyles[card.rarity];
-  
+
   // Generate a card ID
   const cardId = `CARD-${card.id.toString().padStart(4, '0')}-${card.rarity?.substring(0, 1)}${card.type?.substring(0, 1)}`;
 
@@ -927,8 +927,8 @@ function CardDetailOverlay({ card, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
+      onClick={onClose}>
+
       {/* Translucent Backdrop with blur */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
 
@@ -945,24 +945,24 @@ function CardDetailOverlay({ card, onClose }) {
           backdropFilter: 'blur(35px) saturate(150%)',
           WebkitBackdropFilter: 'blur(35px) saturate(150%)',
           boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 60px ${
-            card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.15)' :
-            card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.15)' :
-            'rgba(34, 211, 238, 0.15)'
-          }`
-        }}
-      >
+          card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.15)' :
+          card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.15)' :
+          'rgba(34, 211, 238, 0.15)'}`
+
+        }}>
+
         {/* Top Rarity Glow Bar */}
         <div className={`h-1 ${
-          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400 to-transparent' :
-          card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' :
-          'bg-gradient-to-r from-transparent via-blue-400 to-transparent'
-        }`} />
+        card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400 to-transparent' :
+        card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' :
+        'bg-gradient-to-r from-transparent via-blue-400 to-transparent'}`
+        } />
 
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10 backdrop-blur-md border border-white/10"
-        >
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10 backdrop-blur-md border border-white/10">
+
           <X className="w-5 h-5 text-white/80" />
         </button>
 
@@ -971,17 +971,17 @@ function CardDetailOverlay({ card, onClose }) {
             {/* Left Side - Card Preview in Glass Box */}
             <div className="flex-shrink-0 flex flex-col items-center">
               {/* Card Container with inner glow */}
-              <div 
+              <div
                 className={`p-4 rounded-xl border ${style?.border || 'border-white/20'}`}
                 style={{
                   background: 'rgba(255,255,255,0.03)',
                   boxShadow: `inset 0 0 30px ${
-                    card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.1)' :
-                    card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.1)' :
-                    'rgba(59, 130, 246, 0.1)'
-                  }`
-                }}
-              >
+                  card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.1)' :
+                  card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.1)' :
+                  'rgba(59, 130, 246, 0.1)'}`
+
+                }}>
+
                 <AchievementStyleCard card={card} isSelected={true} size="large" />
               </div>
               
@@ -1000,10 +1000,10 @@ function CardDetailOverlay({ card, onClose }) {
               <div className="flex flex-wrap items-center gap-2 mb-5">
                 {/* Rarity */}
                 <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${
-                  card.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                  card.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
-                  'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                }`}>
+                card.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                card.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
+                'bg-blue-500/20 text-blue-300 border-blue-500/40'}`
+                }>
                   <Star className="w-3 h-3 inline mr-1" />
                   {card.rarity}
                 </span>
@@ -1021,10 +1021,10 @@ function CardDetailOverlay({ card, onClose }) {
 
                 {/* Release Status */}
                 <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-                  card.releaseDate === 'Available Now' 
-                    ? 'bg-green-500/20 text-green-300 border-green-500/30' 
-                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                }`}>
+                card.releaseDate === 'Available Now' ?
+                'bg-green-500/20 text-green-300 border-green-500/30' :
+                'bg-amber-500/20 text-amber-300 border-amber-500/30'}`
+                }>
                   {card.releaseDate}
                 </span>
               </div>
@@ -1042,26 +1042,26 @@ function CardDetailOverlay({ card, onClose }) {
               <div className="mb-5">
                 <h4 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">Card Stats</h4>
                 <div className="grid grid-cols-3 gap-3">
-                  {Object.entries(card.stats).map(([key, val]) => (
-                    <div 
-                      key={key} 
-                      className="p-3 rounded-lg text-center border border-white/10"
-                      style={{ background: 'rgba(255,255,255,0.03)' }}
-                    >
+                  {Object.entries(card.stats).map(([key, val]) =>
+                  <div
+                    key={key}
+                    className="p-3 rounded-lg text-center border border-white/10"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}>
+
                       <p className={`font-bold text-lg ${style?.text || 'text-cyan-400'}`}>{val}</p>
                       <p className="text-white/40 text-[10px] uppercase tracking-wide">{key}</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
               {/* Lore */}
-              {card.lore && (
-                <div className="p-4 rounded-lg border border-white/10 mb-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              {card.lore &&
+              <div className="p-4 rounded-lg border border-white/10 mb-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
                   <BookOpen className="w-4 h-4 text-white/30 mb-2" />
                   <p className="text-white/50 text-xs italic leading-relaxed">"{card.lore}"</p>
                 </div>
-              )}
+              }
 
               {/* Unlock Condition */}
               <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
@@ -1088,13 +1088,13 @@ function CardDetailOverlay({ card, onClose }) {
 
         {/* Bottom Fade Bar */}
         <div className={`h-0.5 ${
-          card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400/50 to-transparent' :
-          card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400/50 to-transparent' :
-          'bg-gradient-to-r from-transparent via-blue-400/50 to-transparent'
-        }`} />
+        card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400/50 to-transparent' :
+        card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400/50 to-transparent' :
+        'bg-gradient-to-r from-transparent via-blue-400/50 to-transparent'}`
+        } />
       </motion.div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Demo Video Box Component - plays card demonstration video
@@ -1107,7 +1107,7 @@ function DemoVideoBox({ card }) {
     const demoVideos = {
       'Ability': 'https://www.w3schools.com/html/mov_bbb.mp4',
       'Equipment': 'https://www.w3schools.com/html/movie.mp4',
-      'Passive': 'https://www.w3schools.com/html/mov_bbb.mp4',
+      'Passive': 'https://www.w3schools.com/html/mov_bbb.mp4'
     };
     return demoVideos[card?.type] || 'https://www.w3schools.com/html/mov_bbb.mp4';
   };
@@ -1123,31 +1123,31 @@ function DemoVideoBox({ card }) {
   };
 
   return (
-    <div 
+    <div
       className="w-[260px] h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)'
       }}
-      onClick={handlePlay}
-    >
-      {showVideo ? (
-        <>
+      onClick={handlePlay}>
+
+      {showVideo ?
+      <>
           {/* Video Player */}
           <video
-            src={getDemoVideo()}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          src={getDemoVideo()}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover" />
+
           {/* Close button */}
           <button
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
-            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors z-10"
-          >
+          onClick={(e) => {e.stopPropagation();handleClose();}}
+          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors z-10">
+
             <X className="w-3 h-3 text-white" />
           </button>
           {/* Playing indicator */}
@@ -1155,9 +1155,9 @@ function DemoVideoBox({ card }) {
             <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             <span className="text-[8px] text-white uppercase tracking-wider">Playing</span>
           </div>
-        </>
-      ) : (
-        <>
+        </> :
+
+      <>
           {/* Demo Placeholder */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all mb-2">
@@ -1175,9 +1175,9 @@ function DemoVideoBox({ card }) {
             <span className="text-[8px] text-white/60 uppercase tracking-wider">Demo</span>
           </div>
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 // Large 3D Card Component for Live Panel
@@ -1216,31 +1216,31 @@ function Large3DCard({ card, isActive }) {
       }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="w-32 h-44 relative cursor-pointer flex-shrink-0"
-      style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
-    >
+      style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}>
+
       {/* Card Base */}
-      <div 
+      <div
         className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isHovered ? style.glow : ''} overflow-hidden transition-shadow duration-300`}
         style={{
           background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
-          boxShadow: isHovered 
-            ? `0 20px 40px rgba(0,0,0,0.5), 0 0 30px ${
-                card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.3)' :
-                card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
-                'rgba(59, 130, 246, 0.3)'
-              }` 
-            : '0 10px 30px rgba(0,0,0,0.4)'
-        }}
-      >
+          boxShadow: isHovered ?
+          `0 20px 40px rgba(0,0,0,0.5), 0 0 30px ${
+          card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.3)' :
+          card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
+          'rgba(59, 130, 246, 0.3)'}` :
+
+          '0 10px 30px rgba(0,0,0,0.4)'
+        }}>
+
         {/* Animated shine line */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)`,
-          }}
-        />
+            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)`
+          }} />
+
         
         {/* Content */}
         <div className="relative h-full flex flex-col p-3">
@@ -1270,20 +1270,20 @@ function Large3DCard({ card, isActive }) {
         <div className={`absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 ${style.border} rounded-bl-lg`} />
         <div className={`absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 ${style.border} rounded-br-lg`} />
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 // Game Banner Component - Editable banner display
 function GameBanner({ game, onChangeBanner }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   // Default banner if no game selected
   const bannerImage = game?.cover_image || game?.cover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800';
   const bannerTitle = game?.title || 'Select a Game';
-  
+
   return (
-    <div 
+    <div
       className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
@@ -1293,14 +1293,14 @@ function GameBanner({ game, onChangeBanner }) {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onChangeBanner}
-    >
+      onClick={onChangeBanner}>
+
       {/* Banner Image */}
-      <img 
-        src={bannerImage} 
+      <img
+        src={bannerImage}
         alt={bannerTitle}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+
       
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -1309,34 +1309,34 @@ function GameBanner({ game, onChangeBanner }) {
       {/* Game Info */}
       <div className="absolute bottom-3 left-3 right-3">
         <h4 className="text-white font-bold text-sm truncate">{bannerTitle}</h4>
-        {game?.genre && (
-          <p className="text-white/50 text-[10px] capitalize">{game.genre}</p>
-        )}
+        {game?.genre &&
+        <p className="text-white/50 text-[10px] capitalize">{game.genre}</p>
+        }
       </div>
       
       {/* Change Banner Indicator */}
       <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
-          >
+        {isHovered &&
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20">
               <Settings className="w-4 h-4 text-white/70" />
               <span className="text-white/80 text-xs font-medium">Change Banner</span>
             </div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
       
       {/* Banner Label */}
       <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
         <span className="text-[8px] text-white/60 uppercase tracking-wider">Featured Game</span>
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 // Live Panel - Redesigned with large 3D card showcase
@@ -1346,7 +1346,7 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
 
   const currentCard = upcomingCards[currentCardIndex];
   const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
-  const otherEvents = MOCK_EVENTS.filter(e => !e.featured).slice(0, 4);
+  const otherEvents = MOCK_EVENTS.filter((e) => !e.featured).slice(0, 4);
 
   const nextCard = () => {
     setCurrentCardIndex((prev) => (prev + 1) % upcomingCards.length);
@@ -1365,60 +1365,60 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
         {/* Header Toggle */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setViewMode('cards')}
               className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
-                viewMode === 'cards' ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
+              viewMode === 'cards' ? 'text-white' : 'text-white/40 hover:text-white/70'}`
+              }>
+
               <Radio className={`w-4 h-4 ${viewMode === 'cards' ? 'text-green-400 animate-pulse' : ''}`} />
               New Cards
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('events')}
               className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
-                viewMode === 'events' ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
+              viewMode === 'events' ? 'text-white' : 'text-white/40 hover:text-white/70'}`
+              }>
+
               <CalendarIcon className={`w-4 h-4 ${viewMode === 'events' ? 'text-cyan-400' : ''}`} />
               Upcoming Events
             </button>
           </div>
           
-          {viewMode === 'cards' && (
-            <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
-          )}
+          {viewMode === 'cards' &&
+          <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
+          }
         </div>
 
         {/* Content Area */}
         <div className="flex-1 relative">
           <AnimatePresence mode="wait">
-            {viewMode === 'cards' ? (
-              <motion.div
-                key="cards"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute inset-0 flex items-start gap-4"
-              >
+            {viewMode === 'cards' ?
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute inset-0 flex items-start gap-4">
+
                 {/* Demo Video Box */}
                 <DemoVideoBox card={currentCard} />
 
                 {/* Center: 3D Card with Arrows */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button 
-                    onClick={prevCard}
-                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-                  >
+                  <button
+                  onClick={prevCard}
+                  className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30">
+
                     <ChevronLeft className="w-3 h-3 text-white/60" />
                   </button>
 
                   <Large3DCard card={currentCard} isActive={true} />
 
-                  <button 
-                    onClick={nextCard}
-                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-                  >
+                  <button
+                  onClick={nextCard}
+                  className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30">
+
                     <ChevronRight className="w-3 h-3 text-white/60" />
                   </button>
                 </div>
@@ -1429,10 +1429,10 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
                     <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                        currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                        currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                        'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                      }`}>{currentCard.rarity}</span>
+                    currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                    currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                    'bg-blue-500/20 text-blue-300 border-blue-500/30'}`
+                    }>{currentCard.rarity}</span>
                       <span className="text-[9px] text-white/40">{currentCard.type}</span>
                     </div>
                   </div>
@@ -1446,23 +1446,23 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
                     <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
                   </div>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="events"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute inset-0 overflow-y-auto pr-2"
-                style={{ scrollbarWidth: 'none' }}
-              >
+              </motion.div> :
+
+            <motion.div
+              key="events"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute inset-0 overflow-y-auto pr-2"
+              style={{ scrollbarWidth: 'none' }}>
+
                 <div className="grid grid-cols-2 gap-3">
-                  {otherEvents.map(event => (
-                    <SmallEventCard key={event.id} event={event} />
-                  ))}
+                  {otherEvents.map((event) =>
+                <SmallEventCard key={event.id} event={event} />
+                )}
                 </div>
               </motion.div>
-            )}
+            }
           </AnimatePresence>
         </div>
 
@@ -1473,13 +1473,13 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
       {/* Right Column: System Status & Calendar Hub */}
       <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
          <DateTimeTile onClick={onDateTimeClick} />
-         <AddToCalendarButton 
-           onClick={onOpenCalendar} 
-           clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
-         />
+         <AddToCalendarButton
+          onClick={onOpenCalendar}
+          clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" />
+
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 // Game Reference - clickable scene moments from games that change the Luna dashboard background
@@ -1490,16 +1490,16 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onClick}
-        className="relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-cyan-400/50 transition-all flex-shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
-      >
+        className="relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-cyan-400/50 transition-all flex-shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
+
         <div className="w-full h-full flex items-center justify-center">
           <Home className="w-6 h-6 text-white/80" />
         </div>
         <div className="absolute bottom-1 left-1 right-1">
           <p className="text-white text-[7px] font-bold truncate text-center">Home</p>
         </div>
-      </motion.div>
-    );
+      </motion.div>);
+
   }
 
   return (
@@ -1508,27 +1508,27 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
       whileTap={{ scale: 0.95 }}
       onClick={() => onClick(reference)}
       className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
-        isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
-      }`}
-    >
-      <img 
-        src={reference.thumbnail} 
+      isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'}`
+      }>
+
+      <img
+        src={reference.thumbnail}
         alt={reference.title}
-        className="w-full h-full object-cover"
-      />
+        className="w-full h-full object-cover" />
+
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
       <div className="absolute bottom-1 left-1 right-1">
         <p className="text-white text-[7px] font-bold truncate">{reference.title}</p>
       </div>
       {/* Scene type indicator */}
       <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-        reference.type === 'death' ? 'bg-red-500' :
-        reference.type === 'victory' ? 'bg-green-500' :
-        reference.type === 'battle' ? 'bg-orange-500' :
-        'bg-blue-500'
-      }`} />
-    </motion.div>
-  );
+      reference.type === 'death' ? 'bg-red-500' :
+      reference.type === 'victory' ? 'bg-green-500' :
+      reference.type === 'battle' ? 'bg-orange-500' :
+      'bg-blue-500'}`
+      } />
+    </motion.div>);
+
 }
 
 // Library Banner Section - Banner aligned to top gap, references to the right
@@ -1543,19 +1543,19 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
     const fetchBackgrounds = async () => {
       try {
         const backgrounds = await base44.entities.HeroBackground.list();
-        
+
         // Initial mock data
         let initialRefs = [
-          { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
-          { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
-          { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
-          { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
-          { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
-        ];
+        { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
+        { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
+        { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
+        { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
+        { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' }];
+
 
         // Add fetched backgrounds
         if (backgrounds && backgrounds.data) {
-          const plasmaWater = backgrounds.data.find(bg => bg.title === 'Plasma-Water' || bg.title === 'Plasma Water');
+          const plasmaWater = backgrounds.data.find((bg) => bg.title === 'Plasma-Water' || bg.title === 'Plasma Water');
           if (plasmaWater) {
             initialRefs.push({
               id: plasmaWater.id,
@@ -1568,23 +1568,23 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
             });
           }
         }
-        
+
         setReferences(initialRefs);
       } catch (error) {
         console.error("Failed to fetch backgrounds", error);
       }
     };
-    
+
     fetchBackgrounds();
   }, []);
 
   // Sample games for banner picker
   const bannerGames = games?.slice(0, 8) || [
-    { id: 1, title: 'Cyberpunk 2088', cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', genre: 'RPG' },
-    { id: 2, title: 'Elden Ring', cover_image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800', genre: 'Action RPG' },
-    { id: 3, title: 'Stellar Odyssey', cover_image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800', genre: 'Space Sim' },
-    { id: 4, title: 'Shadow Realm', cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800', genre: 'Horror' },
-  ];
+  { id: 1, title: 'Cyberpunk 2088', cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', genre: 'RPG' },
+  { id: 2, title: 'Elden Ring', cover_image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800', genre: 'Action RPG' },
+  { id: 3, title: 'Stellar Odyssey', cover_image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800', genre: 'Space Sim' },
+  { id: 4, title: 'Shadow Realm', cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800', genre: 'Horror' }];
+
 
   const handleReferenceClick = (reference) => {
     setActiveReference(reference);
@@ -1603,36 +1603,36 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   return (
     <div className="flex flex-col items-start mb-4">
       {/* Top Row: Banner + References to the right */}
-      <div className="flex items-stretch gap-4">
+      <div className="flex items-stretch gap-4 w-full">
 
         {/* Game Banner */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
-          <GameBanner 
-            game={selectedBannerGame} 
-            onChangeBanner={() => setShowBannerPicker(true)} 
-          />
+          <GameBanner
+            game={selectedBannerGame}
+            onChangeBanner={() => setShowBannerPicker(true)} />
+
         </div>
 
         {/* References Section */}
-        <div 
+        <div
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto" 
-          style={{ scrollbarWidth: 'none' }}
-        >
+          className="flex-1 flex items-center gap-2 overflow-x-auto"
+          style={{ scrollbarWidth: 'none' }}>
+
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
-          {references.map((ref) => (
-            <GameReference 
-              key={ref.id} 
-              reference={ref} 
-              onClick={handleReferenceClick}
-              isActive={activeReference?.id === ref.id}
-            />
-          ))}
+          {references.map((ref) =>
+          <GameReference
+            key={ref.id}
+            reference={ref}
+            onClick={handleReferenceClick}
+            isActive={activeReference?.id === ref.id} />
+
+          )}
           {/* Home Button */}
-          <GameReference 
+          <GameReference
             isHomeButton={true}
-            onClick={handleHomeClick}
-          />
+            onClick={handleHomeClick} />
+
         </div>
       </div>
 
@@ -1641,45 +1641,45 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
-        {showBannerPicker && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowBannerPicker(false)}
-          >
+        {showBannerPicker &&
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowBannerPicker(false)}>
+
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg rounded-2xl p-6"
-              style={{
-                background: 'rgba(100, 120, 140, 0.15)',
-                backdropFilter: 'blur(30px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                border: '1px solid rgba(255,255,255,0.12)'
-              }}
-            >
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg rounded-2xl p-6"
+            style={{
+              background: 'rgba(100, 120, 140, 0.15)',
+              backdropFilter: 'blur(30px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+              border: '1px solid rgba(255,255,255,0.12)'
+            }}>
+
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold text-lg">Select Featured Game</h3>
-                <button 
-                  onClick={() => setShowBannerPicker(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                >
+                <button
+                onClick={() => setShowBannerPicker(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+
                   <X className="w-4 h-4 text-white/60" />
                 </button>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
-                {bannerGames.map((game) => (
-                  <div
-                    key={game.id}
-                    onClick={() => { setSelectedBannerGame(game); setShowBannerPicker(false); }}
-                    className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all"
-                  >
+                {bannerGames.map((game) =>
+              <div
+                key={game.id}
+                onClick={() => {setSelectedBannerGame(game);setShowBannerPicker(false);}}
+                className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all">
+
                     <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute bottom-2 left-2">
@@ -1687,14 +1687,14 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
                       <p className="text-white/50 text-[10px]">{game.genre}</p>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
             </motion.div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
-    </div>
-  );
+    </div>);
+
 }
 
 // Date & Time Tile Component
@@ -1721,8 +1721,8 @@ const DateTimeTile = ({ onClick }) => {
         backdropFilter: 'blur(20px) saturate(150%)',
         WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-      }}
-    >
+      }}>
+
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
       
       <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
@@ -1744,36 +1744,36 @@ const DateTimeTile = ({ onClick }) => {
           <span className="text-[10px] text-white/60 font-medium">System Online</span>
         </div>
       </div>
-    </motion.button>
-  );
+    </motion.button>);
+
 };
 
 // Add to Calendar Button Component
-const AddToCalendarButton = ({ onClick, clanIcon }) => (
-  <motion.button
-    whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    className="w-full h-16 rounded-xl relative overflow-hidden group border border-white/10 flex items-center justify-center gap-3 transition-all"
-    style={{
-      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)'
-    }}
-  >
+const AddToCalendarButton = ({ onClick, clanIcon }) =>
+<motion.button
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+  onClick={onClick}
+  className="w-full h-16 rounded-xl relative overflow-hidden group border border-white/10 flex items-center justify-center gap-3 transition-all"
+  style={{
+    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)'
+  }}>
+
     <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
     
-    {clanIcon ? (
-      <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-lg relative z-10">
+    {clanIcon ?
+  <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-lg relative z-10">
         <img src={clanIcon} alt="Clan" className="w-full h-full object-cover" />
-      </div>
-    ) : (
-      <CalendarIcon className="w-5 h-5 text-blue-300 relative z-10" />
-    )}
+      </div> :
+
+  <CalendarIcon className="w-5 h-5 text-blue-300 relative z-10" />
+  }
     
     <span className="text-sm font-bold text-white tracking-wide relative z-10">Add to Calendar</span>
-  </motion.button>
-);
+  </motion.button>;
+
 
 // Main Export
 export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
@@ -1784,7 +1784,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [activeGenre, setActiveGenre] = useState('Action');
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
   const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
@@ -1811,16 +1811,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       if (isAuthenticated) {
         const allGamesFromDb = await base44.entities.Game.list();
-        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map((g) => [g.id, g])) };
         const ownedIds = user?.purchased_items || [];
-        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
+        userGames = ownedIds.map((id) => combinedGamePool[id]).filter(Boolean);
         if (testGameAlpha) userGames.unshift(testGameAlpha);
       } else {
         if (testGameAlpha) userGames.push(testGameAlpha);
         userGames = [...userGames, ...Object.values(allMockGames).slice(0, 20)];
       }
-      
-      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+
+      setOwnedGames(Array.from(new Map(userGames.map((g) => [g.id, g])).values()));
       setLoading(false);
     };
     fetchGames();
@@ -1830,23 +1830,23 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const gamesByGenre = useMemo(() => {
     const result = {};
     // Initialize all genres
-    ALL_GENRES.forEach(g => result[g] = []);
-    
+    ALL_GENRES.forEach((g) => result[g] = []);
+
     // Map games to genres
-    ownedGames.forEach(game => {
+    ownedGames.forEach((game) => {
       const gameGenre = game.genre || 'Action';
       // Try to match to our genre list
-      const matchedGenre = ALL_GENRES.find(g => 
-        g.toLowerCase() === gameGenre.toLowerCase() ||
-        g.toLowerCase().includes(gameGenre.toLowerCase()) ||
-        gameGenre.toLowerCase().includes(g.toLowerCase().split(' ')[0])
+      const matchedGenre = ALL_GENRES.find((g) =>
+      g.toLowerCase() === gameGenre.toLowerCase() ||
+      g.toLowerCase().includes(gameGenre.toLowerCase()) ||
+      gameGenre.toLowerCase().includes(g.toLowerCase().split(' ')[0])
       ) || 'Action';
-      
+
       if (result[matchedGenre]) {
         result[matchedGenre].push(game);
       }
     });
-    
+
     return result;
   }, [ownedGames]);
 
@@ -1873,11 +1873,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
           {/* Content Area - Live Panel (Split: New Cards Toggle | Featured Event) */}
           <div className="flex-1 flex flex-col pr-2">
-            <LivePanel 
+            <LivePanel
               upcomingCards={upcomingCards}
               onOpenCalendar={onOpenCalendar}
-              onDateTimeClick={handleDateTimeClick}
-            />
+              onDateTimeClick={handleDateTimeClick} />
+
           </div>
         </div>
       </div>
@@ -1888,63 +1888,42 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       {/* Scroll Transition Overlay */}
       <AnimatePresence>
-        {showScrollTransition && (
-          <ScrollTransitionOverlay 
-            onComplete={() => {
-              navigate(pendingNavigateUrl);
-              setShowScrollTransition(false);
-            }} 
-          />
-        )}
+        {showScrollTransition &&
+        <ScrollTransitionOverlay
+          onComplete={() => {
+            navigate(pendingNavigateUrl);
+            setShowScrollTransition(false);
+          }} />
+
+        }
       </AnimatePresence>
 
       {/* Game Side Menu Overlay */}
       <AnimatePresence>
-        {showGamePanel && selectedGame && (
-          <GameSideMenu 
-            game={selectedGame} 
-            onClose={handleCloseGamePanel} 
-          />
-        )}
+        {showGamePanel && selectedGame &&
+        <GameSideMenu
+          game={selectedGame}
+          onClose={handleCloseGamePanel} />
+
+        }
       </AnimatePresence>
 
       {/* Bottom Section - Grid layout matching Top Section */}
       <div className="mt-6 w-full flex gap-6 items-start">
-        {/* Left Column - Limited Edition Area (Swapped from Right, Resized to fit 220px) */}
+        {/* Left Column - Matches top section's 220px viewer space */}
         <div className="w-[220px] flex-shrink-0 relative">
-           <div className="transform scale-[0.75] origin-top-left">
-             <LimitedEditionDisplay />
-           </div>
-        </div>
-
-        {/* Right Column - Library & Card Collection */}
-        <div className="w-full flex gap-6 items-start">
-          {/* Library Area - Constrained width to match banner+memories alignment (~700px) */}
-          <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[700px]">
-            <div className="w-full">
-              <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-            </div>
-            <LibraryGamesSection 
-              onSelectGame={handleGameSelect}
-              selectedGame={selectedGame}
-              allGames={ownedGames}
-              showGamePanel={showGamePanel}
-              onClosePanel={handleCloseGamePanel}
-            />
-          </div>
-
-          {/* Card Collection - Swapped from Left (now on Far Right) */}
-          <div className="flex-1 min-w-[280px] relative">
+          {/* LunaCardScroll - Far Left (scaled down) */}
+          <div className="absolute left-0 top-0 z-10">
             <div className="origin-top-left scale-[0.8]">
-              <h3 
-                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
-                  style={{ 
-                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-                  }}>
+              <h3
+                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform"
+                style={{
+                  background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                }}>
                 Card Collection
               </h3>
               <LunaCardScroll />
@@ -1952,9 +1931,31 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           </div>
         </div>
 
+        {/* Right Column - Library Content & Limited Edition */}
+        <div className="flex-1 flex gap-6 min-w-0">
+          {/* Library Area */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <div className="px-64 origin-top-left scale-[0.8]">
+              <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+            </div>
+            <LibraryGamesSection
+              onSelectGame={handleGameSelect}
+              selectedGame={selectedGame}
+              allGames={ownedGames}
+              showGamePanel={showGamePanel}
+              onClosePanel={handleCloseGamePanel} />
+
+          </div>
+
+          {/* Limited Edition Area - Moved from Top */}
+          <div className="w-[280px] flex-shrink-0">
+             <LimitedEditionDisplay />
+          </div>
+        </div>
+
       </div>
 
 
-    </div>
-  );
+    </div>);
+
 }
