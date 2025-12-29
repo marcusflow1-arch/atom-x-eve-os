@@ -1910,28 +1910,14 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       {/* Bottom Section - Grid layout matching Top Section */}
       <div className="mt-6 w-full flex gap-6 items-start">
-        {/* Left Column - Matches top section's 220px viewer space */}
+        {/* Left Column - Limited Edition Area (Swapped from Right, Resized to fit 220px) */}
         <div className="w-[220px] flex-shrink-0 relative">
-          {/* LunaCardScroll - Far Left (scaled down) */}
-          <div className="absolute left-0 top-0 z-10">
-            <div className="origin-top-left scale-[0.8]">
-              <h3 
-                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
-                  style={{ 
-                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-                  }}>
-                Card Collection
-              </h3>
-              <LunaCardScroll />
-            </div>
-          </div>
+           <div className="transform scale-[0.75] origin-top-left">
+             <LimitedEditionDisplay />
+           </div>
         </div>
 
-        {/* Right Column - Library Content & Limited Edition */}
+        {/* Right Column - Library & Card Collection */}
         <div className="w-full flex gap-6 items-start">
           {/* Library Area - Constrained width to match banner+memories alignment (~700px) */}
           <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[700px]">
@@ -1947,9 +1933,22 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             />
           </div>
 
-          {/* Limited Edition Area - Moved from Top */}
-          <div className="flex-1 min-w-[280px]">
-             <LimitedEditionDisplay />
+          {/* Card Collection - Swapped from Left (now on Far Right) */}
+          <div className="flex-1 min-w-[280px] relative">
+            <div className="origin-top-left scale-[0.8]">
+              <h3 
+                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
+                  style={{ 
+                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                  }}>
+                Card Collection
+              </h3>
+              <LunaCardScroll />
+            </div>
           </div>
         </div>
 
