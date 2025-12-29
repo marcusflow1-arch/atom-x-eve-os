@@ -645,10 +645,10 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
     onSelectGame(game);
   };
 
-  // Split games into rows of 10
+  // Split games into rows of 8 (narrower grid)
   const rows = [];
-  for (let i = 0; i < currentGames.length; i += 10) {
-    rows.push(currentGames.slice(i, i + 10));
+  for (let i = 0; i < currentGames.length; i += 8) {
+    rows.push(currentGames.slice(i, i + 8));
   }
 
   return (
@@ -672,7 +672,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           </button>
         </div>
 
-        {/* Games Grid - Rows of 10, with options panel on the right */}
+        {/* Games Grid - Rows of 8, with options panel on the right */}
         <div className="flex gap-3">
           <div 
             ref={libraryScrollRef}
@@ -692,8 +692,8 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                      transition={{ delay: (rowIndex * 10 + index) * 0.02, duration: 0.3 }}
-                      className="relative flex-shrink-0 w-[calc(10%-6px)] min-w-[69px] group cursor-pointer"
+                      transition={{ delay: (rowIndex * 8 + index) * 0.02, duration: 0.3 }}
+                      className="relative flex-shrink-0 w-[calc(12.5%-7px)] min-w-[69px] group cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
                       >
                       <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
@@ -1933,8 +1933,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
         {/* Right Column - Library Content & Limited Edition */}
         <div className="w-full flex gap-6 items-start">
-          {/* Library Area */}
-          <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[850px]">
+          {/* Library Area - Constrained width to match banner+memories alignment (~700px) */}
+          <div className="w-auto flex flex-col gap-4 min-w-0 max-w-[700px]">
             <div className="w-full">
               <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
             </div>
