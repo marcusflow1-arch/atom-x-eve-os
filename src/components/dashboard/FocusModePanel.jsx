@@ -1856,29 +1856,15 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
-      {/* Top Section - News Feed & Content (right of 3D viewer) */}
+      {/* Top Section - News Feed & Content */}
       <div className="flex gap-6 w-full">
-        {/* Left side - Space for 3D viewer (rendered separately as fixed element) */}
-        <div className="w-[220px] flex-shrink-0 flex flex-col">
-          {/* 3D Viewer Space - This is just a placeholder, actual viewer is fixed in LunaTemplate */}
-          <div className="relative flex-1 min-h-[180px]">
-            {/* Invisible boundary - 3D viewer floats above this space */}
-          </div>
-        </div>
-
-        {/* Right of 3D Viewer - News & Updates Feed */}
-        <div className="flex-1 flex gap-4">
-          {/* Vertical Divider */}
-          <div className="w-px bg-white/10 self-stretch" />
-
-          {/* Content Area - Live Panel (Split: New Cards Toggle | Featured Event) */}
-          <div className="flex-1 flex flex-col pr-2">
-            <LivePanel 
-              upcomingCards={upcomingCards}
-              onOpenCalendar={onOpenCalendar}
-              onDateTimeClick={handleDateTimeClick}
-            />
-          </div>
+        {/* Content Area - Live Panel */}
+        <div className="flex-1 flex flex-col pr-2">
+          <LivePanel 
+            upcomingCards={upcomingCards}
+            onOpenCalendar={onOpenCalendar}
+            onDateTimeClick={handleDateTimeClick}
+          />
         </div>
       </div>
 
@@ -1908,49 +1894,40 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Grid layout matching Top Section */}
-      <div className="mt-6 w-full flex gap-6 items-start">
-        {/* Left Column - Matches top section's 220px viewer space */}
-        <div className="w-[220px] flex-shrink-0 relative">
-          {/* Empty spacer to maintain layout alignment */}
+      {/* Bottom Section - Grid layout */}
+      <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
+        {/* Library Area - Flexible width */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0">
+          <div className="w-full">
+            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+          </div>
+          <LibraryGamesSection 
+            onSelectGame={handleGameSelect}
+            selectedGame={selectedGame}
+            allGames={ownedGames}
+            showGamePanel={showGamePanel}
+            onClosePanel={handleCloseGamePanel}
+          />
         </div>
 
-        {/* Right Column - Library Content & Card Collection */}
-        <div className="flex-1 flex gap-6 items-start justify-between min-w-0">
-          {/* Library Area - Flexible width */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
-            <div className="w-full">
-              <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-            </div>
-            <LibraryGamesSection 
-              onSelectGame={handleGameSelect}
-              selectedGame={selectedGame}
-              allGames={ownedGames}
-              showGamePanel={showGamePanel}
-              onClosePanel={handleCloseGamePanel}
-            />
-          </div>
-
-          {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
-            <div className="w-full">
-              <h3 
-                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
-                  style={{ 
-                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                    textAlign: 'center'
-                  }}>
-                Card Collection
-              </h3>
-              <LunaCardScroll />
-            </div>
+        {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
+        <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
+          <div className="w-full">
+            <h3 
+                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
+                style={{ 
+                  background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                  textAlign: 'center'
+                }}>
+              Card Collection
+            </h3>
+            <LunaCardScroll />
           </div>
         </div>
-
       </div>
 
 

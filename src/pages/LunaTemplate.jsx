@@ -1137,12 +1137,14 @@ export default function LunaTemplate() {
         className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${
         uiVisible ?
         'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' :
-        'top-20 left-8 w-[200px] h-[180px] z-[35]'}`
+        'top-0 left-0 bottom-0 w-[400px] z-[35]'}`
         }
         style={!uiVisible ? {
-          /* Constrained to reduced area */
-          maxWidth: '200px',
-          maxHeight: '180px'
+          /* Full height left sidebar */
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         } : {}}>
 
             <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
@@ -1179,8 +1181,9 @@ export default function LunaTemplate() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="fixed left-8 right-8 z-30 overflow-y-auto"
+          className="fixed right-8 z-30 overflow-y-auto"
           style={{
+            left: '420px', /* Offset for the 3D viewer sidebar */
             top: '80px',
             bottom: '32px',
             maxHeight: 'calc(100vh - 112px)',
