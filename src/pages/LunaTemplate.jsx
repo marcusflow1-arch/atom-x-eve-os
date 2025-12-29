@@ -78,7 +78,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.5, 5);
+    camera.position.set(0, 2.5, 5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
@@ -526,7 +526,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         }
 
         // Keep camera following model
-        const offset = new THREE.Vector3(0, 1.5, 5);
+        const offset = new THREE.Vector3(0, 2.5, 5);
         camera.position.x = modelRef.current.position.x + offset.x;
         camera.position.y = modelRef.current.position.y + offset.y;
         camera.position.z = modelRef.current.position.z + offset.z;
@@ -1137,7 +1137,7 @@ export default function LunaTemplate() {
         className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${
         uiVisible ?
         'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' :
-        'top-0 left-0 bottom-0 w-[400px] z-[35]'}`
+        'top-0 left-0 bottom-0 w-[300px] z-[35]'}`
         }
         style={!uiVisible ? {
           /* Full height left sidebar */
@@ -1183,7 +1183,7 @@ export default function LunaTemplate() {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="fixed right-8 z-30 overflow-y-auto"
           style={{
-            left: '420px', /* Offset for the 3D viewer sidebar */
+            left: '320px', /* Offset for the 3D viewer sidebar */
             top: '80px',
             bottom: '32px',
             maxHeight: 'calc(100vh - 112px)',
