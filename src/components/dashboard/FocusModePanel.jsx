@@ -1912,23 +1912,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <div className="mt-6 w-full flex gap-6 items-start">
         {/* Left Column - Matches top section's 220px viewer space */}
         <div className="w-[220px] flex-shrink-0 relative">
-          {/* LunaCardScroll - Far Left (scaled down) */}
-          <div className="absolute left-0 top-0 z-10">
-            <div className="origin-top-left scale-[0.8]">
-              <h3 
-                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
-                  style={{ 
-                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
-                  }}>
-                Card Collection
-              </h3>
-              <LunaCardScroll />
-            </div>
-          </div>
+          {/* Empty spacer to maintain layout alignment */}
         </div>
 
         {/* Right Column - Library Content & Limited Edition */}
@@ -1947,9 +1931,22 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             />
           </div>
 
-          {/* Limited Edition Area - Moved from Top */}
-          <div className="flex-1 min-w-[280px]">
-             <LimitedEditionDisplay />
+          {/* Card Collection - Bottom Right */}
+          <div className="flex-1 min-w-[280px] flex flex-col items-center">
+            <div className="w-full">
+              <h3 
+                  onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                  className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
+                  style={{ 
+                    background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                  }}>
+                Card Collection
+              </h3>
+              <LunaCardScroll />
+            </div>
           </div>
         </div>
 
