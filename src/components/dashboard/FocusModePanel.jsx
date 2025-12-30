@@ -734,7 +734,6 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
 
       </div>
     </div>
-  </div>
   );
 }
 
