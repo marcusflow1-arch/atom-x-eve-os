@@ -645,10 +645,11 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
     onSelectGame(game);
   };
 
-  // One-row horizontal scroller
-  const scrollByAmount = 320;
-  const scrollLeft = () => libraryScrollRef.current?.scrollBy({ left: -scrollByAmount, behavior: 'smooth' });
-  const scrollRight = () => libraryScrollRef.current?.scrollBy({ left: scrollByAmount, behavior: 'smooth' });
+  // Vertical scroller: rows of 7 games
+  const rows = [];
+  for (let i = 0; i < currentGames.length; i += 7) {
+    rows.push(currentGames.slice(i, i + 7));
+  }
 
   return (
     <div className="h-full flex flex-col" onClick={(e) => {
@@ -671,55 +672,49 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           </button>
         </div>
 
-        {/* One-row horizontal scroller above the dock Home button */}
-        <div className="relative">
-          {/* Scroll buttons */}
-          <button onClick={scrollLeft} className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center">
-            <ChevronLeft className="w-4 h-4 text-white/80" />
-          </button>
-          <button onClick={scrollRight} className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center">
-            <ChevronRight className="w-4 h-4 text-white/80" />
-          </button>
-
-          <div
-            ref={libraryScrollRef}
-            className="flex gap-2 overflow-x-auto overflow-y-hidden pl-6 pr-6 py-1"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <AnimatePresence mode="popLayout">
-              {currentGames.map((game, index) => {
-                const isSelected = selectedGame?.id === game.id && showGamePanel;
-                return (
-                  <motion.div
-                    key={game.id}
-                    layout
-                    data-game-card
-                    initial={{ opacity: 0, scale: 0.9, y: 0 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 0 }}
-                    transition={{ delay: index * 0.01, duration: 0.25 }}
-                    className="relative flex-shrink-0 w-24 min-w-[96px] group cursor-pointer"
-                    onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
-                  >
-                    <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
-                      isSelected ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-cyan-400/50'
-                    }`}>
-                      <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                          <Play className="w-3 h-3 text-white ml-0.5" />
+        {/* Vertical scroller: rows of 7 games; one row visible height */}
+        <div
+          ref={libraryScrollRef}
+          className="overflow-y-auto overflow-x-hidden"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '160px' }}
+        >
+          <AnimatePresence mode="popLayout">
+            {rows.map((row, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-7 gap-2 mb-2">
+                {row.map((game, index) => {
+                  const isSelected = selectedGame?.id === game.id && showGamePanel;
+                  return (
+                    <motion.div
+                      key={game.id}
+                      layout
+                      data-game-card
+                      initial={{ opacity: 0, scale: 0.95, y: 0 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 0 }}
+                      transition={{ delay: index * 0.01, duration: 0.25 }}
+                      className="relative w-full group cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
+                    >
+                      <div className={`relative aspect-[3/4] rounded-lg overflow-hidden border transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] ${
+                        isSelected ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-cyan-400/50'
+                      }`}>
+                        <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-6 h-6 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                            <Play className="w-3 h-3 text-white ml-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-1">
+                          <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
                         </div>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-1">
-                        <p className="text-white font-bold text-[8px] truncate">{game.title}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ))}
+          </AnimatePresence>
 
           {currentGames.length === 0 && (
             <motion.div 
