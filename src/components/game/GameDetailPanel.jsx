@@ -154,6 +154,15 @@ export default function GameDetailPanel({ gameId, onClose }) {
   // Mock DLC data
   const dlcList = [
     {
+      id: 'standard',
+      name: 'Standard Edition',
+      description: game.description || 'The base game experience with all core features and content.',
+      offers: ['Base Game Content', 'Core Story Campaign', 'Standard Abilities', 'Base Card Collection'],
+      stats: {},
+      achievements: [],
+      abilities: []
+    },
+    {
       id: 'dlc_1',
       name: 'Neural Expansion Pack',
       description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
@@ -438,6 +447,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         <Unlock className="w-3 h-3" /> System Unlocked
                       </span>
                     )}
+                    <button
+                      onClick={() => setSelectedDLC(null)}
+                      className="relative px-3 py-1 rounded-lg overflow-hidden group transition-all hover:scale-105"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                      }}
+                    >
+                      <span className="relative text-[10px] font-bold uppercase tracking-widest text-white/80 group-hover:text-white transition-colors">
+                        Standard Edition
+                      </span>
+                    </button>
                   </div>
                   <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-2 leading-none">
                     {game.title}
@@ -748,16 +772,20 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     {dlcList.map((dlc) => (
                       <div 
                         key={dlc.id}
-                        onClick={() => setSelectedDLC(dlc)}
+                        onClick={() => dlc.id === 'standard' ? setSelectedDLC(null) : setSelectedDLC(dlc)}
                         className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all group ${
-                          selectedDLC?.id === dlc.id 
+                          dlc.id === 'standard' && !selectedDLC
+                            ? 'bg-cyan-500/20 border-cyan-400/40'
+                            : selectedDLC?.id === dlc.id 
                             ? 'bg-purple-500/20 border-purple-400/40' 
                             : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-purple-400/30'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
                           <p className={`font-bold text-sm mb-1 transition-colors ${
-                            selectedDLC?.id === dlc.id ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
+                            dlc.id === 'standard' && !selectedDLC
+                              ? 'text-cyan-300'
+                              : selectedDLC?.id === dlc.id ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
                           }`}>
                             {dlc.name}
                           </p>
@@ -766,7 +794,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                           </p>
                         </div>
                         <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                          selectedDLC?.id === dlc.id ? 'text-purple-400' : 'text-white/30 group-hover:text-purple-400'
+                          dlc.id === 'standard' && !selectedDLC
+                            ? 'text-cyan-400'
+                            : selectedDLC?.id === dlc.id ? 'text-purple-400' : 'text-white/30 group-hover:text-purple-400'
                         }`} />
                       </div>
                     ))}
