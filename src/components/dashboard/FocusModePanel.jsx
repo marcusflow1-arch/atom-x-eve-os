@@ -675,10 +675,11 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setShowEntertainment(v => !v); }}
-              className="text-white/70 hover:text-white"
+              className="flex items-center gap-1 text-white/70 hover:text-white"
               title="Entertainment"
             >
               <Tv className="w-4 h-4" />
+              <span className="text-xs">Entertainment</span>
             </button>
           </div>
         </div>
