@@ -3,17 +3,10 @@ import { motion } from 'framer-motion';
 import { Sparkles, Users, Trophy, Target, Calendar, Star } from 'lucide-react';
 
 export default function StreamerInfoSection({ streamer }) {
-  const sponsors = [
-    { name: 'RazerGear', logo: '🎮' },
-    { name: 'EnergyDrink Co.', logo: '⚡' },
-    { name: 'TechSetup', logo: '💻' }
-  ];
-
+  const sponsors = streamer.sponsors || [];
   const funFacts = [
-    { label: 'Favorite Game Genre', value: 'RPG & FPS', icon: Trophy },
-    { label: 'Total Stream Hours', value: '2,400+', icon: Calendar },
-    { label: 'Community Size', value: '15K Followers', icon: Users },
-    { label: 'Rarest Card Owned', value: 'Void Emperor Set', icon: Sparkles }
+    { label: 'Stream Focus', value: streamer.stream_focus || 'Variety', icon: Trophy },
+    { label: 'Total Followers', value: streamer.follower_count?.toLocaleString() || '0', icon: Users },
   ];
 
   return (
@@ -28,10 +21,9 @@ export default function StreamerInfoSection({ streamer }) {
         </div>
         
         <p className="text-white/80 leading-relaxed">
-          {streamer.why_stream || `I love connecting with people who share my passion for gaming. Every stream is a journey—whether we're hunting rare cards, tackling impossible challenges, or just vibing to great gameplay. This community is everything to me, and I want to build something we can all be proud of.`}
+          {streamer.bio || streamer.why_stream || 'No description available'}
         </p>
 
-        {/* Fun Facts Grid */}
         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10">
           {funFacts.map((fact, i) => (
             <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
@@ -45,34 +37,29 @@ export default function StreamerInfoSection({ streamer }) {
         </div>
       </div>
 
-      {/* Sponsors */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Target className="w-5 h-5 text-purple-400" />
-          <h3 className="text-white font-bold text-lg">Sponsored By</h3>
+      {sponsors.length > 0 && (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Target className="w-5 h-5 text-purple-400" />
+            <h3 className="text-white font-bold text-lg">Sponsored By</h3>
+          </div>
+          
+          <div className="space-y-3">
+            {sponsors.map((sponsor, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer transition-all"
+              >
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-2xl">
+                  {sponsor.logo}
+                </div>
+                <span className="text-white font-medium text-sm">{sponsor.name}</span>
+              </motion.div>
+            ))}
+          </div>
         </div>
-        
-        <div className="space-y-3">
-          {sponsors.map((sponsor, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer transition-all"
-            >
-              <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-2xl">
-                {sponsor.logo}
-              </div>
-              <span className="text-white font-medium text-sm">{sponsor.name}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="pt-4 border-t border-white/10">
-          <p className="text-white/40 text-xs leading-relaxed">
-            These partnerships help keep the stream running and bring you exclusive giveaways!
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
