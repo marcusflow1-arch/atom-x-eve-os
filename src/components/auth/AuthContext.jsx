@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { User } from '@/entities/User';
-import { Avatar } from '@/entities/Avatar';
+import { base44 } from '@/api/base44Client';
 
 const AuthContext = createContext(null);
 
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         }
         setLoading(true);
         try {
-            const updatedUser = await User.me();
+            const updatedUser = await base44.auth.me();
             if (updatedUser) {
                 setUser(updatedUser);
 
@@ -51,7 +50,7 @@ export const AuthProvider = ({ children }) => {
                     setAvatar(null);
                 } else {
                     setShowSignUp(false);
-                    const userAvatars = await Avatar.filter({ user_id: updatedUser.id });
+                    const userAvatars = await base44.entities.Avatar.filter({ user_id: updatedUser.id });
                     if (userAvatars.length > 0) {
                         setAvatar(userAvatars[0]);
                     } else {
@@ -80,7 +79,7 @@ export const AuthProvider = ({ children }) => {
         const checkSession = async () => {
             setLoading(true);
             try {
-                const currentUser = await User.me();
+                const currentUser = await base44.auth.me();
                 if (currentUser) {
                     setUser(currentUser);
 
@@ -89,7 +88,7 @@ export const AuthProvider = ({ children }) => {
                         setAvatar(null);
                         setIsLoginFlow(true);
                     } else {
-                        const userAvatars = await Avatar.filter({ user_id: currentUser.id });
+                        const userAvatars = await base44.entities.Avatar.filter({ user_id: currentUser.id });
                         if (userAvatars.length > 0) {
                             setAvatar(userAvatars[0]);
                         } else {
@@ -98,14 +97,14 @@ export const AuthProvider = ({ children }) => {
                         setIsLoginFlow(false);
                     }
 
-                    await User.updateMyUserData({
+                    await base44.auth.updateMe({
                         last_login: new Date().toISOString()
                     });
 
                     if (!currentUser.unlocked_achievements?.includes('first_login')) {
                         console.log("Granting First Login Achievement");
                         const updatedAchievements = [...(currentUser.unlocked_achievements || []), 'first_login'];
-                        await User.updateMyUserData({ unlocked_achievements: updatedAchievements });
+                        await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
                     }
                 } else {
                     setUser(null);
@@ -130,7 +129,8 @@ export const AuthProvider = ({ children }) => {
         setIsLoginFlow(true);
         setLoading(true);
         try {
-            const loggedInUser = await User.login();
+            await base44.auth.redirectToLogin();
+                  return;
             if (loggedInUser) {
                 setUser(loggedInUser);
 
@@ -147,12 +147,12 @@ export const AuthProvider = ({ children }) => {
                     }
                 }
 
-                await User.updateMyUserData({ last_login: new Date().toISOString() });
+                await base44.auth.updateMe({ last_login: new Date().toISOString() });
 
                 if (!loggedInUser.unlocked_achievements?.includes('first_login')) {
                     console.log("Granting First Login Achievement");
                     const updatedAchievements = [...(loggedInUser.unlocked_achievements || []), 'first_login'];
-                    await User.updateMyUserData({ unlocked_achievements: updatedAchievements });
+                    await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
                     const refreshedUser = await User.me();
                     setUser(refreshedUser);
                 }
@@ -175,7 +175,7 @@ export const AuthProvider = ({ children }) => {
 
     const loginWithRedirect = async (callbackUrl) => {
         try {
-            await User.loginWithRedirect(callbackUrl);
+            await base44.auth.redirectToLogin(callbackUrl);
         } catch (error) {
             console.error('Login with redirect failed:', error);
             return { success: false, error: 'Login failed. Please try again.' };
@@ -184,7 +184,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await User.logout();
+            await base44.auth.logout();
             setUser(null);
             setAvatar(null);
             setShowSignUp(false);
@@ -197,7 +197,7 @@ export const AuthProvider = ({ children }) => {
     const updateUserData = async (newData) => {
         setLoading(true);
         try {
-            await User.updateMyUserData(newData);
+            await base44.auth.updateMe(newData);
             await refreshUserData();
             return { success: true };
         } catch (error) {
@@ -211,7 +211,7 @@ export const AuthProvider = ({ children }) => {
     const completeSignUp = async (signUpData) => {
         setLoading(true);
         try {
-            await User.updateMyUserData({
+            await base44.auth.updateMe({
                 username: signUpData.username,
                 bio: signUpData.bio,
                 avatar_url: signUpData.avatar_url
@@ -221,7 +221,7 @@ export const AuthProvider = ({ children }) => {
                 if (!user?.id) {
                     throw new Error("User ID not available to create avatar.");
                 }
-                await Avatar.create({
+                await base44.entities.Avatar.create({
                     user_id: user.id,
                     name: signUpData.username,
                     gender: signUpData.gender,
