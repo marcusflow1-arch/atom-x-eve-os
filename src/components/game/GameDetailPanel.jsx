@@ -123,27 +123,74 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
   const [activeTab, setActiveTab] = useState('system'); // 'system' or 'specs'
-  const [mediaTab, setMediaTab] = useState('media'); // 'media' or 'achievements'
+  const [mediaTab, setMediaTab] = useState('content'); // 'content' or 'achievement_loop'
   const [isViewingMedia, setIsViewingMedia] = useState(false);
-  const [currentMediaType, setCurrentMediaType] = useState('video'); // 'video', 'ability', 'achievement'
-  const [currentMediaTitle, setCurrentMediaTitle] = useState('');
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [showNavArrows, setShowNavArrows] = useState(false);
+  const [mouseTimeout, setMouseTimeout] = useState(null);
   const owned = isPurchased(gameId);
 
-  // ESC key to exit media viewing
+  // Mock media content
+  const videos = [
+    { title: 'Gameplay Trailer', image: game?.cover_image },
+    { title: 'Feature Showcase', image: game?.cover_image },
+  ];
+
+  const screenshots = [
+    { title: 'Screenshot 1', image: game?.cover_image },
+    { title: 'Screenshot 2', image: game?.cover_image },
+    { title: 'Screenshot 3', image: game?.cover_image },
+  ];
+
+  const achievements = [
+    { name: 'Neural Shock', icon: '⚡' },
+    { name: 'Cyber Metabolism', icon: '💚' },
+    { name: 'Void Walker', icon: '👻' },
+    { name: 'Tactical Mind', icon: '🧠' },
+    { name: 'Data Stream', icon: '📡' },
+  ];
+
+  const currentContent = mediaTab === 'content' 
+    ? [...videos, ...screenshots] 
+    : achievements;
+
+  // ESC key and arrow keys
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isViewingMedia) {
+      if (!isViewingMedia) return;
+      
+      if (e.key === 'Escape') {
         setIsViewingMedia(false);
+        setCurrentMediaIndex(0);
+      } else if (e.key === 'ArrowLeft') {
+        handlePrevious();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isViewingMedia]);
+  }, [isViewingMedia, currentMediaIndex, currentContent.length]);
 
-  const handleMediaTrigger = (title, type = 'video') => {
-    setCurrentMediaTitle(title);
-    setCurrentMediaType(type);
+  // Mouse move handler for arrows
+  const handleMouseMove = () => {
+    setShowNavArrows(true);
+    if (mouseTimeout) clearTimeout(mouseTimeout);
+    const timeout = setTimeout(() => setShowNavArrows(false), 2000);
+    setMouseTimeout(timeout);
+  };
+
+  const handleMediaTrigger = (index) => {
+    setCurrentMediaIndex(index);
     setIsViewingMedia(true);
+  };
+
+  const handleNext = () => {
+    setCurrentMediaIndex((prev) => (prev + 1) % currentContent.length);
+  };
+
+  const handlePrevious = () => {
+    setCurrentMediaIndex((prev) => (prev - 1 + currentContent.length) % currentContent.length);
   }; // Use CartContext check or local state if preferred, but context is better for syncing.
   
   useEffect(() => {
@@ -210,17 +257,52 @@ export default function GameDetailPanel({ gameId, onClose }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="absolute inset-0 z-40"
-            onClick={() => setIsViewingMedia(false)}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsViewingMedia(false);
+                setCurrentMediaIndex(0);
+              }
+            }}
+            onMouseMove={handleMouseMove}
           >
             {/* Video/Media Background */}
             <div className="absolute inset-0 bg-black">
               <img 
-                src={game.cover_image} 
-                alt={currentMediaTitle}
+                src={currentContent[currentMediaIndex]?.image || currentContent[currentMediaIndex]?.icon || game.cover_image}
+                alt={currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/20" />
             </div>
+
+            {/* Navigation Arrows */}
+            <AnimatePresence>
+              {showNavArrows && (
+                <>
+                  <motion.button
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+                    className="absolute left-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10"
+                  >
+                    <ChevronRight className="w-8 h-8 text-white rotate-180" />
+                  </motion.button>
+
+                  <motion.button
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10"
+                  >
+                    <ChevronRight className="w-8 h-8 text-white" />
+                  </motion.button>
+                </>
+              )}
+            </AnimatePresence>
 
             {/* Subtle UI Hint */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -230,8 +312,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 transition={{ delay: 0.3 }}
                 className="text-center"
               >
-                <h3 className="text-white text-2xl font-bold mb-2">{currentMediaTitle}</h3>
-                <p className="text-white/60 text-sm">Click anywhere or press ESC to return</p>
+                <h3 className="text-white text-2xl font-bold mb-2">
+                  {currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
+                </h3>
+                <p className="text-white/60 text-sm">
+                  Use arrow keys or click arrows to navigate • ESC to exit
+                </p>
               </motion.div>
             </div>
           </motion.div>
@@ -338,127 +424,141 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                 {/* Media System */}
                 <div className="pt-6">
-                  <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden">
-                    {/* Media Tabs */}
-                    <div className="flex p-1 bg-black/40 border-b border-white/10">
+                  <div className="space-y-3">
+                    {/* Compact Tab Switcher */}
+                    <div className="flex items-center gap-4">
                       <button 
-                        onClick={() => setMediaTab('media')}
-                        className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                          mediaTab === 'media' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                        onClick={() => setMediaTab('content')}
+                        className={`text-sm font-bold uppercase tracking-wider transition-all ${
+                          mediaTab === 'content' ? 'text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
-                        Media
+                        Content
                       </button>
                       <button 
-                        onClick={() => setMediaTab('achievements')}
-                        className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                          mediaTab === 'achievements' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                        onClick={() => setMediaTab('achievement_loop')}
+                        className={`text-sm font-bold uppercase tracking-wider transition-all ${
+                          mediaTab === 'achievement_loop' ? 'text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
-                        Achievements
+                        Achievement Loop
                       </button>
                     </div>
 
                     {/* Media Content */}
-                    <div className="p-4">
-                      <AnimatePresence mode="wait">
-                        {mediaTab === 'media' ? (
-                          <motion.div
-                            key="media"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-3"
-                          >
-                            {/* Video Player */}
-                            <div 
-                              onClick={() => handleMediaTrigger('Gameplay Trailer', 'video')}
-                              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
-                            >
-                              <img 
-                                src={game.cover_image} 
-                                alt="Gameplay" 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
-                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500/30 group-hover:border-cyan-400/50 transition-all">
-                                  <Play className="w-6 h-6 text-white ml-0.5" />
+                    <AnimatePresence mode="wait">
+                      {mediaTab === 'content' ? (
+                        <motion.div
+                          key="content"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex gap-3"
+                        >
+                          {/* Videos (Left) */}
+                          <div className="flex gap-2">
+                            {videos.map((video, i) => (
+                              <div 
+                                key={i}
+                                onClick={() => handleMediaTrigger(i)}
+                                className="w-32 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
+                              >
+                                <img 
+                                  src={video.image} 
+                                  alt={video.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                                  <Play className="w-4 h-4 text-white" />
                                 </div>
                               </div>
-                            </div>
+                            ))}
+                          </div>
 
-                            {/* Screenshots Grid */}
-                            <div className="grid grid-cols-3 gap-2">
-                              {[1, 2, 3].map((i) => (
+                          {/* Screenshots (Right) with arrows */}
+                          <div className="flex-1 flex items-center gap-2">
+                            <button 
+                              onClick={() => {
+                                const firstScreenshot = videos.length;
+                                setCurrentMediaIndex(firstScreenshot);
+                              }}
+                              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+                            >
+                              <ChevronRight className="w-4 h-4 text-white rotate-180" />
+                            </button>
+                            
+                            <div className="flex gap-2 overflow-x-auto flex-1">
+                              {screenshots.map((screenshot, i) => (
                                 <div 
                                   key={i}
-                                  onClick={() => handleMediaTrigger(`Screenshot ${i}`, 'screenshot')}
-                                  className="aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group"
+                                  onClick={() => handleMediaTrigger(videos.length + i)}
+                                  className="w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group flex-shrink-0"
                                 >
                                   <img 
-                                    src={game.cover_image} 
-                                    alt={`Screenshot ${i}`}
+                                    src={screenshot.image} 
+                                    alt={screenshot.title}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                   />
                                 </div>
                               ))}
                             </div>
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="achievements"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-2"
-                          >
-                            {/* Achievement Cards */}
-                            {[
-                              { name: 'Neural Shock', desc: 'Unlock the Neural Shock ability', icon: '⚡' },
-                              { name: 'Cyber Metabolism', desc: 'Master regeneration techniques', icon: '💚' },
-                              { name: 'Void Walker', desc: 'Complete stealth mission', icon: '👻' },
-                            ].map((achievement, i) => (
-                              <div 
-                                key={i}
-                                onClick={() => handleMediaTrigger(achievement.name, 'achievement')}
-                                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
-                              >
-                                <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center text-xl border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
-                                  {achievement.icon}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-white font-semibold text-xs group-hover:text-cyan-300 transition-colors">{achievement.name}</p>
-                                  <p className="text-white/50 text-[10px] truncate group-hover:text-white/70 transition-colors">{achievement.desc}</p>
-                                </div>
-                                <Play className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
 
-                    {/* Add to Cart - Shown when not owned */}
-                    {!owned && (
-                      <div className="p-4 pt-0">
-                        <button 
-                          onClick={handleAddToCart}
-                          className="w-full group relative px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-xs overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                            <button 
+                              onClick={() => {
+                                const lastScreenshot = videos.length + screenshots.length - 1;
+                                setCurrentMediaIndex(lastScreenshot);
+                              }}
+                              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+                            >
+                              <ChevronRight className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="achievement_loop"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="space-y-2 max-h-48 overflow-y-auto"
                         >
-                          <div className="absolute inset-0 bg-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors" />
-                          <span className="relative flex items-center justify-center gap-2 text-white">
-                            <Download className="w-4 h-4" />
-                            Add to Cart • ${game.price?.toFixed(2) || '0.00'}
-                          </span>
-                        </button>
-                      </div>
-                    )}
+                          {achievements.map((achievement, i) => (
+                            <div 
+                              key={i}
+                              onClick={() => handleMediaTrigger(i)}
+                              className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-lg border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
+                                {achievement.icon}
+                              </div>
+                              <p className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">
+                                {achievement.name}
+                              </p>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
 
               {/* Right: Asset Preview (The Hook) */}
               <div className="w-full lg:w-80 flex-shrink-0 space-y-3">
+                {/* Add to Cart - Above System Assets */}
+                {!owned && (
+                  <button 
+                    onClick={handleAddToCart}
+                    className="w-full group relative px-4 py-3 rounded-xl font-bold uppercase tracking-widest text-xs overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                  >
+                    <div className="absolute inset-0 bg-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors" />
+                    <span className="relative flex items-center justify-center gap-2 text-white">
+                      <Download className="w-4 h-4" />
+                      Add to Cart • ${game.price?.toFixed(2) || '0.00'}
+                    </span>
+                  </button>
+                )}
+
                 {/* Play Button - Top */}
                 {owned && (
                   <button 
