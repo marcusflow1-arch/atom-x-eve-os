@@ -5,18 +5,18 @@ import {
   Star, ShoppingCart, Shield, BrainCircuit, Heart, Award, 
   Package, Info, Trophy, MessageSquare, Gamepad2, Zap, 
   Swords, Target, Sparkles, Check, Lock, ChevronRight,
-  Play, Pause, Volume2, VolumeX, Eye, User
+  Play, Pause, Volume2, VolumeX, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShinyCard from '@/components/shared/ShinyCard';
-import { base44 } from '@/api/base44Client';
+import { Post } from '@/entities/Post';
 import CreatePostForm from '../community/CreatePostForm';
 import GameCardShowcase from './GameCardShowcase';
 
 // --- Components ---
 
-const ValueHighlight = ({ icon: Icon, text, subtext, onClick }) => (
-  <div onClick={onClick} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+const ValueHighlight = ({ icon: Icon, text, subtext }) => (
+  <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
       <Icon className="w-4 h-4 text-blue-400" />
     </div>
@@ -39,8 +39,8 @@ const GainBlock = ({ icon: Icon, title, description }) => (
   </div>
 );
 
-const AbilityCard = ({ ability, onTrigger }) => (
-  <div className="w-full h-full group cursor-pointer" onClick={() => onTrigger?.(ability)}>
+const AbilityCard = ({ ability }) => (
+  <div className="w-full h-full">
     <ShinyCard>
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
       <img 
@@ -79,8 +79,8 @@ const AbilityCard = ({ ability, onTrigger }) => (
   </div>
 );
 
-const EquipmentCard = ({ item, onTrigger }) => (
-  <div className="w-full h-full group cursor-pointer" onClick={() => onTrigger?.(item)}>
+const EquipmentCard = ({ item }) => (
+  <div className="w-full h-full">
     <ShinyCard>
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
       <img 
@@ -127,31 +127,6 @@ export default function GameDetailPanel({ game, onPurchase }) {
   const [communityPosts, setCommunityPosts] = useState([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
-  // Immersive media state
-  const [immersive, setImmersive] = useState({ active: false, src: '', title: '' });
-  const startImmersive = (src, title) => setImmersive({ active: true, src, title });
-  const stopImmersive = () => setImmersive({ active: false, src: '', title: '' });
-
-  // Close immersive with ESC
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') stopImmersive(); };
-    if (immersive.active) window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [immersive.active]);
-
-  const getDemoUrl = (kind) => kind === 'ability' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : 'https://www.w3schools.com/html/movie.mp4';
-  const startImmersiveFromAsset = (asset, kind) => {
-    const url = asset?.demo_url || getDemoUrl(kind);
-    startImmersive(url, asset?.name || 'Demo');
-  };
-  const startImmersiveFromAchievement = (ach) => {
-    const url = ach?.demo_url || getDemoUrl('achievement');
-    startImmersive(url, ach?.title || ach?.name || 'Achievement Demo');
-  };
-
-  // Right-side media switcher state
-  const [rightMediaTab, setRightMediaTab] = useState('media');
-
   // Initialize media
   useEffect(() => {
     if (game?.media && game.media.length > 0) {
@@ -169,7 +144,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
     if (activeTab === 'community' && game?.title) {
       const fetchPosts = async () => {
         try {
-          const posts = await base44.entities.Post.filter({ game_title: game.title }, '-created_date', 5);
+          const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
           setCommunityPosts(posts);
         } catch (error) {
           console.error("Failed to fetch posts:", error);
@@ -191,15 +166,12 @@ export default function GameDetailPanel({ game, onPurchase }) {
     { id: 'community', label: 'Community', icon: MessageSquare },
   ];
 
-  // Consider a game owned if flagged or has a play_link
-  const owned = Boolean(game?.isOwned || game?.owned || game?.play_link);
-
   const handleCreatePost = async (postData) => {
     try {
       const newPost = { ...postData, game_title: game.title };
-      await base44.entities.Post.create(newPost);
+      await Post.create(newPost);
       setShowCreatePost(false);
-      const posts = await base44.entities.Post.filter({ game_title: game.title }, '-created_date', 5);
+      const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
       setCommunityPosts(posts);
     } catch (error) {
       console.error("Failed to create post:", error);
@@ -208,17 +180,8 @@ export default function GameDetailPanel({ game, onPurchase }) {
 
   return (
     <div className="h-full flex flex-col bg-[#0a0c10] text-white overflow-hidden relative">
-      <style>{`
-        .game-detail-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .game-detail-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
       {/* Background Ambience */}
-      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${immersive.active ? 'opacity-0' : 'opacity-100'}`}>
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-900/10 via-purple-900/5 to-[#0a0c10]" />
         <img 
           src={game.cover_image} 
@@ -227,22 +190,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
         />
       </div>
 
-      <AnimatePresence>
-        {immersive.active && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[30] bg-black">
-            <video src={immersive.src} autoPlay muted loop className="w-full h-full object-cover" />
-            <div className="absolute top-6 left-6 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md text-white text-sm font-medium border border-white/20">{immersive.title}</div>
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md text-white/60 text-xs border border-white/20">
-              Click anywhere or press ESC to exit
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {immersive.active && (
-        <button onClick={stopImmersive} className="fixed inset-0 z-[40] cursor-pointer" aria-label="Exit immersive" title="Click or press ESC to exit" />
-      )}
-
-      <div className={`flex-1 overflow-y-auto game-detail-scroll relative z-20 transition-opacity duration-500 ${immersive.active ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
         {/* TOP SECTION: Hero & Decision Anchor */}
         <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
           <div className="flex flex-col lg:flex-row gap-8">
@@ -327,116 +275,31 @@ export default function GameDetailPanel({ game, onPurchase }) {
                 <div className="text-center text-[10px] text-white/30">
                   Instant digital delivery • Atom XE Secure
                 </div>
-
-                {/* Right Media System (replaces moved Play button) */}
-                <div className="mt-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <button
-                      onClick={() => setRightMediaTab('media')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${rightMediaTab === 'media' ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10 hover:text-white'}`}
-                    >
-                      Media
-                    </button>
-                    <button
-                      onClick={() => setRightMediaTab('aa')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${rightMediaTab === 'aa' ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10 hover:text-white'}`}
-                    >
-                      Achievements / Abilities
-                    </button>
-                  </div>
-
-                  {rightMediaTab === 'media' ? (
-                    <div className="grid grid-cols-3 gap-2">
-                      {(gameMedia || []).slice(0, 6).map((m, i) => (
-                        <button
-                          key={i}
-                          onClick={() => startImmersive(m.url, m.type === 'video' ? 'Gameplay' : 'Screenshot')}
-                          className="relative aspect-video rounded-lg overflow-hidden border border-white/10 hover:border-white/20 group"
-                          title={m.type === 'video' ? 'Play Video' : 'View Screenshot'}
-                        >
-                          <img src={m.url} className="w-full h-full object-cover group-hover:opacity-90" />
-                          {m.type === 'video' && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center border border-white/20">
-                                <Play className="w-3 h-3 text-white fill-white" />
-                              </div>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {(game.achievements || []).slice(0, 4).map((ach, idx) => (
-                        <button
-                          key={`ach-${idx}`}
-                          onClick={() => startImmersiveFromAchievement(ach)}
-                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-left flex items-center gap-2"
-                        >
-                          <div className="w-8 h-8 rounded bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400 text-xs font-bold">
-                            {ach.points || 100}
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-white line-clamp-1">{ach.title || ach.name}</p>
-                            <p className="text-[10px] text-white/40 line-clamp-1">{ach.rarity || 'Common'}</p>
-                          </div>
-                        </button>
-                      ))}
-                      {(game.abilities || []).slice(0, 4).map((ab, idx) => (
-                        <button
-                          key={`ab-${idx}`}
-                          onClick={() => startImmersiveFromAsset(ab, 'ability')}
-                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-left flex items-center gap-2"
-                        >
-                          <div className="w-8 h-8 rounded bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
-                            <Zap className="w-3.5 h-3.5 text-purple-300" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-white line-clamp-1">{ab.name}</p>
-                            <p className="text-[10px] text-white/40 line-clamp-1">{ab.tier || 'Rare'}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Quick Value Highlights */}
-              <div className="space-y-2 relative">
-                {owned && (
-                  <div className="mb-3 -mt-1">
-                    <Button onClick={() => { if (game?.play_link) window.open(game.play_link, '_blank'); }} className="w-full h-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-sm font-bold rounded-xl shadow-[0_0_25px_rgba(22,163,74,0.4)]">
-                      <Play className="w-4 h-4 mr-2 fill-current" />
-                      Play / Launch
-                    </Button>
-                  </div>
-                )}
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included System Assets</h3>
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included in Atom XE</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <ValueHighlight 
                     icon={BrainCircuit} 
                     text={`Unlocks ${game.abilities?.length || 3} Abilities`} 
-                    subtext="Permanent Avatar Upgrades"
-                    onClick={() => startImmersive(getDemoUrl('ability'), 'Abilities Preview')} 
+                    subtext="Permanent Avatar Upgrades" 
                   />
                   <ValueHighlight 
                     icon={Shield} 
                     text={`Includes ${game.equipment?.length || 5} Cards`} 
-                    subtext="Tradable Equipment"
-                    onClick={() => startImmersive(getDemoUrl('equipment'), 'Equipment Preview')} 
+                    subtext="Tradable Equipment" 
                   />
                   <ValueHighlight 
                     icon={Trophy} 
                     text="Genre XP Boost" 
-                    subtext="Progress Seasonal Pass"
-                    onClick={() => startImmersive(getDemoUrl('achievement'), 'Achievement Demo')} 
+                    subtext="Progress Seasonal Pass" 
                   />
                   <ValueHighlight 
                     icon={Sparkles} 
                     text="Exclusive Badge" 
-                    subtext="Early Adopter Reward"
-                    onClick={() => startImmersive(getDemoUrl('ability'), 'Trait Preview')} 
+                    subtext="Early Adopter Reward" 
                   />
                 </div>
               </div>
@@ -569,7 +432,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 3, name: 'Data Siphon', description: 'Steal energy from robotic enemies on hit.', tier: 'Legendary', type: 'Passive' }
                     ]).map((ability, idx) => (
                       <div key={idx} className="aspect-[3/4]">
-                        <AbilityCard ability={ability} onTrigger={(a) => startImmersiveFromAsset(a, 'ability')} />
+                        <AbilityCard ability={ability} />
                       </div>
                     ))}
                   </div>
@@ -596,7 +459,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 3, name: 'Quantum Visor', description: 'Highlights enemy weak points.', rarity: 'Legendary', type: 'Accessory', stats: { crt: 15, acc: 20 } }
                     ]).map((item, idx) => (
                       <div key={idx} className="aspect-[3/4]">
-                        <EquipmentCard item={item} onTrigger={(a) => startImmersiveFromAsset(a, 'equipment')} />
+                        <EquipmentCard item={item} />
                       </div>
                     ))}
                   </div>
@@ -613,7 +476,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 2, title: 'Master of War', description: 'Win 50 PvP matches.', points: 500, rarity: 'Epic' },
                       { id: 3, title: 'Collector', description: 'Find all hidden data drives.', points: 300, rarity: 'Rare' }
                     ]).map((ach, idx) => (
-                      <div key={idx} onClick={() => startImmersiveFromAchievement(ach)} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="w-12 h-12 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center font-bold text-yellow-500">
                           {ach.points}
                         </div>
