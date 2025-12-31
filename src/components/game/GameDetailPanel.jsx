@@ -23,18 +23,23 @@ const DataPoint = ({ label, value, icon: Icon, color = "text-white" }) => (
   </div>
 );
 
-const SystemPreviewCard = ({ type, title, subtitle }) => (
-  <div className="relative group overflow-hidden rounded-xl border border-white/10 bg-black/20 hover:bg-white/5 transition-all duration-300">
-    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-cyan-500/50 to-transparent opacity-50" />
+const SystemPreviewCard = ({ type, title, subtitle, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="relative group overflow-hidden rounded-xl border border-white/10 bg-black/20 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:scale-105"
+  >
+    <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-cyan-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
     <div className="p-4">
       <div className="flex justify-between items-start mb-3">
-        <span className="text-[9px] uppercase tracking-wider text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded bg-cyan-500/10">
+        <span className="text-[9px] uppercase tracking-wider text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
           {type}
         </span>
-        <Lock className="w-3 h-3 text-white/20" />
+        <div className="w-3 h-3 flex items-center justify-center">
+          <Play className="w-2.5 h-2.5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
       </div>
-      <h4 className="text-white font-bold text-sm mb-1">{title}</h4>
-      <p className="text-white/40 text-xs">{subtitle}</p>
+      <h4 className="text-white font-bold text-sm mb-1 group-hover:text-cyan-300 transition-colors">{title}</h4>
+      <p className="text-white/40 text-xs group-hover:text-white/60 transition-colors">{subtitle}</p>
     </div>
   </div>
 );
@@ -120,7 +125,26 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [activeTab, setActiveTab] = useState('system'); // 'system' or 'specs'
   const [mediaTab, setMediaTab] = useState('media'); // 'media' or 'achievements'
   const [isViewingMedia, setIsViewingMedia] = useState(false);
-  const owned = isPurchased(gameId); // Use CartContext check or local state if preferred, but context is better for syncing.
+  const [currentMediaType, setCurrentMediaType] = useState('video'); // 'video', 'ability', 'achievement'
+  const [currentMediaTitle, setCurrentMediaTitle] = useState('');
+  const owned = isPurchased(gameId);
+
+  // ESC key to exit media viewing
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isViewingMedia) {
+        setIsViewingMedia(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isViewingMedia]);
+
+  const handleMediaTrigger = (title, type = 'video') => {
+    setCurrentMediaTitle(title);
+    setCurrentMediaType(type);
+    setIsViewingMedia(true);
+  }; // Use CartContext check or local state if preferred, but context is better for syncing.
   
   useEffect(() => {
     const fetchGame = async () => {
@@ -177,30 +201,38 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   return (
     <div className="h-full w-full relative bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
-      {/* Full Screen Media Viewer */}
+      {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-black flex items-center justify-center"
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 z-40"
             onClick={() => setIsViewingMedia(false)}
           >
-            <div className="relative w-full h-full max-w-7xl mx-auto p-8 flex items-center justify-center">
-              <button 
-                onClick={() => setIsViewingMedia(false)}
-                className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
+            {/* Video/Media Background */}
+            <div className="absolute inset-0 bg-black">
+              <img 
+                src={game.cover_image} 
+                alt={currentMediaTitle}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/20" />
+            </div>
+
+            {/* Subtle UI Hint */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-center"
               >
-                <X className="w-6 h-6 text-white" />
-              </button>
-              <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/20">
-                <img 
-                  src={game.cover_image} 
-                  alt="Media"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+                <h3 className="text-white text-2xl font-bold mb-2">{currentMediaTitle}</h3>
+                <p className="text-white/60 text-sm">Click anywhere or press ESC to return</p>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -209,7 +241,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       {/* Immersive Background */}
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
         className="absolute inset-0 z-0"
       >
         <img 
@@ -226,7 +258,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       {/* Header / Nav */}
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
         className="relative z-20 p-8 flex justify-between items-start"
       >
         <button 
@@ -263,7 +295,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       {/* Main Content Area */}
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
         className="relative z-10 flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-12 py-12"
       >
         <AnimatePresence mode="wait">
@@ -340,16 +372,16 @@ export default function GameDetailPanel({ gameId, onClose }) {
                           >
                             {/* Video Player */}
                             <div 
-                              onClick={() => setIsViewingMedia(true)}
-                              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-white/20 transition-colors"
+                              onClick={() => handleMediaTrigger('Gameplay Trailer', 'video')}
+                              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
                             >
                               <img 
                                 src={game.cover_image} 
                                 alt="Gameplay" 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-cyan-500/30 group-hover:border-cyan-400/50 transition-all">
                                   <Play className="w-6 h-6 text-white ml-0.5" />
                                 </div>
                               </div>
@@ -360,13 +392,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               {[1, 2, 3].map((i) => (
                                 <div 
                                   key={i}
-                                  onClick={() => setIsViewingMedia(true)}
-                                  className="aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-white/20 transition-colors"
+                                  onClick={() => handleMediaTrigger(`Screenshot ${i}`, 'screenshot')}
+                                  className="aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group"
                                 >
                                   <img 
                                     src={game.cover_image} 
                                     alt={`Screenshot ${i}`}
-                                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                   />
                                 </div>
                               ))}
@@ -388,16 +420,17 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             ].map((achievement, i) => (
                               <div 
                                 key={i}
-                                onClick={() => setIsViewingMedia(true)}
-                                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                onClick={() => handleMediaTrigger(achievement.name, 'achievement')}
+                                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
                               >
-                                <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center text-xl border border-white/10">
+                                <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center text-xl border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
                                   {achievement.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-white font-semibold text-xs">{achievement.name}</p>
-                                  <p className="text-white/50 text-[10px] truncate">{achievement.desc}</p>
+                                  <p className="text-white font-semibold text-xs group-hover:text-cyan-300 transition-colors">{achievement.name}</p>
+                                  <p className="text-white/50 text-[10px] truncate group-hover:text-white/70 transition-colors">{achievement.desc}</p>
                                 </div>
+                                <Play className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                             ))}
                           </motion.div>
@@ -452,10 +485,30 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </h3>
 
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    <SystemPreviewCard type="Ability" title="Neural Shock" subtitle="Stun enemies in radius" />
-                    <SystemPreviewCard type="Passive" title="Cyber Metabolism" subtitle="+10% Regeneration" />
-                    <SystemPreviewCard type="Equipment" title="Void Walker Set" subtitle="Stealth Bonus" />
-                    <SystemPreviewCard type="Trait" title="Tactical Mind" subtitle="AI Behavior Mod" />
+                    <SystemPreviewCard 
+                      type="Ability" 
+                      title="Neural Shock" 
+                      subtitle="Stun enemies in radius" 
+                      onClick={() => handleMediaTrigger('Neural Shock', 'ability')}
+                    />
+                    <SystemPreviewCard 
+                      type="Passive" 
+                      title="Cyber Metabolism" 
+                      subtitle="+10% Regeneration" 
+                      onClick={() => handleMediaTrigger('Cyber Metabolism', 'ability')}
+                    />
+                    <SystemPreviewCard 
+                      type="Equipment" 
+                      title="Void Walker Set" 
+                      subtitle="Stealth Bonus" 
+                      onClick={() => handleMediaTrigger('Void Walker Set', 'equipment')}
+                    />
+                    <SystemPreviewCard 
+                      type="Trait" 
+                      title="Tactical Mind" 
+                      subtitle="AI Behavior Mod" 
+                      onClick={() => handleMediaTrigger('Tactical Mind', 'trait')}
+                    />
                   </div>
 
                   <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
