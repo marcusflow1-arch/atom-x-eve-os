@@ -73,7 +73,7 @@ export default function SignUpForm({ onComplete, onCancel }) {
             };
 
             // Update user data with signup info
-            await UserEntity.updateMyUserData(finalData);
+            await base44.auth.updateMe(finalData);
             
             onComplete(finalData);
         } catch (error) {
