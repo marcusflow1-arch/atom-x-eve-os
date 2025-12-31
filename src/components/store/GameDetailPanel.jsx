@@ -15,8 +15,8 @@ import GameCardShowcase from './GameCardShowcase';
 
 // --- Components ---
 
-const ValueHighlight = ({ icon: Icon, text, subtext }) => (
-  <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+const ValueHighlight = ({ icon: Icon, text, subtext, onClick }) => (
+  <div onClick={onClick} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
       <Icon className="w-4 h-4 text-blue-400" />
     </div>
@@ -39,8 +39,8 @@ const GainBlock = ({ icon: Icon, title, description }) => (
   </div>
 );
 
-const AbilityCard = ({ ability }) => (
-  <div className="w-full h-full">
+const AbilityCard = ({ ability, onTrigger }) => (
+  <div className="w-full h-full group cursor-pointer" onClick={() => onTrigger?.(ability)}>
     <ShinyCard>
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
       <img 
@@ -79,8 +79,8 @@ const AbilityCard = ({ ability }) => (
   </div>
 );
 
-const EquipmentCard = ({ item }) => (
-  <div className="w-full h-full">
+const EquipmentCard = ({ item, onTrigger }) => (
+  <div className="w-full h-full group cursor-pointer" onClick={() => onTrigger?.(item)}>
     <ShinyCard>
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
       <img 
@@ -127,6 +127,28 @@ export default function GameDetailPanel({ game, onPurchase }) {
   const [communityPosts, setCommunityPosts] = useState([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
+  // Immersive media state
+  const [immersive, setImmersive] = useState({ active: false, src: '', title: '' });
+  const startImmersive = (src, title) => setImmersive({ active: true, src, title });
+  const stopImmersive = () => setImmersive({ active: false, src: '', title: '' });
+
+  // Close immersive with ESC
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') stopImmersive(); };
+    if (immersive.active) window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [immersive.active]);
+
+  const getDemoUrl = (kind) => kind === 'ability' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : 'https://www.w3schools.com/html/movie.mp4';
+  const startImmersiveFromAsset = (asset, kind) => {
+    const url = asset?.demo_url || getDemoUrl(kind);
+    startImmersive(url, asset?.name || 'Demo');
+  };
+  const startImmersiveFromAchievement = (ach) => {
+    const url = ach?.demo_url || getDemoUrl('achievement');
+    startImmersive(url, ach?.title || ach?.name || 'Achievement Demo');
+  };
+
   // Initialize media
   useEffect(() => {
     if (game?.media && game.media.length > 0) {
@@ -166,6 +188,9 @@ export default function GameDetailPanel({ game, onPurchase }) {
     { id: 'community', label: 'Community', icon: MessageSquare },
   ];
 
+  // Consider a game owned if flagged or has a play_link
+  const owned = Boolean(game?.isOwned || game?.owned || game?.play_link);
+
   const handleCreatePost = async (postData) => {
     try {
       const newPost = { ...postData, game_title: game.title };
@@ -190,7 +215,19 @@ export default function GameDetailPanel({ game, onPurchase }) {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
+      <AnimatePresence>
+        {immersive.active && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[30]">
+            <video src={immersive.src} autoPlay muted loop className="w-full h-full object-cover" />
+            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/50 text-white text-xs font-medium border border-white/10">{immersive.title}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {immersive.active && (
+        <button onClick={stopImmersive} className="fixed inset-0 z-[40] cursor-pointer" aria-label="Exit immersive" title="Click or press ESC to exit" />
+      )}
+
+      <div className={`flex-1 overflow-y-auto custom-scrollbar relative z-20 transition-opacity duration-300 ${immersive.active ? 'opacity-10 pointer-events-none' : ''}`}>
         {/* TOP SECTION: Hero & Decision Anchor */}
         <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
           <div className="flex flex-col lg:flex-row gap-8">
@@ -278,28 +315,40 @@ export default function GameDetailPanel({ game, onPurchase }) {
               </div>
 
               {/* Quick Value Highlights */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included in Atom XE</h3>
+                {owned && (
+                  <div className="absolute -top-3 right-0">
+                    <Button onClick={() => {}} className="h-8 px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-full shadow-[0_0_20px_rgba(22,163,74,0.3)]">
+                      <Play className="w-3.5 h-3.5 mr-1.5 fill-current" />
+                      Play / Launch
+                    </Button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <ValueHighlight 
                     icon={BrainCircuit} 
                     text={`Unlocks ${game.abilities?.length || 3} Abilities`} 
-                    subtext="Permanent Avatar Upgrades" 
+                    subtext="Permanent Avatar Upgrades"
+                    onClick={() => startImmersive(getDemoUrl('ability'), 'Abilities Preview')} 
                   />
                   <ValueHighlight 
                     icon={Shield} 
                     text={`Includes ${game.equipment?.length || 5} Cards`} 
-                    subtext="Tradable Equipment" 
+                    subtext="Tradable Equipment"
+                    onClick={() => startImmersive(getDemoUrl('equipment'), 'Equipment Preview')} 
                   />
                   <ValueHighlight 
                     icon={Trophy} 
                     text="Genre XP Boost" 
-                    subtext="Progress Seasonal Pass" 
+                    subtext="Progress Seasonal Pass"
+                    onClick={() => startImmersive(getDemoUrl('achievement'), 'Achievement Demo')} 
                   />
                   <ValueHighlight 
                     icon={Sparkles} 
                     text="Exclusive Badge" 
-                    subtext="Early Adopter Reward" 
+                    subtext="Early Adopter Reward"
+                    onClick={() => startImmersive(getDemoUrl('ability'), 'Trait Preview')} 
                   />
                 </div>
               </div>
@@ -432,7 +481,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 3, name: 'Data Siphon', description: 'Steal energy from robotic enemies on hit.', tier: 'Legendary', type: 'Passive' }
                     ]).map((ability, idx) => (
                       <div key={idx} className="aspect-[3/4]">
-                        <AbilityCard ability={ability} />
+                        <AbilityCard ability={ability} onTrigger={(a) => startImmersiveFromAsset(a, 'ability')} />
                       </div>
                     ))}
                   </div>
@@ -459,7 +508,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 3, name: 'Quantum Visor', description: 'Highlights enemy weak points.', rarity: 'Legendary', type: 'Accessory', stats: { crt: 15, acc: 20 } }
                     ]).map((item, idx) => (
                       <div key={idx} className="aspect-[3/4]">
-                        <EquipmentCard item={item} />
+                        <EquipmentCard item={item} onTrigger={(a) => startImmersiveFromAsset(a, 'equipment')} />
                       </div>
                     ))}
                   </div>
@@ -476,7 +525,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                       { id: 2, title: 'Master of War', description: 'Win 50 PvP matches.', points: 500, rarity: 'Epic' },
                       { id: 3, title: 'Collector', description: 'Find all hidden data drives.', points: 300, rarity: 'Rare' }
                     ]).map((ach, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                      <div key={idx} onClick={() => startImmersiveFromAchievement(ach)} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
                         <div className="w-12 h-12 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center font-bold text-yellow-500">
                           {ach.points}
                         </div>
