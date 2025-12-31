@@ -208,6 +208,15 @@ export default function GameDetailPanel({ game, onPurchase }) {
 
   return (
     <div className="h-full flex flex-col bg-[#0a0c10] text-white overflow-hidden relative">
+      <style>{`
+        .game-detail-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .game-detail-scroll::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
       {/* Background Ambience */}
       <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${immersive.active ? 'opacity-0' : 'opacity-100'}`}>
         <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-900/10 via-purple-900/5 to-[#0a0c10]" />
@@ -233,7 +242,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
         <button onClick={stopImmersive} className="fixed inset-0 z-[40] cursor-pointer" aria-label="Exit immersive" title="Click or press ESC to exit" />
       )}
 
-      <div className={`flex-1 overflow-y-auto custom-scrollbar relative z-20 transition-opacity duration-500 ${immersive.active ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`flex-1 overflow-y-auto game-detail-scroll relative z-20 transition-opacity duration-500 ${immersive.active ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* TOP SECTION: Hero & Decision Anchor */}
         <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
           <div className="flex flex-col lg:flex-row gap-8">
