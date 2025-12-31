@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
-  Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
-  Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
-  Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-  Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users
-} from 'lucide-react';
+        Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
+        Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
+        Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
+        Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv
+      } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +17,6 @@ import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
-import UserInterfaceView from './views/UserInterfaceView';
 
 // Mock pinned games
 const pinnedGames = [
@@ -635,6 +634,7 @@ function GameDetailPanel({ game, onClose }) {
 function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePanel, onClosePanel }) {
   const navigate = useNavigate();
   const libraryScrollRef = useRef(null);
+  const [showEntertainment, setShowEntertainment] = useState(false);
 
   // Show all games
   const currentGames = allGames;
@@ -664,20 +664,32 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
       <div className="flex-1 flex flex-col transition-all duration-300">
         {/* Clickable Title - Transitions to Library */}
         <div className="flex items-center justify-between mb-3">
-          <button 
-            onClick={handleLibraryClick}
-            className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
-          >
-            <Book className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-            Library
-            <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleLibraryClick}
+              className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
+            >
+              <Book className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              Library
+              <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowEntertainment(v => !v); }}
+              className={`w-8 h-8 rounded-full border transition-all ${showEntertainment ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              title="Entertainment"
+            >
+              <Tv className="w-4 h-4 text-white/80" />
+            </button>
+          </div>
         </div>
 
         {/* Vertical scroller: rows of 7 games; one row visible height */}
+        {showEntertainment && (
+          <EntertainmentRow />
+        )}
         <div
           ref={libraryScrollRef}
-          className="overflow-y-auto overflow-x-hidden"
+          className={`overflow-y-auto overflow-x-hidden ${showEntertainment ? 'hidden' : ''}`}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '160px' }}
         >
           <AnimatePresence mode="popLayout">
@@ -1773,7 +1785,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [activeGenre, setActiveGenre] = useState('Action');
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [librarySubPage, setLibrarySubPage] = useState('library');
   
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
@@ -1886,53 +1897,18 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       {/* Bottom Section - Grid layout */}
       <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
-        {/* Left Area with Sub Tabs */}
+        {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          {/* Subpage Tabs */}
-          <div className="flex items-center gap-2">
-            {[
-              { id: 'library', label: 'Library' },
-              { id: 'entertainment', label: 'Entertainment' },
-              { id: 'ui', label: 'User Interface' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setLibrarySubPage(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                  librarySubPage === tab.id
-                    ? 'bg-white/10 text-white border-white/20'
-                    : 'text-white/50 hover:text-white hover:bg-white/5 border-transparent'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="w-full">
+            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
           </div>
-
-          {librarySubPage === 'library' && (
-            <>
-              <div className="w-full">
-                <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-              </div>
-              <LibraryGamesSection 
-                onSelectGame={handleGameSelect}
-                selectedGame={selectedGame}
-                allGames={ownedGames}
-                showGamePanel={showGamePanel}
-                onClosePanel={handleCloseGamePanel}
-              />
-            </>
-          )}
-
-          {librarySubPage === 'entertainment' && (
-            <EntertainmentRow />
-          )}
-
-          {librarySubPage === 'ui' && (
-            <div className="bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden">
-              <UserInterfaceView />
-            </div>
-          )}
+          <LibraryGamesSection 
+            onSelectGame={handleGameSelect}
+            selectedGame={selectedGame}
+            allGames={ownedGames}
+            showGamePanel={showGamePanel}
+            onClosePanel={handleCloseGamePanel}
+          />
         </div>
 
         {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
