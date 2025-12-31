@@ -123,11 +123,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
   const [activeTab, setActiveTab] = useState('system'); // 'system' or 'specs'
-  const [mediaTab, setMediaTab] = useState('content'); // 'content' or 'achievement_loop'
+  const [mediaTab, setMediaTab] = useState('content'); // 'content' or 'achievement_loot'
   const [isViewingMedia, setIsViewingMedia] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showNavArrows, setShowNavArrows] = useState(false);
   const [mouseTimeout, setMouseTimeout] = useState(null);
+  const [selectedDLC, setSelectedDLC] = useState(null);
   const owned = isPurchased(gameId);
 
   // Mock media content
@@ -148,6 +149,31 @@ export default function GameDetailPanel({ gameId, onClose }) {
     { name: 'Void Walker', icon: '👻' },
     { name: 'Tactical Mind', icon: '🧠' },
     { name: 'Data Stream', icon: '📡' },
+  ];
+
+  // Mock DLC data
+  const dlcList = [
+    {
+      id: 'dlc_1',
+      name: 'Neural Expansion Pack',
+      description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
+      offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
+      stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 }
+    },
+    {
+      id: 'dlc_2',
+      name: 'Void Walker Arsenal',
+      description: 'Gain access to stealth-focused equipment and void manipulation powers.',
+      offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
+      stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 }
+    },
+    {
+      id: 'dlc_3',
+      name: 'Season Pass: Year One',
+      description: 'All future DLC releases for the first year, plus exclusive seasonal rewards.',
+      offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
+      stats: { dlcAccess: 'unlimited', genreXP: 50 }
+    }
   ];
 
   const currentContent = mediaTab === 'content' 
@@ -409,10 +435,33 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                   <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-2 leading-none">
                     {game.title}
+                    {selectedDLC && (
+                      <>
+                        <br />
+                        <span className="text-2xl text-cyan-400">DLC</span>
+                        <br />
+                        <span className="text-4xl text-white/90">{selectedDLC.name}</span>
+                      </>
+                    )}
                   </h1>
                   <p className="text-lg text-white/60 font-light max-w-xl leading-relaxed">
-                    {game.description || 'Initialize neural link to access description data.'}
+                    {selectedDLC ? selectedDLC.description : (game.description || 'Initialize neural link to access description data.')}
                   </p>
+                  
+                  {/* DLC Offers */}
+                  {selectedDLC && (
+                    <div className="mt-6 space-y-3">
+                      <h3 className="text-white font-bold text-sm uppercase tracking-wider">What This DLC Offers:</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedDLC.offers.map((offer, i) => (
+                          <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg">
+                            <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                            <span className="text-white/80 text-xs">{offer}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* System Stats Preview */}
@@ -436,12 +485,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         Content
                       </button>
                       <button 
-                        onClick={() => setMediaTab('achievement_loop')}
+                        onClick={() => setMediaTab('achievement_loot')}
                         className={`text-sm font-bold uppercase tracking-wider transition-all ${
-                          mediaTab === 'achievement_loop' ? 'text-white' : 'text-white/40 hover:text-white'
+                          mediaTab === 'achievement_loot' ? 'text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
-                        Achievement Loop
+                        Achievement Loot
                       </button>
                     </div>
 
@@ -453,89 +502,119 @@ export default function GameDetailPanel({ gameId, onClose }) {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="flex gap-3"
+                          className="flex items-center gap-2"
                         >
-                          {/* Videos (Left) */}
+                          {/* Left Arrow */}
+                          <button 
+                            onClick={() => {
+                              if (currentMediaIndex > 0) {
+                                setCurrentMediaIndex(currentMediaIndex - 1);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
+                          >
+                            <ChevronRight className="w-4 h-4 text-white rotate-180" />
+                          </button>
+
+                          {/* Videos */}
                           <div className="flex gap-2">
                             {videos.map((video, i) => (
                               <div 
                                 key={i}
                                 onClick={() => handleMediaTrigger(i)}
-                                className="w-32 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
+                                className="relative w-32 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
                               >
                                 <img 
                                   src={video.image} 
                                   alt={video.title}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors pointer-events-none">
                                   <Play className="w-4 h-4 text-white" />
                                 </div>
                               </div>
                             ))}
                           </div>
-
-                          {/* Screenshots (Right) with arrows */}
-                          <div className="flex-1 flex items-center gap-2">
-                            <button 
-                              onClick={() => {
-                                const firstScreenshot = videos.length;
-                                setCurrentMediaIndex(firstScreenshot);
-                              }}
-                              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
-                            >
-                              <ChevronRight className="w-4 h-4 text-white rotate-180" />
-                            </button>
-                            
-                            <div className="flex gap-2 overflow-x-auto flex-1">
-                              {screenshots.map((screenshot, i) => (
-                                <div 
-                                  key={i}
-                                  onClick={() => handleMediaTrigger(videos.length + i)}
-                                  className="w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group flex-shrink-0"
-                                >
-                                  <img 
-                                    src={screenshot.image} 
-                                    alt={screenshot.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-
-                            <button 
-                              onClick={() => {
-                                const lastScreenshot = videos.length + screenshots.length - 1;
-                                setCurrentMediaIndex(lastScreenshot);
-                              }}
-                              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
-                            >
-                              <ChevronRight className="w-4 h-4 text-white" />
-                            </button>
+                          
+                          {/* Screenshots */}
+                          <div className="flex gap-2 overflow-x-auto flex-1">
+                            {screenshots.map((screenshot, i) => (
+                              <div 
+                                key={i}
+                                onClick={() => handleMediaTrigger(videos.length + i)}
+                                className="w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group flex-shrink-0"
+                              >
+                                <img 
+                                  src={screenshot.image} 
+                                  alt={screenshot.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              </div>
+                            ))}
                           </div>
+
+                          {/* Right Arrow */}
+                          <button 
+                            onClick={() => {
+                              const totalItems = videos.length + screenshots.length;
+                              if (currentMediaIndex < totalItems - 1) {
+                                setCurrentMediaIndex(currentMediaIndex + 1);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
+                          >
+                            <ChevronRight className="w-4 h-4 text-white" />
+                          </button>
                         </motion.div>
                       ) : (
                         <motion.div
-                          key="achievement_loop"
+                          key="achievement_loot"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="space-y-2 max-h-48 overflow-y-auto"
+                          className="flex items-center gap-2"
                         >
-                          {achievements.map((achievement, i) => (
-                            <div 
-                              key={i}
-                              onClick={() => handleMediaTrigger(i)}
-                              className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-lg border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
-                                {achievement.icon}
+                          {/* Left Arrow */}
+                          <button 
+                            onClick={() => {
+                              if (currentMediaIndex > 0) {
+                                setCurrentMediaIndex(currentMediaIndex - 1);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
+                          >
+                            <ChevronRight className="w-4 h-4 text-white rotate-180" />
+                          </button>
+
+                          {/* Achievement List */}
+                          <div className="flex-1 space-y-2 max-h-48 overflow-y-auto">
+                            {achievements.map((achievement, i) => (
+                              <div 
+                                key={i}
+                                onClick={() => handleMediaTrigger(i)}
+                                className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-lg border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
+                                  {achievement.icon}
+                                </div>
+                                <p className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">
+                                  {achievement.name}
+                                </p>
                               </div>
-                              <p className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">
-                                {achievement.name}
-                              </p>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
+
+                          {/* Right Arrow */}
+                          <button 
+                            onClick={() => {
+                              if (currentMediaIndex < achievements.length - 1) {
+                                setCurrentMediaIndex(currentMediaIndex + 1);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
+                          >
+                            <ChevronRight className="w-4 h-4 text-white" />
+                          </button>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -619,6 +698,42 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     <p className="text-[9px] text-white/50 leading-relaxed">
                       All assets from this system can be forged, combined, and ascended in the Blacksmith OS.
                     </p>
+                  </div>
+                </div>
+
+                {/* DLC & Updates Section */}
+                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                    <Download className="w-4 h-4 text-purple-400" />
+                    DLC & Updates
+                  </h3>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {dlcList.map((dlc) => (
+                      <div 
+                        key={dlc.id}
+                        onClick={() => setSelectedDLC(dlc)}
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all group ${
+                          selectedDLC?.id === dlc.id 
+                            ? 'bg-purple-500/20 border-purple-400/40' 
+                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-purple-400/30'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-bold text-sm mb-1 transition-colors ${
+                            selectedDLC?.id === dlc.id ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
+                          }`}>
+                            {dlc.name}
+                          </p>
+                          <p className="text-white/50 text-[10px] line-clamp-2">
+                            {dlc.description}
+                          </p>
+                        </div>
+                        <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                          selectedDLC?.id === dlc.id ? 'text-purple-400' : 'text-white/30 group-hover:text-purple-400'
+                        }`} />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
