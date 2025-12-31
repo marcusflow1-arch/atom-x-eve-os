@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { User, Mail, Calendar, Users, Camera, AtSign } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { User as UserEntity } from '@/entities/User';
+// removed direct entity import; using base44.auth instead
 import { base44 } from '@/api/base44Client';
 
 export default function SignUpForm({ onComplete, onCancel }) {
