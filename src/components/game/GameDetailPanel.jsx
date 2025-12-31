@@ -268,7 +268,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.3 }}
-        className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto w-full px-12 pb-12"
+        className="relative z-10 flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-12 py-12"
       >
         <AnimatePresence mode="wait">
           {activeTab === 'system' ? (
@@ -278,10 +278,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col lg:flex-row gap-16 items-center"
+              className="flex flex-col lg:flex-row gap-16 items-start"
             >
               {/* Left: Identity */}
-              <div className="flex-1 space-y-8">
+              <div className="flex-1 space-y-8 min-w-0">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-3 py-1 rounded bg-white/10 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-cyan-300">
@@ -293,10 +293,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </span>
                     )}
                   </div>
-                  <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-2 leading-none">
+                  <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-2 leading-none">
                     {game.title}
                   </h1>
-                  <p className="text-xl text-white/60 font-light max-w-xl leading-relaxed">
+                  <p className="text-lg text-white/60 font-light max-w-xl leading-relaxed">
                     {game.description || 'Initialize neural link to access description data.'}
                   </p>
                 </div>
@@ -308,14 +308,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   <DataPoint label="Compatibility" value="High" icon={Cpu} color="text-green-400" />
                 </div>
 
-                {/* Media System - Replaces Action Button */}
-                <div className="pt-4">
-                  <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden">
+                {/* Media System */}
+                <div className="pt-6">
+                  <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden">
                     {/* Media Tabs */}
                     <div className="flex p-1 bg-black/40 border-b border-white/10">
                       <button 
                         onClick={() => setMediaTab('media')}
-                        className={`flex-1 px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all ${
+                        className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                           mediaTab === 'media' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
@@ -323,7 +323,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </button>
                       <button 
                         onClick={() => setMediaTab('achievements')}
-                        className={`flex-1 px-6 py-3 text-xs font-bold uppercase tracking-wider transition-all ${
+                        className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                           mediaTab === 'achievements' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
@@ -332,7 +332,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
 
                     {/* Media Content */}
-                    <div className="p-6">
+                    <div className="p-4">
                       <AnimatePresence mode="wait">
                         {mediaTab === 'media' ? (
                           <motion.div
@@ -340,12 +340,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="space-y-4"
+                            className="space-y-3"
                           >
                             {/* Video Player */}
                             <div 
                               onClick={() => setIsViewingMedia(true)}
-                              className="relative aspect-video bg-black rounded-xl overflow-hidden cursor-pointer group border border-white/10 hover:border-white/20 transition-colors"
+                              className="relative aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-white/20 transition-colors"
                             >
                               <img 
                                 src={game.cover_image} 
@@ -353,8 +353,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                  <Play className="w-8 h-8 text-white ml-1" />
+                                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                  <Play className="w-6 h-6 text-white ml-0.5" />
                                 </div>
                               </div>
                             </div>
@@ -365,7 +365,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                                 <div 
                                   key={i}
                                   onClick={() => setIsViewingMedia(true)}
-                                  className="aspect-video bg-black rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-white/20 transition-colors"
+                                  className="aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-white/20 transition-colors"
                                 >
                                   <img 
                                     src={game.cover_image} 
@@ -382,7 +382,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="space-y-3"
+                            className="space-y-2"
                           >
                             {/* Achievement Cards */}
                             {[
@@ -393,14 +393,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               <div 
                                 key={i}
                                 onClick={() => setIsViewingMedia(true)}
-                                className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
                               >
-                                <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border border-white/10">
+                                <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center text-xl border border-white/10">
                                   {achievement.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-white font-semibold text-sm">{achievement.name}</p>
-                                  <p className="text-white/50 text-xs truncate">{achievement.desc}</p>
+                                  <p className="text-white font-semibold text-xs">{achievement.name}</p>
+                                  <p className="text-white/50 text-[10px] truncate">{achievement.desc}</p>
                                 </div>
                               </div>
                             ))}
@@ -411,14 +411,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                     {/* Add to Cart - Shown when not owned */}
                     {!owned && (
-                      <div className="p-6 pt-0">
+                      <div className="p-4 pt-0">
                         <button 
                           onClick={handleAddToCart}
-                          className="w-full group relative px-6 py-4 rounded-xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+                          className="w-full group relative px-4 py-3 rounded-lg font-bold uppercase tracking-widest text-xs overflow-hidden hover:scale-[1.02] transition-transform border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                         >
                           <div className="absolute inset-0 bg-white/10 backdrop-blur-md group-hover:bg-white/20 transition-colors" />
-                          <span className="relative flex items-center justify-center gap-3 text-white">
-                            <Download className="w-5 h-5" />
+                          <span className="relative flex items-center justify-center gap-2 text-white">
+                            <Download className="w-4 h-4" />
                             Add to Cart • ${game.price?.toFixed(2) || '0.00'}
                           </span>
                         </button>
@@ -429,45 +429,45 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Right: Asset Preview (The Hook) */}
-              <div className="flex-1 w-full lg:max-w-md space-y-6">
-                {/* Play Button - Moved Above */}
+              <div className="w-full lg:w-80 flex-shrink-0 space-y-3">
+                {/* Play Button - Top */}
                 {owned && (
                   <button 
                     onClick={handlePlay}
-                    className="w-full group relative px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm overflow-hidden hover:scale-[1.02] transition-transform border border-green-400/30 shadow-[0_0_30px_rgba(74,222,128,0.2)]"
+                    className="w-full group relative px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-xs overflow-hidden hover:scale-[1.02] transition-transform border border-green-400/30 shadow-[0_0_30px_rgba(74,222,128,0.2)]"
                   >
                     <div className="absolute inset-0 bg-green-500/10 backdrop-blur-md group-hover:bg-green-500/20 transition-colors" />
                     <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/10 to-green-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                    <span className="relative flex items-center justify-center gap-3 text-green-300 group-hover:text-green-200 drop-shadow-[0_2px_10px_rgba(74,222,128,0.5)]">
-                      <Play className="w-5 h-5 fill-green-400 text-green-400 drop-shadow-lg" />
+                    <span className="relative flex items-center justify-center gap-2 text-green-300 group-hover:text-green-200 drop-shadow-[0_2px_10px_rgba(74,222,128,0.5)]">
+                      <Play className="w-4 h-4 fill-green-400 text-green-400 drop-shadow-lg" />
                       Execute Launch Sequence
                     </span>
                   </button>
                 )}
 
-                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4">
-                    <Database className="w-6 h-6 text-white/10" />
+                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-3">
+                    <Database className="w-5 h-5 text-white/10" />
                   </div>
                   
-                  <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-cyan-400" />
+                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-cyan-400" />
                     Included System Assets
                   </h3>
 
-                  <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="grid grid-cols-2 gap-2 mb-4">
                     <SystemPreviewCard type="Ability" title="Neural Shock" subtitle="Stun enemies in radius" />
                     <SystemPreviewCard type="Passive" title="Cyber Metabolism" subtitle="+10% Regeneration" />
                     <SystemPreviewCard type="Equipment" title="Void Walker Set" subtitle="Stealth Bonus" />
                     <SystemPreviewCard type="Trait" title="Tactical Mind" subtitle="AI Behavior Mod" />
                   </div>
 
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Zap className="w-4 h-4 text-yellow-400" />
-                      <span className="text-xs font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
                     </div>
-                    <p className="text-[10px] text-white/50 leading-relaxed">
+                    <p className="text-[9px] text-white/50 leading-relaxed">
                       All assets from this system can be forged, combined, and ascended in the Blacksmith OS.
                     </p>
                   </div>
