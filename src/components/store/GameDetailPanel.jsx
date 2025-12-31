@@ -319,7 +319,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included in Atom XE</h3>
                 {owned && (
                   <div className="absolute -top-3 right-0">
-                    <Button onClick={() => {}} className="h-8 px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-full shadow-[0_0_20px_rgba(22,163,74,0.3)]">
+                    <Button onClick={() => { if (game?.play_link) window.open(game.play_link, '_blank'); }} className="h-8 px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-full shadow-[0_0_20px_rgba(22,163,74,0.3)]">
                       <Play className="w-3.5 h-3.5 mr-1.5 fill-current" />
                       Play / Launch
                     </Button>
