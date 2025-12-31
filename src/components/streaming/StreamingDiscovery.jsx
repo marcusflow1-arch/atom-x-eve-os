@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight, Video, Camera, CameraOff, Star, Clock, Trend
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
+import GameStreamersView from './GameStreamersView';
 
 // Game Genre Categories
 const STREAM_CATEGORIES = [
@@ -162,7 +163,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
 
   return (
     <div 
-      className="w-[280px] flex-shrink-0 p-5 rounded-3xl h-fit max-h-[calc(100vh-200px)] overflow-y-auto"
+      className="w-[238px] flex-shrink-0 p-5 rounded-3xl h-fit max-h-[calc(100vh-200px)] overflow-y-auto"
       style={{
         background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.2) 0%, rgba(100, 116, 139, 0.3) 50%, rgba(71, 85, 105, 0.2) 100%)',
         backdropFilter: 'blur(40px) saturate(180%)',
@@ -332,13 +333,27 @@ export default function StreamingDiscovery() {
     newStreamers: false,
     establishedStreamers: false,
     frequency: 'any',
-    viewerRange: null
+    viewerRange: null,
+    gameSearch: ''
   });
 
   const [selectedStreamer, setSelectedStreamer] = useState(MOCK_STREAMERS.filter(s => s.isNew)[0]);
   const [detailView, setDetailView] = useState('overview'); // 'overview' or 'details'
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [currentUserName] = useState('ProStreamer_User'); // Mock current user
+  const [selectedGame, setSelectedGame] = useState(null);
+
+  // Mock games data
+  const MOCK_GAMES = [
+    { id: 'game1', title: 'Cyberpunk 2088', viewers: '125K', genre: 'RPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop', streamers: 450 },
+    { id: 'game2', title: 'Elden Ring', viewers: '98K', genre: 'RPG', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop', streamers: 320 },
+    { id: 'game3', title: 'Valorant', viewers: '250K', genre: 'FPS', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop', streamers: 680 },
+    { id: 'game4', title: 'Minecraft', viewers: '185K', genre: 'Sandbox', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=200&fit=crop', streamers: 520 },
+    { id: 'game5', title: 'Apex Legends', viewers: '110K', genre: 'FPS', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop', streamers: 390 },
+    { id: 'game6', title: 'Counter-Strike 2', viewers: '95K', genre: 'FPS', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=300&h=200&fit=crop', streamers: 280 },
+    { id: 'game7', title: 'Dota 2', viewers: '88K', genre: 'MOBA', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&h=200&fit=crop', streamers: 210 },
+    { id: 'game8', title: 'League of Legends', viewers: '220K', genre: 'MOBA', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop', streamers: 590 },
+  ];
 
   const filteredStreamers = MOCK_STREAMERS.filter(streamer => {
     if (filters.category !== 'all' && streamer.category !== filters.category) return false;
@@ -354,6 +369,28 @@ export default function StreamingDiscovery() {
     return true;
   });
 
+  const filteredGames = MOCK_GAMES.filter(game => {
+    if (filters.gameSearch) {
+      return game.title.toLowerCase().includes(filters.gameSearch.toLowerCase()) ||
+             game.genre.toLowerCase().includes(filters.gameSearch.toLowerCase());
+    }
+    if (filters.category !== 'all') {
+      return game.genre.toLowerCase().includes(filters.category.toLowerCase());
+    }
+    return true;
+  });
+
+  if (selectedGame) {
+    return (
+      <AnimatePresence>
+        <GameStreamersView 
+          game={selectedGame} 
+          onClose={() => setSelectedGame(null)} 
+        />
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div className="flex gap-6 h-full p-6">
       {/* Left Column - Profile Button + Filter Sidebar */}
@@ -361,7 +398,7 @@ export default function StreamingDiscovery() {
         {/* User Profile Button - Above Categories */}
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-white transition-all w-[280px]"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-white transition-all w-[238px]"
           style={{
             background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(100, 116, 139, 0.3) 50%, rgba(59, 130, 246, 0.2) 100%)',
             backdropFilter: 'blur(40px) saturate(180%)',
@@ -375,7 +412,7 @@ export default function StreamingDiscovery() {
           </div>
           <div className="flex-1 text-left">
             <span className="font-semibold text-sm">{currentUserName}</span>
-            <p className="text-white/50 text-xs">Edit Streamer Profile</p>
+            <p className="text-white/50 text-xs">Edit Profile</p>
           </div>
           <ChevronRight className="w-4 h-4 text-white/40" />
         </button>
@@ -383,9 +420,68 @@ export default function StreamingDiscovery() {
         <FilterSidebar filters={filters} setFilters={setFilters} />
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto space-y-6">
+        {/* Games Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <Video className="w-6 h-6 text-cyan-400" />
+            Games
+          </h2>
+          
+          {/* Game Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search games or genres..."
+              value={filters.gameSearch}
+              onChange={(e) => setFilters(prev => ({ ...prev, gameSearch: e.target.value }))}
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-cyan-400/50 backdrop-blur-md"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 gap-4">
+            {filteredGames.map(game => (
+              <motion.div
+                key={game.id}
+                whileHover={{ scale: 1.03, y: -4 }}
+                onClick={() => setSelectedGame(game)}
+                className="cursor-pointer group"
+              >
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-black">
+                  <img 
+                    src={game.image} 
+                    alt={game.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+                  
+                  <div className="absolute top-3 right-3">
+                    <div className="px-2 py-1 bg-cyan-500/20 backdrop-blur-md rounded text-cyan-300 text-[10px] font-bold border border-cyan-500/30">
+                      {game.genre}
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="text-white font-bold text-sm mb-1">{game.title}</h3>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1 text-white/60">
+                        <Users className="w-3 h-3" />
+                        {game.viewers}
+                      </div>
+                      <span className="text-white/40">{game.streamers} streaming</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-white/10" />
+
         {/* Introduce Yourself Section */}
-        <div className="mb-8">
+        <div>
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Video className="w-6 h-6 text-blue-400" />
             Introduce Yourself
