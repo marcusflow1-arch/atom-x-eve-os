@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Shield, Cpu, ChevronRight, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
-  Download, Play, CreditCard, Check, X, Loader2
+  Download, Play, CreditCard, Check, X, Loader2,
+  Maximize2, Star, ThumbsUp, MessageSquare, User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -129,6 +130,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [showNavArrows, setShowNavArrows] = useState(false);
   const [mouseTimeout, setMouseTimeout] = useState(null);
   const [selectedDLC, setSelectedDLC] = useState(null);
+  const [selectedMediaItem, setSelectedMediaItem] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [devReview, setDevReview] = useState(null);
+  const [newReview, setNewReview] = useState({ rating: 5, content: '' });
   const owned = isPurchased(gameId);
 
   // Mock media content
@@ -223,6 +228,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   const handleMediaTrigger = (index) => {
     setCurrentMediaIndex(index);
+    setSelectedMediaItem(currentContent[index]);
+  };
+
+  const handleFullscreen = () => {
     setIsViewingMedia(true);
   };
 
@@ -240,6 +249,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
       try {
         const fetchedGame = await base44.entities.Game.get(gameId);
         setGame(fetchedGame);
+        
+        // Fetch reviews
+        const gameReviews = await base44.entities.Post.filter({ 
+          type: 'game_review', 
+          game_title: fetchedGame.title 
+        }, '-created_date');
+        setReviews(gameReviews);
+        
+        // Mock dev review (in production, this would be fetched from a DevReview entity)
+        setDevReview({
+          dev_name: "Studio Unknown",
+          dev_title: "Lead Game Designer",
+          content: "Our vision for the card system is to make every achievement feel earned. Cards aren't just collectibles—they're extensions of your playstyle. We wanted players to feel like they're building their own legend, one card at a time. The synergy between abilities and equipment cards mirrors the game's core philosophy: adaptation is survival.",
+          card_philosophy: "Merge, Ascend, Dominate"
+        });
       } catch (err) {
         console.error("Failed to fetch game", err);
       } finally {
@@ -248,6 +272,36 @@ export default function GameDetailPanel({ gameId, onClose }) {
     };
     fetchGame();
   }, [gameId]);
+
+  const handleSubmitReview = async () => {
+    if (!isAuthenticated) {
+      alert("Please sign in to leave a review");
+      return;
+    }
+    if (!newReview.content.trim()) return;
+    
+    try {
+      await base44.entities.Post.create({
+        title: `Review: ${game.title}`,
+        content: newReview.content,
+        type: 'game_review',
+        game_title: game.title,
+        genre: game.genre,
+        rating: newReview.rating,
+        community: 'reviews'
+      });
+      
+      // Refresh reviews
+      const gameReviews = await base44.entities.Post.filter({ 
+        type: 'game_review', 
+        game_title: game.title 
+      }, '-created_date');
+      setReviews(gameReviews);
+      setNewReview({ rating: 5, content: '' });
+    } catch (err) {
+      console.error("Failed to submit review", err);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -532,152 +586,254 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
                 {/* Media System */}
-                <div className="pt-6">
-                  <div className="space-y-3">
-                    {/* Compact Tab Switcher */}
-                    <div className="flex items-center gap-4">
-                      <button 
-                        onClick={() => setMediaTab('content')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-all ${
-                          mediaTab === 'content' ? 'text-white' : 'text-white/40 hover:text-white'
-                        }`}
+                <div className="pt-6 space-y-4">
+                  {/* Compact Tab Switcher */}
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setMediaTab('content')}
+                      className={`text-sm font-bold uppercase tracking-wider transition-all ${
+                        mediaTab === 'content' ? 'text-white' : 'text-white/40 hover:text-white'
+                      }`}
+                    >
+                      Content
+                    </button>
+                    <button 
+                      onClick={() => setMediaTab('achievement_loot')}
+                      className={`text-sm font-bold uppercase tracking-wider transition-all ${
+                        mediaTab === 'achievement_loot' ? 'text-white' : 'text-white/40 hover:text-white'
+                      }`}
+                    >
+                      Achievement DLC Loot
+                    </button>
+                  </div>
+
+                  {/* Media Thumbnails */}
+                  <AnimatePresence mode="wait">
+                    {mediaTab === 'content' ? (
+                      <motion.div
+                        key="content"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2"
                       >
-                        Content
-                      </button>
-                      <button 
-                        onClick={() => setMediaTab('achievement_loot')}
-                        className={`text-sm font-bold uppercase tracking-wider transition-all ${
-                          mediaTab === 'achievement_loot' ? 'text-white' : 'text-white/40 hover:text-white'
-                        }`}
+                        {/* Videos */}
+                        <div className="flex gap-2">
+                          {videos.map((video, i) => (
+                            <div 
+                              key={i}
+                              onClick={() => handleMediaTrigger(i)}
+                              className={`relative w-24 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all ${
+                                selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                              }`}
+                            >
+                              <img 
+                                src={video.image} 
+                                alt={video.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors pointer-events-none">
+                                <Play className="w-3 h-3 text-white" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Screenshots */}
+                        <div className="flex gap-2 overflow-x-auto flex-1">
+                          {screenshots.map((screenshot, i) => (
+                            <div 
+                              key={i}
+                              onClick={() => handleMediaTrigger(videos.length + i)}
+                              className={`w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
+                                selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                              }`}
+                            >
+                              <img 
+                                src={screenshot.image} 
+                                alt={screenshot.title}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="achievement_loot"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 overflow-x-auto pb-2"
                       >
-                        Achievement DLC Loot
+                        {achievements.map((achievement, i) => (
+                          <div 
+                            key={i}
+                            onClick={() => handleMediaTrigger(i)}
+                            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer transition-all group ${
+                              selectedMediaItem === currentContent[i] ? 'bg-cyan-500/30 scale-110' : 'hover:bg-cyan-500/20 hover:scale-110'
+                            }`}
+                          >
+                            <div className={`w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border transition-all ${
+                              selectedMediaItem === currentContent[i] ? 'border-cyan-400 bg-black/60' : 'border-white/10 group-hover:border-cyan-400/50 group-hover:bg-black/60'
+                            }`}>
+                              {achievement.icon}
+                            </div>
+                            <p className={`font-semibold text-[10px] text-center transition-colors max-w-[60px] truncate ${
+                              selectedMediaItem === currentContent[i] ? 'text-cyan-300' : 'text-white group-hover:text-cyan-300'
+                            }`}>
+                              {achievement.name}
+                            </p>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Media Preview Box */}
+                  {selectedMediaItem && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden"
+                    >
+                      <div className="aspect-video relative">
+                        <img 
+                          src={selectedMediaItem.image || selectedMediaItem.icon || game.cover_image}
+                          alt={selectedMediaItem.title || selectedMediaItem.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        
+                        {/* Fullscreen Button */}
+                        <button
+                          onClick={handleFullscreen}
+                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group"
+                        >
+                          <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
+                        </button>
+
+                        {/* Media Info */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <h4 className="text-white font-bold text-lg mb-1">
+                            {selectedMediaItem.title || selectedMediaItem.name}
+                          </h4>
+                          {selectedMediaItem.title && (
+                            <p className="text-white/60 text-sm">Click fullscreen to view in theater mode</p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Developer Review Section */}
+                {devReview && (
+                  <div className="pt-8 space-y-4">
+                    <h3 className="text-white font-bold text-lg uppercase tracking-wider flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-purple-400" />
+                      Developer Insight
+                    </h3>
+                    <div className="bg-gradient-to-br from-purple-900/20 via-black/40 to-blue-900/20 backdrop-blur-md border border-purple-500/20 rounded-2xl p-6">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center flex-shrink-0">
+                          <User className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-bold">{devReview.dev_name}</h4>
+                          <p className="text-white/60 text-sm">{devReview.dev_title}</p>
+                        </div>
+                      </div>
+                      <p className="text-white/80 leading-relaxed mb-4">{devReview.content}</p>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                        <Zap className="w-4 h-4 text-purple-400" />
+                        <span className="text-purple-300 font-medium text-sm">{devReview.card_philosophy}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* User Reviews Section */}
+                <div className="pt-8 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-white font-bold text-lg uppercase tracking-wider flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-cyan-400" />
+                      Player Reviews ({reviews.length})
+                    </h3>
+                  </div>
+
+                  {/* Write Review */}
+                  {isAuthenticated && (
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setNewReview({ ...newReview, rating: star })}
+                            className="transition-all hover:scale-110"
+                          >
+                            <Star 
+                              className={`w-6 h-6 ${star <= newReview.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={newReview.content}
+                        onChange={(e) => setNewReview({ ...newReview, content: e.target.value })}
+                        placeholder="Share your thoughts on this game..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/40 resize-none h-24 focus:outline-none focus:border-cyan-400/50"
+                      />
+                      <button
+                        onClick={handleSubmitReview}
+                        className="px-6 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-xl text-cyan-300 font-medium hover:bg-cyan-500/30 transition-all"
+                      >
+                        Submit Review
                       </button>
                     </div>
+                  )}
 
-                    {/* Media Content */}
-                    <AnimatePresence mode="wait">
-                      {mediaTab === 'content' ? (
-                        <motion.div
-                          key="content"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="flex items-center gap-2"
-                        >
-                          {/* Left Arrow */}
-                          <button 
-                            onClick={() => {
-                              if (currentMediaIndex > 0) {
-                                setCurrentMediaIndex(currentMediaIndex - 1);
-                              }
-                            }}
-                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
-                          >
-                            <ChevronRight className="w-4 h-4 text-white rotate-180" />
-                          </button>
-
-                          {/* Videos */}
-                          <div className="flex gap-2">
-                            {videos.map((video, i) => (
-                              <div 
-                                key={i}
-                                onClick={() => handleMediaTrigger(i)}
-                                className="relative w-32 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border border-white/10 hover:border-cyan-400/30 transition-all"
-                              >
-                                <img 
-                                  src={video.image} 
-                                  alt={video.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors pointer-events-none">
-                                  <Play className="w-4 h-4 text-white" />
-                                </div>
+                  {/* Reviews List */}
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {reviews.length === 0 ? (
+                      <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-center">
+                        <MessageSquare className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                        <p className="text-white/60">No reviews yet. Be the first to share your experience!</p>
+                      </div>
+                    ) : (
+                      reviews.map((review) => (
+                        <div key={review.id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:border-cyan-400/30 transition-all">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                                <User className="w-5 h-5 text-cyan-400" />
                               </div>
-                            ))}
-                          </div>
-                          
-                          {/* Screenshots */}
-                          <div className="flex gap-2 overflow-x-auto flex-1">
-                            {screenshots.map((screenshot, i) => (
-                              <div 
-                                key={i}
-                                onClick={() => handleMediaTrigger(videos.length + i)}
-                                className="w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/30 transition-all group flex-shrink-0"
-                              >
-                                <img 
-                                  src={screenshot.image} 
-                                  alt={screenshot.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Right Arrow */}
-                          <button 
-                            onClick={() => {
-                              const totalItems = videos.length + screenshots.length;
-                              if (currentMediaIndex < totalItems - 1) {
-                                setCurrentMediaIndex(currentMediaIndex + 1);
-                              }
-                            }}
-                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
-                          >
-                            <ChevronRight className="w-4 h-4 text-white" />
-                          </button>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="achievement_loot"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="flex items-center gap-2"
-                        >
-                          {/* Left Arrow */}
-                          <button 
-                            onClick={() => {
-                              if (currentMediaIndex > 0) {
-                                setCurrentMediaIndex(currentMediaIndex - 1);
-                              }
-                            }}
-                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
-                          >
-                            <ChevronRight className="w-4 h-4 text-white rotate-180" />
-                          </button>
-
-                          {/* Achievement Horizontal List */}
-                          <div className="flex-1 flex gap-2 overflow-x-auto pb-2">
-                            {achievements.map((achievement, i) => (
-                              <div 
-                                key={i}
-                                onClick={() => handleMediaTrigger(i)}
-                                className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer hover:bg-cyan-500/20 hover:scale-110 transition-all group"
-                              >
-                                <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border border-white/10 group-hover:border-cyan-400/50 group-hover:bg-black/60 transition-all">
-                                  {achievement.icon}
-                                </div>
-                                <p className="text-white font-semibold text-[10px] text-center group-hover:text-cyan-300 transition-colors max-w-[60px] truncate">
-                                  {achievement.name}
+                              <div>
+                                <p className="text-white font-medium">{review.created_by}</p>
+                                <p className="text-white/40 text-xs">
+                                  {new Date(review.created_date).toLocaleDateString()}
                                 </p>
                               </div>
-                            ))}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i}
+                                  className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                                />
+                              ))}
+                            </div>
                           </div>
-
-                          {/* Right Arrow */}
-                          <button 
-                            onClick={() => {
-                              if (currentMediaIndex < achievements.length - 1) {
-                                setCurrentMediaIndex(currentMediaIndex + 1);
-                              }
-                            }}
-                            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all flex-shrink-0"
-                          >
-                            <ChevronRight className="w-4 h-4 text-white" />
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <p className="text-white/80 leading-relaxed">{review.content}</p>
+                          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10">
+                            <button className="flex items-center gap-2 text-white/40 hover:text-cyan-400 transition-all text-sm">
+                              <ThumbsUp className="w-4 h-4" />
+                              <span>{review.score || 0}</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
