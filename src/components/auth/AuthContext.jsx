@@ -126,50 +126,12 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async () => {
-        setIsLoginFlow(true);
-        setLoading(true);
         try {
+            setIsLoginFlow(true);
             await base44.auth.redirectToLogin();
-                  return;
-            if (loggedInUser) {
-                setUser(loggedInUser);
-
-                if (!loggedInUser.username) {
-                    setShowSignUp(true);
-                    setAvatar(null);
-                } else {
-                    setShowSignUp(false);
-                    const userAvatars = await Avatar.filter({ user_id: loggedInUser.id });
-                    if (userAvatars.length > 0) {
-                        setAvatar(userAvatars[0]);
-                    } else {
-                        setAvatar(null);
-                    }
-                }
-
-                await base44.auth.updateMe({ last_login: new Date().toISOString() });
-
-                if (!loggedInUser.unlocked_achievements?.includes('first_login')) {
-                    console.log("Granting First Login Achievement");
-                    const updatedAchievements = [...(loggedInUser.unlocked_achievements || []), 'first_login'];
-                    await base44.auth.updateMe({ unlocked_achievements: updatedAchievements });
-                    const refreshedUser = await User.me();
-                    setUser(refreshedUser);
-                }
-            } else {
-                setUser(null);
-                setAvatar(null);
-                setShowSignUp(false);
-            }
         } catch (error) {
             console.error('Login failed:', error);
-            setUser(null);
-            setAvatar(null);
-            setShowSignUp(false);
             setIsLoginFlow(false);
-            return { success: false, error: 'Login failed. Please try again.' };
-        } finally {
-            setLoading(false);
         }
     };
 
