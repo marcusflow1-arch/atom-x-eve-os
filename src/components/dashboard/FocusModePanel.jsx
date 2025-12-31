@@ -16,6 +16,8 @@ import CardTutorialOverlay from '../cards/CardTutorialOverlay';
 import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import LimitedEditionDisplay from './LimitedEditionDisplay';
+import EntertainmentRow from './EntertainmentRow';
+import UserInterfaceView from './views/UserInterfaceView';
 
 // Mock pinned games
 const pinnedGames = [
@@ -1771,6 +1773,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [activeGenre, setActiveGenre] = useState('Action');
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [librarySubPage, setLibrarySubPage] = useState('library');
   
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
@@ -1883,18 +1886,53 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       {/* Bottom Section - Grid layout */}
       <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
-        {/* Library Area - Flexible width */}
+        {/* Left Area with Sub Tabs */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="w-full">
-            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+          {/* Subpage Tabs */}
+          <div className="flex items-center gap-2">
+            {[
+              { id: 'library', label: 'Library' },
+              { id: 'entertainment', label: 'Entertainment' },
+              { id: 'ui', label: 'User Interface' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setLibrarySubPage(tab.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                  librarySubPage === tab.id
+                    ? 'bg-white/10 text-white border-white/20'
+                    : 'text-white/50 hover:text-white hover:bg-white/5 border-transparent'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <LibraryGamesSection 
-            onSelectGame={handleGameSelect}
-            selectedGame={selectedGame}
-            allGames={ownedGames}
-            showGamePanel={showGamePanel}
-            onClosePanel={handleCloseGamePanel}
-          />
+
+          {librarySubPage === 'library' && (
+            <>
+              <div className="w-full">
+                <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+              </div>
+              <LibraryGamesSection 
+                onSelectGame={handleGameSelect}
+                selectedGame={selectedGame}
+                allGames={ownedGames}
+                showGamePanel={showGamePanel}
+                onClosePanel={handleCloseGamePanel}
+              />
+            </>
+          )}
+
+          {librarySubPage === 'entertainment' && (
+            <EntertainmentRow />
+          )}
+
+          {librarySubPage === 'ui' && (
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden">
+              <UserInterfaceView />
+            </div>
+          )}
         </div>
 
         {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
