@@ -675,10 +675,10 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setShowEntertainment(v => !v); }}
-              className={`w-8 h-8 rounded-full border transition-all ${showEntertainment ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+              className="text-white/70 hover:text-white"
               title="Entertainment"
             >
-              <Tv className="w-4 h-4 text-white/80" />
+              <Tv className="w-4 h-4" />
             </button>
           </div>
         </div>
