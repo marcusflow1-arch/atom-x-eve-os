@@ -155,14 +155,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
     setUnlocking(true);
     try {
         await base44.functions.invoke('unlockGameSystem', { gameId });
-        setOwned(true);
-        setShowPurchaseModal(false);
+        // Cart context will handle ownership state
     } catch (err) {
         console.error("Unlock failed", err);
-        setUnlocking(false); // Stop processing if error
     } finally {
-        // We keep unlocking true for a moment if successful to transition? 
-        // Actually setOwned(true) will re-render the main view.
         setUnlocking(false);
     }
   };
