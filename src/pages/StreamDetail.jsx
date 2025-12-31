@@ -1,20 +1,19 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Radio, Users, Eye, Heart, Share2, Gift, Flag, Settings,
-  Mic, Send, Play, Volume2, VolumeX, Maximize, Crown, Star
+  Mic, Send, Play, Volume2, VolumeX, Maximize, Crown, Star, X, UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../components/auth/AuthContext';
-import { Stream } from '@/entities/Stream';
-import { StreamChatMessage } from '@/entities/StreamChatMessage';
-import { StreamFollow } from '@/entities/StreamFollow';
-import { StreamDonation } from '@/entities/StreamDonation';
+import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
+import StreamerProfilePreview from '../components/streaming/StreamerProfilePreview';
+import ViewerSeasonalPass from '../components/streaming/ViewerSeasonalPass';
+import StreamerInfoSection from '../components/streaming/StreamerInfoSection';
 
 const ChatMessage = ({ message }) => {
   const isVoice = message.message_type === 'voice';
@@ -126,6 +125,7 @@ const StreamPlayer = ({ stream, isFullscreen, onToggleFullscreen }) => {
 
 export default function StreamDetail() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [stream, setStream] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,6 +135,8 @@ export default function StreamDetail() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [viewState, setViewState] = useState('profile'); // 'profile' or 'stream'
+  const [viewerTier, setViewerTier] = useState(12);
   const chatEndRef = useRef(null);
   const mediaRecorder = useRef(null);
 
@@ -143,26 +145,34 @@ export default function StreamDetail() {
 
   const loadStreamData = useCallback(async () => {
     try {
-      // In production: const streamData = await Stream.get(streamId);
-      // For now, mock data
-      const mockStream = {
-        id: streamId,
-        title: 'Epic Boss Battle - Come Watch!',
-        streamer_id: 'user1',
-        streamer_username: 'ProGamer2024',
-        streamer_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop',
-        game_id: 'sample_1',
-        game_title: 'Cyberpunk 2088',
-        viewer_count: 1247,
-        tags: ['Action', 'RPG', 'Live'],
-        mode: 'streaming',
-        preview_image_url: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=1280&h=720&fit=crop',
-        started_at: new Date().toISOString(),
-        is_live: true,
-        max_viewers: 1500,
-        description: 'Taking on the final boss! This fight is going to be epic. Come hang out and chat!'
-      };
-      setStream(mockStream);
+      // Try to fetch real stream
+      const streams = await base44.entities.Stream.filter({ id: streamId });
+      if (streams.length > 0) {
+        setStream(streams[0]);
+      } else {
+        // Mock data fallback
+        const mockStream = {
+          id: streamId,
+          title: 'Epic Boss Battle - Come Watch!',
+          streamer_id: 'user1',
+          name: 'ProGamer Elite',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop',
+          game_title: 'Cyberpunk 2088',
+          viewer_count: 1247,
+          tags: ['Action', 'RPG', 'Live'],
+          focus: 'Card Collector',
+          bio: 'Tactical genius with a love for high-stakes plays. I hunt rare weapon skins and coach new players.',
+          recent_games: ['Valorant', 'Apex Legends', 'The Finals'],
+          schedule: 'Mon-Fri 7PM EST',
+          preview_image_url: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=1280&h=720&fit=crop',
+          started_at: new Date().toISOString(),
+          is_live: true,
+          max_viewers: 1500,
+          description: 'Taking on the final boss! This fight is going to be epic. Come hang out and chat!',
+          why_stream: "I love connecting with people who share my passion for gaming."
+        };
+        setStream(mockStream);
+      }
     } catch (error) {
       console.error('Error loading stream:', error);
     } finally {
@@ -171,15 +181,24 @@ export default function StreamDetail() {
   }, [streamId]);
 
   const loadChatMessages = useCallback(async () => {
-    // Mock chat messages
-    const mockMessages = [
-      { id: '1', username: 'ChatFan', content: 'Good luck with the boss!', message_type: 'text' },
-      { id: '2', username: 'GamerGirl', content: 'You got this!', message_type: 'text' },
-      { id: '3', username: 'VoiceFan', content: '', message_type: 'voice', media_duration: 3000 },
-      { id: '4', username: 'Supporter', content: 'Amazing stream!', message_type: 'donation', donation_amount: 5 }
-    ];
-    setChatMessages(mockMessages);
-  }, []);
+    try {
+      const messages = await base44.entities.StreamChatMessage.filter(
+        { stream_id: streamId },
+        '-created_date',
+        50
+      );
+      setChatMessages(messages.reverse());
+    } catch (error) {
+      // Fallback to mock
+      const mockMessages = [
+        { id: '1', username: 'ChatFan', content: 'Good luck with the boss!', message_type: 'text', user_id: 'u1' },
+        { id: '2', username: 'GamerGirl', content: 'You got this!', message_type: 'text', user_id: 'u2' },
+        { id: '3', username: 'VoiceFan', content: '', message_type: 'voice', media_duration: 3000, user_id: 'u3' },
+        { id: '4', username: 'Supporter', content: 'Amazing stream!', message_type: 'donation', donation_amount: 5, user_id: 'u4' }
+      ];
+      setChatMessages(mockMessages);
+    }
+  }, [streamId]);
 
   const simulateRealTimeUpdates = useCallback(() => {
     // Simulate periodic viewer count updates
@@ -209,19 +228,32 @@ export default function StreamDetail() {
   }, [streamId, loadStreamData, loadChatMessages, simulateRealTimeUpdates]);
 
   const handleSendMessage = useCallback(async () => {
-    if (!newMessage.trim() || !isAuthenticated) return;
+    if (!newMessage.trim() || !isAuthenticated || !stream) return;
 
-    const message = {
-      id: Date.now().toString(),
-      username: user.username || user.full_name,
-      content: newMessage,
-      message_type: 'text'
-    };
+    try {
+      await base44.entities.StreamChatMessage.create({
+        stream_id: stream.id,
+        user_id: user.id,
+        username: user.username || user.full_name,
+        content: newMessage,
+        message_type: 'text'
+      });
 
-    setChatMessages(prev => [...prev, message]);
-    setNewMessage('');
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [newMessage, isAuthenticated, user]);
+      const message = {
+        id: Date.now().toString(),
+        username: user.username || user.full_name,
+        content: newMessage,
+        message_type: 'text',
+        user_id: user.id
+      };
+
+      setChatMessages(prev => [...prev, message]);
+      setNewMessage('');
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+  }, [newMessage, isAuthenticated, user, stream]);
 
   const handleVoiceMessage = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -314,113 +346,91 @@ export default function StreamDetail() {
     );
   }
 
+  if (viewState === 'profile') {
+    return (
+      <StreamerProfilePreview 
+        streamer={stream}
+        onEnterStream={() => setViewState('stream')}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* Header */}
-      <div className="border-b border-slate-700 p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <Button variant="ghost" asChild>
-            <Link to={createPageUrl('StreamingHub')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Streams
-            </Link>
-          </Button>
-          
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Share2 className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Flag className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#050505] text-white">
+      {/* Back Button */}
+      <div className="fixed top-6 left-6 z-50">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Video Player */}
-            <StreamPlayer 
-              stream={stream} 
-              isFullscreen={isFullscreen}
-              onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-            />
-            
-            {/* Stream Info */}
-            <div className="space-y-4">
-              <h1 className="text-2xl font-bold">{stream.title}</h1>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src={stream.streamer_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop'} 
-                    alt={stream.streamer_username}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <p className="font-semibold text-lg">{stream.streamer_username}</p>
-                    <div className="flex items-center gap-4 text-sm text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        {stream.viewer_count} viewers
-                      </span>
-                      <span>Started {new Date(stream.started_at).toLocaleTimeString()}</span>
-                    </div>
-                  </div>
+      <div className="max-w-[1800px] mx-auto p-6 space-y-6">
+        {/* Stream + Chat Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Stream Player - 3 columns */}
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+              <StreamPlayer 
+                stream={stream} 
+                isFullscreen={isFullscreen}
+                onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+              />
+            </div>
+
+            {/* Streamer Header Info */}
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={stream.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=64&h=64&fit=crop'} 
+                  alt={stream.name}
+                  className="w-14 h-14 rounded-full border-2 border-white/20"
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-white">{stream.title}</h1>
+                  <p className="text-white/60 text-sm">{stream.name}</p>
                 </div>
-                
-                {isAuthenticated && (
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={handleFollow}
-                      variant={isFollowing ? "secondary" : "default"}
-                      className="bg-purple-600 hover:bg-purple-700"
-                    >
-                      <Heart className={`w-4 h-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
-                      {isFollowing ? 'Following' : 'Follow'}
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => setShowDonateModal(true)}
-                      className="bg-yellow-600 hover:bg-yellow-700"
-                    >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Donate
-                    </Button>
-                  </div>
-                )}
               </div>
               
-              {/* Tags and Game Info */}
-              <div className="flex flex-wrap gap-2">
-                {stream.game_title && (
-                  <Badge variant="outline" className="text-blue-400 border-blue-400">
-                    Playing: {stream.game_title}
-                  </Badge>
-                )}
-                {stream.tags?.map(tag => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
-                ))}
-              </div>
-              
-              {stream.description && (
-                <p className="text-slate-300">{stream.description}</p>
+              {isAuthenticated && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleFollow}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                      isFollowing 
+                        ? 'bg-white/10 border border-white/20 text-white' 
+                        : 'bg-purple-500/20 border border-purple-500/40 text-purple-300 hover:bg-purple-500/30'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${isFollowing ? 'fill-current' : ''}`} />
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowDonateModal(true)}
+                    className="px-4 py-2 rounded-lg font-medium bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all flex items-center gap-2"
+                  >
+                    <Gift className="w-4 h-4" />
+                    Donate
+                  </button>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Chat Panel */}
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 flex flex-col h-full">
-            <div className="p-4 border-b border-slate-700/50">
-              <h3 className="font-bold flex items-center gap-2">
+          {/* Chat Panel - 1 column */}
+          <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col h-[800px]">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="font-bold flex items-center gap-2 text-white">
                 <Users className="w-5 h-5" />
-                Live Chat ({stream.viewer_count})
+                Stream Chat
               </h3>
+              <p className="text-white/40 text-xs mt-1">{stream.viewer_count} watching</p>
             </div>
             
-            <div className="flex-grow overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {chatMessages.map(message => (
                 <ChatMessage key={message.id} message={message} />
               ))}
@@ -428,34 +438,50 @@ export default function StreamDetail() {
             </div>
             
             {isAuthenticated ? (
-              <div className="p-4 border-t border-slate-700/50">
+              <div className="p-4 border-t border-white/10">
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Send a message..."
+                  <input
+                    placeholder="Say something..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="bg-slate-900 border-slate-700"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-cyan-400/50"
                   />
-                  <Button size="icon" onClick={handleSendMessage}>
-                    <Send className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant={isRecordingVoice ? "destructive" : "outline"}
-                    onClick={handleVoiceMessage}
+                  <button 
+                    onClick={handleSendMessage}
+                    className="w-10 h-10 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 rounded-lg flex items-center justify-center text-cyan-400 transition-all"
                   >
-                    <Mic className={`w-4 h-4 ${isRecordingVoice ? 'animate-pulse' : ''}`} />
-                  </Button>
+                    <Send className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleVoiceMessage}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                      isRecordingVoice 
+                        ? 'bg-red-500/30 border-red-500/50 text-red-400 animate-pulse' 
+                        : 'bg-white/5 hover:bg-white/10 border border-white/10 text-white/60'
+                    }`}
+                  >
+                    <Mic className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="p-4 border-t border-slate-700/50 text-center">
-                <p className="text-slate-400">Sign in to chat</p>
+              <div className="p-4 border-t border-white/10 text-center">
+                <p className="text-white/40 text-sm">Sign in to participate in chat</p>
               </div>
             )}
           </div>
         </div>
+
+        {/* Streamer Info Section */}
+        <StreamerInfoSection streamer={stream} />
+
+        {/* Viewer Seasonal Pass */}
+        <ViewerSeasonalPass 
+          currentTier={viewerTier} 
+          maxTier={30}
+          streamerId={stream.streamer_id}
+        />
       </div>
     </div>
   );
