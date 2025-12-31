@@ -1,18 +1,29 @@
-Deno.serve(async (_req) => {
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+Deno.serve(async (req) => {
   try {
-    const key = Deno.env.get('STRIPE_PUBLISHABLE_KEY');
-    if (!key) {
-      throw new Error("Stripe publishable key is not set in environment variables.");
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return new Response(JSON.stringify({ publishableKey: key }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+
+    const publishableKey = Deno.env.get('STRIPE_PUBLISHABLE_KEY');
+
+    if (!publishableKey) {
+      return Response.json({ 
+        error: 'Stripe publishable key not configured' 
+      }, { status: 500 });
+    }
+
+    return Response.json({ 
+      publishableKey 
     });
-  } catch (e) {
-    console.error("Error fetching Stripe publishable key:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (error) {
+    console.error('Get Stripe key error:', error);
+    return Response.json({ 
+      error: error.message 
+    }, { status: 500 });
   }
 });

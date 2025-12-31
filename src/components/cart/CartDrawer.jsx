@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, CreditCard, Trash2, CheckCircle2, Shield, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, CreditCard, Trash2, CheckCircle2, Shield, AlertCircle, Loader2, ArrowRight, Database } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
@@ -14,32 +14,10 @@ export default function CartDrawer() {
 
   const total = getCartTotal();
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (cart.length === 0) return;
-    
-    setIsCheckingOut(true);
-    setCheckoutStep('processing');
-
-    try {
-      const response = await base44.functions.invoke('processCheckout', { 
-        items: cart,
-        paymentMethod: 'credit_card'
-      });
-
-      if (response.data.success) {
-        setCheckoutStep('success');
-        clearCart();
-      } else {
-        // Handle error
-        console.error('Checkout failed:', response.data.error);
-        setCheckoutStep('review'); // Or error state
-        setIsCheckingOut(false);
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      setCheckoutStep('review');
-      setIsCheckingOut(false);
-    }
+    closeCart();
+    navigate(createPageUrl('Checkout'));
   };
 
   const handleClose = () => {

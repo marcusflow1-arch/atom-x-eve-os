@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLocation, Link } from 'react-router-dom';
 import { CheckCircle, Loader2, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';

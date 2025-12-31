@@ -305,7 +305,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-        alert("Authentication Required Identity Protocol.");
+        alert("Authentication Required: Identity Protocol.");
         return;
     }
     addToCart({
@@ -313,7 +313,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
         type: 'game',
         title: game.title,
         price: game.price,
-        image: game.cover_image
+        image: game.cover_image,
+        genre: game.genre
     });
   };
 

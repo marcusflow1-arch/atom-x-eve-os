@@ -335,9 +335,6 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
 
           {/* Right Content Column */}
           <div className="flex-1 flex flex-col overflow-hidden relative">
-            <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 z-10">
-              <X className="w-4 h-4" />
-            </button>
 
             {/* Tabs */}
             <div className="flex gap-6 border-b border-white/10 px-6 pt-6">
@@ -517,9 +514,11 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
     addToCart({
       id: item.id,
       title: item.name,
-      price: item.price || 0,
+      price: (item.price || 0) / 1000, // Convert AGP to USD
       image: item.image,
-      type: 'marketplace'
+      type: 'marketplace_item',
+      rarity: item.rarity,
+      game: item.game
     });
     setSelectedItem(null);
   };
@@ -528,12 +527,14 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
     addToCart({
       id: item.id,
       title: item.name,
-      price: item.price || 0,
+      price: (item.price || 0) / 1000, // Convert AGP to USD
       image: item.image,
-      type: 'marketplace'
+      type: 'marketplace_item',
+      rarity: item.rarity,
+      game: item.game
     });
     setSelectedItem(null);
-    // Cart automatically opens, no need to navigate to separate checkout page
+    navigate(createPageUrl('Checkout'));
   };
 
   return (

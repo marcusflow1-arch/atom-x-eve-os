@@ -17,9 +17,19 @@ const steps = [
 ];
 
 export default function Checkout() {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { cart, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
+
+    // Load Stripe script
+    useEffect(() => {
+        if (!window.Stripe) {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.async = true;
+            document.body.appendChild(script);
+        }
+    }, []);
     
     const [currentStep, setCurrentStep] = useState(1);
     const [processing, setProcessing] = useState(false);
@@ -62,38 +72,47 @@ export default function Checkout() {
     };
 
     const handlePurchase = async () => {
-        if (!user) return;
+        if (!user) {
+            alert("Please sign in to complete your purchase");
+            return;
+        }
         setProcessing(true);
         
         try {
             const total = getCartTotal();
-            const orderItems = cart.map(item => ({
-                game_id: item.id,
-                title: item.title,
-                price: item.price,
-                quantity: item.quantity || 1,
-                image: item.image || item.cover_image
-            }));
-
-            // Create Order in Database
-            const order = await base44.entities.Order.create({
-                user_id: user.id,
-                total_amount: total,
-                status: 'completed',
-                items: orderItems,
-                shipping_info: {
-                    email: formData.email,
-                    address: formData.address,
-                    city: formData.city,
-                    zip: formData.zip,
-                    country: formData.country
-                },
-                transaction_id: 'MOCK-TXN-' + Date.now()
+            
+            // Get Stripe publishable key
+            const { data: keyData } = await base44.functions.invoke('getStripePublishableKey');
+            
+            // Create checkout session
+            const { data: sessionData } = await base44.functions.invoke('createCheckoutSession', {
+                items: cart.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    type: item.type,
+                    rarity: item.rarity,
+                    game: item.game,
+                    image: item.image || item.cover_image
+                })),
+                successUrl: window.location.origin + createPageUrl('OrderConfirmation') + '?session_id={CHECKOUT_SESSION_ID}',
+                cancelUrl: window.location.origin + createPageUrl('Checkout')
             });
 
-            // Clear cart and redirect
-            clearCart();
-            navigate(createPageUrl('OrderConfirmation') + `?orderId=${order.id}`);
+            if (sessionData.sessionId) {
+                // Redirect to Stripe Checkout
+                const stripe = window.Stripe(keyData.publishableKey);
+                const { error } = await stripe.redirectToCheckout({
+                    sessionId: sessionData.sessionId
+                });
+                
+                if (error) {
+                    console.error('Stripe error:', error);
+                    alert('Payment redirect failed. Please try again.');
+                }
+            } else {
+                throw new Error('Failed to create checkout session');
+            }
             
         } catch (error) {
             console.error("Checkout error:", error);

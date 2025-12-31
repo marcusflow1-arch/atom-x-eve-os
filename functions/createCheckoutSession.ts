@@ -1,51 +1,58 @@
-import { createClient } from 'npm:@base44/sdk@0.1.0';
-import Stripe from 'npm:stripe@^14';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import Stripe from 'npm:stripe@16.12.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
-    const { gameId, gameName, amount } = await req.json();
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
 
-    try {
-        const base44 = createClient({
-            appId: Deno.env.get('BASE44_APP_ID'),
-        });
-        
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
-        base44.auth.setToken(token);
-        const user = await base44.auth.me();
-        if (!user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-
-        // Create a PaymentIntent with the order amount and currency
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: 'usd',
-            automatic_payment_methods: {
-                enabled: true,
-            },
-            metadata: {
-                user_id: user.id,
-                user_email: user.email,
-                game_id: gameId,
-                game_name: gameName,
-            }
-        });
-
-        return new Response(JSON.stringify({ clientSecret: paymentIntent.client_secret }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-    } catch (error) {
-        console.error('Stripe Error:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-        });
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { items, successUrl, cancelUrl } = await req.json();
+
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: items.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.title,
+            description: `${item.type === 'game' ? 'Game' : 'Marketplace Item'}${item.rarity ? ` - ${item.rarity}` : ''}`,
+            images: item.image ? [item.image] : [],
+            metadata: {
+              item_id: item.id,
+              item_type: item.type,
+              game: item.game || '',
+              rarity: item.rarity || ''
+            }
+          },
+          unit_amount: Math.round(item.price * 100), // Convert to cents
+        },
+        quantity: 1,
+      })),
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        user_id: user.id,
+        user_email: user.email,
+        items: JSON.stringify(items.map(i => ({ id: i.id, type: i.type, title: i.title })))
+      }
+    });
+
+    return Response.json({ 
+      sessionId: session.id,
+      url: session.url 
+    });
+  } catch (error) {
+    console.error('Create checkout session error:', error);
+    return Response.json({ 
+      error: error.message 
+    }, { status: 500 });
+  }
 });
