@@ -182,167 +182,398 @@ export default function StreamWatch() {
     }
   };
 
+  // Profile Preview State
+  if (viewState === 'intro') {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 opacity-30">
+          <img src={streamer.avatar} className="w-full h-full object-cover blur-3xl scale-150" />
+        </div>
+
+        {/* Back Button */}
+        <div className="fixed top-6 left-6 z-50">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Profile Content */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
+          >
+            {/* Left: Visual Hero */}
+            <div className="space-y-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative aspect-square rounded-3xl overflow-hidden border border-white/20 shadow-2xl"
+              >
+                <img 
+                  src={streamer.avatar} 
+                  alt={streamer.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                
+                <div className="absolute top-6 left-6 px-4 py-2 bg-red-500 rounded-full flex items-center gap-2 font-bold text-white shadow-lg">
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="w-2 h-2 bg-white rounded-full"
+                  />
+                  LIVE NOW
+                </div>
+
+                <div className="absolute bottom-8 left-8 right-8">
+                  <h1 className="text-5xl font-black text-white mb-3 tracking-tight">
+                    {streamer.name}
+                  </h1>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/20">
+                      <Trophy className="w-4 h-4 text-amber-400" />
+                      <span className="text-sm font-bold text-amber-400">{streamer.focus}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/20">
+                      <Users className="w-4 h-4 text-white" />
+                      <span className="text-white font-bold text-sm">{streamer.viewers.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right: Profile Details */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-6"
+            >
+              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 space-y-6">
+                <div>
+                  <h3 className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-3">About</h3>
+                  <p className="text-white/90 leading-relaxed text-lg">
+                    {streamer.bio}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-3">Recent Games</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {streamer.recent_games.map((game, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.05 }}
+                        className="px-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white cursor-pointer hover:bg-white/20 transition-all"
+                      >
+                        <Gamepad2 className="w-3 h-3 inline mr-2 opacity-60" />
+                        {game}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-3">Stream Schedule</h3>
+                  <div className="flex items-center gap-2 text-white/80">
+                    <Calendar className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-medium">{streamer.schedule}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-white/10">
+                  <button className="flex-1 py-2 px-4 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white text-sm font-medium transition-all flex items-center justify-center gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Add Friend
+                  </button>
+                  <button className="flex-1 py-2 px-4 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-pink-300 text-sm font-medium transition-all flex items-center justify-center gap-2">
+                    <Heart className="w-4 h-4" />
+                    Follow
+                  </button>
+                </div>
+              </div>
+
+              <motion.button
+                onClick={handleEnterStream}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-6 rounded-2xl font-black text-xl uppercase tracking-wider relative overflow-hidden group"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 1) 100%)',
+                  boxShadow: '0 20px 60px rgba(239, 68, 68, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <span className="relative z-10 flex items-center justify-center gap-3 text-white">
+                  <Play className="w-6 h-6 fill-white" />
+                  Enter Live Stream
+                </span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Live Stream State
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30">
-      {/* Navbar Placeholder / Back */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-6 pointer-events-none">
+    <div className="min-h-screen bg-[#050505] text-white">
+      {/* Back Button */}
+      <div className="fixed top-6 left-6 z-50">
         <button
           onClick={() => navigate(-1)}
-          className="pointer-events-auto w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 transition-all"
+          className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 transition-all"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-12">
-        
-        {/* --- SECTION 1: INTRODUCTION (Identity First) --- */}
-        <section className="min-h-[85vh] flex flex-col lg:flex-row gap-6">
-          {/* Left: Intro Video */}
-          <div className="flex-1 rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl bg-black">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
-            <IntroPlayer src={streamer.intro_video} />
-            
-            {/* Overlay Info */}
-            <div className="absolute bottom-8 left-8 right-8 z-20">
-              <h2 className="text-4xl md:text-6xl font-black text-white mb-2 tracking-tighter drop-shadow-lg">
-                MEET {streamer.name.toUpperCase()}
-              </h2>
-              <p className="text-white/80 text-lg font-medium drop-shadow-md max-w-xl">
-                Watch the intro to see what this channel is really about.
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Identity Card */}
-          <div className="w-full lg:w-[480px] flex-shrink-0">
-            <StreamerIdentityCard streamer={streamer} onWatchStream={handleEnterStream} />
-          </div>
-        </section>
-
-
-        {/* --- SECTION 2: LIVE STREAM & GAMES --- */}
-        <section id="live-section" className="pt-8 border-t border-white/5">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <h2 className="text-2xl font-bold text-white tracking-tight">Live Broadcast</h2>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[800px] lg:h-[700px]">
-            {/* Live Player */}
-            <div className="lg:col-span-3 bg-black rounded-2xl overflow-hidden relative shadow-2xl border border-white/10">
-              {/* Mock Player */}
-              <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&h=900&fit=crop" className="w-full h-full object-cover opacity-50" />
+      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
+        {/* Stream + Chat Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Stream Player - 3 columns */}
+          <div className="lg:col-span-3">
+            <div className="bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-video relative">
+              <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&h=900&fit=crop" className="w-full h-full object-cover opacity-60" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-full text-xl shadow-[0_0_40px_rgba(220,38,38,0.5)]">
-                  <Play className="w-6 h-6 mr-3 fill-current" />
-                  Watch Live Now
-                </Button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold px-10 py-5 rounded-full text-xl shadow-[0_0_50px_rgba(220,38,38,0.6)] flex items-center gap-3"
+                >
+                  <Play className="w-7 h-7 fill-current" />
+                  Watch Live
+                </motion.button>
               </div>
               
-              {/* Stream Overlay UI */}
               <div className="absolute top-6 left-6 flex gap-3">
-                <Badge className="bg-red-600 text-white border-none animate-pulse">LIVE</Badge>
-                <Badge className="bg-black/60 backdrop-blur-md text-white border-white/10">
-                  <Users className="w-3 h-3 mr-1" /> {streamer.viewers.toLocaleString()}
-                </Badge>
+                <div className="bg-red-600 text-white px-4 py-2 rounded-full font-bold flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="w-2 h-2 bg-white rounded-full"
+                  />
+                  LIVE
+                </div>
+                <div className="bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full font-medium flex items-center gap-2 border border-white/20">
+                  <Users className="w-4 h-4" />
+                  {streamer.viewers.toLocaleString()}
+                </div>
               </div>
             </div>
 
-            {/* Chat / Games Side Panel */}
-            <div className="lg:col-span-1 flex flex-col gap-6 h-full">
-              {/* Games Panel */}
-              <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-5 flex-shrink-0">
-                <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Current Session</h3>
-                <div className="flex gap-3 mb-4">
-                  <div className="w-16 h-20 bg-slate-800 rounded-lg overflow-hidden border border-white/10">
-                    <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200&h=300&fit=crop" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold text-sm">{streamer.game}</h4>
-                    <p className="text-slate-400 text-xs">FPS • Competitive</p>
-                    <Badge variant="outline" className="mt-2 text-[10px] border-white/10 text-blue-400">Drops Enabled</Badge>
-                  </div>
-                </div>
-                
-                <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-2 pt-2 border-t border-white/5">Recently Played</h3>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {streamer.recent_games.map((g, i) => (
-                    <Badge key={i} variant="secondary" className="bg-white/5 hover:bg-white/10 text-[10px] whitespace-nowrap">
-                      {g}
-                    </Badge>
-                  ))}
+            {/* Streamer Header */}
+            <div className="flex items-center justify-between mt-6 px-2">
+              <div className="flex items-center gap-4">
+                <img 
+                  src={streamer.avatar} 
+                  alt={streamer.name}
+                  className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-lg"
+                />
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{streamer.name}</h2>
+                  <p className="text-white/60 text-sm">Playing {streamer.game}</p>
                 </div>
               </div>
-
-              {/* Chat Panel */}
-              <div className="flex-1 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-white/5 flex justify-between items-center">
-                  <h3 className="font-bold text-white text-sm">Stream Chat</h3>
-                  <Settings className="w-4 h-4 text-white/40 cursor-pointer hover:text-white" />
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {MOCK_CHAT.map(msg => (
-                    <div key={msg.id} className="text-sm">
-                      <span className="font-bold text-blue-400 mr-2">{msg.user}:</span>
-                      <span className="text-slate-300">{msg.message}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-3 border-t border-white/5">
-                  <div className="bg-black/40 rounded-lg flex items-center px-3 py-2 border border-white/5 focus-within:border-blue-500/50 transition-colors">
-                    <input 
-                      type="text" 
-                      placeholder="Say hello..." 
-                      className="bg-transparent border-none outline-none text-sm text-white flex-1 placeholder:text-white/20"
-                      value={chatMessage}
-                      onChange={e => setChatMessage(e.target.value)}
-                    />
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-blue-400 hover:text-blue-300 hover:bg-transparent">
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+              
+              <div className="flex items-center gap-3">
+                <button className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white font-medium transition-all flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Add Friend
+                </button>
+                <button className="px-5 py-2.5 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-pink-300 font-medium transition-all flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Follow
+                </button>
+                <button className="px-5 py-2.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 text-yellow-300 font-medium transition-all flex items-center gap-2">
+                  <Gift className="w-4 h-4" />
+                  Donate
+                </button>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* --- SECTION 3: SUPPORT & PROGRESSION --- */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-purple-400" />
-                Support the Stream
+          {/* Chat Panel - 1 column */}
+          <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col h-[600px]">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Live Chat
               </h3>
-              <p className="text-slate-400 text-sm mb-4">Use Atom Points to support {streamer.name} directly.</p>
-              <div className="flex gap-3">
-                <Button className="flex-1 bg-white/10 hover:bg-white/20">Donate AGP</Button>
-                <Button className="flex-1 bg-purple-600 hover:bg-purple-700">Subscribe</Button>
+              <p className="text-white/40 text-xs mt-1">{streamer.viewers} watching</p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {MOCK_CHAT.map(msg => (
+                <div key={msg.id} className="text-sm">
+                  <span className="font-bold text-cyan-400 mr-2">{msg.user}:</span>
+                  <span className="text-white/80">{msg.message}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-4 border-t border-white/10">
+              <div className="flex gap-2">
+                <input
+                  placeholder="Say something..."
+                  value={chatMessage}
+                  onChange={e => setChatMessage(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-cyan-400/50"
+                />
+                <button className="w-10 h-10 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 rounded-lg flex items-center justify-center text-cyan-400">
+                  <Send className="w-4 h-4" />
+                </button>
               </div>
-           </div>
+            </div>
+          </div>
+        </div>
 
-           <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-amber-400" />
-                Streamer Pass
-              </h3>
-              <p className="text-slate-400 text-sm mb-4">Level 5 • 60% to Gold Card Reward</p>
-              <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 w-[60%]" />
+        {/* Streamer Info Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Why I Stream */}
+          <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                <Star className="w-5 h-5 text-white" />
               </div>
-           </div>
+              <h3 className="text-white font-bold text-xl">Why I Stream</h3>
+            </div>
+            
+            <p className="text-white/80 leading-relaxed text-lg">
+              I love connecting with people who share my passion for gaming. Every stream is a journey—whether we're hunting rare cards, tackling impossible challenges, or just vibing to great gameplay.
+            </p>
 
-           <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/10 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-400" />
-                Next Stream
-              </h3>
-              <p className="text-slate-400 text-sm mb-1">Card Hunting Event</p>
-              <p className="text-white font-mono text-lg">Tomorrow, 7:00 PM</p>
-           </div>
-        </section>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+              {[
+                { label: 'Favorite Genre', value: 'RPG & FPS', icon: Trophy },
+                { label: 'Total Hours', value: '2,400+', icon: Clock },
+                { label: 'Followers', value: '15K', icon: Users },
+                { label: 'Rarest Card', value: 'Void Emperor', icon: Flame }
+              ].map((stat, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                  <stat.icon className="w-5 h-5 text-cyan-400" />
+                  <div>
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider">{stat.label}</p>
+                    <p className="text-white font-bold text-sm">{stat.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sponsors */}
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-400" />
+              <h3 className="text-white font-bold text-lg">Sponsored By</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {[
+                { name: 'RazerGear', logo: '🎮' },
+                { name: 'EnergyDrink Co.', logo: '⚡' },
+                { name: 'TechSetup', logo: '💻' }
+              ].map((sponsor, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer transition-all"
+                >
+                  <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-2xl">
+                    {sponsor.logo}
+                  </div>
+                  <span className="text-white font-medium">{sponsor.name}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Viewer Seasonal Pass */}
+        <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-2xl">Viewer Seasonal Pass</h3>
+                <p className="text-white/40 text-sm">Watch, engage, and earn exclusive rewards</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-black text-white">
+                12<span className="text-white/40 text-2xl">/30</span>
+              </div>
+              <p className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">Current Tier</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-white/60">
+              <span>Season Progress</span>
+              <span>40%</span>
+            </div>
+            <div className="h-4 bg-white/5 rounded-full overflow-hidden border border-white/10">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: '40%' }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+                className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </motion.div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Upcoming Rewards</h4>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {[
+                { tier: 15, reward: '+20% XP', icon: '⚡⚡', next: true },
+                { tier: 20, reward: 'Legendary Card', icon: '🎴' },
+                { tier: 25, reward: 'Exclusive Emote', icon: '😎' },
+                { tier: 30, reward: '+30% XP', icon: '⚡⚡⚡' }
+              ].map((reward, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.05 }}
+                  className={`p-4 rounded-xl border text-center transition-all ${
+                    reward.next
+                      ? 'bg-cyan-500/20 border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.3)]'
+                      : 'bg-white/5 border-white/10 opacity-70'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{reward.icon}</div>
+                  <div className="text-[10px] font-bold uppercase text-white/40 mb-1">Tier {reward.tier}</div>
+                  <p className={`text-xs font-medium ${reward.next ? 'text-cyan-300' : 'text-white/60'}`}>
+                    {reward.reward}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl">
+            <Zap className="w-6 h-6 text-green-400" />
+            <div className="flex-1">
+              <p className="text-white font-bold">Active Viewer Boost</p>
+              <p className="text-white/60 text-sm">+10% XP while watching this stream</p>
+            </div>
+            <div className="text-3xl font-black text-green-400">+10%</div>
+          </div>
+        </div>
 
       </div>
     </div>
