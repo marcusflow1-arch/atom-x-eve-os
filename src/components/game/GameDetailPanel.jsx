@@ -156,7 +156,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
     {
       id: 'standard',
       name: 'Standard Edition',
-      description: game.description || 'The base game experience with all core features and content.',
+      description: 'The base game experience with all core features and content.',
       offers: ['Base Game Content', 'Core Story Campaign', 'Standard Abilities', 'Base Card Collection'],
       stats: {},
       achievements: [],
