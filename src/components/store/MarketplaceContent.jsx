@@ -336,21 +336,26 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
           {/* Right Content Column */}
           <div className="flex-1 flex flex-col overflow-hidden relative">
 
-            {/* Tabs */}
-            <div className="flex gap-6 border-b border-white/10 px-6 pt-6">
-              {['details', 'preview', 'offers'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-3 text-sm font-bold transition-all uppercase tracking-wide ${
-                    activeTab === tab 
-                      ? 'text-white border-b-2 border-cyan-500' 
-                      : 'text-white/40 hover:text-white'
-                  }`}
-                >
-                  {tab === 'preview' ? 'Visual Preview' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
+            {/* Header with Close */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4">
+              <div className="flex gap-6 border-b border-white/10 pb-3">
+                {['details', 'preview', 'offers'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`text-sm font-bold transition-all uppercase tracking-wide ${
+                      activeTab === tab 
+                        ? 'text-white border-b-2 border-cyan-500' 
+                        : 'text-white/40 hover:text-white'
+                    }`}
+                  >
+                    {tab === 'preview' ? 'Visual Preview' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
