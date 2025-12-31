@@ -209,7 +209,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
   return (
     <div className="h-full flex flex-col bg-[#0a0c10] text-white overflow-hidden relative">
       {/* Background Ambience */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${immersive.active ? 'opacity-0' : 'opacity-100'}`}>
         <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-900/10 via-purple-900/5 to-[#0a0c10]" />
         <img 
           src={game.cover_image} 
@@ -220,9 +220,12 @@ export default function GameDetailPanel({ game, onPurchase }) {
 
       <AnimatePresence>
         {immersive.active && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[30]">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[30] bg-black">
             <video src={immersive.src} autoPlay muted loop className="w-full h-full object-cover" />
-            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/50 text-white text-xs font-medium border border-white/10">{immersive.title}</div>
+            <div className="absolute top-6 left-6 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md text-white text-sm font-medium border border-white/20">{immersive.title}</div>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/70 backdrop-blur-md text-white/60 text-xs border border-white/20">
+              Click anywhere or press ESC to exit
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -230,7 +233,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
         <button onClick={stopImmersive} className="fixed inset-0 z-[40] cursor-pointer" aria-label="Exit immersive" title="Click or press ESC to exit" />
       )}
 
-      <div className={`flex-1 overflow-y-auto custom-scrollbar relative z-20 transition-opacity duration-300 ${immersive.active ? 'opacity-10 pointer-events-none' : ''}`}>
+      <div className={`flex-1 overflow-y-auto custom-scrollbar relative z-20 transition-opacity duration-500 ${immersive.active ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* TOP SECTION: Hero & Decision Anchor */}
         <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full">
           <div className="flex flex-col lg:flex-row gap-8">
@@ -392,15 +395,15 @@ export default function GameDetailPanel({ game, onPurchase }) {
 
               {/* Quick Value Highlights */}
               <div className="space-y-2 relative">
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included System Assets</h3>
                 {owned && (
-                  <div className="absolute -top-3 right-0">
-                    <Button onClick={() => { if (game?.play_link) window.open(game.play_link, '_blank'); }} className="h-8 px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-full shadow-[0_0_20px_rgba(22,163,74,0.3)]">
-                      <Play className="w-3.5 h-3.5 mr-1.5 fill-current" />
+                  <div className="mb-3 -mt-1">
+                    <Button onClick={() => { if (game?.play_link) window.open(game.play_link, '_blank'); }} className="w-full h-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white text-sm font-bold rounded-xl shadow-[0_0_25px_rgba(22,163,74,0.4)]">
+                      <Play className="w-4 h-4 mr-2 fill-current" />
                       Play / Launch
                     </Button>
                   </div>
                 )}
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included System Assets</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <ValueHighlight 
                     icon={BrainCircuit} 
