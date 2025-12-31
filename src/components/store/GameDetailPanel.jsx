@@ -149,6 +149,9 @@ export default function GameDetailPanel({ game, onPurchase }) {
     startImmersive(url, ach?.title || ach?.name || 'Achievement Demo');
   };
 
+  // Right-side media switcher state
+  const [rightMediaTab, setRightMediaTab] = useState('media');
+
   // Initialize media
   useEffect(() => {
     if (game?.media && game.media.length > 0) {
@@ -312,11 +315,84 @@ export default function GameDetailPanel({ game, onPurchase }) {
                 <div className="text-center text-[10px] text-white/30">
                   Instant digital delivery • Atom XE Secure
                 </div>
+
+                {/* Right Media System (replaces moved Play button) */}
+                <div className="mt-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <button
+                      onClick={() => setRightMediaTab('media')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${rightMediaTab === 'media' ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10 hover:text-white'}`}
+                    >
+                      Media
+                    </button>
+                    <button
+                      onClick={() => setRightMediaTab('aa')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${rightMediaTab === 'aa' ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10 hover:text-white'}`}
+                    >
+                      Achievements / Abilities
+                    </button>
+                  </div>
+
+                  {rightMediaTab === 'media' ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {(gameMedia || []).slice(0, 6).map((m, i) => (
+                        <button
+                          key={i}
+                          onClick={() => startImmersive(m.url, m.type === 'video' ? 'Gameplay' : 'Screenshot')}
+                          className="relative aspect-video rounded-lg overflow-hidden border border-white/10 hover:border-white/20 group"
+                          title={m.type === 'video' ? 'Play Video' : 'View Screenshot'}
+                        >
+                          <img src={m.url} className="w-full h-full object-cover group-hover:opacity-90" />
+                          {m.type === 'video' && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center border border-white/20">
+                                <Play className="w-3 h-3 text-white fill-white" />
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {(game.achievements || []).slice(0, 4).map((ach, idx) => (
+                        <button
+                          key={`ach-${idx}`}
+                          onClick={() => startImmersiveFromAchievement(ach)}
+                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-left flex items-center gap-2"
+                        >
+                          <div className="w-8 h-8 rounded bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400 text-xs font-bold">
+                            {ach.points || 100}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-white line-clamp-1">{ach.title || ach.name}</p>
+                            <p className="text-[10px] text-white/40 line-clamp-1">{ach.rarity || 'Common'}</p>
+                          </div>
+                        </button>
+                      ))}
+                      {(game.abilities || []).slice(0, 4).map((ab, idx) => (
+                        <button
+                          key={`ab-${idx}`}
+                          onClick={() => startImmersiveFromAsset(ab, 'ability')}
+                          className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-left flex items-center gap-2"
+                        >
+                          <div className="w-8 h-8 rounded bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                            <Zap className="w-3.5 h-3.5 text-purple-300" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-white line-clamp-1">{ab.name}</p>
+                            <p className="text-[10px] text-white/40 line-clamp-1">{ab.tier || 'Rare'}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Quick Value Highlights */}
               <div className="space-y-2 relative">
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included in Atom XE</h3>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Included System Assets</h3>
                 {owned && (
                   <div className="absolute -top-3 right-0">
                     <Button onClick={() => { if (game?.play_link) window.open(game.play_link, '_blank'); }} className="h-8 px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-full shadow-[0_0_20px_rgba(22,163,74,0.3)]">
