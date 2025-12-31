@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShinyCard from '@/components/shared/ShinyCard';
-import { Post } from '@/entities/Post';
+import { base44 } from '@/api/base44Client';
 import CreatePostForm from '../community/CreatePostForm';
 import GameCardShowcase from './GameCardShowcase';
 
@@ -169,7 +169,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
     if (activeTab === 'community' && game?.title) {
       const fetchPosts = async () => {
         try {
-          const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
+          const posts = await base44.entities.Post.filter({ game_title: game.title }, '-created_date', 5);
           setCommunityPosts(posts);
         } catch (error) {
           console.error("Failed to fetch posts:", error);
@@ -197,9 +197,9 @@ export default function GameDetailPanel({ game, onPurchase }) {
   const handleCreatePost = async (postData) => {
     try {
       const newPost = { ...postData, game_title: game.title };
-      await Post.create(newPost);
+      await base44.entities.Post.create(newPost);
       setShowCreatePost(false);
-      const posts = await Post.filter({ game_title: game.title }, '-created_date', 5);
+      const posts = await base44.entities.Post.filter({ game_title: game.title }, '-created_date', 5);
       setCommunityPosts(posts);
     } catch (error) {
       console.error("Failed to create post:", error);
