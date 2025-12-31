@@ -8,15 +8,30 @@ import { base44 } from '@/api/base44Client';
 
 export default function OrderConfirmation() {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const query = new URLSearchParams(location.search);
-    const orderId = query.get('orderId');
-
     useEffect(() => {
         const fetchOrder = async () => {
-            if (orderId) {
+            const orderId = searchParams.get('orderId');
+            const sessionId = searchParams.get('session_id');
+            
+            if (sessionId) {
+                // Stripe checkout - verify session and create order
+                try {
+                    const { data } = await base44.functions.invoke('verifyStripeSession', { 
+                        sessionId 
+                    });
+                    
+                    if (data.order) {
+                        setOrder(data.order);
+                    }
+                } catch (error) {
+                    console.error("Failed to verify session:", error);
+                }
+            } else if (orderId) {
+                // Direct order ID lookup (legacy)
                 try {
                     const fetchedOrder = await base44.entities.Order.get(orderId);
                     setOrder(fetchedOrder);
@@ -28,7 +43,7 @@ export default function OrderConfirmation() {
         };
 
         fetchOrder();
-    }, [orderId]);
+    }, [searchParams]);
 
     if (loading) {
         return (
