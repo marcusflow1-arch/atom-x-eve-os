@@ -158,21 +158,27 @@ export default function GameDetailPanel({ gameId, onClose }) {
       name: 'Neural Expansion Pack',
       description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
       offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
-      stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 }
+      stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
+      achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
+      abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst']
     },
     {
       id: 'dlc_2',
       name: 'Void Walker Arsenal',
       description: 'Gain access to stealth-focused equipment and void manipulation powers.',
       offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
-      stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 }
+      stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
+      achievements: ['Shadow Master', 'Void Walker'],
+      abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation']
     },
     {
       id: 'dlc_3',
       name: 'Season Pass: Year One',
       description: 'All future DLC releases for the first year, plus exclusive seasonal rewards.',
       offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
-      stats: { dlcAccess: 'unlimited', genreXP: 50 }
+      stats: { dlcAccess: 'unlimited', genreXP: 50 },
+      achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
+      abilities: ['All DLC Abilities']
     }
   ];
 
@@ -450,16 +456,46 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   
                   {/* DLC Offers */}
                   {selectedDLC && (
-                    <div className="mt-6 space-y-3">
-                      <h3 className="text-white font-bold text-sm uppercase tracking-wider">What This DLC Offers:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {selectedDLC.offers.map((offer, i) => (
-                          <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg">
-                            <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                            <span className="text-white/80 text-xs">{offer}</span>
-                          </div>
-                        ))}
+                    <div className="mt-6 space-y-4">
+                      <div>
+                        <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">What This DLC Offers:</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {selectedDLC.offers.map((offer, i) => (
+                            <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg">
+                              <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                              <span className="text-white/80 text-xs">{offer}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
+
+                      {/* Achievements Included */}
+                      {selectedDLC.achievements && selectedDLC.achievements.length > 0 && (
+                        <div>
+                          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">Achievements Included:</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedDLC.achievements.map((achievement, i) => (
+                              <div key={i} className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-xs font-medium">
+                                {achievement}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Abilities Included */}
+                      {selectedDLC.abilities && selectedDLC.abilities.length > 0 && (
+                        <div>
+                          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">Abilities Included:</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedDLC.abilities.map((ability, i) => (
+                              <div key={i} className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-300 text-xs font-medium">
+                                {ability}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -490,7 +526,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                           mediaTab === 'achievement_loot' ? 'text-white' : 'text-white/40 hover:text-white'
                         }`}
                       >
-                        Achievement Loot
+                        Achievement DLC Loot
                       </button>
                     </div>
 
@@ -586,18 +622,18 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             <ChevronRight className="w-4 h-4 text-white rotate-180" />
                           </button>
 
-                          {/* Achievement List */}
-                          <div className="flex-1 space-y-2 max-h-48 overflow-y-auto">
+                          {/* Achievement Horizontal List */}
+                          <div className="flex-1 flex gap-2 overflow-x-auto pb-2">
                             {achievements.map((achievement, i) => (
                               <div 
                                 key={i}
                                 onClick={() => handleMediaTrigger(i)}
-                                className="flex items-center gap-3 p-2 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
+                                className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer hover:bg-cyan-500/20 hover:scale-110 transition-all group"
                               >
-                                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-lg border border-white/10 group-hover:border-cyan-400/30 group-hover:bg-black/60 transition-all">
+                                <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border border-white/10 group-hover:border-cyan-400/50 group-hover:bg-black/60 transition-all">
                                   {achievement.icon}
                                 </div>
-                                <p className="text-white font-semibold text-sm group-hover:text-cyan-300 transition-colors">
+                                <p className="text-white font-semibold text-[10px] text-center group-hover:text-cyan-300 transition-colors max-w-[60px] truncate">
                                   {achievement.name}
                                 </p>
                               </div>
