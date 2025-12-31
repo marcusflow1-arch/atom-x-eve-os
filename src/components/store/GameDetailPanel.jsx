@@ -5,7 +5,7 @@ import {
   Star, ShoppingCart, Shield, BrainCircuit, Heart, Award, 
   Package, Info, Trophy, MessageSquare, Gamepad2, Zap, 
   Swords, Target, Sparkles, Check, Lock, ChevronRight,
-  Play, Pause, Volume2, VolumeX, Eye
+  Play, Pause, Volume2, VolumeX, Eye, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShinyCard from '@/components/shared/ShinyCard';
