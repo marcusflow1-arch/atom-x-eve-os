@@ -950,14 +950,25 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* Retail - Card Offerings */}
+                {/* Achievement Loot - Card Offerings */}
                 <div className="space-y-3">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Database className="w-4 h-4 text-cyan-400" />
-                    Retail
+                    Achievement Loot
                   </h3>
 
-                  <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('card-scroll-container');
+                        container.scrollBy({ left: -200, behavior: 'smooth' });
+                      }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
+                    >
+                      <ChevronRight className="w-4 h-4 text-white rotate-180" />
+                    </button>
+
+                    <div id="card-scroll-container" className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide px-10">
                     {[
                       { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
                       { name: 'Cyber Metabolism', type: 'Passive', description: '+10% Regeneration', edition: 'Standard Edition' },
@@ -1019,6 +1030,17 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         </div>
                       </motion.div>
                     ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('card-scroll-container');
+                        container.scrollBy({ left: 200, behavior: 'smooth' });
+                      }}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
+                    >
+                      <ChevronRight className="w-4 h-4 text-white" />
+                    </button>
                   </div>
                 </div>
 
