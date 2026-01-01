@@ -1836,7 +1836,20 @@ export default function LunaTemplate() {
                         className="flex h-full">
 
                         {/* Left: 3D Viewer Spacing */}
-                        <div className="w-[260px] flex-shrink-0" />
+                        <div className="w-[260px] flex-shrink-0 relative">
+                          {/* Empty Box at Bottom - Overlapping 3D Viewer */}
+                          <div 
+                            className="absolute bottom-0 left-0 w-48 h-32 rounded-2xl border shadow-lg"
+                            style={{ 
+                              background: 'rgba(100, 120, 140, 0.10)', 
+                              backdropFilter: 'blur(12px) saturate(120%)', 
+                              WebkitBackdropFilter: 'blur(12px) saturate(120%)', 
+                              borderColor: 'rgba(255, 255, 255, 0.08)', 
+                              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                              zIndex: 50
+                            }}
+                          />
+                        </div>
 
                         {/* Vertical Divider Line */}
                         <div className="w-px bg-white/20 self-stretch relative z-30" />
