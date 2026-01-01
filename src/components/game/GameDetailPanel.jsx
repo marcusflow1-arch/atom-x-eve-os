@@ -953,72 +953,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* Achievements Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-cyan-400" />
-                    Achievements
-                  </h3>
-
-                  <div className="space-y-3">
-                    {achievements.slice(0, 5).map((achievement, i) => (
-                      <motion.div
-                        key={i}
-                        className="relative group perspective-1000 cursor-pointer"
-                        whileHover={{ scale: 1.02 }}
-                        onMouseMove={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = (e.clientX - rect.left) / rect.width - 0.5;
-                          const y = (e.clientY - rect.top) / rect.height - 0.5;
-                          e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
-                        }}
-                        style={{
-                          transformStyle: 'preserve-3d',
-                          transition: 'transform 0.1s ease-out'
-                        }}
-                      >
-                        <div className="relative rounded-xl overflow-hidden border border-white/20 bg-gradient-to-br from-cyan-900/20 via-purple-900/20 to-blue-900/20 p-4"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%)',
-                            backdropFilter: 'blur(20px) saturate(180%)',
-                            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                          }}
-                        >
-                          {/* Liquid glass shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                          
-                          <div className="flex items-center gap-3 relative z-10">
-                            <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border border-cyan-400/30">
-                              {achievement.icon}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-white font-bold text-sm">{achievement.name}</h4>
-                              <p className="text-white/50 text-xs">Unlockable Card</p>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/10">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Zap className="w-3 h-3 text-yellow-400" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
-                    </div>
-                    <p className="text-[9px] text-white/50 leading-relaxed">
-                      All cards can be forged, combined, and ascended in the Blacksmith OS.
-                    </p>
-                  </div>
-                </div>
-
                 {/* DLC & Expansion Packs */}
-                <div className="space-y-3">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                     <Download className="w-4 h-4 text-purple-400" />
                     DLC & Expansion Packs
                   </h3>
@@ -1055,6 +992,51 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         }`} />
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Achievements - System Assets Content */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-cyan-400" />
+                    Achievements
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <SystemPreviewCard 
+                      type="Ability" 
+                      title="Neural Shock" 
+                      subtitle="Stun enemies in radius" 
+                      onClick={() => handleMediaTrigger('Neural Shock', 'ability')}
+                    />
+                    <SystemPreviewCard 
+                      type="Passive" 
+                      title="Cyber Metabolism" 
+                      subtitle="+10% Regeneration" 
+                      onClick={() => handleMediaTrigger('Cyber Metabolism', 'ability')}
+                    />
+                    <SystemPreviewCard 
+                      type="Equipment" 
+                      title="Void Walker Set" 
+                      subtitle="Stealth Bonus" 
+                      onClick={() => handleMediaTrigger('Void Walker Set', 'equipment')}
+                    />
+                    <SystemPreviewCard 
+                      type="Trait" 
+                      title="Tactical Mind" 
+                      subtitle="AI Behavior Mod" 
+                      onClick={() => handleMediaTrigger('Tactical Mind', 'trait')}
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="w-3 h-3 text-yellow-400" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
+                    </div>
+                    <p className="text-[9px] text-white/50 leading-relaxed">
+                      All assets from this system can be forged, combined, and ascended in the Blacksmith OS.
+                    </p>
                   </div>
                 </div>
               </div>
