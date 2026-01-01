@@ -1910,30 +1910,7 @@ export default function LunaTemplate() {
                         </div>
                       </motion.div> :
                       null}
-                  {showInventory && uiVisible &&
-                    <motion.div
-                      key="inventory"
-                      initial={{ opacity: 0, x: -50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
-                      className="w-full max-w-5xl">
 
-                      <InventoryPanel
-                        inventory={inventoryData}
-                        capacity={profileData.inventoryCapacity}
-                        profile={profileData}
-                        onClose={() => setShowInventory(false)}
-                        onEquip={handleEquipItem} />
-
-                    </motion.div>
-                  }
-                </AnimatePresence>
-              </motion.div>
-            }
-          </AnimatePresence>
-        </div>
-      }
 
 
 
