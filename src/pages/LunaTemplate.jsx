@@ -1089,21 +1089,21 @@ export default function LunaTemplate() {
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
-        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
+        background: 'linear-gradient(135deg, #0B0B0B 0%, #141414 30%, #0B0B0B 60%, #141414 100%)'
       }}>
-      {/* Liquid Glass Overlay */}
+      {/* Crystalline Glass Layer */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          background: 'rgba(255, 255, 255, 0.01)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'rgba(255, 255, 255, 0.06)',
+          backdropFilter: 'blur(35px)',
+          WebkitBackdropFilter: 'blur(35px)',
         }}
       />
-      {/* Ambient Effects */}
-      <div className="absolute inset-0 pointer-events-none z-[1]">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-400/8 rounded-full blur-[120px]" />
+      {/* Ink Ambient Presence */}
+      <div className="absolute inset-0 pointer-events-none z-[1] opacity-60">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-black/40 rounded-full blur-[180px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gray-900/30 rounded-full blur-[160px] animate-pulse" style={{ animationDuration: '10s' }} />
       </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
       {customBackground && (
@@ -1738,25 +1738,25 @@ export default function LunaTemplate() {
                         <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30">
                           {/* Weapons */}
                           <div className="flex flex-col items-center">
-                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
+                            <h2 className="text-[10px] font-light tracking-[0.35em] uppercase mb-4 text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Weapons</h2>
                             <div className="relative w-64 h-4 mb-4">
-                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
+                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/10"></div>
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
                             </div>
                             <div className="flex gap-3">
                               {[1, 2, 3].map((i) => {
                                 const slotId = `weapon-${i}`;
                                 const equippedItem = equippedItems[slotId];
-                                return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);
+                                return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);
                               })}
                             </div>
                           </div>
 
                           {/* Armor */}
                           <div className="flex flex-col items-center gap-4">
-                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
-                            <div className="relative w-64 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Armor</h2>
+                            <div className="relative w-64 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
                             <div className="flex gap-3">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {const slotId = `armor-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                           </div>
 
@@ -1764,22 +1764,22 @@ export default function LunaTemplate() {
                           <div className="flex items-start justify-between gap-6 w-full">
                             {/* Left: Genre Mastery */}
                             <div className="flex flex-col items-center gap-4">
-                              <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Genre</h2>
-                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
                               <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
 
                             {/* Middle: Artifacts */}
                             <div className="flex flex-col items-center gap-4">
-                              <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Artifacts</h2>
-                              <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
+                              <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
                               <div className="flex gap-3">{[1, 2, 3, 4, 5].map((i) => {const slotId = `artifact-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
 
                             {/* Right: Aspects */}
                             <div className="flex flex-col items-center gap-4">
-                              <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Aspects</h2>
-                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
+                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
                               <div className="flex gap-3">{[1, 2, 3].map((i) => {const slotId = `aspect-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-full border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
                           </div>
@@ -2149,7 +2149,7 @@ export default function LunaTemplate() {
         <div className="fixed bottom-8 left-8 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
-            <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
+            <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Skills</h2>
             <div className="flex gap-2">
               {[0, 1, 2, 3, 4].map((i) => {
                 const skillMap = {
@@ -2216,13 +2216,19 @@ export default function LunaTemplate() {
                     onClick={handleSkillClick}
                     onDragOver={onDragOver}
                     onDrop={onDrop}
-                    className={`w-10 h-10 rounded-lg backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center relative overflow-hidden ${activeSkills[i] ?
-                      'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' :
-                      'bg-[rgba(100,120,140,0.08)] border-white/[0.08] hover:bg-[rgba(100,120,140,0.12)]'}`
+                    className={`w-10 h-10 rounded-lg border cursor-pointer flex items-center justify-center relative overflow-hidden group transition-all duration-700 ${activeSkills[i] ?
+                      'border-white/25 shadow-[inset_0_1px_3px_rgba(255,255,255,0.15)]' :
+                      ''}`
                     }
-                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                    title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}>
-                    <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                    style={{ 
+                      background: 'rgba(11, 11, 11, 0.85)', 
+                      backdropFilter: 'blur(35px)', 
+                      WebkitBackdropFilter: 'blur(35px)', 
+                      borderColor: activeSkills[i] ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)', 
+                      boxShadow: activeSkills[i] ? 'inset 0 1px 3px rgba(255, 255, 255, 0.15), 0 0 12px rgba(255, 255, 255, 0.1)' : 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' 
+                    }}
+                    title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    <span className="text-[#9A9A9A] text-xs font-light relative z-10">{i + 1}</span>
                     {assigned &&
                       <div className="absolute inset-0 flex items-center justify-center">
                         {assigned.image ?
@@ -2241,7 +2247,7 @@ export default function LunaTemplate() {
 
           {/* AI Passives */}
           <div className="flex flex-col items-center gap-2">
-            <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
+            <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>AI Passives</h2>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((i) => {
                 const slotId = `passive-${i}`;
@@ -2250,10 +2256,11 @@ export default function LunaTemplate() {
                   <div 
                     key={slotId} 
                     onClick={() => handleBoxClick(slotId)} 
-                    className="w-10 h-10 rounded-lg border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" 
-                    style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
+                    className="w-10 h-10 rounded-lg border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" 
+                    style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}
                   >
-                    {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-1" />}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-1 relative z-10" />}
                   </div>
                 );
               })}
