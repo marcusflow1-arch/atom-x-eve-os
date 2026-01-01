@@ -505,30 +505,19 @@ export default function DeveloperLimitedEdition() {
       {/* Main Content Area */}
       <div className="flex gap-6 h-[500px]">
         {/* Left Side - Card Display & Card Selector */}
-        <div className="w-[22%] flex-shrink-0 flex flex-col gap-3">
+        <div className="w-[33%] flex-shrink-0 flex flex-col gap-3">
           <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
             <Sparkles className="w-3 h-3 text-amber-400" />
             Limited Edition Cards
           </h4>
 
-          {/* Card Display Box - Translucent */}
-          <div 
-            className="flex-1 rounded-2xl p-4 flex items-center justify-center relative overflow-hidden"
-            style={{
-              background: 'rgba(15, 23, 42, 0.4)',
-              backdropFilter: 'blur(30px)',
-              WebkitBackdropFilter: 'blur(30px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            {/* Ambient Background Glow for Selected Developer */}
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/10 opacity-50" />
-            
+          {/* Card Display - NO BOX */}
+          <div className="flex-1 flex items-center justify-center">
             {selectedCard && <LargeCardDisplay card={selectedCard} />}
           </div>
 
-          {/* Card Selector - Horizontal Scroller */}
-          <div className="h-[80px] rounded-xl border border-white/10 bg-white/5 p-2 flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* Card Selector - NO BOX, cards only, 50% bigger */}
+          <div className="h-[120px] flex gap-3 overflow-x-auto scrollbar-hide">
              {currentGame?.limitedCards.map((card) => {
                 const isSelected = selectedCard?.id === card.id;
                 const rarity = rarityColors[card.rarity] || rarityColors.Common;
@@ -551,35 +540,18 @@ export default function DeveloperLimitedEdition() {
           </div>
         </div>
 
-        {/* Vertical Divider */}
-        <div className="w-px bg-white/10 self-stretch" />
-
-        {/* Middle - Card Details */}
-        <div className="flex-1 min-w-0 self-stretch">
+        {/* Middle - Card Details - NO BOX, 30% shorter, 50% narrower */}
+        <div className="w-[25%] flex-shrink-0 self-center h-[70%]">
           {selectedCard ? (
-            <div 
-              className="rounded-2xl p-6 h-full overflow-y-auto"
-              style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.5) 100%)',
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
+            <div className="h-full overflow-y-auto">
               <CardDetailPanelCompact card={selectedCard} />
             </div>
           ) : (
-            <div 
-              className="rounded-2xl p-4 h-full flex items-center justify-center border border-white/5"
-              style={{ background: 'rgba(15, 23, 42, 0.4)' }}
-            >
-              <p className="text-white/40 text-sm">Select a card to view details</p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-white/40 text-sm">Select a card</p>
             </div>
           )}
         </div>
-
-        {/* Vertical Divider */}
-        <div className="w-px bg-white/10 self-stretch" />
 
         {/* Right Side - Games List */}
         <div className="w-[220px] flex-shrink-0">
