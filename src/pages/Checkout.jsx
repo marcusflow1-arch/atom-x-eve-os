@@ -138,6 +138,17 @@ export default function Checkout() {
     return (
         <div className="min-h-screen bg-slate-950 text-white p-6 md:p-12 page-container">
             <div className="max-w-6xl mx-auto">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate(createPageUrl('Store'))}
+                    className="absolute top-6 right-6 flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
+                >
+                    <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <ChevronLeft className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-medium">Back</span>
+                </button>
+
                 {/* Progress Stepper */}
                 <div className="mb-12">
                     <div className="flex justify-center items-center relative">
