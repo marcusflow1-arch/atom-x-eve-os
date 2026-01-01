@@ -283,7 +283,11 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-blue-950/30 backdrop-blur-xl border-white/20 max-w-5xl text-white p-0 overflow-hidden shadow-[0_0_50px_rgba(0,0,100,0.5)]">
+      <DialogContent className="backdrop-blur-3xl border-white/20 max-w-5xl text-white p-0 overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.1)]" style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(60px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(60px) saturate(180%)',
+      }}>
         <div className="flex flex-col md:flex-row h-[85vh]">
           {/* Left Media Column */}
           <div className="md:w-[350px] flex-shrink-0 bg-transparent p-6 flex flex-col gap-4">
@@ -336,9 +340,6 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
                   </button>
                 ))}
               </div>
-              <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
