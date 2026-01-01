@@ -556,7 +556,139 @@ export default function GameDetailPanel({ gameId, onClose }) {
               className="flex flex-col lg:flex-row gap-16 items-start"
             >
               {/* Left: Identity */}
-              <div className="flex-1 space-y-8 min-w-0">
+              <div className="flex-1 space-y-6 min-w-0">
+                {/* Media Preview Box - Moved to Top */}
+                {selectedMediaItem && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden"
+                  >
+                    <div className="aspect-video relative">
+                      <img 
+                        src={selectedMediaItem.image || selectedMediaItem.icon || game.cover_image}
+                        alt={selectedMediaItem.title || selectedMediaItem.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      
+                      {/* Fullscreen Button */}
+                      <button
+                        onClick={handleFullscreen}
+                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group"
+                      >
+                        <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
+                      </button>
+
+                      {/* Media Info */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h4 className="text-white font-bold text-lg mb-1">
+                          {selectedMediaItem.title || selectedMediaItem.name}
+                        </h4>
+                        {selectedMediaItem.title && (
+                          <p className="text-white/60 text-sm">Click fullscreen to view in theater mode</p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Media Thumbnails - Screenshots */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                  {videos.map((video, i) => (
+                    <div 
+                      key={i}
+                      onClick={() => handleMediaTrigger(i)}
+                      className={`relative w-32 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all flex-shrink-0 ${
+                        selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                      }`}
+                    >
+                      <img 
+                        src={video.image} 
+                        alt={video.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors pointer-events-none">
+                        <Play className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  ))}
+                  {screenshots.map((screenshot, i) => (
+                    <div 
+                      key={i}
+                      onClick={() => handleMediaTrigger(videos.length + i)}
+                      className={`w-32 aspect-video bg-black rounded-md overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
+                        selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                      }`}
+                    >
+                      <img 
+                        src={screenshot.image} 
+                        alt={screenshot.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* DLC Content Dropdown */}
+                <div className="space-y-2">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Download className="w-4 h-4 text-purple-400" />
+                    DLC Content
+                  </h3>
+                  {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => {
+                    const isExpanded = selectedDLC?.id === dlc.id;
+                    return (
+                      <div key={dlc.id} className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setSelectedDLC(isExpanded ? null : dlc)}
+                          className="w-full flex items-center justify-between p-4 hover:bg-white/10 transition-all"
+                        >
+                          <div className="text-left">
+                            <p className="font-bold text-white text-sm">{dlc.name}</p>
+                            <p className="text-white/50 text-xs">{dlc.description}</p>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="border-t border-white/10 p-4 space-y-3"
+                            >
+                              <div>
+                                <h4 className="text-white/70 text-xs font-semibold uppercase mb-2">Includes:</h4>
+                                <div className="space-y-1">
+                                  {dlc.offers.map((offer, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-white/70 text-xs">
+                                      <Check className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                      <span>{offer}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              {dlc.achievements && dlc.achievements.length > 0 && (
+                                <div>
+                                  <h4 className="text-white/70 text-xs font-semibold uppercase mb-2">Achievements:</h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {dlc.achievements.map((achievement, i) => (
+                                      <span key={i} className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-300 text-[10px]">
+                                        {achievement}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <span className="px-3 py-1 rounded bg-white/10 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-cyan-300">
@@ -583,7 +715,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </span>
                     </button>
                   </div>
-                  <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white mb-2 leading-none">
+                  <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-2 leading-none">
                     {game.title}
                     {selectedDLC && (
                       <>
@@ -594,7 +726,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </>
                     )}
                   </h1>
-                  <p className="text-lg text-white/60 font-light max-w-xl leading-relaxed">
+                  <p className="text-base text-white/60 font-light max-w-xl leading-relaxed">
                     {selectedDLC ? selectedDLC.description : (game.description || 'Initialize neural link to access description data.')}
                   </p>
                   
@@ -649,148 +781,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   <DataPoint label="Card Pool" value="45+" icon={Database} color="text-blue-400" />
                   <DataPoint label="Genre XP" value="+15%" icon={Zap} color="text-yellow-400" />
                   <DataPoint label="Compatibility" value="High" icon={Cpu} color="text-green-400" />
-                </div>
-
-                {/* Media System */}
-                <div className="pt-6 space-y-4">
-                  {/* Compact Tab Switcher */}
-                  <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => setMediaTab('content')}
-                      className={`text-sm font-bold uppercase tracking-wider transition-all ${
-                        mediaTab === 'content' ? 'text-white' : 'text-white/40 hover:text-white'
-                      }`}
-                    >
-                      Content
-                    </button>
-                    <button 
-                      onClick={() => setMediaTab('achievement_loot')}
-                      className={`text-sm font-bold uppercase tracking-wider transition-all ${
-                        mediaTab === 'achievement_loot' ? 'text-white' : 'text-white/40 hover:text-white'
-                      }`}
-                    >
-                      Achievement DLC Loot
-                    </button>
-                  </div>
-
-                  {/* Media Thumbnails */}
-                  <AnimatePresence mode="wait">
-                    {mediaTab === 'content' ? (
-                      <motion.div
-                        key="content"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2"
-                      >
-                        {/* Videos */}
-                        <div className="flex gap-2">
-                          {videos.map((video, i) => (
-                            <div 
-                              key={i}
-                              onClick={() => handleMediaTrigger(i)}
-                              className={`relative w-24 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all ${
-                                selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
-                              }`}
-                            >
-                              <img 
-                                src={video.image} 
-                                alt={video.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors pointer-events-none">
-                                <Play className="w-3 h-3 text-white" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* Screenshots */}
-                        <div className="flex gap-2 overflow-x-auto flex-1">
-                          {screenshots.map((screenshot, i) => (
-                            <div 
-                              key={i}
-                              onClick={() => handleMediaTrigger(videos.length + i)}
-                              className={`w-24 aspect-video bg-black rounded-md overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
-                                selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
-                              }`}
-                            >
-                              <img 
-                                src={screenshot.image} 
-                                alt={screenshot.title}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="achievement_loot"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2 overflow-x-auto pb-2"
-                      >
-                        {achievements.map((achievement, i) => (
-                          <div 
-                            key={i}
-                            onClick={() => handleMediaTrigger(i)}
-                            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-lg cursor-pointer transition-all group ${
-                              selectedMediaItem === currentContent[i] ? 'bg-cyan-500/30 scale-110' : 'hover:bg-cyan-500/20 hover:scale-110'
-                            }`}
-                          >
-                            <div className={`w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border transition-all ${
-                              selectedMediaItem === currentContent[i] ? 'border-cyan-400 bg-black/60' : 'border-white/10 group-hover:border-cyan-400/50 group-hover:bg-black/60'
-                            }`}>
-                              {achievement.icon}
-                            </div>
-                            <p className={`font-semibold text-[10px] text-center transition-colors max-w-[60px] truncate ${
-                              selectedMediaItem === currentContent[i] ? 'text-cyan-300' : 'text-white group-hover:text-cyan-300'
-                            }`}>
-                              {achievement.name}
-                            </p>
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Media Preview Box */}
-                  {selectedMediaItem && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden"
-                    >
-                      <div className="aspect-video relative">
-                        <img 
-                          src={selectedMediaItem.image || selectedMediaItem.icon || game.cover_image}
-                          alt={selectedMediaItem.title || selectedMediaItem.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        
-                        {/* Fullscreen Button */}
-                        <button
-                          onClick={handleFullscreen}
-                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group"
-                        >
-                          <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
-                        </button>
-
-                        {/* Media Info */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h4 className="text-white font-bold text-lg mb-1">
-                            {selectedMediaItem.title || selectedMediaItem.name}
-                          </h4>
-                          {selectedMediaItem.title && (
-                            <p className="text-white/60 text-sm">Click fullscreen to view in theater mode</p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
                 </div>
 
                 {/* Developer Review Section */}
