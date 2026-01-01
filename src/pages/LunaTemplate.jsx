@@ -1859,17 +1859,9 @@ export default function LunaTemplate() {
 
                 {/* Right Side: Equipment Layout */}
                 <div className="flex-1 flex flex-col gap-8 relative z-40 py-8">
-                      {/* Weapons Section - 3 boxes */}
-                      <div className="flex flex-col items-center">
-                        <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
-                        
-                        {/* Decorative Lines */}
-                        <div className="relative w-64 h-4 mb-4">
-                          <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
-                        </div>
-                        
+                      {/* Top Row: 5 Equipment Slots (Horizontal) */}
+                      <div className="flex justify-center">
+                        <div className="flex gap-4">
                           {[1, 2, 3, 4, 5].map((i) => {
                           const slotId = `equipment-${i}`;
                           const equippedItem = equippedItems[slotId];
@@ -1898,6 +1890,7 @@ export default function LunaTemplate() {
                         })}
                         </div>
                       </div>
+
 
                       {/* Stacked Sections */}
                       <div className="flex flex-col gap-6">
