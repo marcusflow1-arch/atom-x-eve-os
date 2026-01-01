@@ -534,16 +534,16 @@ export default function DeveloperLimitedEdition() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex gap-6 h-[500px]">
-        {/* Left Side - Card Display & Card Selector */}
-        <div className="w-[33%] flex-shrink-0 flex flex-col gap-3">
-          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+      <div className="flex gap-6">
+        {/* Left Side - Card Display & Buy Button */}
+        <div className="w-[280px] flex-shrink-0 flex flex-col">
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
             <Sparkles className="w-3 h-3 text-amber-400" />
             Limited Edition Cards
           </h4>
 
           {/* Card Display - NO BOX */}
-          <div className="flex-1 flex items-center justify-center relative">
+          <div className="flex-1 flex items-center justify-center relative mb-4">
             {selectedCard && (
               <>
                 <LargeCardDisplay card={selectedCard} />
@@ -558,7 +558,7 @@ export default function DeveloperLimitedEdition() {
           </div>
 
           {/* Buy Button */}
-          <div className="flex justify-center mb-2">
+          <div className="flex justify-center">
             <motion.button 
               onClick={handleBuyCard}
               disabled={!selectedCard}
@@ -585,9 +585,16 @@ export default function DeveloperLimitedEdition() {
               )}
             </motion.button>
           </div>
+        </div>
 
-          {/* Card Selector - NO BOX, cards only, 50% bigger */}
-          <div className="h-[120px] flex gap-3 overflow-x-auto scrollbar-hide">
+        {/* Middle - Card Selector */}
+        <div className="flex-1 flex flex-col">
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Info className="w-3 h-3 text-purple-400" />
+            Select Card
+          </h4>
+          
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
              {currentGame?.limitedCards.map((card) => {
                 const isSelected = selectedCard?.id === card.id;
                 const rarity = rarityColors[card.rarity] || rarityColors.Common;
@@ -597,7 +604,7 @@ export default function DeveloperLimitedEdition() {
                     onClick={() => handleCardClick(card)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex-shrink-0 h-full aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative ${
+                    className={`flex-shrink-0 h-[180px] aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative ${
                       isSelected 
                         ? `${rarity.border} ring-2 ring-white/20` 
                         : 'border-white/10 opacity-60 hover:opacity-100'
@@ -610,20 +617,7 @@ export default function DeveloperLimitedEdition() {
           </div>
         </div>
 
-        {/* Middle - Card Details - NO BOX, 30% shorter, 50% narrower */}
-        <div className="w-[25%] flex-shrink-0 self-center h-[70%]">
-          {selectedCard ? (
-            <div className="h-full overflow-y-auto">
-              <CardDetailPanelCompact card={selectedCard} />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-white/40 text-sm">Select a card</p>
-            </div>
-          )}
-        </div>
-
-        {/* Right Side - Games List - NO BOX */}
+        {/* Right Side - Games List */}
         <div className="w-[280px] flex-shrink-0 flex flex-col">
           <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
             <Gamepad2 className="w-3 h-3 text-cyan-400" />
