@@ -1839,10 +1839,10 @@ export default function LunaTemplate() {
                         <div className="w-[260px] flex-shrink-0" />
 
                         {/* Vertical Divider Line */}
-                        <div className="w-px bg-white/20 self-stretch" />
+                        <div className="w-px bg-white/20 self-stretch relative z-30" />
 
                         {/* Middle: All Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8">
+                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30">
                           {/* Weapons */}
                           <div className="flex flex-col items-center">
                             <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
