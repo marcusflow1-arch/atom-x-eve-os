@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, Shield, Cpu, ChevronRight, Lock, 
+  Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
   Maximize2, Star, ThumbsUp, MessageSquare, User
