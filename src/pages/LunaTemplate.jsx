@@ -2138,7 +2138,7 @@ export default function LunaTemplate() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-8 right-8 z-50"
-          style={{ transform: 'scale(0.68) scaleX(0.85)' }}
+          style={{ transform: 'scale(0.68) scaleX(0.7225)' }}
         >
           <LunaStatsPanel />
         </motion.div>
