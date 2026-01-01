@@ -330,18 +330,54 @@ function AchievementsView({ onExitToLibrary }) {
     return localAchievements[selectedGame.title];
   }, [selectedGame, localAchievements]);
 
+  const [userCards, setUserCards] = useState([]);
+
+  useEffect(() => {
+    const fetchUserCards = async () => {
+      if (!user || !selectedGame) return;
+      
+      try {
+        const cards = await base44.entities.UserCard.filter({ 
+          user_id: user.id,
+          game_name: selectedGame.title 
+        });
+        setUserCards(cards);
+      } catch (error) {
+        console.error('Failed to fetch user cards:', error);
+      }
+    };
+
+    fetchUserCards();
+  }, [user, selectedGame]);
+
   const tradingCards = useMemo(() => {
     if (!selectedGame) return [];
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: `card-${selectedGame.id}-${i}`,
-      title: `${selectedGame.title} Card ${i + 1}`,
-      series: selectedGame.title,
-      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
-      image: selectedGame.cover_image || selectedGame.cover,
-      description: `A collectible trading card from ${selectedGame.title}.`,
-      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
-    }));
-  }, [selectedGame]);
+    
+    const gameAchievements = localAchievements[selectedGame.title] || [];
+    const cards = [];
+
+    gameAchievements.forEach(achievement => {
+      if (achievement.reward) {
+        const userCard = userCards.find(c => c.card_name === achievement.reward.name);
+        const isUnlocked = user?.unlocked_achievements?.includes(achievement.id);
+        
+        cards.push({
+          id: achievement.id,
+          title: achievement.reward.name || achievement.title,
+          series: selectedGame.title,
+          rarity: achievement.rarity,
+          image: selectedGame.cover_image || selectedGame.cover,
+          description: achievement.reward.description || achievement.description,
+          stats: achievement.reward.stats || {},
+          isPurchased: userCard?.acquisition_method === 'purchased',
+          isUnlocked: isUnlocked,
+          purchasePrice: userCard?.purchase_price
+        });
+      }
+    });
+
+    return cards;
+  }, [selectedGame, localAchievements, userCards, user]);
 
   const genres = useMemo(() => {
     const g = new Set(allGames.map(game => game.genre).filter(Boolean));
@@ -833,27 +869,38 @@ function AchievementsView({ onExitToLibrary }) {
                                   {tradingCards.map((card, i) => (
                                       <div key={card.id} className="aspect-[2.5/3.5]">
                                           <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
-                                              <div className="absolute inset-0 flex flex-col p-3">
-                                                  <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                                      <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                  </div>
-                                                  <div className="flex-1 flex flex-col justify-between">
-                                                      <div>
-                                                          <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                          <div className="flex gap-1 flex-wrap">
-                                                              <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                                  card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                                  card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                                  card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                                  'border-slate-500/50 text-slate-400'
-                                                              }`}>
-                                                                  {card.rarity}
-                                                              </Badge>
-                                                          </div>
-                                                      </div>
-                                                  </div>
-                                              </div>
+                                             <div className="absolute inset-0 flex flex-col p-3">
+                                                 <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                                     <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                                     {card.isPurchased && !card.isUnlocked && (
+                                                       <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                                         <DollarSign className="w-4 h-4 text-white" />
+                                                       </div>
+                                                     )}
+                                                 </div>
+                                                 <div className="flex-1 flex flex-col justify-between">
+                                                     <div>
+                                                         <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                                         <div className="flex gap-1 flex-wrap">
+                                                             <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                                                 card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                                                 card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                                                 card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                                 card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                                                 'border-slate-500/50 text-slate-400'
+                                                             }`}>
+                                                                 {card.rarity}
+                                                             </Badge>
+                                                             {card.isPurchased && (
+                                                               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
+                                                                 BOUGHT
+                                                               </Badge>
+                                                             )}
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
                                           </ShinyCard>
                                       </div>
                                   ))}
