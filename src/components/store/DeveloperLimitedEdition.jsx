@@ -591,8 +591,8 @@ export default function DeveloperLimitedEdition() {
         <div className="flex-1 flex flex-col">
           {/* Card Information Header */}
           {selectedCard && (
-            <div className="mb-3 pb-3 border-b border-white/10">
-              <div className="flex items-start justify-between">
+            <div className="mb-3 pb-4 border-b border-white/10">
+              <div className="flex items-start justify-between mb-3">
                 <div>
                   <h2 className="text-lg font-bold text-white mb-1">{selectedCard.name}</h2>
                   <div className="flex items-center gap-2 mb-1">
@@ -605,6 +605,60 @@ export default function DeveloperLimitedEdition() {
                   <p className="text-white/40 text-[10px]">Card ID</p>
                   <p className="text-white font-mono text-sm">#{String(selectedCard.id).padStart(4, '0')}</p>
                 </div>
+              </div>
+
+              {/* Stats */}
+              <div className="mb-3">
+                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Statistics</h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {Object.entries({
+                    Power: 50 + (selectedCard.id * 7) % 50,
+                    Defense: 30 + (selectedCard.id * 11) % 40,
+                    Speed: 20 + (selectedCard.id * 13) % 30,
+                    Synergy: 15 + (selectedCard.id * 5) % 35,
+                    Durability: 40 + (selectedCard.id * 9) % 40,
+                  }).map(([key, value]) => (
+                    <div key={key} className="text-center">
+                      <div className="text-[9px] text-white/40 uppercase mb-0.5">{key}</div>
+                      <div className="text-base font-bold text-white">{value}</div>
+                      <div className="w-full h-0.5 bg-white/10 rounded-full mt-0.5 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                          style={{ width: `${value}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Abilities */}
+              <div className="mb-3">
+                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Abilities</h3>
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-white font-semibold text-xs">Primary Effect</h4>
+                      <p className="text-white/60 text-[10px]">Enhances {selectedCard.type.toLowerCase()} capabilities by {20 + (selectedCard.id * 3) % 30}%</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-white font-semibold text-xs">Passive Bonus</h4>
+                      <p className="text-white/60 text-[10px]">Grants bonus experience in related genre activities</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lore */}
+              <div>
+                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Lore</h3>
+                <p className="text-white/70 text-xs italic leading-relaxed">
+                  This {selectedCard.rarity.toLowerCase()} {selectedCard.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension.
+                </p>
               </div>
             </div>
           )}
