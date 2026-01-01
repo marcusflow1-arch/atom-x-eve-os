@@ -135,6 +135,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [devReview, setDevReview] = useState(null);
   const [newReview, setNewReview] = useState({ rating: 5, content: '' });
   const owned = isPurchased(gameId);
+  const [userReactions, setUserReactions] = useState({});
 
   // Mock media content
   const videos = [
@@ -303,6 +304,70 @@ export default function GameDetailPanel({ gameId, onClose }) {
     }
   };
 
+  const handleReaction = async (reviewId, reactionType) => {
+    if (!isAuthenticated) {
+      alert("Please sign in to react");
+      return;
+    }
+    
+    try {
+      const existingReactions = await base44.entities.Reaction.filter({
+        target_id: reviewId,
+        created_by: user.email
+      });
+      
+      if (existingReactions.length > 0) {
+        const existingReaction = existingReactions[0];
+        if (existingReaction.type === reactionType) {
+          // Remove reaction
+          await base44.entities.Reaction.delete(existingReaction.id);
+        } else {
+          // Update reaction
+          await base44.entities.Reaction.update(existingReaction.id, { type: reactionType });
+        }
+      } else {
+        // Create new reaction
+        await base44.entities.Reaction.create({
+          target_id: reviewId,
+          target_type: 'post',
+          type: reactionType
+        });
+      }
+      
+      // Refresh user reactions
+      const allUserReactions = await base44.entities.Reaction.filter({
+        created_by: user.email
+      });
+      const reactionsMap = {};
+      allUserReactions.forEach(r => {
+        reactionsMap[r.target_id] = r.type;
+      });
+      setUserReactions(reactionsMap);
+    } catch (err) {
+      console.error("Failed to react", err);
+    }
+  };
+
+  // Fetch user reactions on mount
+  useEffect(() => {
+    const fetchUserReactions = async () => {
+      if (!isAuthenticated || !user) return;
+      try {
+        const allUserReactions = await base44.entities.Reaction.filter({
+          created_by: user.email
+        });
+        const reactionsMap = {};
+        allUserReactions.forEach(r => {
+          reactionsMap[r.target_id] = r.type;
+        });
+        setUserReactions(reactionsMap);
+      } catch (err) {
+        console.error("Failed to fetch reactions", err);
+      }
+    };
+    fetchUserReactions();
+  }, [isAuthenticated, user]);
+
   const handleAddToCart = () => {
     if (!isAuthenticated) {
         alert("Authentication Required: Identity Protocol.");
@@ -343,7 +408,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   }
 
   return (
-    <div className="h-full w-full relative bg-[#050505] text-white font-sans overflow-hidden flex flex-col">
+    <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
@@ -431,8 +496,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
           alt={game.title} 
           className="w-full h-full object-cover opacity-40 blur-sm scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-transparent to-[#0d0d0d]" />
         {/* Scanlines */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
       </motion.div>
@@ -827,9 +892,27 @@ export default function GameDetailPanel({ gameId, onClose }) {
                           </div>
                           <p className="text-white/80 leading-relaxed">{review.content}</p>
                           <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10">
-                            <button className="flex items-center gap-2 text-white/40 hover:text-cyan-400 transition-all text-sm">
-                              <ThumbsUp className="w-4 h-4" />
-                              <span>{review.score || 0}</span>
+                            <button 
+                              onClick={() => handleReaction(review.id, 'agree')}
+                              className={`flex items-center gap-2 transition-all text-sm ${
+                                userReactions[review.id] === 'agree' 
+                                  ? 'text-green-400' 
+                                  : 'text-white/40 hover:text-green-400'
+                              }`}
+                            >
+                              <ThumbsUp className={`w-4 h-4 ${userReactions[review.id] === 'agree' ? 'fill-green-400' : ''}`} />
+                              <span>Agree</span>
+                            </button>
+                            <button 
+                              onClick={() => handleReaction(review.id, 'disagree')}
+                              className={`flex items-center gap-2 transition-all text-sm ${
+                                userReactions[review.id] === 'disagree' 
+                                  ? 'text-red-400' 
+                                  : 'text-white/40 hover:text-red-400'
+                              }`}
+                            >
+                              <ThumbsUp className={`w-4 h-4 rotate-180 ${userReactions[review.id] === 'disagree' ? 'fill-red-400' : ''}`} />
+                              <span>Disagree</span>
                             </button>
                           </div>
                         </div>
@@ -870,59 +953,74 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-3">
-                    <Database className="w-5 h-5 text-white/10" />
-                  </div>
-                  
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-cyan-400" />
-                    Included System Assets
+                {/* Achievements Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-cyan-400" />
+                    Achievements
                   </h3>
 
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <SystemPreviewCard 
-                      type="Ability" 
-                      title="Neural Shock" 
-                      subtitle="Stun enemies in radius" 
-                      onClick={() => handleMediaTrigger('Neural Shock', 'ability')}
-                    />
-                    <SystemPreviewCard 
-                      type="Passive" 
-                      title="Cyber Metabolism" 
-                      subtitle="+10% Regeneration" 
-                      onClick={() => handleMediaTrigger('Cyber Metabolism', 'ability')}
-                    />
-                    <SystemPreviewCard 
-                      type="Equipment" 
-                      title="Void Walker Set" 
-                      subtitle="Stealth Bonus" 
-                      onClick={() => handleMediaTrigger('Void Walker Set', 'equipment')}
-                    />
-                    <SystemPreviewCard 
-                      type="Trait" 
-                      title="Tactical Mind" 
-                      subtitle="AI Behavior Mod" 
-                      onClick={() => handleMediaTrigger('Tactical Mind', 'trait')}
-                    />
+                  <div className="space-y-3">
+                    {achievements.slice(0, 5).map((achievement, i) => (
+                      <motion.div
+                        key={i}
+                        className="relative group perspective-1000 cursor-pointer"
+                        whileHover={{ scale: 1.02 }}
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = (e.clientX - rect.left) / rect.width - 0.5;
+                          const y = (e.clientY - rect.top) / rect.height - 0.5;
+                          e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+                        }}
+                        style={{
+                          transformStyle: 'preserve-3d',
+                          transition: 'transform 0.1s ease-out'
+                        }}
+                      >
+                        <div className="relative rounded-xl overflow-hidden border border-white/20 bg-gradient-to-br from-cyan-900/20 via-purple-900/20 to-blue-900/20 p-4"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(147, 51, 234, 0.1) 50%, rgba(59, 130, 246, 0.1) 100%)',
+                            backdropFilter: 'blur(20px) saturate(180%)',
+                            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                          }}
+                        >
+                          {/* Liquid glass shine effect */}
+                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                          
+                          <div className="flex items-center gap-3 relative z-10">
+                            <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center text-2xl border border-cyan-400/30">
+                              {achievement.icon}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-white font-bold text-sm">{achievement.name}</h4>
+                              <p className="text-white/50 text-xs">Unlockable Card</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
 
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/10">
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-3 h-3 text-yellow-400" />
                       <span className="text-[10px] font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
                     </div>
                     <p className="text-[9px] text-white/50 leading-relaxed">
-                      All assets from this system can be forged, combined, and ascended in the Blacksmith OS.
+                      All cards can be forged, combined, and ascended in the Blacksmith OS.
                     </p>
                   </div>
                 </div>
 
-                {/* DLC & Updates Section */}
-                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                {/* DLC & Expansion Packs */}
+                <div className="space-y-3">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Download className="w-4 h-4 text-purple-400" />
-                    DLC & Updates
+                    DLC & Expansion Packs
                   </h3>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
