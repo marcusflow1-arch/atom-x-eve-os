@@ -2138,15 +2138,15 @@ export default function LunaTemplate() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-8 right-8 z-50"
-          style={{ transform: 'scale(0.68)' }}
+          style={{ transform: 'scale(0.68) scaleX(0.85)' }}
         >
           <LunaStatsPanel />
         </motion.div>
       }
 
-      {/* Skills & AI Passives - Bottom Center */}
+      {/* Skills & AI Passives - Bottom Left */}
       {uiVisible && !showInventory &&
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
+        <div className="fixed bottom-8 left-8 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
             <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
