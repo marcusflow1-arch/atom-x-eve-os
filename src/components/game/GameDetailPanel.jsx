@@ -132,6 +132,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedDLC, setSelectedDLC] = useState(null);
   const [selectedMediaItem, setSelectedMediaItem] = useState(null);
   const [reviews, setReviews] = useState([]);
+  
+  // Auto-select first media item on load
+  useEffect(() => {
+    if (videos.length > 0 && !selectedMediaItem) {
+      setSelectedMediaItem(videos[0]);
+    }
+  }, [game]);
   const [devReview, setDevReview] = useState(null);
   const [newReview, setNewReview] = useState({ rating: 5, content: '' });
   const owned = isPurchased(gameId);
@@ -630,7 +637,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   ))}
                 </div>
 
-                {/* DLC Content Dropdown */}
+                {/* DLC Content - No Box */}
                 <div className="space-y-2">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Download className="w-4 h-4 text-purple-400" />
@@ -639,10 +646,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => {
                     const isExpanded = selectedDLC?.id === dlc.id;
                     return (
-                      <div key={dlc.id} className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                      <div key={dlc.id} className="overflow-hidden">
                         <button
                           onClick={() => setSelectedDLC(isExpanded ? null : dlc)}
-                          className="w-full flex items-center justify-between p-4 hover:bg-white/10 transition-all"
+                          className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-all rounded-lg"
                         >
                           <div className="text-left">
                             <p className="font-bold text-white text-sm">{dlc.name}</p>
@@ -656,7 +663,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              className="border-t border-white/10 p-4 space-y-3"
+                              className="p-4 space-y-3"
                             >
                               <div>
                                 <h4 className="text-white/70 text-xs font-semibold uppercase mb-2">Includes:</h4>
@@ -943,44 +950,74 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* DLC & Expansion Packs */}
-                <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                    <Download className="w-4 h-4 text-purple-400" />
-                    DLC & Expansion Packs
+                {/* Retail - Card Offerings */}
+                <div className="space-y-3">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Database className="w-4 h-4 text-cyan-400" />
+                    Retail
                   </h3>
 
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {dlcList.map((dlc) => (
-                      <div 
-                        key={dlc.id}
-                        onClick={() => dlc.id === 'standard' ? setSelectedDLC(null) : setSelectedDLC(dlc)}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all group ${
-                          dlc.id === 'standard' && !selectedDLC
-                            ? 'bg-cyan-500/20 border-cyan-400/40'
-                            : selectedDLC?.id === dlc.id 
-                            ? 'bg-purple-500/20 border-purple-400/40' 
-                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-purple-400/30'
-                        }`}
+                  <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                    {[
+                      { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
+                      { name: 'Cyber Metabolism', type: 'Passive', description: '+10% Regeneration', edition: 'Standard Edition' },
+                      { name: 'Void Walker Set', type: 'Equipment', description: 'Stealth Bonus', edition: 'Neural Expansion' },
+                      { name: 'Tactical Mind', type: 'Trait', description: 'AI Behavior Mod', edition: 'Digital Edition' },
+                      { name: 'Data Stream', type: 'Ability', description: 'Hack networks', edition: 'Void Arsenal DLC' },
+                      { name: 'Shadow Clone', type: 'Ability', description: 'Create decoys', edition: 'Void Arsenal DLC' },
+                    ].map((card, i) => (
+                      <motion.div
+                        key={i}
+                        className="relative group perspective-1000 flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = (e.clientX - rect.left) / rect.width - 0.5;
+                          const y = (e.clientY - rect.top) / rect.height - 0.5;
+                          e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+                        }}
+                        style={{
+                          transformStyle: 'preserve-3d',
+                          transition: 'transform 0.1s ease-out',
+                          width: '160px'
+                        }}
                       >
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-bold text-sm mb-1 transition-colors ${
-                            dlc.id === 'standard' && !selectedDLC
-                              ? 'text-cyan-300'
-                              : selectedDLC?.id === dlc.id ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
-                          }`}>
-                            {dlc.name}
-                          </p>
-                          <p className="text-white/50 text-[10px] line-clamp-2">
-                            {dlc.description}
-                          </p>
+                        <div className="space-y-2">
+                          {/* Card Name + Edition */}
+                          <div className="text-center">
+                            <p className="text-white font-bold text-xs mb-0.5">{card.name}</p>
+                            <p className="text-cyan-400/70 text-[9px]">{card.edition}</p>
+                          </div>
+
+                          {/* Crystal Clear Card */}
+                          <div 
+                            className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/30"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
+                              backdropFilter: 'blur(20px) saturate(180%)',
+                              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                            }}
+                          >
+                            {/* Shine effect */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                            
+                            {/* Mystery content */}
+                            <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">
+                              ?
+                            </div>
+                          </div>
+
+                          {/* Card Info */}
+                          <div className="text-center space-y-0.5">
+                            <p className="text-cyan-300 text-[10px] font-semibold">{card.type}</p>
+                            <p className="text-white/60 text-[9px] leading-tight">{card.description}</p>
+                          </div>
                         </div>
-                        <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                          dlc.id === 'standard' && !selectedDLC
-                            ? 'text-cyan-400'
-                            : selectedDLC?.id === dlc.id ? 'text-purple-400' : 'text-white/30 group-hover:text-purple-400'
-                        }`} />
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
