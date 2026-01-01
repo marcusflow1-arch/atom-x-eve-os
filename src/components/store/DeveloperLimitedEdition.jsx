@@ -472,23 +472,23 @@ export default function DeveloperLimitedEdition() {
     <div className="mb-12">
       {/* 1. Developer Navigation - NO BOX */}
       <div className="mb-6">
-        <div className="flex overflow-x-auto gap-2 scrollbar-hide">
+        <div className="flex overflow-x-auto gap-2 hover:overflow-x-scroll scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
           {DEVELOPERS.map((dev, index) => (
             <button
               key={dev.id}
               onClick={() => handleSelectDeveloper(index)}
-              className={`flex-shrink-0 flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-300 border ${
+              className={`flex-shrink-0 flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl transition-all duration-300 border ${
                 currentDeveloperIndex === index 
                   ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)] text-white' 
                   : 'bg-transparent border-white/5 text-white/40 hover:text-white hover:bg-white/5'
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] ${
                 currentDeveloperIndex === index ? 'bg-cyan-500/20 text-cyan-300' : 'bg-white/10 text-white/50'
               }`}>
                 {dev.logo}
               </div>
-              <span className="text-sm font-bold tracking-wide">{dev.name}</span>
+              <span className="text-[13px] font-bold tracking-wide">{dev.name}</span>
             </button>
           ))}
         </div>
