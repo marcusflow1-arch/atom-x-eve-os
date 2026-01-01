@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -1536,7 +1535,7 @@ export default function LunaTemplate() {
                                         className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
                                         title="View Achievements"
                                       >
-                                        Trophy size={12} />
+                                        <Trophy size={12} />
                                       </button>
                                     </motion.div>
                                   )}
@@ -1819,7 +1818,7 @@ export default function LunaTemplate() {
                       }
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
             }
             {uiVisible &&
