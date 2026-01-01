@@ -1665,7 +1665,7 @@ export default function LunaTemplate() {
 
 
                         {/* Middle: All Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30 items-center">
+                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30 items-center" style={{ marginTop: '320px' }}>
                           {/* Top Row: Armor and Weapons with Genre */}
                           <div className="flex gap-12 items-start">
                             {/* Armor - 3x3 Grid */}
