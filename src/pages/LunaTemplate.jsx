@@ -1909,10 +1909,14 @@ export default function LunaTemplate() {
                           <LunaStatsPanel />
                         </div>
                       </motion.div> :
-                      null}
-
-
-
+                      null
+                  }
+                </AnimatePresence>
+              </motion.div>
+            }
+          </AnimatePresence>
+        </div>
+      }
 
       {/* Settings Overlay */}
       <AnimatePresence>
