@@ -470,17 +470,9 @@ export default function DeveloperLimitedEdition() {
 
   return (
     <div className="mb-12">
-      {/* 1. Developer Navigation - Tabbed Layout */}
-      <div 
-        className="relative rounded-2xl p-2 mb-6 overflow-hidden flex flex-col gap-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.5) 100%)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <div className="flex overflow-x-auto gap-2 px-2 py-2 scrollbar-hide">
+      {/* 1. Developer Navigation - NO BOX */}
+      <div className="mb-6">
+        <div className="flex overflow-x-auto gap-2 scrollbar-hide">
           {DEVELOPERS.map((dev, index) => (
             <button
               key={dev.id}
@@ -553,51 +545,33 @@ export default function DeveloperLimitedEdition() {
           )}
         </div>
 
-        {/* Right Side - Games List */}
-        <div className="w-[220px] flex-shrink-0">
-          <div 
-            className="rounded-2xl p-4 h-full flex flex-col"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%)',
-              backdropFilter: 'blur(30px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Gamepad2 className="w-3 h-3 text-cyan-400" />
-              {currentDeveloper.name} Games
-            </h4>
-            
-            <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 custom-scrollbar">
-              {currentDeveloper.games.map((game, index) => (
-                <button
-                  key={game.id}
-                  onClick={() => handleSelectGame(index)}
-                  className={`w-full group relative overflow-hidden rounded-xl border transition-all text-left ${
-                    index === selectedGameIndex 
-                      ? 'border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
-                      : 'border-white/10 hover:border-white/30'
-                  }`}
-                >
-                  <div className="aspect-video w-full relative">
-                    <img src={game.cover} alt={game.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <h4 className="text-white font-bold text-xs truncate leading-tight">{game.title}</h4>
-                      <p className="text-[9px] text-white/60">{game.year}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            <div className="mt-4 pt-4 border-t border-white/10">
-               <div className="flex items-center justify-between text-[10px] text-white/40">
-                  <span>Total Collections</span>
-                  <span>{currentDeveloper.games.length}</span>
-               </div>
-            </div>
+        {/* Right Side - Games List - NO BOX */}
+        <div className="w-[280px] flex-shrink-0 flex flex-col">
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Gamepad2 className="w-3 h-3 text-cyan-400" />
+            {currentDeveloper.name} Games
+          </h4>
+          
+          <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 custom-scrollbar">
+            {currentDeveloper.games.map((game, index) => (
+              <button
+                key={game.id}
+                onClick={() => handleSelectGame(index)}
+                className={`w-full group flex items-center gap-3 transition-all text-left p-2 rounded-lg ${
+                  index === selectedGameIndex 
+                    ? 'bg-cyan-500/10 border-l-2 border-cyan-500' 
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
+                  <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white font-bold text-sm truncate">{game.title}</h4>
+                  <p className="text-white/50 text-xs">{game.year}</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
