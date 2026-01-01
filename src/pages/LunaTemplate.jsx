@@ -1842,15 +1842,11 @@ export default function LunaTemplate() {
                         <div className="w-px bg-white/20 self-stretch relative z-30" />
 
                         {/* Middle: All Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30">
-                          {/* Weapons */}
-                          <div className="flex flex-col items-center">
-                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
-                            <div className="relative w-64 h-4 mb-4">
-                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
-                            </div>
+                        <div className="flex items-start gap-12 flex-shrink-0 py-8 ml-8 relative z-30">
+                          {/* Left: Weapons */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Weapons</h2>
+                            <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
                             <div className="flex gap-3">
                               {[1, 2, 3].map((i) => {
                                 const slotId = `weapon-${i}`;
@@ -1860,45 +1856,48 @@ export default function LunaTemplate() {
                             </div>
                           </div>
 
-                          {/* Armor */}
+                          {/* Middle: Armor */}
                           <div className="flex flex-col items-center gap-4">
                             <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
-                            <div className="relative w-64 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
-                            <div className="flex gap-3">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {const slotId = `armor-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                            <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex flex-col gap-3">
+                              <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `armor-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                              <div className="flex gap-3">{[3, 4, 5, 6, 7, 8, 9].map((i) => {const slotId = `armor-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                            </div>
                           </div>
 
-                          {/* Bottom Row: Genre, Artifacts/Passives, Aspects */}
-                          <div className="flex items-start justify-between gap-6 w-full">
-                            {/* Left: Genre Mastery */}
-                            <div className="flex flex-col items-center gap-4">
-                              <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Genre</h2>
-                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
-                              <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          {/* Right: AI Passives */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
+                            <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex flex-col gap-3">
+                              <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `passive-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                              <div className="flex gap-3">{[3, 4, 5].map((i) => {const slotId = `passive-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
+                          </div>
+                        </div>
 
-                            {/* Middle: Artifacts & AI Passives */}
-                            <div className="flex flex-col items-center gap-6">
-                              {/* Artifacts */}
-                              <div className="flex flex-col items-center gap-4">
-                                <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Artifacts</h2>
-                                <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
-                                <div className="flex gap-3">{[1, 2, 3, 4, 5].map((i) => {const slotId = `artifact-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
-                              </div>
+                        {/* Bottom Row: Genre, Artifacts, Aspects */}
+                        <div className="flex items-start justify-between gap-8 w-full mt-8 ml-8 relative z-30">
+                          {/* Left: Genre Mastery */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Genre</h2>
+                            <div className="relative w-32 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-10 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          </div>
 
-                              {/* AI Passives */}
-                              <div className="flex flex-col items-center gap-4">
-                                <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
-                                <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
-                                <div className="flex gap-3">{[1, 2, 3, 4, 5].map((i) => {const slotId = `passive-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
-                              </div>
-                            </div>
+                          {/* Middle: Artifacts */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Artifacts</h2>
+                            <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-3">{[1, 2, 3, 4, 5].map((i) => {const slotId = `artifact-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          </div>
 
-                            {/* Right: Aspects */}
-                            <div className="flex flex-col items-center gap-4">
-                              <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Aspects</h2>
-                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
-                              <div className="flex gap-3">{[1, 2, 3].map((i) => {const slotId = `aspect-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-full border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
-                            </div>
+                          {/* Right: Aspects */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-[11px] font-bold tracking-[0.3em] uppercase text-white/50">Aspects</h2>
+                            <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-3">{[1, 2, 3].map((i) => {const slotId = `aspect-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-full border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                           </div>
                         </div>
 
