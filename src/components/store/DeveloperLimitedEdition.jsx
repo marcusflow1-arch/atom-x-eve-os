@@ -587,14 +587,35 @@ export default function DeveloperLimitedEdition() {
           </div>
         </div>
 
-        {/* Middle - Card Selector */}
+        {/* Middle - Card Info & Selector */}
         <div className="flex-1 flex flex-col">
-          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+          {/* Card Information Header */}
+          {selectedCard && (
+            <div className="mb-3 pb-3 border-b border-white/10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-white mb-1">{selectedCard.name}</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{selectedCard.type}</Badge>
+                    <Badge className={`${rarityColors[selectedCard.rarity]?.bg} ${rarityColors[selectedCard.rarity]?.text} border-none text-[10px]`}>{selectedCard.rarity}</Badge>
+                    <span className="text-amber-400/80 text-[10px]">{selectedCard.tag}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-white/40 text-[10px]">Card ID</p>
+                  <p className="text-white font-mono text-sm">#{String(selectedCard.id).padStart(4, '0')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Select Card Header - aligned with buy button */}
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Info className="w-3 h-3 text-purple-400" />
             Select Card
           </h4>
           
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
              {currentGame?.limitedCards.map((card) => {
                 const isSelected = selectedCard?.id === card.id;
                 const rarity = rarityColors[card.rarity] || rarityColors.Common;
@@ -604,7 +625,7 @@ export default function DeveloperLimitedEdition() {
                     onClick={() => handleCardClick(card)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex-shrink-0 h-[180px] aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative ${
+                    className={`flex-shrink-0 h-[135px] aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative ${
                       isSelected 
                         ? `${rarity.border} ring-2 ring-white/20` 
                         : 'border-white/10 opacity-60 hover:opacity-100'
