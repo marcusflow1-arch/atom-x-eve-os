@@ -143,6 +143,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [newReview, setNewReview] = useState({ rating: 5, content: '' });
   const owned = isPurchased(gameId);
   const [userReactions, setUserReactions] = useState({});
+  const [selectedCard, setSelectedCard] = useState(null);
 
   // Mock media content
   const videos = [
@@ -979,7 +980,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     ].map((card, i) => (
                       <motion.div
                         key={i}
-                        className="relative group perspective-1000 flex-shrink-0"
+                        onClick={() => setSelectedCard(card)}
+                        className="relative group perspective-1000 flex-shrink-0 cursor-pointer"
                         whileHover={{ scale: 1.05 }}
                         onMouseMove={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
@@ -1095,6 +1097,95 @@ export default function GameDetailPanel({ gameId, onClose }) {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Card Detail Overlay */}
+      <AnimatePresence>
+        {selectedCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-8"
+            onClick={() => setSelectedCard(null)}
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 max-w-5xl w-full flex gap-8 items-center"
+            >
+              {/* Left: Card Display */}
+              <div className="flex-shrink-0 flex items-center justify-center">
+                <motion.div
+                  className="relative group perspective-1000"
+                  style={{ width: '280px' }}
+                  whileHover={{ scale: 1.05 }}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+                  }}
+                >
+                  <div 
+                    className="relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden border-2 border-white/40"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+                      backdropFilter: 'blur(30px) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                      boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.3)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.1s ease-out'
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    <div className="absolute inset-0 flex items-center justify-center text-9xl opacity-10 text-white">
+                      ?
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Right: Card Information */}
+              <div className="flex-1 space-y-6 text-white">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-3xl font-bold">{selectedCard.name}</h2>
+                    <span className="text-cyan-400/80 text-sm">{selectedCard.edition}</span>
+                  </div>
+                  <p className="text-cyan-300 text-lg">{selectedCard.type}</p>
+                </div>
+
+                <p className="text-white/70 text-base leading-relaxed">
+                  {selectedCard.description}
+                </p>
+
+                <div className="space-y-3">
+                  <h3 className="text-white/50 text-sm uppercase tracking-wider">Details</h3>
+                  <div className="space-y-2 text-white/60">
+                    <p>Rarity: <span className="text-white/40">Unknown</span></p>
+                    <p>Power: <span className="text-white/40">?</span></p>
+                    <p>Unlock Method: <span className="text-white/40">?</span></p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedCard(null)}
+                  className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Transaction Modal removed in favor of global Cart */}
     </div>
