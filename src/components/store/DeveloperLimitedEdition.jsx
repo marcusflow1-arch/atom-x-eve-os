@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ShinyCard from '@/components/shared/ShinyCard';
+import { useCart } from '../CartContext';
 
 // Developer data with their games and limited edition cards
 const DEVELOPERS = [
@@ -439,9 +440,11 @@ function CardDetailPanelCompact({ card }) {
 }
 
 export default function DeveloperLimitedEdition() {
+  const { addToCart, isPurchased } = useCart();
   const [currentDeveloperIndex, setCurrentDeveloperIndex] = useState(0);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [justAdded, setJustAdded] = useState(false);
   
   const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
   const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
@@ -466,6 +469,37 @@ export default function DeveloperLimitedEdition() {
 
   const handleCardClick = (card) => {
     setSelectedCard(card);
+    setJustAdded(false);
+  };
+
+  const handleBuyCard = () => {
+    if (!selectedCard) return;
+    
+    // Calculate price based on rarity
+    const rarityPrices = {
+      'Mythic': 95000,
+      'Legendary': 75000,
+      'Epic': 45000,
+      'Rare': 25000,
+      'Common': 10000
+    };
+    
+    const price = rarityPrices[selectedCard.rarity] || 25000;
+    
+    addToCart({
+      id: `dev_card_${selectedCard.id}`,
+      title: selectedCard.name,
+      price: price / 1000, // Convert AGP to USD for cart
+      image: selectedCard.image,
+      type: 'limited_card',
+      rarity: selectedCard.rarity,
+      game: currentGame.title,
+      developer: currentDeveloper.name,
+      cardType: selectedCard.type
+    });
+    
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2000);
   };
 
   return (
@@ -473,10 +507,31 @@ export default function DeveloperLimitedEdition() {
       {/* Section Header */}
       <div className="flex items-center justify-center gap-3 mb-6">
         <h3 className="text-2xl font-bold text-white tracking-wide">Devs Limited Cards</h3>
-        <button className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors">
-          <ShoppingCart className="w-5 h-5" />
-          <span className="font-semibold">Buy</span>
-        </button>
+        <motion.button 
+          onClick={handleBuyCard}
+          disabled={!selectedCard}
+          whileHover={{ scale: selectedCard ? 1.05 : 1 }}
+          whileTap={{ scale: selectedCard ? 0.95 : 1 }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all ${
+            selectedCard 
+              ? justAdded
+                ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)]'
+                : 'bg-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+              : 'bg-white/10 text-white/30 cursor-not-allowed'
+          }`}
+        >
+          {justAdded ? (
+            <>
+              <Check className="w-5 h-5" />
+              <span>Added!</span>
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-5 h-5" />
+              <span>Buy</span>
+            </>
+          )}
+        </motion.button>
       </div>
 
       {/* 1. Developer Navigation - NO BOX */}
@@ -513,8 +568,18 @@ export default function DeveloperLimitedEdition() {
           </h4>
 
           {/* Card Display - NO BOX */}
-          <div className="flex-1 flex items-center justify-center">
-            {selectedCard && <LargeCardDisplay card={selectedCard} />}
+          <div className="flex-1 flex items-center justify-center relative">
+            {selectedCard && (
+              <>
+                <LargeCardDisplay card={selectedCard} />
+                {isPurchased(`dev_card_${selectedCard.id}`) && (
+                  <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
+                    <Check className="w-4 h-4 text-white" />
+                    <span className="text-white text-xs font-bold">Owned</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Card Selector - NO BOX, cards only, 50% bigger */}
