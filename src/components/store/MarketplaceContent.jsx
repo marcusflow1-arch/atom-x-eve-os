@@ -19,29 +19,31 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ShinyCard from '@/components/shared/ShinyCard';
 import DeveloperLimitedEdition from './DeveloperLimitedEdition';
 
-// Enhanced Mock Data with new fields
+// Enhanced Mock Data with genre and item type
 const MARKETPLACE_ITEMS = [
-  { id: 'c1', name: 'Phoenix Familiar - Legendary Fire Companion', price: 45000, originalPrice: 52000, rarity: 'Legendary', game: 'Mage Wars Online', category: 'Companions', subcategory: 'Mythical', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'PetMaster', rating: 4.9, sales: 1250 }, views: 3421, description: 'A blazing phoenix companion that automatically revives you once per battle. Includes flame aura effect.', stats: { Power: 85, Loyalty: 95 }, reviews: 234, prime: true, sponsored: true, playstyle: 'PvE', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: 'https://cdn.coverr.co/videos/coverr-fire-burning-in-slow-motion-5358/1080p.mp4' },
-  { id: 'c2', name: 'Shadow Wolf Pack - Stealth Bonus Set', price: 28000, rarity: 'Epic', game: 'Elder Scrolls: Reborn', category: 'Companions', subcategory: 'Beast', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'WildTamer', rating: 4.7, sales: 890 }, views: 2156, description: 'Three shadow wolves that hunt alongside you with +25% stealth bonus when active.', stats: { Power: 70, Loyalty: 80 }, reviews: 156, prime: true, playstyle: 'Stealth', developer: { name: 'Bethesda', logo: 'B' }, isNew: true, previewUrl: null },
-  { id: 'c3', name: 'Quantum AI Drone MK-X', price: 52000, rarity: 'Mythic', game: 'Cyberpunk 2088', category: 'Companions', subcategory: 'Mechanical', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'TechDealer', rating: 5.0, sales: 2100 }, views: 4521, description: 'Military-grade AI companion with combat assistance, hacking support, and tactical analysis.', stats: { Power: 90, Intelligence: 100 }, reviews: 312, prime: true, sponsored: true, playstyle: 'PvP', developer: { name: 'CD Projekt Red', logo: 'CDPR' }, isNew: false, previewUrl: null },
-  { id: 'c4', name: 'Elemental Sprite - Magic Buffer', price: 15000, originalPrice: 18000, rarity: 'Rare', game: 'Mage Wars Online', category: 'Companions', subcategory: 'Elemental', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'SpriteTrader', rating: 4.5, sales: 567 }, views: 1234, description: 'A helpful sprite that buffs magic abilities by 15% and provides passive mana regeneration.', stats: { Power: 45, Support: 75 }, reviews: 89, prime: false, playstyle: 'Support', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: null },
-  { id: 'g1', name: 'Void Reaper Scythe - Soul Harvesting', price: 78000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidForge', rating: 4.9, sales: 1890 }, views: 5678, description: 'Harvests souls with each killing blow. 15% life steal on hit. Glows with void energy.', stats: { Attack: 120, CritChance: 25 }, reviews: 445, prime: true, playstyle: 'PvP', developer: { name: 'Bethesda', logo: 'B' }, isNew: true, previewUrl: null },
-  { id: 'g2', name: 'Plasma Cannon MK-X - Heavy Weapon', price: 65000, originalPrice: 72000, rarity: 'Epic', game: 'Galactic Warfare', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=400&fit=crop', seller: { name: 'GunRunner', rating: 4.6, sales: 1200 }, views: 3421, description: 'Military-grade plasma weapon with burst fire capability. Includes thermal scope attachment.', stats: { Attack: 95, FireRate: 80 }, reviews: 267, prime: true, sponsored: true, playstyle: 'PvE', developer: { name: 'Bungie', logo: 'BG' }, isNew: false, previewUrl: null },
-  { id: 'g3', name: 'Cyber Katana - Mono-Molecular Edge', price: 42000, rarity: 'Epic', game: 'Cyberpunk 2088', category: 'Gear', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'BladeSmith', rating: 4.8, sales: 980 }, views: 2987, description: 'Mono-molecular edge cuts through any armor. Electric discharge on critical hits.', stats: { Attack: 85, Speed: 95 }, reviews: 198, prime: true, playstyle: 'PvP', developer: { name: 'CD Projekt Red', logo: 'CDPR' }, isNew: false, previewUrl: null },
-  { id: 'g4', name: 'Void Emperor Complete Armor Set', price: 125000, originalPrice: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', category: 'Gear', subcategory: 'Armor', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidMaster', rating: 4.9, sales: 3200 }, views: 8921, description: 'Complete 5-piece armor set forged in the void dimension. Grants immunity to shadow damage.', stats: { Defense: 150, MagicRes: 80 }, reviews: 567, prime: true, sponsored: true, playstyle: 'Tank', developer: { name: 'Bethesda', logo: 'B' }, isNew: false, previewUrl: null },
+  { id: 'c1', name: 'Phoenix Familiar - Legendary Fire Companion', price: 45000, originalPrice: 52000, rarity: 'Legendary', game: 'Mage Wars Online', genre: 'RPG', category: 'Companions', itemType: 'Companions', subcategory: 'Mythical', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'PetMaster', rating: 4.9, sales: 1250 }, views: 3421, description: 'A blazing phoenix companion that automatically revives you once per battle. Includes flame aura effect.', stats: { Power: 85, Loyalty: 95 }, reviews: 234, prime: true, sponsored: true, playstyle: 'PvE', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: 'https://cdn.coverr.co/videos/coverr-fire-burning-in-slow-motion-5358/1080p.mp4' },
+  { id: 'c2', name: 'Shadow Wolf Pack - Stealth Bonus Set', price: 28000, rarity: 'Epic', game: 'Elder Scrolls: Reborn', genre: 'RPG', category: 'Companions', itemType: 'Companions', subcategory: 'Beast', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'WildTamer', rating: 4.7, sales: 890 }, views: 2156, description: 'Three shadow wolves that hunt alongside you with +25% stealth bonus when active.', stats: { Power: 70, Loyalty: 80 }, reviews: 156, prime: true, playstyle: 'Stealth', developer: { name: 'Bethesda', logo: 'B' }, isNew: true, previewUrl: null },
+  { id: 'c3', name: 'Quantum AI Drone MK-X', price: 52000, rarity: 'Mythic', game: 'Cyberpunk 2088', genre: 'Sci-Fi', category: 'Companions', itemType: 'Companions', subcategory: 'Mechanical', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'TechDealer', rating: 5.0, sales: 2100 }, views: 4521, description: 'Military-grade AI companion with combat assistance, hacking support, and tactical analysis.', stats: { Power: 90, Intelligence: 100 }, reviews: 312, prime: true, sponsored: true, playstyle: 'PvP', developer: { name: 'CD Projekt Red', logo: 'CDPR' }, isNew: false, previewUrl: null },
+  { id: 'c4', name: 'Elemental Sprite - Magic Buffer', price: 15000, originalPrice: 18000, rarity: 'Rare', game: 'Mage Wars Online', genre: 'RPG', category: 'Companions', itemType: 'Companions', subcategory: 'Elemental', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'SpriteTrader', rating: 4.5, sales: 567 }, views: 1234, description: 'A helpful sprite that buffs magic abilities by 15% and provides passive mana regeneration.', stats: { Power: 45, Support: 75 }, reviews: 89, prime: false, playstyle: 'Support', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: null },
+  { id: 'g1', name: 'Void Reaper Scythe - Soul Harvesting', price: 78000, rarity: 'Legendary', game: 'Elder Scrolls: Reborn', genre: 'RPG', category: 'Gear', itemType: 'Equipment', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidForge', rating: 4.9, sales: 1890 }, views: 5678, description: 'Harvests souls with each killing blow. 15% life steal on hit. Glows with void energy.', stats: { Attack: 120, CritChance: 25 }, reviews: 445, prime: true, playstyle: 'PvP', developer: { name: 'Bethesda', logo: 'B' }, isNew: true, previewUrl: null },
+  { id: 'g2', name: 'Plasma Cannon MK-X - Heavy Weapon', price: 65000, originalPrice: 72000, rarity: 'Epic', game: 'Galactic Warfare', genre: 'Shooter', category: 'Gear', itemType: 'Equipment', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=400&h=400&fit=crop', seller: { name: 'GunRunner', rating: 4.6, sales: 1200 }, views: 3421, description: 'Military-grade plasma weapon with burst fire capability. Includes thermal scope attachment.', stats: { Attack: 95, FireRate: 80 }, reviews: 267, prime: true, sponsored: true, playstyle: 'PvE', developer: { name: 'Bungie', logo: 'BG' }, isNew: false, previewUrl: null },
+  { id: 'g3', name: 'Cyber Katana - Mono-Molecular Edge', price: 42000, rarity: 'Epic', game: 'Cyberpunk 2088', genre: 'Sci-Fi', category: 'Gear', itemType: 'Equipment', subcategory: 'Weapons', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'BladeSmith', rating: 4.8, sales: 980 }, views: 2987, description: 'Mono-molecular edge cuts through any armor. Electric discharge on critical hits.', stats: { Attack: 85, Speed: 95 }, reviews: 198, prime: true, playstyle: 'PvP', developer: { name: 'CD Projekt Red', logo: 'CDPR' }, isNew: false, previewUrl: null },
+  { id: 'g4', name: 'Void Emperor Complete Armor Set', price: 125000, originalPrice: 150000, rarity: 'Mythic', game: 'Elder Scrolls: Reborn', genre: 'RPG', category: 'Gear', itemType: 'Equipment', subcategory: 'Armor', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'VoidMaster', rating: 4.9, sales: 3200 }, views: 8921, description: 'Complete 5-piece armor set forged in the void dimension. Grants immunity to shadow damage.', stats: { Defense: 150, MagicRes: 80 }, reviews: 567, prime: true, sponsored: true, playstyle: 'Tank', developer: { name: 'Bethesda', logo: 'B' }, isNew: false, previewUrl: null },
+  { id: 'a1', name: 'Fireball Mastery - Ancient Spell', price: 38000, rarity: 'Legendary', game: 'Mage Wars Online', genre: 'RPG', category: 'Abilities', itemType: 'Abilities & Skills', subcategory: 'Magic', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'SpellTrader', rating: 4.8, sales: 1450 }, views: 3980, description: 'Master-level fireball spell that deals devastating AoE damage. Ignites enemies for 5 seconds.', stats: { Power: 110, CoolDown: 8 }, reviews: 289, prime: true, playstyle: 'PvE', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: null },
+  { id: 'm1', name: 'Cyber Motorcycle - Neon Fury', price: 89000, rarity: 'Epic', game: 'Cyberpunk 2088', genre: 'Sci-Fi', category: 'Mounts', itemType: 'Mounts & Vehicles', subcategory: 'Vehicles', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop', seller: { name: 'VehicleDealer', rating: 4.7, sales: 890 }, views: 4230, description: 'High-speed motorcycle with neon underglow. Boost ability with 200% speed increase.', stats: { Speed: 145, Durability: 80 }, reviews: 198, prime: true, playstyle: 'PvP', developer: { name: 'CD Projekt Red', logo: 'CDPR' }, isNew: true, previewUrl: null },
+  { id: 'cm1', name: 'Void Crystals Bundle (x100)', price: 12000, rarity: 'Rare', game: 'Elder Scrolls: Reborn', genre: 'RPG', category: 'Materials', itemType: 'Crafting Materials', subcategory: 'Enchanting', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'CrafterSupply', rating: 4.6, sales: 2340 }, views: 1890, description: 'High-quality void crystals used for enchanting legendary gear. Stack of 100.', stats: { Quality: 95 }, reviews: 456, prime: false, playstyle: 'Crafting', developer: { name: 'Bethesda', logo: 'B' }, isNew: false, previewUrl: null },
 ];
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Departments', icon: Grid },
+const GENRES = ['All Genres', 'Action', 'RPG', 'Shooter', 'Sci-Fi', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror'];
+
+const ITEM_TYPES = [
+  { id: 'all', name: 'All Items', icon: Grid },
+  { id: 'Equipment', name: 'Equipment', icon: Shield },
+  { id: 'Abilities & Skills', name: 'Abilities & Skills', icon: Zap },
+  { id: 'Mounts & Vehicles', name: 'Mounts & Vehicles', icon: Footprints },
   { id: 'Companions', name: 'Companions', icon: Ghost },
-  { id: 'Gear', name: 'Gear & Equipment', icon: Shield },
-  { id: 'Abilities', name: 'Abilities & Skills', icon: Zap },
-  { id: 'Consumables', name: 'Consumables', icon: Package },
-  { id: 'Materials', name: 'Crafting Materials', icon: Gem },
-  { id: 'Mounts', name: 'Mounts & Vehicles', icon: Footprints },
+  { id: 'Crafting Materials', name: 'Crafting Materials', icon: Gem },
 ];
-
-const PLAYSTYLES = ['All Styles', 'PvE', 'PvP', 'Stealth', 'Support', 'Tank', 'Crafting'];
 
 const rarityStyles = {
   Common: { text: 'text-slate-400', bg: 'bg-slate-500/20' },
@@ -160,8 +162,8 @@ const FilterSection = ({ title, children, defaultOpen = true }) => {
   );
 };
 
-const FilterSidebar = ({ filters, setFilters }) => {
-  const { category, game, priceRange, rarities, rating, prime, deals, playstyle } = filters;
+const FilterSidebar = ({ filters, setFilters, availableGames }) => {
+  const { itemType, game, priceRange, rarities } = filters;
 
   const toggleRarity = (r) => {
     setFilters(prev => ({
@@ -181,58 +183,49 @@ const FilterSidebar = ({ filters, setFilters }) => {
         boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
       }}
     >
-      <FilterSection title="Playstyle">
+      <FilterSection title="Item Type">
         <div className="space-y-1">
-          {PLAYSTYLES.map(style => (
+          {ITEM_TYPES.map(type => (
             <button
-              key={style}
-              onClick={() => setFilters(prev => ({ ...prev, playstyle: style }))}
+              key={type.id}
+              onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
               className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                playstyle === style ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+                itemType === type.id ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
               }`}
             >
-              {playstyle === style && <ChevronRight className="w-3 h-3" />}
-              {style}
+              {itemType === type.id && <ChevronRight className="w-3 h-3" />}
+              {type.name}
             </button>
           ))}
         </div>
       </FilterSection>
 
-      <FilterSection title="Equipment and Items">
-        <div className="space-y-1">
-          {CATEGORIES.map(cat => (
+      <FilterSection title="Game">
+        <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+          <button
+            onClick={() => setFilters(prev => ({ ...prev, game: 'All Games' }))}
+            className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
+              game === 'All Games' ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            {game === 'All Games' && <ChevronRight className="w-3 h-3" />}
+            All Games
+          </button>
+          {availableGames.map(gameName => (
             <button
-              key={cat.id}
-              onClick={() => setFilters(prev => ({ ...prev, category: cat.id }))}
+              key={gameName}
+              onClick={() => setFilters(prev => ({ ...prev, game: gameName }))}
               className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                category === cat.id ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+                game === gameName ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
               }`}
             >
-              {category === cat.id && <ChevronRight className="w-3 h-3" />}
-              {cat.id === 'all' ? 'All Loot' : cat.name}
+              {game === gameName && <ChevronRight className="w-3 h-3" />}
+              {gameName}
             </button>
           ))}
         </div>
       </FilterSection>
 
-      <FilterSection title="Genre">
-        <div className="space-y-1">
-          {['All Genres', 'Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror'].map(genre => (
-            <button
-              key={genre}
-              onClick={() => setFilters(prev => ({ ...prev, genre: genre }))}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                filters.genre === genre ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              {filters.genre === genre && <ChevronRight className="w-3 h-3" />}
-              {genre}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      {/* Other filters remain the same... price, rarity, etc */}
       <FilterSection title="Rarity">
         <div className="space-y-1.5">
           {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
@@ -472,29 +465,37 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   const [viewMode, setViewMode] = useState('list');
 
   const [filters, setFilters] = useState({
-    category: 'all',
-    game: 'All Games',
     genre: 'All Genres',
-    playstyle: 'All Styles',
+    game: 'All Games',
+    itemType: 'all',
     priceRange: [0, 200000],
     rarities: [],
-    rating: null,
-    prime: false,
-    deals: false,
   });
+
+  // Get available games based on selected genre
+  const availableGames = useMemo(() => {
+    if (filters.genre === 'All Genres') {
+      return [...new Set(MARKETPLACE_ITEMS.map(item => item.game))].sort();
+    }
+    return [...new Set(MARKETPLACE_ITEMS.filter(item => item.genre === filters.genre).map(item => item.game))].sort();
+  }, [filters.genre]);
+
+  // Reset game filter when genre changes if selected game is not in the new genre
+  React.useEffect(() => {
+    if (filters.game !== 'All Games' && !availableGames.includes(filters.game)) {
+      setFilters(prev => ({ ...prev, game: 'All Games' }));
+    }
+  }, [availableGames, filters.game]);
 
   const filteredItems = useMemo(() => {
     return MARKETPLACE_ITEMS.filter(item => {
       const searchMatch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const categoryMatch = filters.category === 'all' || item.category === filters.category;
+      const genreMatch = filters.genre === 'All Genres' || item.genre === filters.genre;
       const gameMatch = filters.game === 'All Games' || item.game === filters.game;
-      const playstyleMatch = filters.playstyle === 'All Styles' || item.playstyle === filters.playstyle;
+      const itemTypeMatch = filters.itemType === 'all' || item.itemType === filters.itemType;
       const priceMatch = item.price >= filters.priceRange[0] && item.price <= filters.priceRange[1];
       const rarityMatch = filters.rarities.length === 0 || filters.rarities.includes(item.rarity);
-      const ratingMatch = !filters.rating || item.seller.rating >= filters.rating;
-      const primeMatch = !filters.prime || item.prime;
-      const dealsMatch = !filters.deals || (item.originalPrice && item.originalPrice > item.price);
-      return searchMatch && categoryMatch && gameMatch && playstyleMatch && priceMatch && rarityMatch && ratingMatch && primeMatch && dealsMatch;
+      return searchMatch && genreMatch && gameMatch && itemTypeMatch && priceMatch && rarityMatch;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
       if (sortBy === 'price-high') return b.price - a.price;
@@ -552,7 +553,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
           <div className="flex gap-6">
             {/* Sidebar */}
             <aside className="hidden lg:block">
-              <FilterSidebar filters={filters} setFilters={setFilters} />
+              <FilterSidebar filters={filters} setFilters={setFilters} availableGames={availableGames} />
             </aside>
 
             {/* Results */}
@@ -587,11 +588,11 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                   </button>
                 </div>
                 <select
-                  value={filters.playstyle}
-                  onChange={(e) => setFilters(prev => ({ ...prev, playstyle: e.target.value }))}
+                  value={filters.genre}
+                  onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
                   className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
                 >
-                  {PLAYSTYLES.map(style => <option key={style} value={style}>{style}</option>)}
+                  {GENRES.map(genre => <option key={genre} value={genre}>{genre}</option>)}
                 </select>
                 <select
                   value={sortBy}
