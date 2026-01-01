@@ -1719,8 +1719,7 @@ export default function LunaTemplate() {
                         </div>
 
 
-                      </motion.div> :
-                      null
+                      </motion.div>
                   }
                 </AnimatePresence>
               </motion.div>
