@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -1846,130 +1845,71 @@ export default function LunaTemplate() {
                         {/* Vertical Divider Line */}
                         <div className="w-px bg-white/20 self-stretch" />
 
-                        {/* Middle: Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 py-8">
-                          {/* Top Row: 5 Equipment Slots (Horizontal) */}
-                          <div className="flex justify-center">
+                        {/* Middle: All Equipment Sections */}
+                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8">
+                          {/* Weapons */}
+                          <div className="flex flex-col items-center">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-white/50">Weapons</h2>
+                            <div className="relative w-64 h-4 mb-4">
+                              <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div>
+                              <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div>
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div>
+                            </div>
                             <div className="flex gap-4">
-                              {[1, 2, 3, 4, 5].map((i) => {
-                                const slotId = `equipment-${i}`;
+                              {[1, 2, 3].map((i) => {
+                                const slotId = `weapon-${i}`;
                                 const equippedItem = equippedItems[slotId];
-                                return (
-                                  <div
-                                    key={slotId}
-                                    onClick={() => handleBoxClick(slotId)}
-                                    className="w-16 h-16 rounded-xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative"
-                                    style={{
-                                      background: 'rgba(100, 120, 140, 0.10)',
-                                      backdropFilter: 'blur(12px) saturate(120%)',
-                                      WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                      borderColor: 'rgba(255, 255, 255, 0.08)',
-                                      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                                    }}>
-                                    {equippedItem && (
-                                      <img
-                                        src={equippedItem.icon_url || equippedItem.icon}
-                                        alt={equippedItem.name}
-                                        className="w-full h-full object-contain p-2"
-                                      />
-                                    )}
-                                  </div>
-                                );
+                                return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);
                               })}
                             </div>
                           </div>
 
-                          {/* Stacked Sections */}
-                          <div className="flex flex-col gap-6">
-                            {/* Armor Section */}
-                            <div className="flex flex-col gap-3">
-                              <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
-                              <div className="w-48 h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                style={{
-                                  background: 'rgba(100, 120, 140, 0.10)',
-                                  backdropFilter: 'blur(12px) saturate(120%)',
-                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                  borderColor: 'rgba(255, 255, 255, 0.08)',
-                                }}>
-                                <span className="text-white/40 text-xs">Armor Slot</span>
-                              </div>
-                            </div>
+                          {/* Armor 3x3 */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Armor</h2>
+                            <div className="relative w-64 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-4">{[1, 2, 3].map((i) => {const slotId = `armor-top-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                            <div className="flex gap-4">{[1, 2, 3].map((i) => {const slotId = `armor-mid-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                            <div className="flex gap-4">{[1, 2, 3].map((i) => {const slotId = `armor-bot-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          </div>
 
-                            {/* Weapons Section */}
-                            <div className="flex flex-col gap-3">
-                              <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Weapons</h2>
-                              <div className="w-48 h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                style={{
-                                  background: 'rgba(100, 120, 140, 0.10)',
-                                  backdropFilter: 'blur(12px) saturate(120%)',
-                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                  borderColor: 'rgba(255, 255, 255, 0.08)',
-                                }}>
-                                <span className="text-white/40 text-xs">Weapon Slot</span>
-                              </div>
-                            </div>
+                          {/* Genre Mastery */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Genre Mastery</h2>
+                            <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-4">{[1, 2].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          </div>
 
-                            {/* Genre and Mastering AI Aspects - Side by Side */}
-                            <div className="flex gap-4">
-                              <div className="flex flex-col gap-3 flex-1">
-                                <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Genre</h2>
-                                <div className="w-full h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                  style={{
-                                    background: 'rgba(100, 120, 140, 0.10)',
-                                    backdropFilter: 'blur(12px) saturate(120%)',
-                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                    borderColor: 'rgba(255, 255, 255, 0.08)',
-                                  }}>
-                                  <span className="text-white/40 text-xs">Genre Slot</span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-3 flex-1">
-                                <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Mastering AI</h2>
-                                <div className="w-full h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                  style={{
-                                    background: 'rgba(100, 120, 140, 0.10)',
-                                    backdropFilter: 'blur(12px) saturate(120%)',
-                                    WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                    borderColor: 'rgba(255, 255, 255, 0.08)',
-                                  }}>
-                                  <span className="text-white/40 text-xs">AI Aspects</span>
-                                </div>
-                              </div>
+                          {/* Aspect */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Aspect</h2>
+                            <div className="relative w-64 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex gap-4">{[1, 2, 3].map((i) => {const slotId = `aspect-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-full border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                          </div>
+
+                          {/* AI Passives 2+3 */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">AI Passives</h2>
+                            <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="flex gap-4">{[1, 2].map((i) => {const slotId = `passive-top-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                              <div className="flex gap-4">{[3, 4, 5].map((i) => {const slotId = `passive-bottom-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
                           </div>
 
-                          {/* Bottom Row: AI Passives and Artifacts - Side by Side */}
-                          <div className="flex gap-4">
-                            <div className="flex flex-col gap-3 flex-1">
-                              <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
-                              <div className="w-full h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                style={{
-                                  background: 'rgba(100, 120, 140, 0.10)',
-                                  backdropFilter: 'blur(12px) saturate(120%)',
-                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                  borderColor: 'rgba(255, 255, 255, 0.08)',
-                                }}>
-                                <span className="text-white/40 text-xs">AI Passive Slot</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-3 flex-1">
-                              <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">Artifacts</h2>
-                              <div className="w-full h-12 rounded-xl border flex items-center justify-center cursor-pointer hover:border-cyan-400/30 transition-all"
-                                style={{
-                                  background: 'rgba(100, 120, 140, 0.10)',
-                                  backdropFilter: 'blur(12px) saturate(120%)',
-                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                  borderColor: 'rgba(255, 255, 255, 0.08)',
-                                }}>
-                                <span className="text-white/40 text-xs">Artifact Slot</span>
-                              </div>
+                          {/* Artifacts 2+3 */}
+                          <div className="flex flex-col items-center gap-4">
+                            <h2 className="text-xs font-bold tracking-[0.3em] uppercase mb-2 text-white/50">Artifacts</h2>
+                            <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/20"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/40"></div></div>
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="flex gap-4">{[1, 2].map((i) => {const slotId = `artifact-top-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
+                              <div className="flex gap-4">{[3, 4, 5].map((i) => {const slotId = `artifact-bottom-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-20 h-20 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);})}</div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Right: Luna Stats Panel (dynamically sized) */}
-                        <div className="flex-1 flex flex-col gap-3 relative z-40 py-8">
-                          <h2 className="text-xs font-bold tracking-[0.3em] uppercase text-white/50">AI Attributes</h2>
+                        {/* Right Side: AI Attributes Panel */}
+                        <div className="flex-shrink-0 pt-6 flex flex-col relative z-40 ml-8">
                           <LunaStatsPanel />
                         </div>
                       </motion.div> :
