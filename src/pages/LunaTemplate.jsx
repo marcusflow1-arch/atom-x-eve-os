@@ -1135,20 +1135,16 @@ export default function LunaTemplate() {
         <div className="absolute inset-0 bg-black/20 z-[6]" />
       )}
 
-      {/* 3D Model Viewer - Fixed floating element in top-left, separate from page scroll */}
+      {/* 3D Model Viewer - Fixed floating element in top-left */}
       {modelUrl &&
         <div
-          className={`fixed pointer-events-auto transition-all duration-500 ease-in-out ${uiVisible ?
-            'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[500px] z-20' :
-            'top-0 left-0 bottom-0 w-[260px] z-[35]'}`
-          }
-          style={!uiVisible ? {
-            /* Full height left sidebar */
+          className="fixed top-0 left-0 bottom-0 w-[260px] z-[35] pointer-events-auto"
+          style={{
             height: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
-          } : {}}>
+          }}>
 
           <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
         </div>
