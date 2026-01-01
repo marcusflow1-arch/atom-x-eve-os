@@ -471,8 +471,12 @@ export default function DeveloperLimitedEdition() {
   return (
     <div className="mb-12">
       {/* Section Header */}
-      <div className="flex items-center justify-center mb-6">
+      <div className="flex items-center justify-center gap-3 mb-6">
         <h3 className="text-2xl font-bold text-white tracking-wide">Devs Limited Cards</h3>
+        <button className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors">
+          <ShoppingCart className="w-5 h-5" />
+          <span className="font-semibold">Buy</span>
+        </button>
       </div>
 
       {/* 1. Developer Navigation - NO BOX */}

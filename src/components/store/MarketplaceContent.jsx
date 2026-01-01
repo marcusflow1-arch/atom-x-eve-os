@@ -309,16 +309,6 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
               )}
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="text-xs border-white/10 hover:bg-white/5" onClick={() => setActiveTab('preview')}>
-                <Video className="w-3 h-3 mr-2" /> Preview
-              </Button>
-              <Button variant="outline" className="text-xs border-white/10 hover:bg-white/5" onClick={() => setActiveTab('details')}>
-                <Award className="w-3 h-3 mr-2" /> Details
-              </Button>
-            </div>
-
             {/* Developer Info */}
             {item.developer && (
               <div className="p-3">
