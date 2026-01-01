@@ -1730,126 +1730,9 @@ export default function LunaTemplate() {
                         className="flex h-full">
 
                         {/* Left: 3D Viewer Spacing */}
-                        <div className="w-[260px] flex-shrink-0 relative">
-                          {/* Skills & AI Passives at Bottom - Overlapping 3D Viewer */}
-                          <div className="absolute bottom-8 left-4 z-50 flex flex-col gap-4">
-                            {/* Skills */}
-                            <div className="flex flex-col items-center gap-2">
-                              <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
-                              <div className="flex gap-2">
-                                {[0, 1, 2, 3, 4].map((i) => {
-                                  const skillMap = {
-                                    0: 'kick_ability',
-                                    1: null,
-                                    2: null,
-                                    3: null,
-                                    4: null
-                                  };
+                        <div className="w-[260px] flex-shrink-0" />
 
-                                  const handleSkillClick = () => {
-                                    const skillId = skillMap[i];
-                                    if (skillId && window.LUNA_ACTION_STATE) {
-                                      window.LUNA_ACTION_STATE.skill = skillId;
-                                      setActiveSkills((prev) => {
-                                        const newSkills = [...prev];
-                                        newSkills[i] = true;
-                                        setTimeout(() => {
-                                          setActiveSkills((s) => {
-                                            const updated = [...s];
-                                            updated[i] = false;
-                                            return updated;
-                                          });
-                                        }, 1000);
-                                        return newSkills;
-                                      });
-                                    }
-                                  };
 
-                                  const onDragOver = (e) => {
-                                    if (e.dataTransfer) {
-                                      e.preventDefault();
-                                      e.dataTransfer.dropEffect = 'copy';
-                                    }
-                                  };
-
-                                  const onDrop = (e) => {
-                                    e.preventDefault();
-                                    try {
-                                      const json = e.dataTransfer.getData('application/json');
-                                      const payload = json ? JSON.parse(json) : null;
-                                      if (payload?.source === 'luna-card' && payload.card) {
-                                        window.LUNA_HOTBAR = window.LUNA_HOTBAR || {};
-                                        window.LUNA_HOTBAR[i] = payload.card;
-                                        setActiveSkills((prev) => {
-                                          const next = [...prev];
-                                          next[i] = true;
-                                          setTimeout(() => setActiveSkills((p) => {
-                                            const n = [...p];
-                                            n[i] = false;
-                                            return n;
-                                          }), 500);
-                                          return next;
-                                        });
-                                      }
-                                    } catch { }
-                                  };
-
-                                  const assigned = window.LUNA_HOTBAR && window.LUNA_HOTBAR[i] || null;
-
-                                  return (
-                                    <div
-                                      key={`skill-${i}`}
-                                      onClick={handleSkillClick}
-                                      onDragOver={onDragOver}
-                                      onDrop={onDrop}
-                                      className={`w-10 h-10 rounded-lg backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center relative overflow-hidden ${activeSkills[i] ?
-                                        'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' :
-                                        'bg-[rgba(100,120,140,0.08)] border-white/[0.08] hover:bg-[rgba(100,120,140,0.12)]'}`
-                                      }
-                                      style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                                      title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}>
-                                      <span className="text-white/60 text-xs font-bold">{i + 1}</span>
-                                      {assigned &&
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                          {assigned.image ?
-                                            <img src={assigned.image} alt={assigned.title} className="w-full h-full object-cover opacity-30" /> :
-                                            <span className="text-white/50 text-[10px] font-semibold px-1 text-center leading-tight line-clamp-2">
-                                              {assigned.title}
-                                            </span>
-                                          }
-                                        </div>
-                                      }
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* AI Passives */}
-                            <div className="flex flex-col items-center gap-2">
-                              <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
-                              <div className="flex gap-2">
-                                {[1, 2, 3, 4, 5].map((i) => {
-                                  const slotId = `passive-${i}`;
-                                  const equippedItem = equippedItems[slotId];
-                                  return (
-                                    <div 
-                                      key={slotId} 
-                                      onClick={() => handleBoxClick(slotId)} 
-                                      className="w-10 h-10 rounded-lg border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" 
-                                      style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
-                                    >
-                                      {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-1" />}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Vertical Divider Line */}
-                        <div className="w-px bg-white/20 self-stretch relative z-30" />
 
                         {/* Middle: All Equipment Sections */}
                         <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30">
@@ -1865,7 +1748,7 @@ export default function LunaTemplate() {
                               {[1, 2, 3].map((i) => {
                                 const slotId = `weapon-${i}`;
                                 const equippedItem = equippedItems[slotId];
-                                return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-16 h-16 rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);
+                                return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-2xl border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}>{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2" />}</div>);
                               })}
                             </div>
                           </div>
@@ -2255,10 +2138,128 @@ export default function LunaTemplate() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-8 right-8 z-50"
-          style={{ transform: 'scale(0.85)' }}
+          style={{ transform: 'scale(0.68)' }}
         >
           <LunaStatsPanel />
         </motion.div>
+      }
+
+      {/* Skills & AI Passives - Bottom Center */}
+      {uiVisible && !showInventory &&
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-4 pointer-events-auto">
+          {/* Skills */}
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">Skills</h2>
+            <div className="flex gap-2">
+              {[0, 1, 2, 3, 4].map((i) => {
+                const skillMap = {
+                  0: 'kick_ability',
+                  1: null,
+                  2: null,
+                  3: null,
+                  4: null
+                };
+
+                const handleSkillClick = () => {
+                  const skillId = skillMap[i];
+                  if (skillId && window.LUNA_ACTION_STATE) {
+                    window.LUNA_ACTION_STATE.skill = skillId;
+                    setActiveSkills((prev) => {
+                      const newSkills = [...prev];
+                      newSkills[i] = true;
+                      setTimeout(() => {
+                        setActiveSkills((s) => {
+                          const updated = [...s];
+                          updated[i] = false;
+                          return updated;
+                        });
+                      }, 1000);
+                      return newSkills;
+                    });
+                  }
+                };
+
+                const onDragOver = (e) => {
+                  if (e.dataTransfer) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                  }
+                };
+
+                const onDrop = (e) => {
+                  e.preventDefault();
+                  try {
+                    const json = e.dataTransfer.getData('application/json');
+                    const payload = json ? JSON.parse(json) : null;
+                    if (payload?.source === 'luna-card' && payload.card) {
+                      window.LUNA_HOTBAR = window.LUNA_HOTBAR || {};
+                      window.LUNA_HOTBAR[i] = payload.card;
+                      setActiveSkills((prev) => {
+                        const next = [...prev];
+                        next[i] = true;
+                        setTimeout(() => setActiveSkills((p) => {
+                          const n = [...p];
+                          n[i] = false;
+                          return n;
+                        }), 500);
+                        return next;
+                      });
+                    }
+                  } catch { }
+                };
+
+                const assigned = window.LUNA_HOTBAR && window.LUNA_HOTBAR[i] || null;
+
+                return (
+                  <div
+                    key={`skill-${i}`}
+                    onClick={handleSkillClick}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    className={`w-10 h-10 rounded-lg backdrop-blur-xl border shadow-lg transition-all duration-300 cursor-pointer flex items-center justify-center relative overflow-hidden ${activeSkills[i] ?
+                      'bg-cyan-500/30 border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.5)]' :
+                      'bg-[rgba(100,120,140,0.08)] border-white/[0.08] hover:bg-[rgba(100,120,140,0.12)]'}`
+                    }
+                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                    title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}>
+                    <span className="text-white/60 text-xs font-bold">{i + 1}</span>
+                    {assigned &&
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {assigned.image ?
+                          <img src={assigned.image} alt={assigned.title} className="w-full h-full object-cover opacity-30" /> :
+                          <span className="text-white/50 text-[10px] font-semibold px-1 text-center leading-tight line-clamp-2">
+                            {assigned.title}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* AI Passives */}
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/50">AI Passives</h2>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((i) => {
+                const slotId = `passive-${i}`;
+                const equippedItem = equippedItems[slotId];
+                return (
+                  <div 
+                    key={slotId} 
+                    onClick={() => handleBoxClick(slotId)} 
+                    className="w-10 h-10 rounded-lg border shadow-lg hover:border-cyan-400/30 transition-all duration-300 cursor-pointer flex items-center justify-center overflow-hidden relative" 
+                    style={{ background: 'rgba(100, 120, 140, 0.10)', backdropFilter: 'blur(12px) saturate(120%)', WebkitBackdropFilter: 'blur(12px) saturate(120%)', borderColor: 'rgba(255, 255, 255, 0.08)', boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)' }}
+                  >
+                    {equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-1" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       }
 
       {/* User Profile Overlay */}
