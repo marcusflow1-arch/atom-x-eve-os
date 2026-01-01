@@ -1491,7 +1491,7 @@ export default function LunaTemplate() {
 
       {/* Main Content Area */}
       {uiVisible &&
-        <div className="w-full mt-2 px-12 relative" style={{ display: uiVisible ? 'block' : 'none' }}>
+        <div className="w-full h-full mt-2 px-12 relative overflow-hidden" style={{ display: uiVisible ? 'block' : 'none' }}>
           <AnimatePresence mode="wait">
             {false &&
               <motion.div
@@ -1665,7 +1665,7 @@ export default function LunaTemplate() {
 
 
                         {/* Middle: All Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 py-8 ml-8 relative z-30 items-center" style={{ marginTop: '320px' }}>
+                        <div className="flex flex-col gap-8 flex-shrink-0 ml-8 relative z-30 items-center" style={{ marginTop: '450px' }}>
                           {/* Top Row: Armor and Weapons with Genre */}
                           <div className="flex gap-12 items-start">
                             {/* Armor - 3x3 Grid */}
