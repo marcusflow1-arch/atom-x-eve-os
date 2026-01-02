@@ -43,21 +43,17 @@ export default Deno.serve(async (req) => {
             Return a JSON object with a key "ideas" containing an array of objects, each with "title" and "description".
         `;
 
-        // 2. Parallel Generation from 3 "Engines" using service role (admin-only)
-        if (user.role !== 'admin') {
-            return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-        }
-
+        // 2. Parallel Generation from 3 "Engines" using allSettled for robustness
         const results = await Promise.allSettled([
-            base44.asServiceRole.integrations.Core.InvokeLLM({
+            base44.integrations.Core.InvokeLLM({
                 prompt: promptTemplate("Gemini 3 Persona", "Data integration, multimodal interactions, ecosystem connectivity, and real-time adaptability."),
                 response_json_schema: { type: "object", properties: { ideas: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" } } } } } }
             }),
-            base44.asServiceRole.integrations.Core.InvokeLLM({
+            base44.integrations.Core.InvokeLLM({
                 prompt: promptTemplate("ChatGPT-5 Persona", "Creativity, gamification, social psychology, user engagement, and viral features."),
                 response_json_schema: { type: "object", properties: { ideas: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" } } } } } }
             }),
-            base44.asServiceRole.integrations.Core.InvokeLLM({
+            base44.integrations.Core.InvokeLLM({
                 prompt: promptTemplate("Claude 4.5 Persona", "Technical robustness, advanced utility, safety, code generation, and complex system architecture."),
                 response_json_schema: { type: "object", properties: { ideas: { type: "array", items: { type: "object", properties: { title: { type: "string" }, description: { type: "string" } } } } } }
             })
@@ -94,7 +90,7 @@ export default Deno.serve(async (req) => {
             Return a JSON object with a key "unified_ideals" containing an array of objects with "title", "description", "origin", and "score" (1-100).
         `;
 
-        const synthesisRes = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        const synthesisRes = await base44.integrations.Core.InvokeLLM({
             prompt: synthesisPrompt,
             response_json_schema: { 
                 type: "object", 

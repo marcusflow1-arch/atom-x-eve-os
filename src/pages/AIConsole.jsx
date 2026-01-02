@@ -39,27 +39,26 @@ export default function AIConsolePage() {
         setIsLoading(true);
 
         try {
-            // Use secure backend integration with rate limiting
-            const response = await base44.functions.invoke('secureIntegrations', {
-                action: 'invokeLLM',
-                payload: {
-                    prompt: `You are a sentient AI Avatar in a 3D cyberpunk world. 
-                    User says: ${input}
-                    Respond concisely and in character (futuristic, helpful, slightly enigmatic).`
-                }
+            // Use the built-in LLM integration
+            const res = await base44.integrations.Core.InvokeLLM({
+                prompt: `You are a sentient AI Avatar in a 3D cyberpunk world. 
+                User says: ${input}
+                Respond concisely and in character (futuristic, helpful, slightly enigmatic).`,
+                app_id: process.env.BASE44_APP_ID
             });
             
-            let reply = response.data?.result || response.data || 'Neural processing error.';
-            if (typeof reply === 'object') reply = JSON.stringify(reply);
+            // The integration usually returns a string directly if no schema provided, 
+            // or we might need to adjust based on actual return type. 
+            // Assuming standard InvokeLLM behavior:
+            let reply = typeof res === 'string' ? res : JSON.stringify(res);
+            
+            // Clean up quotes if any
             if (reply.startsWith('"') && reply.endsWith('"')) reply = reply.slice(1, -1);
 
             setMessages([...newMessages, { role: 'assistant', content: reply }]);
         } catch (error) {
             console.error("AI Error:", error);
-            const errorMsg = error.response?.status === 429 
-                ? 'Neural link overloaded. Please wait a moment.'
-                : 'Connection interrupted. Neural link unstable.';
-            setMessages([...newMessages, { role: 'system', content: errorMsg }]);
+            setMessages([...newMessages, { role: 'system', content: 'Connection interrupted. Neural link unstable.' }]);
         } finally {
             setIsLoading(false);
         }
