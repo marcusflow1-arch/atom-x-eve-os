@@ -15,6 +15,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
+import ScrollTransitionOverlay from '../components/shared/ScrollTransitionOverlay';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
@@ -907,6 +908,9 @@ export default function LunaTemplate() {
     };
   }, []);
 
+  const [showConsole, setShowConsole] = useState(false);
+  const [showTransition, setShowTransition] = useState(false);
+
   // Open overlays based on URL panel param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -914,6 +918,21 @@ export default function LunaTemplate() {
     setShowSettings(panel === 'settings');
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
+    
+    // Handle console panel with transition
+    if (panel === 'console') {
+      setShowTransition(true);
+      setTimeout(() => {
+        setShowConsole(true);
+        setShowTransition(false);
+      }, 600);
+    } else if (showConsole) {
+      setShowTransition(true);
+      setTimeout(() => {
+        setShowConsole(false);
+        setShowTransition(false);
+      }, 600);
+    }
 
     // Handle sub-tabs
     if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
@@ -2243,6 +2262,29 @@ export default function LunaTemplate() {
               </button>
             </motion.div>
           </>
+        }
+      </AnimatePresence>
+
+      {/* Console Blank View */}
+      <AnimatePresence>
+        {showConsole &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-40"
+            style={{
+              background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
+            }}
+          />
+        }
+      </AnimatePresence>
+
+      {/* Scroll Transition Effect */}
+      <AnimatePresence>
+        {showTransition &&
+          <ScrollTransitionOverlay onComplete={() => {}} />
         }
       </AnimatePresence>
 
