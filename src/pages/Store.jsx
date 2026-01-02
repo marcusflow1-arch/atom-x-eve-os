@@ -610,7 +610,7 @@ export default function Store() {
                             <Link to={createPageUrl('Cart')} className="relative text-white/70 hover:text-white transition-colors">
                               <ShoppingCart className="w-5 h-5" />
                               <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                                {cartCount}
+                                {getCartCount()}
                               </span>
                             </Link>
 
