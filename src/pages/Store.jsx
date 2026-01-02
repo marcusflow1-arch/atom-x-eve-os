@@ -487,9 +487,9 @@ export default function Store() {
     }, []);
 
     // Constants for positioning
-    const ITEM_HEIGHT = 80; // height of genre item
+    const ITEM_HEIGHT = 80;
     const ITEM_GAP = 24;
-    const CROSS_Y_VH = 40; // Intersection point in VH
+    const CROSS_Y_VH = 40;
 
     return (
         <PageErrorBoundary pageName="Store">
