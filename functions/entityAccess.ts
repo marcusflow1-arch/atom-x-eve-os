@@ -155,10 +155,14 @@ Deno.serve(async (req) => {
             };
           }
           
+          // Enforce max limit
+          const maxLimit = 100;
+          const safeLimit = Math.min(limit || 50, maxLimit);
+          
           result = await base44.asServiceRole.entities[entityName].filter(
             scopedFilter,
             sort || '-created_date',
-            limit || 50
+            safeLimit
           );
         }
         break;

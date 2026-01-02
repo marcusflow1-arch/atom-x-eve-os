@@ -8,6 +8,7 @@ import Achievements from './Achievements';
 import DigitalAchievementCard from '@/components/achievements/DigitalAchievementCard';
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
+import VirtualizedGameList from '@/components/library/VirtualizedGameList';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { allMockGames } from '../components/store/mockData';
@@ -818,7 +819,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       const testGameAlpha = allMockGames['test_game_alpha'];
 
       if (isAuthenticated) {
-        const allGamesFromDb = await base44.entities.Game.list();
+        const allGamesFromDb = await base44.entities.Game.filter({}, '-created_date', 100);
         const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
         const ownedIds = user?.purchased_items || [];
         userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
@@ -1053,25 +1054,14 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                                                           <div className="w-1 h-1 rounded-full bg-blue-500"></div>
                                                           {genre}
                                                       </h4>
-                                                      <div className="space-y-1 border-l border-white/5 pl-2 ml-0.5">
-                                                          {games.map(game => (
-                                                              <button
-                                                                  key={game.id}
-                                                                  onClick={() => setSelectedGame(game)}
-                                                                  className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors text-left group border ${selectedGame?.id === game.id ? 'border-cyan-400/30' : 'hover:border-cyan-400/20 border-transparent'}`}
-                                                  style={selectedGame?.id === game.id ? {
-                                                    background: 'rgba(34, 211, 238, 0.12)',
-                                                    boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                                                  } : {}}
-                                                              >
-                                                                  <div className="w-8 h-8 rounded bg-slate-800 flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-white/30">
-                                                                      <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
-                                                                  </div>
-                                                                  <span className={`text-sm truncate ${selectedGame?.id === game.id ? 'text-white font-medium' : 'text-slate-400 group-hover:text-white'}`}>
-                                                                      {game.title}
-                                                                  </span>
-                                                              </button>
-                                                          ))}
+                                                      <div className="border-l border-white/5 pl-2 ml-0.5 max-h-[300px]">
+                                                         <VirtualizedGameList
+                                                           games={games}
+                                                           selectedGame={selectedGame}
+                                                           streamingGameId={streamingGameId}
+                                                           onSelect={setSelectedGame}
+                                                           onPlay={handleLaunchGame}
+                                                         />
                                                       </div>
                                                   </div>
                                               ))}
@@ -1285,17 +1275,14 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 <div className="mb-4">
                   <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
                 </div>
-                <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-                  {filteredGames.map(game => (
-                    <LunaSidebarItem
-                      key={game.id}
-                      game={game}
-                      isSelected={selectedGame?.id === game.id}
-                      isStreaming={game.id === streamingGameId}
-                      onSelect={setSelectedGame}
-                      onPlay={handleLaunchGame}
-                    />
-                  ))}
+                <div className="max-h-[calc(100vh-300px)] pr-2">
+                  <VirtualizedGameList
+                    games={filteredGames}
+                    selectedGame={selectedGame}
+                    streamingGameId={streamingGameId}
+                    onSelect={setSelectedGame}
+                    onPlay={handleLaunchGame}
+                  />
                 </div>
               </ShinySidebarBox>
             </div>

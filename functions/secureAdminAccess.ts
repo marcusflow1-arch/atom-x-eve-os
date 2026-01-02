@@ -34,10 +34,14 @@ Deno.serve(async (req) => {
     
     switch (operation) {
       case 'list':
+        // Enforce max limit
+        const maxLimit = 100;
+        const safeLimit = Math.min(limit || 50, maxLimit);
+        
         result = await base44.asServiceRole.entities[entityName].filter(
           filter || {},
           sort || '-created_date',
-          limit || 50
+          safeLimit
         );
         break;
         

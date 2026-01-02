@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ArrowLeft, Search, Mic, Bell, User, MessageSquare, TrendingUp, Users, Gamepad2, Swords, Shield, Trophy, Target, Sparkles, Bot, Radio, Star, X } from 'lucide-react';
+import VirtualizedPostList from '../components/community/VirtualizedPostList';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,7 +68,7 @@ export default function CommunityPage() {
                 filter = {}; 
             }
 
-            const fetchedPostsResponse = await base44.entities.Post.filter(filter, sort);
+            const fetchedPostsResponse = await base44.entities.Post.filter(filter, sort, 50);
             const fetchedPosts = fetchedPostsResponse.data || fetchedPostsResponse;
             
             let filtered = fetchedPosts;
@@ -94,7 +95,7 @@ export default function CommunityPage() {
 
     const fetchComments = useCallback(async (postId) => {
         if (!postId) return;
-        const fetchedCommentsResponse = await base44.entities.Comment.filter({ post_id: postId }, '-score');
+        const fetchedCommentsResponse = await base44.entities.Comment.filter({ post_id: postId }, '-score', 100);
         const fetchedComments = fetchedCommentsResponse.data || fetchedCommentsResponse;
         setComments(fetchedComments);
     }, []);
@@ -430,7 +431,7 @@ export default function CommunityPage() {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="space-y-3"
+                                        className="h-full"
                                     >
                                         {loading ? (
                                             <div className="space-y-3">
@@ -439,26 +440,12 @@ export default function CommunityPage() {
                                                 ))}
                                             </div>
                                         ) : posts.length > 0 ? (
-                                            posts.map(post => {
-                                                if (post.type === 'achievement_share' || post.type === 'challenge') {
-                                                    return (
-                                                        <FeedPost 
-                                                            key={post.id} 
-                                                            post={post} 
-                                                            onVote={handleVote} 
-                                                            onShare={() => {}}
-                                                        />
-                                                    );
-                                                }
-                                                return (
-                                                    <PostCard
-                                                        key={post.id}
-                                                        post={post}
-                                                        onVote={handleVote}
-                                                        onSelect={() => setSelectedPost(post)}
-                                                    />
-                                                );
-                                            })
+                                            <VirtualizedPostList
+                                              posts={posts}
+                                              selectedPost={selectedPost}
+                                              onVote={handleVote}
+                                              onSelect={setSelectedPost}
+                                            />
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-20 text-center">
                                                 <MessageSquare className="w-12 h-12 text-white/20 mb-4" />

@@ -53,10 +53,14 @@ Deno.serve(async (req) => {
           return Response.json({ error: 'Division ID required' }, { status: 400 });
         }
         
+        // Enforce max limit
+        const maxLimit = 100;
+        const safeLimit = Math.min(limit || 50, maxLimit);
+        
         result = await base44.asServiceRole.entities.ClanMessage.filter(
           { divisionId, channelId: entityData?.channelId || null },
           '-created_date',
-          limit || 100
+          safeLimit
         );
         break;
         

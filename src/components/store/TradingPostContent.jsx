@@ -7,6 +7,7 @@ import {
   CheckCircle, Timer, DollarSign, Sparkles, Crown, Flame, Rocket, Globe, Orbit, Info,
   SlidersHorizontal, ScrollText, Database, Hammer, Crosshair, ArrowUpDown
 } from 'lucide-react';
+import VirtualizedTradeGrid from './VirtualizedTradeGrid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -423,7 +424,7 @@ export default function TradingPostContent() {
   const { data: globalOffers } = useQuery({
     queryKey: ['tradeOffers'],
     queryFn: async () => {
-      const result = await base44.entities.TradeOffer.filter({ status: 'active' });
+      const result = await base44.entities.TradeOffer.filter({ status: 'active' }, '-created_date', 100);
       return result || [];
     },
     initialData: []
@@ -928,10 +929,8 @@ export default function TradingPostContent() {
                       className="relative w-full h-full"
                     >
                       <div className="flex-1 overflow-y-auto custom-scrollbar relative pr-2 h-full pb-6">
-                          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                              {/* Filter items to show only for the active game */}
-                              {generateGameItems(activeCrossGame).filter(item => {
-                                  // Apply same filters as before
+                              {(() => {
+                                const filteredItems = generateGameItems(activeCrossGame).filter(item => {
                                   if (filters.category !== 'all' && filters.category !== 'global') {
                                       const cat = filters.category;
                                       if (cat === 'weapon' && item.type !== 'Weapon') return false;
@@ -945,8 +944,12 @@ export default function TradingPostContent() {
                                   if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
                                   if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
                                   return true;
-                              }).map((item, i) => (
-                                  <HollowCard key={item.id + i} className="h-[320px] w-full" onClick={() => {
+                                });
+
+                                return (
+                                  <VirtualizedTradeGrid
+                                    items={filteredItems}
+                                    onSelectItem={(item) => {
                                      // Get real offers from backend for this item and game
                                      const realOffers = globalOffers.filter(offer => 
                                        offer.item_name === item.name && offer.game_name === item.game
@@ -1004,23 +1007,11 @@ export default function TradingPostContent() {
                                           allOffers: mockOffers // Store unfiltered for dynamic filtering
                                       };
                                       setSelectedListingGroup(group);
-                                  }}>
-                                      <div className="flex-1 flex flex-col items-center justify-center text-center opacity-70 group-hover:opacity-100 transition-opacity">
-                                          <div className="w-24 h-24 mb-4 relative">
-                                              <img src={item.image} alt={item.name} className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
-                                              <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                          </div>
-                                          <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 px-2">{item.name}</h4>
-                                          <Badge variant="outline" className="border-white/10 text-[10px] text-slate-400">{item.rarity}</Badge>
+                                      }}
+                                      />
+                                      );
+                                      })()}
                                       </div>
-                                      <div className="mt-auto pt-4 w-full border-t border-white/10 flex justify-between items-center px-2">
-                                          <span className="text-[10px] text-slate-500 truncate max-w-[60%]">{item.type}</span>
-                                          <span className="text-cyan-400 font-mono text-xs">{item.marketPrice} G</span>
-                                      </div>
-                                  </HollowCard>
-                              ))}
-                          </div>
-                      </div>
                     </motion.div>
                   ) : !selectedOffer ? (
                     // LEVEL 2: Offer List View
