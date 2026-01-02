@@ -624,23 +624,32 @@ function LayoutContent({ children, currentPageName }) {
 
                                                                                   <div className="relative inline-block">
                                                                                     <button
-                                                                                      onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                                                                                      onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aiconsole') ? 'LunaTemplate' : 'AIConsole'))}
                                                                                       className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                                                                                     >
                                                                                       <span className="flex items-center gap-2">
-                                                                                        <Home className="w-4 h-4" />
-                                                                                        Home
+                                                                                        {location.pathname.toLowerCase().includes('/aiconsole') ? (
+                                                                                          <>
+                                                                                            <Home className="w-4 h-4" />
+                                                                                            Home
+                                                                                          </>
+                                                                                        ) : (
+                                                                                          <>
+                                                                                            <Home className="w-4 h-4" />
+                                                                                            Home
+                                                                                          </>
+                                                                                        )}
                                                                                       </span>
                                                                                     </button>
-                                                                                    <div
-                                                                                      aria-hidden
-                                                                                      className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
+                                                                                    <button
+                                                                                      onClick={() => navigate(createPageUrl('AIConsole'))}
+                                                                                      className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center transition-all hover:bg-white/15"
                                                                                     >
                                                                                       <span className="text-base font-medium flex items-center gap-2">
                                                                                         <Gamepad2 className="w-4 h-4" />
                                                                                         Console
                                                                                       </span>
-                                                                                    </div>
+                                                                                    </button>
                                                                                   </div>
 
                                                                                   <button
