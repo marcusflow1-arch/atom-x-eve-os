@@ -13,6 +13,8 @@ export const NAV_HIERARCHY = [
         icon: Home,
         path: createPageUrl('LunaTemplate'),
         subPages: [
+            { name: 'Home', icon: Home, path: createPageUrl('LunaTemplate') },
+            { name: 'Console', icon: Gamepad2, path: createPageUrl('AIConsole') },
             { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
             { name: 'Season Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
             { name: 'Entertainment', icon: Clapperboard, path: createPageUrl('Entertainment') },
