@@ -11,6 +11,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { getAIAchievements } from '@/components/store/AIAchievementsData';
 
 // --- Components ---
 
@@ -144,6 +145,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const owned = isPurchased(gameId);
   const [userReactions, setUserReactions] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedAIPerk, setSelectedAIPerk] = useState(null);
+  
+  // Get AI Achievements data for this game
+  const aiAchievements = getAIAchievements(gameId);
 
   // Mock media content
   const videos = [
@@ -1046,47 +1051,118 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Achievements - System Assets Content */}
+                {/* AI Achievements - Learnable Fighting Styles & Combat Techniques */}
                 <div className="space-y-4">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Shield className="w-4 h-4 text-cyan-400" />
-                    Achievements
+                    AI Achievements
                   </h3>
 
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <SystemPreviewCard 
-                      type="Ability" 
-                      title="Neural Shock" 
-                      subtitle="Stun enemies in radius" 
-                      onClick={() => handleMediaTrigger('Neural Shock', 'ability')}
-                    />
-                    <SystemPreviewCard 
-                      type="Passive" 
-                      title="Cyber Metabolism" 
-                      subtitle="+10% Regeneration" 
-                      onClick={() => handleMediaTrigger('Cyber Metabolism', 'ability')}
-                    />
-                    <SystemPreviewCard 
-                      type="Equipment" 
-                      title="Void Walker Set" 
-                      subtitle="Stealth Bonus" 
-                      onClick={() => handleMediaTrigger('Void Walker Set', 'equipment')}
-                    />
-                    <SystemPreviewCard 
-                      type="Trait" 
-                      title="Tactical Mind" 
-                      subtitle="AI Behavior Mod" 
-                      onClick={() => handleMediaTrigger('Tactical Mind', 'trait')}
-                    />
+                  {/* XP & Points Badge */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                      <Zap className="w-3 h-3 text-cyan-400" />
+                      <span className="text-cyan-300 font-bold text-[10px]">+{aiAchievements.aiXP} AI XP</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <Star className="w-3 h-3 text-yellow-400" />
+                      <span className="text-yellow-300 font-bold text-[10px]">+{aiAchievements.achievementPoints} Pts</span>
+                    </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
+                  {/* Perks List - Scrollable */}
+                  <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                    {aiAchievements.perks.map((perk, idx) => (
+                      <button
+                        key={perk.id}
+                        onClick={() => setSelectedAIPerk(perk)}
+                        className={`w-full text-left p-2.5 rounded-xl transition-all ${
+                          selectedAIPerk?.id === perk.id
+                            ? 'bg-cyan-500/20 border-cyan-400/40 text-white'
+                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                        } border`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xl flex-shrink-0">{perk.icon}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-xs truncate">{perk.name}</p>
+                            <p className="text-[9px] text-white/50 truncate">{perk.combatStyle?.split(' - ')[0]}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selected Perk Preview Card */}
+                  <AnimatePresence mode="wait">
+                    {selectedAIPerk ? (
+                      <motion.div
+                        key={selectedAIPerk.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="relative rounded-xl overflow-hidden border border-white/20"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%)',
+                          backdropFilter: 'blur(20px) saturate(180%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        {/* Preview Image */}
+                        <div className="relative aspect-[16/9] overflow-hidden">
+                          <img 
+                            src={selectedAIPerk.image} 
+                            alt={selectedAIPerk.name}
+                            className="w-full h-full object-cover opacity-80"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                          <div className="absolute top-2 left-2">
+                            <span className="text-2xl">{selectedAIPerk.icon}</span>
+                          </div>
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <h4 className="text-white font-bold text-sm mb-0.5">{selectedAIPerk.name}</h4>
+                          </div>
+                        </div>
+
+                        {/* Perk Details */}
+                        <div className="p-3 space-y-2">
+                          <p className="text-white/70 text-[10px] leading-relaxed line-clamp-2">{selectedAIPerk.description}</p>
+                          
+                          <div className="pt-2 border-t border-white/10 space-y-1.5">
+                            <div>
+                              <span className="text-white/40 text-[8px] font-bold uppercase block">Combat Style</span>
+                              <span className="text-cyan-300 text-[10px]">{selectedAIPerk.combatStyle}</span>
+                            </div>
+                            <div>
+                              <span className="text-white/40 text-[8px] font-bold uppercase block">AI Behavior</span>
+                              <span className="text-white/80 text-[10px]">{selectedAIPerk.behaviorImpact}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="h-32 flex items-center justify-center rounded-xl border border-dashed border-white/10 text-white/30 text-center p-4"
+                      >
+                        <div>
+                          <Shield className="w-6 h-6 mx-auto mb-1.5 opacity-30" />
+                          <p className="text-[10px]">Select a perk to preview</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Blacksmith Compatible Note */}
+                  <div className="p-2.5 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-3 h-3 text-yellow-400" />
-                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">Blacksmith Compatible</span>
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">AI Training Compatible</span>
                     </div>
                     <p className="text-[9px] text-white/50 leading-relaxed">
-                      All assets from this system can be forged, combined, and ascended in the Blacksmith OS.
+                      These combat behaviors are learned by your AI and persist across all games.
                     </p>
                   </div>
                 </div>
