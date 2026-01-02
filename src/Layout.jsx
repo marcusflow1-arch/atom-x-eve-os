@@ -269,6 +269,7 @@ const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
   const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan','/community'].some(s => location.pathname.toLowerCase().includes(s));
@@ -622,35 +623,27 @@ function LayoutContent({ children, currentPageName }) {
 
                                                                                   <div className="h-6 w-px bg-white/10" />
 
-                                                                                  <div className="relative inline-block">
-                                                                                    <button
-                                                                                      onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aiconsole') ? 'LunaTemplate' : 'AIConsole'))}
-                                                                                      className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                                                                    >
-                                                                                      <span className="flex items-center gap-2">
-                                                                                        {location.pathname.toLowerCase().includes('/aiconsole') ? (
-                                                                                          <>
-                                                                                            <Home className="w-4 h-4" />
-                                                                                            Home
-                                                                                          </>
-                                                                                        ) : (
-                                                                                          <>
-                                                                                            <Home className="w-4 h-4" />
-                                                                                            Home
-                                                                                          </>
-                                                                                        )}
-                                                                                      </span>
-                                                                                    </button>
-                                                                                    <button
-                                                                                      onClick={() => navigate(createPageUrl('AIConsole'))}
-                                                                                      className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center transition-all hover:bg-white/15"
-                                                                                    >
-                                                                                      <span className="text-base font-medium flex items-center gap-2">
-                                                                                        <Gamepad2 className="w-4 h-4" />
-                                                                                        Console
-                                                                                      </span>
-                                                                                    </button>
-                                                                                  </div>
+                                                                                  <button
+                                                                                    onClick={() => {
+                                                                                      const isConsole = searchParams.get('panel') === 'console';
+                                                                                      navigate(createPageUrl('LunaTemplate') + (isConsole ? '' : '?panel=console'));
+                                                                                    }}
+                                                                                    className="relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                                                                  >
+                                                                                    <span className="flex items-center gap-2">
+                                                                                      {searchParams.get('panel') === 'console' ? (
+                                                                                        <>
+                                                                                          <Home className="w-4 h-4" />
+                                                                                          Home
+                                                                                        </>
+                                                                                      ) : (
+                                                                                        <>
+                                                                                          <Gamepad2 className="w-4 h-4" />
+                                                                                          Console
+                                                                                        </>
+                                                                                      )}
+                                                                                    </span>
+                                                                                  </button>
 
                                                                                   <button
                                                                                     onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
