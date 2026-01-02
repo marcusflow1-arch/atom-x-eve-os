@@ -12,6 +12,12 @@ Deno.serve(async (req) => {
 
     try {
         const base44 = createClientFromRequest(req);
+        const user = await base44.auth.me();
+
+        if (!user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+        }
+
         const { action, data } = await req.json();
 
         if (!action) {
@@ -34,7 +40,7 @@ Deno.serve(async (req) => {
                 Keep it under 280 characters. Add relevant emojis.
             `;
 
-            const content = await base44.integrations.Core.InvokeLLM({
+            const content = await base44.asServiceRole.integrations.Core.InvokeLLM({
                 prompt: prompt
             });
 
@@ -52,7 +58,7 @@ Deno.serve(async (req) => {
                 - "reason": string (if unsafe)
             `;
 
-            const response = await base44.integrations.Core.InvokeLLM({
+            const response = await base44.asServiceRole.integrations.Core.InvokeLLM({
                 prompt: prompt,
                 response_json_schema: {
                     type: "object",
@@ -74,7 +80,7 @@ Deno.serve(async (req) => {
                 Generate 5 trending gaming topics or hashtags for a community feed.
                 Return a JSON object with "trends": array of strings.
             `;
-             const response = await base44.integrations.Core.InvokeLLM({
+             const response = await base44.asServiceRole.integrations.Core.InvokeLLM({
                 prompt: prompt,
                 response_json_schema: {
                     type: "object",
