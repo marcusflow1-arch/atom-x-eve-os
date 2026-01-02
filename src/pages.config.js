@@ -38,6 +38,7 @@ import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import AIConsole from './pages/AIConsole';
 import LunaTemplate from './pages/LunaTemplate';
+import EnvGuide from './pages/EnvGuide';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +83,7 @@ export const PAGES = {
     "WorldEvents": WorldEvents,
     "AIConsole": AIConsole,
     "LunaTemplate": LunaTemplate,
+    "EnvGuide": EnvGuide,
 }
 
 export const pagesConfig = {

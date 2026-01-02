@@ -10,6 +10,7 @@ import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
+import EnvStatus from './components/env/EnvStatus';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -148,6 +149,7 @@ function LayoutContent({ children, currentPageName }) {
         <ThemeBackground themeId="moon_essence" />
       </div>
 
+      <EnvStatus />
       <PWAManifest />
       <ServiceWorker />
 
