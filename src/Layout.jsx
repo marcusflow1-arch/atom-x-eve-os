@@ -622,6 +622,27 @@ function LayoutContent({ children, currentPageName }) {
 
                                                                                   <div className="h-6 w-px bg-white/10" />
 
+                                                                                  <div className="relative inline-block">
+                                                                                    <button
+                                                                                      onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                                                                                      className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                                                                    >
+                                                                                      <span className="flex items-center gap-2">
+                                                                                        <Home className="w-4 h-4" />
+                                                                                        Home
+                                                                                      </span>
+                                                                                    </button>
+                                                                                    <div
+                                                                                      aria-hidden
+                                                                                      className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
+                                                                                    >
+                                                                                      <span className="text-base font-medium flex items-center gap-2">
+                                                                                        <Gamepad2 className="w-4 h-4" />
+                                                                                        Console
+                                                                                      </span>
+                                                                                    </div>
+                                                                                  </div>
+
                                                                                   <button
                                                                                     onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
                                                                                     className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
