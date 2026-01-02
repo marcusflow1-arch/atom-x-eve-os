@@ -523,12 +523,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
       >
         <button 
           onClick={onClose}
-          className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group"
+          className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group ml-16"
         >
           <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10">
             <ChevronRight className="w-4 h-4 rotate-180" />
           </div>
-          <span className="text-xs font-medium tracking-widest uppercase">Abort</span>
+          <span className="text-xs font-medium tracking-widest uppercase">Back</span>
         </button>
         
         {/* Tabs Switcher */}
