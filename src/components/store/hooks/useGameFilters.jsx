@@ -54,10 +54,28 @@ export function useGameFilters(games, loading) {
 
     const sortedGenres = Object.keys(groups).sort();
     
+    // Icon mapping
+    const GENRE_ICONS = {
+      'Action': Crosshair,
+      'RPG': Shield,
+      'Strategy': Trophy,
+      'Simulation': Monitor,
+      'Sports': Trophy,
+      'Racing': Car,
+      'Horror': Skull,
+      'Shooter': Crosshair,
+      'Music': Music,
+      'Adventure': Gamepad2,
+      'Puzzle': Zap,
+      'Romance': Heart,
+      'Sci-Fi': Sparkles,
+    };
+    
     return sortedGenres.map(genre => ({
       id: genre,
       label: genre,
-      items: groups[genre]
+      items: groups[genre],
+      icon: GENRE_ICONS[genre] || Gamepad2
     }));
   }, [games, loading, activeCategory, selectedGenres, priceRange, minRating, showAndroidOnly]);
 
