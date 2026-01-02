@@ -450,24 +450,34 @@ export default function Store() {
     // Initial Data Fetch
     useEffect(() => {
         const fetchGames = async () => {
+            const isDev = import.meta.env.DEV;
+            const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
+
             try {
                 const fetchedGamesResponse = await base44.entities.Game.list();
                 const fetchedGames = fetchedGamesResponse.data || fetchedGamesResponse;
-                const enhancedGames = fetchedGames.length > 0 ? fetchedGames : [
-                    ...aiGamesList,
-                    ...otherSampleGames,
-                    ...androidGames,
-                    ...googlePlayGames
-                ];
-                setGames(enhancedGames);
+
+                if (fetchedGames.length > 0) {
+                    setGames(fetchedGames);
+                } else if (useMock) {
+                    // Only use mock data if explicitly enabled in dev
+                    setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                } else {
+                    // Empty state - show helpful message
+                    setGames([]);
+                }
             } catch (error) {
                 showError(error, 'Load Games');
-                setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                if (useMock) {
+                    setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                } else {
+                    setGames([]);
+                }
             }
             setLoading(false);
-            };
-            fetchGames();
-            }, []);
+        };
+        fetchGames();
+    }, []);
 
             // Navigate with scroll transition
     const handleNavigateToGame = (id) => {

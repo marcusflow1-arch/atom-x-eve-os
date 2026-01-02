@@ -1,3 +1,4 @@
+import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AbilityAchievements from './pages/AbilityAchievements';
 import Achievements from './pages/Achievements';
@@ -11,6 +12,7 @@ import Clan from './pages/Clan';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
 import Entertainment from './pages/Entertainment';
+import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
@@ -21,6 +23,7 @@ import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
 import Library from './pages/Library';
+import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OrderConfirmation from './pages/OrderConfirmation';
@@ -36,13 +39,11 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import AIConsole from './pages/AIConsole';
-import LunaTemplate from './pages/LunaTemplate';
-import EnvGuide from './pages/EnvGuide';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIConsole": AIConsole,
     "AINews": AINews,
     "AbilityAchievements": AbilityAchievements,
     "Achievements": Achievements,
@@ -56,6 +57,7 @@ export const PAGES = {
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
     "Entertainment": Entertainment,
+    "EnvGuide": EnvGuide,
     "Events": Events,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
@@ -66,6 +68,7 @@ export const PAGES = {
     "InstallApp": InstallApp,
     "Launcher": Launcher,
     "Library": Library,
+    "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OrderConfirmation": OrderConfirmation,
@@ -81,9 +84,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "AIConsole": AIConsole,
-    "LunaTemplate": LunaTemplate,
-    "EnvGuide": EnvGuide,
 }
 
 export const pagesConfig = {

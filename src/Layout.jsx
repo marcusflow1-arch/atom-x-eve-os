@@ -15,6 +15,7 @@ import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
+import DevTools from './components/dev/DevTools';
 
 // Eagerly loaded components (critical path)
 import PWAManifest from './components/desktop/PWAManifest';
@@ -928,9 +929,12 @@ function LayoutContent({ children, currentPageName }) {
           />
         )}
       </AnimatePresence>
-    </div>
-  );
-}
+
+      {/* Dev Tools Panel */}
+      <DevTools />
+      </div>
+      );
+      }
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
