@@ -68,24 +68,24 @@ export default function SettingsPanel() {
         </TabsContent>
 
         <TabsContent value="audio" className="space-y-6">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Volume Controls</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label className="text-white">Master Volume</Label>
-                  <span className="text-white/60 text-sm">{volume}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={volume} 
-                  onChange={(e) => setVolume(e.target.value)}
-                  className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500"
-                />
-              </div>
+         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6" style={{ maxWidth: '45%' }}>
+           <h3 className="text-lg font-semibold text-white mb-4">Volume Controls</h3>
+
+           <div className="space-y-4">
+             <div className="space-y-2">
+               <div className="flex justify-between">
+                 <Label className="text-white">Master Volume</Label>
+                 <span className="text-white/60 text-sm">{volume}%</span>
+               </div>
+               <input 
+                 type="range" 
+                 min="0" 
+                 max="100" 
+                 value={volume} 
+                 onChange={(e) => setVolume(e.target.value)}
+                 className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500"
+               />
+             </div>
 
               <div className="flex items-center justify-between mt-6">
                 <div className="space-y-1">
