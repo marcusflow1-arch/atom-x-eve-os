@@ -672,7 +672,7 @@ export default function Store() {
                             </div>
                             <Link to={createPageUrl('Cart')} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative backdrop-blur-md border border-white/10">
                                 <ShoppingCart className="w-4 h-4 text-white/80" />
-                                {cartCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
+                                {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
                             </Link>
                         </div>
                     ) : null}
