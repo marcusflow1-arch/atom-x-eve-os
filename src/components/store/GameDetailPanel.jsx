@@ -12,6 +12,7 @@ import ShinyCard from '@/components/shared/ShinyCard';
 import { Post } from '@/entities/Post';
 import CreatePostForm from '../community/CreatePostForm';
 import GameCardShowcase from './GameCardShowcase';
+import { getAIAchievements } from './AIAchievementsData';
 
 // --- Components ---
 
@@ -126,6 +127,10 @@ export default function GameDetailPanel({ game, onPurchase }) {
   const [activeMedia, setActiveMedia] = useState(null);
   const [communityPosts, setCommunityPosts] = useState([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedPerk, setSelectedPerk] = useState(null);
+
+  // Get AI Achievements for this game
+  const aiAchievements = getAIAchievements(game?.id);
 
   // Initialize media
   useEffect(() => {
@@ -162,7 +167,7 @@ export default function GameDetailPanel({ game, onPurchase }) {
     { id: 'overview', label: 'Overview', icon: Info },
     { id: 'abilities', label: 'Abilities', icon: BrainCircuit },
     { id: 'equipment', label: 'Equipment', icon: Shield },
-    { id: 'achievements', label: 'Achievements', icon: Trophy },
+    { id: 'ai_achievements', label: 'AI Achievements', icon: Shield },
     { id: 'community', label: 'Community', icon: MessageSquare },
   ];
 
@@ -466,29 +471,133 @@ export default function GameDetailPanel({ game, onPurchase }) {
                 </div>
               )}
 
-              {/* ACHIEVEMENTS TAB */}
-              {activeTab === 'achievements' && (
+              {/* AI ACHIEVEMENTS TAB */}
+              {activeTab === 'ai_achievements' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">Achievement Rewards</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(game.achievements || [
-                      { id: 1, title: 'First Steps', description: 'Complete the tutorial mission.', points: 100, rarity: 'Common' },
-                      { id: 2, title: 'Master of War', description: 'Win 50 PvP matches.', points: 500, rarity: 'Epic' },
-                      { id: 3, title: 'Collector', description: 'Find all hidden data drives.', points: 300, rarity: 'Rare' }
-                    ]).map((ach, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                        <div className="w-12 h-12 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center font-bold text-yellow-500">
-                          {ach.points}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-white">{ach.title || ach.name}</h4>
-                          <p className="text-sm text-slate-400">{ach.description}</p>
-                        </div>
-                        <Badge variant="outline" className="bg-black/30 border-white/10 text-white/60">
-                          {ach.rarity || 'Common'}
-                        </Badge>
+                  <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                    <Shield className="w-6 h-6 text-cyan-400" />
+                    AI Achievements
+                  </h2>
+                  <p className="text-white/50 text-sm mb-8">Your AI learns combat techniques, fighting styles, and tactical behaviors from this game</p>
+
+                  {/* Main Liquid Glass Card */}
+                  <div 
+                    className="relative rounded-3xl p-8 border overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%)',
+                      backdropFilter: 'blur(40px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                      borderColor: 'rgba(255,255,255,0.15)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 80px rgba(6,182,212,0.1)'
+                    }}
+                  >
+                    {/* Corner Data */}
+                    <div className="absolute top-6 left-6 z-20">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <BrainCircuit className="w-4 h-4 text-cyan-400" />
+                        <span className="text-cyan-300 font-bold text-sm">AI XP +{aiAchievements.aiXP}</span>
                       </div>
-                    ))}
+                    </div>
+                    <div className="absolute top-6 right-6 z-20">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <Trophy className="w-4 h-4 text-yellow-400" />
+                        <span className="text-yellow-300 font-bold text-sm">+{aiAchievements.achievementPoints} Points</span>
+                      </div>
+                    </div>
+
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-16">
+                      {/* Left: Perks List */}
+                      <div className="space-y-2">
+                        <h3 className="text-white/40 text-xs font-bold uppercase tracking-wider mb-4">AI Combat Perks</h3>
+                        {aiAchievements.perks.map((perk, idx) => (
+                          <button
+                            key={perk.id}
+                            onClick={() => setSelectedPerk(perk)}
+                            className={`w-full text-left p-3 rounded-xl transition-all ${
+                              selectedPerk?.id === perk.id
+                                ? 'bg-cyan-500/20 border-cyan-400/40 text-white'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                            } border`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{perk.icon}</span>
+                              <span className="font-medium text-sm">{perk.name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Center: Divider */}
+                      <div className="hidden lg:flex items-center justify-center">
+                        <div className="w-px h-[60%] bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                      </div>
+
+                      {/* Right: Dynamic Preview Card */}
+                      <div className="lg:col-span-1">
+                        {selectedPerk ? (
+                          <motion.div
+                            key={selectedPerk.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-2xl overflow-hidden border border-white/20"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)'
+                            }}
+                          >
+                            {/* Holographic Preview Image */}
+                            <div className="relative aspect-[4/3] overflow-hidden">
+                              <img 
+                                src={selectedPerk.image} 
+                                alt={selectedPerk.name}
+                                className="w-full h-full object-cover opacity-80"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                              <div className="absolute top-3 left-3">
+                                <span className="text-4xl">{selectedPerk.icon}</span>
+                              </div>
+                            </div>
+
+                            {/* Perk Details */}
+                            <div className="p-5 space-y-4">
+                              <div>
+                                <h4 className="text-white font-bold text-lg mb-2">{selectedPerk.name}</h4>
+                                <p className="text-white/70 text-sm leading-relaxed">{selectedPerk.description}</p>
+                              </div>
+
+                              <div className="pt-4 border-t border-white/10 space-y-3">
+                                <div>
+                                  <span className="text-white/40 text-xs font-bold uppercase block mb-1">Combat Style</span>
+                                  <span className="text-cyan-300 text-sm">{selectedPerk.combatStyle}</span>
+                                </div>
+                                <div>
+                                  <span className="text-white/40 text-xs font-bold uppercase block mb-1">AI Behavior Impact</span>
+                                  <span className="text-white/80 text-sm">{selectedPerk.behaviorImpact}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-white/30 text-center p-8">
+                            <div>
+                              <Shield className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                              <p className="text-sm">Select a perk to view details</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Center Holographic Preview (Auto-plays once) */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-10">
+                      <img 
+                        src={aiAchievements.holographicPreview} 
+                        alt="Holographic preview"
+                        className="w-32 h-32 object-cover rounded-full blur-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
