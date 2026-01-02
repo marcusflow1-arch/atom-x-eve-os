@@ -486,12 +486,6 @@ export default function Store() {
         fetchGames();
     }, []);
 
-            // Navigate with scroll transition
-    const handleNavigateToGame = (id) => {
-        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
-        setShowScrollTransition(true);
-    };
-
     // Constants for positioning
     const ITEM_HEIGHT = 80; // height of genre item
     const ITEM_GAP = 24;
