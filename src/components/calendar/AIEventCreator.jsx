@@ -21,21 +21,47 @@ export default function AIEventCreator({ mode, selectedDate, onClose, onSuccess,
     if (!aiPrompt.trim()) return;
     setIsProcessing(true);
     
-    // Simulate AI processing for now
-    setTimeout(() => {
-      // Mock parsing logic
+    try {
+      const response = await base44.functions.invoke('secureLLM', {
+        prompt: `Extract event details from this user request: "${aiPrompt}". Return JSON with: title, description, event_type (gaming_session/raid/tournament/personal/meeting/reminder)`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            description: { type: "string" },
+            event_type: { type: "string" }
+          }
+        }
+      });
+      
+      if (response.success && response.result) {
+        setFormData({
+          ...formData,
+          title: response.result.title || aiPrompt,
+          description: response.result.description || '',
+          event_type: response.result.event_type || 'personal',
+        });
+      } else {
+        throw new Error('Failed to parse event');
+      }
+      
+      setStep('form');
+    } catch (error) {
+      console.error('AI parsing error:', error);
+      // Fallback to simple logic
       const isGame = aiPrompt.toLowerCase().includes('game') || aiPrompt.toLowerCase().includes('play');
       const isMeeting = aiPrompt.toLowerCase().includes('meet') || aiPrompt.toLowerCase().includes('work');
       
       setFormData({
         ...formData,
-        title: aiPrompt, // In real AI, would extract intent
+        title: aiPrompt,
         description: 'AI Generated from: ' + aiPrompt,
         event_type: isGame ? 'gaming_session' : isMeeting ? 'meeting' : 'personal',
       });
       setStep('form');
+    } finally {
       setIsProcessing(false);
-    }, 1500);
+    }
   };
 
   const handleSubmit = async () => {
