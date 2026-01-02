@@ -373,6 +373,7 @@ export default function Store() {
             setStoreMode(mode);
         }
     }, [searchParams]);
+
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -386,6 +387,12 @@ export default function Store() {
     const scrollTimeoutRef = useRef(null);
     const [hoveredGame, setHoveredGame] = useState(null);
     const genreRefs = useRef([]);
+
+    // Navigate with scroll transition
+    const handleNavigateToGame = (id) => {
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
+    };
 
     // Use filter and navigation hooks
     const {
