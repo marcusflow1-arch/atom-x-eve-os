@@ -25,34 +25,37 @@ export default function InventoryItemOverlay({ item, onClose, onSale, onTrade, o
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{
-        background: 'radial-gradient(circle at center, rgba(15, 23, 42, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%)',
-        backdropFilter: 'blur(8px)'
-      }}
       onClick={onClose}
     >
+      {/* Translucent backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl h-[600px] flex"
+        className="relative w-full max-w-4xl rounded-2xl overflow-hidden flex"
         style={{
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.02) 100%)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
         }}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 bg-black/80 hover:bg-black text-white p-2 rounded-full transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
         >
-          <X className="w-6 h-6" />
+          <X className="w-4 h-4" />
         </button>
 
-        {/* Left Side - Card Display */}
-        <div className="w-[45%] p-12 flex flex-col items-center justify-center">
+        {/* Left Side - Compact Card Display */}
+        <div className="w-[200px] flex-shrink-0 p-5 flex flex-col items-center justify-center border-r border-white/10">
           {/* Card */}
-          <div className="w-full max-w-sm aspect-[2.5/3.5] mb-6">
+          <div className="w-full aspect-[2.5/3.5] mb-3">
             <ShinyCard className="h-full">
               <div className="relative h-full flex flex-col">
                 <div className="absolute inset-0">
@@ -60,25 +63,23 @@ export default function InventoryItemOverlay({ item, onClose, onSale, onTrade, o
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                 </div>
                 
-                <div className="relative z-10 flex-1 flex flex-col justify-between p-5">
+                <div className="relative z-10 flex-1 flex flex-col justify-between p-3">
                   <div className="flex justify-between items-start">
-                    <Badge className="bg-slate-900/80 backdrop-blur-md text-white/90 border-white/20 text-xs px-3 py-1">
+                    <Badge className="bg-black/60 backdrop-blur-md text-white/90 border-white/20 text-[9px] px-1.5 py-0.5">
                       {item.type}
                     </Badge>
-                    <Badge variant="outline" className={`${rarity.border} ${rarity.color} text-xs px-3 py-1 font-bold`}>
+                    <Badge variant="outline" className={`${rarity.border} ${rarity.color} text-[9px] px-1.5 py-0.5 font-bold`}>
                       {item.rarity}
                     </Badge>
                   </div>
                   
                   <div>
-                    <h3 className="text-white font-bold text-2xl mb-2 leading-tight drop-shadow-lg">
+                    <h3 className="text-white font-bold text-sm leading-tight drop-shadow-lg">
                       {item.name}
                     </h3>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm">
-                        Level {item.level}
-                      </Badge>
-                    </div>
+                    <Badge variant="outline" className="border-white/30 text-white/80 bg-black/30 backdrop-blur-sm text-[9px] mt-1">
+                      Lv {item.level}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -87,108 +88,87 @@ export default function InventoryItemOverlay({ item, onClose, onSale, onTrade, o
 
           {/* Card Name & Rarity Below */}
           <div className="text-center">
-            <h3 className="text-white font-bold text-xl mb-2">{item.name}</h3>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-slate-400 text-sm">{item.game}</span>
-              <Badge className={`${rarity.bg} ${rarity.color} text-xs`}>{item.rarity}</Badge>
+            <h3 className="text-white font-bold text-sm mb-1">{item.name}</h3>
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="text-white/50 text-[10px]">{item.game}</span>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Item Record */}
-        <div className="flex-1 p-8 overflow-y-auto">
+        {/* Right Side - Compact Item Record */}
+        <div className="flex-1 p-5 flex flex-col">
           {/* Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-              <Package className="w-6 h-6 text-blue-400" />
+          <div className="mb-3">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Package className="w-4 h-4 text-cyan-400" />
               Item Record
             </h2>
-            <p className="text-slate-500 text-sm">Detailed information about this item</p>
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</h3>
-            <p className="text-slate-300 italic">"{item.description}"</p>
+          <div className="mb-3">
+            <p className="text-white/60 text-xs italic line-clamp-2">"{item.description}"</p>
           </div>
 
-          {/* Series & Rarity */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Series</h3>
-              <p className="text-white font-semibold">{item.game}</p>
+          {/* Stats Section - Compact Grid */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            <div className="bg-white/5 rounded-lg p-2 text-center">
+              <div className="text-[9px] text-white/40 uppercase mb-0.5">Avg Price</div>
+              <div className="text-base font-bold text-white">{item.marketPrice}</div>
             </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rarity</h3>
-              <Badge className={`${rarity.bg} ${rarity.color} border-0`}>{item.rarity}</Badge>
+            <div className="bg-white/5 rounded-lg p-2 text-center">
+              <div className="text-[9px] text-white/40 uppercase mb-0.5">Last Bid</div>
+              <div className="text-base font-bold text-purple-400">{item.last_bid_price || Math.floor(item.marketPrice * 0.8)}</div>
             </div>
-          </div>
-
-          {/* Stats Section */}
-          <div className="mb-6">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Market Stats</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-800/60 rounded-lg p-4">
-                <div className="text-xs text-slate-500 uppercase mb-1">Average Price</div>
-                <div className="text-3xl font-bold text-white">{item.marketPrice}</div>
-              </div>
-              <div className="bg-slate-800/60 rounded-lg p-4">
-                <div className="text-xs text-slate-500 uppercase mb-1">Last Bid</div>
-                <div className="text-3xl font-bold text-purple-400">{item.last_bid_price || Math.floor(item.marketPrice * 0.8)}</div>
-              </div>
-              <div className="bg-slate-800/60 rounded-lg p-4">
-                <div className="text-xs text-slate-500 uppercase mb-1">Last Sold</div>
-                <div className="text-3xl font-bold text-green-400">{item.last_sale_price || item.marketPrice}</div>
-              </div>
-              <div className="bg-slate-800/60 rounded-lg p-4">
-                <div className="text-xs text-slate-500 uppercase mb-1">Power</div>
-                <div className="text-3xl font-bold text-blue-400">{item.power}</div>
-              </div>
+            <div className="bg-white/5 rounded-lg p-2 text-center">
+              <div className="text-[9px] text-white/40 uppercase mb-0.5">Last Sold</div>
+              <div className="text-base font-bold text-green-400">{item.last_sale_price || item.marketPrice}</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2 text-center">
+              <div className="text-[9px] text-white/40 uppercase mb-0.5">Power</div>
+              <div className="text-base font-bold text-cyan-400">{item.power}</div>
             </div>
           </div>
 
-          {/* Item Details */}
-          <div className="mb-6">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Item Details</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-700/50">
-                <span className="text-slate-500">Item ID</span>
-                <span className="text-white font-mono text-xs">{item.id}</span>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-slate-700/50">
-                <span className="text-slate-500">Type</span>
-                <span className="text-white">{item.type}</span>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-slate-700/50">
-                <span className="text-slate-500">Collection</span>
-                <span className="text-white">{item.game}</span>
-              </div>
+          {/* Item Details - Inline */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/40">Series:</span>
+              <span className="text-white">{item.game}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/40">Type:</span>
+              <span className="text-white">{item.type}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/40">Rarity:</span>
+              <Badge className={`${rarity.bg} ${rarity.color} text-[9px] px-1.5 py-0 h-4`}>{item.rarity}</Badge>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="mt-auto pt-6 border-t border-slate-700/50">
-            <div className="grid grid-cols-3 gap-3">
+          {/* Action Buttons - Compact */}
+          <div className="mt-auto pt-3 border-t border-white/10">
+            <div className="grid grid-cols-3 gap-2">
               <Button 
                 onClick={() => { onSale(item); }}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold flex-col gap-2 h-24"
+                className="bg-green-600/80 hover:bg-green-600 text-white font-bold text-xs h-10 gap-1.5"
               >
-                <DollarSign className="w-6 h-6" />
-                <span>Sale</span>
+                <DollarSign className="w-4 h-4" />
+                Sale
               </Button>
               <Button 
                 onClick={() => { onTrade(item); }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold flex-col gap-2 h-24"
+                className="bg-blue-600/80 hover:bg-blue-600 text-white font-bold text-xs h-10 gap-1.5"
               >
-                <ArrowLeftRight className="w-6 h-6" />
-                <span>Trade</span>
+                <ArrowLeftRight className="w-4 h-4" />
+                Trade
               </Button>
               <Button 
                 onClick={() => { onBid(item); }}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold flex-col gap-2 h-24"
+                className="bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-xs h-10 gap-1.5"
               >
-                <Gavel className="w-6 h-6" />
-                <span>Bid</span>
+                <Gavel className="w-4 h-4" />
+                Bid
               </Button>
             </div>
           </div>
