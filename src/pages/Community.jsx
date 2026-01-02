@@ -15,6 +15,8 @@ import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 
 export default function CommunityPage() {
     const navigate = useNavigate();
@@ -118,28 +120,39 @@ export default function CommunityPage() {
             });
             
             if (!modRes.data.is_safe) {
-                alert(`Post rejected: ${modRes.data.reason}`);
+                showError(`Post rejected: ${modRes.data.reason}`, 'Moderation');
                 return;
             }
         } catch (e) {
-            console.error("Moderation check failed", e);
+            showError(e, 'Moderation');
+            return;
         }
 
-        await base44.entities.Post.create(postData);
-        setShowCreateForm(false);
-        fetchPosts();
+        try {
+            await base44.entities.Post.create(postData);
+            setShowCreateForm(false);
+            fetchPosts();
+            showSuccess('Post created successfully!');
+        } catch (error) {
+            showError(error, 'Create Post');
+        }
     };
 
     const handleVote = async (post, voteType) => {
         if (!isAuthenticated) {
-            alert('Please sign in to vote');
+            showError('Please sign in to vote');
             return;
         }
-        const newScore = post.score + (voteType === 'up' ? 1 : -1);
-        await base44.entities.Post.update(post.id, { score: newScore });
-        setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
-        if (selectedPost?.id === post.id) {
-            setSelectedPost(prev => ({...prev, score: newScore}));
+        
+        try {
+            const newScore = post.score + (voteType === 'up' ? 1 : -1);
+            await base44.entities.Post.update(post.id, { score: newScore });
+            setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
+            if (selectedPost?.id === post.id) {
+                setSelectedPost(prev => ({...prev, score: newScore}));
+            }
+        } catch (error) {
+            showError(error, 'Vote');
         }
     };
 
@@ -150,6 +163,7 @@ export default function CommunityPage() {
     };
 
     return (
+        <PageErrorBoundary pageName="Community">
         <div 
             className="min-h-screen text-white p-8 pt-24 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -503,5 +517,6 @@ export default function CommunityPage() {
                 )}
             </AnimatePresence>
         </div>
+        </PageErrorBoundary>
     );
 }

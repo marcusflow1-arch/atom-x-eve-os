@@ -9,6 +9,8 @@ import DigitalAchievementCard from '@/components/achievements/DigitalAchievement
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import VirtualizedGameList from '@/components/library/VirtualizedGameList';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { showError } from '@/components/error/ErrorToast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { allMockGames } from '../components/store/mockData';
@@ -805,6 +807,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         setStreamingSession({ game, session: { status: 'initializing' } });
       }
     } catch (e) {
+      showError(e, 'Start Stream');
       setStreamingSession({ game, session: { status: 'initializing' } });
     }
   };
@@ -891,6 +894,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   }
 
   return (
+    <PageErrorBoundary pageName="Library">
     <div 
       className="min-h-screen text-white"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -1340,5 +1344,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       </AnimatePresence>
 
           </div>
+    </PageErrorBoundary>
         );
 }
