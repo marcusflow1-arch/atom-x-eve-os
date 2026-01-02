@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import useLunaStore from '../useLunaStore';
 
 /**
- * Hook for managing skills and ability hotbar
+ * Hook for managing skills and ability hotbar with Zustand store
  * @returns {Object} Skill state and handlers
  */
 export function useSkills() {
   const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
+  const { triggerSkill: storeSkill, isOnCooldown, setCooldown, getHotbarItem } = useLunaStore();
 
   /**
    * Activate a skill slot
@@ -34,13 +36,17 @@ export function useSkills() {
    * @param {number} slotIndex - Slot index (0-4)
    */
   const triggerSkill = (slotIndex) => {
-    const assigned = window.LUNA_HOTBAR?.[slotIndex];
+    const assigned = getHotbarItem(slotIndex);
     
-    if (assigned && window.LUNA_ACTION_STATE) {
+    if (assigned) {
       const skillFromCardType = { ability: 'kick_ability' };
       const derived = skillFromCardType[assigned.type] || 'kick_ability';
-      window.LUNA_ACTION_STATE.skill = derived;
-      activateSkill(slotIndex);
+      
+      if (!isOnCooldown(derived)) {
+        storeSkill(derived);
+        activateSkill(slotIndex);
+        setCooldown(derived, Date.now() + 3000);
+      }
       return;
     }
 
@@ -54,26 +60,12 @@ export function useSkills() {
     };
     
     const skillId = skillMap[slotIndex];
-    if (skillId && window.LUNA_ACTION_STATE) {
-      window.LUNA_ACTION_STATE.skill = skillId;
+    if (skillId && !isOnCooldown(skillId)) {
+      storeSkill(skillId);
       activateSkill(slotIndex);
+      setCooldown(skillId, Date.now() + 3000);
     }
   };
-
-  /**
-   * Initialize global state objects
-   */
-  useEffect(() => {
-    if (!window.LUNA_ACTION_STATE) {
-      window.LUNA_ACTION_STATE = { attack: false, skill: null };
-    }
-    if (!window.LUNA_COOLDOWNS) {
-      window.LUNA_COOLDOWNS = {};
-    }
-    if (!window.LUNA_HOTBAR) {
-      window.LUNA_HOTBAR = {};
-    }
-  }, []);
 
   /**
    * Keyboard listener for skill activation (1-5 keys)

@@ -27,6 +27,8 @@ import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import LoadingState from '@/components/error/LoadingState';
+import { useStoreNavigation } from '../components/store/hooks/useStoreNavigation';
+import { useGameFilters } from '../components/store/hooks/useGameFilters';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -374,25 +376,38 @@ export default function Store() {
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [marketplaceSearchTerm, setMarketplaceSearchTerm] = useState(''); // Dedicated state for marketplace
+    const [marketplaceSearchTerm, setMarketplaceSearchTerm] = useState('');
     const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
-    const [showVoiceOptions, setShowVoiceOptions] = useState(false); // New state for voice dropdown
-
-    // Scroll transition state
+    const [showVoiceOptions, setShowVoiceOptions] = useState(false);
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
-    
-    // Header fade on scroll
     const [headerOpacity, setHeaderOpacity] = useState(1);
     const [isScrolling, setIsScrolling] = useState(false);
     const scrollTimeoutRef = useRef(null);
-
-    // Navigation State
-    const [activeGenreIndex, setActiveGenreIndex] = useState(0);
-    const [activeGameIndex, setActiveGameIndex] = useState(0);
-    const [isNavigating, setIsNavigating] = useState(false);
     const [hoveredGame, setHoveredGame] = useState(null);
     const genreRefs = useRef([]);
+
+    // Use filter and navigation hooks
+    const {
+        activeCategory,
+        setActiveCategory,
+        priceRange,
+        setPriceRange,
+        selectedGenres,
+        toggleGenre,
+        minRating,
+        setMinRating,
+        showAndroidOnly,
+        setShowAndroidOnly,
+        genreData
+    } = useGameFilters(games, loading);
+
+    const {
+        activeGenreIndex,
+        activeGameIndex,
+        currentGenre: currentNavGenre,
+        activeGame
+    } = useStoreNavigation(genreData, loading, viewMode, storeMode, handleNavigateToGame);
 
     // Scroll active genre into view for Classic Mode
     useEffect(() => {
@@ -424,16 +439,9 @@ export default function Store() {
                 clearTimeout(scrollTimeoutRef.current);
             }
         };
-    }, []);
+        }, []);
 
-    // Filters for Sidebar
-    const [activeCategory, setActiveCategory] = useState('All Games');
-    const [priceRange, setPriceRange] = useState([0, 100]);
-    const [selectedGenres, setSelectedGenres] = useState([]);
-    const [minRating, setMinRating] = useState(0);
-    const [showAndroidOnly, setShowAndroidOnly] = useState(false);
-
-    // Regular Voice Input for Store
+        // Regular Voice Input for Store
     const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
         setSearchTerm(text);
         setShowVoiceOptions(false);
@@ -457,169 +465,15 @@ export default function Store() {
                 setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
             }
             setLoading(false);
-        };
-        fetchGames();
-    }, []);
+            };
+            fetchGames();
+            }, []);
 
-    // Group Games by Genre with Filters
-    const genreData = useMemo(() => {
-        if (loading || games.length === 0) return [];
-        
-        // Filter Games
-        const filteredGames = games.filter(game => {
-            // Android Filter
-            if (showAndroidOnly && !game.platforms?.includes('Android') && !game.isMobile) return false;
-
-            // Category Filter
-            if (activeCategory === 'Trending Now' && (game.rating < 4.5 && game.reviews < 1000)) return false;
-            if (activeCategory === 'New Releases' && game.original_year < 2024) return false;
-            if (activeCategory === 'Top Rated' && game.rating < 4.8) return false;
-            if (activeCategory === 'AI Enhanced' && !game.aiEnhanced) return false;
-            if (activeCategory === 'On Sale' && (!game.originalPrice || game.price >= game.originalPrice)) return false;
-
-            // Genre Filter
-            if (selectedGenres.length > 0 && !selectedGenres.includes(game.genre)) return false;
-
-            // Price Filter
-            if (game.price < priceRange[0] || game.price > priceRange[1]) return false;
-
-            // Rating Filter
-            if (minRating > 0 && (game.rating || 0) < minRating) return false;
-
-            return true;
-        });
-
-        const groups = {};
-        filteredGames.forEach(game => {
-            const g = game.genre || 'Other';
-            if (!groups[g]) groups[g] = [];
-            groups[g].push(game);
-        });
-
-        const sortedGenres = Object.keys(groups).sort();
-        
-        return sortedGenres.map(genre => ({
-            id: genre,
-            label: genre,
-            icon: GENRE_ICONS[genre] || Gamepad2,
-            items: groups[genre]
-        }));
-    }, [games, loading, activeCategory, selectedGenres, priceRange, minRating]);
-
-    // Navigation Logic (Keyboard + Wheel)
-    useEffect(() => {
-        if (storeMode !== 'store') return;
-
-        // --- Keyboard Handler ---
-        const handleKeyDown = (e) => {
-            if (loading || genreData.length === 0 || isNavigating) return;
-
-            const key = e.key.toLowerCase();
-
-            // Up: Genre Previous
-            if (key === 'arrowup' || key === 'w') {
-                e.preventDefault();
-                if (activeGenreIndex > 0) {
-                    setActiveGenreIndex(prev => prev - 1);
-                    setActiveGameIndex(0);
-                }
-            }
-            // Down: Genre Next
-            else if (key === 'arrowdown' || key === 's') {
-                e.preventDefault();
-                if (activeGenreIndex < genreData.length - 1) {
-                    setActiveGenreIndex(prev => prev + 1);
-                    setActiveGameIndex(0);
-                }
-            }
-            // Left: Game Previous
-            else if (key === 'arrowleft' || key === 'a') {
-                e.preventDefault();
-                if (activeGameIndex > 0) {
-                    setActiveGameIndex(prev => prev - 1);
-                }
-            }
-            // Right: Game Next
-            else if (key === 'arrowright' || key === 'd') {
-                e.preventDefault();
-                if (activeGameIndex < genreData[activeGenreIndex].items.length - 1) {
-                    setActiveGameIndex(prev => prev + 1);
-                }
-            }
-            // Enter: Select
-            else if (key === 'enter') {
-                e.preventDefault();
-                const game = genreData[activeGenreIndex].items[activeGameIndex];
-                if (game) {
-                    handleNavigateToGame(game.id);
-                }
-            }
-        };
-
-        // --- Wheel Handler ---
-        let lastWheelTime = 0;
-        const WHEEL_COOLDOWN = 150; // ms to prevent rapid scrolling
-
-        const handleWheel = (e) => {
-            if (loading || genreData.length === 0 || isNavigating || viewMode === 'classic') return;
-
-            const now = Date.now();
-            if (now - lastWheelTime < WHEEL_COOLDOWN) return;
-
-            // Prioritize horizontal scrolling if shift is held or if deltaX is dominant
-            if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
-                // Horizontal (Games)
-                if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
-                    // Right
-                     if (activeGameIndex < genreData[activeGenreIndex].items.length - 1) {
-                        setActiveGameIndex(prev => prev + 1);
-                        lastWheelTime = now;
-                    }
-                } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
-                    // Left
-                    if (activeGameIndex > 0) {
-                        setActiveGameIndex(prev => prev - 1);
-                        lastWheelTime = now;
-                    }
-                }
-            } else {
-                // Vertical (Genres)
-                if (e.deltaY > 0) {
-                    // Down
-                    if (activeGenreIndex < genreData.length - 1) {
-                        setActiveGenreIndex(prev => prev + 1);
-                        setActiveGameIndex(0);
-                        lastWheelTime = now;
-                    }
-                } else if (e.deltaY < 0) {
-                    // Up
-                    if (activeGenreIndex > 0) {
-                        setActiveGenreIndex(prev => prev - 1);
-                        setActiveGameIndex(0);
-                        lastWheelTime = now;
-                    }
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('wheel', handleWheel, { passive: false });
-        
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('wheel', handleWheel);
-        };
-    }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, navigate, storeMode, viewMode]);
-
-    // Navigate with scroll transition
+            // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
         setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
         setShowScrollTransition(true);
     };
-
-    // Active Item Helpers
-    const currentNavGenre = genreData[activeGenreIndex];
-    const activeGame = currentNavGenre?.items[activeGameIndex];
 
     // Constants for positioning
     const ITEM_HEIGHT = 80; // height of genre item
@@ -990,13 +844,10 @@ export default function Store() {
                                                 {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation'].map((g) => (
                                                     <label key={g} className="flex items-center gap-3 cursor-pointer group">
                                                         <Checkbox 
-                                                            className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 rounded" 
-                                                            checked={selectedGenres.includes(g)}
-                                                            onCheckedChange={() => {
-                                                                if (selectedGenres.includes(g)) setSelectedGenres(selectedGenres.filter(x => x !== g));
-                                                                else setSelectedGenres([...selectedGenres, g]);
-                                                            }}
-                                                        />
+                                                                        className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 rounded" 
+                                                                        checked={selectedGenres.includes(g)}
+                                                                        onCheckedChange={() => toggleGenre(g)}
+                                                                    />
                                                         <span className="text-sm text-slate-400 group-hover:text-white transition-colors">{g}</span>
                                                     </label>
                                                 ))}

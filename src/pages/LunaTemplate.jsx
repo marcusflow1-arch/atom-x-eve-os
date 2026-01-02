@@ -32,32 +32,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
 
-  // Initialize global state objects
-  useEffect(() => {
-    if (!window.LUNA_EQUIPMENT_STATE) {
-      window.LUNA_EQUIPMENT_STATE = { weapon: null };
-    }
-    if (!window.LUNA_ACTION_STATE) {
-      window.LUNA_ACTION_STATE = { attack: false, skill: null };
-    }
-    if (!window.LUNA_COOLDOWNS) {
-      window.LUNA_COOLDOWNS = {};
-    }
-    if (!window.LUNA_ANIMATION_BINDINGS) {
-      window.LUNA_ANIMATION_BINDINGS = {
-        idle: "idle",
-        weapon_idle: {
-          sword_of_the_abyss: "sort_afk"
-        },
-        weapon_attack: {
-          sword_of_the_abyss: "sword_attack"
-        },
-        skills: {
-          kick_ability: "kick"
-        }
-      };
-    }
-  }, []);
+  // Zustand store state
+  const equipment = useLunaStore((state) => state.equipment);
+  const actions = useLunaStore((state) => state.actions);
+  const animationBindings = useLunaStore((state) => state.animationBindings);
+  const clearActions = useLunaStore((state) => state.clearActions);
 
   // Fetch animations for Y Bot
   useEffect(() => {
@@ -387,47 +366,50 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
     // Resolve idle animation based on weapon state
     const resolveIdle = () => {
-      const weapon = window.LUNA_EQUIPMENT_STATE?.weapon;
-      if (weapon && window.LUNA_ANIMATION_BINDINGS?.weapon_idle?.[weapon]) {
-        return window.LUNA_ANIMATION_BINDINGS.weapon_idle[weapon];
+      const state = useLunaStore.getState();
+      const weapon = state.equipment.weapon;
+      if (weapon && state.animationBindings?.weapon_idle?.[weapon]) {
+        return state.animationBindings.weapon_idle[weapon];
       }
       return 'idle';
     };
 
     // Handle attack trigger
     const handleAttack = () => {
-      if (!window.LUNA_ACTION_STATE?.attack) return;
+      const state = useLunaStore.getState();
+      if (!state.actions.attack) return;
 
-      const weapon = window.LUNA_EQUIPMENT_STATE?.weapon;
+      const weapon = state.equipment.weapon;
       if (!weapon) return;
 
-      const anim = window.LUNA_ANIMATION_BINDINGS?.weapon_attack?.[weapon];
+      const anim = state.animationBindings?.weapon_attack?.[weapon];
       if (!anim || !actionsRef.current[anim]) return;
 
       setBaseAction(anim, true);
-      window.LUNA_ACTION_STATE.attack = false;
+      state.clearActions();
     };
 
     // Handle skill trigger
     const handleSkill = () => {
-      const skill = window.LUNA_ACTION_STATE?.skill;
+      const state = useLunaStore.getState();
+      const skill = state.actions.skill;
       if (!skill) return;
 
-      const now = Date.now();
-      if (now < (window.LUNA_COOLDOWNS?.[skill] || 0)) return;
+      if (state.isOnCooldown(skill)) return;
 
-      const anim = window.LUNA_ANIMATION_BINDINGS?.skills?.[skill];
+      const anim = state.animationBindings?.skills?.[skill];
       if (!anim || !actionsRef.current[anim]) return;
 
       setBaseAction(anim, true);
-      window.LUNA_COOLDOWNS[skill] = now + 3000;
-      window.LUNA_ACTION_STATE.skill = null;
+      state.setCooldown(skill, Date.now() + 3000);
+      state.clearActions();
     };
 
     // Update weapon visibility
     const updateWeaponVisual = () => {
       if (!weaponRef.current) return;
-      const equipped = window.LUNA_EQUIPMENT_STATE?.weapon === "sword_of_the_abyss";
+      const state = useLunaStore.getState();
+      const equipped = state.equipment.weapon === "sword_of_the_abyss";
       weaponRef.current.visible = equipped;
     };
 
@@ -452,10 +434,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       updateWeaponVisual();
 
       // UI → STATE → VIEWER BRIDGE
-      const state = window.LUNA_STATE;
-      if (state && state.equippedWeapon !== currentWeaponRef.current) {
-        window.LUNA_EQUIPMENT_STATE.weapon = state.equippedWeapon;
-        currentWeaponRef.current = state.equippedWeapon;
+      const storeState = useLunaStore.getState();
+      if (storeState.equippedWeapon !== currentWeaponRef.current) {
+        currentWeaponRef.current = storeState.equippedWeapon;
       }
 
       if (modelRef.current && controlsActive.current) {
@@ -492,12 +473,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
         // Animation priority system
         if (grounded) {
+          const currentState = useLunaStore.getState();
           // Priority 1: Skill
-          if (window.LUNA_ACTION_STATE?.skill) {
+          if (currentState.actions.skill) {
             handleSkill();
           }
           // Priority 2: Attack
-          else if (window.LUNA_ACTION_STATE?.attack) {
+          else if (currentState.actions.attack) {
             handleAttack();
           }
           // Priority 3: Movement or Idle
@@ -538,9 +520,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         controls.update();
       } else if (modelRef.current && !controlsActive.current) {
         // When inactive, check for actions or use idle
-        if (window.LUNA_ACTION_STATE?.skill) {
+        const currentState = useLunaStore.getState();
+        if (currentState.actions.skill) {
           handleSkill();
-        } else if (window.LUNA_ACTION_STATE?.attack) {
+        } else if (currentState.actions.attack) {
           handleAttack();
         } else if (!animationLocked.current) {
           setBaseAction(resolveIdle());
@@ -605,6 +588,9 @@ import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
+import useLunaStore from '../components/luna/useLunaStore';
+import { useEquipment } from '../components/luna/hooks/useEquipment';
+import { useSkills } from '../components/luna/hooks/useSkills';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 
@@ -850,6 +836,9 @@ export default function LunaTemplate() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const resetLunaStore = useLunaStore((state) => state.reset);
+  const { equipItem, unequipItem, equippedItems, setWeaponModelUrl, weaponModelUrl } = useEquipment();
+  const { activeSkills, triggerSkill } = useSkills();
   const [showSettings, setShowSettings] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
@@ -872,12 +861,9 @@ export default function LunaTemplate() {
   const [userEvents, setUserEvents] = useState([]);
   const [platformUpdates, setPlatformUpdates] = useState([]);
   const [showForumOverlay, setShowForumOverlay] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState(null); // 'forum' | 'blacksmith' | 'seasonalpass' | 'entertainment' | 'clan' | null
+  const [activeSubTab, setActiveSubTab] = useState(null);
   const [modelUrl, setModelUrl] = useState(null);
-  const [activeSkills, setActiveSkills] = useState([false, false, false, false, false]);
   const [clickedSlot, setClickedSlot] = useState(null);
-  const [equippedItems, setEquippedItems] = useState({});
-  const [weaponModelUrl, setWeaponModelUrl] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
   // Memory System State
   const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
@@ -912,6 +898,13 @@ export default function LunaTemplate() {
       }
     };
     fetchModelAndAnimations();
+  }, []);
+
+  // Reset Luna store on unmount
+  useEffect(() => {
+    return () => {
+      resetLunaStore();
+    };
   }, []);
 
   // Open overlays based on URL panel param
@@ -975,53 +968,6 @@ export default function LunaTemplate() {
   // Animation Event Trigger
   const [triggerAnimation, setTriggerAnimation] = useState(null);
 
-  // Skill Keybinds (1-5 keys) - Trigger skill animations via state
-  useEffect(() => {
-    const handleSkillKey = (e) => {
-      const key = e.key;
-      if (['1', '2', '3', '4', '5'].includes(key)) {
-        const index = parseInt(key) - 1;
-
-        // Toggle active state briefly
-        setActiveSkills((prev) => {
-          const next = [...prev];
-          next[index] = true;
-          setTimeout(() => setActiveSkills((p) => {
-            const n = [...p];
-            n[index] = false;
-            return n;
-          }), 800);
-          return next;
-        });
-
-        // If a card is assigned to this slot, trigger its demo
-        const assigned = window.LUNA_HOTBAR && window.LUNA_HOTBAR[index] || null;
-        if (assigned && window.LUNA_ACTION_STATE) {
-          const skillFromCardType = { ability: 'kick_ability' };
-          const derived = skillFromCardType[assigned.type] || 'kick_ability';
-          window.LUNA_ACTION_STATE.skill = derived;
-          return;
-        }
-
-        // Fallback to static mapping
-        const skillMap = {
-          '1': 'kick_ability',
-          '2': null,
-          '3': null,
-          '4': null,
-          '5': null
-        };
-        const skillId = skillMap[key];
-        if (skillId && window.LUNA_ACTION_STATE) {
-          window.LUNA_ACTION_STATE.skill = skillId;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleSkillKey);
-    return () => window.removeEventListener('keydown', handleSkillKey);
-  }, []);
-
   // Hotkey to toggle UI (I key) and close overlays (ESC)
   useEffect(() => {
     const onKey = (e) => {
@@ -1058,22 +1004,7 @@ export default function LunaTemplate() {
 
   const handleEquipItem = (item) => {
     if (clickedSlot && item) {
-      setEquippedItems((prev) => ({
-        ...prev,
-        [clickedSlot]: item
-      }));
-
-      // Initialize global state bridge
-      window.LUNA_STATE = window.LUNA_STATE || {};
-
-      // Update global state for weapon equips (weapon-1, weapon-2, weapon-3)
-      if (clickedSlot.startsWith('weapon-') && item.name === 'Blade of Abyss') {
-        window.LUNA_STATE.equippedWeapon = "sword_of_the_abyss";
-      } else if (clickedSlot.startsWith('weapon-')) {
-        // Other weapons or unequip
-        window.LUNA_STATE.equippedWeapon = null;
-      }
-
+      equipItem(clickedSlot, item);
       setShowInventory(false);
     }
   };
@@ -2155,22 +2086,7 @@ export default function LunaTemplate() {
                 };
 
                 const handleSkillClick = () => {
-                  const skillId = skillMap[i];
-                  if (skillId && window.LUNA_ACTION_STATE) {
-                    window.LUNA_ACTION_STATE.skill = skillId;
-                    setActiveSkills((prev) => {
-                      const newSkills = [...prev];
-                      newSkills[i] = true;
-                      setTimeout(() => {
-                        setActiveSkills((s) => {
-                          const updated = [...s];
-                          updated[i] = false;
-                          return updated;
-                        });
-                      }, 1000);
-                      return newSkills;
-                    });
-                  }
+                  triggerSkill(i);
                 };
 
                 const onDragOver = (e) => {
@@ -2186,23 +2102,12 @@ export default function LunaTemplate() {
                     const json = e.dataTransfer.getData('application/json');
                     const payload = json ? JSON.parse(json) : null;
                     if (payload?.source === 'luna-card' && payload.card) {
-                      window.LUNA_HOTBAR = window.LUNA_HOTBAR || {};
-                      window.LUNA_HOTBAR[i] = payload.card;
-                      setActiveSkills((prev) => {
-                        const next = [...prev];
-                        next[i] = true;
-                        setTimeout(() => setActiveSkills((p) => {
-                          const n = [...p];
-                          n[i] = false;
-                          return n;
-                        }), 500);
-                        return next;
-                      });
+                      useLunaStore.getState().assignToHotbar(i, payload.card);
                     }
                   } catch { }
                 };
 
-                const assigned = window.LUNA_HOTBAR && window.LUNA_HOTBAR[i] || null;
+                const assigned = useLunaStore.getState().hotbar[i] || null;
 
                 return (
                   <div

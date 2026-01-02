@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
  * @param {Array} genreData - Array of genre objects with items
  * @param {boolean} loading - Loading state
  * @param {string} viewMode - Current view mode ('cross' or 'classic')
+ * @param {string} storeMode - Store mode (e.g., 'store')
  * @param {Function} onNavigate - Navigation callback
  * @returns {Object} Navigation state and active items
  */
-export function useStoreNavigation(genreData, loading, viewMode, onNavigate) {
+export function useStoreNavigation(genreData, loading, viewMode, storeMode, onNavigate) {
   const [activeGenreIndex, setActiveGenreIndex] = useState(0);
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -18,7 +19,7 @@ export function useStoreNavigation(genreData, loading, viewMode, onNavigate) {
 
   // Keyboard + Wheel Navigation
   useEffect(() => {
-    if (loading || genreData.length === 0 || isNavigating || viewMode !== 'cross') return;
+    if (storeMode !== 'store' || loading || genreData.length === 0 || isNavigating || viewMode !== 'cross') return;
 
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
@@ -96,7 +97,7 @@ export function useStoreNavigation(genreData, loading, viewMode, onNavigate) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, viewMode]);
+  }, [activeGenreIndex, activeGameIndex, genreData, loading, isNavigating, viewMode, storeMode]);
 
   return {
     activeGenreIndex,

@@ -1,4 +1,5 @@
 import React from 'react';
+import useLunaStore from './useLunaStore';
 
 /**
  * Skill slot component for ability hotbar
@@ -8,7 +9,8 @@ import React from 'react';
  * @param {Function} props.onClick - Click handler
  */
 export default function SkillSlot({ index, isActive, onClick }) {
-  const assigned = window.LUNA_HOTBAR?.[index] || null;
+  const assigned = useLunaStore((state) => state.hotbar[index]);
+  const assignToHotbar = useLunaStore((state) => state.assignToHotbar);
 
   const onDragOver = (e) => {
     if (e.dataTransfer) {
@@ -24,8 +26,7 @@ export default function SkillSlot({ index, isActive, onClick }) {
       const payload = json ? JSON.parse(json) : null;
       
       if (payload?.source === 'luna-card' && payload.card) {
-        if (!window.LUNA_HOTBAR) window.LUNA_HOTBAR = {};
-        window.LUNA_HOTBAR[index] = payload.card;
+        assignToHotbar(index, payload.card);
         
         // Visual feedback
         if (onClick) onClick();

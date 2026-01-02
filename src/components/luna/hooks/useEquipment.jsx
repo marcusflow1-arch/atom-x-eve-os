@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useLunaStore from '../useLunaStore';
 
 /**
- * Hook for managing equipment state and global state bridge
+ * Hook for managing equipment state with Zustand store integration
  * @returns {Object} Equipment state and handlers
  */
 export function useEquipment() {
   const [equippedItems, setEquippedItems] = useState({});
   const [weaponModelUrl, setWeaponModelUrl] = useState(null);
+  const { setWeapon, setEquippedWeapon } = useLunaStore();
 
   /**
    * Equip an item to a slot
@@ -19,14 +21,13 @@ export function useEquipment() {
       [slotId]: item
     }));
 
-    // Initialize global state bridge
-    if (!window.LUNA_STATE) window.LUNA_STATE = {};
-
-    // Update global state for weapon equips
+    // Update Zustand store for weapon equips
     if (slotId.startsWith('weapon-') && item.name === 'Blade of Abyss') {
-      window.LUNA_STATE.equippedWeapon = "sword_of_the_abyss";
+      setWeapon("sword_of_the_abyss");
+      setEquippedWeapon("sword_of_the_abyss");
     } else if (slotId.startsWith('weapon-')) {
-      window.LUNA_STATE.equippedWeapon = null;
+      setWeapon(null);
+      setEquippedWeapon(null);
     }
   };
 
@@ -42,9 +43,8 @@ export function useEquipment() {
     });
 
     if (slotId.startsWith('weapon-')) {
-      if (window.LUNA_STATE) {
-        window.LUNA_STATE.equippedWeapon = null;
-      }
+      setWeapon(null);
+      setEquippedWeapon(null);
     }
   };
 
