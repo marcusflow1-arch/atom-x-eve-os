@@ -24,6 +24,9 @@ import StoreSpotlight from '../components/store/StoreSpotlight';
 import Library from './Library';
 import Achievements from './Achievements';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { showError } from '@/components/error/ErrorToast';
+import LoadingState from '@/components/error/LoadingState';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -204,7 +207,7 @@ Format your response as JSON:
         onSearchResult(response.searchSuggestion);
       }
     } catch (error) {
-      console.error('AI processing error:', error);
+      showError(error, 'AI Search');
       setAiResponse("I'm having trouble processing that. Could you try describing the game again?");
     } finally {
       setIsProcessing(false);
@@ -450,7 +453,7 @@ export default function Store() {
                 ];
                 setGames(enhancedGames);
             } catch (error) {
-                console.error("Error fetching games:", error);
+                showError(error, 'Load Games');
                 setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
             }
             setLoading(false);
@@ -624,6 +627,7 @@ export default function Store() {
     const CROSS_Y_VH = 40; // Intersection point in VH
 
     return (
+        <PageErrorBoundary pageName="Store">
         <div 
             className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -1191,12 +1195,7 @@ export default function Store() {
                     >
                         {/* Loading State */}
                         {loading ? (
-                            <div className="h-full w-full flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-4">
-                                    <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                                    <p className="text-white/50 tracking-widest uppercase text-xs">Loading Store...</p>
-                                </div>
-                            </div>
+                            <LoadingState fullScreen message="Loading Store..." />
                         ) : !currentNavGenre ? null : (
                             <>
                                 {/* Dynamic Background */}
@@ -1449,5 +1448,6 @@ export default function Store() {
               }} />
             )}
         </div>
+        </PageErrorBoundary>
     );
 }

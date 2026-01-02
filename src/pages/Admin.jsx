@@ -15,6 +15,8 @@ import Model3DManager from '../components/admin/Model3DManager';
 import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -116,7 +118,7 @@ export default function Admin() {
     if (!file) return;
 
     if (!file.type.includes('video/mp4')) {
-      alert('Please upload an MP4 file');
+      showError('Please upload an MP4 file');
       return;
     }
 
@@ -131,9 +133,9 @@ export default function Admin() {
       });
       
       setNewTitle('');
+      showSuccess('Background uploaded successfully!');
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      showError(error, 'Upload');
     } finally {
       setUploading(false);
     }
@@ -144,8 +146,11 @@ export default function Admin() {
   };
 
   const deleteBackground = (id) => {
-    if (confirm('Are you sure you want to delete this background?')) {
-      deleteMutation.mutate(id);
+    if (window.confirm('Are you sure you want to delete this background?')) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => showSuccess('Background deleted'),
+        onError: (error) => showError(error, 'Delete')
+      });
     }
   };
 
@@ -191,10 +196,9 @@ export default function Admin() {
       }
       
       refetchGames();
-      alert(`Finished fixing images! Processed ${totalFixed} games.`);
+      showSuccess(`Finished fixing images! Processed ${totalFixed} games.`);
     } catch (error) {
-      console.error('Failed to fix images:', error);
-      alert('Failed to fix images. Please try again.');
+      showError(error, 'Fix Images');
     } finally {
       setFixingImages(false);
     }
@@ -333,23 +337,25 @@ export default function Admin() {
       }
       
       refetchGames();
-      alert('Successfully populated games catalog!');
+      showSuccess('Successfully populated games catalog!');
     } catch (error) {
-      console.error('Failed to populate games:', error);
-      alert('Failed to populate games. Please try again.');
+      showError(error, 'Populate Games');
     }
     setPopulatingGames(false);
   };
 
   const handleAddGame = () => {
     if (!newGame.title || !newGame.price) {
-      alert('Title and price are required');
+      showError('Title and price are required');
       return;
     }
     createGameMutation.mutate({
       ...newGame,
       price: parseFloat(newGame.price),
       status: 'available'
+    }, {
+      onSuccess: () => showSuccess('Game added successfully!'),
+      onError: (error) => showError(error, 'Add Game')
     });
   };
 
@@ -399,19 +405,19 @@ export default function Admin() {
         }
         
         refetchGames();
-        alert(`IGDB Import Complete!\nCreated: ${created} games\nUpdated: ${updated} games`);
+        showSuccess(`IGDB Import Complete! Created: ${created} | Updated: ${updated}`);
       } else {
-        alert('No games returned from IGDB');
+        showError('No games returned from IGDB');
       }
     } catch (error) {
-      console.error('Failed to fetch from IGDB:', error);
-      alert(`Failed to fetch from IGDB: ${error.message}`);
+      showError(error, 'IGDB Import');
     } finally {
       setFetchingIGDB(false);
     }
   };
 
   return (
+    <PageErrorBoundary pageName="Admin">
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-black mb-2">Admin Panel</h1>
@@ -888,5 +894,6 @@ export default function Admin() {
                     </Tabs>
       </div>
     </div>
+    </PageErrorBoundary>
   );
 }
