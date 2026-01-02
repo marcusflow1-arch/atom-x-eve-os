@@ -818,17 +818,33 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
   useEffect(() => {
     const fetchOwnedGames = async () => {
+      const isDev = import.meta.env.DEV;
+      const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
       let userGames = [];
-      const testGameAlpha = allMockGames['test_game_alpha'];
 
       if (isAuthenticated) {
-        const allGamesFromDb = await base44.entities.Game.filter({}, '-created_date', 100);
-        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
-        const ownedIds = user?.purchased_items || [];
-        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
-        if (testGameAlpha) userGames.unshift(testGameAlpha);
-      } else {
-        if (testGameAlpha) userGames.push(testGameAlpha);
+        try {
+          const allGamesFromDb = await base44.entities.Game.filter({}, '-created_date', 100);
+          const ownedIds = user?.purchased_items || [];
+          userGames = allGamesFromDb.filter(g => ownedIds.includes(g.id));
+
+          // Fallback to mock data in dev if user has no games
+          if (userGames.length === 0 && useMock) {
+            const { allMockGames } = await import('../components/store/mockData');
+            const mockGamesArray = Object.values(allMockGames).slice(0, 5);
+            userGames = mockGamesArray;
+          }
+        } catch (error) {
+          console.error('Failed to fetch games:', error);
+          if (useMock) {
+            const { allMockGames } = await import('../components/store/mockData');
+            userGames = Object.values(allMockGames).slice(0, 5);
+          }
+        }
+      } else if (useMock) {
+        // Not authenticated but in dev mode
+        const { allMockGames } = await import('../components/store/mockData');
+        userGames = Object.values(allMockGames).slice(0, 3);
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
