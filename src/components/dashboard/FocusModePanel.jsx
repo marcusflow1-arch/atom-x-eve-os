@@ -1603,12 +1603,12 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
   };
 
   return (
-    <div className="flex flex-col items-start mb-4">
-      {/* Top Row: Banner + References to the right */}
-      <div className="flex items-stretch gap-4">
+    <div className="flex flex-col items-center mb-4 w-full">
+      {/* Top Row: Banner + References centered */}
+      <div className="flex items-stretch gap-4 justify-center">
 
         {/* Game Banner */}
-        <div className="w-[368px] h-[60px] flex-shrink-0">
+        <div className="w-[280px] h-[60px] flex-shrink-0">
           <GameBanner 
             game={selectedBannerGame} 
             onChangeBanner={() => setShowBannerPicker(true)} 
@@ -1619,7 +1619,7 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         <div 
           ref={scrollRef}
           className="flex items-center gap-2 overflow-x-auto" 
-          style={{ scrollbarWidth: 'none' }}
+          style={{ scrollbarWidth: 'none', maxWidth: '480px' }}
         >
           <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
           {references.map((ref) => (
@@ -1638,8 +1638,8 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         </div>
       </div>
 
-      {/* Horizontal Line below banner - Aligned with banner */}
-      <div className="w-[368px] h-px bg-white/20 mt-3" />
+      {/* Horizontal Line below banner - Centered */}
+      <div className="w-[280px] h-px bg-white/20 mt-3" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
@@ -1858,6 +1858,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
+      {/* Banner and Memories - Centered at top */}
+      <div className="w-full flex justify-center mb-6">
+        <div className="w-[800px]">
+          <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+        </div>
+      </div>
+
       {/* Top Section - News Feed & Content */}
       <div className="flex gap-6 w-full">
         {/* Content Area - Live Panel */}
@@ -1900,9 +1907,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="w-full">
-            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-          </div>
           <LibraryGamesSection 
             onSelectGame={handleGameSelect}
             selectedGame={selectedGame}
