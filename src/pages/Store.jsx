@@ -355,7 +355,8 @@ export default function Store() {
     const [searchParams] = useSearchParams();
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user, cartCount } = useAuth();
+    const { user } = useAuth();
+    const { getCartCount } = useCart();
     
     // Store Mode State
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
