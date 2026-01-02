@@ -17,6 +17,177 @@ import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
 
+// Global styles (extracted for CSP compliance)
+const globalStyles = `
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  .page-container {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  *:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.6);
+    outline-offset: 2px;
+  }
+
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.8);
+    outline-offset: 2px;
+  }
+
+  @keyframes pulse-bg {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .modern-nav-header {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 20;
+  }
+
+  .nav-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 12px 24px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .nav-brand {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    justify-self: center;
+  }
+
+  .nav-brand:hover {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+  }
+
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-item {
+    position: relative;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    background: transparent;
+    white-space: nowrap;
+  }
+
+  .nav-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .nav-item.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .nav-item.active:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .nav-icon {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  }
+
+  .nav-item:hover .nav-icon {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+
+  .nav-item.active .nav-icon {
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+
+  @media (max-width: 1200px) {
+    .nav-menu {
+      gap: 6px;
+    }
+    .nav-item {
+      padding: 7px 14px;
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .nav-container {
+      padding: 8px 16px;
+    }
+    .nav-brand {
+      font-size: 1.4rem;
+    }
+    .nav-menu {
+      gap: 4px;
+    }
+    .nav-item {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .nav-container {
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+    }
+    .nav-menu {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .nav-item {
+      font-size: 0.75rem;
+      padding: 5px 8px;
+    }
+    .nav-brand {
+      font-size: 1.5rem;
+    }
+  }
+`;
+
 // Eagerly loaded components (critical path)
 import PWAManifest from './components/desktop/PWAManifest';
 import ServiceWorker from './components/desktop/ServiceWorker';
@@ -170,175 +341,8 @@ function LayoutContent({ children, currentPageName }) {
       <ServiceWorker />
 
       {/* Global Style */}
-      <style>{`
-          * {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          
-          *::-webkit-scrollbar {
-            display: none;
-          }
-
-          .page-container {
-            height: 100%;
-            overflow-y: auto;
-          }
-
-          *:focus {
-            outline: 2px solid rgba(59, 130, 246, 0.6);
-            outline-offset: 2px;
-          }
-
-          *:focus:not(:focus-visible) {
-            outline: none;
-          }
-
-          *:focus-visible {
-            outline: 2px solid rgba(59, 130, 246, 0.8);
-            outline-offset: 2px;
-          }
-
-          @keyframes pulse-bg {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-
-          .modern-nav-header {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            position: relative;
-            z-index: 20;
-          }
-
-          .nav-container {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            padding: 12px 24px;
-            position: relative;
-            z-index: 10;
-          }
-
-          .nav-brand {
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #6366f1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            justify-self: center;
-          }
-
-          .nav-brand:hover {
-            transform: scale(1.03);
-            filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
-          }
-
-          .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .nav-item {
-            position: relative;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            text-decoration: none;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid transparent;
-            background: transparent;
-            white-space: nowrap;
-          }
-
-          .nav-item:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.1);
-          }
-
-          .nav-item.active {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-          }
-
-          .nav-item.active:hover {
-            background: rgba(255, 255, 255, 0.2);
-          }
-
-          .nav-icon {
-            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-          }
-
-          .nav-item:hover .nav-icon {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-          }
-
-          .nav-item.active .nav-icon {
-            filter: drop-shadow(0 0 5px currentColor);
-          }
-
-          @media (max-width: 1200px) {
-            .nav-menu {
-              gap: 6px;
-            }
-            .nav-item {
-              padding: 7px 14px;
-              font-size: 0.85rem;
-            }
-          }
-
-          @media (max-width: 992px) {
-            .nav-container {
-              padding: 8px 16px;
-            }
-            .nav-brand {
-              font-size: 1.4rem;
-            }
-            .nav-menu {
-              gap: 4px;
-            }
-            .nav-item {
-              padding: 6px 10px;
-              font-size: 0.8rem;
-            }
-          }
-
-          @media (max-width: 768px) {
-            .nav-container {
-              flex-direction: column;
-              gap: 10px;
-              padding: 10px;
-            }
-            .nav-menu {
-              flex-wrap: wrap;
-              justify-content: center;
-              gap: 8px;
-            }
-            .nav-item {
-              font-size: 0.75rem;
-              padding: 5px 8px;
-            }
-            .nav-brand {
-              font-size: 1.5rem;
-            }
-          }
-      `}</style>
+      {/* Global Styles - Extracted to reduce inline violations */}
+      <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
 
 
