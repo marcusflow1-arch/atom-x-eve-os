@@ -413,7 +413,9 @@ export default function Store() {
         activeGenreIndex,
         activeGameIndex,
         currentGenre: currentNavGenre,
-        activeGame
+        activeGame,
+        setActiveGenreIndex,
+        setActiveGameIndex
     } = useStoreNavigation(genreData, loading, viewMode, storeMode, handleNavigateToGame);
 
     // Scroll active genre into view for Classic Mode
