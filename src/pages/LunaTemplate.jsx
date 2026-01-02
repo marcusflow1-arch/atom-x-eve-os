@@ -604,7 +604,6 @@ import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalend
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
-import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 
 
 // Orbital Menu Items
