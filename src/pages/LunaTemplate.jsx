@@ -605,6 +605,8 @@ import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { showError } from '@/components/error/ErrorToast';
 
 
 // Orbital Menu Items
@@ -940,7 +942,7 @@ export default function LunaTemplate() {
         const updates = await base44.entities.PlatformUpdate.filter({ published: true });
         setPlatformUpdates(updates);
       } catch (error) {
-        console.error('Failed to load events/updates:', error);
+        showError(error, 'Load Events');
       }
     };
     fetchData();
@@ -1085,7 +1087,7 @@ export default function LunaTemplate() {
   }
 
   return (
-
+    <PageErrorBoundary pageName="LunaTemplate">
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
@@ -2363,7 +2365,9 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-    </div>);
+    </div>
+    </PageErrorBoundary>
+    );
 
 
 }
