@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState, Suspense } from 'react';
+import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-              LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
-            } from 'lucide-react';
+                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
@@ -16,16 +16,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Eagerly loaded components (critical path)
 import PWAManifest from './components/desktop/PWAManifest';
 import ServiceWorker from './components/desktop/ServiceWorker';
 import SignUpForm from './components/auth/SignUpForm';
 import IntroScreen from './components/intro/IntroScreen';
-import SocialHub from './components/dashboard/SocialHub';
-import IntelligentCalendarOverlay from './components/calendar/IntelligentCalendarOverlay';
 import CartDrawer from './components/cart/CartDrawer';
 import { useCart } from './components/CartContext';
 
-// Loading fallback component
+// Lazy loaded components (non-critical)
+const SocialHub = lazy(() => import('./components/dashboard/SocialHub'));
+const IntelligentCalendarOverlay = lazy(() => import('./components/calendar/IntelligentCalendarOverlay'));
+
+// Route-level lazy loading fallback
+const RouteLoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-6"></div>
+      <p className="text-white/60 text-lg font-medium tracking-wider">Loading...</p>
+    </div>
+  </div>
+);
+
+// Generic loading fallback for overlays
 const LoadingFallback = () => (
   <div className="min-h-screen bg-slate-900 flex items-center justify-center">
     <div className="text-center">
@@ -833,7 +846,7 @@ function LayoutContent({ children, currentPageName }) {
       <main className="flex-grow overflow-hidden">
         <div className="page-container">
           <ErrorBoundary>
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<RouteLoadingFallback />}>
               {children}
             </Suspense>
           </ErrorBoundary>
@@ -876,7 +889,9 @@ function LayoutContent({ children, currentPageName }) {
 
               {/* Social Hub Content */}
               <div className="w-full h-full overflow-hidden">
-                <SocialHub />
+                <Suspense fallback={<LoadingFallback />}>
+                  <SocialHub />
+                </Suspense>
               </div>
             </motion.div>
           </>
@@ -886,10 +901,12 @@ function LayoutContent({ children, currentPageName }) {
       {/* Calendar Overlay */}
       <AnimatePresence>
         {calendarOpen && (
-          <IntelligentCalendarOverlay 
-            onClose={() => setCalendarOpen(false)} 
-            currentUserId={user?.id} 
-          />
+          <Suspense fallback={<LoadingFallback />}>
+            <IntelligentCalendarOverlay 
+              onClose={() => setCalendarOpen(false)} 
+              currentUserId={user?.id} 
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
