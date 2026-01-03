@@ -23,6 +23,7 @@ import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
 import Library from './pages/Library';
+import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OrderConfirmation from './pages/OrderConfirmation';
@@ -38,7 +39,6 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +68,7 @@ export const PAGES = {
     "InstallApp": InstallApp,
     "Launcher": Launcher,
     "Library": Library,
+    "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OrderConfirmation": OrderConfirmation,
@@ -83,7 +84,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {

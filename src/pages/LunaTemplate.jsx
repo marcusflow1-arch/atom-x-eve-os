@@ -1432,44 +1432,88 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
+            className="w-full h-full pt-20 flex relative z-20"
           >
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <BookOpen className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">AI Story</span>
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <Swords className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">AI Battle</span>
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <Layers className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">AI Skill Tree</span>
-            </motion.button>
-            <motion.button
-              onClick={() => setShowSeasonalPass(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <Crown className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">Season Pass</span>
-            </motion.button>
+            {/* Left Sidebar - Menu Options */}
+            <div className="w-[10%] min-w-[120px] flex flex-col items-stretch gap-4 p-6">
+              <motion.button
+                onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                style={{
+                  background: 'rgba(100, 120, 140, 0.12)',
+                  backdropFilter: 'blur(20px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+                  borderColor: 'rgba(255, 255, 255, 0.10)',
+                  border: '1px solid',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+                }}
+              >
+                <BookOpen className="w-8 h-8" />
+              </motion.button>
+              
+              <motion.button
+                onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                style={{
+                  background: 'rgba(100, 120, 140, 0.12)',
+                  backdropFilter: 'blur(20px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+                  borderColor: 'rgba(255, 255, 255, 0.10)',
+                  border: '1px solid',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+                }}
+              >
+                <Swords className="w-8 h-8" />
+              </motion.button>
+              
+              <motion.button
+                onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                style={{
+                  background: 'rgba(100, 120, 140, 0.12)',
+                  backdropFilter: 'blur(20px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+                  borderColor: 'rgba(255, 255, 255, 0.10)',
+                  border: '1px solid',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+                }}
+              >
+                <Layers className="w-8 h-8" />
+              </motion.button>
+              
+              <motion.button
+                onClick={() => setShowSeasonalPass(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                style={{
+                  background: 'rgba(100, 120, 140, 0.12)',
+                  backdropFilter: 'blur(20px) saturate(130%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(130%)',
+                  borderColor: 'rgba(255, 255, 255, 0.10)',
+                  border: '1px solid',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+                }}
+              >
+                <Crown className="w-8 h-8" />
+              </motion.button>
+            </div>
+
+            {/* Divider Line */}
+            <div className="w-px bg-white/10" />
+
+            {/* Right Content Area */}
+            <div className="flex-1 p-8">
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-white/40 text-lg">Select an option from the left menu</p>
+              </div>
+            </div>
           </motion.div>
         ) : uiVisible ? (
           <motion.div 
