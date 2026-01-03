@@ -916,7 +916,7 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
 
     // Handle sub-tabs
-    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum' || panel === 'console') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -2007,55 +2007,7 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Home Icon with Hover Menu - Bottom Center - Always Visible */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center">
-        <div className="relative group flex items-center">
-          {/* Left Items - appear on hover */}
-          <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Story"
-            >
-              <BookOpen className="w-5 h-5" />
-            </motion.button>
-          </div>
 
-          {/* Home Button (Center) */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
-            title="Home"
-          >
-            <Home className="w-6 h-6" />
-          </motion.button>
-
-          {/* Right Items - appear on hover */}
-          <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Battle"
-            >
-              <Swords className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Skill Tree"
-            >
-              <Layers className="w-5 h-5" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
 
       {/* AI Attributes Panel - Bottom Right */}
       {uiVisible &&
@@ -2260,6 +2212,37 @@ export default function LunaTemplate() {
             }}>
 
             <div className="h-full w-full pt-20 overflow-hidden">
+              {activeSubTab === 'console' && (
+                <div className="flex items-center justify-center h-full gap-8 p-8">
+                  <motion.button
+                    onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+                  >
+                    <BookOpen className="w-16 h-16 mb-4" />
+                    <span className="text-xl font-bold">AI Story</span>
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+                  >
+                    <Swords className="w-16 h-16 mb-4" />
+                    <span className="text-xl font-bold">AI Battle</span>
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+                  >
+                    <Layers className="w-16 h-16 mb-4" />
+                    <span className="text-xl font-bold">AI Skill Tree</span>
+                  </motion.button>
+                </div>
+              )}
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
