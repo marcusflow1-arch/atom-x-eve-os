@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
                 } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
@@ -721,22 +721,6 @@ function LayoutContent({ children, currentPageName }) {
                                                                                     </span>
                                                                                   </div>
                                                                                   </div>
-
-                                                                                  <button
-                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
-                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                      location.pathname.toLowerCase().includes('/blacksmith')
-                                                                                        ? 'bg-white/10 border-white/20 text-white'
-                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
-                                                                                    }`}
-                                                                                  >
-                                                                                    <span className="flex items-center gap-2">
-                                                                                      <Hammer className="w-4 h-4" />
-                                                                                      Blacksmith
-                                                                                    </span>
-                                                                                  </button>
-
-
 
                                                                                   <button
                                                                                     onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
