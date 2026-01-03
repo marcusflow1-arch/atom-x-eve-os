@@ -2208,10 +2208,10 @@ export default function LunaTemplate() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute inset-0 z-30 pt-20 overflow-hidden"
+            className="fixed inset-0 z-40"
           >
             {activeSubTab === 'console' && (
-              <div className="h-full flex items-center justify-center gap-8">
+              <div className="h-full w-full flex items-center justify-center gap-8">
                 {/* AI Story Card */}
                 <motion.button
                   onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
@@ -2240,12 +2240,12 @@ export default function LunaTemplate() {
               </div>
             )}
             {activeSubTab === 'seasonalpass' && (
-              <div className="h-full overflow-y-auto">
+              <div className="h-full overflow-y-auto pt-20">
                 <SeasonalPassContent />
               </div>
             )}
             {activeSubTab === 'skilltree' && (
-              <div className="h-full overflow-hidden">
+              <div className="h-full overflow-hidden pt-20">
                 <GenreMastery onClose={() => navigate(createPageUrl('LunaTemplate'))} />
               </div>
             )}
