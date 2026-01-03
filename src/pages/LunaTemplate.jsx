@@ -916,7 +916,7 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
 
     // Handle sub-tabs
-    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum' || panel === 'console') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -2246,7 +2246,7 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
+      {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum, Console */}
       <AnimatePresence>
         {activeSubTab &&
           <motion.div
@@ -2260,6 +2260,7 @@ export default function LunaTemplate() {
             }}>
 
             <div className="h-full w-full pt-20 overflow-hidden">
+              {activeSubTab === 'console' && <div className="text-white p-8 flex items-center justify-center"><div className="text-center"><Gamepad2 className="w-16 h-16 text-white/40 mx-auto mb-4" /><p className="text-white/60 text-lg">Console Content</p><p className="text-white/40 text-sm mt-2">Coming soon</p></div></div>}
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}

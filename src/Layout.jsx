@@ -624,7 +624,15 @@ function LayoutContent({ children, currentPageName }) {
 
                                                                                   <div className="relative inline-block">
                                                                                     <button
-                                                                                      onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                                                                                      onClick={() => {
+                                                                                        const params = new URLSearchParams(location.search);
+                                                                                        const panel = params.get('panel');
+                                                                                        if (panel === 'console') {
+                                                                                          navigate(createPageUrl('LunaTemplate'));
+                                                                                        } else {
+                                                                                          navigate(createPageUrl('LunaTemplate') + '?panel=console');
+                                                                                        }
+                                                                                      }}
                                                                                       className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                                                                                     >
                                                                                       <span className="flex items-center gap-2">
