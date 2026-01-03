@@ -683,19 +683,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                     </span>
                                                                                   </button>
 
-                                                                                  <button
-                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
-                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                      location.pathname.toLowerCase().includes('/seasonalpass')
-                                                                                        ? 'bg-white/10 border-white/20 text-white'
-                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
-                                                                                    }`}
-                                                                                  >
-                                                                                    <span className="flex items-center gap-2">
-                                                                                      <Crown className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
-                                                                                    </span>
-                                                                                  </button>
+
 
                                                                                   <button
                                                                                     onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/entertainment') ? 'LunaTemplate' : 'Entertainment'))}
