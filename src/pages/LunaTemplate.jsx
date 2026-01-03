@@ -1441,7 +1441,7 @@ export default function LunaTemplate() {
                 onClick={() => setConsoleSelection('story')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`h-20 rounded-2xl flex items-center justify-between gap-2 px-3 text-white transition-all shadow-lg ${
+                className={`h-20 rounded-2xl flex items-center justify-start gap-2 px-3 text-white transition-all shadow-lg ${
                   consoleSelection === 'story' ? 'ring-2 ring-cyan-400/50' : ''
                 }`}
                 style={{
@@ -1453,17 +1453,6 @@ export default function LunaTemplate() {
                   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                <div
-                  className="px-3 py-1 text-[10px] uppercase tracking-wider text-white/80 rounded-md border border-white/15"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    backdropFilter: 'blur(14px) saturate(140%)',
-                    WebkitBackdropFilter: 'blur(14px) saturate(140%)'
-                  }}
-                >
-                  AI Story
-                </div>
                 <BookOpen className="w-[1.7rem] h-[1.7rem]" />
               </motion.button>
               
@@ -1471,7 +1460,7 @@ export default function LunaTemplate() {
                 onClick={() => setConsoleSelection('battle')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`h-20 rounded-2xl flex items-center justify-between gap-2 px-3 text-white transition-all shadow-lg ${
+                className={`h-20 rounded-2xl flex items-center justify-start gap-2 px-3 text-white transition-all shadow-lg ${
                   consoleSelection === 'battle' ? 'ring-2 ring-cyan-400/50' : ''
                 }`}
                 style={{
@@ -1483,17 +1472,6 @@ export default function LunaTemplate() {
                   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                <div
-                  className="px-3 py-1 text-[10px] uppercase tracking-wider text-white/80 rounded-md border border-white/15"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    backdropFilter: 'blur(14px) saturate(140%)',
-                    WebkitBackdropFilter: 'blur(14px) saturate(140%)'
-                  }}
-                >
-                  Battle Mode
-                </div>
                 <Swords className="w-[1.7rem] h-[1.7rem]" />
               </motion.button>
               
@@ -1501,7 +1479,7 @@ export default function LunaTemplate() {
                 onClick={() => setConsoleSelection('skill-tree')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`h-20 rounded-2xl flex items-center justify-between gap-2 px-3 text-white transition-all shadow-lg ${
+                className={`h-20 rounded-2xl flex items-center justify-start gap-2 px-3 text-white transition-all shadow-lg ${
                   consoleSelection === 'skill-tree' ? 'ring-2 ring-cyan-400/50' : ''
                 }`}
                 style={{
@@ -1513,17 +1491,6 @@ export default function LunaTemplate() {
                   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                <div
-                  className="px-3 py-1 text-[10px] uppercase tracking-wider text-white/80 rounded-md border border-white/15"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    backdropFilter: 'blur(14px) saturate(140%)',
-                    WebkitBackdropFilter: 'blur(14px) saturate(140%)'
-                  }}
-                >
-                  Skill Tree
-                </div>
                 <Layers className="w-[1.7rem] h-[1.7rem]" />
               </motion.button>
               
@@ -1531,7 +1498,7 @@ export default function LunaTemplate() {
                 onClick={() => setConsoleSelection('season-pass')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`h-20 rounded-2xl flex items-center justify-between gap-2 px-3 text-white transition-all shadow-lg ${
+                className={`h-20 rounded-2xl flex items-center justify-start gap-2 px-3 text-white transition-all shadow-lg ${
                   consoleSelection === 'season-pass' ? 'ring-2 ring-cyan-400/50' : ''
                 }`}
                 style={{
@@ -1543,17 +1510,6 @@ export default function LunaTemplate() {
                   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                <div
-                  className="px-3 py-1 text-[10px] uppercase tracking-wider text-white/80 rounded-md border border-white/15"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    backdropFilter: 'blur(14px) saturate(140%)',
-                    WebkitBackdropFilter: 'blur(14px) saturate(140%)'
-                  }}
-                >
-                  Season Pass
-                </div>
                 <Crown className="w-[1.7rem] h-[1.7rem]" />
               </motion.button>
             </div>
