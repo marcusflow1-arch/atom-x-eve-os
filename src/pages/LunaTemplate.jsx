@@ -2008,55 +2008,7 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Home Icon with Hover Menu - Bottom Center - Always Visible */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center">
-        <div className="relative group flex items-center">
-          {/* Left Items - appear on hover */}
-          <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Story"
-            >
-              <BookOpen className="w-5 h-5" />
-            </motion.button>
-          </div>
 
-          {/* Home Button (Center) */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
-            title="Home"
-          >
-            <Home className="w-6 h-6" />
-          </motion.button>
-
-          {/* Right Items - appear on hover */}
-          <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Battle"
-            >
-              <Swords className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-              title="AI Skill Tree"
-            >
-              <Layers className="w-5 h-5" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
 
       {/* AI Attributes Panel - Bottom Right */}
       {uiVisible &&
@@ -2259,54 +2211,32 @@ export default function LunaTemplate() {
             className="absolute inset-0 z-30 pt-20 overflow-hidden"
           >
             {activeSubTab === 'console' && (
-              <div className="h-full flex items-center justify-center">
-                {/* Home Button Interface */}
-                <div className="relative group flex items-center">
-                  {/* Left Items - appear on hover */}
-                  <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-                    <motion.button
-                      onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                      title="AI Story"
-                    >
-                      <BookOpen className="w-5 h-5" />
-                    </motion.button>
-                  </div>
+              <div className="h-full flex items-center justify-center gap-8">
+                {/* AI Story Card */}
+                <motion.button
+                  onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-64 h-80 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <BookOpen className="w-16 h-16 mb-4 relative z-10" />
+                  <span className="text-2xl font-bold relative z-10">AI Story</span>
+                  <span className="text-sm text-white/60 mt-2 relative z-10">Continue Your Journey</span>
+                </motion.button>
 
-                  {/* Home Button (Center) */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
-                    title="Home"
-                  >
-                    <Home className="w-6 h-6" />
-                  </motion.button>
-
-                  {/* Right Items - appear on hover */}
-                  <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-                    <motion.button
-                      onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                      title="AI Battle"
-                    >
-                      <Swords className="w-5 h-5" />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                      title="AI Skill Tree"
-                    >
-                      <Layers className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                </div>
+                {/* Battle Mode Card */}
+                <motion.button
+                  onClick={() => setActiveDrawer({ id: 'battle', label: 'Battle Mode', icon: Swords })}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-64 h-80 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Swords className="w-16 h-16 mb-4 relative z-10" />
+                  <span className="text-2xl font-bold relative z-10">Battle Mode</span>
+                  <span className="text-sm text-white/60 mt-2 relative z-10">Enter Combat Arena</span>
+                </motion.button>
               </div>
             )}
             {activeSubTab === 'seasonalpass' && (
