@@ -4,6 +4,7 @@ import AbilityAchievements from './pages/AbilityAchievements';
 import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
+import AdminUIBuilder from './pages/AdminUIBuilder';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
 import Cart from './pages/Cart';
@@ -17,6 +18,7 @@ import Events from './pages/Events';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
 import GameProfile from './pages/GameProfile';
+import GeneratedUI from './pages/GeneratedUI';
 import GenreMastery from './pages/GenreMastery';
 import Home from './pages/Home';
 import Ideals from './pages/Ideals';
@@ -39,8 +41,6 @@ import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import AdminUIBuilder from './pages/AdminUIBuilder';
-import GeneratedUI from './pages/GeneratedUI';
 import __Layout from './Layout.jsx';
 
 
@@ -51,6 +51,7 @@ export const PAGES = {
     "Achievements": Achievements,
     "AdamXEve": AdamXEve,
     "Admin": Admin,
+    "AdminUIBuilder": AdminUIBuilder,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
     "Cart": Cart,
@@ -64,6 +65,7 @@ export const PAGES = {
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
     "GameProfile": GameProfile,
+    "GeneratedUI": GeneratedUI,
     "GenreMastery": GenreMastery,
     "Home": Home,
     "Ideals": Ideals,
@@ -86,8 +88,6 @@ export const PAGES = {
     "StreamerProfileEdit": StreamerProfileEdit,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "AdminUIBuilder": AdminUIBuilder,
-    "GeneratedUI": GeneratedUI,
 }
 
 export const pagesConfig = {
