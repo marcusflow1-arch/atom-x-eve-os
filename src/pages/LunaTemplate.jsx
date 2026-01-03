@@ -916,8 +916,8 @@ export default function LunaTemplate() {
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
 
-    // Handle sub-tabs (including console, seasonalpass, skilltree)
-    if (panel === 'console' || panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'skilltree' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    // Handle content-switching panels (console, seasonalpass, skilltree)
+    if (panel === 'console' || panel === 'seasonalpass' || panel === 'skilltree') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -1424,7 +1424,7 @@ export default function LunaTemplate() {
 
 
       {/* Main Content Area */}
-      {uiVisible &&
+      {uiVisible && !activeSubTab &&
         <div className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center" style={{ display: uiVisible ? 'flex' : 'none' }}>
           <AnimatePresence mode="wait">
             {false &&
@@ -2247,88 +2247,80 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Sub-Page Views - Console, Blacksmith, Season Pass, Entertainment, Clan, Forum */}
-      <AnimatePresence>
-        {activeSubTab &&
+      {/* Content-Switching Panels (Console, Seasonal Pass, Skill Tree) - Inline below header */}
+      <AnimatePresence mode="wait">
+        {activeSubTab && (
           <motion.div
+            key={activeSubTab}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-40"
-            style={{
-              background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
-            }}>
-
-            <div className="h-full w-full pt-20 overflow-hidden">
-              {activeSubTab === 'console' && (
-                <div className="h-full flex items-center justify-center">
-                  {/* Home Button Interface */}
-                  <div className="relative group flex items-center">
-                    {/* Left Items - appear on hover */}
-                    <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-                      <motion.button
-                        onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                        title="AI Story"
-                      >
-                        <BookOpen className="w-5 h-5" />
-                      </motion.button>
-                    </div>
-
-                    {/* Home Button (Center) */}
+            className="absolute inset-0 z-30 pt-20 overflow-hidden"
+          >
+            {activeSubTab === 'console' && (
+              <div className="h-full flex items-center justify-center">
+                {/* Home Button Interface */}
+                <div className="relative group flex items-center">
+                  {/* Left Items - appear on hover */}
+                  <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
+                      onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+                      whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
-                      title="Home"
+                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                      title="AI Story"
                     >
-                      <Home className="w-6 h-6" />
+                      <BookOpen className="w-5 h-5" />
                     </motion.button>
+                  </div>
 
-                    {/* Right Items - appear on hover */}
-                    <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
-                      <motion.button
-                        onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                        title="AI Battle"
-                      >
-                        <Swords className="w-5 h-5" />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
-                        title="AI Skill Tree"
-                      >
-                        <Layers className="w-5 h-5" />
-                      </motion.button>
-                    </div>
+                  {/* Home Button (Center) */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
+                    title="Home"
+                  >
+                    <Home className="w-6 h-6" />
+                  </motion.button>
+
+                  {/* Right Items - appear on hover */}
+                  <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+                    <motion.button
+                      onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                      title="AI Battle"
+                    >
+                      <Swords className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                      title="AI Skill Tree"
+                    >
+                      <Layers className="w-5 h-5" />
+                    </motion.button>
                   </div>
                 </div>
-              )}
-              {activeSubTab === 'seasonalpass' && (
-                <div className="h-full overflow-y-auto">
-                  <SeasonalPassContent />
-                </div>
-              )}
-              {activeSubTab === 'skilltree' && (
-                <div className="h-full overflow-hidden">
-                  <GenreMastery onClose={() => navigate(createPageUrl('LunaTemplate'))} />
-                </div>
-              )}
-              {activeSubTab === 'forum' && <CommunityPage />}
-              {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
-              {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
-              {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
-            </div>
+              </div>
+            )}
+            {activeSubTab === 'seasonalpass' && (
+              <div className="h-full overflow-y-auto">
+                <SeasonalPassContent />
+              </div>
+            )}
+            {activeSubTab === 'skilltree' && (
+              <div className="h-full overflow-hidden">
+                <GenreMastery onClose={() => navigate(createPageUrl('LunaTemplate'))} />
+              </div>
+            )}
           </motion.div>
-        }
+        )}
       </AnimatePresence>
 
     </div>
