@@ -1592,7 +1592,6 @@ export default function LunaTemplate() {
                   </div>
                 </div>
               </motion.div>
-            }
             {uiVisible &&
               <motion.div
                 key="visible-ui"
