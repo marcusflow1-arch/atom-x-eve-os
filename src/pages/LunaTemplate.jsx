@@ -862,6 +862,7 @@ export default function LunaTemplate() {
   const [platformUpdates, setPlatformUpdates] = useState([]);
   const [showForumOverlay, setShowForumOverlay] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState(null);
+  const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
@@ -914,9 +915,10 @@ export default function LunaTemplate() {
     setShowSettings(panel === 'settings');
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
+    setShowConsoleMode(panel === 'console');
 
     // Handle sub-tabs
-    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum' || panel === 'console') {
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -1422,8 +1424,48 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
 
+      {/* Console Mode - Below Header */}
+      <AnimatePresence>
+        {showConsoleMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
+          >
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+            >
+              <BookOpen className="w-16 h-16 mb-4" />
+              <span className="text-xl font-bold">AI Story</span>
+            </motion.button>
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+            >
+              <Swords className="w-16 h-16 mb-4" />
+              <span className="text-xl font-bold">AI Battle</span>
+            </motion.button>
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+            >
+              <Layers className="w-16 h-16 mb-4" />
+              <span className="text-xl font-bold">AI Skill Tree</span>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content Area */}
-      {uiVisible &&
+      {uiVisible && !showConsoleMode &&
         <div className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center" style={{ display: uiVisible ? 'flex' : 'none' }}>
           <AnimatePresence mode="wait">
             {false &&
@@ -2212,37 +2254,6 @@ export default function LunaTemplate() {
             }}>
 
             <div className="h-full w-full pt-20 overflow-hidden">
-              {activeSubTab === 'console' && (
-                <div className="flex items-center justify-center h-full gap-8 p-8">
-                  <motion.button
-                    onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-                  >
-                    <BookOpen className="w-16 h-16 mb-4" />
-                    <span className="text-xl font-bold">AI Story</span>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-                  >
-                    <Swords className="w-16 h-16 mb-4" />
-                    <span className="text-xl font-bold">AI Battle</span>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-                  >
-                    <Layers className="w-16 h-16 mb-4" />
-                    <span className="text-xl font-bold">AI Skill Tree</span>
-                  </motion.button>
-                </div>
-              )}
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
