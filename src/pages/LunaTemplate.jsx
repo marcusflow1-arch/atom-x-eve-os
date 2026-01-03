@@ -1518,7 +1518,7 @@ export default function LunaTemplate() {
             <div className="w-px bg-white/10" />
 
             {/* Right Content Area (fills from divider to far right, under header) */}
-            <div className="flex-1 p-6 pt-4 overflow-hidden">
+            <div className="flex-1 overflow-hidden">
               <div className="relative w-full h-[calc(100vh-6rem)]">{/* ~under header space */}
 
                 <AnimatePresence mode="wait">
@@ -1568,13 +1568,11 @@ export default function LunaTemplate() {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
-                      className="absolute inset-0"
+                      className="absolute inset-0 overflow-y-auto"
                     >
-                      <div className="w-full h-full rounded-2xl overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/10">
-                        <SeasonalPassContent />
-                      </div>
+                      <SeasonalPassContent />
                     </motion.div>
-                  ) : null}
+                  ) : null
                 </AnimatePresence>
               </div>
             </div>
