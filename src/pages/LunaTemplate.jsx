@@ -1451,15 +1451,11 @@ export default function LunaTemplate() {
               label="AI Skill Tree"
               onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
             />
-            <motion.button
+            <HolographicTile
+              Icon={Crown}
+              label="Season Pass"
               onClick={() => setShowSeasonalPass(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <Crown className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">Season Pass</span>
-            </motion.button>
+            />
             <motion.button
               onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=blacksmith')}
               whileHover={{ scale: 1.05 }}
