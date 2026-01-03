@@ -15,7 +15,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
-import ScrollTransitionOverlay from '../components/shared/ScrollTransitionOverlay';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
@@ -916,8 +915,8 @@ export default function LunaTemplate() {
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
 
-    // Handle content-switching panels (console, seasonalpass, skilltree)
-    if (panel === 'console' || panel === 'seasonalpass' || panel === 'skilltree') {
+    // Handle sub-tabs
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -1070,7 +1069,7 @@ export default function LunaTemplate() {
       )}
 
       {/* 3D Model Viewer - Fixed floating element in top-left */}
-      {modelUrl && !['seasonalpass', 'skilltree'].includes(activeSubTab) &&
+      {modelUrl &&
         <div
           className="fixed top-0 left-0 bottom-0 w-[260px] z-[35] pointer-events-auto"
           style={{
@@ -1424,7 +1423,7 @@ export default function LunaTemplate() {
 
 
       {/* Main Content Area */}
-      {uiVisible && !activeSubTab &&
+      {uiVisible &&
         <div className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center" style={{ display: uiVisible ? 'flex' : 'none' }}>
           <AnimatePresence mode="wait">
             {false &&
@@ -2008,7 +2007,55 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
+      {/* Home Icon with Hover Menu - Bottom Center - Always Visible */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center">
+        <div className="relative group flex items-center">
+          {/* Left Items - appear on hover */}
+          <div className="flex items-center gap-3 mr-3 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+              title="AI Story"
+            >
+              <BookOpen className="w-5 h-5" />
+            </motion.button>
+          </div>
 
+          {/* Home Button (Center) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10 shadow-lg"
+            title="Home"
+          >
+            <Home className="w-6 h-6" />
+          </motion.button>
+
+          {/* Right Items - appear on hover */}
+          <div className="flex items-center gap-3 ml-3 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+              title="AI Battle"
+            >
+              <Swords className="w-5 h-5" />
+            </motion.button>
+            <motion.button
+              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+              title="AI Skill Tree"
+            >
+              <Layers className="w-5 h-5" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
 
       {/* AI Attributes Panel - Bottom Right */}
       {uiVisible &&
@@ -2199,58 +2246,28 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Content-Switching Panels (Console, Seasonal Pass, Skill Tree) - Inline below header */}
-      <AnimatePresence mode="wait">
-        {activeSubTab && (
+      {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
+      <AnimatePresence>
+        {activeSubTab &&
           <motion.div
-            key={activeSubTab}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="fixed inset-0 z-40"
-          >
-            {activeSubTab === 'console' && (
-              <div className="h-full w-full flex items-center justify-center gap-8">
-                {/* AI Story Card */}
-                <motion.button
-                  onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-64 h-80 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl group relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <BookOpen className="w-16 h-16 mb-4 relative z-10" />
-                  <span className="text-2xl font-bold relative z-10">AI Story</span>
-                  <span className="text-sm text-white/60 mt-2 relative z-10">Continue Your Journey</span>
-                </motion.button>
+            style={{
+              background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
+            }}>
 
-                {/* Battle Mode Card */}
-                <motion.button
-                  onClick={() => setActiveDrawer({ id: 'battle', label: 'Battle Mode', icon: Swords })}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-64 h-80 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl group relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Swords className="w-16 h-16 mb-4 relative z-10" />
-                  <span className="text-2xl font-bold relative z-10">Battle Mode</span>
-                  <span className="text-sm text-white/60 mt-2 relative z-10">Enter Combat Arena</span>
-                </motion.button>
-              </div>
-            )}
-            {activeSubTab === 'seasonalpass' && (
-              <div className="h-full overflow-y-auto pt-20">
-                <SeasonalPassContent />
-              </div>
-            )}
-            {activeSubTab === 'skilltree' && (
-              <div className="h-full overflow-hidden pt-20">
-                <GenreMastery onClose={() => navigate(createPageUrl('LunaTemplate'))} />
-              </div>
-            )}
+            <div className="h-full w-full pt-20 overflow-hidden">
+              {activeSubTab === 'forum' && <CommunityPage />}
+              {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
+              {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
+              {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
+              {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
+            </div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
 
     </div>

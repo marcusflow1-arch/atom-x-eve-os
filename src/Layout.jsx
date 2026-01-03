@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-                      LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar, Plus
-                    } from 'lucide-react';
+                  LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
@@ -269,7 +269,6 @@ const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
   const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan','/community'].some(s => location.pathname.toLowerCase().includes(s));
@@ -623,27 +622,26 @@ function LayoutContent({ children, currentPageName }) {
 
                                                                                   <div className="h-6 w-px bg-white/10" />
 
-                                                                                  <button
-                                                                                    onClick={() => {
-                                                                                      const isConsole = searchParams.get('panel') === 'console';
-                                                                                      navigate(createPageUrl('LunaTemplate') + (isConsole ? '' : '?panel=console'));
-                                                                                    }}
-                                                                                    className="relative px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                                                                  >
-                                                                                    <span className="flex items-center gap-2">
-                                                                                      {searchParams.get('panel') === 'console' ? (
-                                                                                        <>
-                                                                                          <Home className="w-4 h-4" />
-                                                                                          Home
-                                                                                        </>
-                                                                                      ) : (
-                                                                                        <>
-                                                                                          <Gamepad2 className="w-4 h-4" />
-                                                                                          Console
-                                                                                        </>
-                                                                                      )}
-                                                                                    </span>
-                                                                                  </button>
+                                                                                  <div className="relative inline-block">
+                                                                                    <button
+                                                                                      onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                                                                                      className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                                                                    >
+                                                                                      <span className="flex items-center gap-2">
+                                                                                        <Home className="w-4 h-4" />
+                                                                                        Home
+                                                                                      </span>
+                                                                                    </button>
+                                                                                    <div
+                                                                                      aria-hidden
+                                                                                      className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
+                                                                                    >
+                                                                                      <span className="text-base font-medium flex items-center gap-2">
+                                                                                        <Gamepad2 className="w-4 h-4" />
+                                                                                        Console
+                                                                                      </span>
+                                                                                    </div>
+                                                                                  </div>
 
                                                                                   <button
                                                                                     onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/blacksmith') ? 'LunaTemplate' : 'Blacksmith'))}
@@ -660,28 +658,16 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   </button>
 
                                                                                   <button
-                                                                                    onClick={() => {
-                                                                                      const isSeasonalPass = searchParams.get('panel') === 'seasonalpass';
-                                                                                      navigate(createPageUrl('LunaTemplate') + (isSeasonalPass ? '?panel=skilltree' : '?panel=seasonalpass'));
-                                                                                    }}
+                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
                                                                                     className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                      searchParams.get('panel') === 'seasonalpass' || searchParams.get('panel') === 'skilltree'
+                                                                                      location.pathname.toLowerCase().includes('/seasonalpass')
                                                                                         ? 'bg-white/10 border-white/20 text-white'
                                                                                         : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
                                                                                     }`}
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
-                                                                                      {searchParams.get('panel') === 'seasonalpass' ? (
-                                                                                        <>
-                                                                                          <Layers className="w-4 h-4" />
-                                                                                          Skill Tree
-                                                                                        </>
-                                                                                      ) : (
-                                                                                        <>
-                                                                                          <Crown className="w-4 h-4" />
-                                                                                          Season Pass
-                                                                                        </>
-                                                                                      )}
+                                                                                      <Crown className="w-4 h-4" />
+                                                                                      {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
                                                                                     </span>
                                                                                   </button>
 
