@@ -70,7 +70,7 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
               properties: {
                 type: { type: "string" },
                 props: { type: "object" },
-                children: { type: "array" },
+                children: { type: "array", items: { type: "object" } },
               },
               required: ["type"],
               additionalProperties: true,
