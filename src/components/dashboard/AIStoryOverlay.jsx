@@ -4,7 +4,7 @@ import { ChevronLeft, Clock, Settings, Play, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
-export default function AIStoryOverlay({ onClose, isInline = false }) {
+export default function AIStoryOverlay({ onClose }) {
   const [view, setView] = useState('menu'); // menu, timeline, settings
   
   // Fetch Plasma Water video or fallback to active background
@@ -69,7 +69,7 @@ export default function AIStoryOverlay({ onClose, isInline = false }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`${isInline ? 'relative w-full h-full font-serif overflow-hidden rounded-2xl' : 'fixed inset-0 z-[100] font-serif overflow-hidden'}`}
+      className="fixed inset-0 z-[100] font-serif overflow-hidden"
     >
       {/* LAYER 0: Plasma Water Video Background */}
       {/* LAYER 0: Plasma Water Video Background */}
@@ -98,7 +98,7 @@ export default function AIStoryOverlay({ onClose, isInline = false }) {
 
       {/* LAYER 2: Liquid Glass Layer */}
       <div 
-        className={`absolute ${isInline ? 'inset-0' : 'inset-0'} m-0 md:m-0 backdrop-blur-[20px] bg-white/[0.08] shadow-2xl`}
+        className="absolute inset-0 m-0 md:m-0 backdrop-blur-[20px] bg-white/[0.08] shadow-2xl"
         style={{
           WebkitBackdropFilter: 'blur(20px)',
         }}
@@ -285,14 +285,12 @@ export default function AIStoryOverlay({ onClose, isInline = false }) {
           </AnimatePresence>
 
           {/* Footer / Quit */}
-          {!isInline && (
-            <div className="absolute bottom-12 right-12 flex items-center gap-3 text-white/50 hover:text-white transition-colors cursor-pointer drop-shadow-md">
-              <div className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 bg-current rounded-full" />
-              </div>
-              <span className="uppercase tracking-widest text-xs font-bold" onClick={onClose}>Return to Dashboard</span>
+          <div className="absolute bottom-12 right-12 flex items-center gap-3 text-white/50 hover:text-white transition-colors cursor-pointer drop-shadow-md">
+            <div className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-current rounded-full" />
             </div>
-          )}
+            <span className="uppercase tracking-widest text-xs font-bold" onClick={onClose}>Return to Dashboard</span>
+          </div>
 
         </div>
       </div>
