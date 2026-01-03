@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer
 } from
   'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -587,6 +587,7 @@ import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalend
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
+import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
@@ -2277,7 +2278,7 @@ export default function LunaTemplate() {
 
             <div className="h-full w-full pt-20 overflow-hidden">
               {activeSubTab === 'forum' && <CommunityPage />}
-              {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
+              {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
               {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
