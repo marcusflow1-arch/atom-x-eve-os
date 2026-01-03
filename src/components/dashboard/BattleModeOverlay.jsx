@@ -2,13 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Swords, Target, Flame, Zap, Shield, X } from 'lucide-react';
 
-export default function BattleModeOverlay({ onClose }) {
+export default function BattleModeOverlay({ onClose, isInline = false }) {
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black"
+      className={`${isInline ? 'relative w-full h-full overflow-hidden' : 'fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black'}`}
     >
       {/* Background Gradient */}
       <div 
@@ -19,14 +19,16 @@ export default function BattleModeOverlay({ onClose }) {
       />
 
       {/* Close Button */}
-      <button 
-        onClick={onClose}
-        className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
-      >
-        <X className="w-5 h-5" />
-      </button>
+      {!isInline && (
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
 
-      <div className="relative z-10 flex flex-col items-center text-center max-w-6xl w-full px-6 py-12">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-6xl w-full px-6 py-12 h-full overflow-y-auto">
         
         {/* Icon */}
         <div className="w-24 h-24 rounded-full bg-orange-600 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(234,88,12,0.4)]">
