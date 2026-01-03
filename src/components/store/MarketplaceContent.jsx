@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import {
-  Search, ChevronRight, ChevronDown, Star, TrendingUp, Clock,
+  Search, ChevronLeft, ChevronRight, ChevronDown, Star, TrendingUp, Clock,
   Sparkles, DollarSign, Eye, Heart, ShoppingCart,
   Gamepad2, Package, Zap, Shield, X, Grid, List,
   Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus,
