@@ -2276,7 +2276,17 @@ export default function LunaTemplate() {
               background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
             }}>
 
-            <div className="h-full w-full pt-20 overflow-hidden">
+             {/* Close Blacksmith -> Console */}
+             {activeSubTab === 'blacksmith' && (
+               <button
+                 onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
+                 className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             )}
+
+             <div className="h-full w-full pt-20 overflow-hidden">
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
