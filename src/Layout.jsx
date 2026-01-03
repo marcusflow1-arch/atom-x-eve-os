@@ -627,46 +627,99 @@ function LayoutContent({ children, currentPageName }) {
                                                                                       onClick={() => {
                                                                                         const params = new URLSearchParams(location.search);
                                                                                         const currentPanel = params.get('panel');
-                                                                                        if (currentPanel === 'console') {
+                                                                                        const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+
+                                                                                        // If on subpage (blacksmith, entertainment, clan, forum), go to home first
+                                                                                        if (!isOnLunaPage) {
                                                                                           navigate(createPageUrl('LunaTemplate'));
-                                                                                        } else {
+                                                                                        }
+                                                                                        // If on console mode, go to home
+                                                                                        else if (currentPanel === 'console') {
+                                                                                          navigate(createPageUrl('LunaTemplate'));
+                                                                                        }
+                                                                                        // If on home, go to console
+                                                                                        else {
                                                                                           navigate(createPageUrl('LunaTemplate') + '?panel=console');
                                                                                         }
                                                                                       }}
                                                                                       className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                                                                                     >
                                                                                       <span className="flex items-center gap-2">
-                                                                                        {new URLSearchParams(location.search).get('panel') === 'console' ? (
-                                                                                          <>
-                                                                                            <Home className="w-4 h-4" />
-                                                                                            Home
-                                                                                          </>
-                                                                                        ) : (
-                                                                                          <>
-                                                                                            <Gamepad2 className="w-4 h-4" />
-                                                                                            Console
-                                                                                          </>
-                                                                                        )}
+                                                                                        {(() => {
+                                                                                          const params = new URLSearchParams(location.search);
+                                                                                          const currentPanel = params.get('panel');
+                                                                                          const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+
+                                                                                          // On subpage - show "Home"
+                                                                                          if (!isOnLunaPage) {
+                                                                                            return (
+                                                                                              <>
+                                                                                                <Home className="w-4 h-4" />
+                                                                                                Home
+                                                                                              </>
+                                                                                            );
+                                                                                          }
+                                                                                          // On console mode - show "Home"
+                                                                                          else if (currentPanel === 'console') {
+                                                                                            return (
+                                                                                              <>
+                                                                                                <Home className="w-4 h-4" />
+                                                                                                Home
+                                                                                              </>
+                                                                                            );
+                                                                                          }
+                                                                                          // On home page - show "Console"
+                                                                                          else {
+                                                                                            return (
+                                                                                              <>
+                                                                                                <Gamepad2 className="w-4 h-4" />
+                                                                                                Console
+                                                                                              </>
+                                                                                            );
+                                                                                          }
+                                                                                        })()}
                                                                                       </span>
                                                                                     </button>
                                                                                     <div
-                                                                                      aria-hidden
-                                                                                      className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
-                                                                                    >
-                                                                                      <span className="text-base font-medium flex items-center gap-2">
-                                                                                        {new URLSearchParams(location.search).get('panel') === 'console' ? (
-                                                                                          <>
-                                                                                            <Home className="w-4 h-4" />
-                                                                                            Home
-                                                                                          </>
-                                                                                        ) : (
-                                                                                          <>
-                                                                                            <Gamepad2 className="w-4 h-4" />
-                                                                                            Console
-                                                                                          </>
-                                                                                        )}
-                                                                                      </span>
-                                                                                    </div>
+                                                                                    aria-hidden
+                                                                                    className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
+                                                                                  >
+                                                                                    <span className="text-base font-medium flex items-center gap-2">
+                                                                                      {(() => {
+                                                                                        const params = new URLSearchParams(location.search);
+                                                                                        const currentPanel = params.get('panel');
+                                                                                        const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+
+                                                                                        // On subpage - show opposite (Console)
+                                                                                        if (!isOnLunaPage) {
+                                                                                          return (
+                                                                                            <>
+                                                                                              <Gamepad2 className="w-4 h-4" />
+                                                                                              Console
+                                                                                            </>
+                                                                                          );
+                                                                                        }
+                                                                                        // On console mode - show opposite (Console)
+                                                                                        else if (currentPanel === 'console') {
+                                                                                          return (
+                                                                                            <>
+                                                                                              <Gamepad2 className="w-4 h-4" />
+                                                                                              Console
+                                                                                            </>
+                                                                                          );
+                                                                                        }
+                                                                                        // On home page - show opposite (Home)
+                                                                                        else {
+                                                                                          return (
+                                                                                            <>
+                                                                                              <Home className="w-4 h-4" />
+                                                                                              Home
+                                                                                            </>
+                                                                                          );
+                                                                                        }
+                                                                                      })()}
+                                                                                    </span>
+                                                                                  </div>
                                                                                   </div>
 
                                                                                   <button
@@ -679,7 +732,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
                                                                                       <Hammer className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/blacksmith') ? 'Dashboard' : 'Blacksmith'}
+                                                                                      Blacksmith
                                                                                     </span>
                                                                                   </button>
 
@@ -695,7 +748,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
                                                                                       <Clapperboard className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/entertainment') ? 'Dashboard' : 'Entertainment'}
+                                                                                      Entertainment
                                                                                     </span>
                                                                                   </button>
 
@@ -709,7 +762,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
                                                                                       <Users className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/clan') ? 'Dashboard' : 'Clan'}
+                                                                                      Clan
                                                                                     </span>
                                                                                   </button>
 
@@ -723,7 +776,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
                                                                                       <MessageSquare className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/community') ? 'Dashboard' : 'Forum'}
+                                                                                      Forum
                                                                                     </span>
                                                                                   </button>
                                                                                   </div>
