@@ -1071,7 +1071,7 @@ export default function LunaTemplate() {
       )}
 
       {/* 3D Model Viewer - Fixed floating element in top-left */}
-      {modelUrl &&
+      {modelUrl && !showConsoleMode &&
         <div
           className="fixed top-0 left-0 bottom-0 w-[260px] z-[35] pointer-events-auto"
           style={{
@@ -2056,7 +2056,7 @@ export default function LunaTemplate() {
 
 
       {/* AI Attributes Panel - Bottom Right */}
-      {uiVisible &&
+      {uiVisible && !showConsoleMode &&
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2068,7 +2068,7 @@ export default function LunaTemplate() {
       }
 
       {/* Skills & AI Passives - Bottom Left */}
-      {uiVisible && !showInventory &&
+      {uiVisible && !showInventory && !showConsoleMode &&
         <div className="fixed bottom-8 left-8 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
