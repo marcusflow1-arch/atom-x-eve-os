@@ -571,6 +571,7 @@ import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
 import AINewsContent from '../components/dashboard/AINewsContent';
 import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import ShinyCard from '../components/shared/ShinyCard';
+import HolographicTile from '@/components/dashboard/HolographicTile';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import { inventoryData, profileData } from '../components/profile/mockData';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
