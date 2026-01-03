@@ -656,13 +656,13 @@ function LayoutContent({ children, currentPageName }) {
                                                                                       <span className="text-base font-medium flex items-center gap-2">
                                                                                         {new URLSearchParams(location.search).get('panel') === 'console' ? (
                                                                                           <>
-                                                                                            <Gamepad2 className="w-4 h-4" />
-                                                                                            Console
+                                                                                            <Home className="w-4 h-4" />
+                                                                                            Home
                                                                                           </>
                                                                                         ) : (
                                                                                           <>
-                                                                                            <Home className="w-4 h-4" />
-                                                                                            Home
+                                                                                            <Gamepad2 className="w-4 h-4" />
+                                                                                            Console
                                                                                           </>
                                                                                         )}
                                                                                       </span>
