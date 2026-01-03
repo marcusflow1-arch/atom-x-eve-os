@@ -863,6 +863,7 @@ export default function LunaTemplate() {
   const [showForumOverlay, setShowForumOverlay] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [showConsoleMode, setShowConsoleMode] = useState(false);
+  const [consoleSelection, setConsoleSelection] = useState(null);
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
@@ -1437,10 +1438,12 @@ export default function LunaTemplate() {
             {/* Left Sidebar - Menu Options */}
             <div className="w-[10%] min-w-[120px] flex flex-col items-stretch gap-4 p-6">
               <motion.button
-                onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+                onClick={() => setConsoleSelection('story')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                className={`h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg ${
+                  consoleSelection === 'story' ? 'ring-2 ring-cyan-400/50' : ''
+                }`}
                 style={{
                   background: 'rgba(100, 120, 140, 0.12)',
                   backdropFilter: 'blur(20px) saturate(130%)',
@@ -1454,10 +1457,12 @@ export default function LunaTemplate() {
               </motion.button>
               
               <motion.button
-                onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+                onClick={() => setConsoleSelection('battle')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                className={`h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg ${
+                  consoleSelection === 'battle' ? 'ring-2 ring-cyan-400/50' : ''
+                }`}
                 style={{
                   background: 'rgba(100, 120, 140, 0.12)',
                   backdropFilter: 'blur(20px) saturate(130%)',
@@ -1471,10 +1476,12 @@ export default function LunaTemplate() {
               </motion.button>
               
               <motion.button
-                onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+                onClick={() => setConsoleSelection('skill-tree')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                className={`h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg ${
+                  consoleSelection === 'skill-tree' ? 'ring-2 ring-cyan-400/50' : ''
+                }`}
                 style={{
                   background: 'rgba(100, 120, 140, 0.12)',
                   backdropFilter: 'blur(20px) saturate(130%)',
@@ -1488,10 +1495,12 @@ export default function LunaTemplate() {
               </motion.button>
               
               <motion.button
-                onClick={() => setShowSeasonalPass(true)}
+                onClick={() => setConsoleSelection('season-pass')}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg"
+                className={`h-20 rounded-2xl flex items-center justify-center text-white transition-all shadow-lg ${
+                  consoleSelection === 'season-pass' ? 'ring-2 ring-cyan-400/50' : ''
+                }`}
                 style={{
                   background: 'rgba(100, 120, 140, 0.12)',
                   backdropFilter: 'blur(20px) saturate(130%)',
@@ -1509,10 +1518,60 @@ export default function LunaTemplate() {
             <div className="w-px bg-white/10" />
 
             {/* Right Content Area */}
-            <div className="flex-1 p-8">
-              <div className="w-full h-full flex items-center justify-center">
-                <p className="text-white/40 text-lg">Select an option from the left menu</p>
-              </div>
+            <div className="flex-1 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {!consoleSelection ? (
+                  <motion.div
+                    key="no-selection"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    <p className="text-white/40 text-lg">Select an option from the left menu</p>
+                  </motion.div>
+                ) : consoleSelection === 'story' ? (
+                  <motion.div
+                    key="story"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="w-full h-full"
+                  >
+                    <AIStoryOverlay onClose={() => setConsoleSelection(null)} isInline />
+                  </motion.div>
+                ) : consoleSelection === 'battle' ? (
+                  <motion.div
+                    key="battle"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="w-full h-full"
+                  >
+                    <BattleModeOverlay onClose={() => setConsoleSelection(null)} isInline />
+                  </motion.div>
+                ) : consoleSelection === 'skill-tree' ? (
+                  <motion.div
+                    key="skill-tree"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="w-full h-full"
+                  >
+                    <GenreMastery onClose={() => setConsoleSelection(null)} isInline />
+                  </motion.div>
+                ) : consoleSelection === 'season-pass' ? (
+                  <motion.div
+                    key="season-pass"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="w-full h-full"
+                  >
+                    <SeasonalPassContent />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
           </motion.div>
         ) : uiVisible ? (
@@ -1838,39 +1897,7 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Seasonal Pass Overlay */}
-      <AnimatePresence>
-        {showSeasonalPass &&
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowSeasonalPass(false)} />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
-              <div className="flex-1 overflow-y-auto">
-                <SeasonalPassContent />
-              </div>
-
-              <button
-                onClick={() => setShowSeasonalPass(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
-                <X className="w-5 h-5" />
-              </button>
-            </motion.div>
-          </>
-        }
-      </AnimatePresence>
 
 
 
