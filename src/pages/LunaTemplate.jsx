@@ -1520,6 +1520,21 @@ export default function LunaTemplate() {
             {/* Right Content Area (fills from divider to far right, under header) */}
             <div className="flex-1 p-6 pt-4 overflow-hidden">
               <div className="relative w-full h-[calc(100vh-6rem)]">{/* ~under header space */}
+                {consoleSelection && (
+                  <div className="absolute top-0 left-0 z-30 flex items-center gap-2 p-2 pointer-events-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+                    <div
+                      className="px-3 py-1 text-[10px] md:text-xs uppercase tracking-wider text-white/80 rounded-md border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
+                      style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        backdropFilter: 'blur(14px) saturate(140%)',
+                        WebkitBackdropFilter: 'blur(14px) saturate(140%)'
+                      }}
+                    >
+                      {consoleSelection === 'story' ? 'AI Story' : consoleSelection === 'battle' ? 'Battle Mode' : consoleSelection === 'skill-tree' ? 'Skill Tree' : consoleSelection === 'season-pass' ? 'Season Pass' : ''}
+                    </div>
+                  </div>
+                )}
                 <AnimatePresence mode="wait">
                   {!consoleSelection ? (
                     <motion.div
