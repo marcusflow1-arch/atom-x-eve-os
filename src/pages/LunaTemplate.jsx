@@ -1471,16 +1471,16 @@ export default function LunaTemplate() {
             className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center"
           >
             <AnimatePresence mode="wait">
-            {false &&
-              <motion.div
-                key="hidden-ui"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full h-full flex gap-8 py-8">
+              {false &&
+                <motion.div
+                  key="hidden-ui"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full h-full flex gap-8 py-8">
 
-                {/* Friends List - Far Left */}
+                  {/* Friends List - Far Left */}
                 <div className="w-80 flex-shrink-0">
                   <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full flex flex-col">
                     <FriendRequestsPanel currentUserId={user?.id} />
@@ -1591,17 +1591,18 @@ export default function LunaTemplate() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            {uiVisible &&
-              <motion.div
-                key="visible-ui"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full">
+                </motion.div>
+              }
+              {uiVisible &&
+                <motion.div
+                  key="visible-ui"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full">
 
-                <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait">
                   {expandedGenre ?
                     <ExpandedGenreView
                       genre={expandedGenre}
@@ -1708,8 +1709,9 @@ export default function LunaTemplate() {
 
                       </motion.div>
                   }
-                </AnimatePresence>
-              </motion.div>
+                  </AnimatePresence>
+                </motion.div>
+              }
             </AnimatePresence>
           </motion.div>
         ) : null}
