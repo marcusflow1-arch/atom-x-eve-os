@@ -1,22 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Sparkles, ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { X, Sparkles } from "lucide-react";
 
-export default function AdminUIBuilder() {
+export default function GeneratedUI() {
   const [me, setMe] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-
-  const [prompt, setPrompt] = useState("");
-  const [history, setHistory] = useState([]); // {role:'user'|'assistant', content:string}
   const [nodes, setNodes] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
 
@@ -28,7 +23,16 @@ export default function AdminUIBuilder() {
     })();
   }, []);
 
-  const isAdmin = me?.role === "admin";
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ui_prompt_lab_nodes");
+      const savedHist = localStorage.getItem("ui_prompt_lab_history");
+      if (saved) setNodes(JSON.parse(saved));
+      if (savedHist) setHistory(JSON.parse(savedHist));
+    } catch (_) {
+      // ignore
+    }
+  }, []);
 
   const systemInstructions = useMemo(
     () => `You are a UI generator that outputs a JSON describing a React UI built with TailwindCSS and shadcn/ui.
@@ -47,10 +51,9 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
     []
   );
 
-  const handleGenerate = async (extra = "") => {
-    const userMsg = (prompt + (extra ? "\n\n" + extra : "")).trim();
+  const handleRefine = async () => {
+    const userMsg = prompt.trim();
     if (!userMsg) return;
-
     setIsGenerating(true);
 
     const convo = [
@@ -89,15 +92,10 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
     const newNodes = Array.isArray(res.nodes) ? res.nodes : [];
     setHistory(newHistory);
     setNodes(newNodes);
-    localStorage.setItem('ui_prompt_lab_nodes', JSON.stringify(newNodes));
-    localStorage.setItem('ui_prompt_lab_history', JSON.stringify(newHistory));
+    localStorage.setItem("ui_prompt_lab_nodes", JSON.stringify(newNodes));
+    localStorage.setItem("ui_prompt_lab_history", JSON.stringify(newHistory));
     setIsGenerating(false);
-  };
-
-  const handleOpenPreview = () => {
-    localStorage.setItem('ui_prompt_lab_nodes', JSON.stringify(nodes));
-    localStorage.setItem('ui_prompt_lab_history', JSON.stringify(history));
-    navigate(createPageUrl('GeneratedUI'));
+    setPrompt("");
   };
 
   const renderNode = (node, idx) => {
@@ -130,27 +128,27 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
         );
       case "button":
         return (
-          <Button key={idx} variant={p.variant || "default"} size={p.size || "md"}>
+          <button key={idx} className="px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white hover:bg-white/20">
             {p.label || "Button"}
-          </Button>
+          </button>
         );
       case "input":
-        return <Input key={idx} placeholder={p.placeholder || "Type..."} />;
+        return <input key={idx} placeholder={p.placeholder || "Type..."} className="px-3 py-2 rounded-md bg-white/5 border border-white/20 text-white placeholder-white/40" />;
       case "textarea":
-        return <Textarea key={idx} placeholder={p.placeholder || "Type..."} className="min-h-[100px]" />;
+        return <textarea key={idx} placeholder={p.placeholder || "Type..."} className="px-3 py-2 rounded-md bg-white/5 border border-white/20 text-white placeholder-white/40 min-h-[100px]" />;
       case "card":
         return (
-          <Card key={idx} className="bg-white/5 border-white/10 text-white">
+          <div key={idx} className="bg-white/5 border border-white/10 rounded-xl text-white p-4">
             {(p.title || p.description) && (
-              <CardHeader>
-                {p.title && <CardTitle className="text-white">{p.title}</CardTitle>}
+              <div className="mb-3">
+                {p.title && <div className="text-lg font-semibold">{p.title}</div>}
                 {p.description && <div className="text-white/60 text-sm">{p.description}</div>}
-              </CardHeader>
+              </div>
             )}
-            <CardContent>
+            <div>
               {children.length ? children.map((c, i) => renderNode(c, `${idx}-c-${i}`)) : <div className="text-white/60 text-sm">Card content</div>}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       case "image":
         return (
@@ -163,7 +161,7 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
           />
         );
       case "badge":
-        return <Badge key={idx} className="w-fit">{p.text || "Badge"}</Badge>;
+        return <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded bg-white/10 border border-white/20 text-white text-xs w-fit">{p.text || "Badge"}</span>;
       case "list": {
         const items = Array.isArray(p.items) ? p.items : ["Item 1", "Item 2"]; 
         return (
@@ -187,86 +185,49 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
     );
   }
 
-  if (!isAdmin) {
+  if (me?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center p-8" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-        <div className="max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
-          <ShieldAlert className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <div className="text-white font-semibold mb-2">Admin Access Required</div>
-          <div className="text-white/60 text-sm">Only admins can use the UI Prompt Lab.</div>
-        </div>
+        <div className="text-white/70">Admin access required.</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-10" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-white/10 flex items-center justify-center text-white">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">UI Prompt Lab</h1>
+    <div className="min-h-screen relative p-6 md:p-10" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+      {/* Exit Button */}
+      <button
+        onClick={() => navigate(createPageUrl('AdminUIBuilder'))}
+        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center"
+        title="Exit to UI Prompt Lab"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Generated UI Full Page */}
+      <div className="max-w-7xl mx-auto text-white">
+        {nodes && nodes.length ? (
+          <div className="space-y-4">
+            {nodes.map((n, i) => renderNode(n, i))}
           </div>
-          <Badge className="bg-white/10 border-white/20 text-white">Admin</Badge>
-        </div>
+        ) : (
+          <div className="text-white/60">No UI generated yet. Return to the lab and generate one.</div>
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Prompt Panel */}
-          <Card className="bg-white/5 border-white/10 text-white">
-            <CardHeader>
-              <CardTitle>Describe the UI you want</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Example: A 2-column dashboard with a stats card, a list of tasks, and a CTA button to create a new task"
-                className="min-h-[140px]"
-              />
-              <div className="flex items-center gap-3">
-                <Button onClick={() => handleGenerate()} disabled={isGenerating} className="gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  {isGenerating ? "Generating..." : "Generate UI"}
-                </Button>
-                <Button variant="outline" onClick={handleOpenPreview} disabled={!nodes.length} className="gap-2">
-                  Full Page Preview
-                </Button>
-                <span className="text-white/40 text-sm">Add more instructions and click again to refine.</span>
-              </div>
-
-              {history.length > 0 && (
-                <div className="pt-2">
-                  <Separator className="bg-white/10 mb-4" />
-                  <div className="max-h-40 overflow-auto space-y-2 pr-1">
-                    {history.map((m, i) => (
-                      <div key={i} className={`text-xs ${m.role === 'user' ? 'text-blue-300' : 'text-white/60'}`}>
-                        <span className="uppercase mr-2 opacity-70">{m.role}:</span>
-                        {m.content.length > 300 ? m.content.slice(0, 300) + '…' : m.content}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Preview Panel */}
-          <Card className="bg-white/5 border-white/10 text-white">
-            <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {nodes && nodes.length ? (
-                <div className="space-y-4">
-                  {nodes.map((n, i) => renderNode(n, i))}
-                </div>
-              ) : (
-                <div className="text-white/50 text-sm">Your generated UI will appear here.</div>
-              )}
-            </CardContent>
-          </Card>
+      {/* Floating Prompt Refinement Bar */}
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-6 w-[92vw] md:w-[720px] bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-xl">
+        <div className="flex items-center gap-3">
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Add instructions to refine this UI (e.g., add a hero card, switch to 2 columns, make buttons outline)"
+            className="min-h-[60px] bg-white/5 border-white/10 text-white"
+          />
+          <Button onClick={handleRefine} disabled={isGenerating} className="shrink-0 gap-2">
+            <Sparkles className="w-4 h-4" />
+            {isGenerating ? 'Refining...' : 'Apply'}
+          </Button>
         </div>
       </div>
     </div>

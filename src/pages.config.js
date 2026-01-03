@@ -40,6 +40,7 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import AdminUIBuilder from './pages/AdminUIBuilder';
+import GeneratedUI from './pages/GeneratedUI';
 import __Layout from './Layout.jsx';
 
 
@@ -86,6 +87,7 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "AdminUIBuilder": AdminUIBuilder,
+    "GeneratedUI": GeneratedUI,
 }
 
 export const pagesConfig = {
