@@ -1517,61 +1517,65 @@ export default function LunaTemplate() {
             {/* Divider Line */}
             <div className="w-px bg-white/10" />
 
-            {/* Right Content Area */}
-            <div className="flex-1 overflow-hidden">
-              <AnimatePresence mode="wait">
-                {!consoleSelection ? (
-                  <motion.div
-                    key="no-selection"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="w-full h-full flex items-center justify-center"
-                  >
-                    <p className="text-white/40 text-lg">Select an option from the left menu</p>
-                  </motion.div>
-                ) : consoleSelection === 'story' ? (
-                  <motion.div
-                    key="story"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="w-full h-full"
-                  >
-                    <AIStoryOverlay onClose={() => setConsoleSelection(null)} isInline />
-                  </motion.div>
-                ) : consoleSelection === 'battle' ? (
-                  <motion.div
-                    key="battle"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="w-full h-full"
-                  >
-                    <BattleModeOverlay onClose={() => setConsoleSelection(null)} isInline />
-                  </motion.div>
-                ) : consoleSelection === 'skill-tree' ? (
-                  <motion.div
-                    key="skill-tree"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="w-full h-full"
-                  >
-                    <GenreMastery onClose={() => setConsoleSelection(null)} isInline />
-                  </motion.div>
-                ) : consoleSelection === 'season-pass' ? (
-                  <motion.div
-                    key="season-pass"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="w-full h-full"
-                  >
-                    <SeasonalPassContent />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
+            {/* Right Content Area (fills from divider to far right, under header) */}
+            <div className="flex-1 p-6 pt-4 overflow-hidden">
+              <div className="relative w-full h-[calc(100vh-6rem)]">{/* ~under header space */}
+                <AnimatePresence mode="wait">
+                  {!consoleSelection ? (
+                    <motion.div
+                      key="no-selection"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <p className="text-white/40 text-lg">Select an option from the left menu</p>
+                    </motion.div>
+                  ) : consoleSelection === 'story' ? (
+                    <motion.div
+                      key="story"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="absolute inset-0"
+                    >
+                      <AIStoryOverlay onClose={() => setConsoleSelection(null)} isInline />
+                    </motion.div>
+                  ) : consoleSelection === 'battle' ? (
+                    <motion.div
+                      key="battle"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="absolute inset-0"
+                    >
+                      <BattleModeOverlay onClose={() => setConsoleSelection(null)} isInline />
+                    </motion.div>
+                  ) : consoleSelection === 'skill-tree' ? (
+                    <motion.div
+                      key="skill-tree"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="absolute inset-0"
+                    >
+                      <GenreMastery onClose={() => setConsoleSelection(null)} isInline />
+                    </motion.div>
+                  ) : consoleSelection === 'season-pass' ? (
+                    <motion.div
+                      key="season-pass"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="absolute inset-0"
+                    >
+                      <div className="w-full h-full rounded-2xl overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/10">
+                        <SeasonalPassContent />
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         ) : uiVisible ? (
