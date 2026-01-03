@@ -1435,15 +1435,12 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
           >
-            <motion.button
+            {/* Holographic tile */}
+            <HolographicTile
+              Icon={BookOpen}
+              label="AI Story"
               onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-64 h-64 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-            >
-              <BookOpen className="w-16 h-16 mb-4" />
-              <span className="text-xl font-bold">AI Story</span>
-            </motion.button>
+            />
             <motion.button
               onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
               whileHover={{ scale: 1.05 }}
