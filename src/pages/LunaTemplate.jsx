@@ -916,8 +916,8 @@ export default function LunaTemplate() {
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
 
-    // Handle sub-tabs (including console)
-    if (panel === 'console' || panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    // Handle sub-tabs (including console, seasonalpass, skilltree)
+    if (panel === 'console' || panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'skilltree' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -2312,9 +2312,18 @@ export default function LunaTemplate() {
                   </div>
                 </div>
               )}
+              {activeSubTab === 'seasonalpass' && (
+                <div className="h-full overflow-y-auto">
+                  <SeasonalPassContent />
+                </div>
+              )}
+              {activeSubTab === 'skilltree' && (
+                <div className="h-full overflow-hidden">
+                  <GenreMastery onClose={() => navigate(createPageUrl('LunaTemplate'))} />
+                </div>
+              )}
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <div className="text-white p-8">Blacksmith Content Here</div>}
-              {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
               {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>

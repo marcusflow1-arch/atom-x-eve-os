@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
-                      LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
+                      LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar, Plus
                     } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
 import { ThemeBackground } from '@/components/shared/ThemeSystem';
@@ -660,16 +660,28 @@ function LayoutContent({ children, currentPageName }) {
                                                                                   </button>
 
                                                                                   <button
-                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/seasonalpass') ? 'LunaTemplate' : 'SeasonalPass'))}
+                                                                                    onClick={() => {
+                                                                                      const isSeasonalPass = searchParams.get('panel') === 'seasonalpass';
+                                                                                      navigate(createPageUrl('LunaTemplate') + (isSeasonalPass ? '?panel=skilltree' : '?panel=seasonalpass'));
+                                                                                    }}
                                                                                     className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                      location.pathname.toLowerCase().includes('/seasonalpass')
+                                                                                      searchParams.get('panel') === 'seasonalpass' || searchParams.get('panel') === 'skilltree'
                                                                                         ? 'bg-white/10 border-white/20 text-white'
                                                                                         : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
                                                                                     }`}
                                                                                   >
                                                                                     <span className="flex items-center gap-2">
-                                                                                      <Crown className="w-4 h-4" />
-                                                                                      {location.pathname.toLowerCase().includes('/seasonalpass') ? 'Dashboard' : 'Season Pass'}
+                                                                                      {searchParams.get('panel') === 'seasonalpass' ? (
+                                                                                        <>
+                                                                                          <Layers className="w-4 h-4" />
+                                                                                          Skill Tree
+                                                                                        </>
+                                                                                      ) : (
+                                                                                        <>
+                                                                                          <Crown className="w-4 h-4" />
+                                                                                          Season Pass
+                                                                                        </>
+                                                                                      )}
                                                                                     </span>
                                                                                   </button>
 
