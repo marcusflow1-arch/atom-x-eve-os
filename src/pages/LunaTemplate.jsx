@@ -917,7 +917,7 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
 
-    // Handle sub-tabs
+    // Handle sub-tabs (not console - console is handled inline)
     if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
@@ -1424,13 +1424,14 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
 
-      {/* Console Mode - Below Header */}
-      <AnimatePresence>
-        {showConsoleMode && (
+      {/* Main Content Area - Switches based on Console Mode */}
+      <AnimatePresence mode="wait">
+        {showConsoleMode ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            key="console-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
           >
             <motion.button
@@ -1461,13 +1462,15 @@ export default function LunaTemplate() {
               <span className="text-xl font-bold">AI Skill Tree</span>
             </motion.button>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content Area */}
-      {uiVisible && !showConsoleMode &&
-        <div className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center" style={{ display: uiVisible ? 'flex' : 'none' }}>
-          <AnimatePresence mode="wait">
+        ) : uiVisible ? (
+          <motion.div 
+            key="loadout-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center"
+          >
+            <AnimatePresence mode="wait">
             {false &&
               <motion.div
                 key="hidden-ui"
@@ -1708,10 +1711,10 @@ export default function LunaTemplate() {
                   }
                 </AnimatePresence>
               </motion.div>
-            }
-          </AnimatePresence>
-        </div>
-      }
+            </AnimatePresence>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* Settings Overlay */}
       <AnimatePresence>
