@@ -1572,8 +1572,8 @@ export default function LunaTemplate() {
                     >
                       <SeasonalPassContent />
                     </motion.div>
-                  ) : null
-                </AnimatePresence>
+                  ) : null}
+                                   </AnimatePresence>
               </div>
             </div>
           </motion.div>
