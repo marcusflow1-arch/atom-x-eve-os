@@ -346,11 +346,6 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
             )}
          </div>
       </div>
-
-      {/* Connection Line Segment */}
-      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
-        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
-      `} />
     </motion.div>
   );
 };
