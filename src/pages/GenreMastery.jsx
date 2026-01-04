@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import ShinyCard from '@/components/shared/ShinyCard';
 
 // --- MOCK DATA ---
 
@@ -193,77 +194,80 @@ const LimitedEditionCard = ({ card, onClick }) => {
   const rarity = rarityColors[card.rarity];
   
   return (
-    <motion.div
-      whileHover={{ scale: 1.03, y: -8 }}
-      onClick={() => onClick(card)}
+    <ShinyCard
+      onClick={() => onClick && onClick(card)}
       className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0"
-      style={{
-        background: 'rgba(148, 163, 184, 0.06)',
-        backdropFilter: 'blur(50px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-        border: '1px solid rgba(148, 163, 184, 0.15)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-      }}
     >
-      {/* Liquid Glass Shine Effect */}
-      <motion.div
-        className="absolute inset-0 opacity-15 pointer-events-none"
+      <div
+        className="w-full h-full relative"
         style={{
-          background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+          background: 'rgba(148, 163, 184, 0.06)',
+          backdropFilter: 'blur(50px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+          border: '1px solid rgba(148, 163, 184, 0.15)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
         }}
-        animate={{
-          x: ['-100%', '200%'],
-        }}
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-          repeatDelay: 4,
-        }}
-      />
-      
-      {/* Card Image */}
-      <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
-      
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-      
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <Badge className={`${rarity.bg} ${rarity.text} border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5`}>
-            {card.rarity}
-          </Badge>
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
-            {card.type}
-          </Badge>
+      >
+        {/* Liquid Glass Shine Effect */}
+        <motion.div
+          className="absolute inset-0 opacity-15 pointer-events-none"
+          style={{
+            background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+          }}
+          animate={{
+            x: ['-100%', '200%'],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            repeatDelay: 4,
+          }}
+        />
+        
+        {/* Card Image */}
+        <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+        
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <Badge className={`${rarity.bg} ${rarity.text} border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5`}>
+              {card.rarity}
+            </Badge>
+            <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
+              {card.type}
+            </Badge>
+          </div>
+          
+          <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
+          <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
+          
+          {/* Rarity Indicator */}
+          <div className="flex items-center gap-0.5 mt-2">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
+              />
+            ))}
+          </div>
         </div>
         
-        <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
-        <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
-        
-        {/* Rarity Indicator */}
-        <div className="flex items-center gap-0.5 mt-2">
-          {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
-            />
-          ))}
-        </div>
+        {/* Liquid Glass Border */}
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
+          animate={{
+            opacity: [0.25, 0.5, 0.25],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+          }}
+        />
       </div>
-      
-      {/* Liquid Glass Border */}
-      <motion.div
-        className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
-        animate={{
-          opacity: [0.25, 0.5, 0.25],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-        }}
-      />
-    </motion.div>
+    </ShinyCard>
   );
 };
 
