@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../auth/AuthContext';
+import ShinyCard from '../shared/ShinyCard';
 
 // Rarity System
 const rarityColors = {
@@ -84,14 +85,16 @@ const limitedEditionCards = [
   }
 ];
 
-// Mock Season Pass Levels (1-100)
+// Mock Season Pass Levels (1-100) with card rewards
 const generateSeasonLevels = () => {
   const levels = [];
   const rewardTypes = ['Ability', 'Equipment', 'Companion', 'Currency', 'XP Boost'];
-  const rarities = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythical', 'Godlike'];
+  
+  const getRewardImage = (level) => {
+    return `https://source.unsplash.com/random/500x500?weapon,armor,tech&sig=${level}`;
+  };
   
   for (let i = 1; i <= 100; i++) {
-    const isPremium = i % 5 === 0;
     const rarity = i % 25 === 0 ? 'Godlike' : 
                    i % 20 === 0 ? 'Mythical' :
                    i % 10 === 0 ? 'Legendary' :
@@ -100,42 +103,47 @@ const generateSeasonLevels = () => {
     
     levels.push({
       level: i,
-      xpRequired: i * 1000,
-      freeReward: {
-        name: `Level ${i} Reward`,
+      isUnlocked: i <= 12,
+      season: 1,
+      cardReward: {
+        name: `Season Reward ${i}`,
         type: rewardTypes[Math.floor(Math.random() * rewardTypes.length)],
         rarity: rarity,
-        icon: '🎁'
+        image: getRewardImage(i),
+        description: `Exclusive Season 1 reward for reaching level ${i}.`
       },
-      premiumReward: isPremium ? {
-        name: `Premium ${i} Reward`,
-        type: rewardTypes[Math.floor(Math.random() * rewardTypes.length)],
-        rarity: rarity === 'Common' ? 'Epic' : rarity,
-        icon: '💎'
-      } : null
+      equipmentReward: {
+        name: `Elite Gear Tier ${i}`,
+        type: 'Equipment',
+        rarity: rarity === 'Godlike' ? 'Mythical' : rarity === 'Common' ? 'Common' : rarity,
+        image: `https://source.unsplash.com/random/300x300?armor,weapon&sig=${i}`,
+        description: `High-performance equipment unlocked at level ${i}.`
+      }
     });
   }
   
   return levels;
 };
 
-// Limited Edition Card Component
+// Limited Edition Card Component with ShinyCard
 const LimitedEditionCard = ({ card, onClick }) => {
   const rarity = rarityColors[card.rarity];
   
   return (
-    <motion.div
-      whileHover={{ scale: 1.03, y: -8 }}
-      onClick={() => onClick(card)}
-      className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl"
-      style={{
-        background: 'rgba(255, 255, 255, 0.06)',
-        backdropFilter: 'blur(50px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-      }}
+    <ShinyCard
+      onClick={() => onClick && onClick(card)}
+      className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0"
     >
+      <div
+        className="w-full h-full relative"
+        style={{
+          background: 'rgba(255, 255, 255, 0.06)',
+          backdropFilter: 'blur(50px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+        }}
+      >
       {/* Liquid Glass Shine Effect */}
       <motion.div
         className="absolute inset-0 opacity-15 pointer-events-none"
@@ -261,103 +269,88 @@ const LimitedEditionCard = ({ card, onClick }) => {
         </div>
       </div>
       
-      {/* Liquid Glass Border */}
-      <motion.div
-        className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
-        animate={{
-          opacity: [0.25, 0.5, 0.25],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-        }}
-      />
-    </motion.div>
+        {/* Liquid Glass Border */}
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
+          animate={{
+            opacity: [0.25, 0.5, 0.25],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+          }}
+        />
+      </div>
+    </ShinyCard>
   );
 };
 
-// Season Pass Level Node
-const SeasonLevelNode = ({ level, isUnlocked, isPremiumOwned, currentLevel, onClick }) => {
-  const { freeReward, premiumReward, level: levelNumber } = level;
-  const isCurrentLevel = levelNumber === currentLevel;
-  
+// Progression Node Component (From GenreMastery)
+const LevelNode = ({ levelData, onClick, isActive }) => {
+  const { level, isUnlocked, cardReward } = levelData;
+  const rarity = rarityColors[cardReward.rarity];
+  const isElite = ['Legendary', 'Mythical', 'Godlike'].includes(cardReward.rarity);
+
   return (
     <motion.div
-      whileHover="hover"
-      onClick={() => onClick(level)}
-      className={`relative flex-shrink-0 w-32 h-48 rounded-2xl cursor-pointer transition-all overflow-hidden group border ${
-        isCurrentLevel 
-          ? 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-slate-800/80' 
-          : 'border-white/10 bg-slate-900/40 hover:border-white/30 hover:bg-slate-800/60'
+      onClick={() => onClick(levelData)}
+      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-500 ${
+        isActive ? 'w-44 -translate-y-4' : 'w-28'
       }`}
     >
-      {/* Shiny Light Effect */}
-      <motion.div
-        variants={{
-          hover: { x: '250%', opacity: 1, transition: { duration: 0.8, ease: 'easeInOut' } }
-        }}
-        initial={{ x: '-150%', opacity: 0 }}
-        className="absolute inset-0 z-20 pointer-events-none w-full h-full"
-        style={{
-          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.2) 55%, transparent 80%)',
-          transform: 'skewX(-20deg)'
-        }}
-      />
+      <div className={`flex flex-col items-center gap-3 transition-all duration-300`}>
+         
+         {/* Top Info */}
+         <div className={`text-center transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 group-hover:opacity-100'}`}>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+              Lvl {level}
+            </div>
+         </div>
 
-      {/* Card Header (Level) */}
-      <div className="absolute top-2 left-0 right-0 text-center z-10">
-        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
-          isCurrentLevel 
-            ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' 
-            : 'bg-black/40 text-white/50 border-white/10'
-        }`}>
-          LVL {levelNumber}
-        </span>
+         {/* Reward Visual Container (Liquid Glass) */}
+         <div className={`
+           relative rounded-2xl transition-all duration-300 flex items-center justify-center
+           ${isActive 
+             ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` 
+             : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`
+           }
+         `}
+         style={{
+            boxShadow: isActive ? `0 0 20px ${rarity.glow?.replace('shadow-', '') || 'rgba(255,255,255,0.2)'}` : 'none'
+         }}
+         >
+            {/* Inner Glow for Rarity */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
+            
+            {/* Reward Image/Icon (Floating) */}
+            <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
+               <img src={cardReward.image} alt="Reward" className="w-full h-full object-contain drop-shadow-lg" />
+            </div>
+            
+            {/* Status Indicator (Minimalist) */}
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+               {isUnlocked ? (
+                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                    <Check className="w-3 h-3 text-black" />
+                 </div>
+               ) : (
+                 <div className="w-4 h-4 rounded-full bg-black/50 border border-white/10 flex items-center justify-center backdrop-blur-md">
+                   <Lock className="w-2.5 h-2.5 text-white/40" />
+                 </div>
+               )}
+            </div>
+
+            {/* Elite Particle Effect for rare items */}
+            {isElite && isActive && (
+               <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />
+            )}
+         </div>
       </div>
 
-      {/* Rewards Container */}
-      <div className="flex flex-col h-full pt-10 pb-2 px-2 gap-2">
-        {/* Premium Reward */}
-        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
-            premiumReward 
-                ? (isPremiumOwned && isUnlocked ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-yellow-500/5 border border-dashed border-yellow-500/20') 
-                : 'bg-white/5 border border-dashed border-white/10'
-        }`}>
-            {premiumReward ? (
-                <>
-                    <div className="text-2xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">{premiumReward.icon}</div>
-                    {(!isPremiumOwned || !isUnlocked) && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
-                            <Lock className="w-4 h-4 text-white/40" />
-                        </div>
-                    )}
-                    <div className="absolute top-1 right-1"><Crown className="w-3 h-3 text-yellow-500/50" /></div>
-                </>
-            ) : (
-                <span className="text-white/10 text-[10px]">Empty</span>
-            )}
-        </div>
-
-        {/* Free Reward */}
-        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
-            freeReward 
-                ? (isUnlocked ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-500/5 border border-dashed border-blue-500/20') 
-                : 'bg-white/5 border border-dashed border-white/10'
-        }`}>
-             {freeReward ? (
-                <>
-                    <div className="text-2xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">{freeReward.icon}</div>
-                    {!isUnlocked && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
-                            <Lock className="w-4 h-4 text-white/40" />
-                        </div>
-                    )}
-                </>
-            ) : (
-                <span className="text-white/10 text-[10px]">Empty</span>
-            )}
-        </div>
-      </div>
+      {/* Connection Line Segment */}
+      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
+        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
+      `} />
     </motion.div>
   );
 };
@@ -399,90 +392,136 @@ const TrackSelector = ({ activeTrack, onTrackChange }) => {
   );
 };
 
-// Preview Modal
-const PreviewModal = ({ item, onClose }) => {
-  if (!item) return null;
-  
-  const rarity = rarityColors[item.rarity || 'Common'];
-  
+// Reward Preview Modal (From GenreMastery)
+const RewardModal = ({ level, onClose }) => {
+  if (!level) return null;
+  const cardRarity = rarityColors[level.cardReward.rarity];
+  const equipRarity = rarityColors[level.equipmentReward.rarity];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-8"
+      className="fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center p-8"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.8, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.8, y: 50 }}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className={`relative max-w-4xl w-full bg-slate-900 rounded-3xl border-4 ${rarity.border} ${rarity.glow} shadow-2xl overflow-hidden`}
+        className="max-w-5xl w-full relative flex flex-col md:flex-row items-start gap-8"
+        style={{
+          background: 'rgba(100, 120, 140, 0.12)',
+          backdropFilter: 'blur(30px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '24px',
+          padding: '48px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        }}
       >
-        {/* Close Button */}
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
-        >
-          <X className="w-6 h-6 text-white" />
+            onClick={onClose}
+            className="absolute -top-12 right-0 z-20 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
         </button>
-        
-        <div className="grid md:grid-cols-2 gap-6 p-8">
-          {/* Left: Image */}
-          <div className="relative">
-            <img 
-              src={item.image} 
-              alt={item.name} 
-              className="w-full h-96 object-cover rounded-2xl"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl" />
-          </div>
+
+        {/* Left Side: Main Reward Card with Info Below */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-4">
+          <LimitedEditionCard 
+            card={level.cardReward} 
+            onClick={null}
+            className="w-64 h-80"
+          />
           
-          {/* Right: Details */}
-          <div className="flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Badge className={`${rarity.bg} ${rarity.text} text-sm px-4 py-1`}>
-                  {item.rarity}
-                </Badge>
-                <Badge variant="outline" className="text-sm">
-                  {item.type}
-                </Badge>
+          <div className="text-center">
+            <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-2 px-3 py-1 text-xs backdrop-blur-md`}>
+              SEASON {level.season} • {level.cardReward.rarity.toUpperCase()}
+            </Badge>
+            <h2 className="text-3xl font-black text-white tracking-tight">{level.cardReward.name}</h2>
+          </div>
+        </div>
+
+        {/* Right Side: Details & Bonus Equipment */}
+        <div className="flex-1 flex flex-col gap-6">
+          {/* Reward Details Section */}
+          <div className="relative">
+            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest">Reward Details</h3>
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+              {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-400" />
+                  <span className="text-slate-300 text-sm">Item Type</span>
+                </div>
+                <span className="text-white font-bold text-sm">{level.cardReward.type}</span>
               </div>
-              
-              <h2 className="text-4xl font-black text-white mb-4">{item.name}</h2>
-              <p className="text-lg text-white/70 mb-6">{item.description}</p>
-              
-              {/* Stats */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-400">Power Level</span>
-                  <span className="text-white font-bold">9,500</span>
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-slate-300 text-sm">Power Score</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-400">Cooldown</span>
-                  <span className="text-white font-bold">45s</span>
+                <span className="text-white font-bold text-sm">850</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <span className="text-slate-300 text-sm">Card ID</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-400">Track</span>
-                  <span className="text-white font-bold capitalize">{item.track}</span>
-                </div>
+                <span className="text-white font-bold text-sm font-mono">#{level.level.toString().padStart(4, '0')}</span>
               </div>
             </div>
+
+            <Button 
+              className={`w-full py-4 text-sm font-bold tracking-wide rounded-lg transition-all ${
+                level.isUnlocked 
+                  ? 'bg-white text-black hover:bg-slate-200' 
+                  : 'bg-white/10 text-white/40 cursor-not-allowed hover:bg-white/10'
+              }`}
+            >
+              {level.isUnlocked ? (
+                <span className="flex items-center justify-center gap-2"><Check className="w-4 h-4" /> CLAIM REWARD</span>
+              ) : (
+                <span className="flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> LOCKED (Lvl {level.level})</span>
+              )}
+            </Button>
+          </div>
+          
+          {/* Bonus Equipment Section */}
+          <div className="relative border-t border-white/10 pt-6">
+            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest flex items-center gap-2">
+              <Shield className="w-3 h-3 text-blue-400" /> Bonus Equipment
+            </h3>
             
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                <Play className="w-4 h-4 mr-2" />
-                Preview Animation
-              </Button>
-              <Button variant="outline" className="w-12">
-                <RotateCw className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* Small Equipment Card */}
+              <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+                <img 
+                  src={level.equipmentReward.image} 
+                  alt={level.equipmentReward.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Badge className={`absolute bottom-1 left-1 right-1 ${equipRarity.bg} ${equipRarity.text} text-[8px] px-1 py-0.5 justify-center`}>
+                  {level.equipmentReward.rarity}
+                </Badge>
+              </div>
+              
+              {/* Equipment Info */}
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-white mb-1">{level.equipmentReward.name}</h4>
+                <p className="text-xs text-slate-400 line-clamp-2">{level.equipmentReward.description}</p>
+              </div>
             </div>
           </div>
         </div>
+
       </motion.div>
     </motion.div>
   );
@@ -495,6 +534,7 @@ export default function SeasonalPassContent() {
   const [currentXP, setCurrentXP] = useState(0);
   const [isPremiumOwned, setIsPremiumOwned] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [viewingLevel, setViewingLevel] = useState(null);
   const [seasonLevels] = useState(generateSeasonLevels());
 
   // Load user's season pass data from their profile
@@ -718,7 +758,7 @@ export default function SeasonalPassContent() {
           </div>
         </div>
         
-        {/* Season Pass Progress Track */}
+        {/* Season Pass Progress Track - New GenreMastery Style */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-white">
             <Trophy className="w-6 h-6 text-blue-500" />
@@ -726,53 +766,52 @@ export default function SeasonalPassContent() {
           </h2>
           
           {/* Scroll Controls */}
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 p-4 bg-white/5 rounded-2xl border border-white/5">
             <Button 
-              variant="outline" 
-              size="sm"
+              variant="ghost" 
+              size="icon"
+              className="bg-white/5 hover:bg-white/10 text-white"
               onClick={() => {
                 if (progressRef.current) {
                   progressRef.current.scrollLeft -= 400;
                 }
               }}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 text-center text-sm text-slate-400">
-              Scroll or drag to explore all 100 levels
+            <div className="flex-1 text-center text-sm text-slate-400 font-medium">
+              Navigate through 100 Levels of Season Progression
             </div>
             <Button 
-              variant="outline" 
-              size="sm"
+              variant="ghost" 
+              size="icon"
+              className="bg-white/5 hover:bg-white/10 text-white"
               onClick={() => {
                 if (progressRef.current) {
                   progressRef.current.scrollLeft += 400;
                 }
               }}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
           
-          {/* Progress Track */}
+          {/* Progress Track - Updated to use LevelNode */}
           <div 
             ref={progressRef}
-            className="relative flex gap-4 overflow-x-auto pb-8 pt-6 px-6 rounded-xl scrollbar-hide"
+            className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x"
             style={{ 
               scrollBehavior: 'smooth',
-              background: 'rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(50px) saturate(200%)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
             }}
           >
             {seasonLevels.map((level) => (
-              <SeasonLevelNode
+              <LevelNode
                 key={level.level}
-                level={level}
-                isUnlocked={level.level <= currentLevel}
-                isPremiumOwned={isPremiumOwned}
-                currentLevel={currentLevel}
-                onClick={(lvl) => console.log('Clicked level:', lvl)}
+                levelData={level}
+                isActive={level.level === currentLevel}
+                onClick={setViewingLevel}
               />
             ))}
           </div>
@@ -809,6 +848,13 @@ export default function SeasonalPassContent() {
       <AnimatePresence>
         {selectedItem && (
           <PreviewModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Reward Detail Overlay */}
+      <AnimatePresence>
+        {viewingLevel && (
+          <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
         )}
       </AnimatePresence>
       
