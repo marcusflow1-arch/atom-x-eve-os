@@ -286,7 +286,14 @@ const RewardModal = ({ level, onClose }) => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="max-w-6xl w-full bg-transparent relative flex flex-col md:flex-row items-start gap-8"
+        className="max-w-5xl w-full relative flex flex-col md:flex-row items-start gap-8"
+        style={{
+          background: 'rgba(20, 25, 35, 0.95)',
+          backdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
+          padding: '48px'
+        }}
       >
         <button
             onClick={onClose}
@@ -295,74 +302,97 @@ const RewardModal = ({ level, onClose }) => {
             <X className="w-6 h-6 text-white" />
         </button>
 
-        {/* Left Side: Main Reward Card */}
-        <div className="flex-shrink-0">
-          <LimitedEditionCard 
-            card={level.cardReward} 
-            onClick={null}
-            className="w-80 h-[480px]"
+        {/* Left Side: Main Reward Card with Info Below */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-4">
+          <motion.img 
+            src={level.cardReward.image}
+            alt={level.cardReward.name}
+            className="w-80 h-96 object-contain rounded-xl"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
+          
+          <div className="text-center">
+            <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-2 px-3 py-1 text-xs backdrop-blur-md`}>
+              SEASON {level.season} • {level.cardReward.rarity.toUpperCase()}
+            </Badge>
+            <h2 className="text-3xl font-black text-white tracking-tight">{level.cardReward.name}</h2>
+          </div>
         </div>
 
-        {/* Right Side: Details & Bonus Equipment Card */}
+        {/* Right Side: Details & Bonus Equipment */}
         <div className="flex-1 flex flex-col gap-6">
-          {/* Details Section */}
-          <div className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 relative overflow-hidden">
-            <div className={`absolute inset-0 bg-gradient-to-br ${cardRarity.bg} opacity-5`} />
-            
-            <div className="relative z-10">
-              <h3 className="text-lg font-bold text-white mb-1 uppercase tracking-widest text-white/50">Reward Details</h3>
-              <p className="text-lg text-slate-300 mb-6 leading-relaxed font-light">
-                {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
-              </p>
+          {/* Reward Details Section */}
+          <div className="relative">
+            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest">Reward Details</h3>
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+              {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
+            </p>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-blue-400" />
-                    <span className="text-slate-300 font-medium">Item Type</span>
-                  </div>
-                  <span className="text-white font-bold">{level.cardReward.type}</span>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-400" />
+                  <span className="text-slate-300 text-sm">Item Type</span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-yellow-400" />
-                    <span className="text-slate-300 font-medium">Power Score</span>
-                  </div>
-                  <span className="text-white font-bold">850</span>
-                </div>
+                <span className="text-white font-bold text-sm">{level.cardReward.type}</span>
               </div>
-
-              <Button 
-                className={`w-full py-6 text-lg font-bold tracking-wide rounded-xl transition-all ${
-                  level.isUnlocked 
-                    ? 'bg-white text-black hover:bg-slate-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
-                    : 'bg-white/10 text-white/40 cursor-not-allowed hover:bg-white/10'
-                }`}
-              >
-                {level.isUnlocked ? (
-                  <span className="flex items-center gap-2"><Check className="w-5 h-5" /> CLAIM REWARD</span>
-                ) : (
-                  <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> LOCKED (Lvl {level.level})</span>
-                )}
-              </Button>
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-slate-300 text-sm">Power Score</span>
+                </div>
+                <span className="text-white font-bold text-sm">850</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <span className="text-slate-300 text-sm">Card ID</span>
+                </div>
+                <span className="text-white font-bold text-sm font-mono">#{level.level.toString().padStart(4, '0')}</span>
+              </div>
             </div>
+
+            <Button 
+              className={`w-full py-4 text-sm font-bold tracking-wide rounded-lg transition-all ${
+                level.isUnlocked 
+                  ? 'bg-white text-black hover:bg-slate-200' 
+                  : 'bg-white/10 text-white/40 cursor-not-allowed hover:bg-white/10'
+              }`}
+            >
+              {level.isUnlocked ? (
+                <span className="flex items-center justify-center gap-2"><Check className="w-4 h-4" /> CLAIM REWARD</span>
+              ) : (
+                <span className="flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> LOCKED (Lvl {level.level})</span>
+              )}
+            </Button>
           </div>
           
-          {/* Bonus Equipment Card */}
-          <div className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 relative overflow-hidden">
-            <div className={`absolute inset-0 bg-gradient-to-br ${equipRarity.bg} opacity-5`} />
+          {/* Bonus Equipment Section */}
+          <div className="relative border-t border-white/10 pt-6">
+            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest flex items-center gap-2">
+              <Shield className="w-3 h-3 text-blue-400" /> Bonus Equipment
+            </h3>
             
-            <div className="relative z-10">
-              <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-400" /> Bonus Equipment
-              </h3>
+            <div className="flex items-center gap-4">
+              {/* Small Equipment Card */}
+              <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+                <img 
+                  src={level.equipmentReward.image} 
+                  alt={level.equipmentReward.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <Badge className={`absolute bottom-1 left-1 right-1 ${equipRarity.bg} ${equipRarity.text} text-[8px] px-1 py-0.5 justify-center`}>
+                  {level.equipmentReward.rarity}
+                </Badge>
+              </div>
               
-              <LimitedEditionCard 
-                card={level.equipmentReward} 
-                onClick={null}
-                className="w-full h-64"
-              />
+              {/* Equipment Info */}
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-white mb-1">{level.equipmentReward.name}</h4>
+                <p className="text-xs text-slate-400 line-clamp-2">{level.equipmentReward.description}</p>
+              </div>
             </div>
           </div>
         </div>
