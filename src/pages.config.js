@@ -11,7 +11,6 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import Community from './pages/Community';
-import CreatorDashboard from './pages/CreatorDashboard';
 import CrossGameFusion from './pages/CrossGameFusion';
 import Entertainment from './pages/Entertainment';
 import EnvGuide from './pages/EnvGuide';
@@ -32,7 +31,6 @@ import Notifications from './pages/Notifications';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
-import ProfileHub from './pages/ProfileHub';
 import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
@@ -41,9 +39,9 @@ import StreamDetail from './pages/StreamDetail';
 import StreamWatch from './pages/StreamWatch';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
-import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
+import Streaming from './pages/Streaming';
 import __Layout from './Layout.jsx';
 
 
@@ -61,7 +59,6 @@ export const PAGES = {
     "Checkout": Checkout,
     "Clan": Clan,
     "Community": Community,
-    "CreatorDashboard": CreatorDashboard,
     "CrossGameFusion": CrossGameFusion,
     "Entertainment": Entertainment,
     "EnvGuide": EnvGuide,
@@ -82,7 +79,6 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
-    "ProfileHub": ProfileHub,
     "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
     "Store": Store,
@@ -91,9 +87,9 @@ export const PAGES = {
     "StreamWatch": StreamWatch,
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
-    "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
+    "Streaming": Streaming,
 }
 
 export const pagesConfig = {

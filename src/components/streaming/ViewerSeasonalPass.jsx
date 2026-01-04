@@ -1,158 +1,121 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Star, Lock, Gift } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Trophy, Zap, Star, Crown, Gift, Lock } from 'lucide-react';
 
-export default function ViewerSeasonalPass() {
-  // Mock progress state
-  const currentXP = 3250;
-  const maxXP = 5000;
-  const totalNodes = 50;
-  // Calculate progress relative to total nodes
-  const progressPercent = (currentXP / maxXP) * 100;
-  const currentLevel = Math.floor((currentXP / maxXP) * totalNodes);
+const TIER_REWARDS = [
+  { tier: 5, reward: 'Streamer Badge', icon: '🎖️', unlocked: true },
+  { tier: 10, reward: '+10% XP Boost', icon: '⚡', unlocked: true, type: 'boost' },
+  { tier: 15, reward: '+20% XP Boost', icon: '⚡⚡', unlocked: false, type: 'boost' },
+  { tier: 20, reward: 'Legendary Card Drop', icon: '🎴', unlocked: false, type: 'card' },
+  { tier: 25, reward: 'Exclusive Emote', icon: '😎', unlocked: false },
+  { tier: 30, reward: '+30% XP Boost', icon: '⚡⚡⚡', unlocked: false, type: 'boost' },
+];
+
+export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 30, streamerId }) {
+  const progress = (currentTier / maxTier) * 100;
 
   return (
-    <div 
-      className="relative w-full rounded-t-3xl overflow-hidden mt-8"
-      style={{
-        // Thick Beveled Acrylic Sheet (#4) Implementation - Full Width Bottom Bar style
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(15,23,42,0.95) 100%)',
-        backdropFilter: 'blur(30px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-        borderTop: '2px solid rgba(255,255,255,0.25)',
-        boxShadow: '0 -10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)'
-      }}
-    >
-      <div className="p-6 md:p-8">
-        <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
-                    <Crown className="text-cyan-300" size={20} />
-                </div>
-                <div>
-                    <h3 className="text-lg font-black text-white tracking-wide uppercase leading-none">Season 2: Neon Nights</h3>
-                    <p className="text-xs text-cyan-200/60 font-medium tracking-wider mt-1">XP PROGRESSION TRACK</p>
-                </div>
-            </div>
-            <Badge className="bg-black/40 text-white border border-white/10 px-3 py-1">
-                <span className="text-cyan-400 mr-1 font-bold">{currentXP.toLocaleString()}</span> / {maxXP.toLocaleString()} XP
-            </Badge>
+    <div className="bg-black/20 backdrop-blur-md border-t border-white/10 p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+            <Crown className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg">Viewer Seasonal Pass</h3>
+            <p className="text-white/40 text-xs">Watch, engage, and earn exclusive rewards</p>
+          </div>
         </div>
+        <div className="text-right">
+          <div className="text-3xl font-black text-white">
+            {currentTier}<span className="text-white/40 text-xl">/{maxTier}</span>
+          </div>
+          <p className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">Current Tier</p>
+        </div>
+      </div>
 
-        {/* The Track Container */}
-        <div className="relative w-full h-16 md:h-20 bg-black/40 rounded-full border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] overflow-hidden p-1">
+      {/* Progress Bar */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-xs text-white/60">
+          <span>Season Progress</span>
+          <span>{Math.round(progress)}%</span>
+        </div>
+        <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </motion.div>
+        </div>
+        <p className="text-white/40 text-xs">
+          {maxTier - currentTier} tiers remaining • Watch time & engagement unlocks tiers
+        </p>
+      </div>
+
+      {/* Rewards Showcase */}
+      <div>
+        <h4 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-3">Upcoming Rewards</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {TIER_REWARDS.map((reward) => {
+            const isUnlocked = reward.tier <= currentTier;
+            const isNext = reward.tier > currentTier && reward.tier <= currentTier + 5;
             
-            {/* Liquid XP Fill with Chromatic Aberration */}
-            <motion.div 
-                className="absolute top-1 left-1 bottom-1 rounded-l-full z-0 overflow-hidden"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 2, ease: "easeOut" }}
-                style={{
-                    // Refracting Cyan Light Fill (#5)
-                    background: 'linear-gradient(90deg, rgba(6,182,212,0.8), rgba(34,211,238,0.9), rgba(6,182,212,0.8))',
-                    boxShadow: '0 0 30px rgba(34,211,238,0.5), inset 0 0 15px rgba(255,255,255,0.4)',
-                }}
-            >
-                {/* Bubbles / Flow Texture */}
-                <div className="absolute inset-0 opacity-30" 
-                     style={{ 
-                         backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', 
-                         backgroundSize: '10px 10px',
-                         transform: 'scale(1.5)'
-                     }} 
-                />
+            return (
+              <motion.div
+                key={reward.tier}
+                whileHover={isNext ? { scale: 1.05 } : {}}
+                className={`relative p-4 rounded-xl border transition-all ${
+                  isUnlocked 
+                    ? 'bg-amber-500/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                    : isNext
+                    ? 'bg-white/5 border-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                    : 'bg-white/5 border-white/10 opacity-60'
+                }`}
+              >
+                {!isUnlocked && (
+                  <div className="absolute top-2 right-2">
+                    <Lock className="w-3 h-3 text-white/30" />
+                  </div>
+                )}
                 
-                {/* Chromatic Edge Effect */}
-                <div className="absolute right-0 top-0 bottom-0 w-2 bg-gradient-to-r from-transparent to-white/50 blur-sm mix-blend-overlay" />
-                <div className="absolute right-0 top-0 bottom-0 w-4 bg-purple-500/30 blur-md mix-blend-screen" style={{ transform: 'translateX(2px)' }} />
-                <div className="absolute right-0 top-0 bottom-0 w-4 bg-yellow-500/30 blur-md mix-blend-screen" style={{ transform: 'translateX(-2px)' }} />
-            </motion.div>
-
-            {/* Nodes Layer */}
-            <div className="absolute inset-0 flex items-center justify-between px-2 md:px-4 z-10 pointer-events-none">
-                {Array.from({ length: totalNodes }).map((_, index) => {
-                    const isReached = index < currentLevel;
-                    const isNext = index === currentLevel;
-                    // Only show icons for every 5th node to avoid clutter, but render dots for all
-                    const isMajorNode = (index + 1) % 5 === 0;
-                    
-                    return (
-                        <div 
-                            key={index} 
-                            className="relative flex items-center justify-center group"
-                            style={{ width: `${100 / totalNodes}%` }}
-                        >
-                            {/* Node Marker */}
-                            <div 
-                                className={`rounded-full transition-all duration-500 ${
-                                    isMajorNode 
-                                        ? 'w-3 h-3 md:w-4 md:h-4' 
-                                        : 'w-1 h-1 md:w-1.5 md:h-1.5'
-                                }`}
-                                style={{
-                                    background: isReached 
-                                        ? 'rgba(255,255,255,0.9)' 
-                                        : 'rgba(255,255,255,0.1)',
-                                    boxShadow: isReached 
-                                        ? '0 0 10px rgba(255,255,255,0.8)' 
-                                        : 'none',
-                                    border: isReached 
-                                        ? 'none' 
-                                        : '1px solid rgba(255,255,255,0.1)'
-                                }}
-                            />
-
-                            {/* Active Pulsing Drop Effect (#9) for the next claimable reward */}
-                            {isNext && (
-                                <motion.div
-                                    className="absolute"
-                                    animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.4, 0.8] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                >
-                                    <div className="w-6 h-6 rounded-full bg-red-500/40 blur-md" />
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400 to-yellow-400 opacity-80 shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
-                                </motion.div>
-                            )}
-                            
-                            {/* Tooltip for Major Nodes */}
-                            {isMajorNode && (
-                                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/10 whitespace-nowrap pointer-events-auto">
-                                    Lvl {index + 1}
-                                </div>
-                            )}
-
-                             {/* Shatter Effect (Mock Interaction) */}
-                             <motion.button
-                                className="absolute inset-[-4px] rounded-full z-20 opacity-0 cursor-pointer"
-                                whileTap={{ scale: 1.5, opacity: 0.5 }}
-                                onClick={(e) => {
-                                    // Create simple shatter visual (could be expanded with particles)
-                                    const rect = e.target.getBoundingClientRect();
-                                    const ripple = document.createElement('div');
-                                    ripple.className = 'fixed rounded-full border border-cyan-400 bg-cyan-400/20 z-[100] pointer-events-none';
-                                    ripple.style.width = '20px';
-                                    ripple.style.height = '20px';
-                                    ripple.style.left = `${rect.left}px`;
-                                    ripple.style.top = `${rect.top}px`;
-                                    ripple.style.animation = 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite';
-                                    document.body.appendChild(ripple);
-                                    setTimeout(() => ripple.remove(), 1000);
-                                }}
-                             />
-                        </div>
-                    );
-                })}
-            </div>
-
+                <div className="text-center space-y-2">
+                  <div className="text-3xl">{reward.icon}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40">
+                    Tier {reward.tier}
+                  </div>
+                  <p className={`text-xs font-medium leading-tight ${
+                    isUnlocked ? 'text-amber-300' : isNext ? 'text-cyan-300' : 'text-white/60'
+                  }`}>
+                    {reward.reward}
+                  </p>
+                  
+                  {reward.type === 'boost' && isUnlocked && (
+                    <div className="pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-green-400">
+                        <Zap className="w-3 h-3" />
+                        <span>ACTIVE</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
+      </div>
 
-        <div className="mt-4 flex justify-between text-xs text-white/40 font-mono uppercase tracking-wider">
-            <span>Start</span>
-            <span>Season Progress</span>
-            <span>Mastery</span>
+      {/* Active Boosts Display */}
+      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl">
+        <Zap className="w-5 h-5 text-green-400" />
+        <div className="flex-1">
+          <p className="text-white font-bold text-sm">Active Viewer Boost</p>
+          <p className="text-white/60 text-xs">+10% XP while watching this stream</p>
         </div>
+        <div className="text-2xl font-black text-green-400">+10%</div>
       </div>
     </div>
   );
