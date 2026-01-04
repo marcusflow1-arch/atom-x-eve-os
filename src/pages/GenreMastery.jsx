@@ -146,7 +146,7 @@ const rarityColors = {
   Godlike: { bg: 'bg-gradient-to-br from-purple-600 via-pink-600 to-yellow-600', border: 'border-pink-400', text: 'text-white', glow: 'shadow-pink-500/80' }
 };
 
-// Generate Mock Progression Levels
+// Generate Mock Progression Levels (1-50)
 const generateProgressionLevels = (genreId, genreName) => {
   const levels = [];
   
@@ -156,16 +156,17 @@ const generateProgressionLevels = (genreId, genreName) => {
     return `https://source.unsplash.com/random/500x500?${id},weapon,armor,transparent&sig=${level}`;
   };
   
-  for (let i = 1; i <= 20; i++) {
-    const rarity = i === 20 ? 'Godlike' : 
-                   i === 15 ? 'Mythical' :
-                   i === 10 ? 'Legendary' :
-                   i === 5 ? 'Epic' : 
-                   i % 2 === 0 ? 'Rare' : 'Common';
+  for (let i = 1; i <= 50; i++) {
+    const isPremium = i % 5 === 0;
+    const rarity = i % 50 === 0 ? 'Godlike' : 
+                   i % 25 === 0 ? 'Mythical' :
+                   i % 10 === 0 ? 'Legendary' :
+                   i % 5 === 0 ? 'Epic' : 
+                   i % 3 === 0 ? 'Rare' : 'Common';
     
     levels.push({
       level: i,
-      isUnlocked: i <= 12, // Mock progress relative to max level 20
+      isUnlocked: i <= 12, // Mock progress relative to max level 50
       season: 0,
       cardReward: {
         name: `${genreName} Mastery Reward ${i}`,
@@ -175,13 +176,13 @@ const generateProgressionLevels = (genreId, genreName) => {
         image: getIcon(genreId, i), 
         description: `Exclusive Season 0 reward for reaching rank ${i} in ${genreName}.`
       },
-      equipmentReward: {
+      equipmentReward: isPremium ? {
         name: `Elite Gear Tier ${i}`,
         type: 'Equipment',
-        rarity: rarity === 'Godlike' ? 'Mythical' : rarity === 'Common' ? 'Common' : rarity,
+        rarity: rarity === 'Common' ? 'Epic' : rarity,
         image: `https://source.unsplash.com/random/300x300?armor,weapon,tech&sig=${i}`,
         description: `High-performance equipment unlocked at level ${i}.`
-      }
+      } : null
     });
   }
   return levels;
@@ -786,9 +787,9 @@ export default function GenreMastery({ onClose }) {
                  <div className="mb-6">
                    <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
                      <Trophy className="w-6 h-6 text-blue-500" />
-                     Progression Track
+                     Season Pass Progression
                    </h2>
-                   
+
                    {/* Scroll Controls */}
                    <div className="flex items-center gap-4 mt-6 p-4 bg-white/5 rounded-2xl border border-white/5">
                      <Button 
@@ -800,7 +801,7 @@ export default function GenreMastery({ onClose }) {
                        <ChevronLeft className="w-5 h-5" />
                      </Button>
                      <div className="flex-1 text-center text-sm text-slate-400 font-medium">
-                       Navigate through 20 Levels of {selectedGenre.name} Mastery
+                       Scroll or drag to explore all 50 levels
                      </div>
                      <Button 
                        variant="ghost" 
