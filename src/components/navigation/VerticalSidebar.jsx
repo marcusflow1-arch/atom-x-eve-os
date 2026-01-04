@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Menu, Bell, Home, Radio, Compass, User } from 'lucide-react';
 
 export default function VerticalSidebar() {
+  const [bellActive, setBellActive] = useState(false);
   return (
     <aside className="hidden md:block fixed left-0 top-0 bottom-0 z-30" style={{ width: 280 }}>
       {/* Acrylic pane */}
@@ -51,17 +52,28 @@ export default function VerticalSidebar() {
 
         {/* Content */}
         <div className="relative h-full flex flex-col px-4 py-5">
-          {/* Top: Neon Hamburger */}
+          {/* Top: Etched Neon Hamburger (#19) */}
           <div className="flex items-center justify-between mb-6">
             <button
-              className="w-11 h-11 rounded-2xl flex items-center justify-center text-cyan-300 border border-cyan-500/30 shadow-[0_0_18px_rgba(6,182,212,0.35)]"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center border transition-all"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(34,211,238,0.15) 0%, rgba(99,102,241,0.12) 100%)',
+                background: 'rgba(255,255,255,0.04)',
+                borderColor: 'rgba(255,255,255,0.08)',
+                boxShadow:
+                  'inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.35)'
               }}
               aria-label="Open Menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu
+                className="w-5 h-5"
+                style={{
+                  stroke: 'rgba(255,255,255,0.45)',
+                  strokeWidth: 1.8,
+                  filter:
+                    'drop-shadow(0 1px 0 rgba(255,255,255,0.35)) drop-shadow(0 -1px 0 rgba(0,0,0,0.55)) drop-shadow(0 0 10px rgba(34,211,238,0.22))',
+                  mixBlendMode: 'overlay'
+                }}
+              />
             </button>
 
             {/* Profile shortcut chip */}
@@ -95,14 +107,33 @@ export default function VerticalSidebar() {
             </ul>
           </nav>
 
-          {/* Bottom: Etched Notification Bell */}
+          {/* Bottom: Etched Notification Bell (#18) */}
           <div className="mt-auto pt-4">
             <button
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-white/80 border border-white/15 hover:text-white transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(10px)' }}
+              onClick={() => setBellActive(v => !v)}
+              aria-pressed={bellActive}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all border"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                borderColor: bellActive ? 'rgba(251,191,36,0.35)' : 'rgba(255,255,255,0.15)',
+                boxShadow: bellActive
+                  ? '0 0 20px rgba(251,191,36,0.18), inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -2px 6px rgba(0,0,0,0.35)'
+                  : 'inset 0 1px 2px rgba(255,255,255,0.12), inset 0 -2px 6px rgba(0,0,0,0.35)'
+              }}
               aria-label="Notifications"
+              title={bellActive ? 'Notifications (active)' : 'Notifications'}
             >
-              <Bell className="w-5 h-5" />
+              <Bell
+                className="w-5 h-5"
+                style={{
+                  stroke: bellActive ? 'rgba(251,191,36,0.9)' : 'rgba(255,255,255,0.55)',
+                  strokeWidth: 1.8,
+                  filter: bellActive
+                    ? 'drop-shadow(0 0 6px rgba(251,191,36,0.55)) drop-shadow(0 0 12px rgba(251,191,36,0.35)) drop-shadow(0 0 20px rgba(251,191,36,0.25))'
+                    : 'drop-shadow(0 1px 0 rgba(255,255,255,0.35)) drop-shadow(0 -1px 0 rgba(0,0,0,0.5))',
+                  mixBlendMode: 'overlay'
+                }}
+              />
             </button>
           </div>
         </div>
