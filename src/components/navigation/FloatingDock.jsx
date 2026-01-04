@@ -13,6 +13,8 @@ export default function FloatingDock() {
     { key: 'community', label: 'Community', to: createPageUrl('Community'), icon: MessageSquare },
   ];
 
+  const isLiveMode = location.pathname.includes('Streaming') && location.search.includes('mode=live');
+
   return (
     <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-6 z-[80] pointer-events-none">
       <div
@@ -33,6 +35,34 @@ export default function FloatingDock() {
 
         {items.map(({ key, label, to, icon: Icon }) => {
           const isActive = location.pathname === to;
+
+          // Special styling for Streaming tab when live
+          if (key === 'stream' && isLiveMode) {
+            return (
+              <Link
+                key={key}
+                to={to}
+                title={label}
+                className="relative group rounded-full px-3 md:px-3.5 py-2 flex items-center gap-2 transition-all text-white"
+                style={{
+                  border: '1px solid rgba(239, 68, 68, 0.5)',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)'
+                }}
+              >
+                <div className="relative">
+                  <Icon className="w-5 h-5 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  {/* Pulsing Red Liquid Drop Effect */}
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600 shadow-[0_0_10px_#ef4444]"></span>
+                  </span>
+                </div>
+                <span className="hidden md:inline text-sm font-bold text-red-400 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">LIVE</span>
+              </Link>
+            );
+          }
+
           return (
             <Link
               key={key}

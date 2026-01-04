@@ -27,16 +27,27 @@ export default function Streaming() {
 
   return (
     <div className="min-h-screen p-4 md:p-6 relative">
-      {/* Active Gold Glow Background Transition */}
+      {/* Active Gold Glow Background Transition - Vibrant Shift */}
       {isLive && (
-        <div
-          className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 50%, rgba(234, 179, 8, 0.15), transparent 70%)",
-            mixBlendMode: "screen",
-          }}
-        />
+        <>
+          <div
+            className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.4) 0%, rgba(234, 179, 8, 0.1) 60%, transparent 90%)",
+              mixBlendMode: "screen",
+            }}
+          />
+          <div
+            className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000"
+            style={{
+              background: "conic-gradient(from 0deg at 50% 50%, rgba(255, 215, 0, 0.1) 0deg, transparent 60deg, rgba(255, 215, 0, 0.1) 120deg, transparent 180deg, rgba(255, 215, 0, 0.1) 240deg, transparent 300deg, rgba(255, 215, 0, 0.1) 360deg)",
+              mixBlendMode: "overlay",
+              filter: "blur(60px)",
+              opacity: 0.6
+            }}
+          />
+        </>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[10%_70%_20%] gap-4">
         {/* Left 10% - distinct refraction */}
