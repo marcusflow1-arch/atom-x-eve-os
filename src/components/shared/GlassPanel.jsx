@@ -26,7 +26,22 @@ export default function GlassPanel({ variant = 'center', className = '', childre
   const style = stylesByVariant[variant] || stylesByVariant.center;
 
   return (
-    <div className={`relative h-full w-full rounded-3xl overflow-hidden border ${className}`} style={style}>
+    <div 
+        className={`relative h-full w-full rounded-3xl overflow-hidden border ${className}`} 
+        style={{
+            ...style,
+            // Beveled Glowing Edges (#4) - Enhanced
+            boxShadow: `
+                0 0 0 1px rgba(255,255,255,0.05), /* Outer subtle ring */
+                inset 0 1px 0 rgba(255,255,255,0.2), /* Top bevel highlight */
+                inset 0 0 20px rgba(255,255,255,0.05), /* Inner glow */
+                0 10px 40px rgba(0,0,0,0.2) /* Deep shadow */
+            `
+        }}
+    >
+      {/* 1px Refraction Line on Edge */}
+      <div className="absolute inset-0 rounded-3xl border border-white/10 pointer-events-none mix-blend-overlay" />
+
       {/* Soft edge glow */}
       <div className="pointer-events-none absolute inset-0" style={{ boxShadow: 'inset 0 0 40px rgba(255,255,255,0.06)' }} />
 

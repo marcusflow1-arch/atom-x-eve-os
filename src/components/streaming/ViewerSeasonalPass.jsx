@@ -122,6 +122,25 @@ export default function ViewerSeasonalPass() {
                                     Lvl {index + 1}
                                 </div>
                             )}
+
+                             {/* Shatter Effect (Mock Interaction) */}
+                             <motion.button
+                                className="absolute inset-[-4px] rounded-full z-20 opacity-0 cursor-pointer"
+                                whileTap={{ scale: 1.5, opacity: 0.5 }}
+                                onClick={(e) => {
+                                    // Create simple shatter visual (could be expanded with particles)
+                                    const rect = e.target.getBoundingClientRect();
+                                    const ripple = document.createElement('div');
+                                    ripple.className = 'fixed rounded-full border border-cyan-400 bg-cyan-400/20 z-[100] pointer-events-none';
+                                    ripple.style.width = '20px';
+                                    ripple.style.height = '20px';
+                                    ripple.style.left = `${rect.left}px`;
+                                    ripple.style.top = `${rect.top}px`;
+                                    ripple.style.animation = 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite';
+                                    document.body.appendChild(ripple);
+                                    setTimeout(() => ripple.remove(), 1000);
+                                }}
+                             />
                         </div>
                     );
                 })}

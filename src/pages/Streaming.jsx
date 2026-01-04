@@ -8,8 +8,11 @@ import RealLifeGallerySlide from "@/components/streaming/RealLifeGallerySlide";
 import InterestsSlide from "@/components/streaming/InterestsSlide";
 import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
 import LiveChatPanel from "@/components/streaming/LiveChatPanel";
+import VerticalGameNav from "@/components/streaming/VerticalGameNav";
+import LiquidMetalToggle from "@/components/creator/LiquidMetalToggle"; // Reusing the toggle
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { Search } from "lucide-react";
 
 // Streaming page with High Refraction Player and Liquid Carousel
 export default function Streaming() {
@@ -25,6 +28,14 @@ export default function Streaming() {
     if (filter === "new") return streamers.filter((s) => (s.followers || s.follower_count || 0) < 2000);
     return streamers;
   }, [filter, streamers]);
+
+  const handleLiveToggle = () => {
+    if (isLive) {
+      navigate(createPageUrl('Streaming'));
+    } else {
+      navigate(createPageUrl('Streaming') + '?mode=live');
+    }
+  };
 
   return (
     <div className="min-h-screen p-4 md:p-6 relative">
@@ -51,43 +62,49 @@ export default function Streaming() {
         </>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[10%_70%_20%] gap-4">
-        {/* Left 10% - distinct refraction */}
+        {/* Left 10% - Vertical Game Library with Glass Spheres (#23) */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
           <GlassPanel variant="left">
-            {/* Left column content (e.g., categories, nav) */}
+            <VerticalGameNav />
           </GlassPanel>
         </div>
 
         {/* Center 70% - clearest panel for high color accuracy media */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
           <GlassPanel variant="center">
-            {/* Live Mode Toggle */}
-            <div className="flex justify-end p-3">
-              {isLive ? (
-                <button
-                  onClick={() => navigate(createPageUrl('Streaming'))}
-                  className="px-3 py-1.5 rounded-full text-xs text-white/90 bg-white/10 border border-white/20 hover:bg-white/15"
-                >
-                  Exit Live Mode
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate(createPageUrl('Streaming') + '?mode=live')}
-                  className="px-3 py-1.5 rounded-full text-xs text-white/90 bg-white/10 border border-white/20 hover:bg-white/15"
-                >
-                  Enter Live Mode
-                </button>
-              )}
+            {/* Top Bar: Search & Toggle */}
+            <div className="flex justify-between items-center p-4 md:p-6 pb-2">
+                 {/* Etched Search Bar (#10) */}
+                 <div className="relative group w-1/3">
+                    <div className="absolute inset-0 bg-white/5 rounded-full blur-[1px] group-hover:bg-white/10 transition-colors" />
+                    <div className="relative flex items-center px-4 py-2 rounded-full border border-white/10 bg-white/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                        <Search className="w-4 h-4 text-white/40 mr-2" />
+                        <input 
+                            type="text" 
+                            placeholder="Search creators..." 
+                            className="bg-transparent border-none outline-none text-sm text-white/80 placeholder-white/30 w-full"
+                        />
+                    </div>
+                 </div>
+
+                 {/* Liquid Metal Switch (#12) for Live Mode */}
+                 <div className="w-48">
+                    <LiquidMetalToggle 
+                        label={isLive ? "Live Mode" : "Discovery"} 
+                        isOn={isLive} 
+                        onToggle={handleLiveToggle} 
+                    />
+                 </div>
             </div>
 
             {isLive ? (
-              <div className="p-4 md:p-6">
+              <div className="p-4 md:p-6 pt-2">
                 <HighRefractionVideoPlayer />
               </div>
             ) : (
               <LiquidCarousel intervalMs={15000}>
                 {/* Home */}
-                <div className="p-4 md:p-6">
+                <div className="p-4 md:p-6 pt-2">
                   {/* Hero */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
@@ -104,8 +121,8 @@ export default function Streaming() {
                       </h1>
                     </div>
 
-                    {/* Filters */}
-                    <div className="flex gap-2">
+                    {/* Filters - Liquid Tile Grid */}
+                    <div className="flex gap-3">
                       {[
                         { key: "all", label: "All" },
                         { key: "live", label: "Live Now" },
@@ -114,14 +131,25 @@ export default function Streaming() {
                         <button
                           key={t.key}
                           onClick={() => setFilter(t.key)}
-                          className={`px-4 py-2 rounded-full text-sm transition-all border ${
-                            filter === t.key
-                              ? "text-white bg-white/10 border-white/20"
-                              : "text-white/60 hover:text-white hover:bg-white/5 hover:border-white/10 border-transparent"
+                          className={`relative px-6 py-3 rounded-xl overflow-hidden transition-all duration-300 group ${
+                             filter === t.key ? 'scale-105' : 'hover:scale-105'
                           }`}
-                          style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+                          style={{
+                              // Liquid Tile Styling
+                              background: filter === t.key 
+                                ? 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.1))' 
+                                : 'rgba(255,255,255,0.05)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              boxShadow: filter === t.key
+                                ? '0 8px 20px rgba(34,211,238,0.15), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                : '0 4px 10px rgba(0,0,0,0.1)'
+                          }}
                         >
-                          {t.label}
+                          {/* Glossy sheen */}
+                          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className={`relative z-10 text-sm font-medium tracking-wide ${filter === t.key ? 'text-cyan-300' : 'text-white/60'}`}>
+                            {t.label}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -150,7 +178,7 @@ export default function Streaming() {
           </GlassPanel>
         </div>
 
-        {/* Right 20% - Live Chat Feed */}
+        {/* Right 20% - Live Chat Feed (Holographic Layer #27) */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
           <GlassPanel variant="right" className="!p-0">
              <LiveChatPanel />
