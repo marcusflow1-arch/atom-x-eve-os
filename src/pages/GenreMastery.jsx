@@ -407,73 +407,88 @@ const RewardModal = ({ level, onClose }) => {
 };
 
 
-// Progression Node Component (Refined: Liquid Glass, No Black Box)
-const LevelNode = ({ levelData, onClick, isActive }) => {
-  const { level, isUnlocked, cardReward } = levelData;
-  const rarity = rarityColors[cardReward.rarity];
-  const isElite = ['Legendary', 'Mythical', 'Godlike'].includes(cardReward.rarity);
-
+// Season Pass Level Node Component (Migrated from SeasonalPass)
+const LevelNode = ({ levelData, onClick, currentLevel, isPremiumOwned = false }) => {
+  const { level, isUnlocked, cardReward, equipmentReward } = levelData;
+  const isCurrentLevel = level === currentLevel;
+  
   return (
     <motion.div
+      whileHover="hover"
       onClick={() => onClick(levelData)}
-      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-500 ${
-        isActive ? 'w-44 -translate-y-4' : 'w-28'
+      className={`relative flex-shrink-0 w-32 h-48 rounded-2xl cursor-pointer transition-all overflow-hidden group border ${
+        isCurrentLevel 
+          ? 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)] bg-slate-800/80' 
+          : 'border-white/10 bg-slate-900/40 hover:border-white/30 hover:bg-slate-800/60'
       }`}
     >
-      {/* Node Content */}
-      <div className={`flex flex-col items-center gap-3 transition-all duration-300`}>
-         
-         {/* Top Info */}
-         <div className={`text-center transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 group-hover:opacity-100'}`}>
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-              Lvl {level}
-            </div>
-         </div>
+      {/* Shiny Light Effect */}
+      <motion.div
+        variants={{
+          hover: { x: '250%', opacity: 1, transition: { duration: 0.8, ease: 'easeInOut' } }
+        }}
+        initial={{ x: '-150%', opacity: 0 }}
+        className="absolute inset-0 z-20 pointer-events-none w-full h-full"
+        style={{
+          background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.2) 55%, transparent 80%)',
+          transform: 'skewX(-20deg)'
+        }}
+      />
 
-         {/* Reward Visual Container (Liquid Glass, No Solid Box) */}
-         <div className={`
-           relative rounded-2xl transition-all duration-300 flex items-center justify-center
-           ${isActive 
-             ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` 
-             : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`
-           }
-         `}
-         style={{
-            boxShadow: isActive ? `0 0 20px ${rarity.glow?.replace('shadow-', '') || 'rgba(255,255,255,0.2)'}` : 'none'
-         }}
-         >
-            {/* Inner Glow for Rarity */}
-            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
-            
-            {/* Reward Image/Icon (Floating) */}
-            <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
-               <img src={cardReward.image} alt="Reward" className="w-full h-full object-contain drop-shadow-lg" />
-            </div>
-            
-            {/* Status Indicator (Minimalist) */}
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
-               {isUnlocked ? (
-                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                    <Check className="w-3 h-3 text-black" />
-                 </div>
-               ) : (
-                 <div className="w-4 h-4 rounded-full bg-black/50 border border-white/10 flex items-center justify-center backdrop-blur-md">
-                   <Lock className="w-2.5 h-2.5 text-white/40" />
-                 </div>
-               )}
-            </div>
-
-            {/* Elite Particle Effect for rare items */}
-            {isElite && isActive && (
-               <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />
-            )}
-         </div>
+      {/* Card Header (Level) */}
+      <div className="absolute top-2 left-0 right-0 text-center z-10">
+        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+          isCurrentLevel 
+            ? 'bg-blue-500/20 text-blue-300 border-blue-500/50' 
+            : 'bg-black/40 text-white/50 border-white/10'
+        }`}>
+          LVL {level}
+        </span>
       </div>
 
-      {/* Connection Line Segment */}
-      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
-        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
-      `} />
+      {/* Rewards Container */}
+      <div className="flex flex-col h-full pt-10 pb-2 px-2 gap-2">
+        {/* Premium Reward (Equipment) */}
+        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
+            equipmentReward 
+                ? (isPremiumOwned && isUnlocked ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-yellow-500/5 border border-dashed border-yellow-500/20') 
+                : 'bg-white/5 border border-dashed border-white/10'
+        }`}>
+            {equipmentReward ? (
+                <>
+                    <img src={equipmentReward.image} alt={equipmentReward.name} className="w-12 h-12 object-contain drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all" />
+                    {(!isPremiumOwned || !isUnlocked) && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                            <Lock className="w-4 h-4 text-white/40" />
+                        </div>
+                    )}
+                    <div className="absolute top-1 right-1"><Crown className="w-3 h-3 text-yellow-500/50" /></div>
+                </>
+            ) : (
+                <span className="text-white/10 text-[10px]">Empty</span>
+            )}
+        </div>
+
+        {/* Free Reward (Card) */}
+        <div className={`flex-1 rounded-xl flex items-center justify-center relative transition-colors ${
+            cardReward 
+                ? (isUnlocked ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-500/5 border border-dashed border-blue-500/20') 
+                : 'bg-white/5 border border-dashed border-white/10'
+        }`}>
+             {cardReward ? (
+                <>
+                    <img src={cardReward.image} alt={cardReward.name} className="w-12 h-12 object-contain drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all" />
+                    {!isUnlocked && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
+                            <Lock className="w-4 h-4 text-white/40" />
+                        </div>
+                    )}
+                </>
+            ) : (
+                <span className="text-white/10 text-[10px]">Empty</span>
+            )}
+        </div>
+      </div>
     </motion.div>
   );
 };
@@ -798,21 +813,23 @@ export default function GenreMastery({ onClose }) {
                    </div>
                  </div>
 
-                 {/* HORIZONTAL SCROLL TRACK (Using existing LevelNode but in new layout) */}
+                 {/* HORIZONTAL SCROLL TRACK (Season Pass Style) */}
                  <div 
                     ref={scrollContainerRef}
-                    className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x mb-12"
+                    className="relative flex gap-4 overflow-x-auto pb-8 pt-6 px-6 rounded-xl scrollbar-hide"
                     style={{ 
                       scrollBehavior: 'smooth',
-                      background: 'rgba(0, 0, 0, 0.2)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      backdropFilter: 'blur(50px) saturate(200%)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
                     }}
                   >
                     {progressionData.map((level) => (
                       <LevelNode 
                         key={level.level}
                         levelData={level} 
-                        isActive={level.level === 36} // Mock active state
+                        currentLevel={selectedGenre.level}
+                        isPremiumOwned={false}
                         onClick={setViewingLevel} 
                       />
                     ))}
