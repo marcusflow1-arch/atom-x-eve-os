@@ -2,6 +2,7 @@ import React from 'react';
 import ProfileGameLibrary from '@/components/profile/ProfileGameLibrary';
 import PersonalityCarousel from '@/components/profile/PersonalityCarousel';
 import FloatingLiveChat from '@/components/profile/FloatingLiveChat';
+import GlassPanel from '@/components/shared/GlassPanel';
 
 export default function ProfileHub() {
   return (
@@ -13,17 +14,23 @@ export default function ProfileHub() {
       >
         {/* Left 10% - Vertical Game Library (#23) */}
         <div className="h-full">
-          <ProfileGameLibrary />
+          <GlassPanel variant="left">
+            <ProfileGameLibrary />
+          </GlassPanel>
         </div>
 
         {/* Center 70% - Personality Carousel with Ripple Avatar (#22) and Dark Bio Layer (#24) */}
-        <div className="h-full flex flex-col items-center">
-          <PersonalityCarousel />
+        <div className="h-full flex flex-col">
+          <GlassPanel variant="center" className="flex items-center justify-start">
+            <PersonalityCarousel />
+          </GlassPanel>
         </div>
 
         {/* Right 20% - Floating Live Chat (#27) */}
         <div className="h-full">
-          <FloatingLiveChat />
+          <GlassPanel variant="right">
+            <FloatingLiveChat />
+          </GlassPanel>
         </div>
       </div>
 
