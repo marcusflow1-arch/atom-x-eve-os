@@ -144,6 +144,32 @@ export default function CreatorDashboard() {
                  <p className="text-white/40">Metrics and stream health summary would appear here.</p>
             </div>
         );
+      case 'community':
+        return (
+            <div className="max-w-3xl mx-auto p-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-black text-white mb-2">Community & Followers</h1>
+                    <p className="text-white/40">Manage your follower list, VIPs, and community interactions.</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center h-64">
+                    <Users size={48} className="text-white/20 mb-4" />
+                    <p className="text-white/50">Follower list and moderation tools loading...</p>
+                </div>
+            </div>
+        );
+      case 'sponsors':
+        return (
+            <div className="max-w-3xl mx-auto p-8">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-black text-white mb-2">Sponsor Management</h1>
+                    <p className="text-white/40">Active sponsorships, campaigns, and brand assets.</p>
+                </div>
+                 <div className="bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center h-64">
+                    <Crown size={48} className="text-yellow-500/40 mb-4" />
+                    <p className="text-white/50">Sponsorship campaigns and asset manager loading...</p>
+                </div>
+            </div>
+        );
       default:
         return (
              <div className="max-w-4xl mx-auto p-8 flex flex-col items-center justify-center min-h-[50vh] text-center">

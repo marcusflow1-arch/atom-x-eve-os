@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, BarChart2, Users, Layout, Video, Crown } from 'lucide-react';
+import { Settings, BarChart2, Users, Layout, Video, Crown, Handshake } from 'lucide-react';
 
 export default function RefractingGearNav({ activeTab, onTabChange }) {
   const tabs = [
@@ -9,6 +9,7 @@ export default function RefractingGearNav({ activeTab, onTabChange }) {
     { id: 'seasonpass', icon: Crown, label: 'Pass' },
     { id: 'analytics', icon: BarChart2, label: 'Analytics' },
     { id: 'community', icon: Users, label: 'Community' },
+    { id: 'sponsors', icon: Handshake, label: 'Sponsors' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
