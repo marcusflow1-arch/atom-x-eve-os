@@ -9,6 +9,9 @@ import InterestsSlide from "@/components/streaming/InterestsSlide";
 import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function Streaming() {
   const navigate = useNavigate();
@@ -25,7 +28,18 @@ export default function Streaming() {
   }, [filter, streamers]);
 
   return (
-    <div className="min-h-screen p-4 md:p-6">
+    <div className="min-h-screen p-4 md:p-6 relative">
+      {/* Active Gold Glow Background Transition */}
+      {isLive && (
+        <div
+          className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(234, 179, 8, 0.15), transparent 70%)",
+            mixBlendMode: "screen",
+          }}
+        />
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-[10%_70%_20%] gap-4">
         {/* Left 10% - distinct refraction */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
