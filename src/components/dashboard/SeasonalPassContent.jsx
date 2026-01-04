@@ -580,7 +580,7 @@ export default function SeasonalPassContent() {
     <div 
       className="relative min-h-full overflow-x-hidden"
       style={{
-        background: 'rgba(255, 255, 255, 0.01)',
+        background: 'rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
       }}
@@ -661,25 +661,23 @@ export default function SeasonalPassContent() {
         {/* Track Selector */}
         <TrackSelector activeTrack={activeTrack} onTrackChange={setActiveTrack} />
         
-        {/* Limited Edition Cards Carousel */}
+        {/* Limited Edition Icons */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
               <Sparkles className="w-6 h-6 text-blue-500" />
               Limited Edition Season Rewards
             </h2>
-            <div className="text-sm text-slate-400">
-              Scroll to explore • Click to preview
-            </div>
           </div>
           
-          <div 
-            ref={carouselRef}
-            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
-            style={{ scrollBehavior: 'smooth' }}
-          >
+          <div className="flex gap-8 items-center justify-center">
             {filteredCards.map((card) => (
-              <LimitedEditionCard key={card.id} card={card} onClick={setSelectedItem} />
+              <div key={card.id} className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <span className="text-sm text-white font-medium">{card.name}</span>
+              </div>
             ))}
           </div>
         </div>
