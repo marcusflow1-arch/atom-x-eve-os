@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, BarChart2, Users, Layout, Video } from 'lucide-react';
+import { Settings, BarChart2, Users, Layout, Video, Crown } from 'lucide-react';
 
 export default function RefractingGearNav({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'overview', icon: Layout, label: 'Overview' },
     { id: 'content', icon: Video, label: 'Content' },
+    { id: 'seasonpass', icon: Crown, label: 'Pass' },
     { id: 'analytics', icon: BarChart2, label: 'Analytics' },
     { id: 'community', icon: Users, label: 'Community' },
     { id: 'settings', icon: Settings, label: 'Settings' },

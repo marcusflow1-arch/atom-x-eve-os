@@ -8,42 +8,62 @@ export default function LiquidMetalToggle({ label, isOn, onToggle }) {
       
       <button 
         onClick={onToggle}
-        className="relative w-14 h-8 rounded-full transition-colors duration-300"
+        className="relative w-16 h-8 rounded-full transition-all duration-500 cursor-pointer group"
         style={{
-          background: isOn ? 'rgba(34, 211, 238, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-          boxShadow: isOn 
-            ? 'inset 0 2px 5px rgba(0,0,0,0.5), 0 0 10px rgba(34, 211, 238, 0.3)' 
-            : 'inset 0 2px 5px rgba(0,0,0,0.5)'
+          background: 'rgba(0, 0, 0, 0.3)', // Dark glass slot background
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1)' // Deep inset for slot
         }}
       >
-        {/* Track liquid effect */}
-        <div className="absolute inset-0 rounded-full overflow-hidden">
+        {/* Glass Glare / Slot Reflection */}
+        <div className="absolute inset-0 rounded-full opacity-30 pointer-events-none"
+             style={{
+               background: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 40%, rgba(255,255,255,0.05) 100%)'
+             }}
+        />
+
+        {/* Liquid Trail (Mercury Flow) */}
+        <div className="absolute inset-1 rounded-full overflow-hidden pointer-events-none">
              <motion.div 
-               className="absolute inset-0"
+               className="absolute inset-0 rounded-full"
                initial={false}
-               animate={{ x: isOn ? 0 : '-100%' }}
-               transition={{ type: "spring", stiffness: 300, damping: 30 }}
+               animate={{ 
+                 x: isOn ? 0 : '-100%',
+                 opacity: isOn ? 1 : 0
+               }}
+               transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1 }}
                style={{
-                 background: 'linear-gradient(90deg, #06b6d4, #22d3ee)',
+                 background: 'linear-gradient(90deg, #94a3b8, #cbd5e1, #e2e8f0)', // Silver flow
+                 filter: 'blur(4px)',
                  opacity: 0.5
                }}
              />
         </div>
 
-        {/* The Liquid Metal Switch Knob */}
+        {/* The Droplet (Switch Knob) */}
         <motion.div
-          className="absolute top-1 left-1 w-6 h-6 rounded-full shadow-lg"
+          className="absolute top-1 left-1 w-6 h-6 rounded-full"
           initial={false}
-          animate={{ x: isOn ? 24 : 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+          animate={{ x: isOn ? 32 : 0 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 400, 
+            damping: 25,
+            mass: 0.8 // Slightly lighter for fluid feel
+          }}
           style={{
-            background: 'linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #64748b 100%)', // Chrome/Silver look
-            boxShadow: '0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -2px 5px rgba(0,0,0,0.2)'
+            background: 'conic-gradient(from 180deg at 50% 50%, #cbd5e1 0deg, #f8fafc 180deg, #94a3b8 360deg)', // Metallic Silver
+            boxShadow: `
+              0 2px 6px rgba(0,0,0,0.5), 
+              inset 0 2px 3px rgba(255,255,255,0.9), 
+              inset 0 -2px 4px rgba(0,0,0,0.4)
+            `
           }}
         >
-            {/* Specular highlight for liquid metal look */}
-            <div className="absolute top-[2px] left-[4px] w-2 h-1 bg-white/90 rounded-full blur-[1px]" />
-            <div className="absolute bottom-[2px] right-[4px] w-3 h-3 bg-black/10 rounded-full blur-[2px]" />
+            {/* Liquid Surface Tension/Highlight */}
+            <div className="absolute top-[20%] left-[20%] w-[30%] h-[15%] bg-white rounded-full blur-[0.5px] opacity-90" />
+            
+            {/* Environment Reflection */}
+            <div className="absolute bottom-[20%] right-[20%] w-[20%] h-[20%] bg-blue-300/20 rounded-full blur-[1px]" />
         </motion.div>
       </button>
     </div>

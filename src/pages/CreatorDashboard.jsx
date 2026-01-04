@@ -15,7 +15,11 @@ export default function CreatorDashboard() {
     chatModeration: true,
     subscriberOnly: false,
     lowLatency: true,
-    hdrEnabled: false
+    hdrEnabled: false,
+    seasonActive: true,
+    premiumRewards: true,
+    autoClaim: false,
+    publicVoter: true
   });
 
   const handleToggle = (key) => {
@@ -24,6 +28,50 @@ export default function CreatorDashboard() {
 
   const renderContent = () => {
     switch(activeTab) {
+      case 'seasonpass':
+        return (
+          <div className="max-w-3xl mx-auto p-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-black text-white mb-2">Seasonal Pass Builder</h1>
+                <p className="text-white/40">Configure the rewards and progression for the current season.</p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md mb-8">
+                <div className="flex items-center gap-2 mb-6 text-yellow-400">
+                    <Crown size={18} />
+                    <h2 className="text-sm font-bold uppercase tracking-widest">Season Configuration</h2>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                    <LiquidMetalToggle 
+                        label="Season Active" 
+                        isOn={toggles.seasonActive} 
+                        onToggle={() => handleToggle('seasonActive')} 
+                    />
+                    <LiquidMetalToggle 
+                        label="Enable Premium Reward Track" 
+                        isOn={toggles.premiumRewards} 
+                        onToggle={() => handleToggle('premiumRewards')} 
+                    />
+                     <LiquidMetalToggle 
+                        label="Allow Auto-Claim Rewards" 
+                        isOn={toggles.autoClaim} 
+                        onToggle={() => handleToggle('autoClaim')} 
+                    />
+                     <LiquidMetalToggle 
+                        label="Public Community Voting" 
+                        isOn={toggles.publicVoter} 
+                        onToggle={() => handleToggle('publicVoter')} 
+                    />
+                </div>
+            </div>
+
+            {/* Visual Placeholder for Builder */}
+            <div className="rounded-2xl border-2 border-dashed border-white/10 p-12 flex flex-col items-center justify-center text-white/20 bg-black/20">
+                <Crown size={48} className="mb-4 opacity-50" />
+                <p>Drag and drop reward nodes here to build the track.</p>
+            </div>
+          </div>
+        );
       case 'settings':
         return (
           <div className="max-w-2xl mx-auto p-8">
