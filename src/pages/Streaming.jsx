@@ -10,6 +10,7 @@ import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVide
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
+// Streaming page with High Refraction Player and Liquid Carousel
 export default function Streaming() {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
