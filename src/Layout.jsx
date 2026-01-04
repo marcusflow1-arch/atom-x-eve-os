@@ -5,7 +5,7 @@ import {
                   LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, Lightbulb, Rocket, Swords, Layers, Crown, Target, TrendingUp, Calendar
                 } from 'lucide-react';
 import { ALL_NAV_ITEMS, NAV_GROUPS, NAV_HIERARCHY } from './components/dashboard/NavigationConfig';
-import { ThemeBackground } from '@/components/shared/ThemeSystem';
+import LiquidBackground from '@/components/shared/LiquidBackground';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
@@ -332,14 +332,13 @@ function LayoutContent({ children, currentPageName }) {
     <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
-        {location.pathname.toLowerCase().includes('/lunatemplate') ? (
+        <LiquidBackground />
+        {location.pathname.toLowerCase().includes('/lunatemplate') && (
           <img
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/d7df982d2_unnamed4.jpg"
             alt="Luna dashboard background"
             className="w-full h-full object-cover"
           />
-        ) : (
-          <ThemeBackground themeId="moon_essence" />
         )}
       </div>
 
