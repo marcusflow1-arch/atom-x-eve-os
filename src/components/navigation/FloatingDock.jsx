@@ -14,7 +14,7 @@ export default function FloatingDock() {
   ];
 
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-6 z-[50] pointer-events-none">
+    <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-6 z-[80] pointer-events-none">
       <div
         className="pointer-events-auto relative mx-auto flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-full"
         style={{
