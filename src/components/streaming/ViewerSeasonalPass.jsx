@@ -1,121 +1,133 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Star, Crown, Gift, Lock } from 'lucide-react';
+import { Crown, Star, Lock, Gift } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
-const TIER_REWARDS = [
-  { tier: 5, reward: 'Streamer Badge', icon: '🎖️', unlocked: true },
-  { tier: 10, reward: '+10% XP Boost', icon: '⚡', unlocked: true, type: 'boost' },
-  { tier: 15, reward: '+20% XP Boost', icon: '⚡⚡', unlocked: false, type: 'boost' },
-  { tier: 20, reward: 'Legendary Card Drop', icon: '🎴', unlocked: false, type: 'card' },
-  { tier: 25, reward: 'Exclusive Emote', icon: '😎', unlocked: false },
-  { tier: 30, reward: '+30% XP Boost', icon: '⚡⚡⚡', unlocked: false, type: 'boost' },
-];
-
-export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 30, streamerId }) {
-  const progress = (currentTier / maxTier) * 100;
+export default function ViewerSeasonalPass() {
+  // Mock progress state
+  const currentXP = 1250;
+  const maxXP = 2000;
+  const progressPercent = (currentXP / maxXP) * 100;
+  const level = 45;
 
   return (
-    <div className="bg-black/20 backdrop-blur-md border-t border-white/10 p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-            <Crown className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-white font-bold text-lg">Viewer Seasonal Pass</h3>
-            <p className="text-white/40 text-xs">Watch, engage, and earn exclusive rewards</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-black text-white">
-            {currentTier}<span className="text-white/40 text-xl">/{maxTier}</span>
-          </div>
-          <p className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">Current Tier</p>
-        </div>
-      </div>
+    <div 
+      className="relative w-full rounded-2xl overflow-hidden mt-12"
+      style={{
+        // Beveled Acrylic Sheet (#4) Implementation
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderTop: '1px solid rgba(255,255,255,0.4)',
+        borderLeft: '1px solid rgba(255,255,255,0.4)',
+        borderBottom: '1px solid rgba(0,0,0,0.6)',
+        borderRight: '1px solid rgba(0,0,0,0.6)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 30px rgba(255,255,255,0.05)'
+      }}
+    >
+      {/* Refraction/Sheen Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0" 
+        style={{
+          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.0) 50%)',
+          mixBlendMode: 'overlay'
+        }}
+      />
 
-      {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs text-white/60">
-          <span>Season Progress</span>
-          <span>{Math.round(progress)}%</span>
+      <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+        
+        {/* Identity / Season Info */}
+        <div className="flex flex-col items-center md:items-start min-w-[200px]">
+          <div className="flex items-center gap-2 mb-1">
+             <Crown className="text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]" size={24} />
+             <h3 className="text-xl font-black text-white tracking-wide uppercase">Neon Nights</h3>
+          </div>
+          <Badge className="bg-cyan-900/40 text-cyan-300 border-cyan-500/30 backdrop-blur-md">
+            SEASON 2 PASS
+          </Badge>
         </div>
-        <div className="h-3 bg-white/5 rounded-full overflow-hidden border border-white/10">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 relative"
+
+        {/* Progression Track */}
+        <div className="flex-1 w-full">
+          <div className="flex justify-between items-end mb-3">
+             <div className="flex flex-col">
+               <span className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Current Level</span>
+               <span className="text-3xl font-black text-white drop-shadow-lg">{level}</span>
+             </div>
+             <div className="flex flex-col items-end">
+               <span className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">XP Progress</span>
+               <span className="text-lg font-bold text-cyan-200">{currentXP} <span className="text-white/30">/</span> {maxXP}</span>
+             </div>
+          </div>
+
+          {/* Progress Bar Container - Deep Groove */}
+          <div 
+            className="h-6 w-full rounded-full relative overflow-hidden"
+            style={{
+              background: 'rgba(0,0,0,0.6)',
+              boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1)'
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-          </motion.div>
+            {/* Neon Cyan Refraction (#5) - Fluid Animation */}
+            <motion.div 
+              className="absolute top-0 left-0 h-full rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              style={{
+                background: 'linear-gradient(90deg, #06b6d4, #22d3ee, #e0f2fe)', // Cyan to bright white-cyan
+                boxShadow: '0 0 20px rgba(34,211,238, 0.6), inset 0 0 10px rgba(255,255,255,0.5)'
+              }}
+            >
+               {/* Shimmer Effect */}
+               <motion.div 
+                 className="absolute inset-0 w-full h-full"
+                 animate={{ x: ['-100%', '100%'] }}
+                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                 style={{
+                   background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
+                   mixBlendMode: 'overlay'
+                 }}
+               />
+            </motion.div>
+          </div>
+          
+          <p className="text-xs text-white/30 mt-3 text-center md:text-left">
+            Participate in chat and watch streams to fill your refraction gauge.
+          </p>
         </div>
-        <p className="text-white/40 text-xs">
-          {maxTier - currentTier} tiers remaining • Watch time & engagement unlocks tiers
-        </p>
-      </div>
 
-      {/* Rewards Showcase */}
-      <div>
-        <h4 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-3">Upcoming Rewards</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {TIER_REWARDS.map((reward) => {
-            const isUnlocked = reward.tier <= currentTier;
-            const isNext = reward.tier > currentTier && reward.tier <= currentTier + 5;
-            
-            return (
-              <motion.div
-                key={reward.tier}
-                whileHover={isNext ? { scale: 1.05 } : {}}
-                className={`relative p-4 rounded-xl border transition-all ${
-                  isUnlocked 
-                    ? 'bg-amber-500/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
-                    : isNext
-                    ? 'bg-white/5 border-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-                    : 'bg-white/5 border-white/10 opacity-60'
-                }`}
-              >
-                {!isUnlocked && (
-                  <div className="absolute top-2 right-2">
-                    <Lock className="w-3 h-3 text-white/30" />
-                  </div>
-                )}
-                
-                <div className="text-center space-y-2">
-                  <div className="text-3xl">{reward.icon}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/40">
-                    Tier {reward.tier}
-                  </div>
-                  <p className={`text-xs font-medium leading-tight ${
-                    isUnlocked ? 'text-amber-300' : isNext ? 'text-cyan-300' : 'text-white/60'
-                  }`}>
-                    {reward.reward}
-                  </p>
-                  
-                  {reward.type === 'boost' && isUnlocked && (
-                    <div className="pt-2 border-t border-white/10">
-                      <div className="flex items-center justify-center gap-1 text-[10px] text-green-400">
-                        <Zap className="w-3 h-3" />
-                        <span>ACTIVE</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+        {/* Rewards Section */}
+        <div className="flex gap-3">
+           {/* Unlocked */}
+           <div className="w-16 h-16 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center relative group cursor-pointer hover:bg-cyan-500/20 transition-all">
+              <Star className="text-cyan-400" size={20} />
+              <div className="absolute -bottom-1 w-full text-center">
+                 <span className="text-[9px] font-bold text-cyan-200 bg-cyan-900/80 px-1.5 py-0.5 rounded-full">Lvl 44</span>
+              </div>
+           </div>
 
-      {/* Active Boosts Display */}
-      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl">
-        <Zap className="w-5 h-5 text-green-400" />
-        <div className="flex-1">
-          <p className="text-white font-bold text-sm">Active Viewer Boost</p>
-          <p className="text-white/60 text-xs">+10% XP while watching this stream</p>
+           {/* Next Reward */}
+           <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-400/50 flex flex-col items-center justify-center relative group cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+              <Gift className="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)] animate-pulse" size={28} />
+              <div className="absolute -top-2 -right-2">
+                 <span className="flex h-4 w-4 relative">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-4 w-4 bg-cyan-500"></span>
+                 </span>
+              </div>
+              <span className="text-[10px] font-bold text-white mt-1 uppercase tracking-wide">Next</span>
+           </div>
+
+           {/* Locked */}
+           <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center relative opacity-50">
+              <Lock className="text-white/40" size={18} />
+              <div className="absolute -bottom-1 w-full text-center">
+                 <span className="text-[9px] font-bold text-white/30 bg-black/60 px-1.5 py-0.5 rounded-full">Lvl 46</span>
+              </div>
+           </div>
         </div>
-        <div className="text-2xl font-black text-green-400">+10%</div>
+
       </div>
     </div>
   );
