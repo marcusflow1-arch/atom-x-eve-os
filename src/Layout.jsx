@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
+import FloatingDock from './components/navigation/FloatingDock';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -988,6 +989,9 @@ function LayoutContent({ children, currentPageName }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Floating Command Dock (#16) */}
+      <FloatingDock />
 
       {/* Dev Tools Panel */}
       <DevTools />
