@@ -7,6 +7,7 @@ import LiquidCarousel from "@/components/streaming/LiquidCarousel";
 import RealLifeGallerySlide from "@/components/streaming/RealLifeGallerySlide";
 import InterestsSlide from "@/components/streaming/InterestsSlide";
 import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
+import LiveChatPanel from "@/components/streaming/LiveChatPanel";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -149,10 +150,10 @@ export default function Streaming() {
           </GlassPanel>
         </div>
 
-        {/* Right 20% - distinct refraction */}
+        {/* Right 20% - Live Chat Feed */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
-          <GlassPanel variant="right">
-            {/* Right column content (e.g., live chat, widgets) */}
+          <GlassPanel variant="right" className="!p-0">
+             <LiveChatPanel />
           </GlassPanel>
         </div>
       </div>
