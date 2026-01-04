@@ -23,26 +23,36 @@ export default function WaterTubeVolumeSlider({ value = 0.7, onChange, onToggleM
       </button>
 
       {/* Water tube */}
-      <div className="relative h-3 w-40 rounded-full overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
+      <div className="relative h-3 w-40 rounded-full" style={{ border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.2)" }}>
         {/* Tube glass */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 rounded-full overflow-hidden"
           style={{
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1)), linear-gradient(90deg, rgba(34,211,238,0.25), rgba(99,102,241,0.25))",
-            backdropFilter: "blur(8px)",
+              "linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
+            backdropFilter: "blur(4px)",
           }}
         />
         {/* Water fill */}
         <div
-          className="absolute left-0 top-0 h-full"
+          className="absolute left-0 top-0 h-full rounded-l-full relative"
           style={{
             width: `${pct}%`,
             background:
-              "linear-gradient(90deg, rgba(56,189,248,0.9), rgba(34,211,238,0.9))",
-            boxShadow: "0 0 18px rgba(56,189,248,0.75)",
+              "linear-gradient(90deg, #06b6d4, #3b82f6)", // Cyan to Blue neon
+            boxShadow: "0 0 15px rgba(6, 182, 212, 0.6)",
+            transition: "width 0.1s linear"
           }}
-        />
+        >
+           {/* Trapped Bubble Handle */}
+           <div 
+             className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.9)] z-10 border-2 border-cyan-400"
+             style={{
+               background: "radial-gradient(circle at 30% 30%, white, #cffafe)",
+               boxShadow: "0 0 12px rgba(34, 211, 238, 0.8), inset 0 0 4px rgba(0,0,0,0.1)"
+             }}
+           />
+        </div>
       </div>
 
       <input
@@ -51,7 +61,7 @@ export default function WaterTubeVolumeSlider({ value = 0.7, onChange, onToggleM
         max={100}
         value={pct}
         onChange={(e) => onChange?.(Number(e.target.value) / 100)}
-        className="opacity-0 absolute w-40 h-3 -ml-[156px]"
+        className="opacity-0 absolute w-full h-full inset-0 cursor-pointer z-20"
         aria-label="Volume"
       />
     </div>

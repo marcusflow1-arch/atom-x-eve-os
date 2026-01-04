@@ -5,11 +5,12 @@ export default function NeonSubscribeButton({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="px-5 py-2.5 rounded-full text-white font-semibold tracking-wide relative overflow-hidden"
+      className="px-6 py-2 rounded-full text-white font-bold tracking-wide relative overflow-hidden group transition-all duration-300 hover:scale-105"
       style={{
-        background: "linear-gradient(135deg, #f59e0b, #f97316)",
-        boxShadow: "0 0 24px rgba(245, 158, 11, 0.5), 0 12px 40px rgba(249, 115, 22, 0.35)",
+        background: "linear-gradient(135deg, #ec4899, #8b5cf6, #d946ef)", // Pink to Purple
+        boxShadow: "0 0 30px rgba(236, 72, 153, 0.6), 0 0 15px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.3)",
         border: "1px solid rgba(255,255,255,0.2)",
+        textShadow: "0 2px 4px rgba(0,0,0,0.3)"
       }}
     >
       <span className="relative z-10 flex items-center gap-2">

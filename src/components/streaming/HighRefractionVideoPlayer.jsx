@@ -95,20 +95,18 @@ export default function HighRefractionVideoPlayer({
         </div>
       )}
 
-      {/* Controls overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Top-right Subscribe */}
-        <div className="absolute top-4 right-4 pointer-events-auto">
-          <NeonSubscribeButton />
-        </div>
+      {/* Controls Bar Overlay */}
+      <div className="absolute inset-x-0 bottom-0 p-6 pointer-events-none bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div className="flex items-center justify-between gap-4 pointer-events-auto">
+            {/* Left side: Volume */}
+            <WaterTubeVolumeSlider
+              value={muted ? 0 : volume}
+              onChange={(v) => setVolume(v)}
+              onToggleMute={() => setMuted((m) => !m)}
+            />
 
-        {/* Bottom-right volume tube */}
-        <div className="absolute bottom-4 right-4 pointer-events-auto">
-          <WaterTubeVolumeSlider
-            value={muted ? 0 : volume}
-            onChange={(v) => setVolume(v)}
-            onToggleMute={() => setMuted((m) => !m)}
-          />
+            {/* Right side: Subscribe Action */}
+            <NeonSubscribeButton />
         </div>
       </div>
     </div>
