@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { MOCK_STREAMERS } from "@/components/streaming/mockData";
 import StreamerCard from "@/components/streaming/StreamerCard";
 import { Button } from "@/components/ui/button";
+import VerticalSidebar from "@/components/navigation/VerticalSidebar";
 
 export default function Streaming() {
   const [filter, setFilter] = useState("all");
@@ -14,7 +15,9 @@ export default function Streaming() {
   }, [filter, streamers]);
 
   return (
-    <div className="min-h-screen p-6 md:p-10">
+    <>
+      <VerticalSidebar />
+      <div className="min-h-screen p-6 md:p-10 md:pl-[280px]">
       {/* Hero */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -64,6 +67,6 @@ export default function Streaming() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
