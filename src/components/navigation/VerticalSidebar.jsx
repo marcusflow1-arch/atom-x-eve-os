@@ -8,27 +8,44 @@ export default function VerticalSidebar() {
       <div
         className="relative w-full h-full"
         style={{
+          // ~70% transparency via 0.30 alpha stops
           background:
-            'linear-gradient(180deg, rgba(15,23,42,0.32) 0%, rgba(17,24,39,0.30) 45%, rgba(24,24,35,0.28) 100%)',
-          backdropFilter: 'blur(55px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(55px) saturate(180%)',
+            'linear-gradient(180deg, rgba(15,23,42,0.30) 0%, rgba(17,24,39,0.30) 45%, rgba(24,24,35,0.30) 100%)',
+          backdropFilter: 'blur(60px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(180%)',
           borderRight: '1px solid rgba(255,255,255,0.10)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 40px rgba(0,0,0,0.45), 0 0 42px rgba(34,211,238,0.10)',
+            'inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 45px rgba(0,0,0,0.48), 0 0 52px rgba(34,211,238,0.12), 0 0 48px rgba(99,102,241,0.10)',
         }}
       >
         {/* Soft edge glow */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            boxShadow: 'inset 0 0 40px rgba(255,255,255,0.06)',
+            boxShadow: 'inset 0 0 40px rgba(255,255,255,0.06)'
           }}
         />
+        {/* Edge glow accents */}
         <div
           className="pointer-events-none absolute -right-[1px] top-0 bottom-0 w-1"
           style={{
             background: 'linear-gradient(to bottom, rgba(34,211,238,0.35), rgba(99,102,241,0.25))',
-            filter: 'blur(8px)',
+            filter: 'blur(10px)'
+          }}
+        />
+        <div
+          className="pointer-events-none absolute -left-[1px] top-0 bottom-0 w-1"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(34,211,238,0.20), rgba(99,102,241,0.18))',
+            filter: 'blur(10px)'
+          }}
+        />
+        {/* Subtle acrylic grain */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: 'linear-gradient(0deg, rgba(255,255,255,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px)',
+            backgroundSize: '3px 3px'
           }}
         />
 
