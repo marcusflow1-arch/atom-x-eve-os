@@ -9,9 +9,6 @@ import InterestsSlide from "@/components/streaming/InterestsSlide";
 import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import HighRefractionVideoPlayer from "@/components/streaming/HighRefractionVideoPlayer";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 
 export default function Streaming() {
   const navigate = useNavigate();
