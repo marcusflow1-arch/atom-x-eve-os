@@ -304,12 +304,10 @@ const RewardModal = ({ level, onClose }) => {
 
         {/* Left Side: Main Reward Card with Info Below */}
         <div className="flex-shrink-0 flex flex-col items-center gap-4">
-          <motion.img 
-            src={level.cardReward.image}
-            alt={level.cardReward.name}
-            className="w-80 h-96 object-contain rounded-xl"
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          <LimitedEditionCard 
+            card={level.cardReward} 
+            onClick={null}
+            className="w-64 h-80"
           />
           
           <div className="text-center">
