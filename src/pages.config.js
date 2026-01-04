@@ -43,6 +43,7 @@ import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import ProfileHub from './pages/ProfileHub';
+import CreatorDashboard from './pages/CreatorDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -92,6 +93,7 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "ProfileHub": ProfileHub,
+    "CreatorDashboard": CreatorDashboard,
 }
 
 export const pagesConfig = {
