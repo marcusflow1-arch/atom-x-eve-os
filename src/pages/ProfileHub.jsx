@@ -8,7 +8,7 @@ export default function ProfileHub() {
     <div className="min-h-screen w-full p-4 md:p-8">
       {/* 10/70/20 layout using explicit column sizes to match spec */}
       <div
-        className="w-full h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] grid gap-4"
+        className="w-full h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] grid gap-4 profile-grid"
         style={{ gridTemplateColumns: '10% 1fr 20%', gridTemplateRows: '1fr' }}
       >
         {/* Left 10% - Vertical Game Library (#23) */}
