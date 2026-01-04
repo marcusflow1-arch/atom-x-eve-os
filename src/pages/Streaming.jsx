@@ -27,6 +27,16 @@ export default function Streaming() {
         {/* Center 70% - clearest panel for high color accuracy media */}
         <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
           <GlassPanel variant="center">
+              {/* Left 10% - distinct refraction */}
+        <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
+          <GlassPanel variant="left">
+            {/* Left column content (e.g., categories, nav) */}
+          </GlassPanel>
+        </div>
+
+        {/* Center 70% - clearest panel for high color accuracy media */}
+        <div className="h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)]">
+          <GlassPanel variant="center">
             {/* Hero */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
