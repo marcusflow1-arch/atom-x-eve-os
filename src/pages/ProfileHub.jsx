@@ -30,7 +30,7 @@ export default function ProfileHub() {
       {/* Mobile stacking (override grid to vertical) */}
       <style>{`
         @media (max-width: 1024px) {
-          .profile-grid-stack { display: flex; flex-direction: column; }
+          .profile-grid { display: flex !important; flex-direction: column; }
         }
       `}</style>
     </div>
