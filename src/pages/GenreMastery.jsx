@@ -288,11 +288,13 @@ const RewardModal = ({ level, onClose }) => {
         onClick={(e) => e.stopPropagation()}
         className="max-w-5xl w-full relative flex flex-col md:flex-row items-start gap-8"
         style={{
-          background: 'rgba(20, 25, 35, 0.95)',
-          backdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(100, 120, 140, 0.12)',
+          backdropFilter: 'blur(30px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
           borderRadius: '24px',
-          padding: '48px'
+          padding: '48px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         }}
       >
         <button
