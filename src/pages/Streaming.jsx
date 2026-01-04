@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { MOCK_STREAMERS } from "@/components/streaming/mockData";
 import StreamerCard from "@/components/streaming/StreamerCard";
 import { Button } from "@/components/ui/button";
-import VerticalSidebar from "@/components/navigation/VerticalSidebar";
+import GlassPanel from "@/components/shared/GlassPanel";
 
 export default function Streaming() {
   const [filter, setFilter] = useState("all");
