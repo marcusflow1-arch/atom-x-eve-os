@@ -41,6 +41,12 @@ export const NAV_HIERARCHY = [
         path: createPageUrl('CreatorDashboard'),
         subPages: []
     },
+    {
+        name: 'Creator Studio',
+        icon: Settings,
+        path: createPageUrl('CreatorDashboard'),
+        subPages: []
+    },
 ];
 
 // Flat list for backward compatibility
