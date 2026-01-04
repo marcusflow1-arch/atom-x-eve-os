@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Radio, ShoppingBag, MessageSquare } from 'lucide-react';
+import { Home, Radio, ShoppingBag, MessageSquare, Settings } from 'lucide-react';
 
 export default function FloatingDock() {
   const location = useLocation();
@@ -11,6 +11,7 @@ export default function FloatingDock() {
     { key: 'stream', label: 'Streaming', to: createPageUrl('Streaming'), icon: Radio },
     { key: 'store', label: 'Store', to: createPageUrl('Store'), icon: ShoppingBag },
     { key: 'community', label: 'Community', to: createPageUrl('Community'), icon: MessageSquare },
+    { key: 'creator', label: 'Studio', to: createPageUrl('CreatorDashboard'), icon: Settings },
   ];
 
   const isLiveMode = location.pathname.includes('Streaming') && location.search.includes('mode=live');
