@@ -3,7 +3,13 @@ import { motion } from 'framer-motion';
 
 export default function VolumetricFogBackground() {
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#0f1419]">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1 }}
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#0f1419]"
+    >
       {/* Base dark layer */}
       <div className="absolute inset-0 bg-slate-900" />
 
@@ -39,6 +45,6 @@ export default function VolumetricFogBackground() {
       
       {/* Vignette */}
       <div className="absolute inset-0 bg-radial-gradient-vignette mix-blend-multiply" />
-    </div>
+    </motion.div>
   );
 }
