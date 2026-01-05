@@ -103,6 +103,9 @@ export default function AuraGamesCrossView() {
   }, [genreData, currentGenre, selectedGame]);
 
   const onWheel = (e) => {
+    // Allow vertical scrolling inside the streams box without switching genres
+    if (e.target && typeof e.target.closest === 'function' && e.target.closest('.streams-box')) return;
+
     const now = Date.now();
     if (now - wheelCooldownRef.current < 160) return; // throttle
     wheelCooldownRef.current = now;
