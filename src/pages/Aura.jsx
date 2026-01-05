@@ -6,6 +6,7 @@ import {
   Bell, Calendar, Heart, Share2, Twitter, Instagram, MessageCircle,
   ExternalLink, Gift, Star, Trophy, Lock, Check
 } from 'lucide-react';
+import AuraGamesCrossView from '@/components/aura/AuraGamesCrossView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
