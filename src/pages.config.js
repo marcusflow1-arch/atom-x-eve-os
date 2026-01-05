@@ -39,10 +39,8 @@ import StreamDetail from './pages/StreamDetail';
 import StreamWatch from './pages/StreamWatch';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
-import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Aura from './pages/Aura';
 import __Layout from './Layout.jsx';
 
 
@@ -88,10 +86,8 @@ export const PAGES = {
     "StreamWatch": StreamWatch,
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
-    "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Aura": Aura,
 }
 
 export const pagesConfig = {
