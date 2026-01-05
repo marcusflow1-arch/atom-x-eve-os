@@ -19,6 +19,10 @@ export default function StreamerProfile() {
   const streamerId = searchParams.get('id') || '1';
   const streamer = MOCK_STREAMERS.find(s => s.id === streamerId) || MOCK_STREAMERS[0];
   const [activeTab, setActiveTab] = useState('overview');
+  const [preview, setPreview] = useState({
+    title: 'Elder Scrolls Online',
+    keyArtUrl: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=1200&auto=format&fit=crop'
+  });
 
   return (
     <div className="min-h-screen bg-[#0f1419] text-white p-6 md:p-12 overflow-y-auto custom-scrollbar">
@@ -59,9 +63,9 @@ export default function StreamerProfile() {
         </div>
 
         {/* Stream Header + Video + Rewards */}
-        <StreamHeader gameTitle={"Elder Scrolls Online"} viewCount={3421} />
-        <VideoBox title={"Elder Scrolls Online"} />
-        <AbilityRewardCarousel />
+        <StreamHeader gameTitle={preview.title} viewCount={3421} />
+        <VideoBox title={preview.title} keyArtUrl={preview.keyArtUrl} />
+        <AbilityRewardCarousel onSelect={(it) => setPreview((p) => ({ ...p, keyArtUrl: it.image }))} />
 
         {/* Sponsors */}
         <SponsorsSection />
