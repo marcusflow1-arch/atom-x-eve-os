@@ -72,64 +72,70 @@ export default function StreamsForGame({ game, onClose }) {
 
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 20, opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-      className="streams-box absolute left-56 right-6 bottom-8 z-[30] rounded-2xl overflow-hidden border"
-      style={{
-        background: 'rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(24px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(140%)',
-        borderColor: 'rgba(255,255,255,0.12)'
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="streams-box fixed inset-0 z-[70]"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-        <div>
-          <p className="text-white/50 text-xs font-semibold uppercase tracking-wider">Live Streams</p>
-          <h3 className="text-white font-bold text-lg">
-            {game.title} <span className="text-white/40 text-sm ml-2">({game.genre})</span>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+      <motion.div
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 12, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 26 }}
+        className="relative w-full h-full p-6"
+      >
+        {/* Close button only (no lines) */}
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Title */}
+        <div className="pr-14 mb-4">
+          <h3 className="text-white font-bold text-2xl">
+            {game.title} <span className="text-white/50 text-base ml-2">{game.genre}</span>
           </h3>
         </div>
-        <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
-          <X className="w-4 h-4 text-white/80" />
-        </button>
-      </div>
 
-      {/* Grid Body */}
-      <div className="max-h-[65vh] overflow-y-auto p-4">
-        {loading ? (
-          <div className="py-16 text-center text-white/60">Loading streams...</div>
-        ) : streams.length === 0 ? (
-          <div className="py-16 text-center text-white/60">No live streams found for this game right now.</div>
-        ) : (
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-            {streams.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => goToProfile(s)}
-                className="text-left p-3 rounded-xl hover:bg-white/10 transition-colors border border-white/10"
-                style={{ background: 'rgba(0,0,0,0.25)' }}
-              >
-                <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 bg-black/40 flex items-center justify-center border border-white/10">
-                  {s.profile?.avatar_url ? (
-                    <img src={s.profile.avatar_url} alt={s.profile.display_name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Radio className="w-6 h-6 text-white/60" />
-                  )}
-                </div>
-                <p className="text-white font-semibold truncate">{s.profile?.display_name || 'Unknown Streamer'}</p>
-                {s.title && <p className="text-white/60 text-xs truncate">{s.title}</p>}
-                <div className="flex items-center gap-3 text-xs text-white/50 mt-1">
-                  <span className="inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {s.viewer_count || 0}</span>
-                  <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {s.profile?.follower_count || 0}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        {/* Fullscreen scrollable grid */}
+        <div className="absolute inset-x-6 bottom-6 top-[84px] overflow-y-auto">
+          {loading ? (
+            <div className="py-16 text-center text-white/70">Loading streams...</div>
+          ) : streams.length === 0 ? (
+            <div className="py-16 text-center text-white/70">No live streams found for this game right now.</div>
+          ) : (
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+              {streams.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => goToProfile(s)}
+                  className="text-left p-3 rounded-xl hover:bg-white/10 transition-colors bg-white/5"
+                >
+                  <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 bg-black/40 flex items-center justify-center">
+                    {s.profile?.avatar_url ? (
+                      <img src={s.profile.avatar_url} alt={s.profile.display_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Radio className="w-6 h-6 text-white/60" />
+                    )}
+                  </div>
+                  <p className="text-white font-semibold truncate">{s.profile?.display_name || 'Unknown Streamer'}</p>
+                  {s.title && <p className="text-white/60 text-xs truncate">{s.title}</p>}
+                  <div className="flex items-center gap-3 text-xs text-white/60 mt-1">
+                    <span className="inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {s.viewer_count || 0}</span>
+                    <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {s.profile?.follower_count || 0}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
