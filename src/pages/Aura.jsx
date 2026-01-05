@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import AuraMasteryTrack from '@/components/aura/AuraMasteryTrack';
 import GenreVerticalBrowser from '@/components/aura/GenreVerticalBrowser';
-import EmbeddedGamesCrossView from '@/components/aura/EmbeddedGamesCrossView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -561,17 +560,7 @@ export default function Aura() {
                   </div>
 
                   {/* Content Grid */}
-                  <div className={`grid gap-6 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-3'}`}>
-                    {/* Left Column - Games (Embedded Cross Menu) */}
-                    <div className={`${videoExpanded ? 'hidden' : ''}`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-white">GAMES PLAYED</h2>
-                        <button onClick={() => setVideoExpanded((v) => !v)} className="text-white/60 hover:text-white">
-                          <ChevronLeft className={`w-5 h-5 transition-transform ${videoExpanded ? '-rotate-180' : ''}`} />
-                        </button>
-                      </div>
-                      <EmbeddedGamesCrossView />
-                    </div>
+                  <div className={`grid gap-6 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-2'}`}>
 
                     {/* Middle Column - Stream */}
                     <div className="relative">
