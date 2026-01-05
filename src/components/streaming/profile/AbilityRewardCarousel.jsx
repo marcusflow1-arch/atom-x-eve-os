@@ -44,7 +44,7 @@ export default function AbilityRewardCarousel({ items = DEFAULT_ITEMS, onSelect 
       <div className="overflow-hidden">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {pageItems.map((it) => {
-            const locked = it.rarity === "Legendary" ? false : false; // hook up later
+            const locked = it.rarity !== "Legendary";
             const isActive = activeId === it.id;
             return (
               <ShinyCard key={it.id} className={`rounded-2xl overflow-hidden border ${isActive ? 'border-cyan-400/50' : 'border-white/10'} bg-white/5`} onClick={() => { setActiveId(it.id); onSelect?.(it); }}>
