@@ -276,7 +276,7 @@ export default function Aura() {
                         key={streamer.id}
                         onClick={() => setSelectedStreamer(streamer)}
                         className="relative rounded-3xl overflow-hidden cursor-pointer group"
-                        style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                        style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                         whileHover={{ scale: 1.02 }}
                       >
                         {streamer.isLive && (
