@@ -4,13 +4,14 @@ import {
   Home, Compass, Radio, Gamepad2, Search, SlidersHorizontal,
   Play, Users, Eye, ChevronLeft, ChevronRight, Settings,
   Bell, Calendar, Heart, Share2, Twitter, Instagram, MessageCircle,
-  ExternalLink, Gift, Star, Trophy, Lock, Check
+  ExternalLink, Gift, Star, Trophy, Lock, Check, Pause, Volume2, Maximize, Minimize
 } from 'lucide-react';
 import AuraMasteryTrack from '@/components/aura/AuraMasteryTrack';
 import GenreVerticalBrowser from '@/components/aura/GenreVerticalBrowser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import ShinyCard from '@/components/shared/ShinyCard';
 import { trendingGames, newReleases, classicBestSellers, aiGamesList, androidGames } from '@/components/store/mockData';
 
 // Mock Data
@@ -219,6 +220,20 @@ export default function Aura() {
   const [selectedStreamer, setSelectedStreamer] = useState(null);
   const [videoExpanded, setVideoExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playerRef = useRef(null);
+  const toggleFullscreen = () => {
+    const el = playerRef.current;
+    if (!document.fullscreenElement && el?.requestFullscreen) {
+      el.requestFullscreen();
+      setIsFullscreen(true);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
 
   // Sidebar Nav Items
   const navItems = [
