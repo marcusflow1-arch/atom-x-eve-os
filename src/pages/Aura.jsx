@@ -633,21 +633,18 @@ export default function Aura() {
                       </div>
 
                       {/* Meta below video */}
-                      <div className="text-center">
-                        <h3 className="text-white font-bold text-lg">Elder Scrolls Online</h3>
-                        <div className="flex items-center justify-center my-3">
-                          <div className="h-px bg-white/15 w-20" />
-                          <div className="w-2 h-2 rounded-full bg-white/40 mx-2" />
-                          <div className="h-px bg-white/15 w-20" />
-                        </div>
-                        <div className="flex flex-wrap items-center justify-center gap-3 text-white/80">
-                          <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm">
-                            <Heart className="w-4 h-4" /> Follow
-                          </button>
-                          <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm">
-                            <Bell className="w-4 h-4" /> Notify
-                          </button>
-                          <Button className="h-8 px-4 rounded-full text-sm bg-cyan-500 hover:bg-cyan-600">Subscribe</Button>
+                      <div className="mt-2">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-white font-bold text-lg">Elder Scrolls Online</h3>
+                            <Button className="h-8 px-4 rounded-full text-sm bg-cyan-500 hover:bg-cyan-600">Subscribe</Button>
+                            <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm text-white/80">
+                              <Heart className="w-4 h-4" /> Follow
+                            </button>
+                            <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm text-white/80">
+                              <Bell className="w-4 h-4" /> Notify
+                            </button>
+                          </div>
                           <div className="flex items-center gap-1 text-white/70 text-sm">
                             <Eye className="w-4 h-4" /> 3,421
                           </div>
@@ -658,17 +655,35 @@ export default function Aura() {
                       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <div>
                           <h4 className="text-white font-semibold mb-3">Achievements</h4>
-                          <div className="space-y-2">
-                            {[
-                              { name: 'First Blood', rarity: 'Rare' },
-                              { name: 'Dungeon Master', rarity: 'Epic' },
-                              { name: 'Dragon Slayer', rarity: 'Legendary' }
-                            ].map((a, i) => (
-                              <div key={i} className="flex items-center justify-between rounded-xl px-3 py-2 border border-white/10 bg-white/5">
-                                <span className="text-white/90 text-sm">{a.name}</span>
-                                <span className={`px-2 py-0.5 text-[10px] rounded border ${a.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' : a.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-blue-500/20 text-blue-300 border-blue-500/30'}`}>{a.rarity}</span>
-                              </div>
-                            ))}
+                          <div className="overflow-x-auto">
+                            <div className="flex gap-4 pb-2">
+                              {[
+                                { name: 'First Blood', rarity: 'Rare' },
+                                { name: 'Dungeon Master', rarity: 'Epic' },
+                                { name: 'Dragon Slayer', rarity: 'Legendary' },
+                                { name: 'Explorer', rarity: 'Common' }
+                              ].map((a, i) => (
+                                <ShinyCard key={i} className="w-56 rounded-2xl overflow-hidden flex-shrink-0">
+                                  <div className="relative h-32">
+                                    <img
+                                      src={`https://source.unsplash.com/random/400x300?sig=${i+1}&fantasy`}
+                                      alt={a.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                    <div className="absolute top-2 left-2">
+                                      <span className={`px-2 py-0.5 text-[10px] rounded border ${a.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' : a.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : a.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-slate-500/20 text-slate-300 border-slate-500/30'}`}>{a.rarity}</span>
+                                    </div>
+                                  </div>
+                                  <div className="p-3">
+                                    <div className="text-white font-semibold text-sm mb-0.5">{a.name}</div>
+                                    <div className="text-white/60 text-xs flex items-center gap-1">
+                                      <Trophy className="w-3 h-3 text-yellow-300" /> Achievement
+                                    </div>
+                                  </div>
+                                </ShinyCard>
+                              ))}
+                            </div>
                           </div>
                         </div>
                         <div className="flex justify-end">
