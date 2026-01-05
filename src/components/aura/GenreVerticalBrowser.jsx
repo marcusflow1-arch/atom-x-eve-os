@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Sparkles, Star, BadgeDollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Star, DollarSign } from 'lucide-react';
 import { aiGamesList, trendingGames, newReleases, classicBestSellers, androidGames } from '@/components/store/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ const GameCard = ({ game, onClick }) => (
           <div className="flex items-center justify-between">
             <h4 className="text-white font-bold text-sm truncate max-w-[70%]">{game.title}</h4>
             <div className="text-white font-semibold text-sm flex items-center gap-1">
-              <BadgeDollarSign className="w-4 h-4 text-emerald-400" />
+              <DollarSign className="w-4 h-4 text-emerald-400" />
               {Number(game.price || 0).toFixed(0)}
             </div>
           </div>

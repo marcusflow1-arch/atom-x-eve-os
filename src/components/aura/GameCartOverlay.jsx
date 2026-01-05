@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Star, BadgeDollarSign } from 'lucide-react';
+import { X, ShoppingBag, Star, DollarSign } from 'lucide-react';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +74,7 @@ export default function GameCartOverlay({ game, onClose }) {
                 <div className="px-5 py-3 rounded-xl border border-white/15 bg-white/5">
                   <div className="text-xs text-white/60">Price</div>
                   <div className="text-2xl font-bold text-white flex items-center gap-2">
-                    <BadgeDollarSign className="w-5 h-5 text-emerald-400" />
+                    <DollarSign className="w-5 h-5 text-emerald-400" />
                     ${Number(game.price || 0).toFixed(2)}
                   </div>
                 </div>
