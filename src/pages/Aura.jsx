@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, Compass, Radio, Gamepad2, Search, SlidersHorizontal,
@@ -221,30 +221,6 @@ export default function Aura() {
   const [videoExpanded, setVideoExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const isLive = !!selectedStreamer?.isLive;
-  const [bezelColor, setBezelColor] = useState('rgba(34, 211, 238, 0.5)');
-  const streamImgRef = useRef(null);
-
-  useEffect(() => {
-    const imgEl = streamImgRef.current;
-    if (!imgEl) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imgEl.src;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 32; canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      ctx.drawImage(img, 0, 0, 32, 32);
-      const { data } = ctx.getImageData(0, 0, 32, 32);
-      let r = 0, g = 0, b = 0, count = 0;
-      for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i+1]; b += data[i+2]; count++; }
-      r = Math.round(r / count); g = Math.round(g / count); b = Math.round(b / count);
-      setBezelColor(`rgba(${r}, ${g}, ${b}, 0.6)`);
-    };
-  }, [selectedStreamer, videoExpanded]);
-
   // Sidebar Nav Items
   const navItems = [
     { id: 'home', icon: Home },
@@ -256,21 +232,9 @@ export default function Aura() {
   ];
 
   return (
-    <div className={`min-h-screen flex aura-root ${isLive ? 'aura-live' : ''}`} style={{ background: 'linear-gradient(135deg, #0a1628 0%, #1a2640 50%, #0f1c35 100%)', '--aura-glow-color': isLive ? '#FFA500' : '#22d3ee' }}>
-      <style>{`
-        .aura-root { position: relative; }
-        .aura-glass { position: relative; background: rgba(12,24,36,0.20); backdrop-filter: blur(50px) saturate(160%); -webkit-backdrop-filter: blur(50px) saturate(160%); border-radius: inherit; }
-        .aura-glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-        .aura-glass::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 2px 2px; opacity: 1; pointer-events: none; }
-        .aura-ease { transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1); }
-        .aura-refraction::after { content: ""; position: absolute; inset: -20%; background: radial-gradient(60% 40% at 50% 50%, rgba(34,211,238,0.25), transparent 60%); mix-blend-mode: overlay; opacity: 0; transition: opacity 300ms cubic-bezier(0.23,1,0.32,1); pointer-events: none; border-radius: inherit; }
-        .aura-refraction:hover::after { opacity: 1; }
-        .aura-bezel { box-shadow: 0 0 0 1px rgba(255,255,255,0.12) inset, 0 0 16px 2px var(--aura-glow-color); }
-        @keyframes auraPulse { from { filter: drop-shadow(0 0 8px var(--aura-glow-color)); } to { filter: drop-shadow(0 0 16px var(--aura-glow-color)); } }
-        .aura-live .aura-bezel { animation: auraPulse 1s ease-in-out infinite alternate; }
-      `}</style>
+    <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #1a2640 50%, #0f1c35 100%)' }}>
       {/* Sidebar */}
-      <div className="w-16 flex flex-col items-center py-6 gap-6 aura-glass aura-ease" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      <div className="w-16 flex flex-col items-center py-6 gap-6" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
         {/* Logo */}
         <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center">
           <Radio className="w-6 h-6 text-white" />
@@ -301,7 +265,7 @@ export default function Aura() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-4 aura-glass aura-ease" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div className="px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
@@ -417,7 +381,7 @@ export default function Aura() {
                       <motion.div
                         key={streamer.id}
                         onClick={() => setSelectedStreamer(streamer)}
-                        className="relative rounded-3xl overflow-hidden cursor-pointer group aura-glass aura-refraction aura-ease"
+                        className="relative rounded-3xl overflow-hidden cursor-pointer group"
                         style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                         whileHover={{ scale: 1.02 }}
                       >
@@ -611,9 +575,8 @@ export default function Aura() {
 
                     {/* Middle Column - Stream */}
                     <div className="relative">
-                      <div className={`rounded-2xl flex items-center justify-center mb-4 overflow-hidden aura-glass aura-ease aura-bezel ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`} style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.15) inset, 0 0 24px 4px ${bezelColor}, 0 0 120px 16px ${bezelColor}` }}>
+                      <div className={`rounded-2xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`}>
                         <img
-                          ref={streamImgRef}
                           src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
                           alt="Stream"
                           className="w-full h-full object-cover"
@@ -643,7 +606,7 @@ export default function Aura() {
                     {/* Right Column - Chat */}
                     <div className={`${videoExpanded ? 'hidden' : ''}`}>
                       <h2 className="text-xl font-bold text-white mb-4">Live Chat</h2>
-                      <div className="rounded-xl overflow-hidden aura-glass aura-refraction aura-ease" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="p-4 border-b border-white/10">
                           <h3 className="text-white font-semibold text-sm mb-2">Chat Rules</h3>
                           <ul className="text-white/60 text-xs space-y-1">
@@ -734,7 +697,7 @@ export default function Aura() {
 
                   {/* Aura Mastery (AI Skill Tree Seasonal Passive Awards) */}
                   <div className="mb-12">
-                    <AuraMasteryTrack isLive={isLive} />
+                    <AuraMasteryTrack />
                   </div>
 
                       </div>

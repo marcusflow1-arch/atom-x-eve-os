@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Sparkles, Star, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Star, BadgeDollarSign } from 'lucide-react';
 import { aiGamesList, trendingGames, newReleases, classicBestSellers, androidGames } from '@/components/store/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ const GameCard = ({ game, onClick }) => (
   <motion.button
     onClick={() => onClick(game)}
     whileHover={{ scale: 1.03 }}
-    className="relative w-full rounded-2xl overflow-hidden aura-glass aura-refraction aura-ease text-left"
+    className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md text-left"
     style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
   >
     <ShinyCard>
@@ -34,7 +34,7 @@ const GameCard = ({ game, onClick }) => (
           <div className="flex items-center justify-between">
             <h4 className="text-white font-bold text-sm truncate max-w-[70%]">{game.title}</h4>
             <div className="text-white font-semibold text-sm flex items-center gap-1">
-              <DollarSign className="w-4 h-4 text-emerald-400" />
+              <BadgeDollarSign className="w-4 h-4 text-emerald-400" />
               {Number(game.price || 0).toFixed(0)}
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function GenreVerticalBrowser() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex-shrink-0 aura-glass aura-ease text-white"
+                className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white"
                 onClick={() => prevPair(genre, pairs.length)}
                 title="Previous"
               >
@@ -109,7 +109,7 @@ export default function GenreVerticalBrowser() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex-shrink-0 aura-glass aura-ease text-white"
+                className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white"
                 onClick={() => nextPair(genre, pairs.length)}
                 title="Next"
               >
