@@ -6,7 +6,6 @@ import {
   Bell, Calendar, Heart, Share2, Twitter, Instagram, MessageCircle,
   ExternalLink, Gift, Star, Trophy, Lock, Check
 } from 'lucide-react';
-import AuraGameXMB from "../components/aura/AuraGameXMB";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -218,34 +217,6 @@ export default function Aura() {
   const [selectedStreamer, setSelectedStreamer] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Cross-Scroll data (migrated from Store)
-  const allGames = React.useMemo(() => [
-    ...trendingGames,
-    ...newReleases,
-    ...classicBestSellers,
-    ...aiGamesList,
-    ...androidGames
-  ], []);
-
-  const genres = React.useMemo(() => {
-    const map = new Map();
-    allGames.forEach((g) => {
-      const label = g.genre || 'Other';
-      if (!map.has(label)) map.set(label, []);
-      map.get(label).push(g);
-    });
-    return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
-  }, [allGames]);
-
-  const [activeGenreIndex, setActiveGenreIndex] = useState(0);
-  const [activeGameIndex, setActiveGameIndex] = useState(0);
-  const rowRef = useRef(null);
-
-  const scrollRow = (dir) => {
-    if (!rowRef.current) return;
-    rowRef.current.scrollBy({ left: dir === 'left' ? -400 : 400, behavior: 'smooth' });
-  };
-
   // Sidebar Nav Items
   const navItems = [
     { id: 'home', icon: Home },
@@ -447,94 +418,92 @@ export default function Aura() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full overflow-hidden pt-8"
+                className="p-8 h-full overflow-y-auto"
               >
-                <div className="px-8 pb-12">
+                <div className="max-w-7xl mx-auto">
                   <h1 className="text-4xl font-bold text-white mb-2">BROWSE GAMES</h1>
-                  <p className="text-white/60 mb-8">Select a genre on the left, then browse games</p>
+                  <p className="text-white/60 mb-8">Find streams by your favorite games</p>
 
-                  <div className="grid grid-cols-[200px,1fr] gap-8 min-h-[60vh]">
-                    {/* Vertical Genres (from Store) */}
-                    <div className="overflow-y-auto pr-2">
-                      <div className="flex flex-col gap-2">
-                        {genres.map((g, idx) => (
-                          <button
-                            key={g.label}
-                            onClick={() => { setActiveGenreIndex(idx); setActiveGameIndex(0); }}
-                            className={`w-full text-left px-4 py-2 rounded-lg transition-all border ${idx === activeGenreIndex ? 'bg-white/15 text-white border-white/20' : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'}`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-semibold uppercase tracking-wider">{g.label}</span>
-                              <span className="text-xs text-white/40">{g.items.length}</span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Horizontal Games Row for active genre */}
-                    <div className="relative group">
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.3 }}
-                        whileHover={{ opacity: 1 }}
-                        onClick={() => scrollRow('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center border"
-                        style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', borderColor: 'rgba(255,255,255,0.15)' }}
-                      >
-                        <ChevronLeft className="w-6 h-6 text-white" />
-                      </motion.button>
-
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.3 }}
-                        whileHover={{ opacity: 1 }}
-                        onClick={() => scrollRow('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center border"
-                        style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)', borderColor: 'rgba(255,255,255,0.15)' }}
-                      >
-                        <ChevronRight className="w-6 h-6 text-white" />
-                      </motion.button>
-
-                      <div ref={rowRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 pr-12 pl-12">
-                        {genres[activeGenreIndex]?.items.map((game) => (
-                          <motion.div
-                            key={game.id}
-                            onClick={() => setSelectedGame(game)}
-                            className="relative rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 w-48"
-                            whileHover={{ scale: 1.05 }}
-                            style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
-                          >
-                            <div className="aspect-[3/4] relative">
-                              <img
-                                src={game.cover_image || game.image}
-                                alt={game.title}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                              <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{game.title}</h3>
-                                <div className="flex items-center gap-1 text-xs text-cyan-400">
-                                  <span>{game.genre}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      <style>{`
-                        .scrollbar-hide::-webkit-scrollbar { display: none; }
-                        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-                      `}</style>
-                    </div>
+                  {/* Search */}
+                  <div className="relative mb-12">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input
+                      placeholder="Search for a game..."
+                      className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder:text-white/40 border-white/10"
+                      style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+                    />
                   </div>
+
+                  {/* Genre Sections with Horizontal Scroll */}
+                  <GenreScrollSection title="Trending Games" games={trendingGames} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="New Releases" games={newReleases} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="Classic Best Sellers" games={classicBestSellers} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="AI Enhanced" games={aiGamesList} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="Mobile Games" games={androidGames} onGameClick={setSelectedGame} />
                 </div>
               </motion.div>
             )}
 
             {selectedGame && (
-              <AuraGameXMB selectedGame={selectedGame} onBack={() => setSelectedGame(null)} />
+              <motion.div
+                key="game-detail"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-8"
+              >
+                <div className="max-w-7xl mx-auto">
+                  <button
+                    onClick={() => setSelectedGame(null)}
+                    className="flex items-center gap-2 text-white/60 hover:text-white mb-6 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back to Games
+                  </button>
+
+                  <div className="flex items-center gap-4 mb-8">
+                    <img src={selectedGame.image} alt={selectedGame.name} className="w-20 h-20 rounded-xl object-cover" />
+                    <div>
+                      <h1 className="text-3xl font-bold text-white uppercase">{selectedGame.name}</h1>
+                      <div className="flex items-center gap-2 text-white/50">
+                        <div className="w-2 h-2 rounded-full bg-red-400" />
+                        <span>{selectedGame.viewers.toLocaleString()} viewers</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Streams Grid */}
+                  <div className="grid grid-cols-3 gap-6">
+                    {mockStreams.map((stream) => (
+                      <motion.div
+                        key={stream.id}
+                        className="relative rounded-2xl overflow-hidden cursor-pointer group"
+                        style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="aspect-video relative">
+                          <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover" />
+                          <div className="absolute top-3 left-3 px-2 py-1 rounded bg-red-500 flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                            <span className="text-white text-xs font-bold uppercase">LIVE</span>
+                          </div>
+                          <div className="absolute bottom-3 left-3 px-2 py-1 rounded bg-black/60 backdrop-blur-sm flex items-center gap-1 text-white text-xs">
+                            <Eye className="w-3 h-3" />
+                            <span>{stream.viewers.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <div className="p-4 flex items-start gap-3">
+                          <img src={stream.avatar} alt={stream.streamer} className="w-10 h-10 rounded-full" />
+                          <div className="flex-1">
+                            <h3 className="text-white font-semibold line-clamp-1">{stream.title}</h3>
+                            <p className="text-white/60 text-sm">{stream.streamer}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {selectedStreamer && (
