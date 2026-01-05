@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, Compass, Radio, Gamepad2, Search, SlidersHorizontal,
@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { trendingGames, newReleases, classicBestSellers, aiGamesList, androidGames } from '@/components/store/mockData';
 
 // Mock Data
 const mockStreamers = [
@@ -107,6 +108,107 @@ const mockStreams = [
     isLive: true
   }
 ];
+
+// Genre Scroll Section Component
+const GenreScrollSection = ({ title, games, onGameClick }) => {
+  const scrollRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 400;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="mb-12">
+      <h2 className="text-2xl font-bold text-cyan-400 mb-6">{title}</h2>
+      <div className="relative group">
+        {/* Left Arrow */}
+        <motion.button
+          initial={{ opacity: 0.3 }}
+          whileHover={{ opacity: 1 }}
+          onClick={() => scroll('left')}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            showLeftArrow ? 'opacity-30 group-hover:opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+        >
+          <ChevronLeft className="w-6 h-6 text-white" />
+        </motion.button>
+
+        {/* Right Arrow */}
+        <motion.button
+          initial={{ opacity: 0.3 }}
+          whileHover={{ opacity: 1 }}
+          onClick={() => scroll('right')}
+          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            showRightArrow ? 'opacity-30 group-hover:opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+        >
+          <ChevronRight className="w-6 h-6 text-white" />
+        </motion.button>
+
+        {/* Scrollable Games */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          {games.map((game) => (
+            <motion.div
+              key={game.id}
+              onClick={() => onGameClick(game)}
+              className="relative rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 w-48"
+              whileHover={{ scale: 1.05 }}
+              style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+            >
+              <div className="aspect-[3/4] relative">
+                <img
+                  src={game.cover_image}
+                  alt={game.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{game.title}</h3>
+                  <div className="flex items-center gap-1 text-xs text-cyan-400">
+                    <span>{game.genre}</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+};
 
 export default function Aura() {
   const [activeTab, setActiveTab] = useState('discover');
@@ -316,7 +418,7 @@ export default function Aura() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-8"
+                className="p-8 h-full overflow-y-auto"
               >
                 <div className="max-w-7xl mx-auto">
                   <h1 className="text-4xl font-bold text-white mb-2">BROWSE GAMES</h1>
@@ -332,40 +434,12 @@ export default function Aura() {
                     />
                   </div>
 
-                  {/* FPS Games */}
-                  <div className="mb-12">
-                    <h2 className="text-2xl font-bold text-cyan-400 mb-6">FPS</h2>
-                    <div className="grid grid-cols-5 gap-4">
-                      {mockGames.map((game) => (
-                        <motion.div
-                          key={game.id}
-                          onClick={() => setSelectedGame(game)}
-                          className="relative rounded-2xl overflow-hidden cursor-pointer group"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <div className="aspect-[3/4] relative">
-                            <img
-                              src={game.image}
-                              alt={game.name}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                              <h3 className="text-white font-bold mb-1">{game.name}</h3>
-                              <div className="flex items-center gap-1 text-xs">
-                                <span className="text-cyan-400">{game.category}</span>
-                                <span className="text-white/40">•</span>
-                                <div className="flex items-center gap-1 text-red-400">
-                                  <div className="w-2 h-2 rounded-full bg-red-400" />
-                                  <span>{(game.viewers / 1000).toFixed(1)}K</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Genre Sections with Horizontal Scroll */}
+                  <GenreScrollSection title="Trending Games" games={trendingGames} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="New Releases" games={newReleases} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="Classic Best Sellers" games={classicBestSellers} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="AI Enhanced" games={aiGamesList} onGameClick={setSelectedGame} />
+                  <GenreScrollSection title="Mobile Games" games={androidGames} onGameClick={setSelectedGame} />
                 </div>
               </motion.div>
             )}
