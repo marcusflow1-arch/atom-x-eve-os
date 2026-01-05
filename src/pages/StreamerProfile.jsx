@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Heart, Star, Crown, Gift, Zap, Shield, Play } from 'lucide-react';
+import StreamHeader from '@/components/streaming/profile/StreamHeader';
+import VideoBox from '@/components/streaming/profile/VideoBox';
+import AbilityRewardCarousel from '@/components/streaming/profile/AbilityRewardCarousel';
+import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
+import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
+import AboutMeAutoTabs from '@/components/streaming/profile/AboutMeAutoTabs';
+import ViewerSeasonPass from '@/components/streaming/profile/ViewerSeasonPass';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MOCK_STREAMERS } from '../components/streaming/mockData';
@@ -26,138 +33,45 @@ export default function StreamerProfile() {
         </button>
 
         {/* Hero Identity Section */}
-        <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/50 backdrop-blur-xl shadow-2xl mb-12">
+        <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/50 backdrop-blur-xl shadow-2xl mb-8">
            {/* Cover / Intro Video Bg */}
-           <div className="h-80 w-full relative">
+           <div className="h-72 w-full relative">
               <video src={streamer.intro_video_url} className="w-full h-full object-cover opacity-40" autoPlay loop muted playsInline />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f1419] via-transparent to-transparent" />
            </div>
 
-           <div className="px-10 pb-10 -mt-20 relative flex items-end justify-between">
-              <div className="flex items-end gap-8">
-                <div className="w-40 h-40 rounded-full border-4 border-[#0f1419] overflow-hidden shadow-2xl">
+           <div className="px-8 pb-8 -mt-16 relative flex items-end justify-between">
+              <div className="flex items-end gap-6">
+                <div className="w-32 h-32 rounded-full border-4 border-[#0f1419] overflow-hidden shadow-2xl">
                   <img src={streamer.avatar_url} className="w-full h-full object-cover" />
                 </div>
-                <div className="pb-4">
-                   <div className="flex items-center gap-3 mb-2">
-                     <h1 className="text-4xl font-black text-white">{streamer.username}</h1>
+                <div className="pb-3">
+                   <div className="flex items-center gap-3 mb-1">
+                     <h1 className="text-3xl font-black text-white">{streamer.username}</h1>
                      <Badge className="bg-cyan-500 text-black font-bold">PRO</Badge>
                    </div>
-                   <p className="text-xl text-white/60 font-light italic">"{streamer.tagline}"</p>
+                   <p className="text-lg text-white/60 font-light italic">"{streamer.tagline}"</p>
                 </div>
               </div>
 
-              <div className="pb-4 flex gap-4">
-                 <Button className="bg-white text-black hover:bg-cyan-50 font-bold px-8 rounded-full h-12 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                   <Heart className="mr-2 fill-black" size={18} /> Follow
-                 </Button>
-                 <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold px-8 rounded-full h-12 border-0 shadow-[0_0_20px_rgba(147,51,234,0.4)]">
-                   <Zap className="mr-2 fill-white" size={18} /> Subscribe
-                 </Button>
-              </div>
+              <div className="pb-3" />
            </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-12 gap-8">
-          
-          {/* Main Column (8) */}
-          <div className="col-span-12 lg:col-span-8 space-y-8">
-            
-            {/* About / Context */}
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <User className="text-cyan-400" /> The Human Behind the Screen
-              </h2>
-              <div className="space-y-6">
-                <div className="bg-black/20 rounded-xl p-6 border border-white/5">
-                  <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2">Bio</h3>
-                  <p className="text-white/80 leading-relaxed text-lg">{streamer.bio_short}</p>
-                </div>
-                {streamer.context_disclaimer && (
-                  <div className="bg-cyan-900/20 rounded-xl p-6 border border-cyan-500/20 flex gap-4 items-start">
-                    <Shield className="text-cyan-400 shrink-0 mt-1" />
-                    <div>
-                      <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">Reality Check</h3>
-                      <p className="text-cyan-100/80">{streamer.context_disclaimer}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Stream Header + Video + Rewards */}
+        <StreamHeader gameTitle={"Elder Scrolls Online"} viewCount={3421} />
+        <VideoBox title={"Elder Scrolls Online"} />
+        <AbilityRewardCarousel />
 
-            {/* Seasonal Pass Progress (Viewer) */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Crown size={120} />
-              </div>
-              
-              <div className="flex justify-between items-center mb-6 relative z-10">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Crown className="text-yellow-400" /> Season Pass: Neon Nights
-                </h2>
-                <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">SEASON 2</Badge>
-              </div>
+        {/* Sponsors */}
+        <SponsorsSection />
+        <ProductsGrid />
 
-              <div className="flex items-center gap-8 relative z-10">
-                <div className="flex-1">
-                   <div className="flex justify-between text-sm mb-2">
-                     <span className="text-white/60">Level 45</span>
-                     <span className="text-white font-bold">1,250 / 2,000 XP</span>
-                   </div>
-                   <div className="h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                     <div className="h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 w-[65%]" />
-                   </div>
-                   <p className="text-xs text-white/40 mt-3">Earn XP by watching, chatting, and reacting.</p>
-                </div>
-                
-                {/* Reward Preview */}
-                <div className="w-24 h-24 bg-white/5 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2">
-                  <Gift className="text-purple-400" />
-                  <span className="text-[10px] text-white/60 uppercase font-bold">Next Reward</span>
-                </div>
-              </div>
-            </div>
+        {/* About */}
+        <AboutMeAutoTabs />
 
-          </div>
-
-          {/* Sidebar Column (4) */}
-          <div className="col-span-12 lg:col-span-4 space-y-8">
-            
-            {/* Sponsors */}
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-              <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Supported By</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="h-16 bg-white/10 rounded-xl flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
-                  <span className="font-black text-white/20 tracking-tighter text-xl">RAZER</span>
-                </div>
-                <div className="h-16 bg-white/10 rounded-xl flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
-                  <span className="font-black text-white/20 tracking-tighter text-xl">RED BULL</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Platform Perks */}
-            <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-3xl p-6">
-              <h3 className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Zap size={12} /> Subscriber Perks
-              </h3>
-              <ul className="space-y-3">
-                {streamer.perks?.map((perk, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-white/80">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                    <span>{perk.type}: <span className="font-bold text-white">{perk.value}</span></span>
-                  </li>
-                ))}
-              </ul>
-              <Button className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl h-10">
-                Unlock Perks
-              </Button>
-            </div>
-
-          </div>
-
-        </div>
+        {/* Seasonal Pass at bottom */}
+        <ViewerSeasonPass />
 
       </div>
     </div>
