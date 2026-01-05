@@ -7,7 +7,7 @@ import {
   ExternalLink, Gift, Star, Trophy, Lock, Check
 } from 'lucide-react';
 import AuraMasteryTrack from '@/components/aura/AuraMasteryTrack';
-import AuraGamesCrossView from '@/components/aura/AuraGamesCrossView';
+import GenreVerticalBrowser from '@/components/aura/GenreVerticalBrowser';
 import EmbeddedGamesCrossView from '@/components/aura/EmbeddedGamesCrossView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -424,7 +424,7 @@ export default function Aura() {
                 exit={{ opacity: 0 }}
                 className="relative h-full pt-2"
               >
-                <AuraGamesCrossView />
+                <GenreVerticalBrowser />
               </motion.div>
             )}
 
