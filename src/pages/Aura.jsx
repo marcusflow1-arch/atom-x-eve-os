@@ -579,21 +579,48 @@ export default function Aura() {
 
                     {/* Middle Column - Stream */}
                     <div className="relative md:order-1">
-                      <div className={`rounded-3xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[70vh] md:w-1/2' : 'h-[60vh] w-full md:w-1/2'} mx-auto`}>
+                      <div className={`relative rounded-3xl bg-slate-800/80 border border-white/10 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`}>
                         <img
                           src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
                           alt="Stream"
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                          <button className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all">
-                            <Play className="w-8 h-8 text-white ml-1" />
-                          </button>
-                        </div>
+                        <div className="absolute inset-0 bg-black/40" />
+
+                        {/* Center Play */}
+                        <button
+                          onClick={() => setIsPlaying(!isPlaying)}
+                          className="absolute z-10 w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all"
+                        >
+                          {isPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-1" />}
+                        </button>
+
+                        {/* Live badge */}
                         <div className="absolute top-3 right-3 px-2 py-1 rounded bg-red-500 flex items-center gap-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           <span className="text-white text-xs font-bold">LIVE</span>
                         </div>
+
+                        {/* Controls bar */}
+                        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setIsPlaying(!isPlaying)} className="w-9 h-9 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                              {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white" />}
+                            </button>
+                            <button onClick={() => setIsMuted(!isMuted)} className="w-9 h-9 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                              <Volume2 className="w-5 h-5 text-white" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button className="w-9 h-9 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                              <Settings className="w-5 h-5 text-white" />
+                            </button>
+                            <button onClick={toggleFullscreen} className="w-9 h-9 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                              {isFullscreen ? <Minimize className="w-5 h-5 text-white" /> : <Maximize className="w-5 h-5 text-white" />}
+                            </button>
+                          </div>
+                        </div>
+
                         {videoExpanded && (
                           <button
                             onClick={() => setVideoExpanded(false)}
@@ -604,7 +631,64 @@ export default function Aura() {
                           </button>
                         )}
                       </div>
-                      <p className="text-center text-white/60 text-sm">Click Play to Watch</p>
+
+                      {/* Meta below video */}
+                      <div className="text-center">
+                        <h3 className="text-white font-bold text-lg">Elder Scrolls Online</h3>
+                        <div className="flex items-center justify-center my-3">
+                          <div className="h-px bg-white/15 w-20" />
+                          <div className="w-2 h-2 rounded-full bg-white/40 mx-2" />
+                          <div className="h-px bg-white/15 w-20" />
+                        </div>
+                        <div className="flex flex-wrap items-center justify-center gap-3 text-white/80">
+                          <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm">
+                            <Heart className="w-4 h-4" /> Follow
+                          </button>
+                          <button className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 flex items-center gap-2 text-sm">
+                            <Bell className="w-4 h-4" /> Notify
+                          </button>
+                          <Button className="h-8 px-4 rounded-full text-sm bg-cyan-500 hover:bg-cyan-600">Subscribe</Button>
+                          <div className="flex items-center gap-1 text-white/70 text-sm">
+                            <Eye className="w-4 h-4" /> 3,421
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Achievements and Game Card */}
+                      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        <div>
+                          <h4 className="text-white font-semibold mb-3">Achievements</h4>
+                          <div className="space-y-2">
+                            {[
+                              { name: 'First Blood', rarity: 'Rare' },
+                              { name: 'Dungeon Master', rarity: 'Epic' },
+                              { name: 'Dragon Slayer', rarity: 'Legendary' }
+                            ].map((a, i) => (
+                              <div key={i} className="flex items-center justify-between rounded-xl px-3 py-2 border border-white/10 bg-white/5">
+                                <span className="text-white/90 text-sm">{a.name}</span>
+                                <span className={`px-2 py-0.5 text-[10px] rounded border ${a.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' : a.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-blue-500/20 text-blue-300 border-blue-500/30'}`}>{a.rarity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <div className="w-56">
+                            <ShinyCard className="rounded-2xl overflow-hidden">
+                              <div className="relative aspect-[3/4]">
+                                <img
+                                  src={(trendingGames[0] && trendingGames[0].cover_image) ? trendingGames[0].cover_image : 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600'}
+                                  alt="Game Card"
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                <div className="absolute top-2 left-2">
+                                  <Badge className="bg-black/50 border-white/15 text-yellow-300 text-[10px]">LEGENDARY</Badge>
+                                </div>
+                              </div>
+                            </ShinyCard>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Right Column - Chat */}
