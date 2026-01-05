@@ -575,10 +575,10 @@ export default function Aura() {
                   </div>
 
                   {/* Content Grid */}
-                  <div className={`grid gap-6 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  <div className={`grid gap-4 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
 
                     {/* Middle Column - Stream */}
-                    <div className="relative md:order-1">
+                    <div className="relative md:order-1 md:col-span-2">
                       <div className={`relative rounded-3xl bg-slate-800/80 border border-white/10 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`}>
                         <img
                           src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
