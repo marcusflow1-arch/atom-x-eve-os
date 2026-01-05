@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Aura() {
   return (
-    <div className="w-full h-[calc(100vh-0px)]">
+    <div className="w-full h-screen">
       <iframe
         src="https://aura-fb23b6bd.base44.app/"
         title="Aura"
