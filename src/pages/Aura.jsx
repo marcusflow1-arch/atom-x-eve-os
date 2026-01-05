@@ -418,9 +418,9 @@ export default function Aura() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-8 h-full overflow-y-auto"
+                className="h-full overflow-y-auto pt-8"
               >
-                <div className="max-w-7xl mx-auto">
+                <div className="px-8 pb-12">
                   <h1 className="text-4xl font-bold text-white mb-2">BROWSE GAMES</h1>
                   <p className="text-white/60 mb-8">Find streams by your favorite games</p>
 
