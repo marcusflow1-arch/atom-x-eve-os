@@ -563,8 +563,8 @@ export default function Aura() {
                   <div className={`grid gap-6 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-2'}`}>
 
                     {/* Middle Column - Stream */}
-                    <div className="relative">
-                      <div className={`rounded-2xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`}>
+                    <div className="relative md:order-1">
+                      <div className={`rounded-3xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[70vh] md:w-1/2' : 'h-[60vh] w-full md:w-1/2'} mx-auto`}>
                         <img
                           src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
                           alt="Stream"
@@ -593,9 +593,9 @@ export default function Aura() {
                     </div>
 
                     {/* Right Column - Chat */}
-                    <div className={`${videoExpanded ? 'hidden' : ''}`}>
+                    <div className={`${videoExpanded ? 'hidden' : ''} md:order-2 ml-auto`}>
                       <h2 className="text-xl font-bold text-white mb-4">Live Chat</h2>
-                      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="p-4 border-b border-white/10">
                           <h3 className="text-white font-semibold text-sm mb-2">Chat Rules</h3>
                           <ul className="text-white/60 text-xs space-y-1">
@@ -604,7 +604,7 @@ export default function Aura() {
                             <li>• Keep it positive and fun</li>
                           </ul>
                         </div>
-                        <div className="p-4 space-y-3 h-64 overflow-y-auto">
+                        <div className="p-4 space-y-3 h-80 overflow-y-auto">
                           {['Luna', 'Alex', 'Jordan', 'Sam'].map((name, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
