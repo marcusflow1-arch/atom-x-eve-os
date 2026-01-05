@@ -29,6 +29,12 @@ export default function AuraGamesCrossView() {
   const [androidOnly, setAndroidOnly] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
   const containerRef = useRef(null);
+  const wheelCooldownRef = useRef(0);
+
+  // Layout constants (mirroring Store cross view)
+  const ITEM_HEIGHT = 80; // px
+  const ITEM_GAP = 24; // px
+  const CROSS_Y_VH = 40; // center at ~40vh
 
   // Combine all games
   const allGames = useMemo(() => {
@@ -96,8 +102,21 @@ export default function AuraGamesCrossView() {
     return () => el.removeEventListener("keydown", onKey);
   }, [genreData, currentGenre, selectedGame]);
 
+  const onWheel = (e) => {
+    const now = Date.now();
+    if (now - wheelCooldownRef.current < 160) return; // throttle
+    wheelCooldownRef.current = now;
+    if (e.deltaY > 0) {
+      setActiveGenreIdx((g) => Math.min(g + 1, Math.max(genreData.length - 1, 0)));
+      setActiveGameIdx(0);
+    } else if (e.deltaY < 0) {
+      setActiveGenreIdx((g) => Math.max(g - 1, 0));
+      setActiveGameIdx(0);
+    }
+  };
+
   return (
-    <div ref={containerRef} tabIndex={0} className="relative w-full h-full outline-none">
+    <div ref={containerRef} tabIndex={0} onWheel={onWheel} className="relative w-full h-full outline-none">
       {/* Background */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -156,24 +175,31 @@ export default function AuraGamesCrossView() {
 
       {/* Vertical Genres */}
       <div className="absolute top-24 bottom-16 left-4 w-40 overflow-hidden">
-        <div className="flex flex-col gap-4">
+        <motion.div
+          className="flex flex-col gap-6 py-2"
+          animate={{ y: `calc(${CROSS_Y_VH}vh - ${activeGenreIdx * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)` }}
+          transition={{ type: "spring", stiffness: 250, damping: 25 }}
+        >
           {genreData.map((g, idx) => {
             const Icon = g.icon;
             const active = idx === activeGenreIdx;
             return (
-              <button
+              <motion.button
                 key={g.id}
                 onClick={() => { setActiveGenreIdx(idx); setActiveGameIdx(0); }}
-                className={`flex flex-col items-center gap-2 transition-all ${active ? "opacity-100" : "opacity-50 hover:opacity-80"}`}
+                animate={{ scale: active ? 1.2 : 0.9, opacity: active ? 1 : 0.35, x: active ? 20 : 0 }}
+                transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                className="flex flex-col items-center gap-2"
+                style={{ height: ITEM_HEIGHT }}
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${active ? "bg-white/20 border-white/30" : "bg-white/5 border-white/10"}`}>
                   <Icon className={`w-7 h-7 ${active ? "text-white" : "text-white/70"}`} />
                 </div>
                 <span className={`text-[10px] uppercase tracking-wider ${active ? "text-white" : "text-white/60"}`}>{g.label}</span>
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       {/* Horizontal Games */}
@@ -188,7 +214,7 @@ export default function AuraGamesCrossView() {
                 onClick={() => setSelectedGame(game)}
                 animate={{ scale: active ? 1.06 : 0.92, opacity: active ? 1 : 0.5, y: active ? 0 : 12 }}
                 transition={{ type: "spring", stiffness: 220, damping: 24 }}
-                className={`relative w-[210px] aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border ${active ? "border-white/40" : "border-white/10 bg-black/40"}`}
+                className={`relative w-[168px] aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border ${active ? "border-white/40" : "border-white/10 bg-black/40"}`}
               >
                 <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover" />
                 {!active && <div className="absolute inset-0 bg-black/40" />}
