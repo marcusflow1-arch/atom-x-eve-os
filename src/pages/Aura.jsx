@@ -128,7 +128,7 @@ export default function Aura() {
   return (
     <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #1a2640 50%, #0f1c35 100%)' }}>
       {/* Sidebar */}
-      <div className="w-16 flex flex-col items-center py-6 gap-6" style={{ background: 'rgba(15, 28, 50, 0.6)', backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255, 255, 255, 0.05)' }}>
+      <div className="w-16 flex flex-col items-center py-6 gap-6" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
         {/* Logo */}
         <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center">
           <Radio className="w-6 h-6 text-white" />
@@ -159,7 +159,7 @@ export default function Aura() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-4" style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(30px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div className="px-8 py-4" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
@@ -256,7 +256,7 @@ export default function Aura() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by name, bio, or interests..."
                         className="w-full pl-12 pr-4 py-6 rounded-2xl text-white placeholder:text-white/40 border-white/10"
-                        style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(20px)' }}
+                        style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
                       />
                     </div>
                     <Button
@@ -328,7 +328,7 @@ export default function Aura() {
                     <Input
                       placeholder="Search for a game..."
                       className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder:text-white/40 border-white/10"
-                      style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(20px)' }}
+                      style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
                     />
                   </div>
 
@@ -404,7 +404,7 @@ export default function Aura() {
                       <motion.div
                         key={stream.id}
                         className="relative rounded-2xl overflow-hidden cursor-pointer group"
-                        style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                        style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
                         whileHover={{ scale: 1.02 }}
                       >
                         <div className="aspect-video relative">
@@ -549,7 +549,7 @@ export default function Aura() {
                     {/* Right Column - Chat */}
                     <div>
                       <h2 className="text-xl font-bold text-white mb-4">Live Chat</h2>
-                      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(20, 35, 60, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="p-4 border-b border-white/10">
                           <h3 className="text-white font-semibold text-sm mb-2">Chat Rules</h3>
                           <ul className="text-white/60 text-xs space-y-1">
@@ -622,7 +622,7 @@ export default function Aura() {
                       </div>
 
                       {/* Things I Love */}
-                      <div className="p-6 rounded-2xl" style={{ background: 'rgba(20, 35, 60, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                      <div className="p-6 rounded-2xl" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="flex items-center gap-2 mb-3">
                           <Heart className="w-5 h-5 text-pink-400" />
                           <h3 className="text-white font-bold">Things I Love</h3>
@@ -640,7 +640,7 @@ export default function Aura() {
 
                   {/* Season Pass Section */}
                   <div className="mb-12">
-                    <div className="p-8 rounded-3xl" style={{ background: 'rgba(20, 35, 60, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <div className="p-8 rounded-3xl" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <div className="flex items-center gap-3 mb-2">
