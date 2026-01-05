@@ -575,10 +575,10 @@ export default function Aura() {
                   </div>
 
                   {/* Content Grid */}
-                  <div className={`grid gap-4 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+                  <div className={`grid gap-2 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
 
                     {/* Middle Column - Stream */}
-                    <div className="relative md:order-1 md:col-span-2">
+                    <div className="relative md:order-1 md:col-span-2 md:self-start">
                       <div className={`relative rounded-3xl bg-slate-800/80 border border-white/10 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[80vh]' : 'h-[56.25vh]'} md:col-span-2`}>
                         <img
                           src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
@@ -692,8 +692,8 @@ export default function Aura() {
                     </div>
 
                     {/* Right Column - Chat */}
-                    <div className={`${videoExpanded ? 'hidden' : ''} md:order-2 ml-auto`}>
-                      <h2 className="text-xl font-bold text-white mb-4">Live Chat</h2>
+                    <div className={`${videoExpanded ? 'hidden' : ''} md:order-2 md:justify-self-end md:self-start md:mr-[-12px]`}>
+                      <h2 className="text-xl font-bold text-white mb-3">Live Chat</h2>
                       <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="p-4 border-b border-white/10">
                           <h3 className="text-white font-semibold text-sm mb-2">Chat Rules</h3>
