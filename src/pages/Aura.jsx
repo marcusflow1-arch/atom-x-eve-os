@@ -7,6 +7,7 @@ import {
   ExternalLink, Gift, Star, Trophy, Lock, Check
 } from 'lucide-react';
 import AuraGamesCrossView from '@/components/aura/AuraGamesCrossView';
+import EmbeddedGamesCrossView from '@/components/aura/EmbeddedGamesCrossView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -216,6 +217,7 @@ export default function Aura() {
   const [activeSetupTab, setActiveSetupTab] = useState('video');
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedStreamer, setSelectedStreamer] = useState(null);
+  const [videoExpanded, setVideoExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sidebar Nav Items
@@ -558,33 +560,23 @@ export default function Aura() {
                   </div>
 
                   {/* Content Grid */}
-                  <div className="grid grid-cols-3 gap-6 mb-12">
-                    {/* Left Column - Games */}
-                    <div>
+                  <div className={`grid gap-6 mb-12 ${videoExpanded ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                    {/* Left Column - Games (Embedded Cross Menu) */}
+                    <div className={`${videoExpanded ? 'hidden' : ''}`}>
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-white">GAMES PLAYE</h2>
-                        <button className="text-white/60 hover:text-white">
-                          <ChevronLeft className="w-5 h-5" />
+                        <h2 className="text-xl font-bold text-white">GAMES PLAYED</h2>
+                        <button onClick={() => setVideoExpanded((v) => !v)} className="text-white/60 hover:text-white">
+                          <ChevronLeft className={`w-5 h-5 transition-transform ${videoExpanded ? '-rotate-180' : ''}`} />
                         </button>
                       </div>
-                      <div className="space-y-2">
-                        {['Valorant', 'Counter-Strike 2'].map((game, i) => (
-                          <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
-                            <img src={mockGames[i].image} alt={game} className="w-12 h-12 rounded-lg object-cover" />
-                            <div>
-                              <p className="text-white font-semibold text-sm">{game}</p>
-                              <p className="text-white/40 text-xs">FPS</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <EmbeddedGamesCrossView />
                     </div>
 
                     {/* Middle Column - Stream */}
                     <div className="relative">
-                      <div className="aspect-video rounded-2xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden">
+                      <div className={`rounded-2xl bg-slate-800 flex items-center justify-center mb-4 overflow-hidden ${videoExpanded ? 'h-[64vh]' : 'aspect-video'}`}>
                         <img
-                          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600"
+                          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200"
                           alt="Stream"
                           className="w-full h-full object-cover"
                         />
@@ -597,12 +589,21 @@ export default function Aura() {
                           <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           <span className="text-white text-xs font-bold">LIVE</span>
                         </div>
+                        {videoExpanded && (
+                          <button
+                            onClick={() => setVideoExpanded(false)}
+                            className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                            title="Collapse"
+                          >
+                            <ChevronLeft className="w-5 h-5 text-white rotate-180" />
+                          </button>
+                        )}
                       </div>
                       <p className="text-center text-white/60 text-sm">Click Play to Watch</p>
                     </div>
 
                     {/* Right Column - Chat */}
-                    <div>
+                    <div className={`${videoExpanded ? 'hidden' : ''}`}>
                       <h2 className="text-xl font-bold text-white mb-4">Live Chat</h2>
                       <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                         <div className="p-4 border-b border-white/10">
