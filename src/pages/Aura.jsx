@@ -6,6 +6,7 @@ import {
   Bell, Calendar, Heart, Share2, Twitter, Instagram, MessageCircle,
   ExternalLink, Gift, Star, Trophy, Lock, Check
 } from 'lucide-react';
+import AuraMasteryTrack from '@/components/aura/AuraMasteryTrack';
 import AuraGamesCrossView from '@/components/aura/AuraGamesCrossView';
 import EmbeddedGamesCrossView from '@/components/aura/EmbeddedGamesCrossView';
 import { Button } from '@/components/ui/button';
@@ -694,10 +695,10 @@ export default function Aura() {
                     </div>
                   </div>
 
-                  {/* Season Pass Section */}
+                  {/* Aura Mastery (AI Skill Tree Seasonal Passive Awards) */}
                   <div className="mb-12">
-                    <div className="p-8 rounded-3xl" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                      <div className="flex items-center justify-between mb-6">
+                    <AuraMasteryTrack />
+                  </div>
                         <div>
                           <div className="flex items-center gap-3 mb-2">
                             <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">PILOT</Badge>
