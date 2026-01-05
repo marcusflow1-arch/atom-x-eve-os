@@ -412,35 +412,15 @@ export default function Aura() {
               </motion.div>
             )}
 
-            {activeTab === 'games' && !selectedGame && (
+            {activeTab === 'games' && (
               <motion.div
-                key="games"
+                key="games-cross"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-8 h-full overflow-y-auto"
+                className="relative h-full pt-2"
               >
-                <div className="max-w-7xl mx-auto">
-                  <h1 className="text-4xl font-bold text-white mb-2">BROWSE GAMES</h1>
-                  <p className="text-white/60 mb-8">Find streams by your favorite games</p>
-
-                  {/* Search */}
-                  <div className="relative mb-12">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <Input
-                      placeholder="Search for a game..."
-                      className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder:text-white/40 border-white/10"
-                      style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
-                    />
-                  </div>
-
-                  {/* Genre Sections with Horizontal Scroll */}
-                  <GenreScrollSection title="Trending Games" games={trendingGames} onGameClick={setSelectedGame} />
-                  <GenreScrollSection title="New Releases" games={newReleases} onGameClick={setSelectedGame} />
-                  <GenreScrollSection title="Classic Best Sellers" games={classicBestSellers} onGameClick={setSelectedGame} />
-                  <GenreScrollSection title="AI Enhanced" games={aiGamesList} onGameClick={setSelectedGame} />
-                  <GenreScrollSection title="Mobile Games" games={androidGames} onGameClick={setSelectedGame} />
-                </div>
+                <AuraGamesCrossView />
               </motion.div>
             )}
 
