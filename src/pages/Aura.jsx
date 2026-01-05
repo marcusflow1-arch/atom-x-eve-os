@@ -699,83 +699,13 @@ export default function Aura() {
                   <div className="mb-12">
                     <AuraMasteryTrack />
                   </div>
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
-                            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">PILOT</Badge>
-                            <span className="text-white/60 text-sm">Level 7 / 50</span>
-                            <span className="text-white/60 text-sm">Season 0</span>
-                          </div>
-                          <h2 className="text-3xl font-bold text-white">AURA MASTERY</h2>
-                          <p className="text-white/60">Level 7 / 50 • Season 0 Pass</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-white/60 text-sm mb-1">FRESH XP</p>
-                          <p className="text-4xl font-bold text-white">78 <span className="text-white/40">/ 100</span></p>
-                        </div>
+
                       </div>
 
-                      {/* Progress Bar */}
-                      <div className="relative h-2 bg-white/10 rounded-full mb-8 overflow-hidden">
-                        <motion.div
-                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 to-blue-500"
-                          initial={{ width: 0 }}
-                          animate={{ width: '78%' }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                        />
-                      </div>
 
-                      {/* Rewards */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-6">
-                          <Star className="w-5 h-5 text-yellow-400" />
-                          <h3 className="text-xl font-bold text-white">EXCLUSIVE SEASON REWARDS</h3>
-                        </div>
-                        <div className="grid grid-cols-6 gap-4">
-                          {[1, 4, 6, 7, 10, 11].map((level, i) => {
-                            const isUnlocked = level <= 7;
-                            return (
-                              <div
-                                key={i}
-                                className={`relative aspect-square rounded-xl overflow-hidden ${
-                                  isUnlocked ? 'opacity-100' : 'opacity-40'
-                                }`}
-                                style={{ background: 'rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                              >
-                                <div className="absolute top-2 left-2">
-                                  <Badge className={`text-[10px] ${level <= 3 ? 'bg-orange-500/80' : i === 4 ? 'bg-pink-500/80' : i === 5 ? 'bg-orange-500/80' : 'bg-pink-500/80'}`}>
-                                    {level <= 3 ? 'LEGENDARY' : level === 6 ? 'EPIC' : 'LEGENDARY'}
-                                  </Badge>
-                                </div>
-                                <div className="absolute top-2 right-2">
-                                  <div className="flex gap-0.5">
-                                    {[1, 2, 3].map((star) => (
-                                      <Star key={star} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                    ))}
-                                  </div>
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  {isUnlocked ? (
-                                    <Check className="w-8 h-8 text-green-400" />
-                                  ) : (
-                                    <Lock className="w-8 h-8 text-white/40" />
-                                  )}
-                                </div>
-                                <div className="absolute bottom-2 left-2 right-2">
-                                  <p className="text-white text-[10px] font-bold text-center">
-                                    AURA MASTERY Reward {level}
-                                  </p>
-                                  <p className="text-white/60 text-[9px] text-center">
-                                    Exclusive Season reward for reaching rank {level}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+
+
               </motion.div>
             )}
 
