@@ -32,7 +32,7 @@ export default function GameCartOverlay({ game, onClose }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ type: 'spring', damping: 24, stiffness: 200 }}
-            className="absolute inset-4 md:inset-16 rounded-3xl overflow-hidden z-[71] flex flex-col md:flex-row"
+            className="absolute inset-4 md:inset-16 rounded-3xl overflow-hidden z-[71] flex flex-col md:flex-row aura-glass aura-refraction aura-ease"
             style={{
               background: 'rgba(100,120,140,0.12)',
               backdropFilter: 'blur(30px) saturate(150%)',

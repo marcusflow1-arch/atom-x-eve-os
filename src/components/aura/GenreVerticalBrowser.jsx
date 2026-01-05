@@ -17,7 +17,7 @@ const GameCard = ({ game, onClick }) => (
   <motion.button
     onClick={() => onClick(game)}
     whileHover={{ scale: 1.03 }}
-    className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md text-left"
+    className="relative w-full rounded-2xl overflow-hidden aura-glass aura-refraction aura-ease text-left"
     style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
   >
     <ShinyCard>
@@ -92,7 +92,7 @@ export default function GenreVerticalBrowser() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white"
+                className="flex-shrink-0 aura-glass aura-ease text-white"
                 onClick={() => prevPair(genre, pairs.length)}
                 title="Previous"
               >
@@ -109,7 +109,7 @@ export default function GenreVerticalBrowser() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex-shrink-0 bg-white/10 hover:bg-white/20 text-white"
+                className="flex-shrink-0 aura-glass aura-ease text-white"
                 onClick={() => nextPair(genre, pairs.length)}
                 title="Next"
               >

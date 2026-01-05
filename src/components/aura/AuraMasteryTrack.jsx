@@ -72,7 +72,7 @@ const LevelNode = ({ data, onClick, active }) => {
   );
 };
 
-export default function AuraMasteryTrack() {
+export default function AuraMasteryTrack({ isLive = false }) {
   const [levels] = useState(generateAuraLevels());
   const [active, setActive] = useState(7);
   const scrollerRef = useRef(null);
@@ -120,6 +120,11 @@ export default function AuraMasteryTrack() {
         className="relative flex gap-4 overflow-x-auto pb-8 pt-4 px-2 rounded-2xl scrollbar-hide"
         style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', scrollBehavior: 'smooth' }}
       >
+        {isLive && (
+          <div className="pointer-events-none absolute inset-0 overflow-hidden mix-blend-screen">
+            <div className="aura-shimmer absolute top-0 bottom-0 w-1/3 -translate-x-1/3" />
+          </div>
+        )}
         {levels.map((lv) => (
           <LevelNode key={lv.level} data={lv} active={lv.level === active} onClick={(d) => setActive(d.level)} />
         ))}
@@ -141,6 +146,8 @@ export default function AuraMasteryTrack() {
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes auraShimmer { 0% { transform: translateX(-40%); opacity: 0.0; } 20% { opacity: 0.6; } 100% { transform: translateX(140%); opacity: 0; } }
+        .aura-shimmer { background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.35), rgba(59, 130, 246, 0.25), transparent); filter: blur(6px); animation: auraShimmer 2.2s linear infinite; }
       `}</style>
     </div>
   );
