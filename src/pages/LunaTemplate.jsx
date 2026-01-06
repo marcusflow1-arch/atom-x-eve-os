@@ -824,6 +824,49 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
 };
 
+// Console Tile Component with Liquid Glass + Shine Effect
+const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false }) => {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePos({ x, y });
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      className={`relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] ${className}`}
+      style={{
+        background: accentColor 
+          ? `linear-gradient(135deg, ${accentColor} 0%, rgba(100, 120, 140, 0.12) 100%)`
+          : 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+      }}
+    >
+      {/* Shine Effect */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
+        style={{
+          opacity: isHovered ? 0.6 : 0,
+          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+        }}
+      />
+      {/* Content */}
+      {children}
+    </div>
+  );
+};
+
 // Mock Friends Data
 const mockFriends = [
   { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
