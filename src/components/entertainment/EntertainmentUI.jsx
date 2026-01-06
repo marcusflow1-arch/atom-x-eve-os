@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Clapperboard, ChevronLeft } from "lucide-react";
-import StreamingDiscovery from "@/components/streaming/StreamingDiscovery";
 import SocialHub from "@/components/dashboard/SocialHub";
 
 export default function EntertainmentUI() {
@@ -10,7 +9,6 @@ export default function EntertainmentUI() {
 
   const tabs = [
     { id: "entertainment", label: "Entertainment" },
-    { id: "streaming", label: "Streaming" },
     { id: "social", label: "Social Hub" },
   ];
 
@@ -223,7 +221,6 @@ export default function EntertainmentUI() {
               </div>
             )}
 
-            {activeTab === "streaming" && <StreamingDiscovery />}
             {activeTab === "social" && <SocialHub />}
           </motion.div>
         </AnimatePresence>
