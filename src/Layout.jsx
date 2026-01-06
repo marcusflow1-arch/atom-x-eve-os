@@ -650,15 +650,15 @@ function LayoutContent({ children, currentPageName }) {
                                                                                         const currentPanel = params.get('panel');
                                                                                         const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                        // If on subpage (blacksmith, entertainment, clan, forum), go to home first
+                                                                                        // If on subpage (blacksmith, seasonalpass, clan, community, storyline, worldevents, genremastery, aura), go to console first
                                                                                         if (!isOnLunaPage) {
-                                                                                          navigate(createPageUrl('LunaTemplate'));
+                                                                                          navigate(createPageUrl('LunaTemplate') + '?panel=console');
                                                                                         }
-                                                                                        // If on console mode, go to home
+                                                                                        // If on console mode, go to Luna home
                                                                                         else if (currentPanel === 'console') {
                                                                                           navigate(createPageUrl('LunaTemplate'));
                                                                                         }
-                                                                                        // If on home, go to console
+                                                                                        // If on Luna home, go to console
                                                                                         else {
                                                                                           navigate(createPageUrl('LunaTemplate') + '?panel=console');
                                                                                         }
@@ -671,7 +671,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                           const currentPanel = params.get('panel');
                                                                                           const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                          // On subpage - show "Home"
+                                                                                          // On subpage - show "Home" (goes to console)
                                                                                           if (!isOnLunaPage) {
                                                                                             return (
                                                                                               <>
@@ -680,7 +680,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                               </>
                                                                                             );
                                                                                           }
-                                                                                          // On console mode - show "Home"
+                                                                                          // On console mode - show "Home" (goes to Luna dashboard)
                                                                                           else if (currentPanel === 'console') {
                                                                                             return (
                                                                                               <>
@@ -689,7 +689,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                               </>
                                                                                             );
                                                                                           }
-                                                                                          // On home page - show "Console"
+                                                                                          // On Luna home page - show "Console"
                                                                                           else {
                                                                                             return (
                                                                                               <>
@@ -711,7 +711,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                         const currentPanel = params.get('panel');
                                                                                         const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                        // On subpage - show opposite (Console)
+                                                                                        // On subpage - shadow shows "Console"
                                                                                         if (!isOnLunaPage) {
                                                                                           return (
                                                                                             <>
@@ -720,7 +720,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                             </>
                                                                                           );
                                                                                         }
-                                                                                        // On console mode - show opposite (Console)
+                                                                                        // On console mode - shadow shows "Console"
                                                                                         else if (currentPanel === 'console') {
                                                                                           return (
                                                                                             <>
@@ -729,7 +729,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                             </>
                                                                                           );
                                                                                         }
-                                                                                        // On home page - show opposite (Home)
+                                                                                        // On Luna home - shadow shows "Home"
                                                                                         else {
                                                                                           return (
                                                                                             <>
