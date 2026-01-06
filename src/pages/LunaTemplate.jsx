@@ -1434,34 +1434,197 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
+            className="w-full h-full pt-20 px-8 pb-8 relative z-20 flex flex-col"
           >
-            {/* Holographic tile */}
-            <HolographicTile
-              Icon={BookOpen}
-              label="AI Story"
-              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
-            />
-            <HolographicTile
-              Icon={Swords}
-              label="AI Battle"
-              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
-            />
-            <HolographicTile
-              Icon={Layers}
-              label="AI Skill Tree"
-              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-            />
-            <HolographicTile
-              Icon={Crown}
-              label="Season Pass"
-              onClick={() => setShowSeasonalPass(true)}
-            />
-            <HolographicTile
-              Icon={Hammer}
-              label="Blacksmith"
-              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=blacksmith')}
-            />
+            {/* Main Grid: Hero Left + 2x2 Right */}
+            <div className="flex-1 flex gap-4">
+              {/* Large Hero Tile - Left */}
+              <div 
+                className="flex-1 relative rounded-2xl overflow-hidden cursor-pointer group"
+                onClick={() => navigate(createPageUrl('Store'))}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(20, 30, 40, 0.9) 0%, rgba(10, 15, 20, 0.95) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
+                  alt="Featured Game"
+                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h2 className="text-4xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                    RESIDENT EVIL 2
+                  </h2>
+                  <p className="text-white/60 text-sm">Continue your nightmare</p>
+                </div>
+              </div>
+
+              {/* Right Side - 2x2 Grid */}
+              <div className="w-[340px] flex flex-col gap-4">
+                {/* Top Row */}
+                <div className="flex gap-4 flex-1">
+                  {/* Settings Tile */}
+                  <div 
+                    onClick={() => setShowSettings(true)}
+                    className="flex-1 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                    style={{
+                      background: 'rgba(40, 50, 60, 0.6)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    <Settings className="w-10 h-10 text-white/70 group-hover:text-white transition-colors" />
+                    <span className="text-white/80 text-sm font-medium">Settings</span>
+                  </div>
+                  
+                  {/* Featured Game 1 */}
+                  <div 
+                    onClick={() => navigate(createPageUrl('Store'))}
+                    className="flex-1 rounded-xl cursor-pointer overflow-hidden relative group"
+                    style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <img 
+                      src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop" 
+                      alt="Elden Ring"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <p className="text-[10px] text-cyan-400 font-semibold uppercase">Pre-order</p>
+                      <p className="text-white text-xs font-bold">Elden Ring</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Row */}
+                <div className="flex gap-4 flex-1">
+                  {/* My Games & Apps */}
+                  <div 
+                    onClick={() => setShowPinGames(true)}
+                    className="flex-1 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                    style={{
+                      background: 'rgba(40, 50, 60, 0.6)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    <Layers className="w-10 h-10 text-green-400 group-hover:text-green-300 transition-colors" />
+                    <span className="text-white/80 text-sm font-medium text-center">My games<br/>& apps</span>
+                  </div>
+                  
+                  {/* Game of the Year */}
+                  <div 
+                    onClick={() => navigate(createPageUrl('Store'))}
+                    className="flex-1 rounded-xl cursor-pointer overflow-hidden relative group"
+                    style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <img 
+                      src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop" 
+                      alt="Game of the Year"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <p className="text-[10px] text-yellow-400 font-semibold uppercase">Game of the year</p>
+                      <p className="text-white text-xs font-bold">The Last of Us</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Ribbon - Quick Access */}
+            <div className="flex gap-4 mt-4">
+              {/* Friends */}
+              <div 
+                onClick={() => setSelectedFriend(mockFriends[0])}
+                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 200, 200, 0.2)'
+                }}
+              >
+                <Users className="w-8 h-8 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-white/80 text-sm font-medium">Friends</span>
+              </div>
+
+              {/* Achievements */}
+              <div 
+                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 200, 200, 0.2)'
+                }}
+              >
+                <Trophy className="w-8 h-8 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
+                <span className="text-white/80 text-sm font-medium">Achievement</span>
+              </div>
+
+              {/* AI Mode */}
+              <div 
+                onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 200, 200, 0.2)'
+                }}
+              >
+                <Bot className="w-8 h-8 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                <span className="text-white/80 text-sm font-medium">AI Mode</span>
+              </div>
+
+              {/* Twitch/Aura */}
+              <div 
+                onClick={() => navigate(createPageUrl('Aura'))}
+                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(0, 200, 200, 0.2)'
+                }}
+              >
+                <Radio className="w-8 h-8 text-red-400 group-hover:text-red-300 transition-colors" />
+                <span className="text-white/80 text-sm font-medium">Aura</span>
+              </div>
+
+              {/* Recently Played - Two stacked images */}
+              <div 
+                onClick={() => navigate(createPageUrl('Store'))}
+                className="flex-1 h-24 rounded-xl cursor-pointer overflow-hidden relative group"
+                style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop" 
+                  alt="Recent"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-2 left-2">
+                  <p className="text-white text-xs font-bold">RESIDENT EVIL 2</p>
+                </div>
+              </div>
+
+              {/* Spotify/Music */}
+              <div 
+                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(30, 215, 96, 0.3) 0%, rgba(20, 150, 70, 0.5) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(30, 215, 96, 0.3)'
+                }}
+              >
+                <svg className="w-10 h-10 text-green-400 group-hover:text-green-300 transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                </svg>
+                <span className="text-white/80 text-xs font-medium">Listen to music free</span>
+              </div>
+            </div>
           </motion.div>
         ) : uiVisible ? (
           <motion.div 
