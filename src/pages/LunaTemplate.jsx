@@ -1479,22 +1479,18 @@ export default function LunaTemplate() {
                     <span className="text-white/80 text-lg font-medium">Settings</span>
                   </div>
                   
-                  {/* Featured Game 1 */}
+                  {/* Blacksmith */}
                   <div 
-                    onClick={() => navigate(createPageUrl('Store'))}
-                    className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
-                    style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                    onClick={() => navigate(createPageUrl('Blacksmith'))}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(180, 83, 9, 0.4) 0%, rgba(120, 53, 15, 0.6) 100%)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(251, 146, 60, 0.3)'
+                    }}
                   >
-                    <img 
-                      src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop" 
-                      alt="Elden Ring"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <p className="text-sm text-cyan-400 font-semibold uppercase">Pre-order</p>
-                      <p className="text-white text-lg font-bold">Elden Ring</p>
-                    </div>
+                    <Hammer className="w-16 h-16 text-orange-400 group-hover:text-orange-300 transition-colors" />
+                    <span className="text-white/80 text-lg font-medium">Blacksmith</span>
                   </div>
                 </div>
 
@@ -1514,22 +1510,18 @@ export default function LunaTemplate() {
                     <span className="text-white/80 text-lg font-medium text-center">My games & apps</span>
                   </div>
                   
-                  {/* Game of the Year */}
+                  {/* Season Pass */}
                   <div 
-                    onClick={() => navigate(createPageUrl('Store'))}
-                    className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
-                    style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                    onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(126, 34, 206, 0.6) 100%)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(192, 132, 252, 0.3)'
+                    }}
                   >
-                    <img 
-                      src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop" 
-                      alt="Game of the Year"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <p className="text-sm text-yellow-400 font-semibold uppercase">Game of the year</p>
-                      <p className="text-white text-lg font-bold">The Last of Us</p>
-                    </div>
+                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                    <span className="text-white/80 text-lg font-medium">Season Pass</span>
                   </div>
                 </div>
               </div>
@@ -1593,36 +1585,32 @@ export default function LunaTemplate() {
                 <span className="text-white/80 text-base font-medium">Aura</span>
               </div>
 
-              {/* Recently Played */}
+              {/* AI Story */}
               <div 
-                onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
-                style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
-              >
-                <img 
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&h=200&fit=crop" 
-                  alt="Recent"
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <p className="text-white text-base font-bold">RESIDENT EVIL 2</p>
-                </div>
-              </div>
-
-              {/* Spotify/Music */}
-              <div 
+                onClick={() => navigate(createPageUrl('Storyline'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(30, 215, 96, 0.3) 0%, rgba(20, 150, 70, 0.5) 100%)',
+                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(67, 56, 202, 0.6) 100%)',
                   backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(30, 215, 96, 0.3)'
+                  border: '1px solid rgba(129, 140, 248, 0.3)'
                 }}
               >
-                <svg className="w-14 h-14 text-green-400 group-hover:text-green-300 transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-                <span className="text-white/80 text-sm font-medium">Listen to music free</span>
+                <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">AI Story</span>
+              </div>
+
+              {/* AI Battle */}
+              <div 
+                onClick={() => navigate(createPageUrl('WorldEvents'))}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.4) 0%, rgba(185, 28, 28, 0.6) 100%)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(248, 113, 113, 0.3)'
+                }}
+              >
+                <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">AI Battle</span>
               </div>
             </div>
           </motion.div>
