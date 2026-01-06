@@ -1438,13 +1438,10 @@ export default function LunaTemplate() {
             {/* Main Grid: Hero Left + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Large Hero Tile - Left */}
-              <div 
-                className="flex-[2] relative rounded-2xl overflow-hidden cursor-pointer group"
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                style={{
-                  background: 'linear-gradient(135deg, rgba(20, 30, 40, 0.9) 0%, rgba(10, 15, 20, 0.95) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}
+                className="flex-[2] relative rounded-2xl overflow-hidden cursor-pointer"
+                hasImage
               >
                 <img 
                   src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
@@ -1452,76 +1449,58 @@ export default function LunaTemplate() {
                   className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-8 left-8 right-8">
+                <div className="absolute bottom-8 left-8 right-8 z-10">
                   <h2 className="text-5xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                     RESIDENT EVIL 2
                   </h2>
                   <p className="text-white/60 text-base">Continue your nightmare</p>
                 </div>
-              </div>
+              </ConsoleTile>
 
               {/* Right Side - 2x2 Grid */}
               <div className="flex-1 flex flex-col gap-6">
                 {/* Top Row */}
                 <div className="flex gap-6 flex-1">
                   {/* Settings Tile */}
-                  <div 
+                  <ConsoleTile 
                     onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                    style={{
-                      background: 'rgba(40, 50, 60, 0.6)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Settings className="w-16 h-16 text-white/70 group-hover:text-white transition-colors" />
-                    <span className="text-white/80 text-lg font-medium">Settings</span>
-                  </div>
+                    <Settings className="w-16 h-16 text-white/70 group-hover:text-white transition-colors relative z-10" />
+                    <span className="text-white/80 text-lg font-medium relative z-10">Settings</span>
+                  </ConsoleTile>
                   
                   {/* Blacksmith */}
-                  <div 
+                  <ConsoleTile 
                     onClick={() => navigate(createPageUrl('Blacksmith'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(180, 83, 9, 0.4) 0%, rgba(120, 53, 15, 0.6) 100%)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(251, 146, 60, 0.3)'
-                    }}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                    accentColor="rgba(251, 146, 60, 0.15)"
                   >
-                    <Hammer className="w-16 h-16 text-orange-400 group-hover:text-orange-300 transition-colors" />
-                    <span className="text-white/80 text-lg font-medium">Blacksmith</span>
-                  </div>
+                    <Hammer className="w-16 h-16 text-orange-400 group-hover:text-orange-300 transition-colors relative z-10" />
+                    <span className="text-white/80 text-lg font-medium relative z-10">Blacksmith</span>
+                  </ConsoleTile>
                 </div>
 
                 {/* Bottom Row */}
                 <div className="flex gap-6 flex-1">
                   {/* My Games & Apps */}
-                  <div 
+                  <ConsoleTile 
                     onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                    style={{
-                      background: 'rgba(40, 50, 60, 0.6)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors" />
-                    <span className="text-white/80 text-lg font-medium text-center">My games & apps</span>
-                  </div>
+                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors relative z-10" />
+                    <span className="text-white/80 text-lg font-medium text-center relative z-10">My games & apps</span>
+                  </ConsoleTile>
                   
                   {/* Season Pass */}
-                  <div 
+                  <ConsoleTile 
                     onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.4) 0%, rgba(126, 34, 206, 0.6) 100%)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(192, 132, 252, 0.3)'
-                    }}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                    accentColor="rgba(192, 132, 252, 0.15)"
                   >
-                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                    <span className="text-white/80 text-lg font-medium">Season Pass</span>
-                  </div>
+                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
+                    <span className="text-white/80 text-lg font-medium relative z-10">Season Pass</span>
+                  </ConsoleTile>
                 </div>
               </div>
             </div>
@@ -1529,88 +1508,64 @@ export default function LunaTemplate() {
             {/* Bottom Ribbon - Quick Access */}
             <div className="flex gap-6 mt-6 h-36">
               {/* Friends */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Clan'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(0, 200, 200, 0.2)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(34, 211, 238, 0.1)"
               >
-                <Users className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">Friends</span>
-              </div>
+                <Users className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">Friends</span>
+              </ConsoleTile>
 
               {/* Achievements */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(0, 200, 200, 0.2)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(250, 204, 21, 0.1)"
               >
-                <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">Achievement</span>
-              </div>
+                <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">Achievement</span>
+              </ConsoleTile>
 
               {/* AI Mode */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(0, 200, 200, 0.2)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(168, 85, 247, 0.1)"
               >
-                <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">AI Mode</span>
-              </div>
+                <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">AI Mode</span>
+              </ConsoleTile>
 
               {/* Aura */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Aura'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(0, 200, 200, 0.2)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(248, 113, 113, 0.1)"
               >
-                <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">Aura</span>
-              </div>
+                <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">Aura</span>
+              </ConsoleTile>
 
               {/* AI Story */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Storyline'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(67, 56, 202, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(129, 140, 248, 0.3)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(129, 140, 248, 0.15)"
               >
-                <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">AI Story</span>
-              </div>
+                <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">AI Story</span>
+              </ConsoleTile>
 
               {/* AI Battle */}
-              <div 
+              <ConsoleTile 
                 onClick={() => navigate(createPageUrl('WorldEvents'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.4) 0%, rgba(185, 28, 28, 0.6) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(248, 113, 113, 0.3)'
-                }}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(239, 68, 68, 0.15)"
               >
-                <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors" />
-                <span className="text-white/80 text-base font-medium">AI Battle</span>
-              </div>
+                <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">AI Battle</span>
+              </ConsoleTile>
             </div>
           </motion.div>
         ) : uiVisible ? (
