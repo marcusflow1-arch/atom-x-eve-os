@@ -1434,13 +1434,13 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-full pt-20 px-8 pb-8 relative z-20 flex flex-col"
+            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
             {/* Main Grid: Hero Left + 2x2 Right */}
-            <div className="flex-1 flex gap-4">
+            <div className="flex-1 flex gap-6 min-h-0">
               {/* Large Hero Tile - Left */}
               <div 
-                className="flex-1 relative rounded-2xl overflow-hidden cursor-pointer group"
+                className="flex-[2] relative rounded-2xl overflow-hidden cursor-pointer group"
                 onClick={() => navigate(createPageUrl('Store'))}
                 style={{
                   background: 'linear-gradient(135deg, rgba(20, 30, 40, 0.9) 0%, rgba(10, 15, 20, 0.95) 100%)',
@@ -1453,36 +1453,36 @@ export default function LunaTemplate() {
                   className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-4xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                <div className="absolute bottom-8 left-8 right-8">
+                  <h2 className="text-5xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                     RESIDENT EVIL 2
                   </h2>
-                  <p className="text-white/60 text-sm">Continue your nightmare</p>
+                  <p className="text-white/60 text-base">Continue your nightmare</p>
                 </div>
               </div>
 
               {/* Right Side - 2x2 Grid */}
-              <div className="w-[340px] flex flex-col gap-4">
+              <div className="flex-1 flex flex-col gap-6">
                 {/* Top Row */}
-                <div className="flex gap-4 flex-1">
+                <div className="flex gap-6 flex-1">
                   {/* Settings Tile */}
                   <div 
-                    onClick={() => setShowSettings(true)}
-                    className="flex-1 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                     style={{
                       background: 'rgba(40, 50, 60, 0.6)',
                       backdropFilter: 'blur(20px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <Settings className="w-10 h-10 text-white/70 group-hover:text-white transition-colors" />
-                    <span className="text-white/80 text-sm font-medium">Settings</span>
+                    <Settings className="w-16 h-16 text-white/70 group-hover:text-white transition-colors" />
+                    <span className="text-white/80 text-lg font-medium">Settings</span>
                   </div>
                   
                   {/* Featured Game 1 */}
                   <div 
                     onClick={() => navigate(createPageUrl('Store'))}
-                    className="flex-1 rounded-xl cursor-pointer overflow-hidden relative group"
+                    className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
                     style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
                   >
                     <img 
@@ -1491,33 +1491,33 @@ export default function LunaTemplate() {
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <p className="text-[10px] text-cyan-400 font-semibold uppercase">Pre-order</p>
-                      <p className="text-white text-xs font-bold">Elden Ring</p>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-sm text-cyan-400 font-semibold uppercase">Pre-order</p>
+                      <p className="text-white text-lg font-bold">Elden Ring</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Row */}
-                <div className="flex gap-4 flex-1">
+                <div className="flex gap-6 flex-1">
                   {/* My Games & Apps */}
                   <div 
-                    onClick={() => setShowPinGames(true)}
-                    className="flex-1 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                     style={{
                       background: 'rgba(40, 50, 60, 0.6)',
                       backdropFilter: 'blur(20px)',
                       border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <Layers className="w-10 h-10 text-green-400 group-hover:text-green-300 transition-colors" />
-                    <span className="text-white/80 text-sm font-medium text-center">My games<br/>& apps</span>
+                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors" />
+                    <span className="text-white/80 text-lg font-medium text-center">My games & apps</span>
                   </div>
                   
                   {/* Game of the Year */}
                   <div 
                     onClick={() => navigate(createPageUrl('Store'))}
-                    className="flex-1 rounded-xl cursor-pointer overflow-hidden relative group"
+                    className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
                     style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
                   >
                     <img 
@@ -1526,9 +1526,9 @@ export default function LunaTemplate() {
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <p className="text-[10px] text-yellow-400 font-semibold uppercase">Game of the year</p>
-                      <p className="text-white text-xs font-bold">The Last of Us</p>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-sm text-yellow-400 font-semibold uppercase">Game of the year</p>
+                      <p className="text-white text-lg font-bold">The Last of Us</p>
                     </div>
                   </div>
                 </div>
@@ -1536,67 +1536,67 @@ export default function LunaTemplate() {
             </div>
 
             {/* Bottom Ribbon - Quick Access */}
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-6 mt-6 h-36">
               {/* Friends */}
               <div 
-                onClick={() => setSelectedFriend(mockFriends[0])}
-                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                onClick={() => navigate(createPageUrl('Clan'))}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
                   backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(0, 200, 200, 0.2)'
                 }}
               >
-                <Users className="w-8 h-8 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-                <span className="text-white/80 text-sm font-medium">Friends</span>
+                <Users className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">Friends</span>
               </div>
 
               {/* Achievements */}
               <div 
                 onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
                   backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(0, 200, 200, 0.2)'
                 }}
               >
-                <Trophy className="w-8 h-8 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
-                <span className="text-white/80 text-sm font-medium">Achievement</span>
+                <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">Achievement</span>
               </div>
 
               {/* AI Mode */}
               <div 
-                onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
-                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
                   backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(0, 200, 200, 0.2)'
                 }}
               >
-                <Bot className="w-8 h-8 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                <span className="text-white/80 text-sm font-medium">AI Mode</span>
+                <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">AI Mode</span>
               </div>
 
-              {/* Twitch/Aura */}
+              {/* Aura */}
               <div 
                 onClick={() => navigate(createPageUrl('Aura'))}
-                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(0, 100, 100, 0.4) 0%, rgba(0, 80, 80, 0.6) 100%)',
                   backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(0, 200, 200, 0.2)'
                 }}
               >
-                <Radio className="w-8 h-8 text-red-400 group-hover:text-red-300 transition-colors" />
-                <span className="text-white/80 text-sm font-medium">Aura</span>
+                <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors" />
+                <span className="text-white/80 text-base font-medium">Aura</span>
               </div>
 
-              {/* Recently Played - Two stacked images */}
+              {/* Recently Played */}
               <div 
-                onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-1 h-24 rounded-xl cursor-pointer overflow-hidden relative group"
+                onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                className="flex-1 rounded-2xl cursor-pointer overflow-hidden relative group"
                 style={{ border: '1px solid rgba(255, 255, 255, 0.1)' }}
               >
                 <img 
@@ -1605,24 +1605,24 @@ export default function LunaTemplate() {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-2 left-2">
-                  <p className="text-white text-xs font-bold">RESIDENT EVIL 2</p>
+                <div className="absolute bottom-4 left-4">
+                  <p className="text-white text-base font-bold">RESIDENT EVIL 2</p>
                 </div>
               </div>
 
               {/* Spotify/Music */}
               <div 
-                className="flex-1 h-24 rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 group transition-all hover:scale-[1.02]"
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 group transition-all hover:scale-[1.02]"
                 style={{
                   background: 'linear-gradient(135deg, rgba(30, 215, 96, 0.3) 0%, rgba(20, 150, 70, 0.5) 100%)',
                   backdropFilter: 'blur(20px)',
                   border: '1px solid rgba(30, 215, 96, 0.3)'
                 }}
               >
-                <svg className="w-10 h-10 text-green-400 group-hover:text-green-300 transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-14 h-14 text-green-400 group-hover:text-green-300 transition-colors" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
                 </svg>
-                <span className="text-white/80 text-xs font-medium">Listen to music free</span>
+                <span className="text-white/80 text-sm font-medium">Listen to music free</span>
               </div>
             </div>
           </motion.div>
