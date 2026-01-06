@@ -263,12 +263,12 @@ export default function GameDetailPanel({ game, onPurchase }) {
               {/* Price & CTA */}
               <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl font-bold text-white">${game.price}</span>
+                  <span className="text-4xl font-extrabold text-white">${game.price}</span>
                   {game.originalPrice && (
-                    <span className="text-sm text-white/40 line-through">${game.originalPrice}</span>
+                    <span className="text-base text-white/40 line-through">${game.originalPrice}</span>
                   )}
                 </div>
-                
+
                 <Button 
                   onClick={() => onPurchase(game)}
                   className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-base shadow-[0_0_20px_rgba(37,99,235,0.3)] mb-3"
