@@ -1305,7 +1305,7 @@ export default function Store() {
                 )}
             </AnimatePresence>
             {showScrollTransition && (
-              <ScrollTransitionOverlay onComplete={() => {
+              <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
                 const url = pendingNavigateUrl;
                 setShowScrollTransition(false);
                 setPendingNavigateUrl(null);
