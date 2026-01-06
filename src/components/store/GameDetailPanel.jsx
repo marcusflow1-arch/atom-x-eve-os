@@ -218,12 +218,11 @@ export default function GameDetailPanel({ game, onPurchase }) {
                     {game.title}
                   </h1>
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                    <Badge variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white text-base">
                       {game.genre}
                     </Badge>
                     <div className="flex items-center gap-1 text-yellow-400">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="font-bold">{game.rating || 4.5}</span>
+                      <span className="font-bold text-lg">{game.rating || 4.5}</span>
                     </div>
                   </div>
                 </div>
