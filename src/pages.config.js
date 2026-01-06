@@ -13,7 +13,6 @@ import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
-import Entertainment from './pages/Entertainment';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
 import GameDetail from './pages/GameDetail';
@@ -62,7 +61,6 @@ export const PAGES = {
     "Clan": Clan,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
-    "Entertainment": Entertainment,
     "EnvGuide": EnvGuide,
     "Events": Events,
     "GameDetail": GameDetail,

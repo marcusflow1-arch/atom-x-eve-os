@@ -1,3 +1,4 @@
+
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -15,7 +16,6 @@ export const NAV_HIERARCHY = [
         subPages: [
             { name: 'Blacksmith', icon: Hammer, path: createPageUrl('Blacksmith') },
             { name: 'Season Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
-            { name: 'Entertainment', icon: Clapperboard, path: createPageUrl('Entertainment') },
             { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
             { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
             { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
