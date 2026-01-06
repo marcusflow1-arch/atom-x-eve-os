@@ -18,7 +18,6 @@ export const NAV_HIERARCHY = [
             { name: 'Season Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
             { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
             { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
-            { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
         ]
     },
     {
@@ -31,9 +30,9 @@ export const NAV_HIERARCHY = [
         ]
     },
     {
-        name: 'Social',
-        icon: TrendingUp,
-        path: createPageUrl('SocialFeed'),
+        name: 'Aura',
+        icon: Radio,
+        path: createPageUrl('Aura'),
         subPages: []
     },
 ];
