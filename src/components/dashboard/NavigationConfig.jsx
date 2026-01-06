@@ -18,7 +18,6 @@ export const NAV_HIERARCHY = [
             { name: 'Entertainment', icon: Clapperboard, path: createPageUrl('Entertainment') },
             { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
             { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
-            { name: 'Streaming', icon: Radio, path: createPageUrl('Streaming') },
             { name: 'Aura', icon: Radio, path: createPageUrl('Aura') },
         ]
     },

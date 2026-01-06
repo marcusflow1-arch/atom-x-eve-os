@@ -5,6 +5,7 @@ import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
+import Aura from './pages/Aura';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
 import Cart from './pages/Cart';
@@ -39,10 +40,9 @@ import StreamDetail from './pages/StreamDetail';
 import StreamWatch from './pages/StreamWatch';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
+import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Aura from './pages/Aura';
-import Streaming from './pages/Streaming';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +54,7 @@ export const PAGES = {
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
+    "Aura": Aura,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
     "Cart": Cart,
@@ -88,10 +89,9 @@ export const PAGES = {
     "StreamWatch": StreamWatch,
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
+    "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Aura": Aura,
-    "Streaming": Streaming,
 }
 
 export const pagesConfig = {
