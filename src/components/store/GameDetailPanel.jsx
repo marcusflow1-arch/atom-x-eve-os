@@ -320,13 +320,12 @@ export default function GameDetailPanel({ game, onPurchase }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 h-full text-sm font-bold transition-all relative ${
+                  className={`flex items-center gap-2 h-full text-lg font-bold transition-all relative ${
                     activeTab === tab.id 
                       ? 'text-white' 
                       : 'text-white/40 hover:text-white'
                   }`}
                 >
-                  <tab.icon className="w-4 h-4" />
                   {tab.label}
                   {activeTab === tab.id && (
                     <motion.div 
