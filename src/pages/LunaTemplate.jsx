@@ -907,6 +907,7 @@ export default function LunaTemplate() {
   const [showForumOverlay, setShowForumOverlay] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [showConsoleMode, setShowConsoleMode] = useState(false);
+  const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
@@ -1552,7 +1553,7 @@ export default function LunaTemplate() {
             <div className="flex gap-6 mt-6 h-36">
               {/* Friends */}
               <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Clan'))}
+                onClick={() => setShowFriendsHub(true)}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                 accentColor="rgba(34, 211, 238, 0.1)"
               >
@@ -1570,14 +1571,14 @@ export default function LunaTemplate() {
                 <span className="text-white/80 text-base font-medium relative z-10">Achievement</span>
               </ConsoleTile>
 
-              {/* AI Mode */}
+              {/* AI Skill Tree */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                 accentColor="rgba(168, 85, 247, 0.1)"
               >
                 <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Mode</span>
+                <span className="text-white/80 text-base font-medium relative z-10">AI Skill Tree</span>
               </ConsoleTile>
 
               {/* Aura */}
