@@ -825,8 +825,77 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
 };
 
-// Console Tile Component with Liquid Glass + Shine Effect
-const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false }) => {
+// Console Tile Component with Liquid Glass + Shine Effect + Enhanced Depth
+const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false, isLegendary = false }) => {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePos({ x, y });
+  };
+
+  return (
+    <motion.div
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      tabIndex={0}
+      animate={{
+        scale: isHovered || isFocused ? 1.02 : 1,
+        y: isHovered || isFocused ? -2 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`relative overflow-hidden group outline-none ${className}`}
+      style={{
+        background: accentColor 
+          ? `linear-gradient(135deg, ${accentColor} 0%, rgba(100, 120, 140, 0.10) 100%)`
+          : 'rgba(100, 120, 140, 0.10)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: `1px solid ${isHovered || isFocused ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)'}`,
+        boxShadow: isHovered || isFocused 
+          ? '0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+          : '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+      }}
+    >
+      {/* Subtle background blur separation layer */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0 transition-opacity duration-500"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%)',
+          opacity: isHovered || isFocused ? 1 : 0.5
+        }}
+      />
+      
+      {/* Shine Effect */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
+        style={{
+          opacity: isHovered ? 0.5 : 0,
+          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.3) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+        }}
+      />
+      
+      {/* Focus ring for keyboard navigation */}
+      {isFocused && (
+        <div className="absolute inset-0 rounded-[inherit] border-2 border-cyan-400/50 pointer-events-none z-30" />
+      )}
+      
+      {/* Content */}
+      {children}
+    </motion.div>
+  );
+};
+
+// Legendary Card Tile with Enhanced Glow
+const LegendaryTile = ({ children, onClick, className = "", rarityColor = "orange" }) => {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -837,23 +906,60 @@ const ConsoleTile = ({ children, onClick, className = "", accentColor = null, ha
     setMousePos({ x, y });
   };
 
+  const colorMap = {
+    orange: { glow: 'rgba(249, 115, 22, 0.4)', border: 'rgba(249, 115, 22, 0.5)' },
+    purple: { glow: 'rgba(168, 85, 247, 0.4)', border: 'rgba(168, 85, 247, 0.5)' },
+    cyan: { glow: 'rgba(34, 211, 238, 0.4)', border: 'rgba(34, 211, 238, 0.5)' },
+    red: { glow: 'rgba(239, 68, 68, 0.4)', border: 'rgba(239, 68, 68, 0.5)' },
+  };
+
+  const colors = colorMap[rarityColor] || colorMap.orange;
+
   return (
-    <div
+    <motion.div
       onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      className={`relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] ${className}`}
+      animate={{
+        scale: isHovered ? 1.03 : 1,
+        y: isHovered ? -4 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`relative overflow-hidden group cursor-pointer ${className}`}
       style={{
-        background: accentColor 
-          ? `linear-gradient(135deg, ${accentColor} 0%, rgba(100, 120, 140, 0.12) 100%)`
-          : 'rgba(100, 120, 140, 0.12)',
+        background: 'rgba(100, 120, 140, 0.12)',
         backdropFilter: 'blur(40px) saturate(180%)',
         WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        border: `1px solid ${isHovered ? colors.border : 'rgba(255, 255, 255, 0.15)'}`,
+        boxShadow: isHovered 
+          ? `0 20px 60px ${colors.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.15)`
+          : `0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
       }}
     >
+      {/* Animated Energy Halo */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-0 rounded-[inherit]"
+        animate={{
+          boxShadow: [
+            `inset 0 0 20px ${colors.glow.replace('0.4', '0.1')}`,
+            `inset 0 0 40px ${colors.glow.replace('0.4', '0.2')}`,
+            `inset 0 0 20px ${colors.glow.replace('0.4', '0.1')}`,
+          ]
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Parallax tilt effect on hover */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{
+          background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, ${colors.glow.replace('0.4', '0.15')} 0%, transparent 50%)`,
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}
+      />
+      
       {/* Shine Effect */}
       <div 
         className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
@@ -862,9 +968,12 @@ const ConsoleTile = ({ children, onClick, className = "", accentColor = null, ha
           background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
         }}
       />
+      
       {/* Content */}
-      {children}
-    </div>
+      <div className="relative z-10">
+        {children}
+      </div>
+    </motion.div>
   );
 };
 
