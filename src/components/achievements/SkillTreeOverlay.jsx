@@ -290,16 +290,56 @@ export default function SkillTreeOverlay({ card, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  // Get node position for connection lines
+  const getNodePosition = (nodeId, nodes) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return { x: 0, y: 0 };
+    return { x: node.offsetX, y: node.offsetY };
+  };
+
+  // Render connection lines between nodes
+  const renderConnections = (nodes, unlockedNodes, isPowerTree) => {
+    const connections = [];
+    
+    nodes.forEach(node => {
+      if (!node.parent) return;
+      
+      const parents = Array.isArray(node.parent) ? node.parent : [node.parent];
+      const toPos = getNodePosition(node.id, nodes);
+      
+      parents.forEach(parentId => {
+        const fromPos = getNodePosition(parentId, nodes);
+        const isUnlocked = unlockedNodes.includes(node.id);
+        const isAnimating = recentlyUnlocked === node.id;
+        
+        connections.push(
+          <ConnectionLine
+            key={`${parentId}-${node.id}`}
+            fromX={fromPos.x + 120} // Center offset (240/2)
+            fromY={fromPos.y}
+            toX={toPos.x + 120}
+            toY={toPos.y}
+            isUnlocked={isUnlocked}
+            isPowerTree={isPowerTree}
+            isAnimating={isAnimating}
+          />
+        );
+      });
+    });
+    
+    return connections;
+  };
+
   const renderTree = (nodes, treeType, isPowerTree) => {
     const unlockedNodes = treeType === 'power' ? unlockedPowerNodes : unlockedAINodes;
     const isTreeLocked = committedPath && committedPath !== treeType;
 
     return (
-      <div className={`relative flex flex-col items-center gap-6 p-4 rounded-2xl transition-all duration-500 ${
+      <div className={`relative flex flex-col items-center p-4 rounded-2xl transition-all duration-500 ${
         isTreeLocked ? 'opacity-30 pointer-events-none' : ''
       }`}>
         {/* Tree Header */}
-        <div className="text-center mb-2">
+        <div className="text-center mb-4">
           <h3 className={`text-lg font-bold ${isPowerTree ? 'text-purple-300' : 'text-cyan-300'}`}>
             {isPowerTree ? 'Power Path' : 'AI Adaptation Path'}
           </h3>
@@ -313,38 +353,43 @@ export default function SkillTreeOverlay({ card, onClose }) {
           )}
         </div>
 
-        {/* Tree Grid */}
-        <div className="grid grid-cols-3 gap-x-8 gap-y-10">
-          {[0, 1, 2, 3, 4].map(tier => (
-            <React.Fragment key={tier}>
-              {nodes.filter(n => n.tier === tier).sort((a, b) => a.col - b.col).map(node => {
-                const isUnlocked = unlockedNodes.includes(node.id);
-                const canUnlock = canUnlockNode(node, treeType);
-                const isLocked = !isUnlocked && !canUnlock;
-                
-                return (
-                  <div 
-                    key={node.id} 
-                    className="flex justify-center"
-                    style={{ gridColumn: node.col + 1 }}
-                  >
-                    <SkillNode
-                      node={node}
-                      isUnlocked={isUnlocked}
-                      isSelected={hoveredNode?.id === node.id}
-                      isLocked={isLocked}
-                      canUnlock={canUnlock}
-                      isPowerTree={isPowerTree}
-                      onClick={(n) => handleUnlockNode(n, treeType)}
-                      onHover={setHoveredNode}
-                      onLeave={() => setHoveredNode(null)}
-                      focusedNodeId={focusedNodeId}
-                    />
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+        {/* Tree Container with positioned nodes */}
+        <div className="relative w-[240px] h-[420px]">
+          {/* Connection Lines */}
+          {renderConnections(nodes, unlockedNodes, isPowerTree)}
+          
+          {/* Skill Nodes */}
+          {nodes.map(node => {
+            const isUnlocked = unlockedNodes.includes(node.id);
+            const canUnlock = canUnlockNode(node, treeType);
+            const isLocked = !isUnlocked && !canUnlock;
+            const isAnimating = recentlyUnlocked === node.id;
+            
+            return (
+              <div 
+                key={node.id}
+                className="absolute"
+                style={{ 
+                  left: `calc(50% + ${node.offsetX}px - 28px)`, // 28px = half of 56px node width
+                  top: node.offsetY,
+                }}
+              >
+                <SkillNode
+                  node={node}
+                  isUnlocked={isUnlocked}
+                  isSelected={hoveredNode?.id === node.id}
+                  isLocked={isLocked}
+                  canUnlock={canUnlock}
+                  isPowerTree={isPowerTree}
+                  onClick={(n) => handleUnlockNode(n, treeType)}
+                  onHover={setHoveredNode}
+                  onLeave={() => setHoveredNode(null)}
+                  focusedNodeId={focusedNodeId}
+                  isAnimating={isAnimating}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     );
