@@ -168,11 +168,17 @@ export default function FriendsHubOverlay({ onClose }) {
               <span>Games most played</span>
               <span className="text-2xl font-bold">{stats.gamesMostPlayed}</span>
             </div>
-            <div className="flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors">
+            <div 
+              onClick={() => setActiveTab('playing')}
+              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'playing' ? 'bg-white/10' : ''}`}
+            >
               <span>Friends currently playing</span>
               <span className="text-2xl font-bold">{stats.friendsCurrentlyPlaying}</span>
             </div>
-            <div className="flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors">
+            <div 
+              onClick={() => setActiveTab('online')}
+              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'online' ? 'bg-white/10' : ''}`}
+            >
               <span>Friends online</span>
               <span className="text-2xl font-bold">{stats.friendsOnline}</span>
             </div>
@@ -257,12 +263,6 @@ export default function FriendsHubOverlay({ onClose }) {
               className={`text-lg font-medium transition-colors ${activeTab === 'friends' ? 'text-white border-b-2 border-white pb-1' : 'text-white/50 hover:text-white/80'}`}
             >
               Friends
-            </button>
-            <button 
-              onClick={() => setActiveTab('trophies')}
-              className={`text-lg font-medium transition-colors ${activeTab === 'trophies' ? 'text-white border-b-2 border-white pb-1' : 'text-white/50 hover:text-white/80'}`}
-            >
-              Trophies
             </button>
 
             {/* Close button */}
@@ -395,19 +395,112 @@ export default function FriendsHubOverlay({ onClose }) {
                   })
                 )}
               </div>
-            ) : activeTab === 'trophies' ? (
-              /* Trophies / Achievements */
-              <div className="grid grid-cols-4 gap-4">
-                {achievements.map((ach, i) => (
-                  <div 
-                    key={ach.id || i}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                  >
-                    <MiniAchievementCard achievement={ach} size={60} />
-                    <span className="text-white text-sm font-medium text-center truncate w-full">{ach.title}</span>
-                    <span className="text-white/40 text-xs">{ach.game}</span>
+            ) : activeTab === 'playing' ? (
+              /* Friends Currently Playing */
+              <div className="space-y-4">
+                {friends.filter(f => f.current_game).length === 0 ? (
+                  <div className="text-center py-12">
+                    <Gamepad2 className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                    <p className="text-white/40">No friends currently playing</p>
                   </div>
-                ))}
+                ) : (
+                  friends.filter(f => f.current_game).map((friend) => {
+                    const friendAchievements = getRandomAchievements();
+                    const currentGame = games.find(g => g.title === friend.current_game) || { title: friend.current_game };
+
+                    return (
+                      <div 
+                        key={friend.id}
+                        className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
+                      >
+                        {/* Mini Avatar Viewer */}
+                        <div className="flex-shrink-0">
+                          <MiniAvatarViewer size={80} />
+                        </div>
+
+                        {/* Friend Info */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name and Game */}
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-white font-bold text-lg">{friend.friend_name}</h3>
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                          </div>
+
+                          {/* Currently Playing */}
+                          <div className="flex items-center gap-3 mb-2">
+                            <Gamepad2 className="w-4 h-4 text-green-400" />
+                            <span className="text-green-400 font-medium">{friend.current_game}</span>
+                          </div>
+
+                          {/* Achievements to earn in this game */}
+                          <div className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4 text-yellow-400" />
+                            <span className="text-white/40 text-xs mr-1">Earn:</span>
+                            <div className="flex gap-1">
+                              {friendAchievements.map((ach, i) => (
+                                <MiniAchievementCard key={i} achievement={ach} size={35} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : activeTab === 'online' ? (
+              /* Friends Online */
+              <div className="space-y-4">
+                {friends.filter(f => f.status === 'online').length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                    <p className="text-white/40">No friends online</p>
+                  </div>
+                ) : (
+                  friends.filter(f => f.status === 'online').map((friend) => {
+                    const friendAchievements = getRandomAchievements();
+                    const achievementScore = Math.floor(Math.random() * 50000);
+
+                    return (
+                      <div 
+                        key={friend.id}
+                        className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
+                      >
+                        {/* Mini Avatar Viewer */}
+                        <div className="flex-shrink-0">
+                          <MiniAvatarViewer size={80} />
+                        </div>
+
+                        {/* Friend Info */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name and Status */}
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-white font-bold text-lg">{friend.friend_name}</h3>
+                            <div className="w-2 h-2 rounded-full bg-green-400" />
+                            <span className="text-green-400 text-sm">Online</span>
+                          </div>
+
+                          {/* Achievement Score */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <Trophy className="w-4 h-4 text-yellow-400" />
+                            <span className="text-white/60 text-sm">Achievement Score:</span>
+                            <span className="text-cyan-400 font-bold">{achievementScore.toLocaleString()}</span>
+                          </div>
+
+                          {/* Recent Achievements */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/40 text-xs mr-1">Recent:</span>
+                            <div className="flex gap-1">
+                              {friendAchievements.map((ach, i) => (
+                                <MiniAchievementCard key={i} achievement={ach} size={35} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             ) : null}
           </div>
