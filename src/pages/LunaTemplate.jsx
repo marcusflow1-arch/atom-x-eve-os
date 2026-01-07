@@ -1072,19 +1072,69 @@ export default function LunaTemplate() {
       style={{
         background: 'linear-gradient(135deg, #0B0B0B 0%, #141414 30%, #0B0B0B 60%, #141414 100%)'
       }}>
+      
+      {/* Slow Ambient Gradient Drift */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-[0]"
+        animate={{
+          background: [
+            'radial-gradient(ellipse at 30% 20%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
+            'radial-gradient(ellipse at 70% 80%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
+            'radial-gradient(ellipse at 30% 20%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
+          ]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+      
       {/* Crystalline Glass Layer */}
       <div
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          background: 'rgba(255, 255, 255, 0.06)',
+          background: 'rgba(255, 255, 255, 0.04)',
           backdropFilter: 'blur(35px)',
           WebkitBackdropFilter: 'blur(35px)',
         }}
       />
-      {/* Ink Ambient Presence */}
-      <div className="absolute inset-0 pointer-events-none z-[1] opacity-60">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-black/40 rounded-full blur-[180px] animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gray-900/30 rounded-full blur-[160px] animate-pulse" style={{ animationDuration: '10s' }} />
+      
+      {/* Soft Vignette */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-[2]"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%)'
+        }}
+      />
+      
+      {/* Digital Dust / Particle Noise Layer */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-[1] opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '128px 128px'
+        }}
+      />
+      
+      {/* Ink Ambient Presence - Enhanced with slower, more elegant animation */}
+      <div className="absolute inset-0 pointer-events-none z-[1] opacity-50">
+        <motion.div 
+          className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-slate-900/30 rounded-full blur-[180px]"
+          animate={{ 
+            opacity: [0.3, 0.5, 0.3],
+            scale: [1, 1.05, 1],
+            x: [0, 20, 0],
+            y: [0, 10, 0]
+          }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-800/25 rounded-full blur-[160px]"
+          animate={{ 
+            opacity: [0.25, 0.4, 0.25],
+            scale: [1, 1.03, 1],
+            x: [0, -15, 0],
+            y: [0, -10, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+        />
       </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
       {customBackground && (
