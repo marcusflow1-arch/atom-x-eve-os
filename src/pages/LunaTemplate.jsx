@@ -1612,24 +1612,17 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (Legendary Style) */}
+              {/* Large Hero Tile - Left (Sumi-e Style) */}
               <LegendaryTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.5] relative rounded-2xl overflow-hidden"
-                rarityColor="orange"
+                className="flex-[1.5] relative overflow-hidden"
               >
                 <img 
                   src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
                   alt="Featured Game"
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-8 left-8 right-8 z-10">
-                  <h2 className="text-4xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                    RESIDENT EVIL 2
-                  </h2>
-                  <p className="text-white/60 text-base">Continue your nightmare</p>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/90 via-[#080808]/30 to-transparent" />
               </LegendaryTile>
 
               {/* Leaderboard Tile - Middle */}
