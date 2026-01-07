@@ -213,6 +213,17 @@ export default function SkillTreeOverlay({ card, onClose }) {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [focusedNodeId, setFocusedNodeId] = useState(null);
   const [skillPoints, setSkillPoints] = useState(2000); // Demo SP
+  const [recentlyUnlocked, setRecentlyUnlocked] = useState(null); // For unlock animations
+  const containerRef = useRef(null);
+
+  // Lock body scroll when overlay is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   // Card tilt effects
   const x = useMotionValue(0);
