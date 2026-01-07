@@ -1179,70 +1179,62 @@ export default function LunaTemplate() {
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
-        background: 'linear-gradient(135deg, #0B0B0B 0%, #141414 30%, #0B0B0B 60%, #141414 100%)'
+        background: '#080808'
       }}>
       
-      {/* Slow Ambient Gradient Drift */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none z-[0]"
-        animate={{
-          background: [
-            'radial-gradient(ellipse at 30% 20%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
-            'radial-gradient(ellipse at 70% 80%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
-            'radial-gradient(ellipse at 30% 20%, rgba(30, 41, 59, 0.15) 0%, transparent 50%)',
-          ]
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-      />
-      
-      {/* Crystalline Glass Layer */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1]"
+      {/* Sumi-e Ink Wash Background */}
+      <div 
+        className="absolute inset-0 z-[0]"
         style={{
-          background: 'rgba(255, 255, 255, 0.04)',
-          backdropFilter: 'blur(35px)',
-          WebkitBackdropFilter: 'blur(35px)',
+          backgroundImage: `url("https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
         }}
       />
       
-      {/* Soft Vignette */}
+      {/* Drifting Mist Animation Layer */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-[1]"
+        animate={{
+          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
+        }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+        style={{
+          background: 'radial-gradient(ellipse at 30% 40%, rgba(45, 45, 45, 0.3) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(45, 45, 45, 0.25) 0%, transparent 50%)',
+          mixBlendMode: 'overlay'
+        }}
+      />
+      
+      {/* Vignette Overlay - Darkened edges, focused center */}
       <div 
         className="absolute inset-0 pointer-events-none z-[2]"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%)'
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(8, 8, 8, 0.6) 70%, rgba(8, 8, 8, 0.9) 100%)'
         }}
       />
       
-      {/* Digital Dust / Particle Noise Layer */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-[1] opacity-[0.03]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundSize: '128px 128px'
-        }}
-      />
-      
-      {/* Ink Ambient Presence - Enhanced with slower, more elegant animation */}
-      <div className="absolute inset-0 pointer-events-none z-[1] opacity-50">
+      {/* Subtle Ink Cloud Drift */}
+      <div className="absolute inset-0 pointer-events-none z-[1] opacity-40">
         <motion.div 
-          className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-slate-900/30 rounded-full blur-[180px]"
+          className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full blur-[200px]"
+          style={{ background: '#2D2D2D' }}
           animate={{ 
-            opacity: [0.3, 0.5, 0.3],
-            scale: [1, 1.05, 1],
-            x: [0, 20, 0],
-            y: [0, 10, 0]
+            opacity: [0.2, 0.35, 0.2],
+            x: [0, 50, 0],
+            y: [0, 30, 0]
           }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div 
-          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-800/25 rounded-full blur-[160px]"
+          className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full blur-[180px]"
+          style={{ background: '#2D2D2D' }}
           animate={{ 
-            opacity: [0.25, 0.4, 0.25],
-            scale: [1, 1.03, 1],
-            x: [0, -15, 0],
-            y: [0, -10, 0]
+            opacity: [0.15, 0.3, 0.15],
+            x: [0, -40, 0],
+            y: [0, -25, 0]
           }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 5 }}
         />
       </div>
       {/* Custom background image - shown in front of base gradient, behind content */}
