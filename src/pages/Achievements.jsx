@@ -574,7 +574,6 @@ function AchievementsView({ onExitToLibrary }) {
                   <Gamepad2 className="w-5 h-5 text-white/80" />
                 </button>
               </div>
-              </div>
 
               {/* VERTICAL AXIS (Games) */}
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
