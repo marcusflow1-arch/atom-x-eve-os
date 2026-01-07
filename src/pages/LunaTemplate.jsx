@@ -1480,12 +1480,12 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
-            {/* Main Grid: Hero Left + 2x2 Right */}
+            {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left */}
+              {/* Large Hero Tile - Left (70% of original) */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[2] relative rounded-2xl overflow-hidden cursor-pointer"
+                className="flex-[1.4] relative rounded-2xl overflow-hidden cursor-pointer"
                 hasImage
               >
                 <img 
@@ -1495,10 +1495,55 @@ export default function LunaTemplate() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-8 left-8 right-8 z-10">
-                  <h2 className="text-5xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                  <h2 className="text-4xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                     RESIDENT EVIL 2
                   </h2>
                   <p className="text-white/60 text-base">Continue your nightmare</p>
+                </div>
+              </ConsoleTile>
+
+              {/* Leaderboard Tile - Middle */}
+              <ConsoleTile 
+                className="w-72 rounded-2xl overflow-hidden flex flex-col"
+                accentColor="rgba(34, 211, 238, 0.08)"
+              >
+                <div className="p-4 border-b border-white/10">
+                  <h3 className="text-white font-bold text-lg tracking-wide flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    LEADERBOARD
+                  </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                  {[
+                    { rank: 1, name: 'LeonardLord12', score: 45256, avatar: 'https://i.pravatar.cc/150?u=leo' },
+                    { rank: 2, name: 'Johny85Devil', score: 38567, avatar: 'https://i.pravatar.cc/150?u=johny' },
+                    { rank: 3, name: 'DavPoney', score: 25417, avatar: 'https://i.pravatar.cc/150?u=dav' },
+                    { rank: 4, name: 'Acalypca888', score: 23698, avatar: 'https://i.pravatar.cc/150?u=aca' },
+                    { rank: 5, name: 'BobJackson', score: 17568, avatar: 'https://i.pravatar.cc/150?u=bob' },
+                  ].map((player) => (
+                    <div 
+                      key={player.rank}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+                    >
+                      <img 
+                        src={player.avatar} 
+                        alt={player.name}
+                        className="w-8 h-8 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white/50 text-xs">{player.rank}.</span>
+                          <span className="text-white text-sm font-medium truncate">{player.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-cyan-400 text-xs">
+                          <div className="w-2 h-2 rounded-full bg-cyan-400/30 flex items-center justify-center">
+                            <div className="w-1 h-1 rounded-full bg-cyan-400" />
+                          </div>
+                          <span>{player.score.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </ConsoleTile>
 
@@ -1556,9 +1601,9 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => setShowFriendsHub(true)}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(34, 211, 238, 0.1)"
+                accentColor="rgba(59, 130, 246, 0.1)"
               >
-                <Users className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors relative z-10" />
+                <Users className="w-12 h-12 text-blue-500 group-hover:text-blue-400 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">Friends</span>
               </ConsoleTile>
 
