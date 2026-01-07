@@ -183,6 +183,10 @@ function AchievementsView({ onExitToLibrary }) {
   // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
   const [viewMode, setViewMode] = useState('cross');
   
+  // Skill Tree Mode toggle
+  const [skillTreeMode, setSkillTreeMode] = useState(false);
+  const [skillTreeCard, setSkillTreeCard] = useState(null);
+  
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
