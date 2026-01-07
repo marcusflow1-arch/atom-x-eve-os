@@ -565,7 +565,14 @@ function AchievementsView({ onExitToLibrary }) {
                   </div>
                 </button>
 
-{/* Home icon removed */}
+                {/* Controller icon - Back to Library */}
+                <button
+                  onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                  title="Back to Library"
+                >
+                  <Gamepad2 className="w-5 h-5 text-white/80" />
+                </button>
               </div>
 
               {/* VERTICAL AXIS (Games) */}
