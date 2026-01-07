@@ -141,21 +141,68 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
   );
 }
 
-function ConnectionLine({ from, to, isUnlocked }) {
+// Connection line between nodes with energy trail animation
+function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked, isPowerTree, isAnimating }) {
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+  
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className={`absolute w-1 rounded-full transition-colors duration-500 ${
-        isUnlocked ? 'bg-gradient-to-b from-purple-500 to-cyan-500' : 'bg-slate-700'
-      }`}
-      style={{
-        left: '50%',
-        transform: 'translateX(-50%)',
-        top: from,
-        height: to - from,
+      initial={{ opacity: 0, scaleX: 0 }}
+      animate={{ 
+        opacity: 1, 
+        scaleX: 1,
       }}
-    />
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="absolute origin-left"
+      style={{
+        left: fromX + 28, // Center of node (56/2)
+        top: fromY + 28,
+        width: length,
+        height: 3,
+        transform: `rotate(${angle}rad)`,
+        transformOrigin: '0 50%',
+      }}
+    >
+      {/* Base line */}
+      <div className={`absolute inset-0 rounded-full transition-colors duration-500 ${
+        isUnlocked 
+          ? isPowerTree ? 'bg-purple-500/60' : 'bg-cyan-500/60'
+          : 'bg-slate-700/50'
+      }`} />
+      
+      {/* Animated energy flow when unlocked */}
+      {isUnlocked && (
+        <motion.div
+          className={`absolute inset-y-0 left-0 w-8 rounded-full ${
+            isPowerTree 
+              ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' 
+              : 'bg-gradient-to-r from-transparent via-cyan-400 to-transparent'
+          }`}
+          animate={{
+            x: [0, length - 32, 0],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      )}
+      
+      {/* Unlock animation burst */}
+      {isAnimating && (
+        <motion.div
+          className={`absolute inset-0 rounded-full ${
+            isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'
+          }`}
+          initial={{ scaleX: 0, opacity: 1 }}
+          animate={{ scaleX: 1, opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ transformOrigin: '0 50%' }}
+        />
+      )}
+    </motion.div>
   );
 }
 
