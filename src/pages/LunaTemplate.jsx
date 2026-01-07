@@ -1717,91 +1717,79 @@ export default function LunaTemplate() {
               </div>
             </div>
 
-            {/* System Status Bar */}
-            <div className="flex items-center justify-between mb-4 px-2">
-              <motion.div 
-                className="flex items-center gap-3"
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="flex items-center gap-2">
-                  <motion.div 
-                    className="w-2 h-2 rounded-full bg-cyan-400"
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <span className="text-xs text-white/50 font-medium tracking-wider">SYSTEM ONLINE</span>
-                </div>
-                <div className="w-px h-3 bg-white/20" />
-                <span className="text-xs text-white/40 font-mono">
-                  {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </motion.div>
-              <div className="text-xs text-white/30 tracking-wider">LUNA OS v2.1</div>
+            {/* Time Display - Bottom Left */}
+            <div className="absolute bottom-6 left-12 z-30">
+              <span className="text-[#CCCCCC] text-lg font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </span>
             </div>
 
             {/* Bottom Ribbon - Quick Access */}
-            <div className="flex gap-6 h-36">
+            <div className="flex gap-6 h-36 mt-6">
               {/* Friends */}
               <ConsoleTile 
                 onClick={() => setShowFriendsHub(true)}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(59, 130, 246, 0.08)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Users className="w-12 h-12 text-blue-500 group-hover:text-blue-400 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Friends</span>
+                <Users className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
               {/* Achievements */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(250, 204, 21, 0.08)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Achievement</span>
+                <Trophy className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievement</span>
               </ConsoleTile>
 
               {/* AI Skill Tree */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(168, 85, 247, 0.08)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Skill Tree</span>
+                <Bot className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Skill Tree</span>
               </ConsoleTile>
 
               {/* Aura */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Aura'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(248, 113, 113, 0.08)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Aura</span>
+                <Radio className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Aura</span>
               </ConsoleTile>
 
               {/* AI Story */}
               <ConsoleTile 
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(129, 140, 248, 0.10)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Story</span>
+                <BookOpen className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Story</span>
               </ConsoleTile>
 
               {/* AI Battle */}
               <ConsoleTile 
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(239, 68, 68, 0.10)"
+                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Battle</span>
+                <Swords className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Battle</span>
               </ConsoleTile>
             </div>
+
+            {/* SVG Gradient Definition for Silver Icons */}
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="100%" stopColor="#A0A0A0" />
+                </linearGradient>
+              </defs>
+            </svg>
           </motion.div>
         ) : uiVisible ? (
           <motion.div 
