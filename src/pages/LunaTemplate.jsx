@@ -594,6 +594,7 @@ import { useEquipment } from '../components/luna/hooks/useEquipment';
 import { useSkills } from '../components/luna/hooks/useSkills';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
+import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 
 
 // Orbital Menu Items
@@ -2358,6 +2359,13 @@ export default function LunaTemplate() {
             onClose={() => setSelectedUpdate(null)} />
 
         }
+      </AnimatePresence>
+
+      {/* Friends Hub Overlay */}
+      <AnimatePresence>
+        {showFriendsHub && (
+          <FriendsHubOverlay onClose={() => setShowFriendsHub(false)} />
+        )}
       </AnimatePresence>
 
       {/* Notifications Overlay */}
