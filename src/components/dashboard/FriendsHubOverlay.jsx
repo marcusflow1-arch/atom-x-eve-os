@@ -107,12 +107,16 @@ export default function FriendsHubOverlay({ onClose }) {
 
   // Get random achievements for a friend (mock - in real app would be from UserAchievement)
   const getRandomAchievements = () => {
-    return achievements.slice(0, Math.floor(Math.random() * 3) + 2);
+    if (!achievements || achievements.length === 0) return [];
+    const count = Math.min(Math.floor(Math.random() * 3) + 2, achievements.length);
+    return achievements.slice(0, count).filter(a => a != null);
   };
 
   // Get random recent games for a friend
   const getRandomGames = () => {
-    return games.slice(0, Math.floor(Math.random() * 2) + 1);
+    if (!games || games.length === 0) return [];
+    const count = Math.min(Math.floor(Math.random() * 2) + 1, games.length);
+    return games.slice(0, count).filter(g => g != null);
   };
 
   return (
@@ -322,7 +326,7 @@ export default function FriendsHubOverlay({ onClose }) {
                           <div className="flex items-center gap-2 mb-2">
                             <Gamepad2 className="w-4 h-4 text-white/40" />
                             <span className="text-white/60 text-sm">
-                              {friendGames.map(g => g.title).join(', ') || 'No recent games'}
+                              {friendGames.length > 0 ? friendGames.map(g => g?.title || '').filter(t => t).join(', ') : 'No recent games'}
                             </span>
                           </div>
 
