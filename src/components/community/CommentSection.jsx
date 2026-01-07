@@ -16,7 +16,7 @@ const Comment = ({ comment, onVote }) => (
         </div>
         <div>
             <p className="text-xs text-slate-400 mb-1">
-                <span className="font-semibold text-slate-300">{comment.created_by.split('@')[0]}</span>
+                <span className="font-semibold text-slate-300">{comment.created_by?.split('@')[0] || 'Anonymous'}</span>
             </p>
             <p className="text-slate-200">{comment.content}</p>
         </div>
