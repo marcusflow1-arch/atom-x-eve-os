@@ -271,6 +271,10 @@ export default function SkillTreeOverlay({ card, onClose }) {
       setCommittedPath(treeType);
     }
     
+    // Trigger unlock animation
+    setRecentlyUnlocked(node.id);
+    setTimeout(() => setRecentlyUnlocked(null), 1000);
+    
     setUnlocked(prev => [...prev, node.id]);
     setSkillPoints(prev => prev - node.cost);
   };
