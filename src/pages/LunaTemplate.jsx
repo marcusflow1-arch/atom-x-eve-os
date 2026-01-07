@@ -1678,20 +1678,19 @@ export default function LunaTemplate() {
                   {/* Settings Tile */}
                   <ConsoleTile 
                     onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Settings className="w-16 h-16 text-white/70 group-hover:text-white transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Settings</span>
+                    <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
                   </ConsoleTile>
                   
                   {/* Blacksmith */}
                   <ConsoleTile 
                     onClick={() => navigate(createPageUrl('Blacksmith'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                    accentColor="rgba(251, 146, 60, 0.15)"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Hammer className="w-16 h-16 text-orange-400 group-hover:text-orange-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Blacksmith</span>
+                    <Hammer className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Blacksmith</span>
                   </ConsoleTile>
                 </div>
 
@@ -1700,20 +1699,19 @@ export default function LunaTemplate() {
                   {/* My Games & Apps */}
                   <ConsoleTile 
                     onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium text-center relative z-10">My games & apps</span>
+                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
                   </ConsoleTile>
                   
                   {/* Season Pass */}
                   <ConsoleTile 
                     onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                    accentColor="rgba(192, 132, 252, 0.15)"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Season Pass</span>
+                    <Crown className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
                   </ConsoleTile>
                 </div>
               </div>
