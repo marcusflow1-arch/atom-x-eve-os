@@ -377,8 +377,6 @@ const PvPPvETab = () => {
 };
 
 // Leaderboards Tab - Now uses GenreLeaderboardSystem
-import GenreLeaderboardSystem from './GenreLeaderboardSystem';
-
 const LeaderboardsTab = () => {
   return (
     <div className="h-[600px]">
