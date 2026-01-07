@@ -6,6 +6,7 @@ import {
   Settings, Volume2, VolumeX, Palette, Play, Star, Zap, Target, ChevronRight, X,
   Search, Mic, Filter, TrendingUp, Clock, Sparkles, Eye, ShoppingCart
 } from 'lucide-react';
+import GenreLeaderboardSystem from './GenreLeaderboardSystem';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
