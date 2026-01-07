@@ -753,7 +753,6 @@ function AchievementsView({ onExitToLibrary }) {
                   
                   {/* Header */}
                   <div className="flex items-center gap-3">
-{/* Home icon removed */}
                     <h1 className="text-2xl font-black tracking-tighter text-white">
                       Achievements
                     </h1>
@@ -772,6 +771,17 @@ function AchievementsView({ onExitToLibrary }) {
                         <div className="bg-white/80 rounded-[2px]" />
                         <div className="bg-white/80 rounded-[2px]" />
                       </div>
+                    </motion.button>
+
+                    {/* Controller icon - Back to Library */}
+                    <motion.button
+                      onClick={() => navigate(createPageUrl('Store') + '?mode=library')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                      title="Back to Library"
+                    >
+                      <Gamepad2 className="w-4 h-4 text-white/80" />
                     </motion.button>
                   </div>
 
