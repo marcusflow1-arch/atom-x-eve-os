@@ -1806,7 +1806,7 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(250, 204, 21, 0.1)"
+                accentColor="rgba(250, 204, 21, 0.08)"
               >
                 <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">Achievement</span>
@@ -1816,7 +1816,7 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(168, 85, 247, 0.1)"
+                accentColor="rgba(168, 85, 247, 0.08)"
               >
                 <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">AI Skill Tree</span>
@@ -1826,7 +1826,7 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Aura'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(248, 113, 113, 0.1)"
+                accentColor="rgba(248, 113, 113, 0.08)"
               >
                 <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">Aura</span>
@@ -1836,7 +1836,7 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(129, 140, 248, 0.15)"
+                accentColor="rgba(129, 140, 248, 0.10)"
               >
                 <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">AI Story</span>
@@ -1846,7 +1846,7 @@ export default function LunaTemplate() {
               <ConsoleTile 
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(239, 68, 68, 0.15)"
+                accentColor="rgba(239, 68, 68, 0.10)"
               >
                 <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">AI Battle</span>
