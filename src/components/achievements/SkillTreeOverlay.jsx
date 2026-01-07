@@ -450,22 +450,62 @@ export default function SkillTreeOverlay({ card, onClose }) {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex gap-8 overflow-hidden">
-          {/* Left: Card Preview */}
-          <div className="w-80 flex-shrink-0 flex flex-col items-center justify-center">
+        {/* Main Content - Card as Center Origin */}
+        <div className="flex-1 flex items-center justify-center gap-4 overflow-hidden" ref={containerRef}>
+          
+          {/* Left: Power Tree flowing FROM card */}
+          <div className="flex-1 flex justify-end">
+            <div className="relative rounded-2xl p-4" style={{
+              background: 'rgba(100, 120, 140, 0.08)',
+              border: '1px solid rgba(168, 85, 247, 0.2)'
+            }}>
+              {/* Energy trail connector to card */}
+              <div className="absolute top-1/2 -right-8 w-8 h-1 -translate-y-1/2">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/60 to-transparent rounded-full"
+                  animate={{ opacity: [0.3, 0.8, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                {unlockedPowerNodes.length > 1 && (
+                  <motion.div
+                    className="absolute inset-y-0 left-0 w-2 rounded-full bg-purple-400"
+                    animate={{ x: [0, 24, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+              </div>
+              {renderTree(POWER_TREE_NODES, 'power', true)}
+            </div>
+          </div>
+
+          {/* Center: Card as Origin Point */}
+          <div className="flex-shrink-0 flex flex-col items-center justify-center relative z-10">
+            {/* Pulsing origin aura */}
+            <motion.div
+              className="absolute inset-0 rounded-3xl"
+              animate={{
+                boxShadow: [
+                  '0 0 30px rgba(168, 85, 247, 0.2), 0 0 30px rgba(34, 211, 238, 0.2)',
+                  '0 0 60px rgba(168, 85, 247, 0.4), 0 0 60px rgba(34, 211, 238, 0.4)',
+                  '0 0 30px rgba(168, 85, 247, 0.2), 0 0 30px rgba(34, 211, 238, 0.2)',
+                ]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+              style={{ margin: -20 }}
+            />
+            
             <div
-              className="relative w-full max-w-[260px] aspect-[2.5/3.5] perspective-1000"
+              className="relative w-[220px] aspect-[2.5/3.5] perspective-1000"
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
             >
               <motion.div
-                className="w-full h-full rounded-2xl relative overflow-hidden shadow-2xl border border-white/20 bg-slate-900"
+                className="w-full h-full rounded-2xl relative overflow-hidden shadow-2xl border-2 border-white/30 bg-slate-900"
                 style={{
                   rotateX,
                   rotateY,
                   transformStyle: "preserve-3d",
-                  boxShadow: `0 0 40px ${card?.rarity === 'Legendary' ? 'rgba(249,115,22,0.4)' : card?.rarity === 'Mythic' ? 'rgba(244,63,94,0.4)' : 'rgba(59,130,246,0.4)'}`
+                  boxShadow: `0 0 50px ${card?.rarity === 'Legendary' ? 'rgba(249,115,22,0.5)' : card?.rarity === 'Mythic' ? 'rgba(244,63,94,0.5)' : 'rgba(59,130,246,0.5)'}`
                 }}
               >
                 {card?.image ? (
@@ -483,56 +523,62 @@ export default function SkillTreeOverlay({ card, onClose }) {
                     background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.3) ${val}%, transparent 100%)`)
                   }}
                 />
+                
+                {/* Power indicator overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                  <div className="text-center">
+                    <h3 className="text-white font-bold text-sm truncate">{card?.title || card?.name}</h3>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <Badge className={`text-[10px] h-5 px-2 border ${
+                        card?.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
+                        card?.rarity === 'Mythic' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                        card?.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                        'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                      }`}>
+                        {card?.rarity || "Common"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
 
-            {/* Card Info */}
-            <div className="mt-6 text-center">
-              <h2 className="text-xl font-bold text-white">{card?.title || card?.name}</h2>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
-                  {card?.series || "Unknown"}
-                </Badge>
-                <Badge className={`border ${
-                  card?.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
-                  card?.rarity === 'Mythic' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
-                  card?.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                  'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                }`}>
-                  {card?.rarity || "Common"}
-                </Badge>
-              </div>
-              
-              {/* Path Commitment Status */}
-              {committedPath && (
-                <div className="mt-4 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+            {/* Path Commitment Status Below Card */}
+            <div className="mt-4 text-center">
+              {committedPath ? (
+                <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10">
                   <p className="text-xs text-white/50">Committed to</p>
                   <p className={`font-bold ${committedPath === 'power' ? 'text-purple-400' : 'text-cyan-400'}`}>
                     {committedPath === 'power' ? 'Power Path' : 'AI Adaptation Path'}
                   </p>
                 </div>
+              ) : (
+                <p className="text-xs text-white/40">Choose a path to commit</p>
               )}
             </div>
           </div>
 
-          {/* Right: Dual Skill Trees */}
-          <div className="flex-1 flex gap-6 overflow-auto custom-scrollbar">
-            {/* Power Tree */}
-            <div className="flex-1 rounded-2xl p-4" style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              border: '1px solid rgba(168, 85, 247, 0.2)'
-            }}>
-              {renderTree(POWER_TREE_NODES, 'power', true)}
-            </div>
-
-            {/* Divider */}
-            <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-
-            {/* AI Tree */}
-            <div className="flex-1 rounded-2xl p-4" style={{
+          {/* Right: AI Tree flowing FROM card */}
+          <div className="flex-1 flex justify-start">
+            <div className="relative rounded-2xl p-4" style={{
               background: 'rgba(100, 120, 140, 0.08)',
               border: '1px solid rgba(34, 211, 238, 0.2)'
             }}>
+              {/* Energy trail connector to card */}
+              <div className="absolute top-1/2 -left-8 w-8 h-1 -translate-y-1/2">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-l from-cyan-500/60 to-transparent rounded-full"
+                  animate={{ opacity: [0.3, 0.8, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                />
+                {unlockedAINodes.length > 1 && (
+                  <motion.div
+                    className="absolute inset-y-0 right-0 w-2 rounded-full bg-cyan-400"
+                    animate={{ x: [0, -24, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+              </div>
               {renderTree(AI_TREE_NODES, 'ai', false)}
             </div>
           </div>
