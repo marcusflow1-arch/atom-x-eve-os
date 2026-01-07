@@ -1006,10 +1006,20 @@ function AchievementsView({ onExitToLibrary }) {
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
-        {selectedCard && (
+        {selectedCard && !skillTreeMode && (
           <CardEnhancementOverlay
             card={selectedCard}
             onClose={() => setSelectedCard(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Skill Tree Overlay */}
+      <AnimatePresence>
+        {skillTreeCard && skillTreeMode && (
+          <SkillTreeOverlay
+            card={skillTreeCard}
+            onClose={() => setSkillTreeCard(null)}
           />
         )}
       </AnimatePresence>
