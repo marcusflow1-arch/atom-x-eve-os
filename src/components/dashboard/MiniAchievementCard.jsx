@@ -11,6 +11,9 @@ export default function MiniAchievementCard({ achievement, size = 50 }) {
   const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
   const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
 
+  // Return null if no achievement provided
+  if (!achievement) return null;
+
   const handleMouseMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const xPct = (event.clientX - rect.left) / rect.width - 0.5;
