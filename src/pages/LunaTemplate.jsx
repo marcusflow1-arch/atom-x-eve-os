@@ -895,8 +895,8 @@ const ConsoleTile = ({ children, onClick, className = "", accentColor = null, ha
   );
 };
 
-// Legendary Card Tile with Enhanced Glow
-const LegendaryTile = ({ children, onClick, className = "", rarityColor = "orange" }) => {
+// Hero Tile - Sumi-e Liquid Glass (Monochromatic)
+const LegendaryTile = ({ children, onClick, className = "" }) => {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -907,15 +907,6 @@ const LegendaryTile = ({ children, onClick, className = "", rarityColor = "orang
     setMousePos({ x, y });
   };
 
-  const colorMap = {
-    orange: { glow: 'rgba(249, 115, 22, 0.4)', border: 'rgba(249, 115, 22, 0.5)' },
-    purple: { glow: 'rgba(168, 85, 247, 0.4)', border: 'rgba(168, 85, 247, 0.5)' },
-    cyan: { glow: 'rgba(34, 211, 238, 0.4)', border: 'rgba(34, 211, 238, 0.5)' },
-    red: { glow: 'rgba(239, 68, 68, 0.4)', border: 'rgba(239, 68, 68, 0.5)' },
-  };
-
-  const colors = colorMap[rarityColor] || colorMap.orange;
-
   return (
     <motion.div
       onClick={onClick}
@@ -923,47 +914,34 @@ const LegendaryTile = ({ children, onClick, className = "", rarityColor = "orang
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
       animate={{
-        scale: isHovered ? 1.03 : 1,
+        scale: isHovered ? 1.02 : 1,
         y: isHovered ? -4 : 0,
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={`relative overflow-hidden group cursor-pointer ${className}`}
       style={{
-        background: 'rgba(100, 120, 140, 0.12)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: `1px solid ${isHovered ? colors.border : 'rgba(255, 255, 255, 0.15)'}`,
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${isHovered ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
+        borderRadius: '24px',
         boxShadow: isHovered 
-          ? `0 20px 60px ${colors.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.15)`
-          : `0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+          ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+          : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Animated Energy Halo */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none z-0 rounded-[inherit]"
-        animate={{
-          boxShadow: [
-            `inset 0 0 20px ${colors.glow.replace('0.4', '0.1')}`,
-            `inset 0 0 40px ${colors.glow.replace('0.4', '0.2')}`,
-            `inset 0 0 20px ${colors.glow.replace('0.4', '0.1')}`,
-          ]
-        }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      />
-      
-      {/* Parallax tilt effect on hover */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          background: `radial-gradient(circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, ${colors.glow.replace('0.4', '0.15')} 0%, transparent 50%)`,
-          opacity: isHovered ? 1 : 0,
-          transition: 'opacity 0.3s ease'
-        }}
-      />
-      
-      {/* Shine Effect */}
+      {/* Inner Glass Volume Effect */}
       <div 
-        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
+        className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
+        style={{
+          background: isHovered ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+          transition: 'background 0.3s ease'
+        }}
+      />
+      
+      {/* Shine Effect - Silver Filament */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
         style={{
           opacity: isHovered ? 0.6 : 0,
           background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
