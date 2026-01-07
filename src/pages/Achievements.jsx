@@ -801,6 +801,21 @@ function AchievementsView({ onExitToLibrary }) {
                     >
                       <Gamepad2 className="w-4 h-4 text-white/80" />
                     </motion.button>
+
+                    {/* Skill Tree Mode Toggle */}
+                    <motion.button
+                      onClick={() => setSkillTreeMode(!skillTreeMode)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                        skillTreeMode 
+                          ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
+                          : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                      }`}
+                      title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
+                    >
+                      <Layers className="w-4 h-4" />
+                    </motion.button>
                   </div>
 
                   {/* Shiny Box Container */}
