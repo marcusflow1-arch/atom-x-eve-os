@@ -656,7 +656,13 @@ function AchievementsView({ onExitToLibrary }) {
                         key={card.id}
                         onClick={() => {
                           setActiveCardIndex(idx);
-                          if (isActive) setSelectedCard(card);
+                          if (isActive) {
+                            if (skillTreeMode) {
+                              setSkillTreeCard(card);
+                            } else {
+                              setSelectedCard(card);
+                            }
+                          }
                         }}
                         animate={{
                           scale: isActive ? 1.1 : 0.9,
