@@ -1767,13 +1767,36 @@ export default function LunaTemplate() {
               </div>
             </div>
 
+            {/* System Status Bar */}
+            <div className="flex items-center justify-between mb-4 px-2">
+              <motion.div 
+                className="flex items-center gap-3"
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="flex items-center gap-2">
+                  <motion.div 
+                    className="w-2 h-2 rounded-full bg-cyan-400"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <span className="text-xs text-white/50 font-medium tracking-wider">SYSTEM ONLINE</span>
+                </div>
+                <div className="w-px h-3 bg-white/20" />
+                <span className="text-xs text-white/40 font-mono">
+                  {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </motion.div>
+              <div className="text-xs text-white/30 tracking-wider">LUNA OS v2.1</div>
+            </div>
+
             {/* Bottom Ribbon - Quick Access */}
-            <div className="flex gap-6 mt-6 h-36">
+            <div className="flex gap-6 h-36">
               {/* Friends */}
               <ConsoleTile 
                 onClick={() => setShowFriendsHub(true)}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(59, 130, 246, 0.1)"
+                accentColor="rgba(59, 130, 246, 0.08)"
               >
                 <Users className="w-12 h-12 text-blue-500 group-hover:text-blue-400 transition-colors relative z-10" />
                 <span className="text-white/80 text-base font-medium relative z-10">Friends</span>
