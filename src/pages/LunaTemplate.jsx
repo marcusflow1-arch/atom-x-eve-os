@@ -1664,13 +1664,26 @@ export default function LunaTemplate() {
               {/* Leaderboard Tile - Middle */}
               <ConsoleTile 
                 className="w-64 rounded-2xl overflow-hidden flex flex-col"
-                accentColor="rgba(34, 211, 238, 0.08)"
+                accentColor="rgba(34, 211, 238, 0.06)"
               >
-                <div className="p-4 border-b border-white/10">
+                <div className="p-4 border-b border-white/10 relative">
                   <h3 className="text-white font-bold text-lg tracking-wide flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-yellow-400" />
                     LEADERBOARD
                   </h3>
+                  {/* System Online indicator with subtle pulse */}
+                  <motion.div 
+                    className="absolute top-4 right-4 flex items-center gap-1.5"
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <motion.div 
+                      className="w-1.5 h-1.5 rounded-full bg-green-400"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <span className="text-[10px] text-green-400/80 font-medium">LIVE</span>
+                  </motion.div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {[
