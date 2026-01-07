@@ -1641,11 +1641,11 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left */}
-              <ConsoleTile 
+              {/* Large Hero Tile - Left (Legendary Style) */}
+              <LegendaryTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.5] relative rounded-2xl overflow-hidden cursor-pointer"
-                hasImage
+                className="flex-[1.5] relative rounded-2xl overflow-hidden"
+                rarityColor="orange"
               >
                 <img 
                   src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
@@ -1659,7 +1659,7 @@ export default function LunaTemplate() {
                   </h2>
                   <p className="text-white/60 text-base">Continue your nightmare</p>
                 </div>
-              </ConsoleTile>
+              </LegendaryTile>
 
               {/* Leaderboard Tile - Middle */}
               <ConsoleTile 
