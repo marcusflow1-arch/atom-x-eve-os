@@ -1592,7 +1592,7 @@ export default function LunaTemplate() {
 
               {/* AI Story */}
               <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Storyline'))}
+                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                 accentColor="rgba(129, 140, 248, 0.15)"
               >
@@ -1602,7 +1602,7 @@ export default function LunaTemplate() {
 
               {/* AI Battle */}
               <ConsoleTile 
-                onClick={() => navigate(createPageUrl('WorldEvents'))}
+                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
                 className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                 accentColor="rgba(239, 68, 68, 0.15)"
               >
