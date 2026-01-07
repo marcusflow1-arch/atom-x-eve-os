@@ -1482,10 +1482,10 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (70% of original) */}
+              {/* Large Hero Tile - Left */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.4] relative rounded-2xl overflow-hidden cursor-pointer"
+                className="flex-[1.5] relative rounded-2xl overflow-hidden cursor-pointer"
                 hasImage
               >
                 <img 
@@ -1504,7 +1504,7 @@ export default function LunaTemplate() {
 
               {/* Leaderboard Tile - Middle */}
               <ConsoleTile 
-                className="w-72 rounded-2xl overflow-hidden flex flex-col"
+                className="w-64 rounded-2xl overflow-hidden flex flex-col"
                 accentColor="rgba(34, 211, 238, 0.08)"
               >
                 <div className="p-4 border-b border-white/10">

@@ -134,7 +134,7 @@ export default function FriendsHubOverlay({ onClose }) {
         <div 
           className="w-64 h-full flex flex-col py-8 px-6"
           style={{
-            background: 'linear-gradient(180deg, rgba(107, 142, 35, 0.3) 0%, rgba(85, 107, 47, 0.2) 100%)',
+            background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)',
             borderRight: '1px solid rgba(255, 255, 255, 0.1)'
           }}
         >
@@ -156,31 +156,31 @@ export default function FriendsHubOverlay({ onClose }) {
           <div className="space-y-4 flex-1">
             <div 
               onClick={() => setActiveTab('friends')}
-              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'friends' ? 'bg-white/10' : ''}`}
+              className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'friends' ? 'bg-blue-500/20' : ''}`}
             >
               <span>Friends</span>
-              <span className="text-2xl font-bold">{stats.friends}</span>
+              <span className="text-2xl font-bold text-blue-400">{stats.friends}</span>
             </div>
             <div 
               onClick={() => setActiveTab('games')}
-              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'games' ? 'bg-white/10' : ''}`}
+              className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'games' ? 'bg-blue-500/20' : ''}`}
             >
               <span>Games most played</span>
-              <span className="text-2xl font-bold">{stats.gamesMostPlayed}</span>
+              <span className="text-2xl font-bold text-blue-400">{stats.gamesMostPlayed}</span>
             </div>
             <div 
               onClick={() => setActiveTab('playing')}
-              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'playing' ? 'bg-white/10' : ''}`}
+              className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'playing' ? 'bg-blue-500/20' : ''}`}
             >
               <span>Friends currently playing</span>
-              <span className="text-2xl font-bold">{stats.friendsCurrentlyPlaying}</span>
+              <span className="text-2xl font-bold text-blue-400">{stats.friendsCurrentlyPlaying}</span>
             </div>
             <div 
               onClick={() => setActiveTab('online')}
-              className={`flex justify-between items-center text-white/90 hover:bg-white/5 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'online' ? 'bg-white/10' : ''}`}
+              className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'online' ? 'bg-blue-500/20' : ''}`}
             >
               <span>Friends online</span>
-              <span className="text-2xl font-bold">{stats.friendsOnline}</span>
+              <span className="text-2xl font-bold text-blue-400">{stats.friendsOnline}</span>
             </div>
 
             {/* Friend Requests Dropdown */}
