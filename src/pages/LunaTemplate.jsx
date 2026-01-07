@@ -1644,11 +1644,11 @@ export default function LunaTemplate() {
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {[
-                    { rank: 1, name: 'LeonardLord12', score: 45256, avatar: 'https://i.pravatar.cc/150?u=leo' },
-                    { rank: 2, name: 'Johny85Devil', score: 38567, avatar: 'https://i.pravatar.cc/150?u=johny' },
-                    { rank: 3, name: 'DavPoney', score: 25417, avatar: 'https://i.pravatar.cc/150?u=dav' },
-                    { rank: 4, name: 'Acalypca888', score: 23698, avatar: 'https://i.pravatar.cc/150?u=aca' },
-                    { rank: 5, name: 'BobJackson', score: 17568, avatar: 'https://i.pravatar.cc/150?u=bob' },
+                    { rank: 1, name: 'Avatar', score: 3000, avatar: 'https://i.pravatar.cc/150?u=avatar' },
+                    { rank: 2, name: 'Amina', score: 2450, avatar: 'https://i.pravatar.cc/150?u=amina' },
+                    { rank: 3, name: 'Inflamaten', score: 1600, avatar: 'https://i.pravatar.cc/150?u=inflam' },
+                    { rank: 4, name: '_ltamick', score: 1000, avatar: 'https://i.pravatar.cc/150?u=ltamick' },
+                    { rank: 5, name: 'Soobin', score: 900, avatar: 'https://i.pravatar.cc/150?u=soobin' },
                   ].map((player) => (
                     <div 
                       key={player.rank}
@@ -1657,20 +1657,15 @@ export default function LunaTemplate() {
                       <img 
                         src={player.avatar} 
                         alt={player.name}
-                        className="w-8 h-8 rounded-lg object-cover"
+                        className="w-8 h-8 rounded-lg object-cover grayscale"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-white/50 text-xs">{player.rank}.</span>
-                          <span className="text-white text-sm font-medium truncate">{player.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-cyan-400 text-xs">
-                          <div className="w-2 h-2 rounded-full bg-cyan-400/30 flex items-center justify-center">
-                            <div className="w-1 h-1 rounded-full bg-cyan-400" />
-                          </div>
-                          <span>{player.score.toLocaleString()}</span>
+                          <span className="text-[#A0A0A0] text-xs font-sans">{player.rank}</span>
+                          <span className="text-[#CCCCCC] text-sm font-sans truncate" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{player.name}</span>
                         </div>
                       </div>
+                      <span className="text-[#E0E5EC] text-sm font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{player.score}</span>
                     </div>
                   ))}
                 </div>
