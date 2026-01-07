@@ -63,7 +63,7 @@ const getNodeColor = (type, isPower) => {
   }
 };
 
-function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerTree, onClick, onHover, onLeave, focusedNodeId }) {
+function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerTree, onClick, onHover, onLeave, focusedNodeId, isAnimating }) {
   const isFocused = focusedNodeId === node.id;
   const colorGradient = getNodeColor(node.type, isPowerTree);
   
@@ -90,6 +90,16 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
         ${isUnlocked ? 'cursor-pointer' : canUnlock ? 'cursor-pointer' : 'cursor-not-allowed'}
       `}
     >
+      {/* Unlock burst animation */}
+      {isAnimating && (
+        <motion.div
+          className={`absolute inset-0 rounded-xl ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`}
+          initial={{ scale: 1, opacity: 0.8 }}
+          animate={{ scale: 2.5, opacity: 0 }}
+          transition={{ duration: 0.6 }}
+        />
+      )}
+      
       {/* Node Background */}
       <div className={`
         absolute inset-0 rounded-xl transition-all duration-300
