@@ -264,7 +264,7 @@ const DualPost = ({ post, onLike, onFollow, onUnfollow, currentUser, isFollowing
         <div className="p-4 bg-slate-900/30">
              <CommentSection 
                 postId={post.id}
-                comments={comments ? comments.data.map(c => ({...c, created_by: c.created_by || 'Unknown'})) : []}
+                comments={comments && Array.isArray(comments) ? comments.map(c => ({...c, created_by: c.created_by || 'Unknown'})) : (comments?.data ? comments.data.map(c => ({...c, created_by: c.created_by || 'Unknown'})) : [])}
                 onAddComment={(data) => addCommentMutation.mutate(data)}
                 onVote={() => {}} 
              />
