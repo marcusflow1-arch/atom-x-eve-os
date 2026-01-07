@@ -46,7 +46,7 @@ export default function PostCard({ post, onVote, onSelect, isDetailView = false 
                     {post.game_title && <span className="font-bold text-blue-400">{post.game_title}</span>}
                     {post.genre && <span className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">{post.genre}</span>}
                     {post.game_title && <span className="text-slate-600">•</span>}
-                    <span>Posted by <span className="font-semibold text-slate-300">{post.created_by.split('@')[0]}</span></span>
+                    <span>Posted by <span className="font-semibold text-slate-300">{post.created_by?.split('@')[0] || 'Anonymous'}</span></span>
                 </div>
 
                 <div className="flex items-start justify-between">
