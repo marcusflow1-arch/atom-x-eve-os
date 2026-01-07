@@ -578,6 +578,19 @@ function AchievementsView({ onExitToLibrary }) {
                 >
                   <Gamepad2 className="w-5 h-5 text-white/80" />
                 </button>
+
+                {/* Skill Tree Mode Toggle */}
+                <button
+                  onClick={() => setSkillTreeMode(!skillTreeMode)}
+                  className={`p-2 rounded-lg border transition-all ${
+                    skillTreeMode 
+                      ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
+                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
+                  }`}
+                  title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
+                >
+                  <Layers className="w-5 h-5" />
+                </button>
               </div>
 
               {/* VERTICAL AXIS (Games) */}
