@@ -134,7 +134,7 @@ export default function FriendsHubOverlay({ onClose }) {
         <div 
           className="w-64 h-full flex flex-col py-8 px-6"
           style={{
-            background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%)',
+            background: 'linear-gradient(180deg, rgba(107, 142, 35, 0.3) 0%, rgba(85, 107, 47, 0.2) 100%)',
             borderRight: '1px solid rgba(255, 255, 255, 0.1)'
           }}
         >
