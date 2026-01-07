@@ -375,97 +375,14 @@ const PvPPvETab = () => {
   );
 };
 
-// Leaderboards Tab
+// Leaderboards Tab - Now uses GenreLeaderboardSystem
+import GenreLeaderboardSystem from './GenreLeaderboardSystem';
+
 const LeaderboardsTab = () => {
-  const leaders = [
-    { rank: 1, username: 'DragonSlayer99', score: 15420, badge: 'Legendary' },
-    { rank: 2, username: 'CyberNinja', score: 14230, badge: 'Master' },
-    { rank: 3, username: 'MysticMage', score: 13840, badge: 'Master' },
-    { rank: 4, username: 'ShadowBlade', score: 12560, badge: 'Expert' },
-    { rank: 5, username: 'IceWarrior', score: 11920, badge: 'Expert' }
-  ];
-
   return (
-    <Tabs defaultValue="global" className="w-full">
-      <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 mb-6">
-        <TabsTrigger value="global">Global</TabsTrigger>
-        <TabsTrigger value="friends">Friends</TabsTrigger>
-        <TabsTrigger value="genre">Genre</TabsTrigger>
-        <TabsTrigger value="weekly">Weekly</TabsTrigger>
-        <TabsTrigger value="alltime">All-Time</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="global" className="space-y-0 mt-6">
-        {leaders.map((player, index) => (
-          <div 
-            key={player.rank} 
-            className={`flex items-center gap-6 py-6 px-4 ${
-              index !== leaders.length - 1 ? 'border-b border-slate-700/50' : ''
-            } ${player.rank <= 3 ? 'border-l-4 border-yellow-500/50' : 'border-l-4 border-transparent'} hover:bg-slate-800/20 transition-colors cursor-pointer`}
-          >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0 ${
-              player.rank === 1 ? 'bg-yellow-500 text-yellow-900' :
-              player.rank === 2 ? 'bg-slate-400 text-slate-900' :
-              player.rank === 3 ? 'bg-amber-600 text-amber-900' :
-              'bg-slate-700 text-white'
-            }`}>
-              {player.rank <= 3 ? (
-                <Crown className="w-6 h-6" />
-              ) : (
-                player.rank
-              )}
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-1">
-                <p className="text-white font-semibold text-lg">{player.username}</p>
-                <Badge className={
-                  player.badge === 'Legendary' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
-                  player.badge === 'Master' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                  'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                }>
-                  {player.badge}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2 text-slate-400">
-                <Star className="w-4 h-4 text-yellow-400" />
-                <span>{player.score.toLocaleString()} points</span>
-              </div>
-            </div>
-
-            <Trophy className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-          </div>
-        ))}
-      </TabsContent>
-
-      <TabsContent value="friends" className="mt-6">
-        <div className="border-t border-slate-700/50 pt-16 text-center">
-          <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">Connect with friends to see their rankings</p>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="genre" className="mt-6">
-        <div className="border-t border-slate-700/50 pt-16 text-center">
-          <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">Genre-specific leaderboards coming soon</p>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="weekly" className="mt-6">
-        <div className="border-t border-slate-700/50 pt-16 text-center">
-          <Star className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">Weekly rankings reset every Monday</p>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="alltime" className="mt-6">
-        <div className="border-t border-slate-700/50 pt-16 text-center">
-          <Crown className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">All-time legends - since launch</p>
-        </div>
-      </TabsContent>
-    </Tabs>
+    <div className="h-[600px]">
+      <GenreLeaderboardSystem initialView="genres" />
+    </div>
   );
 };
 
