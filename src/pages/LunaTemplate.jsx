@@ -1482,10 +1482,10 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (70% of original) */}
+              {/* Large Hero Tile - Left (80% width) */}
               <ConsoleTile 
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.4] relative rounded-2xl overflow-hidden cursor-pointer"
+                className="flex-[4] relative rounded-2xl overflow-hidden cursor-pointer"
                 hasImage
               >
                 <img 
@@ -1502,9 +1502,9 @@ export default function LunaTemplate() {
                 </div>
               </ConsoleTile>
 
-              {/* Leaderboard Tile - Middle */}
+              {/* Leaderboard Tile - Right (20% width) */}
               <ConsoleTile 
-                className="w-72 rounded-2xl overflow-hidden flex flex-col"
+                className="flex-1 rounded-2xl overflow-hidden flex flex-col"
                 accentColor="rgba(34, 211, 238, 0.08)"
               >
                 <div className="p-4 border-b border-white/10">
@@ -1547,12 +1547,14 @@ export default function LunaTemplate() {
                 </div>
               </ConsoleTile>
 
-              {/* Right Side - 2x2 Grid */}
-              <div className="flex-1 flex flex-col gap-6">
-                {/* Top Row */}
-                <div className="flex gap-6 flex-1">
-                  {/* Settings Tile */}
-                  <ConsoleTile 
+            </div>
+
+            {/* Bottom 2x2 Grid */}
+            <div className="flex gap-6 h-44">
+              {/* Top Row */}
+              <div className="flex gap-6 flex-1">
+                {/* Settings Tile */}
+                <ConsoleTile 
                     onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
                     className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
@@ -1571,28 +1573,24 @@ export default function LunaTemplate() {
                   </ConsoleTile>
                 </div>
 
-                {/* Bottom Row */}
-                <div className="flex gap-6 flex-1">
-                  {/* My Games & Apps */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                  >
-                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium text-center relative z-10">My games & apps</span>
-                  </ConsoleTile>
-                  
-                  {/* Season Pass */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                    accentColor="rgba(192, 132, 252, 0.15)"
-                  >
-                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Season Pass</span>
-                  </ConsoleTile>
-                </div>
-              </div>
+              {/* My Games & Apps */}
+              <ConsoleTile 
+                onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+              >
+                <Layers className="w-12 h-12 text-green-400 group-hover:text-green-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium text-center relative z-10">My games & apps</span>
+              </ConsoleTile>
+              
+              {/* Season Pass */}
+              <ConsoleTile 
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
+                accentColor="rgba(192, 132, 252, 0.15)"
+              >
+                <Crown className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
+                <span className="text-white/80 text-base font-medium relative z-10">Season Pass</span>
+              </ConsoleTile>
             </div>
 
             {/* Bottom Ribbon - Quick Access */}
