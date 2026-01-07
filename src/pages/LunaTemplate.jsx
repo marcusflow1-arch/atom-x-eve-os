@@ -6,7 +6,8 @@ import {
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
   Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer
-} from 'lucide-react';
+} from
+  'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import * as THREE from 'three';
@@ -824,49 +825,6 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
 };
 
-// Console Tile Component with Liquid Glass + Shine Effect
-const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false }) => {
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setMousePos({ x, y });
-  };
-
-  return (
-    <div
-      onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      className={`relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] ${className}`}
-      style={{
-        background: accentColor 
-          ? `linear-gradient(135deg, ${accentColor} 0%, rgba(100, 120, 140, 0.12) 100%)`
-          : 'rgba(100, 120, 140, 0.12)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-      }}
-    >
-      {/* Shine Effect */}
-      <div 
-        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
-        style={{
-          opacity: isHovered ? 0.6 : 0,
-          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
-        }}
-      />
-      {/* Content */}
-      {children}
-    </div>
-  );
-};
-
 // Mock Friends Data
 const mockFriends = [
   { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
@@ -1476,140 +1434,34 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
+            className="w-full h-full pt-20 flex items-center justify-center gap-8 p-8 relative z-20"
           >
-            {/* Main Grid: Hero Left + 2x2 Right */}
-            <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left */}
-              <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[2] relative rounded-2xl overflow-hidden cursor-pointer"
-                hasImage
-              >
-                <img 
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
-                  alt="Featured Game"
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-8 left-8 right-8 z-10">
-                  <h2 className="text-5xl font-black text-white tracking-tight mb-2" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                    RESIDENT EVIL 2
-                  </h2>
-                  <p className="text-white/60 text-base">Continue your nightmare</p>
-                </div>
-              </ConsoleTile>
-
-              {/* Right Side - 2x2 Grid */}
-              <div className="flex-1 flex flex-col gap-6">
-                {/* Top Row */}
-                <div className="flex gap-6 flex-1">
-                  {/* Settings Tile */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                  >
-                    <Settings className="w-16 h-16 text-white/70 group-hover:text-white transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Settings</span>
-                  </ConsoleTile>
-                  
-                  {/* Blacksmith */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('Blacksmith'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                    accentColor="rgba(251, 146, 60, 0.15)"
-                  >
-                    <Hammer className="w-16 h-16 text-orange-400 group-hover:text-orange-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Blacksmith</span>
-                  </ConsoleTile>
-                </div>
-
-                {/* Bottom Row */}
-                <div className="flex gap-6 flex-1">
-                  {/* My Games & Apps */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                  >
-                    <Layers className="w-16 h-16 text-green-400 group-hover:text-green-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium text-center relative z-10">My games & apps</span>
-                  </ConsoleTile>
-                  
-                  {/* Season Pass */}
-                  <ConsoleTile 
-                    onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                    className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                    accentColor="rgba(192, 132, 252, 0.15)"
-                  >
-                    <Crown className="w-16 h-16 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                    <span className="text-white/80 text-lg font-medium relative z-10">Season Pass</span>
-                  </ConsoleTile>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Ribbon - Quick Access */}
-            <div className="flex gap-6 mt-6 h-36">
-              {/* Friends */}
-              <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Clan'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(34, 211, 238, 0.1)"
-              >
-                <Users className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Friends</span>
-              </ConsoleTile>
-
-              {/* Achievements */}
-              <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(250, 204, 21, 0.1)"
-              >
-                <Trophy className="w-12 h-12 text-yellow-400 group-hover:text-yellow-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Achievement</span>
-              </ConsoleTile>
-
-              {/* AI Mode */}
-              <ConsoleTile 
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(168, 85, 247, 0.1)"
-              >
-                <Bot className="w-12 h-12 text-purple-400 group-hover:text-purple-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Mode</span>
-              </ConsoleTile>
-
-              {/* Aura */}
-              <ConsoleTile 
-                onClick={() => navigate(createPageUrl('Aura'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(248, 113, 113, 0.1)"
-              >
-                <Radio className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">Aura</span>
-              </ConsoleTile>
-
-              {/* AI Story */}
-              <ConsoleTile 
-                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(129, 140, 248, 0.15)"
-              >
-                <BookOpen className="w-12 h-12 text-indigo-400 group-hover:text-indigo-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Story</span>
-              </ConsoleTile>
-
-              {/* AI Battle */}
-              <ConsoleTile 
-                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
-                className="flex-1 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3"
-                accentColor="rgba(239, 68, 68, 0.15)"
-              >
-                <Swords className="w-12 h-12 text-red-400 group-hover:text-red-300 transition-colors relative z-10" />
-                <span className="text-white/80 text-base font-medium relative z-10">AI Battle</span>
-              </ConsoleTile>
-            </div>
+            {/* Holographic tile */}
+            <HolographicTile
+              Icon={BookOpen}
+              label="AI Story"
+              onClick={() => setActiveDrawer({ id: 'story', label: 'AI Story', icon: BookOpen })}
+            />
+            <HolographicTile
+              Icon={Swords}
+              label="AI Battle"
+              onClick={() => setActiveDrawer({ id: 'battle', label: 'AI Battle', icon: Swords })}
+            />
+            <HolographicTile
+              Icon={Layers}
+              label="AI Skill Tree"
+              onClick={() => setActiveDrawer({ id: 'skill-tree', label: 'AI Skill Tree', icon: Layers })}
+            />
+            <HolographicTile
+              Icon={Crown}
+              label="Season Pass"
+              onClick={() => setShowSeasonalPass(true)}
+            />
+            <HolographicTile
+              Icon={Hammer}
+              label="Blacksmith"
+              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=blacksmith')}
+            />
           </motion.div>
         ) : uiVisible ? (
           <motion.div 
