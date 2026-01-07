@@ -825,7 +825,7 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
 };
 
-// Console Tile Component with Liquid Glass + Shine Effect + Enhanced Depth
+// Console Tile Component - Sumi-e Liquid Glass Style
 const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false, isLegendary = false }) => {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
@@ -854,38 +854,39 @@ const ConsoleTile = ({ children, onClick, className = "", accentColor = null, ha
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={`relative overflow-hidden group outline-none ${className}`}
       style={{
-        background: accentColor 
-          ? `linear-gradient(135deg, ${accentColor} 0%, rgba(100, 120, 140, 0.10) 100%)`
-          : 'rgba(100, 120, 140, 0.10)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: `1px solid ${isHovered || isFocused ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)'}`,
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${isHovered || isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
+        borderRadius: '24px',
         boxShadow: isHovered || isFocused 
-          ? '0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-          : '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+          ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+          : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Subtle background blur separation layer */}
+      {/* Inner Glass Volume Effect */}
       <div 
-        className="absolute inset-0 pointer-events-none z-0 transition-opacity duration-500"
+        className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%)',
-          opacity: isHovered || isFocused ? 1 : 0.5
+          background: isHovered || isFocused 
+            ? 'rgba(255, 255, 255, 0.10)' 
+            : 'transparent',
+          transition: 'background 0.3s ease'
         }}
       />
       
-      {/* Shine Effect */}
+      {/* Shine Effect - Silver Filament */}
       <div 
-        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
         style={{
-          opacity: isHovered ? 0.5 : 0,
-          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.3) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+          opacity: isHovered ? 0.6 : 0,
+          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
         }}
       />
       
-      {/* Focus ring for keyboard navigation */}
+      {/* Focus ring for keyboard navigation - Moonlight accent */}
       {isFocused && (
-        <div className="absolute inset-0 rounded-[inherit] border-2 border-cyan-400/50 pointer-events-none z-30" />
+        <div className="absolute inset-0 rounded-[24px] border-2 pointer-events-none z-30" style={{ borderColor: '#A8C0FF' }} />
       )}
       
       {/* Content */}
