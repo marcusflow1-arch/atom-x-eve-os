@@ -1618,11 +1618,11 @@ export default function LunaTemplate() {
                 className="flex-[1.5] relative overflow-hidden"
               >
                 <img 
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=800&fit=crop" 
-                  alt="Featured Game"
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png" 
+                  alt="Plasma Water"
+                  className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/90 via-[#080808]/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
               </LegendaryTile>
 
               {/* Leaderboard Tile - Middle */}
