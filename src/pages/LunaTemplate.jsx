@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -958,40 +957,6 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
-  const [customBackground, setCustomBackground] = useState(null);
-  const [plasmaVideoUrl, setPlasmaVideoUrl] = useState(null);
-
-  useEffect(() => {
-    const fetchPlasmaVideo = async () => {
-      try {
-        const heroBackgrounds = await base44.entities.HeroBackground.list();
-        const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) ||
-                          heroBackgrounds?.find(bg => bg.is_active);
-        if (plasmaVideo?.video_url) {
-          setPlasmaVideoUrl(plasmaVideo.video_url);
-        }
-      } catch (error) {
-        console.error('Failed to load plasma video:', error);
-      }
-    };
-    fetchPlasmaVideo();
-  }, []);
-
-  const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
-  const MEMORIES = [
-    { id: 1, url: null, name: 'Default Void' },
-    { id: 2, url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1600', name: 'Cyberpunk District' },
-    { id: 3, url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600', name: 'Highlands Battle' },
-    { id: 4, url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1600', name: 'Deep Space' }
-  ];
-
-  const cycleMemory = (direction) => {
-    let nextIndex = direction === 'next' ? activeMemoryIndex + 1 : activeMemoryIndex - 1;
-    if (nextIndex >= MEMORIES.length) nextIndex = 0;
-    if (nextIndex < 0) nextIndex = MEMORIES.length - 1;
-    setActiveMemoryIndex(nextIndex);
-    setCustomBackground(MEMORIES[nextIndex].url);
-  };
 
   const { mode } = useDashboardMode();
 
@@ -1128,106 +1093,7 @@ export default function LunaTemplate() {
         background: '#080808'
       }}>
 
-      {/* Sumi-e Ink Wash Background - Plasma Water video ONLY on Console mode */}
-      <div className="absolute inset-0 z-[0]">
-        {showConsoleMode && plasmaVideoUrl ? (
-          <video
-            key={plasmaVideoUrl}
-            src={plasmaVideoUrl}
-            className="w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
-          />
-        ) : (
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage: `url("https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat'
-            }}
-          />
-        )}
-      </div>
 
-      {/* Drifting Mist Animation Layer */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none z-[1]"
-        animate={{
-          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
-        }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-        style={{
-          background: 'radial-gradient(ellipse at 30% 40%, rgba(45, 45, 45, 0.3) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(45, 45, 45, 0.25) 0%, transparent 50%)',
-          mixBlendMode: 'overlay'
-        }}
-      />
-
-      {/* Vignette Overlay - Darkened edges, focused center */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[2]"
-        style={{
-          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(8, 8, 8, 0.6) 70%, rgba(8, 8, 8, 0.9) 100%)'
-        }}
-      />
-
-      {/* Subtle Ink Cloud Drift */}
-      <div className="absolute inset-0 pointer-events-none z-[1] opacity-40">
-        <motion.div
-          className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full blur-[200px]"
-          style={{ background: '#2D2D2D' }}
-          animate={{
-            opacity: [0.2, 0.35, 0.2],
-            x: [0, 50, 0],
-            y: [0, 30, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full blur-[180px]"
-          style={{ background: '#2D2D2D' }}
-          animate={{
-            opacity: [0.15, 0.3, 0.15],
-            x: [0, -40, 0],
-            y: [0, -25, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 5 }}
-        />
-      </div>
-      {/* Custom background image - shown in front of base gradient, behind content */}
-      {customBackground && (
-        <div className="absolute inset-0 z-[5]">
-          {customBackground.endsWith('.mp4') || customBackground.includes('base44.app') ? (
-            <video
-              src={customBackground}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-full h-full"
-              style={{
-                backgroundImage: `url(${customBackground})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-              }}
-            />
-          )}
-        </div>
-      )}
-      {/* Very light overlay to maintain some readability */}
-      {customBackground && (
-        <div className="absolute inset-0 bg-black/20 z-[6]" />
-      )}
 
       {/* 3D Model Viewer - Fixed floating element in top-left */}
       {modelUrl && !showConsoleMode &&
@@ -1253,11 +1119,7 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="fixed inset-0 z-10"
-            style={customBackground ? {
-              background: 'rgba(15, 23, 42, 0.3)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)'
-            } : {
+            style={{
               background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 95, 0.75) 50%, rgba(15, 23, 42, 0.85) 100%)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)'
@@ -1284,7 +1146,6 @@ export default function LunaTemplate() {
             }}>
 
             <FocusModePanel
-              onBackgroundChange={setCustomBackground}
               onOpenCalendar={() => setShowCalendar(true)}
             />
           </motion.div>

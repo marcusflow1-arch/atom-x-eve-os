@@ -332,15 +332,7 @@ function LayoutContent({ children, currentPageName }) {
     <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
-        {location.pathname.toLowerCase().includes('/lunatemplate') ? (
-          <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/d7df982d2_unnamed4.jpg"
-            alt="Luna dashboard background"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <ThemeBackground themeId="moon_essence" />
-        )}
+        <ThemeBackground themeId="moon_essence" />
       </div>
 
       <EnvStatus />
