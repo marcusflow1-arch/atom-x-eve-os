@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -141,8 +142,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
             node.skeleton && node.skeleton.pose && node.skeleton.pose();
             node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
           }
-        }
-      });
+        });
 
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
@@ -859,36 +859,36 @@ const ConsoleTile = ({ children, onClick, className = "", accentColor = null, ha
         WebkitBackdropFilter: 'blur(24px)',
         border: `1px solid ${isHovered || isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
         borderRadius: '24px',
-        boxShadow: isHovered || isFocused 
+        boxShadow: isHovered || isFocused
           ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
           : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
       }}
     >
       {/* Inner Glass Volume Effect */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
         style={{
-          background: isHovered || isFocused 
-            ? 'rgba(255, 255, 255, 0.10)' 
+          background: isHovered || isFocused
+            ? 'rgba(255, 255, 255, 0.10)'
             : 'transparent',
           transition: 'background 0.3s ease'
         }}
       />
-      
+
       {/* Shine Effect - Silver Filament */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
         style={{
           opacity: isHovered ? 0.6 : 0,
           background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
         }}
       />
-      
+
       {/* Focus ring for keyboard navigation - Moonlight accent */}
       {isFocused && (
         <div className="absolute inset-0 rounded-[24px] border-2 pointer-events-none z-30" style={{ borderColor: '#A8C0FF' }} />
       )}
-      
+
       {/* Content */}
       {children}
     </motion.div>
@@ -925,29 +925,29 @@ const LegendaryTile = ({ children, onClick, className = "" }) => {
         WebkitBackdropFilter: 'blur(24px)',
         border: `1px solid ${isHovered ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
         borderRadius: '24px',
-        boxShadow: isHovered 
+        boxShadow: isHovered
           ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
           : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
       }}
     >
       {/* Inner Glass Volume Effect */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
         style={{
           background: isHovered ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
           transition: 'background 0.3s ease'
         }}
       />
-      
+
       {/* Shine Effect - Silver Filament */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
         style={{
           opacity: isHovered ? 0.6 : 0,
           background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
         }}
       />
-      
+
       {/* Content */}
       <div className="relative z-10">
         {children}
@@ -1007,7 +1007,7 @@ export default function LunaTemplate() {
     const fetchPlasmaVideo = async () => {
       try {
         const heroBackgrounds = await base44.entities.HeroBackground.list();
-        const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) || 
+        const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) ||
                           heroBackgrounds?.find(bg => bg.is_active);
         if (plasmaVideo?.video_url) {
           setPlasmaVideoUrl(plasmaVideo.video_url);
@@ -1178,10 +1178,10 @@ export default function LunaTemplate() {
       style={{
         background: '#080808'
       }}>
-      
-      {/* Sumi-e Ink Wash Background - Uses Plasma Water Video from AI Story */}
+
+      {/* Sumi-e Ink Wash Background - Plasma Water video ONLY on Console mode */}
       <div className="absolute inset-0 z-[0]">
-        {plasmaVideoUrl ? (
+        {showConsoleMode && plasmaVideoUrl ? (
           <video
             key={plasmaVideoUrl}
             src={plasmaVideoUrl}
@@ -1194,7 +1194,7 @@ export default function LunaTemplate() {
             style={{ transform: 'translateZ(0)', willChange: 'transform' }}
           />
         ) : (
-          <div 
+          <div
             className="w-full h-full"
             style={{
               backgroundImage: `url("https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png")`,
@@ -1205,7 +1205,7 @@ export default function LunaTemplate() {
           />
         )}
       </div>
-      
+
       {/* Drifting Mist Animation Layer */}
       <motion.div
         className="absolute inset-0 pointer-events-none z-[1]"
@@ -1218,31 +1218,31 @@ export default function LunaTemplate() {
           mixBlendMode: 'overlay'
         }}
       />
-      
+
       {/* Vignette Overlay - Darkened edges, focused center */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none z-[2]"
         style={{
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(8, 8, 8, 0.6) 70%, rgba(8, 8, 8, 0.9) 100%)'
         }}
       />
-      
+
       {/* Subtle Ink Cloud Drift */}
       <div className="absolute inset-0 pointer-events-none z-[1] opacity-40">
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full blur-[200px]"
           style={{ background: '#2D2D2D' }}
-          animate={{ 
+          animate={{
             opacity: [0.2, 0.35, 0.2],
             x: [0, 50, 0],
             y: [0, 30, 0]
           }}
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full blur-[180px]"
           style={{ background: '#2D2D2D' }}
-          animate={{ 
+          animate={{
             opacity: [0.15, 0.3, 0.15],
             x: [0, -40, 0],
             y: [0, -25, 0]
@@ -1621,9 +1621,9 @@ export default function LunaTemplate() {
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setShowInventory(false)}
             className="fixed top-40 left-8 z-[70] w-11 h-11 rounded-full hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/12"
-            style={{ 
-              background: 'rgba(11, 11, 11, 0.85)', 
-              backdropFilter: 'blur(40px)', 
+            style={{
+              background: 'rgba(11, 11, 11, 0.85)',
+              backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
               boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 4px 20px rgba(0, 0, 0, 0.4)'
             }}>
@@ -1647,12 +1647,12 @@ export default function LunaTemplate() {
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Large Hero Tile - Left (Sumi-e Style) */}
-              <LegendaryTile 
+              <LegendaryTile
                 onClick={() => navigate(createPageUrl('Store'))}
                 className="flex-[1.5] relative overflow-hidden"
               >
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png" 
+                <img
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png"
                   alt="Plasma Water"
                   className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
                 />
@@ -1660,7 +1660,7 @@ export default function LunaTemplate() {
               </LegendaryTile>
 
               {/* Leaderboard Tile - Middle */}
-              <ConsoleTile 
+              <ConsoleTile
                 className="w-64 overflow-hidden flex flex-col"
               >
                 <div className="p-4 border-b border-white/10 relative">
@@ -1677,12 +1677,12 @@ export default function LunaTemplate() {
                     { rank: 4, name: '_ltamick', score: 1000, avatar: 'https://i.pravatar.cc/150?u=ltamick' },
                     { rank: 5, name: 'Soobin', score: 900, avatar: 'https://i.pravatar.cc/150?u=soobin' },
                   ].map((player) => (
-                    <div 
+                    <div
                       key={player.rank}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
                     >
-                      <img 
-                        src={player.avatar} 
+                      <img
+                        src={player.avatar}
                         alt={player.name}
                         className="w-8 h-8 rounded-lg object-cover grayscale"
                       />
@@ -1703,16 +1703,16 @@ export default function LunaTemplate() {
                 {/* Top Row */}
                 <div className="flex gap-6 flex-1">
                   {/* Settings Tile */}
-                  <ConsoleTile 
+                  <ConsoleTile
                     onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
                     className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
                     <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                     <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
                   </ConsoleTile>
-                  
+
                   {/* Blacksmith */}
-                  <ConsoleTile 
+                  <ConsoleTile
                     onClick={() => navigate(createPageUrl('Blacksmith'))}
                     className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
@@ -1724,16 +1724,16 @@ export default function LunaTemplate() {
                 {/* Bottom Row */}
                 <div className="flex gap-6 flex-1">
                   {/* My Games & Apps */}
-                  <ConsoleTile 
+                  <ConsoleTile
                     onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
                     className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
                     <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                     <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
                   </ConsoleTile>
-                  
+
                   {/* Season Pass */}
-                  <ConsoleTile 
+                  <ConsoleTile
                     onClick={() => navigate(createPageUrl('SeasonalPass'))}
                     className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
@@ -1754,7 +1754,7 @@ export default function LunaTemplate() {
             {/* Bottom Ribbon - Quick Access */}
             <div className="flex gap-6 h-36 mt-6">
               {/* Friends */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => setShowFriendsHub(true)}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1763,7 +1763,7 @@ export default function LunaTemplate() {
               </ConsoleTile>
 
               {/* Achievements */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1772,7 +1772,7 @@ export default function LunaTemplate() {
               </ConsoleTile>
 
               {/* AI Skill Tree */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1781,7 +1781,7 @@ export default function LunaTemplate() {
               </ConsoleTile>
 
               {/* Aura */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => navigate(createPageUrl('Aura'))}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1790,7 +1790,7 @@ export default function LunaTemplate() {
               </ConsoleTile>
 
               {/* AI Story */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1799,7 +1799,7 @@ export default function LunaTemplate() {
               </ConsoleTile>
 
               {/* AI Battle */}
-              <ConsoleTile 
+              <ConsoleTile
                 onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
@@ -1819,7 +1819,7 @@ export default function LunaTemplate() {
             </svg>
           </motion.div>
         ) : uiVisible ? (
-          <motion.div 
+          <motion.div
             key="loadout-mode"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1979,7 +1979,7 @@ export default function LunaTemplate() {
                           WebkitBackdropFilter: 'blur(40px)'
                         }}>
                         <div className="w-full h-full max-w-7xl">
-                          <InventoryPanel 
+                          <InventoryPanel
                             onEquip={handleEquipItem}
                             targetSlot={clickedSlot}
                           />
@@ -2473,12 +2473,12 @@ export default function LunaTemplate() {
                       'border-white/25 shadow-[inset_0_1px_3px_rgba(255,255,255,0.15)]' :
                       ''}`
                     }
-                    style={{ 
-                      background: 'rgba(11, 11, 11, 0.85)', 
-                      backdropFilter: 'blur(35px)', 
-                      WebkitBackdropFilter: 'blur(35px)', 
-                      borderColor: activeSkills[i] ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)', 
-                      boxShadow: activeSkills[i] ? 'inset 0 1px 3px rgba(255, 255, 255, 0.15), 0 0 12px rgba(255, 255, 255, 0.1)' : 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' 
+                    style={{
+                      background: 'rgba(11, 11, 11, 0.85)',
+                      backdropFilter: 'blur(35px)',
+                      WebkitBackdropFilter: 'blur(35px)',
+                      borderColor: activeSkills[i] ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.12)',
+                      boxShadow: activeSkills[i] ? 'inset 0 1px 3px rgba(255, 255, 255, 0.15), 0 0 12px rgba(255, 255, 255, 0.1)' : 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)'
                     }}
                     title={assigned ? `${assigned.title} (${assigned.type})` : 'Drag a card here to assign'}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     <span className="text-[#9A9A9A] text-xs font-light relative z-10">{i + 1}</span>
@@ -2506,10 +2506,10 @@ export default function LunaTemplate() {
                 const slotId = `passive-${i}`;
                 const equippedItem = equippedItems[slotId];
                 return (
-                  <div 
-                    key={slotId} 
-                    onClick={() => handleBoxClick(slotId)} 
-                    className="w-10 h-10 rounded-lg border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" 
+                  <div
+                    key={slotId}
+                    onClick={() => handleBoxClick(slotId)}
+                    className="w-10 h-10 rounded-lg border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700"
                     style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
