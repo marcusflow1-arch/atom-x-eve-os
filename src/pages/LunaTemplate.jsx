@@ -1179,16 +1179,32 @@ export default function LunaTemplate() {
         background: '#080808'
       }}>
       
-      {/* Sumi-e Ink Wash Background */}
-      <div 
-        className="absolute inset-0 z-[0]"
-        style={{
-          backgroundImage: `url("https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
+      {/* Sumi-e Ink Wash Background - Uses Plasma Water Video from AI Story */}
+      <div className="absolute inset-0 z-[0]">
+        {plasmaVideoUrl ? (
+          <video
+            key={plasmaVideoUrl}
+            src={plasmaVideoUrl}
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+          />
+        ) : (
+          <div 
+            className="w-full h-full"
+            style={{
+              backgroundImage: `url("https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        )}
+      </div>
       
       {/* Drifting Mist Animation Layer */}
       <motion.div
