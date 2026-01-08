@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,6 +15,43 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { base44 } from '@/api/base44Client';
+import InventoryPanel from '../components/profile/InventoryPanel';
+import LunaStatsPanel from '../components/profile/LunaStatsPanel';
+import LunaCardScroll from '../components/profile/LunaCardScroll';
+import SettingsPanel from '../components/dashboard/SettingsPanel';
+import LoadoutPanel from '../components/dashboard/LoadoutPanel';
+import GenreMastery from './GenreMastery';
+import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
+import AIHomeOverlay from '../components/dashboard/AIHomeOverlay';
+import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
+import AINewsContent from '../components/dashboard/AINewsContent';
+import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
+import ShinyCard from '../components/shared/ShinyCard';
+import HolographicTile from '@/components/dashboard/HolographicTile';
+import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
+import { inventoryData, profileData } from '../components/profile/mockData';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
+import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
+import PinGamesContent from '../components/dashboard/PinGamesContent';
+import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
+import SocialHub from '../components/dashboard/SocialHub';
+import UserProfileOverlay from '../components/profile/UserProfileOverlay';
+import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
+import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
+import { useAuth } from '../components/auth/AuthContext';
+import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
+import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
+import FocusModePanel from '../components/dashboard/FocusModePanel';
+import CommunityPage from './Community';
+import Blacksmith from './Blacksmith';
+import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
+import useLunaStore from '../components/luna/useLunaStore';
+import { useEquipment } from '../components/luna/hooks/useEquipment';
+import { useSkills } from '../components/luna/hooks/useSkills';
+import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { showError } from '@/components/error/ErrorToast';
+import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
@@ -57,7 +95,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.2, 3.5); // Zoomed in closer
+    camera.position.set(0, 1.2, 3.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
@@ -81,7 +119,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     controls.maxDistance = 10;
     controls.enabled = true;
 
-    // Click handler to activate controls
     const handleCanvasClick = () => {
       controlsActive.current = !controlsActive.current;
       setIsActive(controlsActive.current);
@@ -97,14 +134,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     let mixer = null;
     const clock = new THREE.Clock();
 
-    // Detect file type and use appropriate loader
     const extension = modelUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
 
     const processModel = (model, animations) => {
       modelRef.current = model;
 
-      // Find right hand bone
       let rightHandBone = null;
       model.traverse((node) => {
         if (node.isBone) {
@@ -132,9 +167,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
               mat.needsUpdate = true;
             };
 
-            if (Array.isArray(node.material)) applySide(node.material);
-            else
+            if (Array.isArray(node.material)) {
+              node.material.forEach(applySide);
+            } else {
               applySide(node.material);
+            }
           }
 
           if (node.isSkinnedMesh) {
@@ -153,7 +190,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       model.position.sub(center.multiplyScalar(scale));
       scene.add(model);
 
-      // Load weapon model if provided and right hand found
       if (weaponModel && rightHandBone) {
         const weaponLoader = new FBXLoader();
         weaponLoader.load(
@@ -161,15 +197,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           (weaponFbx) => {
             weaponRef.current = weaponFbx;
             weaponFbx.scale.multiplyScalar(0.01);
-
-            // Attach weapon to hand
             rightHandBone.add(weaponFbx);
-
-            // Position and rotate weapon in hand
             weaponFbx.position.set(0, 0.1, 0);
             weaponFbx.rotation.set(Math.PI / 2, 0, 0);
-
-            // Hidden by default - will be toggled by state
             weaponFbx.visible = false;
             setWeaponAttached(true);
           },
@@ -180,7 +210,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
       mixer = new THREE.AnimationMixer(model);
 
-      // Find and store animations
       if (animations && animations.length > 0) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
@@ -196,7 +225,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
         });
 
-        // Default to idle or first animation
         const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
         if (idleAction) {
           idleAction.play();
@@ -206,8 +234,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
     if (isFBX) {
       const loader = new FBXLoader();
-
-      // Load main model
       loader.load(
         modelUrl,
         (fbx) => {
@@ -219,14 +245,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
                   mat.side = THREE.DoubleSide;
                   mat.needsUpdate = true;
                 };
-                if (Array.isArray(node.material)) node.material.forEach(applySide);
-                else
+                if (Array.isArray(node.material)) {
+                  node.material.forEach(applySide);
+                } else {
                   applySide(node.material);
+                }
               }
             }
           });
 
-          // Load external animations
           const allClips = [...(fbx.animations || [])];
           let loadedCount = 0;
 
@@ -236,7 +263,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
               (animFbx) => {
                 if (animFbx.animations && animFbx.animations.length > 0) {
                   animFbx.animations.forEach((clip) => {
-                    // Rename clip based on animation type
                     if (anim.animation_type === 'idle') clip.name = 'idle';
                     else if (anim.animation_type === 'run') clip.name = 'run';
                     else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
@@ -245,7 +271,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
                 }
                 loadedCount++;
 
-                // Process model after all animations loaded
                 if (loadedCount === animations.length) {
                   processModel(fbx, allClips);
                 }
@@ -255,7 +280,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
             );
           });
 
-          // If no external animations, process immediately
           if (animations.length === 0) {
             processModel(fbx, allClips);
           }
@@ -288,9 +312,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
                   mat.needsUpdate = true;
                 };
 
-                if (Array.isArray(node.material)) node.material.forEach(applySide);
-                else
+                if (Array.isArray(node.material)) {
+                  node.material.forEach(applySide);
+                } else {
                   applySide(node.material);
+                }
               }
 
               if (node.isSkinnedMesh) {
@@ -306,14 +332,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       );
     }
 
-    // Keyboard Controls
     const handleKeyDown = (e) => {
       if (!controlsActive.current) return;
 
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
-      // Spacebar for jump
       if (key === ' ') {
         e.preventDefault();
       }
@@ -324,10 +348,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
-    // Animation priority system
     const animationLocked = { current: false };
 
-    // Safe base action setter - prevents animation spam
     const setBaseAction = (name, once = false) => {
       if (animationLocked.current && !once) return;
       if (currentBaseActionRef.current === name && !once) return;
@@ -337,7 +359,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
       currentBaseActionRef.current = name;
 
-      // Stop all other animations
       Object.values(actionsRef.current).forEach((a) => {
         if (a !== action) {
           a.fadeOut(0.2);
@@ -363,7 +384,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       }
     };
 
-    // Resolve idle animation based on weapon state
     const resolveIdle = () => {
       const state = useLunaStore.getState();
       const weapon = state.equipment.weapon;
@@ -373,7 +393,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       return 'idle';
     };
 
-    // Handle attack trigger
     const handleAttack = () => {
       const state = useLunaStore.getState();
       if (!state.actions.attack) return;
@@ -388,7 +407,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       state.clearActions();
     };
 
-    // Handle skill trigger
     const handleSkill = () => {
       const state = useLunaStore.getState();
       const skill = state.actions.skill;
@@ -404,7 +422,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       state.clearActions();
     };
 
-    // Update weapon visibility
     const updateWeaponVisual = () => {
       if (!weaponRef.current) return;
       const state = useLunaStore.getState();
@@ -429,10 +446,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
 
-      // Update weapon visibility
       updateWeaponVisual();
 
-      // UI → STATE → VIEWER BRIDGE
       const storeState = useLunaStore.getState();
       if (storeState.equippedWeapon !== currentWeaponRef.current) {
         currentWeaponRef.current = storeState.equippedWeapon;
@@ -442,7 +457,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
-        // WASD movement
         if (keysPressed.current.w) direction.z -= 1;
         if (keysPressed.current.s) direction.z += 1;
         if (keysPressed.current.a) direction.x -= 1;
@@ -452,13 +466,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         const isMoving = dirLength > 0.01;
         const grounded = !isJumpingRef.current && modelRef.current.position.y <= 0;
 
-        // Jumping
         if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
           velocityRef.current.y = 0.15;
         }
 
-        // Apply gravity
         if (isJumpingRef.current || modelRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
           modelRef.current.position.y += velocityRef.current.y;
@@ -470,47 +482,34 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
           }
         }
 
-        // Animation priority system
         if (grounded) {
           const currentState = useLunaStore.getState();
-          // Priority 1: Skill
           if (currentState.actions.skill) {
             handleSkill();
           }
-          // Priority 2: Attack
           else if (currentState.actions.attack) {
             handleAttack();
           }
-          // Priority 3: Movement or Idle
           else if (isMoving) {
             direction.normalize();
-
-            // Move model
             modelRef.current.position.x += direction.x * moveSpeed;
             modelRef.current.position.z += direction.z * moveSpeed;
-
-            // Rotate model to face movement direction
             const angle = Math.atan2(direction.x, direction.z);
             modelRef.current.rotation.y = angle;
-
-            // Play running animation
             if (!animationLocked.current) {
               setBaseAction('run');
             }
           } else {
-            // Idle state (weapon-aware)
             if (!animationLocked.current) {
               setBaseAction(resolveIdle());
             }
           }
         } else {
-          // Falling overrides everything when not grounded
           if (!animationLocked.current) {
             setBaseAction('jump');
           }
         }
 
-        // Keep camera following model
         const offset = new THREE.Vector3(0, 1.5, 5);
         camera.position.x = modelRef.current.position.x + offset.x;
         camera.position.y = modelRef.current.position.y + offset.y;
@@ -518,7 +517,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         controls.target.copy(modelRef.current.position);
         controls.update();
       } else if (modelRef.current && !controlsActive.current) {
-        // When inactive, check for actions or use idle
         const currentState = useLunaStore.getState();
         if (currentState.actions.skill) {
           handleSkill();
@@ -545,7 +543,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     };
   }, [modelUrl, weaponModel, animations]);
 
-  // Trigger animation events from parent
   useEffect(() => {
     if (triggerAnimation && actionsRef.current[triggerAnimation]) {
       const action = actionsRef.current[triggerAnimation];
@@ -558,44 +555,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
-import InventoryPanel from '../components/profile/InventoryPanel';
-import LunaStatsPanel from '../components/profile/LunaStatsPanel';
-import LunaCardScroll from '../components/profile/LunaCardScroll';
-import SettingsPanel from '../components/dashboard/SettingsPanel';
-import LoadoutPanel from '../components/dashboard/LoadoutPanel';
-import GenreMastery from './GenreMastery';
-import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
-import AIHomeOverlay from '../components/dashboard/AIHomeOverlay';
-import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
-import AINewsContent from '../components/dashboard/AINewsContent';
-import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
-import ShinyCard from '../components/shared/ShinyCard';
-import HolographicTile from '@/components/dashboard/HolographicTile';
-import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
-import { inventoryData, profileData } from '../components/profile/mockData';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
-import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
-import PinGamesContent from '../components/dashboard/PinGamesContent';
-import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
-import SocialHub from '../components/dashboard/SocialHub';
-import UserProfileOverlay from '../components/profile/UserProfileOverlay';
-import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
-import FriendRequestsPanel from '../components/friends/FriendRequestsPanel';
-import { useAuth } from '../components/auth/AuthContext';
-import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalendarOverlay';
-import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
-import FocusModePanel from '../components/dashboard/FocusModePanel';
-import CommunityPage from './Community';
-import Blacksmith from './Blacksmith';
-import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
-import useLunaStore from '../components/luna/useLunaStore';
-import { useEquipment } from '../components/luna/hooks/useEquipment';
-import { useSkills } from '../components/luna/hooks/useSkills';
-import PageErrorBoundary from '@/components/error/PageErrorBoundary';
-import { showError } from '@/components/error/ErrorToast';
-import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
-
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -977,7 +936,7 @@ export default function LunaTemplate() {
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showPinGames, setShowPinGames] = useState(false);
-  const [expandedGenre, setExpandedGenre] = useState(null); // New State for Expanded View
+  const [expandedGenre, setExpandedGenre] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeDrawer, setActiveDrawer] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1002,7 +961,6 @@ export default function LunaTemplate() {
   const [customBackground, setCustomBackground] = useState(null);
   const [plasmaVideoUrl, setPlasmaVideoUrl] = useState(null);
 
-  // Fetch Plasma Water video for console background (same as AI Story)
   useEffect(() => {
     const fetchPlasmaVideo = async () => {
       try {
@@ -1018,10 +976,10 @@ export default function LunaTemplate() {
     };
     fetchPlasmaVideo();
   }, []);
-  // Memory System State
+
   const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
   const MEMORIES = [
-    { id: 1, url: null, name: 'Default Void' }, // Null uses default gradient
+    { id: 1, url: null, name: 'Default Void' },
     { id: 2, url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1600', name: 'Cyberpunk District' },
     { id: 3, url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600', name: 'Highlands Battle' },
     { id: 4, url: 'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=1600', name: 'Deep Space' }
@@ -1037,11 +995,9 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // Fetch 3D Model and Animations
   useEffect(() => {
     const fetchModelAndAnimations = async () => {
       try {
-        // Fetch Y Bot FBX Model
         const models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
         if (models.length > 0) {
           setModelUrl(models[0].file_url);
@@ -1053,14 +1009,12 @@ export default function LunaTemplate() {
     fetchModelAndAnimations();
   }, []);
 
-  // Reset Luna store on unmount
   useEffect(() => {
     return () => {
       resetLunaStore();
     };
   }, []);
 
-  // Open overlays based on URL panel param
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const panel = params.get('panel');
@@ -1069,7 +1023,6 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
 
-    // Handle sub-tabs (not console - console is handled inline)
     if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
@@ -1077,7 +1030,6 @@ export default function LunaTemplate() {
     }
   }, [location.search]);
 
-  // Fetch User Events and Platform Updates
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
@@ -1095,7 +1047,6 @@ export default function LunaTemplate() {
     fetchData();
   }, [user]);
 
-  // Check if Blade of Abyss is equipped and load weapon model
   useEffect(() => {
     const checkBladeEquipped = async () => {
       const hasBladeOfAbyss = Object.entries(equippedItems).some(
@@ -1119,10 +1070,8 @@ export default function LunaTemplate() {
     checkBladeEquipped();
   }, [equippedItems, weaponModelUrl]);
 
-  // Animation Event Trigger
   const [triggerAnimation, setTriggerAnimation] = useState(null);
 
-  // Hotkey to toggle UI (I key) and close overlays (ESC)
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'i' || e.key === 'I') {
@@ -1824,8 +1773,9 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen mt-2 px-12 relative overflow-hidden flex items-center"
-          >
+            transition={{ duration: 0.5 }}
+            className="w-full">
+
             <AnimatePresence mode="wait">
               {false &&
                 <motion.div
