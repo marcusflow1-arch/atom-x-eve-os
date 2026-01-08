@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -142,7 +141,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
             node.skeleton && node.skeleton.pose && node.skeleton.pose();
             node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
           }
-        });
+        }
+      });
 
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
