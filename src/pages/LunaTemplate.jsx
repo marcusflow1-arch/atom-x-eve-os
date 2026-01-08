@@ -1000,6 +1000,24 @@ export default function LunaTemplate() {
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
+  const [plasmaVideoUrl, setPlasmaVideoUrl] = useState(null);
+
+  // Fetch Plasma Water video for console background (same as AI Story)
+  useEffect(() => {
+    const fetchPlasmaVideo = async () => {
+      try {
+        const heroBackgrounds = await base44.entities.HeroBackground.list();
+        const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) || 
+                          heroBackgrounds?.find(bg => bg.is_active);
+        if (plasmaVideo?.video_url) {
+          setPlasmaVideoUrl(plasmaVideo.video_url);
+        }
+      } catch (error) {
+        console.error('Failed to load plasma video:', error);
+      }
+    };
+    fetchPlasmaVideo();
+  }, []);
   // Memory System State
   const [activeMemoryIndex, setActiveMemoryIndex] = useState(0);
   const MEMORIES = [
