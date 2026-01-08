@@ -976,12 +976,20 @@ const LegendaryTile = ({ children, onClick, className = "" }) => {
   );
 };
 
+// Mock Friends Data
+const mockFriends = [
+  { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
+  { id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
+  { id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
+  { id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
+  { id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }];
+
 // Leaderboard Tile Component with Real-Time Data
 const LeaderboardTile = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['leaderboard-users'],
     queryFn: () => base44.entities.User.list('-level', 10),
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   return (
@@ -1036,15 +1044,6 @@ const LeaderboardTile = () => {
     </ConsoleTile>
   );
 };
-
-// Mock Friends Data
-const mockFriends = [
-  { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
-  { id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
-  { id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
-  { id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
-  { id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }];
-
 
 export default function LunaTemplate() {
   const navigate = useNavigate();
