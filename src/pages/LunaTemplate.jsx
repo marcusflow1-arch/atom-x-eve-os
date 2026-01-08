@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -1470,43 +1471,7 @@ export default function LunaTemplate() {
               </LegendaryTile>
 
               {/* Leaderboard Tile - Middle */}
-              <ConsoleTile
-                className="w-64 overflow-hidden flex flex-col"
-              >
-                <div className="p-4 border-b border-white/10 relative">
-                  <h3 className="text-[#FFFFFF] font-serif text-lg tracking-wide flex items-center gap-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                    <Trophy className="w-5 h-5 text-[#E0E5EC]" style={{ filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} />
-                    LEADERBOARD
-                  </h3>
-                </div>
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {[
-                    { rank: 1, name: 'Avatar', score: 3000, avatar: 'https://i.pravatar.cc/150?u=avatar' },
-                    { rank: 2, name: 'Amina', score: 2450, avatar: 'https://i.pravatar.cc/150?u=amina' },
-                    { rank: 3, name: 'Inflamaten', score: 1600, avatar: 'https://i.pravatar.cc/150?u=inflam' },
-                    { rank: 4, name: '_ltamick', score: 1000, avatar: 'https://i.pravatar.cc/150?u=ltamick' },
-                    { rank: 5, name: 'Soobin', score: 900, avatar: 'https://i.pravatar.cc/150?u=soobin' },
-                  ].map((player) => (
-                    <div
-                      key={player.rank}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-                    >
-                      <img
-                        src={player.avatar}
-                        alt={player.name}
-                        className="w-8 h-8 rounded-lg object-cover grayscale"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[#A0A0A0] text-xs font-sans">{player.rank}</span>
-                          <span className="text-[#CCCCCC] text-sm font-sans truncate" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{player.name}</span>
-                        </div>
-                      </div>
-                      <span className="text-[#E0E5EC] text-sm font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{player.score}</span>
-                    </div>
-                  ))}
-                </div>
-              </ConsoleTile>
+              <LeaderboardTile />
 
               {/* Right Side - 2x2 Grid */}
               <div className="flex-1 flex flex-col gap-6">
