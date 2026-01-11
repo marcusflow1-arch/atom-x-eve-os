@@ -1,5 +1,7 @@
+import AIBattle from './pages/AIBattle';
 import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
+import AIStory from './pages/AIStory';
 import AbilityAchievements from './pages/AbilityAchievements';
 import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
@@ -15,6 +17,7 @@ import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
+import Friends from './pages/Friends';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
 import GameProfile from './pages/GameProfile';
@@ -24,6 +27,7 @@ import Home from './pages/Home';
 import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
+import Leaderboard from './pages/Leaderboard';
 import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
@@ -42,16 +46,14 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Leaderboard from './pages/Leaderboard';
-import Friends from './pages/Friends';
-import AIStory from './pages/AIStory';
-import AIBattle from './pages/AIBattle';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIBattle": AIBattle,
     "AIConsole": AIConsole,
     "AINews": AINews,
+    "AIStory": AIStory,
     "AbilityAchievements": AbilityAchievements,
     "Achievements": Achievements,
     "AdamXEve": AdamXEve,
@@ -67,6 +69,7 @@ export const PAGES = {
     "CrossGameFusion": CrossGameFusion,
     "EnvGuide": EnvGuide,
     "Events": Events,
+    "Friends": Friends,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
     "GameProfile": GameProfile,
@@ -76,6 +79,7 @@ export const PAGES = {
     "Ideals": Ideals,
     "InstallApp": InstallApp,
     "Launcher": Launcher,
+    "Leaderboard": Leaderboard,
     "Library": Library,
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
@@ -94,10 +98,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Leaderboard": Leaderboard,
-    "Friends": Friends,
-    "AIStory": AIStory,
-    "AIBattle": AIBattle,
 }
 
 export const pagesConfig = {
