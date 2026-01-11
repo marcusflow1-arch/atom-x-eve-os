@@ -5,7 +5,7 @@ import {
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -17,6 +17,9 @@ import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
+import AIStoryOverlay from './AIStoryOverlay';
+import BattleModeOverlay from './BattleModeOverlay';
+import { useQuery } from '@tanstack/react-query';
 
 // Mock pinned games
 const pinnedGames = [
@@ -1301,135 +1304,82 @@ function GameBanner({ game, onChangeBanner }) {
   );
 }
 
-// Live Panel - Redesigned with large 3D card showcase
-function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'events'
+// Quick Access Icons Row - Friends, Skill Tree, AI Story, AI Battle, etc.
+function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpenAIBattle, navigate }) {
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['leaderboard-users-mini'],
+    queryFn: () => base44.entities.User.list('-level', 5),
+    refetchInterval: 30000,
+  });
 
-  const currentCard = upcomingCards[currentCardIndex];
-  const style = currentCard ? rarityStyles[currentCard.rarity] : rarityStyles['Common'];
-  const otherEvents = MOCK_EVENTS.filter(e => !e.featured).slice(0, 4);
-
-  const nextCard = () => {
-    setCurrentCardIndex((prev) => (prev + 1) % upcomingCards.length);
-  };
-
-  const prevCard = () => {
-    setCurrentCardIndex((prev) => (prev - 1 + upcomingCards.length) % upcomingCards.length);
-  };
-
-  if (!currentCard) return null;
+  const quickActions = [
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('LunaTemplate') + '?panel=console') },
+    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: onOpenAIStory },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
+    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
+    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
+  ];
 
   return (
     <div className="h-full flex gap-4">
-      {/* Left Column (Main Content - Toggleable) */}
+      {/* Left Column - Quick Access Icons */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header Toggle */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setViewMode('cards')}
-              className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
-                viewMode === 'cards' ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              <Radio className={`w-4 h-4 ${viewMode === 'cards' ? 'text-green-400 animate-pulse' : ''}`} />
-              New Cards
-            </button>
-            <button 
-              onClick={() => setViewMode('events')}
-              className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
-                viewMode === 'events' ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              <CalendarIcon className={`w-4 h-4 ${viewMode === 'events' ? 'text-cyan-400' : ''}`} />
-              Upcoming Events
-            </button>
-          </div>
-          
-          {viewMode === 'cards' && (
-            <span className="text-white/40 text-[10px] font-mono">{currentCardIndex + 1} / {upcomingCards.length}</span>
-          )}
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 relative">
-          <AnimatePresence mode="wait">
-            {viewMode === 'cards' ? (
-              <motion.div
-                key="cards"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute inset-0 flex items-start gap-4"
+        {/* Icons Row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <motion.button
+                key={action.id}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={action.onClick}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg`}
+                style={{
+                  background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  minWidth: '80px'
+                }}
               >
-                {/* Achievement Cards Trophy */}
-                <AchievementCardsTrophy onClick={() => window.location.href = createPageUrl('LunaTemplate') + '?panel=achievements'} />
+                <Icon className="w-6 h-6 text-white/80" />
+                <span className="text-white/70 text-[10px] font-medium text-center">{action.label}</span>
+              </motion.button>
+            );
+          })}
 
-                {/* Center: 3D Card with Arrows */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button 
-                    onClick={prevCard}
-                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-                  >
-                    <ChevronLeft className="w-3 h-3 text-white/60" />
-                  </button>
-
-                  <Large3DCard card={currentCard} isActive={true} />
-
-                  <button 
-                    onClick={nextCard}
-                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all border border-white/10 hover:border-white/30"
-                  >
-                    <ChevronRight className="w-3 h-3 text-white/60" />
-                  </button>
+          {/* Mini Leaderboard */}
+          <div 
+            className="flex flex-col gap-1 p-3 rounded-xl border border-white/10 min-w-[140px]"
+            style={{
+              background: 'rgba(100, 120, 140, 0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)'
+            }}
+          >
+            <div className="flex items-center gap-1 mb-1">
+              <Trophy className="w-3 h-3 text-amber-400" />
+              <span className="text-[9px] text-white/60 uppercase tracking-wider font-bold">Top Players</span>
+            </div>
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto" />
+            ) : users && users.length > 0 ? (
+              users.slice(0, 3).map((player, idx) => (
+                <div key={player.id} className="flex items-center gap-2 text-[10px]">
+                  <span className="text-white/40 w-3">{idx + 1}.</span>
+                  <span className="text-white/70 truncate flex-1">{player.username || player.full_name || 'User'}</span>
+                  <span className="text-cyan-400 font-bold">{player.level || 0}</span>
                 </div>
-
-                {/* Description */}
-                <div className="flex-1 min-w-0 h-44 flex flex-col">
-                  <div className="mb-2">
-                    <h4 className={`font-bold text-base ${style.text}`}>{currentCard.name}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[9px] px-2 py-0.5 rounded border ${
-                        currentCard.rarity === 'Legendary' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
-                        currentCard.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
-                        'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                      }`}>{currentCard.rarity}</span>
-                      <span className="text-[9px] text-white/40">{currentCard.type}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-white/60 text-[11px] leading-relaxed mb-2 line-clamp-3">
-                    {currentCard.description}
-                  </p>
-
-                  <div className="mt-auto flex items-center gap-2 text-[9px]">
-                    <Trophy className="w-3 h-3 text-amber-400" />
-                    <span className="text-white/50 truncate">{currentCard.unlockCondition}</span>
-                  </div>
-                </div>
-              </motion.div>
+              ))
             ) : (
-              <motion.div
-                key="events"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute inset-0 overflow-y-auto pr-2"
-                style={{ scrollbarWidth: 'none' }}
-              >
-                <div className="grid grid-cols-2 gap-3">
-                  {otherEvents.map(event => (
-                    <SmallEventCard key={event.id} event={event} />
-                  ))}
-                </div>
-              </motion.div>
+              <span className="text-white/30 text-[9px]">No data</span>
             )}
-          </AnimatePresence>
+          </div>
         </div>
 
         {/* Separator Line */}
-        <div className="w-full h-px bg-white/20 mt-2" />
+        <div className="w-full h-px bg-white/20 mt-4" />
       </div>
 
       {/* Right Column: System Status & Calendar Hub */}
@@ -1750,6 +1700,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
   const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
+  
+  // AI Overlay States
+  const [showAIStory, setShowAIStory] = useState(false);
+  const [showAIBattle, setShowAIBattle] = useState(false);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1818,17 +1772,33 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
-      {/* Top Section - News Feed & Content */}
+      {/* Top Section - Quick Access Icons */}
       <div className="flex gap-6 w-full">
-        {/* Content Area - Live Panel */}
+        {/* Content Area - Quick Access Row */}
         <div className="flex-1 flex flex-col pr-2">
-          <LivePanel 
-            upcomingCards={upcomingCards}
+          <QuickAccessRow 
             onOpenCalendar={onOpenCalendar}
             onDateTimeClick={handleDateTimeClick}
+            onOpenAIStory={() => setShowAIStory(true)}
+            onOpenAIBattle={() => setShowAIBattle(true)}
+            navigate={navigate}
           />
         </div>
       </div>
+
+      {/* AI Story Overlay */}
+      <AnimatePresence>
+        {showAIStory && (
+          <AIStoryOverlay onClose={() => setShowAIStory(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* AI Battle Overlay */}
+      <AnimatePresence>
+        {showAIBattle && (
+          <BattleModeOverlay onClose={() => setShowAIBattle(false)} />
+        )}
+      </AnimatePresence>
 
 
 
