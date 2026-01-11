@@ -501,7 +501,8 @@ export default function Store() {
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             
-            {/* Top Navigation Bar (Translucent/Invisible) - Fades on scroll */}
+            {/* Top Navigation Bar (Translucent/Invisible) - Fades on scroll - Hidden for Library/Achievements subviews */}
+            {storeSubView === 'games' && (
             <div 
                 className="absolute top-0 left-0 right-0 z-50 flex flex-col transition-opacity duration-200" 
                 style={{ 
@@ -671,6 +672,7 @@ export default function Store() {
                 {/* Horizontal Line under the "A" in Atom */}
                 <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
             </div>
+            )}
 
             {/* App Drawer Overlay */}
             <AnimatePresence>
@@ -776,7 +778,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full pt-20 overflow-hidden"
+                        className="w-full h-full overflow-hidden"
                     >
                         <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
                     </motion.div>
