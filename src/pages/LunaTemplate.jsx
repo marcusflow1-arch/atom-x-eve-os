@@ -1162,7 +1162,8 @@ export default function LunaTemplate() {
 
 
       {/* 3D Model Viewer - Fixed floating element in top-left */}
-      {modelUrl && !showConsoleMode &&
+      {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
+      {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
           className="fixed top-0 left-0 bottom-0 w-[260px] z-[35] pointer-events-auto"
           style={{
