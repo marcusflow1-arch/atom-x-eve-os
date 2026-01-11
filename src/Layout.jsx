@@ -560,8 +560,10 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/worldevents')) {
-          headerConfig.hidden = true;
-        } else if (p.includes('/library')) {
+                        headerConfig.hidden = true;
+                      } else if (p.includes('/friends')) {
+                        headerConfig.hidden = true;
+                      } else if (p.includes('/library')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
