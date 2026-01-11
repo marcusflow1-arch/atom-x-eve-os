@@ -53,6 +53,7 @@ import { useSkills } from '../components/luna/hooks/useSkills';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
+import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
@@ -2490,6 +2491,11 @@ export default function LunaTemplate() {
           </>
         }
       </AnimatePresence>
+
+      {/* Side Access Menu - Minimally invasive left edge interaction */}
+      {!showInventory && !showConsoleMode && !showAchievements && !activeSubTab && (
+        <SideAccessMenu />
+      )}
 
       {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
       <AnimatePresence>
