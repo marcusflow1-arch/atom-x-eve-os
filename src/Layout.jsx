@@ -570,9 +570,9 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/achievements')) {
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
+          headerConfig.hidden = true;
+        } else if (p.includes('/leaderboard')) {
+          headerConfig.hidden = true;
         } else if (p.includes('/genremastery')) {
           headerConfig.title = "Adam - Marcus | Skill Tree";
           headerConfig.showLevel = false;
