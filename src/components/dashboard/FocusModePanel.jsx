@@ -1320,7 +1320,7 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
     { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
     { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
     { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Community') + '?tab=leaderboard') },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
   ];
 
   return (
