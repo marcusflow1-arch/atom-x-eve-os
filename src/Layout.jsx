@@ -901,9 +901,9 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Dev Tools Panel */}
       <DevTools />
-      </div>
-      );
-      }
+    </div>
+  );
+}
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
