@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Tv, Brain, Swords, X, Play, Star, Clock } from 'lucide-react';
+import { Library, Tv, Brain, X, Play, Star, Clock, Swords } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
