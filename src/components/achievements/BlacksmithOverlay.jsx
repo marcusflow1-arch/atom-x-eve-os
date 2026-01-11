@@ -2,10 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { 
   X, Hammer, TrendingUp, Layers, Sparkles, Star, Zap, 
-  ArrowUp, Merge, Crown, ChevronRight, Lock, Check, Flame
+  ArrowUp, Merge, Crown, ChevronRight, Lock, Check, Flame, ArrowLeftRight, Package
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MaterialInventory, MaterialCard, MATERIAL_INFO, MATERIAL_DEFINITIONS } from '../blacksmith/MaterialSystem';
+import { MarketValueDisplay, ValueBreakdown, calculateMarketValue } from '../blacksmith/MarketValuation';
+import TradingPanel from '../blacksmith/TradingPanel';
 
 // Upgrade System Tabs
 const UPGRADE_SYSTEMS = [
@@ -13,14 +16,18 @@ const UPGRADE_SYSTEMS = [
   { id: 'enhance', name: 'Enhance', icon: Sparkles, description: 'Amplify specific stats with materials' },
   { id: 'combine', name: 'Combine', icon: Merge, description: 'Merge duplicates to increase star rating' },
   { id: 'ascend', name: 'Ascend', icon: Crown, description: 'Break level caps and unlock new potential' },
+  { id: 'trade', name: 'Trade', icon: ArrowLeftRight, description: 'List on marketplace or trade with others' },
 ];
 
-// Mock materials for enhancement
+// Mock materials for enhancement - now using genre-based system
 const MOCK_MATERIALS = [
-  { id: 'essence_common', name: 'Common Essence', icon: '💧', quantity: 150, rarity: 'Common' },
-  { id: 'essence_rare', name: 'Rare Essence', icon: '💎', quantity: 45, rarity: 'Rare' },
-  { id: 'essence_epic', name: 'Epic Essence', icon: '⚡', quantity: 12, rarity: 'Epic' },
-  { id: 'gold', name: 'Gold', icon: '🪙', quantity: 25000, rarity: 'Currency' },
+  { id: 'gold', material_type: 'gold', name: 'Gold', icon: '🪙', quantity: 25000, rarity: 'Currency' },
+  { id: 'precision_shard', material_type: 'precision_shard', quantity: 45, rarity: 'Rare' },
+  { id: 'combat_core', material_type: 'combat_core', quantity: 28, rarity: 'Epic' },
+  { id: 'ascension_core', material_type: 'ascension_core', quantity: 8, rarity: 'Epic' },
+  { id: 'skill_catalyst', material_type: 'skill_catalyst', quantity: 35, rarity: 'Rare' },
+  { id: 'fusion_currency', material_type: 'fusion_currency', quantity: 120, rarity: 'Uncommon' },
+  { id: 'wildcard', material_type: 'wildcard', quantity: 5, rarity: 'Legendary' },
 ];
 
 // Mock duplicate cards for combination
@@ -41,6 +48,7 @@ export default function BlacksmithOverlay({ card, onClose }) {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [materials, setMaterials] = useState(MOCK_MATERIALS);
+  const [showTradePanel, setShowTradePanel] = useState(false);
   
   const duplicates = useMemo(() => generateDuplicates(card), [card]);
   const [selectedDuplicates, setSelectedDuplicates] = useState([]);
@@ -618,12 +626,63 @@ export default function BlacksmithOverlay({ card, onClose }) {
                     </div>
                   </motion.div>
                 )}
+
+                {activeSystem === 'trade' && (
+                  <motion.div
+                    key="trade"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="h-full flex flex-col"
+                  >
+                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 flex-1">
+                      <h3 className="text-xl font-bold text-white mb-2">Trade Card</h3>
+                      <p className="text-white/50 text-sm mb-6">List this card on the marketplace or trade for materials.</p>
+                      
+                      {/* Value Breakdown */}
+                      <div className="mb-6">
+                        <ValueBreakdown card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }} />
+                      </div>
+
+                      {/* Trade Info */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 mb-6">
+                        <h4 className="text-cyan-300 font-semibold mb-3">Trading Benefits:</h4>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex items-center gap-2 text-white/70">
+                            <ChevronRight className="w-4 h-4 text-cyan-400" />
+                            Card history preserved for buyer
+                          </li>
+                          <li className="flex items-center gap-2 text-white/70">
+                            <ChevronRight className="w-4 h-4 text-cyan-400" />
+                            All upgrades transfer with card
+                          </li>
+                          <li className="flex items-center gap-2 text-white/70">
+                            <ChevronRight className="w-4 h-4 text-cyan-400" />
+                            Trade for currency or materials
+                          </li>
+                        </ul>
+                      </div>
+
+                      {/* Open Trade Panel Button */}
+                      <Button
+                        onClick={() => setShowTradePanel(true)}
+                        className="w-full py-6 text-lg font-bold bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-[0_0_30px_rgba(6,182,212,0.3)]"
+                      >
+                        <ArrowLeftRight className="w-5 h-5 mr-2" />
+                        Open Trade Panel
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* RIGHT SECTION - Stats & Details */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col gap-4">
+          {/* RIGHT SECTION - Stats, Materials & Value */}
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
+            {/* Market Value Display */}
+            <MarketValueDisplay card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }} />
+
             {/* Detailed Stats Panel */}
             <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
               <h4 className="text-white font-bold mb-4 flex items-center gap-2">
@@ -640,8 +699,26 @@ export default function BlacksmithOverlay({ card, onClose }) {
               </div>
             </div>
 
+            {/* Materials Inventory */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+              <h4 className="text-white font-bold mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5 text-cyan-400" />
+                Materials
+              </h4>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {materials.filter(m => m.material_type !== 'gold').map(mat => (
+                  <MaterialCard
+                    key={mat.id}
+                    material={mat.material_type}
+                    quantity={mat.quantity}
+                    size="small"
+                  />
+                ))}
+              </div>
+            </div>
+
             {/* Upgrade Requirements */}
-            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 flex-1">
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
               <h4 className="text-white font-bold mb-4">Requirements</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
@@ -672,6 +749,20 @@ export default function BlacksmithOverlay({ card, onClose }) {
             </div>
           </div>
         </div>
+
+        {/* Trade Panel Overlay */}
+        <AnimatePresence>
+          {showTradePanel && (
+            <TradingPanel
+              card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }}
+              onClose={() => setShowTradePanel(false)}
+              onListCard={(listing) => {
+                console.log('Listing card:', listing);
+                setShowTradePanel(false);
+              }}
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
     </motion.div>
   );
