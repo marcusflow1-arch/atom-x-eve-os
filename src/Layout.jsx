@@ -618,82 +618,98 @@ function LayoutContent({ children, currentPageName }) {
         ];
 
         return (
-          <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
-            {headerConfig.showMenu && (
-                                <>
-                                  {/* Compact Menu Button - matching Store style */}
-                                  <button
-                                    onClick={() => setDrawerOpen(true)}
-                                    className="w-9 h-9 rounded-lg bg-transparent hover:bg-white/[0.08] flex items-center justify-center transition-all"
-                                  >
-                                    <div className="flex flex-col gap-[5px]">
-                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
-                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
-                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
-                                    </div>
-                                  </button>
+          <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)' }}>
+            <div className="h-16 flex items-center justify-between px-6">
+              <div className="flex items-center gap-6">
+                {headerConfig.showMenu && (
+                  <>
+                    {/* Menu Button - circular like Store */}
+                    <button
+                      onClick={() => setDrawerOpen(true)}
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
+                    >
+                      <div className="flex flex-col gap-[3px]">
+                        <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                        <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                        <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                      </div>
+                    </button>
 
-                                  {showLunaHeaderBar && (
-                                    <div className="flex items-center gap-3">
-                                      {/* Title */}
-                                      <span className="text-sm font-medium text-white/90 tracking-wide">
-                                        Atom X Eve Dashboard Home
-                                      </span>
+                    {showLunaHeaderBar && (
+                      <>
+                        {/* Title - same size as Store */}
+                        <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
+                          Atom X Eve Dashboard Home
+                        </span>
 
-                                      {/* Home Button - pill style */}
-                                      <button
-                                        onClick={() => {
-                                          const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
-                                          if (!isOnLunaPage) {
-                                            navigate(createPageUrl('LunaTemplate'));
-                                          } else {
-                                            navigate(createPageUrl('Store'));
-                                          }
-                                        }}
-                                        className="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-blue-500 text-white hover:bg-blue-600"
-                                      >
-                                        Home
-                                      </button>
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-white/20 mx-2"></div>
 
-                                      {/* Clan */}
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
-                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                          location.pathname.toLowerCase().includes('/clan')
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5'
-                                        }`}
-                                      >
-                                        Clan
-                                      </button>
+                        {/* Sub-Page Links */}
+                        <div className="flex items-center gap-2">
+                          {/* Home Button with layered effect like Store */}
+                          <div className="relative inline-block">
+                            <button
+                              onClick={() => {
+                                const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+                                if (!isOnLunaPage) {
+                                  navigate(createPageUrl('LunaTemplate'));
+                                } else {
+                                  navigate(createPageUrl('Store'));
+                                }
+                              }}
+                              className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                            >
+                              Home
+                            </button>
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
+                            >
+                              <span className="text-sm font-medium">Store</span>
+                            </div>
+                          </div>
 
-                                      {/* Forum */}
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
-                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                          location.pathname.toLowerCase().includes('/community')
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5'
-                                        }`}
-                                      >
-                                        Forum
-                                      </button>
+                          {/* Clan */}
+                          <button
+                            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/clan')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Clan
+                          </button>
 
-                                      {/* Aura */}
-                                      <button
-                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aura') ? 'LunaTemplate' : 'Aura'))}
-                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                          location.pathname.toLowerCase().includes('/aura')
-                                            ? 'bg-white/10 text-white'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5'
-                                        }`}
-                                      >
-                                        Aura
-                                      </button>
-                                    </div>
-                                  )}
-                                </>
-                              )}
+                          {/* Forum */}
+                          <button
+                            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/community')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Forum
+                          </button>
+
+                          {/* Aura */}
+                          <button
+                            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aura') ? 'LunaTemplate' : 'Aura'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/aura')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Aura
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
 
             {/* Under Bar Content: Mode Toggle Only */}
             {headerConfig.showModeToggle && (
