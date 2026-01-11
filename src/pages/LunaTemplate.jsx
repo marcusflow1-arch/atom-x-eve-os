@@ -46,6 +46,7 @@ import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
 import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
+import Achievements from './Achievements';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
 import { useSkills } from '../components/luna/hooks/useSkills';
@@ -1018,6 +1019,7 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   const { mode } = useDashboardMode();
 
@@ -1054,6 +1056,8 @@ export default function LunaTemplate() {
     } else {
       setActiveSubTab(null);
     }
+    
+    setShowAchievements(panel === 'achievements');
   }, [location.search]);
 
   useEffect(() => {
@@ -1505,9 +1509,19 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
 
-      {/* Main Content Area - Switches based on Console Mode */}
+      {/* Main Content Area - Switches based on Console Mode or Achievements */}
       <AnimatePresence mode="wait">
-        {showConsoleMode ? (
+        {showAchievements ? (
+          <motion.div
+            key="achievements-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+          >
+            <Achievements />
+          </motion.div>
+        ) : showConsoleMode ? (
           <motion.div
             key="console-mode"
             initial={{ opacity: 0 }}
@@ -1534,6 +1548,29 @@ export default function LunaTemplate() {
                 {/* Upcoming Events Section */}
                 <ConsoleTile className="h-40">
                   <UpcomingEventsSection />
+                </ConsoleTile>
+
+                {/* Achievement Cards Trophy */}
+                <ConsoleTile
+                  onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
+                  className="h-48 cursor-pointer flex flex-col items-center justify-center gap-3 relative overflow-hidden"
+                >
+                  <motion.div
+                    whileHover={{ y: -8, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Trophy 
+                      className="w-20 h-20 relative z-10" 
+                      style={{ 
+                        stroke: 'url(#goldGradient)', 
+                        filter: 'drop-shadow(0px 0px 12px rgba(255, 215, 0, 0.6))' 
+                      }} 
+                      strokeWidth={1.5} 
+                    />
+                  </motion.div>
+                  <span className="text-[#E0D4A0] text-lg font-sans relative z-10 font-semibold" style={{ textShadow: '0 2px 6px rgba(255, 215, 0, 0.4)' }}>
+                    Achievement Cards
+                  </span>
                 </ConsoleTile>
 
                 {/* Large Hero Tile - Vortex Slayer */}
@@ -1663,12 +1700,17 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* SVG Gradient Definition for Silver Icons */}
+            {/* SVG Gradient Definitions */}
             <svg width="0" height="0" className="absolute">
               <defs>
                 <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#FFFFFF" />
                   <stop offset="100%" stopColor="#A0A0A0" />
+                </linearGradient>
+                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" />
+                  <stop offset="50%" stopColor="#FFA500" />
+                  <stop offset="100%" stopColor="#FF8C00" />
                 </linearGradient>
               </defs>
             </svg>
