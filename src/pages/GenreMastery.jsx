@@ -4,7 +4,7 @@ import {
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
   Trophy, Flame, Sparkles, Orbit, ArrowLeft,
-  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2,
+  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
   Check, Play, RotateCw, TrendingUp, Clock, Users, Target, User
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
