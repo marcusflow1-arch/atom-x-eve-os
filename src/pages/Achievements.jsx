@@ -14,6 +14,7 @@ import AchievementDetailOverlay from '../components/achievements/AchievementDeta
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
+import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
@@ -186,6 +187,10 @@ function AchievementsView({ onExitToLibrary }) {
   // Skill Tree Mode toggle
   const [skillTreeMode, setSkillTreeMode] = useState(false);
   const [skillTreeCard, setSkillTreeCard] = useState(null);
+  
+  // Blacksmith Mode toggle
+  const [blacksmithMode, setBlacksmithMode] = useState(false);
+  const [blacksmithCard, setBlacksmithCard] = useState(null);
   
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
@@ -581,7 +586,7 @@ function AchievementsView({ onExitToLibrary }) {
 
                 {/* Skill Tree Mode Toggle */}
                 <button
-                  onClick={() => setSkillTreeMode(!skillTreeMode)}
+                  onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
                   className={`p-2 rounded-lg border transition-all ${
                     skillTreeMode 
                       ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
@@ -590,6 +595,19 @@ function AchievementsView({ onExitToLibrary }) {
                   title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
                 >
                   <Layers className="w-5 h-5" />
+                </button>
+
+                {/* Blacksmith Mode Toggle */}
+                <button
+                  onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
+                  className={`p-2 rounded-lg border transition-all ${
+                    blacksmithMode 
+                      ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
+                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
+                  }`}
+                  title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
+                >
+                  <Hammer className="w-5 h-5" />
                 </button>
               </div>
 
@@ -659,6 +677,8 @@ function AchievementsView({ onExitToLibrary }) {
                           if (isActive) {
                             if (skillTreeMode) {
                               setSkillTreeCard(card);
+                            } else if (blacksmithMode) {
+                              setBlacksmithCard(card);
                             } else {
                               setSelectedCard(card);
                             }
@@ -810,7 +830,7 @@ function AchievementsView({ onExitToLibrary }) {
 
                     {/* Skill Tree Mode Toggle */}
                     <motion.button
-                      onClick={() => setSkillTreeMode(!skillTreeMode)}
+                      onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                       className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
@@ -821,6 +841,21 @@ function AchievementsView({ onExitToLibrary }) {
                       title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
                     >
                       <Layers className="w-4 h-4" />
+                    </motion.button>
+
+                    {/* Blacksmith Mode Toggle */}
+                    <motion.button
+                      onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                        blacksmithMode 
+                          ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
+                          : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                      }`}
+                      title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
+                    >
+                      <Hammer className="w-4 h-4" />
                     </motion.button>
                   </div>
 
@@ -927,6 +962,8 @@ function AchievementsView({ onExitToLibrary }) {
                                           <ShinyCard index={i} onClick={() => {
                                             if (skillTreeMode) {
                                               setSkillTreeCard(card);
+                                            } else if (blacksmithMode) {
+                                              setBlacksmithCard(card);
                                             } else {
                                               setSelectedCard(card);
                                             }
@@ -1020,6 +1057,16 @@ function AchievementsView({ onExitToLibrary }) {
           <SkillTreeOverlay
             card={skillTreeCard}
             onClose={() => setSkillTreeCard(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Blacksmith Overlay */}
+      <AnimatePresence>
+        {blacksmithCard && blacksmithMode && (
+          <BlacksmithOverlay
+            card={blacksmithCard}
+            onClose={() => setBlacksmithCard(null)}
           />
         )}
       </AnimatePresence>
