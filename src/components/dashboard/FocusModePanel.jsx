@@ -17,9 +17,7 @@ import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
-import AIStoryOverlay from './AIStoryOverlay';
-import BattleModeOverlay from './BattleModeOverlay';
-import FriendsHubOverlay from './FriendsHubOverlay';
+
 import { useQuery } from '@tanstack/react-query';
 
 // Mock pinned games
@@ -1306,7 +1304,7 @@ function GameBanner({ game, onChangeBanner }) {
 }
 
 // Quick Access Icons Row - Friends, Skill Tree, AI Story, AI Battle, etc.
-function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpenAIBattle, onOpenFriends, navigate }) {
+function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate }) {
   const { data: users, isLoading } = useQuery({
     queryKey: ['leaderboard-users-mini'],
     queryFn: () => base44.entities.User.list('-level', 5),
@@ -1314,10 +1312,10 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
   });
 
   const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onOpenFriends },
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
     { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: onOpenAIStory },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
     { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
     { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
     { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
@@ -1675,10 +1673,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [showScrollTransition, setShowScrollTransition] = useState(false);
   const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
   
-  // AI Overlay States
-  const [showAIStory, setShowAIStory] = useState(false);
-  const [showAIBattle, setShowAIBattle] = useState(false);
-  const [showFriendsHub, setShowFriendsHub] = useState(false);
+
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1754,34 +1749,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           <QuickAccessRow 
             onOpenCalendar={onOpenCalendar}
             onDateTimeClick={handleDateTimeClick}
-            onOpenAIStory={() => setShowAIStory(true)}
-            onOpenAIBattle={() => setShowAIBattle(true)}
-            onOpenFriends={() => setShowFriendsHub(true)}
             navigate={navigate}
           />
         </div>
       </div>
 
-      {/* AI Story Overlay */}
-      <AnimatePresence>
-        {showAIStory && (
-          <AIStoryOverlay onClose={() => setShowAIStory(false)} />
-        )}
-      </AnimatePresence>
 
-      {/* AI Battle Overlay */}
-      <AnimatePresence>
-        {showAIBattle && (
-          <BattleModeOverlay onClose={() => setShowAIBattle(false)} />
-        )}
-      </AnimatePresence>
-
-      {/* Friends Hub Overlay */}
-      <AnimatePresence>
-        {showFriendsHub && (
-          <FriendsHubOverlay onClose={() => setShowFriendsHub(false)} />
-        )}
-      </AnimatePresence>
 
 
 

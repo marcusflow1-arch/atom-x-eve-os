@@ -43,6 +43,9 @@ import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import Leaderboard from './pages/Leaderboard';
+import Friends from './pages/Friends';
+import AIStory from './pages/AIStory';
+import AIBattle from './pages/AIBattle';
 import __Layout from './Layout.jsx';
 
 
@@ -92,6 +95,9 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "Leaderboard": Leaderboard,
+    "Friends": Friends,
+    "AIStory": AIStory,
+    "AIBattle": AIBattle,
 }
 
 export const pagesConfig = {
