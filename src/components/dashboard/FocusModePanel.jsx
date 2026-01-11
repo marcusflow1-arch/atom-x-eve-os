@@ -1313,32 +1313,35 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
     refetchInterval: 30000,
   });
 
-  const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onOpenFriends },
-    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: onOpenAIStory },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
-    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
+  // Top row: Friends, Season Pass, AI Story, AI Battle
+  const topRowActions = [
+    { id: 'friends', label: 'Friends', icon: Users, borderColor: 'border-blue-500/30', onClick: onOpenFriends },
+    { id: 'season-pass', label: 'Season Pass', icon: Crown, borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, borderColor: 'border-emerald-500/30', onClick: onOpenAIStory },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
+  ];
+
+  // Bottom row: AI Skill Tree, Achievement Cards
+  const bottomRowActions = [
+    { id: 'skill-tree', label: 'AI Skill Tree', icon: Bot, borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
+    { id: 'achievements', label: 'Achievement Cards', icon: Trophy, borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
   ];
 
   return (
     <div className="h-full flex gap-4">
       {/* Left Column - Quick Access Icons */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Icons Row */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {quickActions.map((action) => {
+        {/* Top Row */}
+        <div className="flex items-center gap-3">
+          {topRowActions.map((action) => {
             const Icon = action.icon;
             return (
-              <motion.button
+              <button
                 key={action.id}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
                 onClick={action.onClick}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg`}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${action.borderColor} transition-all hover:opacity-80`}
                 style={{
-                  background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
+                  background: 'rgba(100, 120, 140, 0.08)',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   minWidth: '80px'
@@ -1346,133 +1349,72 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
               >
                 <Icon className="w-6 h-6 text-white/80" />
                 <span className="text-white/70 text-[10px] font-medium text-center">{action.label}</span>
-              </motion.button>
+              </button>
             );
           })}
-
         </div>
 
-        {/* Second Row - AI Skill Tree & Achievement Cards Boxes */}
-        <div className="flex items-center gap-4 mt-4">
-          {/* AI Skill Tree Box */}
-          <motion.button
-            whileHover={{ scale: 1.03, y: -4 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate(createPageUrl('GenreMastery'))}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-purple-500/30 cursor-pointer"
-            style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.1)',
-              minWidth: '100px',
-              height: '100px'
-            }}
-          >
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Bot 
-                className="w-10 h-10" 
-                style={{ 
-                  stroke: 'url(#purpleGradient)',
-                  filter: 'drop-shadow(0px 0px 10px rgba(168, 85, 247, 0.5))' 
-                }} 
-                strokeWidth={1.5} 
-              />
-            </motion.div>
-            <span className="text-purple-300/90 text-xs font-semibold text-center" style={{ textShadow: '0 2px 6px rgba(168, 85, 247, 0.3)' }}>
-              AI Skill Tree
-            </span>
-          </motion.button>
-
-          {/* Achievement Cards Box */}
-          <motion.button
-            whileHover={{ scale: 1.03, y: -4 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate(createPageUrl('Achievements'))}
-            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-amber-500/30 cursor-pointer"
-            style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              boxShadow: '0 0 20px rgba(255, 215, 0, 0.1)',
-              minWidth: '100px',
-              height: '100px'
-            }}
-          >
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Trophy 
-                className="w-10 h-10" 
-                style={{ 
-                  stroke: '#FFD700',
-                  fill: 'rgba(255, 215, 0, 0.1)',
-                  filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.5))' 
-                }} 
-                strokeWidth={1.5} 
-              />
-            </motion.div>
-            <span className="text-amber-300/90 text-xs font-semibold text-center" style={{ textShadow: '0 2px 6px rgba(255, 215, 0, 0.3)' }}>
-              Achievement Cards
-            </span>
-          </motion.button>
+        {/* Bottom Row - AI Skill Tree & Achievement Cards */}
+        <div className="flex items-center gap-3 mt-3">
+          {bottomRowActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.id}
+                onClick={action.onClick}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${action.borderColor} transition-all hover:opacity-80`}
+                style={{
+                  background: 'rgba(100, 120, 140, 0.08)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  minWidth: '80px'
+                }}
+              >
+                <Icon className="w-6 h-6 text-white/80" />
+                <span className="text-white/70 text-[10px] font-medium text-center">{action.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* SVG Gradient Definitions */}
-        <svg width="0" height="0" className="absolute">
-          <defs>
-            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#C084FC" />
-              <stop offset="100%" stopColor="#A855F7" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Separator Line - Under AI Skill Tree & Achievement Cards boxes */}
-        <div className="w-[216px] h-px bg-white/20 mt-4" />
+        {/* Separator Line - Under bottom row */}
+        <div className="w-[180px] h-px bg-white/20 mt-4" />
       </div>
 
-      {/* Right Column: Leaderboard + System Status & Calendar Hub */}
+      {/* Right Column: Leaderboard + DateTime + Calendar */}
       <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
-         {/* Mini Leaderboard - Expanded */}
+         {/* Mini Leaderboard */}
          <div 
-           className="flex flex-col gap-2 p-4 rounded-xl border border-white/10 flex-1"
+           className="flex flex-col gap-2 p-4 rounded-xl border border-white/10"
            style={{
              background: 'rgba(100, 120, 140, 0.08)',
              backdropFilter: 'blur(10px)',
              WebkitBackdropFilter: 'blur(10px)'
            }}
          >
-           <div className="flex items-center gap-2 mb-2">
+           <div className="flex items-center gap-2 mb-1">
              <Trophy className="w-4 h-4 text-amber-400" />
              <span className="text-xs text-white/70 uppercase tracking-wider font-bold">Leaderboard</span>
            </div>
            {isLoading ? (
-             <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto my-4" />
+             <div className="w-5 h-5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto my-2" />
            ) : users && users.length > 0 ? (
-             users.map((player, idx) => (
-               <div key={player.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                 <span className="text-white/50 text-sm w-5 text-center font-bold">{idx + 1}</span>
-                 {player.avatar_url ? (
-                   <img src={player.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
-                 ) : (
-                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/40 text-xs font-bold">
-                     {(player.username || player.full_name || '?').charAt(0).toUpperCase()}
-                   </div>
-                 )}
-                 <span className="text-white/80 text-sm truncate flex-1">{player.username || player.full_name || 'User'}</span>
-                 <span className="text-cyan-400 font-bold text-sm">{player.level || 0}</span>
+             users.slice(0, 3).map((player, idx) => (
+               <div key={player.id} className="flex items-center gap-2 text-[11px]">
+                 <span className="text-white/40 w-4">{idx + 1}.</span>
+                 <span className="text-white/70 truncate flex-1">{player.username || player.full_name || 'User'}</span>
+                 <span className="text-cyan-400 font-bold">{player.level || 0}</span>
                </div>
              ))
            ) : (
-             <span className="text-white/30 text-sm text-center py-4">No players yet</span>
+             <span className="text-white/30 text-[10px]">No players yet</span>
            )}
          </div>
+
+         {/* DateTime */}
+         <DateTimeTile onClick={onDateTimeClick} />
          
+         {/* Add to Calendar */}
          <AddToCalendarButton 
            onClick={onOpenCalendar} 
            clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
