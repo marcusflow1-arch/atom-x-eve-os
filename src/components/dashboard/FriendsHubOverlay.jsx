@@ -124,12 +124,12 @@ export default function FriendsHubOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] flex"
+      className="fixed inset-0 z-[100] flex"
       style={{ pointerEvents: 'auto' }}
     >
       {/* Background with blur - blocks interaction with avatar behind */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+        className="absolute inset-0 bg-black/80 backdrop-blur-xl"
         onClick={onClose}
         style={{ pointerEvents: 'auto' }}
       />
