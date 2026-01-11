@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Tv, Brain, Swords, X, Play, Star, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import AIStoryOverlay from './AIStoryOverlay';
+import BattleModeOverlay from './BattleModeOverlay';
 
 const MENU_ITEMS = [
   { id: 'library', label: 'Library', icon: Library, color: 'cyan' },
@@ -156,6 +158,8 @@ export default function SideAccessMenu() {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
+  const [showAIStory, setShowAIStory] = useState(false);
+  const [showAIBattle, setShowAIBattle] = useState(false);
   const menuRef = useRef(null);
 
   // Click outside to close
@@ -184,6 +188,20 @@ export default function SideAccessMenu() {
   };
 
   const handleItemClick = (itemId) => {
+    // For AI Story and AI Battle, show full-screen overlays instead of inline panels
+    if (itemId === 'ai-story') {
+      setShowAIStory(true);
+      setIsExpanded(false);
+      setActiveItem(null);
+      return;
+    }
+    if (itemId === 'ai-battle') {
+      setShowAIBattle(true);
+      setIsExpanded(false);
+      setActiveItem(null);
+      return;
+    }
+    
     if (activeItem === itemId) {
       setActiveItem(null);
     } else {
@@ -203,6 +221,21 @@ export default function SideAccessMenu() {
   };
 
   return (
+    <>
+    {/* AI Story Full Screen Overlay */}
+    <AnimatePresence>
+      {showAIStory && (
+        <AIStoryOverlay onClose={() => setShowAIStory(false)} />
+      )}
+    </AnimatePresence>
+
+    {/* AI Battle Full Screen Overlay */}
+    <AnimatePresence>
+      {showAIBattle && (
+        <BattleModeOverlay onClose={() => setShowAIBattle(false)} />
+      )}
+    </AnimatePresence>
+
     <div
       ref={menuRef}
       className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center"
@@ -291,9 +324,9 @@ export default function SideAccessMenu() {
               })}
             </div>
 
-            {/* Content Panel */}
+            {/* Content Panel - Only for library and entertainment */}
             <AnimatePresence>
-              {activeItem && (
+              {activeItem && activeItem !== 'ai-story' && activeItem !== 'ai-battle' && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 'auto', opacity: 1 }}
@@ -312,5 +345,6 @@ export default function SideAccessMenu() {
         )}
       </AnimatePresence>
     </div>
+    </>
   );
 }
