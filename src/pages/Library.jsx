@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
@@ -766,7 +766,19 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 };
 
 export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
+  // Escape key to exit back to Luna Dashboard
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        navigate(createPageUrl('LunaTemplate'));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
   const [ownedGames, setOwnedGames] = useState([]);
   const [favoriteGames, setFavoriteGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -952,7 +964,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold text-white tracking-wide">Atom XE Library</h1>
+            <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Library</h1>
             <div className="h-6 w-px bg-white/10" />
             <button
               onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
