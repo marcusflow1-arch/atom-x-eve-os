@@ -4,9 +4,10 @@ import {
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
   Trophy, Flame, Sparkles, Orbit, ArrowLeft,
-  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
+  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2,
   Check, Play, RotateCw, TrendingUp, Clock, Users, Target, User
 } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -488,6 +489,21 @@ export default function GenreMastery({ onClose }) {
   const scrollContainerRef = useRef(null);
   const carouselRef = useRef(null);
 
+  // Escape key to go back to Luna
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (onClose) {
+          onClose();
+        } else {
+          navigate(createPageUrl('LunaTemplate'));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate, onClose]);
+
   // Load progression when genre changes
   useEffect(() => {
     if (selectedGenre) {
@@ -558,13 +574,7 @@ export default function GenreMastery({ onClose }) {
         )}
       </div>
 
-      {/* Close Button */}
-      <button 
-        onClick={() => onClose ? onClose() : navigate(-1)}
-        className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 hover:border-white/20"
-      >
-        <X className="w-5 h-5 text-white/60" />
-      </button>
+
 
       {/* LEFT SIDEBAR: Genre Selection (Updated UI) */}
       <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/10 bg-white/[0.02] backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] relative">
