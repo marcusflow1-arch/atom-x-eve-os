@@ -951,7 +951,9 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       <div className="relative z-10 px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
+          <div className="flex items-center gap-6">
+            <h1 className="text-2xl font-bold text-white tracking-wide">Atom XE Library</h1>
+            <div className="h-6 w-px bg-white/10" />
             <button
               onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
