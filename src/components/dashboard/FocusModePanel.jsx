@@ -1320,6 +1320,7 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
     { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: onOpenAIBattle },
     { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
     { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Community') + '?tab=leaderboard') },
   ];
 
   return (
@@ -1355,43 +1356,9 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
 
       </div>
 
-      {/* Right Column: Leaderboard + System Status & Calendar Hub */}
+      {/* Right Column: System Status & Calendar Hub */}
       <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
-         {/* Mini Leaderboard - Expanded */}
-         <div 
-           className="flex flex-col gap-2 p-4 rounded-xl border border-white/10 flex-1"
-           style={{
-             background: 'rgba(100, 120, 140, 0.08)',
-             backdropFilter: 'blur(10px)',
-             WebkitBackdropFilter: 'blur(10px)'
-           }}
-         >
-           <div className="flex items-center gap-2 mb-2">
-             <Trophy className="w-4 h-4 text-amber-400" />
-             <span className="text-xs text-white/70 uppercase tracking-wider font-bold">Leaderboard</span>
-           </div>
-           {isLoading ? (
-             <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto my-4" />
-           ) : users && users.length > 0 ? (
-             users.map((player, idx) => (
-               <div key={player.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                 <span className="text-white/50 text-sm w-5 text-center font-bold">{idx + 1}</span>
-                 {player.avatar_url ? (
-                   <img src={player.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
-                 ) : (
-                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/40 text-xs font-bold">
-                     {(player.username || player.full_name || '?').charAt(0).toUpperCase()}
-                   </div>
-                 )}
-                 <span className="text-white/80 text-sm truncate flex-1">{player.username || player.full_name || 'User'}</span>
-                 <span className="text-cyan-400 font-bold text-sm">{player.level || 0}</span>
-               </div>
-             ))
-           ) : (
-             <span className="text-white/30 text-sm text-center py-4">No players yet</span>
-           )}
-         </div>
-         
+         <DateTimeTile onClick={onDateTimeClick} />
          <AddToCalendarButton 
            onClick={onOpenCalendar} 
            clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
