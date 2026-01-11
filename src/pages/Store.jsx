@@ -669,8 +669,7 @@ export default function Store() {
                 </div>
                 </div>
                 
-                {/* Horizontal Line under the "A" in Atom */}
-                <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
+
             </div>
             )}
 

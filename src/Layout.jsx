@@ -714,10 +714,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
             </div>
 
-            {/* Horizontal Line under header - matching Store */}
-            {showLunaHeaderBar && (
-            <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
-            )}
+
             </div>
             );
       })()}
