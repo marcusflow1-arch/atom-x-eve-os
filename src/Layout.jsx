@@ -618,153 +618,81 @@ function LayoutContent({ children, currentPageName }) {
         ];
 
         return (
-          <div className="fixed top-4 left-4 z-40 flex flex-col gap-1.5">
+          <div className="fixed top-4 left-4 z-40 flex items-center gap-4">
             {headerConfig.showMenu && (
-                                <div className="flex items-center gap-3">
+                                <>
+                                  {/* Compact Menu Button - matching Store style */}
                                   <button
                                     onClick={() => setDrawerOpen(true)}
-                                    className="w-11 h-11 rounded-xl bg-white/[0.05] backdrop-blur-2xl hover:bg-white/[0.1] flex items-center justify-center transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
-                                    style={{ WebkitBackdropFilter: 'blur(40px) saturate(200%)' }}
+                                    className="w-9 h-9 rounded-lg bg-transparent hover:bg-white/[0.08] flex items-center justify-center transition-all"
                                   >
-                                    <div className="flex flex-col gap-1">
-                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
-                                      <span className="w-4 h-0.5 bg-white/80 rounded-full"></span>
+                                    <div className="flex flex-col gap-[5px]">
+                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
+                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
+                                      <span className="w-[18px] h-[2px] bg-white/70 rounded-full"></span>
                                     </div>
                                   </button>
 
                                   {showLunaHeaderBar && (
-                                                                                <div className="flex items-center gap-6 ml-4">
-                                                                                  <span className="text-base md:text-lg font-semibold text-white/70 tracking-wide">
-                                                                                                                                Atom X Eve Dashboard Home
-                                                                                                                              </span>
+                                    <div className="flex items-center gap-3">
+                                      {/* Title */}
+                                      <span className="text-sm font-medium text-white/90 tracking-wide">
+                                        Atom X Eve Dashboard Home
+                                      </span>
 
-                                                                                  <div className="h-6 w-px bg-white/10" />
+                                      {/* Home Button - pill style */}
+                                      <button
+                                        onClick={() => {
+                                          const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+                                          if (!isOnLunaPage) {
+                                            navigate(createPageUrl('LunaTemplate'));
+                                          } else {
+                                            navigate(createPageUrl('Store'));
+                                          }
+                                        }}
+                                        className="px-4 py-1.5 rounded-full text-sm font-medium transition-all bg-blue-500 text-white hover:bg-blue-600"
+                                      >
+                                        Home
+                                      </button>
 
-                                                                                  <div className="relative inline-block">
-                                                                                    <button
-                                                                                      onClick={() => {
-                                                                                        const params = new URLSearchParams(location.search);
-                                                                                        const currentPanel = params.get('panel');
-                                                                                        const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+                                      {/* Clan */}
+                                      <button
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                          location.pathname.toLowerCase().includes('/clan')
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        }`}
+                                      >
+                                        Clan
+                                      </button>
 
-                                                                                        // If on subpage (blacksmith, seasonalpass, clan, community, storyline, worldevents, genremastery, aura), go to Luna home
-                                                                                        if (!isOnLunaPage) {
-                                                                                          navigate(createPageUrl('LunaTemplate'));
-                                                                                        }
-                                                                                        // If on Luna home (no panel or panel=console), go to Store
-                                                                                        else {
-                                                                                          navigate(createPageUrl('Store'));
-                                                                                        }
-                                                                                      }}
-                                                                                      className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                                                                    >
-                                                                                      <span className="flex items-center gap-2">
-                                                                                        {(() => {
-                                                                                          const params = new URLSearchParams(location.search);
-                                                                                          const currentPanel = params.get('panel');
-                                                                                          const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+                                      {/* Forum */}
+                                      <button
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
+                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                          location.pathname.toLowerCase().includes('/community')
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        }`}
+                                      >
+                                        Forum
+                                      </button>
 
-                                                                                          // On subpage - show "Home" (goes to Luna home)
-                                                                                          if (!isOnLunaPage) {
-                                                                                            return (
-                                                                                              <>
-                                                                                                <Home className="w-4 h-4" />
-                                                                                                Home
-                                                                                              </>
-                                                                                            );
-                                                                                          }
-                                                                                          // On Luna home page - show "Home" (goes to Store)
-                                                                                          else {
-                                                                                            return (
-                                                                                              <>
-                                                                                                <Home className="w-4 h-4" />
-                                                                                                Home
-                                                                                              </>
-                                                                                            );
-                                                                                          }
-                                                                                        })()}
-                                                                                      </span>
-                                                                                    </button>
-                                                                                    <div
-                                                                                    aria-hidden
-                                                                                    className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-5 py-2 border bg-white/10 border-white/20 text-white backdrop-blur-md z-0 flex items-center justify-center"
-                                                                                  >
-                                                                                    <span className="text-base font-medium flex items-center gap-2">
-                                                                                      {(() => {
-                                                                                        const params = new URLSearchParams(location.search);
-                                                                                        const currentPanel = params.get('panel');
-                                                                                        const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
-
-                                                                                        // On subpage - shadow shows "Store"
-                                                                                        if (!isOnLunaPage) {
-                                                                                          return (
-                                                                                            <>
-                                                                                              <ShoppingBag className="w-4 h-4" />
-                                                                                              Store
-                                                                                            </>
-                                                                                          );
-                                                                                        }
-                                                                                        // On Luna home - shadow shows "Store"
-                                                                                        else {
-                                                                                          return (
-                                                                                            <>
-                                                                                              <ShoppingBag className="w-4 h-4" />
-                                                                                              Store
-                                                                                            </>
-                                                                                          );
-                                                                                        }
-                                                                                      })()}
-                                                                                    </span>
-                                                                                  </div>
-                                                                                  </div>
-
-
-                                                                                  <button
-                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
-                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                      location.pathname.toLowerCase().includes('/clan')
-                                                                                        ? 'bg-white/10 border-white/20 text-white'
-                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
-                                                                                    }`}
-                                                                                  >
-                                                                                    <span className="flex items-center gap-2">
-                                                                                      <Users className="w-4 h-4" />
-                                                                                      Clan
-                                                                                    </span>
-                                                                                  </button>
-
-                                                                                  <button
-                                                                                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
-                                                                                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                                                                                      location.pathname.toLowerCase().includes('/community')
-                                                                                                                                                        ? 'bg-white/10 border-white/20 text-white'
-                                                                                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
-                                                                                                                                                    }`}
-                                                                                                                                                  >
-                                                                                                                                                    <span className="flex items-center gap-2">
-                                                                                                                                                      <MessageSquare className="w-4 h-4" />
-                                                                                                                                                      Forum
-                                                                                                                                                    </span>
-                                                                                                                                                  </button>
-
-
-                                                                                                                                                  <button
-                                                                                                                                                    onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aura') ? 'LunaTemplate' : 'Aura'))}
-                                                                                                                                                    className={`relative px-5 py-2 rounded-full text-base font-medium transition-all border ${
-                                                                                                                                                      location.pathname.toLowerCase().includes('/aura')
-                                                                                                                                                        ? 'bg-white/10 border-white/20 text-white'
-                                                                                                                                                        : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white/80 hover:border-white/10'
-                                                                                                                                                    }`}
-                                                                                                                                                  >
-                                                                                                                                                    <span className="flex items-center gap-2">
-                                                                                                                                                      <Radio className="w-4 h-4" />
-                                                                                                                                                      Aura
-                                                                                                                                                    </span>
-                                                                                                                                                  </button>
-                                                                                                                                                  </div>
-                                                                                                                                                  )}
-                                </div>
+                                      {/* Aura */}
+                                      <button
+                                        onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/aura') ? 'LunaTemplate' : 'Aura'))}
+                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                          location.pathname.toLowerCase().includes('/aura')
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        }`}
+                                      >
+                                        Aura
+                                      </button>
+                                    </div>
+                                  )}
+                                </>
                               )}
 
             {/* Under Bar Content: Mode Toggle Only */}
