@@ -711,14 +711,15 @@ function LayoutContent({ children, currentPageName }) {
                   </>
                 )}
 
-            {/* Under Bar Content: Mode Toggle Only */}
-            {headerConfig.showModeToggle && (
-            <div className="flex items-center gap-6 mt-1 pl-1">
-            {/* Mode toggle would go here if needed */}
             </div>
+            </div>
+
+            {/* Horizontal Line under header - matching Store */}
+            {showLunaHeaderBar && (
+            <div className="h-px bg-white/20" style={{ marginLeft: '68px' }} />
             )}
-          </div>
-        );
+            </div>
+            );
       })()}
 
       {/* Removed Luna header bar - now part of page content for seamless animation */}
