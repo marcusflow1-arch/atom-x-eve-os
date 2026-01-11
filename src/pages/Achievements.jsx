@@ -1100,19 +1100,23 @@ function AchievementsView({ onExitToLibrary }) {
 }
 
 export default function Achievements({ onExitToLibrary, onClose }) {
+  const navigate = useNavigate();
+  
   // ESC key to close when accessed from Luna Dashboard
   useEffect(() => {
-    if (!onClose) return;
-    
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        onClose();
+        if (onClose) {
+          onClose();
+        } else {
+          navigate(createPageUrl('LunaTemplate'));
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, navigate]);
 
   return (
     <div className="h-screen w-full overflow-hidden relative">

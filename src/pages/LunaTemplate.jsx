@@ -1193,6 +1193,29 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
+      {/* Plasma Water Video Background - Shows when I key is pressed (uiVisible) */}
+      <AnimatePresence>
+        {uiVisible && !showConsoleMode && !showAchievements &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-0"
+          >
+            <video
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
+          </motion.div>
+        }
+      </AnimatePresence>
+
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
         {!uiVisible && !showConsoleMode &&
@@ -1534,14 +1557,17 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (Sumi-e Style) */}
+              {/* Large Hero Tile - Left (Sumi-e Style) with Video */}
               <LegendaryTile
                 onClick={() => navigate(createPageUrl('Store'))}
                 className="flex-[1.5] relative overflow-hidden"
               >
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png"
-                  alt="Plasma Water"
+                <video
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                   className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
