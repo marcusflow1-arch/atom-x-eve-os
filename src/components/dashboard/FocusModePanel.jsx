@@ -1381,6 +1381,86 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
 
         {/* Separator Line */}
         <div className="w-full h-px bg-white/20 mt-4" />
+
+        {/* Second Row - AI Skill Tree & Achievement Cards Boxes */}
+        <div className="flex items-center gap-4 mt-4">
+          {/* AI Skill Tree Box */}
+          <motion.button
+            whileHover={{ scale: 1.03, y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate(createPageUrl('GenreMastery'))}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-purple-500/30 cursor-pointer"
+            style={{
+              background: 'rgba(100, 120, 140, 0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              boxShadow: '0 0 20px rgba(168, 85, 247, 0.1)',
+              minWidth: '100px',
+              height: '100px'
+            }}
+          >
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Bot 
+                className="w-10 h-10" 
+                style={{ 
+                  stroke: 'url(#purpleGradient)',
+                  filter: 'drop-shadow(0px 0px 10px rgba(168, 85, 247, 0.5))' 
+                }} 
+                strokeWidth={1.5} 
+              />
+            </motion.div>
+            <span className="text-purple-300/90 text-xs font-semibold text-center" style={{ textShadow: '0 2px 6px rgba(168, 85, 247, 0.3)' }}>
+              AI Skill Tree
+            </span>
+          </motion.button>
+
+          {/* Achievement Cards Box */}
+          <motion.button
+            whileHover={{ scale: 1.03, y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate(createPageUrl('Achievements'))}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-amber-500/30 cursor-pointer"
+            style={{
+              background: 'rgba(100, 120, 140, 0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              boxShadow: '0 0 20px rgba(255, 215, 0, 0.1)',
+              minWidth: '100px',
+              height: '100px'
+            }}
+          >
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Trophy 
+                className="w-10 h-10" 
+                style={{ 
+                  stroke: '#FFD700',
+                  fill: 'rgba(255, 215, 0, 0.1)',
+                  filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.5))' 
+                }} 
+                strokeWidth={1.5} 
+              />
+            </motion.div>
+            <span className="text-amber-300/90 text-xs font-semibold text-center" style={{ textShadow: '0 2px 6px rgba(255, 215, 0, 0.3)' }}>
+              Achievement Cards
+            </span>
+          </motion.button>
+        </div>
+
+        {/* SVG Gradient Definitions */}
+        <svg width="0" height="0" className="absolute">
+          <defs>
+            <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#C084FC" />
+              <stop offset="100%" stopColor="#A855F7" />
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
 
       {/* Right Column: System Status & Calendar Hub */}
