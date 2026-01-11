@@ -1236,6 +1236,7 @@ export default function LunaTemplate() {
 
             <FocusModePanel
               onOpenCalendar={() => setShowCalendar(true)}
+              onOpenFriendsHub={() => setShowFriendsHub(true)}
             />
           </motion.div>
         }

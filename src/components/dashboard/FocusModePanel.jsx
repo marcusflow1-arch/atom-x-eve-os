@@ -1142,97 +1142,64 @@ function AchievementCardsTrophy({ onClick }) {
   );
 }
 
-// Large 3D Card Component for Live Panel
-function Large3DCard({ card, isActive }) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-  const cardRef = useRef(null);
-  const style = rarityStyles[card.rarity];
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setTilt({
-      x: (y - 0.5) * 25,
-      y: (x - 0.5) * -25
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
+// Console Hub Component - Embedded Console icons for Home page
+function ConsoleHub({ onOpenAchievements, onOpenSkillTree, onOpenStory, onOpenBattle, onOpenSeasonPass, onOpenFriends }) {
+  const consoleItems = [
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500 to-cyan-500', onClick: onOpenFriends },
+    { id: 'achievements', label: 'Achievement Cards', icon: Trophy, color: 'from-amber-500 to-orange-500', onClick: onOpenAchievements },
+    { id: 'skill-tree', label: 'AI Skill Tree', icon: Bot, color: 'from-purple-500 to-pink-500', onClick: onOpenSkillTree },
+    { id: 'story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500 to-teal-500', onClick: onOpenStory },
+    { id: 'battle', label: 'AI Battle', icon: Swords, color: 'from-red-500 to-orange-500', onClick: onOpenBattle },
+    { id: 'season', label: 'Season Pass', icon: Crown, color: 'from-indigo-500 to-purple-500', onClick: onOpenSeasonPass },
+  ];
 
   return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      animate={{
-        rotateX: tilt.x,
-        rotateY: tilt.y,
-        scale: isHovered ? 1.02 : 1
-      }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="w-32 h-44 relative cursor-pointer flex-shrink-0"
-      style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
-    >
-      {/* Card Base */}
-      <div 
-        className={`absolute inset-0 rounded-xl border-2 ${style.border} ${isHovered ? style.glow : ''} overflow-hidden transition-shadow duration-300`}
-        style={{
-          background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          boxShadow: isHovered 
-            ? `0 20px 40px rgba(0,0,0,0.5), 0 0 30px ${
-                card.rarity === 'Legendary' ? 'rgba(251, 191, 36, 0.3)' :
-                card.rarity === 'Epic' ? 'rgba(168, 85, 247, 0.3)' :
-                'rgba(59, 130, 246, 0.3)'
-              }` 
-            : '0 10px 30px rgba(0,0,0,0.4)'
-        }}
-      >
-        {/* Animated shine line */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `linear-gradient(${105 + tilt.y * 2}deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)`,
-          }}
-        />
-        
-        {/* Content */}
-        <div className="relative h-full flex flex-col p-3">
-          {/* Rarity indicator */}
-          <div className="flex justify-between items-start mb-2">
-            <span className={`text-[9px] font-bold uppercase tracking-wider ${style.text}`}>
-              {card.rarity}
-            </span>
-            <span className="text-[8px] text-white/40">{card.type}</span>
-          </div>
-
-          {/* Icon */}
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-5xl drop-shadow-lg">{card.icon}</span>
-          </div>
-
-          {/* Name */}
-          <div className="text-center mt-2">
-            <p className="text-white font-bold text-sm leading-tight">{card.name}</p>
-            <p className="text-white/40 text-[9px] mt-1">{card.game}</p>
-          </div>
-        </div>
-
-        {/* Corner decorations */}
-        <div className={`absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 ${style.border} rounded-tl-lg`} />
-        <div className={`absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 ${style.border} rounded-tr-lg`} />
-        <div className={`absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 ${style.border} rounded-bl-lg`} />
-        <div className={`absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 ${style.border} rounded-br-lg`} />
+    <div className="w-full mb-6">
+      <div className="flex items-center gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+        {consoleItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <motion.button
+              key={item.id}
+              onClick={item.onClick}
+              whileHover={{ scale: 1.05, y: -4 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative flex-shrink-0 w-28 h-28 rounded-2xl overflow-hidden border border-white/10 group"
+              style={{
+                background: 'rgba(100, 120, 140, 0.08)',
+                backdropFilter: 'blur(20px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+              }}
+            >
+              {/* Glow effect */}
+              <div 
+                className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}
+              />
+              
+              {/* Shine effect */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                }}
+              />
+              
+              {/* Icon and Label */}
+              <div className="relative h-full flex flex-col items-center justify-center gap-2 p-3">
+                <Icon 
+                  className="w-10 h-10 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" 
+                  strokeWidth={1.5}
+                />
+                <span className="text-white/70 group-hover:text-white text-xs font-semibold text-center leading-tight transition-colors">
+                  {item.label}
+                </span>
+              </div>
+            </motion.button>
+          );
+        })}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1738,7 +1705,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onOpenFriendsHub }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1750,6 +1717,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
   const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
+  
+  // Console overlay states
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
+  const [showStory, setShowStory] = useState(false);
+  const [showBattle, setShowBattle] = useState(false);
+  const [showSeasonPass, setShowSeasonPass] = useState(false);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1818,17 +1792,15 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
-      {/* Top Section - News Feed & Content */}
-      <div className="flex gap-6 w-full">
-        {/* Content Area - Live Panel */}
-        <div className="flex-1 flex flex-col pr-2">
-          <LivePanel 
-            upcomingCards={upcomingCards}
-            onOpenCalendar={onOpenCalendar}
-            onDateTimeClick={handleDateTimeClick}
-          />
-        </div>
-      </div>
+      {/* Console Hub - Embedded Console icons */}
+      <ConsoleHub 
+        onOpenAchievements={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
+        onOpenSkillTree={() => navigate(createPageUrl('GenreMastery'))}
+        onOpenStory={() => setShowStory(true)}
+        onOpenBattle={() => setShowBattle(true)}
+        onOpenSeasonPass={() => navigate(createPageUrl('SeasonalPass'))}
+        onOpenFriends={onOpenFriendsHub}
+      />
 
 
 
@@ -1856,40 +1828,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Grid layout */}
-      <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
-        {/* Library Area - Flexible width */}
-        <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="w-full">
-            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
-          </div>
-          <LibraryGamesSection 
-            onSelectGame={handleGameSelect}
-            selectedGame={selectedGame}
-            allGames={ownedGames}
-            showGamePanel={showGamePanel}
-            onClosePanel={handleCloseGamePanel}
-          />
-        </div>
-
-        {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
-          <div className="w-full">
-            <h3 
-                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
-                style={{ 
-                  background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                  textAlign: 'center'
-                }}>
-              Card Collection
-            </h3>
-            <LunaCardScroll />
-          </div>
-        </div>
+      {/* Memories Strip - Game Banner + References */}
+      <div className="mt-6 w-full">
+        <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
       </div>
 
 
