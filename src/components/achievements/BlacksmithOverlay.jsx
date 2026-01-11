@@ -195,13 +195,7 @@ export default function BlacksmithOverlay({ card, onClose }) {
         style={{ height: '80vh' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-4 -right-4 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white transition-all shadow-2xl"
-        >
-          <X className="w-6 h-6" />
-        </button>
+
 
         {/* Header - Floating style like main header UI */}
         <motion.div

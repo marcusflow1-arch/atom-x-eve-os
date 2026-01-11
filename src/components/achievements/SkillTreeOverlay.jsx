@@ -440,13 +440,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
               <span className="text-yellow-300 font-bold">{skillPoints} SP</span>
             </div>
             
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
+
           </div>
         </div>
 

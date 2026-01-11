@@ -166,7 +166,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
   );
 };
 
-function AchievementsView({ onExitToLibrary }) {
+function AchievementsView({ onExitToLibrary, onClosePage }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
   const navigate = useNavigate();
   const [allGames, setAllGames] = useState([]);
@@ -511,6 +511,31 @@ function AchievementsView({ onExitToLibrary }) {
   // Constants for positioning
   const ITEM_HEIGHT = 80;
   const CROSS_Y_VH = 40;
+
+  // Layered Escape key handling - closes overlays first, then page
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        // Close in order: Blacksmith -> SkillTree -> CardEnhancement -> Achievement Detail -> Page
+        if (blacksmithCard) {
+          setBlacksmithCard(null);
+        } else if (skillTreeCard) {
+          setSkillTreeCard(null);
+        } else if (selectedCard) {
+          setSelectedCard(null);
+        } else if (selectedAchievement) {
+          setSelectedAchievement(null);
+        } else if (onClosePage) {
+          onClosePage();
+        } else {
+          navigate(createPageUrl('LunaTemplate'));
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [blacksmithCard, skillTreeCard, selectedCard, selectedAchievement, onClosePage, navigate]);
 
   return (
     <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
@@ -1100,27 +1125,9 @@ function AchievementsView({ onExitToLibrary }) {
 }
 
 export default function Achievements({ onExitToLibrary, onClose }) {
-  const navigate = useNavigate();
-  
-  // ESC key to close when accessed from Luna Dashboard
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (onClose) {
-          onClose();
-        } else {
-          navigate(createPageUrl('LunaTemplate'));
-        }
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, navigate]);
-
   return (
     <div className="h-screen w-full overflow-hidden relative">
-      <AchievementsView onExitToLibrary={onExitToLibrary} />
+      <AchievementsView onExitToLibrary={onExitToLibrary} onClosePage={onClose} />
     </div>
   );
 }
