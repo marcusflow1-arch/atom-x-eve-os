@@ -1099,10 +1099,23 @@ function AchievementsView({ onExitToLibrary }) {
   );
 }
 
-export default function Achievements({ onExitToLibrary }) {
+export default function Achievements({ onExitToLibrary, showCloseButton = false, onClose }) {
   return (
-    <div className="h-screen w-full overflow-hidden">
+    <div className="h-screen w-full overflow-hidden relative">
       <AchievementsView onExitToLibrary={onExitToLibrary} />
+      
+      {/* Close Button - Only shows when accessed from Luna Dashboard */}
+      {showCloseButton && onClose && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          onClick={onClose}
+          className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+        >
+          <X className="w-5 h-5" />
+        </motion.button>
+      )}
     </div>
   );
 }
