@@ -1517,18 +1517,38 @@ export default function LunaTemplate() {
           >
             {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (Sumi-e Style) */}
-              <LegendaryTile
-                onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.5] relative overflow-hidden"
-              >
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png"
-                  alt="Plasma Water"
-                  className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
-              </LegendaryTile>
+              {/* Left Column - Hero + New Sections */}
+              <div className="flex-[1.5] flex flex-col gap-6">
+                {/* New Cards Section */}
+                <ConsoleTile className="h-32 flex items-center justify-between px-6">
+                  <div className="flex items-center gap-3">
+                    <Layers className="w-10 h-10 text-cyan-400" style={{ filter: 'drop-shadow(0px 0px 8px rgba(6, 182, 212, 0.4))' }} strokeWidth={1.5} />
+                    <div>
+                      <h3 className="text-white font-bold text-lg">New Cards</h3>
+                      <p className="text-white/50 text-sm">3 unlocked today</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-white/40" />
+                </ConsoleTile>
+
+                {/* Upcoming Events Section */}
+                <ConsoleTile className="h-40">
+                  <UpcomingEventsSection />
+                </ConsoleTile>
+
+                {/* Large Hero Tile - Vortex Slayer */}
+                <LegendaryTile
+                  onClick={() => navigate(createPageUrl('Store'))}
+                  className="flex-1 relative overflow-hidden"
+                >
+                  <img
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/158527f4e_Gemini_Generated_Image_c7tjwac7tjwac7tj.png"
+                    alt="Plasma Water"
+                    className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
+                </LegendaryTile>
+              </div>
 
               {/* Leaderboard Tile - Middle */}
               <LeaderboardTile />
@@ -1597,13 +1617,13 @@ export default function LunaTemplate() {
                 <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
-              {/* Achievements */}
+              {/* Achievement Cards - Trophy Only */}
               <ConsoleTile
-                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
+                onClick={() => navigate(createPageUrl('Achievements'))}
                 className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
               >
-                <Trophy className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievement</span>
+                <Trophy className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievement Cards</span>
               </ConsoleTile>
 
               {/* AI Skill Tree */}
