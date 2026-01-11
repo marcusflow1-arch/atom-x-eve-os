@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Medal, Crown, Star, Gamepad2, Target, Flame, 
   TrendingUp, ChevronRight, Search, Filter, Users, Zap,
-  Award, Shield, Swords, X
+  Award, Shield, Swords
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -205,13 +205,7 @@ export default function Leaderboard() {
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
       </div>
 
-      {/* Close Button */}
-      <button
-        onClick={() => navigate(createPageUrl('LunaTemplate'))}
-        className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all group"
-      >
-        <X className="w-6 h-6 text-white/70 group-hover:text-white" />
-      </button>
+
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
         {/* Header */}

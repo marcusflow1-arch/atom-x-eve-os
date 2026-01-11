@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Users, UserPlus, ChevronDown, ChevronUp, Check, XCircle, Trophy, Gamepad2 } from 'lucide-react';
+import { Star, Users, UserPlus, ChevronDown, ChevronUp, Check, XCircle, Trophy, Gamepad2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -127,13 +127,7 @@ export default function Friends() {
       className="min-h-screen w-full text-white flex"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
     >
-      {/* Close Button */}
-      <button
-        onClick={() => navigate(createPageUrl('LunaTemplate'))}
-        className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all group"
-      >
-        <X className="w-6 h-6 text-white/70 group-hover:text-white" />
-      </button>
+
 
       {/* Left Sidebar - Stats */}
       <div 
