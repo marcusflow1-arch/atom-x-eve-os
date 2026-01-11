@@ -1350,37 +1350,7 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
             );
           })}
 
-          {/* Mini Leaderboard */}
-          <div 
-            className="flex flex-col gap-1 p-3 rounded-xl border border-white/10 min-w-[140px]"
-            style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
-            }}
-          >
-            <div className="flex items-center gap-1 mb-1">
-              <Trophy className="w-3 h-3 text-amber-400" />
-              <span className="text-[9px] text-white/60 uppercase tracking-wider font-bold">Top Players</span>
-            </div>
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto" />
-            ) : users && users.length > 0 ? (
-              users.slice(0, 3).map((player, idx) => (
-                <div key={player.id} className="flex items-center gap-2 text-[10px]">
-                  <span className="text-white/40 w-3">{idx + 1}.</span>
-                  <span className="text-white/70 truncate flex-1">{player.username || player.full_name || 'User'}</span>
-                  <span className="text-cyan-400 font-bold">{player.level || 0}</span>
-                </div>
-              ))
-            ) : (
-              <span className="text-white/30 text-[9px]">No data</span>
-            )}
-          </div>
         </div>
-
-        {/* Separator Line */}
-        <div className="w-full h-px bg-white/20 mt-4" />
 
         {/* Second Row - AI Skill Tree & Achievement Cards Boxes */}
         <div className="flex items-center gap-4 mt-4">
@@ -1461,11 +1431,48 @@ function QuickAccessRow({ onOpenCalendar, onDateTimeClick, onOpenAIStory, onOpen
             </linearGradient>
           </defs>
         </svg>
+
+        {/* Separator Line - Under AI Skill Tree & Achievement Cards boxes */}
+        <div className="w-[216px] h-px bg-white/20 mt-4" />
       </div>
 
-      {/* Right Column: System Status & Calendar Hub */}
+      {/* Right Column: Leaderboard + System Status & Calendar Hub */}
       <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
-         <DateTimeTile onClick={onDateTimeClick} />
+         {/* Mini Leaderboard - Expanded */}
+         <div 
+           className="flex flex-col gap-2 p-4 rounded-xl border border-white/10 flex-1"
+           style={{
+             background: 'rgba(100, 120, 140, 0.08)',
+             backdropFilter: 'blur(10px)',
+             WebkitBackdropFilter: 'blur(10px)'
+           }}
+         >
+           <div className="flex items-center gap-2 mb-2">
+             <Trophy className="w-4 h-4 text-amber-400" />
+             <span className="text-xs text-white/70 uppercase tracking-wider font-bold">Leaderboard</span>
+           </div>
+           {isLoading ? (
+             <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto my-4" />
+           ) : users && users.length > 0 ? (
+             users.map((player, idx) => (
+               <div key={player.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                 <span className="text-white/50 text-sm w-5 text-center font-bold">{idx + 1}</span>
+                 {player.avatar_url ? (
+                   <img src={player.avatar_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                 ) : (
+                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/40 text-xs font-bold">
+                     {(player.username || player.full_name || '?').charAt(0).toUpperCase()}
+                   </div>
+                 )}
+                 <span className="text-white/80 text-sm truncate flex-1">{player.username || player.full_name || 'User'}</span>
+                 <span className="text-cyan-400 font-bold text-sm">{player.level || 0}</span>
+               </div>
+             ))
+           ) : (
+             <span className="text-white/30 text-sm text-center py-4">No players yet</span>
+           )}
+         </div>
+         
          <AddToCalendarButton 
            onClick={onOpenCalendar} 
            clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
