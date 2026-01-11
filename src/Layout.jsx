@@ -650,10 +650,10 @@ function LayoutContent({ children, currentPageName }) {
                                                                                         if (!isOnLunaPage) {
                                                                                           navigate(createPageUrl('LunaTemplate') + '?panel=console');
                                                                                         }
-                                                                                        // If on console mode, go to Luna home
-                                                                                        else if (currentPanel === 'console') {
-                                                                                          navigate(createPageUrl('LunaTemplate'));
-                                                                                        }
+                                                                                        // If on console mode, go to Store
+                                                                                                                                                                else if (currentPanel === 'console') {
+                                                                                                                                                                  navigate(createPageUrl('Store'));
+                                                                                                                                                                }
                                                                                         // If on Luna home, go to console
                                                                                         else {
                                                                                           navigate(createPageUrl('LunaTemplate') + '?panel=console');
@@ -676,15 +676,15 @@ function LayoutContent({ children, currentPageName }) {
                                                                                               </>
                                                                                             );
                                                                                           }
-                                                                                          // On console mode - show "Home" (goes to Luna dashboard)
-                                                                                          else if (currentPanel === 'console') {
-                                                                                            return (
-                                                                                              <>
-                                                                                                <Home className="w-4 h-4" />
-                                                                                                Home
-                                                                                              </>
-                                                                                            );
-                                                                                          }
+                                                                                          // On console mode - show "Store" (goes to Store page)
+                                                                                                                                                                    else if (currentPanel === 'console') {
+                                                                                                                                                                      return (
+                                                                                                                                                                        <>
+                                                                                                                                                                          <ShoppingBag className="w-4 h-4" />
+                                                                                                                                                                          Store
+                                                                                                                                                                        </>
+                                                                                                                                                                      );
+                                                                                                                                                                    }
                                                                                           // On Luna home page - show "Console"
                                                                                           else {
                                                                                             return (
@@ -717,14 +717,14 @@ function LayoutContent({ children, currentPageName }) {
                                                                                           );
                                                                                         }
                                                                                         // On console mode - shadow shows "Console"
-                                                                                        else if (currentPanel === 'console') {
-                                                                                          return (
-                                                                                            <>
-                                                                                              <Gamepad2 className="w-4 h-4" />
-                                                                                              Console
-                                                                                            </>
-                                                                                          );
-                                                                                        }
+                                                                                                                                                                else if (currentPanel === 'console') {
+                                                                                                                                                                  return (
+                                                                                                                                                                    <>
+                                                                                                                                                                      <Gamepad2 className="w-4 h-4" />
+                                                                                                                                                                      Console
+                                                                                                                                                                    </>
+                                                                                                                                                                  );
+                                                                                                                                                                }
                                                                                         // On Luna home - shadow shows "Home"
                                                                                         else {
                                                                                           return (
