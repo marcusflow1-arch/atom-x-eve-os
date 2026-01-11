@@ -1099,86 +1099,46 @@ function CardDetailOverlay({ card, onClose }) {
   );
 }
 
-// Demo Video Box Component - plays card demonstration video
-function DemoVideoBox({ card }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
-
-  // Mock demo videos mapped to card types/genres
-  const getDemoVideo = () => {
-    const demoVideos = {
-      'Ability': 'https://www.w3schools.com/html/mov_bbb.mp4',
-      'Equipment': 'https://www.w3schools.com/html/movie.mp4',
-      'Passive': 'https://www.w3schools.com/html/mov_bbb.mp4',
-    };
-    return demoVideos[card?.type] || 'https://www.w3schools.com/html/mov_bbb.mp4';
-  };
-
-  const handlePlay = () => {
-    setShowVideo(true);
-    setIsPlaying(true);
-  };
-
-  const handleClose = () => {
-    setShowVideo(false);
-    setIsPlaying(false);
-  };
-
+// Achievement Cards Trophy Box - navigates to achievements page
+function AchievementCardsTrophy({ onClick }) {
   return (
-    <div 
-      className="w-[260px] h-44 flex-shrink-0 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer"
+    <motion.div 
+      whileHover={{ y: -8, scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      onClick={onClick}
+      className="w-[120px] h-44 flex-shrink-0 rounded-xl border border-amber-500/30 overflow-hidden relative group cursor-pointer flex flex-col items-center justify-center gap-3"
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)'
+        WebkitBackdropFilter: 'blur(10px)',
+        boxShadow: '0 0 20px rgba(255, 215, 0, 0.1)'
       }}
-      onClick={handlePlay}
     >
-      {showVideo ? (
-        <>
-          {/* Video Player */}
-          <video
-            src={getDemoVideo()}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-          {/* Close button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); handleClose(); }}
-            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors z-10"
-          >
-            <X className="w-3 h-3 text-white" />
-          </button>
-          {/* Playing indicator */}
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-red-500/80 backdrop-blur-sm flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span className="text-[8px] text-white uppercase tracking-wider">Playing</span>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Demo Placeholder */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-all mb-2">
-              <Play className="w-5 h-5 text-white/70 ml-0.5" />
-            </div>
-            <span className="text-[10px] text-white/40 font-medium">Demonstration</span>
-            <span className="text-[8px] text-white/30 mt-1">Click to view</span>
-          </div>
+      {/* Trophy Icon */}
+      <motion.div
+        animate={{ y: [0, -4, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Trophy 
+          className="w-16 h-16" 
+          style={{ 
+            stroke: '#FFD700',
+            fill: 'rgba(255, 215, 0, 0.1)',
+            filter: 'drop-shadow(0px 0px 12px rgba(255, 215, 0, 0.5))' 
+          }} 
+          strokeWidth={1.5} 
+        />
+      </motion.div>
+      
+      {/* Label */}
+      <span className="text-amber-300/90 text-xs font-semibold text-center px-2" style={{ textShadow: '0 2px 6px rgba(255, 215, 0, 0.3)' }}>
+        Achievement Cards
+      </span>
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-
-          {/* Demo label */}
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
-            <span className="text-[8px] text-white/60 uppercase tracking-wider">Demo</span>
-          </div>
-        </>
-      )}
-    </div>
+      {/* Hover glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    </motion.div>
   );
 }
 
@@ -1403,8 +1363,8 @@ function LivePanel({ upcomingCards, onOpenCalendar, onDateTimeClick }) {
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute inset-0 flex items-start gap-4"
               >
-                {/* Demo Video Box */}
-                <DemoVideoBox card={currentCard} />
+                {/* Achievement Cards Trophy */}
+                <AchievementCardsTrophy onClick={() => window.location.href = createPageUrl('LunaTemplate') + '?panel=achievements'} />
 
                 {/* Center: 3D Card with Arrows */}
                 <div className="flex items-center gap-2 flex-shrink-0">

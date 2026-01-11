@@ -1853,8 +1853,8 @@ export default function LunaTemplate() {
 
 
 
-                        {/* Middle: All Equipment Sections */}
-                        <div className="flex flex-col gap-8 flex-shrink-0 ml-8 relative z-30 items-center">
+                        {/* Middle: All Equipment Sections - positioned below header */}
+                        <div className="flex flex-col gap-8 flex-shrink-0 ml-8 relative z-30 items-center mt-20">
                           {/* Top Row: Armor and Weapons with Genre */}
                           <div className="flex gap-12 items-start">
                             {/* Armor - 3x3 Grid */}
@@ -2267,11 +2267,11 @@ export default function LunaTemplate() {
 
 
       {/* AI Attributes Panel - Bottom Right */}
-      {uiVisible && !showConsoleMode &&
+      {uiVisible && !showConsoleMode && !showAchievements &&
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-8 right-8 z-50"
+          className="fixed bottom-8 right-8 z-30"
           style={{ transform: 'scale(0.68) scaleX(0.7225)' }}
         >
           <LunaStatsPanel />
@@ -2279,7 +2279,7 @@ export default function LunaTemplate() {
       }
 
       {/* Skills & AI Passives - Bottom Left */}
-      {uiVisible && !showInventory && !showConsoleMode &&
+      {uiVisible && !showInventory && !showConsoleMode && !showAchievements &&
         <div className="fixed bottom-8 left-8 z-30 flex flex-col items-center gap-4 pointer-events-auto">
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
