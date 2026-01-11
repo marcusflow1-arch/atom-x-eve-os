@@ -646,17 +646,13 @@ function LayoutContent({ children, currentPageName }) {
                                                                                         const currentPanel = params.get('panel');
                                                                                         const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                        // If on subpage (blacksmith, seasonalpass, clan, community, storyline, worldevents, genremastery, aura), go to console first
+                                                                                        // If on subpage (blacksmith, seasonalpass, clan, community, storyline, worldevents, genremastery, aura), go to Luna home
                                                                                         if (!isOnLunaPage) {
-                                                                                          navigate(createPageUrl('LunaTemplate') + '?panel=console');
+                                                                                          navigate(createPageUrl('LunaTemplate'));
                                                                                         }
-                                                                                        // If on console mode, go to Store
-                                                                                                                                                                else if (currentPanel === 'console') {
-                                                                                                                                                                  navigate(createPageUrl('Store'));
-                                                                                                                                                                }
-                                                                                        // If on Luna home, go to console
+                                                                                        // If on Luna home (no panel or panel=console), go to Store
                                                                                         else {
-                                                                                          navigate(createPageUrl('LunaTemplate') + '?panel=console');
+                                                                                          navigate(createPageUrl('Store'));
                                                                                         }
                                                                                       }}
                                                                                       className="relative z-10 px-5 py-2 rounded-full text-base font-medium transition-all backdrop-blur-md border bg-white/10 border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
@@ -667,7 +663,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                                           const currentPanel = params.get('panel');
                                                                                           const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                          // On subpage - show "Home" (goes to console)
+                                                                                          // On subpage - show "Home" (goes to Luna home)
                                                                                           if (!isOnLunaPage) {
                                                                                             return (
                                                                                               <>
@@ -676,21 +672,12 @@ function LayoutContent({ children, currentPageName }) {
                                                                                               </>
                                                                                             );
                                                                                           }
-                                                                                          // On console mode - show "Store" (goes to Store page)
-                                                                                                                                                                    else if (currentPanel === 'console') {
-                                                                                                                                                                      return (
-                                                                                                                                                                        <>
-                                                                                                                                                                          <ShoppingBag className="w-4 h-4" />
-                                                                                                                                                                          Store
-                                                                                                                                                                        </>
-                                                                                                                                                                      );
-                                                                                                                                                                    }
-                                                                                          // On Luna home page - show "Console"
+                                                                                          // On Luna home page - show "Home" (goes to Store)
                                                                                           else {
                                                                                             return (
                                                                                               <>
-                                                                                                <Gamepad2 className="w-4 h-4" />
-                                                                                                Console
+                                                                                                <Home className="w-4 h-4" />
+                                                                                                Home
                                                                                               </>
                                                                                             );
                                                                                           }
@@ -707,30 +694,21 @@ function LayoutContent({ children, currentPageName }) {
                                                                                         const currentPanel = params.get('panel');
                                                                                         const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
 
-                                                                                        // On subpage - shadow shows "Console"
+                                                                                        // On subpage - shadow shows "Store"
                                                                                         if (!isOnLunaPage) {
                                                                                           return (
                                                                                             <>
-                                                                                              <Gamepad2 className="w-4 h-4" />
-                                                                                              Console
+                                                                                              <ShoppingBag className="w-4 h-4" />
+                                                                                              Store
                                                                                             </>
                                                                                           );
                                                                                         }
-                                                                                        // On console mode - shadow shows "Console"
-                                                                                                                                                                else if (currentPanel === 'console') {
-                                                                                                                                                                  return (
-                                                                                                                                                                    <>
-                                                                                                                                                                      <Gamepad2 className="w-4 h-4" />
-                                                                                                                                                                      Console
-                                                                                                                                                                    </>
-                                                                                                                                                                  );
-                                                                                                                                                                }
-                                                                                        // On Luna home - shadow shows "Home"
+                                                                                        // On Luna home - shadow shows "Store"
                                                                                         else {
                                                                                           return (
                                                                                             <>
-                                                                                              <Home className="w-4 h-4" />
-                                                                                              Home
+                                                                                              <ShoppingBag className="w-4 h-4" />
+                                                                                              Store
                                                                                             </>
                                                                                           );
                                                                                         }
