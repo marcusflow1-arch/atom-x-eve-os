@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { MaterialInventory, MaterialCard, MATERIAL_INFO, MATERIAL_DEFINITIONS } from '../blacksmith/MaterialSystem';
 import { MarketValueDisplay, ValueBreakdown, calculateMarketValue } from '../blacksmith/MarketValuation';
 import TradingPanel from '../blacksmith/TradingPanel';
+import EvolvedCardVisual, { calculateEvolutionTier, EvolutionBadge, EvolutionPreview, EVOLUTION_TIERS } from '../blacksmith/CardVisualEvolution';
+import { NFCInfoPanel, NFC_SYSTEM_ENABLED } from '../blacksmith/NFCCardSync';
 
 // Upgrade System Tabs
 const UPGRADE_SYSTEMS = [
@@ -232,9 +234,9 @@ export default function BlacksmithOverlay({ card, onClose }) {
         {/* Main Content Grid */}
         <div className="h-full flex gap-8 pt-4">
           
-          {/* LEFT SECTION - Card Display */}
+          {/* LEFT SECTION - Card Display with Visual Evolution */}
           <div className="w-[320px] flex-shrink-0 flex flex-col items-center justify-center">
-            {/* Card with Tilt Effect */}
+            {/* Evolved Card with Tilt Effect */}
             <div
               className="relative perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]"
               onMouseMove={handleCardMouseMove}
@@ -267,71 +269,76 @@ export default function BlacksmithOverlay({ card, onClose }) {
                 />
               )}
 
-              <motion.div
-                className="w-full h-full rounded-2xl relative overflow-hidden shadow-2xl border-2 border-white/30 bg-slate-900"
-                style={{
-                  rotateX,
-                  rotateY,
-                  transformStyle: "preserve-3d",
-                  boxShadow: `0 0 60px ${card?.rarity === 'Legendary' ? 'rgba(249,115,22,0.4)' : card?.rarity === 'Mythic' ? 'rgba(244,63,94,0.4)' : 'rgba(59,130,246,0.4)'}`
-                }}
+              {/* Evolved Card Visual Wrapper */}
+              <EvolvedCardVisual 
+                card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }}
+                showTierBadge={true}
               >
-                {/* Card Image */}
-                {card?.image ? (
-                  <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                    <div className="text-white/20 text-6xl">?</div>
-                  </div>
-                )}
-                
-                {/* Shine Effect */}
                 <motion.div
-                  className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
-                    background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`)
+                    rotateX,
+                    rotateY,
+                    transformStyle: "preserve-3d",
                   }}
-                />
+                >
+                  {/* Card Image */}
+                  {card?.image ? (
+                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                      <div className="text-white/20 text-6xl">?</div>
+                    </div>
+                  )}
+                  
+                  {/* Shine Effect */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                    style={{
+                      background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`)
+                    }}
+                  />
 
-                {/* Level & Stars Overlay */}
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                  <Badge className="bg-black/60 backdrop-blur-md border-white/20 text-white font-bold">
-                    Lv. {cardLevel}
-                  </Badge>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ascension Badge */}
-                {cardAscension > 0 && (
-                  <div className="absolute top-12 left-3">
-                    <Badge className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-md border-purple-400/50 text-white">
-                      <Crown className="w-3 h-3 mr-1" />
-                      A{cardAscension}
+                  {/* Level & Stars Overlay */}
+                  <div className="absolute top-10 left-3 right-3 flex items-center justify-between">
+                    <Badge className="bg-black/60 backdrop-blur-md border-white/20 text-white font-bold">
+                      Lv. {cardLevel}
                     </Badge>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                )}
 
-                {/* Card Info Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-                  <h3 className="text-white font-bold text-lg truncate">{card?.title || card?.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={`bg-gradient-to-r ${getRarityColor(card?.rarity)} border-0 text-white text-xs`}>
-                      {card?.rarity || "Common"}
-                    </Badge>
-                    <span className="text-white/50 text-xs">{card?.series}</span>
+                  {/* Ascension Badge */}
+                  {cardAscension > 0 && (
+                    <div className="absolute top-[4.5rem] left-3">
+                      <Badge className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-md border-purple-400/50 text-white">
+                        <Crown className="w-3 h-3 mr-1" />
+                        A{cardAscension}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Card Info Footer */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
+                    <h3 className="text-white font-bold text-lg truncate">{card?.title || card?.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className={`bg-gradient-to-r ${getRarityColor(card?.rarity)} border-0 text-white text-xs`}>
+                        {card?.rarity || "Common"}
+                      </Badge>
+                      <span className="text-white/50 text-xs">{card?.series}</span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </EvolvedCardVisual>
             </div>
 
-            {/* Power Rating Below Card */}
+            {/* Power Rating & Evolution Tier */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -342,6 +349,11 @@ export default function BlacksmithOverlay({ card, onClose }) {
               <div className="flex items-center justify-center gap-2">
                 <Flame className="w-6 h-6 text-orange-400" />
                 <span className="text-4xl font-black text-white">{baseStats.power.toLocaleString()}</span>
+              </div>
+              
+              {/* Evolution Tier Display */}
+              <div className="mt-3">
+                <EvolutionBadge tier={calculateEvolutionTier({ level: cardLevel, stars: cardStars, ascension: cardAscension })} />
               </div>
             </motion.div>
           </div>
@@ -736,17 +748,14 @@ export default function BlacksmithOverlay({ card, onClose }) {
               </div>
             </div>
 
-            {/* Next Evolution Preview */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20">
-              <h4 className="text-orange-300 font-bold mb-3">Next Milestone</h4>
-              <p className="text-white/60 text-sm">
-                {cardLevel < maxLevel
-                  ? `Reach level ${maxLevel} to unlock Ascension`
-                  : cardAscension < 5
-                    ? `Ascend to increase max level to ${maxLevel + 10}`
-                    : 'Card has reached maximum potential!'}
-              </p>
-            </div>
+            {/* Evolution Preview */}
+            <EvolutionPreview card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }} />
+
+            {/* NFC Card Info (Future-Ready) */}
+            <NFCInfoPanel 
+              physicalCardData={null} 
+              onScan={() => console.log('NFC scan triggered')}
+            />
           </div>
         </div>
 
