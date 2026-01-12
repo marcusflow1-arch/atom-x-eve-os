@@ -429,13 +429,13 @@ function AIAchievementsView({ onClosePage }) {
         {/* Main Layout: 2 Columns */}
         <div className="flex gap-6 h-full overflow-hidden">
           
-          {/* LEFT COLUMN: Game Banner + Quick Actions + Library */}
+          {/* LEFT COLUMN: Library + Game Banner below */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
             
-            {/* Header with Game Banner title */}
+            {/* Header with mode toggles */}
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-black tracking-tighter text-white">
-                Game Banner
+                Library
               </h1>
               
               {/* Skill Tree Mode Toggle */}
@@ -469,59 +469,7 @@ function AIAchievementsView({ onClosePage }) {
               </motion.button>
             </div>
 
-            {/* Quick Action Boxes - Between Game Banner and Library */}
-            <div className="grid grid-cols-4 gap-2">
-              <QuickActionBox 
-                icon={Users} 
-                label="Friends" 
-                color="cyan"
-                onClick={() => navigate(createPageUrl('Friends'))}
-              />
-              <QuickActionBox 
-                icon={Layers} 
-                label="Skill Tree" 
-                color="purple"
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-              />
-              <QuickActionBox 
-                icon={BookOpen} 
-                label="AI Story" 
-                color="blue"
-                onClick={() => navigate(createPageUrl('AIStory'))}
-              />
-              <QuickActionBox 
-                icon={Swords} 
-                label="AI Battle" 
-                color="red"
-                onClick={() => navigate(createPageUrl('AIBattle'))}
-              />
-              <QuickActionBox 
-                icon={Crown} 
-                label="Season Pass" 
-                color="yellow"
-                onClick={() => navigate(createPageUrl('SeasonalPass'))}
-              />
-              <QuickActionBox 
-                icon={Trophy} 
-                label="Achievements" 
-                color="orange"
-                onClick={() => navigate(createPageUrl('Achievements'))}
-              />
-              <QuickActionBox 
-                icon={Target} 
-                label="Leaderboard" 
-                color="green"
-                onClick={() => navigate(createPageUrl('Leaderboard'))}
-              />
-              <QuickActionBox 
-                icon={Sparkles} 
-                label="Memories" 
-                color="pink"
-                onClick={() => {}}
-              />
-            </div>
-
-            {/* Library Section */}
+            {/* Library Section - Now at top */}
             <ShinySidebarBox className="flex-1 flex flex-col p-5">
               
               {/* Library Header */}
