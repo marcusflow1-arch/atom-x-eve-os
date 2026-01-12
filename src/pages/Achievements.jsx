@@ -346,6 +346,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   }, [selectedGame, localAchievements]);
 
   const [userCards, setUserCards] = useState([]);
+  const [gameReviews, setGameReviews] = useState([]);
+  const [userReactions, setUserReactions] = useState({});
+  const [showReviewPanel, setShowReviewPanel] = useState(false);
 
   useEffect(() => {
     const fetchUserCards = async () => {
@@ -364,6 +367,107 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     fetchUserCards();
   }, [user, selectedGame]);
+
+  // Fetch reviews for selected game
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!selectedGame) return;
+      
+      try {
+        const reviews = await base44.entities.Post.filter({ 
+          type: 'game_review',
+          game_title: selectedGame.title 
+        }, '-created_date');
+        setGameReviews(reviews);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      }
+    };
+
+    fetchReviews();
+  }, [selectedGame]);
+
+  // Fetch user reactions
+  useEffect(() => {
+    const fetchUserReactions = async () => {
+      if (!isAuthenticated || !user) return;
+      try {
+        const allUserReactions = await base44.entities.Reaction.filter({
+          created_by: user.email
+        });
+        const reactionsMap = {};
+        allUserReactions.forEach(r => {
+          reactionsMap[r.target_id] = r.type;
+        });
+        setUserReactions(reactionsMap);
+      } catch (err) {
+        console.error('Failed to fetch reactions:', err);
+      }
+    };
+    fetchUserReactions();
+  }, [isAuthenticated, user]);
+
+  const handleReaction = async (reviewId, reactionType) => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const existingReactions = await base44.entities.Reaction.filter({
+        target_id: reviewId,
+        created_by: user.email
+      });
+      
+      if (existingReactions.length > 0) {
+        const existingReaction = existingReactions[0];
+        if (existingReaction.type === reactionType) {
+          await base44.entities.Reaction.delete(existingReaction.id);
+        } else {
+          await base44.entities.Reaction.update(existingReaction.id, { type: reactionType });
+        }
+      } else {
+        await base44.entities.Reaction.create({
+          target_id: reviewId,
+          target_type: 'post',
+          type: reactionType
+        });
+      }
+      
+      const allUserReactions = await base44.entities.Reaction.filter({
+        created_by: user.email
+      });
+      const reactionsMap = {};
+      allUserReactions.forEach(r => {
+        reactionsMap[r.target_id] = r.type;
+      });
+      setUserReactions(reactionsMap);
+    } catch (err) {
+      console.error('Failed to react:', err);
+    }
+  };
+
+  const handleSubmitReview = async (reviewData) => {
+    if (!isAuthenticated || !selectedGame) return;
+    
+    try {
+      await base44.entities.Post.create({
+        title: `Review: ${selectedGame.title}`,
+        content: reviewData.content,
+        type: 'game_review',
+        game_title: selectedGame.title,
+        genre: selectedGame.genre,
+        rating: reviewData.rating,
+        community: 'reviews'
+      });
+      
+      // Refresh reviews
+      const reviews = await base44.entities.Post.filter({ 
+        type: 'game_review',
+        game_title: selectedGame.title 
+      }, '-created_date');
+      setGameReviews(reviews);
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    }
+  };
 
   const tradingCards = useMemo(() => {
     if (!selectedGame) return [];
