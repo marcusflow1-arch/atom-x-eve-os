@@ -642,7 +642,24 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
   const currentGames = allGames;
 
   const handleLibraryClick = () => {
-    navigate(createPageUrl('Store') + '?subview=library');
+    // If in Entertainment view, switch back to Library view
+    if (showEntertainment) {
+      setShowEntertainment(false);
+    } else {
+      // If already in Library view, navigate to the full Library page
+      navigate(createPageUrl('Store') + '?subview=library');
+    }
+  };
+
+  const handleEntertainmentClick = (e) => {
+    e.stopPropagation();
+    // If in Library view, switch to Entertainment view
+    if (!showEntertainment) {
+      setShowEntertainment(true);
+    } else {
+      // If already in Entertainment view, navigate to full Entertainment page
+      navigate(createPageUrl('LunaTemplate') + '?panel=entertainment');
+    }
   };
 
   const handleGameClick = (game) => {
@@ -669,19 +686,20 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
           <div className="flex items-center gap-2">
             <button 
               onClick={handleLibraryClick}
-              className="text-white font-bold text-sm flex items-center gap-2 hover:text-cyan-400 transition-colors group"
+              className={`text-white font-bold text-sm flex items-center gap-2 transition-colors group ${!showEntertainment ? 'text-cyan-400' : 'hover:text-cyan-400'}`}
             >
-              <Book className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <Book className={`w-4 h-4 group-hover:scale-110 transition-transform ${!showEntertainment ? 'text-cyan-400' : 'text-white/70'}`} />
               Library
               <ChevronRight className="w-4 h-4 text-white/40 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); setShowEntertainment(v => !v); }}
-              className="flex items-center gap-1 text-white/70 hover:text-white"
+              onClick={handleEntertainmentClick}
+              className={`flex items-center gap-1 transition-colors ${showEntertainment ? 'text-cyan-400' : 'text-white/70 hover:text-white'}`}
               title="Entertainment"
             >
               <Tv className="w-4 h-4" />
               <span className="text-xs">Entertainment</span>
+              <ChevronRight className="w-4 h-4 text-white/40" />
             </button>
           </div>
         </div>
