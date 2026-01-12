@@ -1021,8 +1021,15 @@ export default function LunaTemplate() {
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [customBackground, setCustomBackground] = useState(null);
+  const [isVideoBackground, setIsVideoBackground] = useState(false);
 
   const { mode } = useDashboardMode();
+
+  const handleBackgroundChange = (backgroundUrl, isVideo = false) => {
+    setCustomBackground(backgroundUrl);
+    setIsVideoBackground(isVideo);
+  };
 
   useEffect(() => {
     const fetchModelAndAnimations = async () => {
@@ -1177,9 +1184,40 @@ export default function LunaTemplate() {
         </div>
       }
 
+      {/* Custom Background - Images or Videos from Memories */}
+      <AnimatePresence>
+        {customBackground && !uiVisible && !showConsoleMode &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-5"
+          >
+            {isVideoBackground ? (
+              <video
+                src={customBackground}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-50"
+              />
+            ) : (
+              <img
+                src={customBackground}
+                alt="Background"
+                className="absolute inset-0 w-full h-full object-cover opacity-40"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
+          </motion.div>
+        }
+      </AnimatePresence>
+
       {/* Focus Mode Background Overlay - More translucent when custom background is active */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode &&
+        {!uiVisible && !showConsoleMode && !customBackground &&
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1237,6 +1275,7 @@ export default function LunaTemplate() {
 
             <FocusModePanel
               onOpenCalendar={() => setShowCalendar(true)}
+              onBackgroundChange={handleBackgroundChange}
             />
           </motion.div>
         }
