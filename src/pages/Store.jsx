@@ -538,21 +538,39 @@ export default function Store() {
                         <div className="relative inline-block">
                           <button 
                             onClick={() => {
-                              navigate(createPageUrl('LunaTemplate'));
+                              // If already on store mode, go to Luna. Otherwise, switch to store mode first.
+                              if (storeMode === 'store') {
+                                navigate(createPageUrl('LunaTemplate'));
+                              } else {
+                                setStoreMode('store');
+                              }
                             }}
-                            className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                            className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              storeMode === 'store'
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
                           >
                             Store
                           </button>
-                          <div
-                            aria-hidden
-                            className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
-                          >
-                            <span className="text-sm font-medium">Home</span>
-                          </div>
+                          {storeMode === 'store' && (
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
+                            >
+                              <span className="text-sm font-medium">Home</span>
+                            </div>
+                          )}
                         </div>
                         <button 
-                            onClick={() => setStoreMode('marketplace')}
+                            onClick={() => {
+                              // If already on marketplace, go to store first
+                              if (storeMode === 'marketplace') {
+                                setStoreMode('store');
+                              } else {
+                                setStoreMode('marketplace');
+                              }
+                            }}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
                                 storeMode === 'marketplace' 
                                     ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
@@ -562,7 +580,14 @@ export default function Store() {
                             Marketplace
                         </button>
                         <button 
-                            onClick={() => setStoreMode('trading')}
+                            onClick={() => {
+                              // If already on trading, go to store first
+                              if (storeMode === 'trading') {
+                                setStoreMode('store');
+                              } else {
+                                setStoreMode('trading');
+                              }
+                            }}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
                                 storeMode === 'trading' 
                                     ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
