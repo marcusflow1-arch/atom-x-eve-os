@@ -11,7 +11,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { getAIAchievements } from '@/components/store/AIAchievementsData';
+
 
 // --- Components ---
 
@@ -146,9 +146,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [userReactions, setUserReactions] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
-  
-  // Get AI Achievements data for this game
-  const aiAchievements = getAIAchievements(gameId);
 
   // Mock media content
   const videos = [
