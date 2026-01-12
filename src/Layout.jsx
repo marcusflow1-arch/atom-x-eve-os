@@ -569,7 +569,7 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
-        } else if (p.includes('/achievements')) {
+        } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = true;
         } else if (p.includes('/leaderboard')) {
           headerConfig.hidden = true;
