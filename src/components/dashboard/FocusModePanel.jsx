@@ -1321,12 +1321,17 @@ function GameBanner({ game, onChangeBanner }) {
   );
 }
 
-// Quick Access Icons Row - NOW EMPTY, moved to LibraryBannerSection
-function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate }) {
+// Quick Access Icons Row - Contains Game Banner, Memories, Quick Actions, and System Status
+function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate, games, onBackgroundChange }) {
   return (
-    <div className="h-full flex gap-4">
+    <div className="h-full flex gap-6">
+      {/* Left Column: Game Banner Section */}
+      <div className="flex-1 min-w-0">
+        <LibraryBannerSection games={games} onBackgroundChange={onBackgroundChange} navigate={navigate} />
+      </div>
+      
       {/* Right Column: System Status & Calendar Hub */}
-      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3 ml-auto">
+      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
          <DateTimeTile onClick={onDateTimeClick} />
          <AddToCalendarButton 
            onClick={onOpenCalendar} 
@@ -1750,15 +1755,14 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - Quick Access Icons */}
-      <div className="flex gap-6 w-full">
-        {/* Content Area - Quick Access Row */}
-        <div className="flex-1 flex flex-col pr-2">
-          <QuickAccessRow 
-            onOpenCalendar={onOpenCalendar}
-            onDateTimeClick={handleDateTimeClick}
-            navigate={navigate}
-          />
-        </div>
+      <div className="w-full">
+        <QuickAccessRow 
+          onOpenCalendar={onOpenCalendar}
+          onDateTimeClick={handleDateTimeClick}
+          navigate={navigate}
+          games={ownedGames}
+          onBackgroundChange={onBackgroundChange}
+        />
       </div>
 
 
@@ -1793,9 +1797,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="w-full">
-            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} navigate={navigate} />
-          </div>
           <LibraryGamesSection 
             onSelectGame={handleGameSelect}
             selectedGame={selectedGame}
