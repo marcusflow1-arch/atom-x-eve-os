@@ -427,8 +427,11 @@ function AIAchievementsView({ onClosePage }) {
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
+        {/* Game Banner Section - At top, under header tabs */}
+        <LibraryBannerSection games={allGames} navigate={navigate} />
+        
         {/* Main Layout: 2 Columns */}
-        <div className="flex gap-6 h-full overflow-hidden">
+        <div className="flex gap-6 flex-1 overflow-hidden">
           
           {/* LEFT COLUMN: Library + Game Banner below */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
