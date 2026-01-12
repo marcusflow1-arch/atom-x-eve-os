@@ -46,6 +46,7 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
+import AIAchievements from './pages/AIAchievements';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +99,7 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
+    "AIAchievements": AIAchievements,
 }
 
 export const pagesConfig = {
