@@ -1064,67 +1064,198 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   </ShinySidebarBox>
                 </div>
 
-                {/* Right Content: Achievements Grid (Cards) */}
+                {/* Center Content: Achievements Grid (Cards) */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
                   {selectedGame ? (
                     <>
-                      <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
-                          {tradingCards.length > 0 ? (
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                  {tradingCards.map((card, i) => (
-                                      <div key={card.id} className="aspect-[2.5/3.5]">
-                                          <ShinyCard index={i} onClick={() => {
-                                            if (skillTreeMode) {
-                                              setSkillTreeCard(card);
-                                            } else if (blacksmithMode) {
-                                              setBlacksmithCard(card);
-                                            } else {
-                                              setSelectedCard(card);
-                                            }
-                                          }}>
-                                             <div className="absolute inset-0 flex flex-col p-3">
-                                                 <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                                     <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                     {card.isPurchased && !card.isUnlocked && (
-                                                       <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
-                                                         <DollarSign className="w-4 h-4 text-white" />
-                                                       </div>
-                                                     )}
-                                                 </div>
-                                                 <div className="flex-1 flex flex-col justify-between">
-                                                     <div>
-                                                         <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                         <div className="flex gap-1 flex-wrap">
-                                                             <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                                 card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                                 card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                                 card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                                 card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                                                 'border-slate-500/50 text-slate-400'
-                                                             }`}>
-                                                                 {card.rarity}
-                                                             </Badge>
-                                                             {card.isPurchased && (
-                                                               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
-                                                                 BOUGHT
-                                                               </Badge>
-                                                             )}
-                                                         </div>
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                          </ShinyCard>
-                                      </div>
-                                  ))}
-                              </div>
-                          ) : (
-                              <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                                  <Layers className="w-16 h-16 mb-4 opacity-20" />
-                                  <p className="text-lg font-medium">No trading cards found</p>
-                              </div>
+                      {/* Tab Toggle: Cards / Peer Reviews */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <button
+                          onClick={() => setShowReviewPanel(false)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                            !showReviewPanel
+                              ? 'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300'
+                              : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
+                          }`}
+                        >
+                          <Layers className="w-4 h-4" />
+                          Card Collection
+                        </button>
+                        <button
+                          onClick={() => setShowReviewPanel(true)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                            showReviewPanel
+                              ? 'bg-purple-500/20 border border-purple-400/30 text-purple-300'
+                              : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
+                          }`}
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          Peer Reviews
+                          {gameReviews.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
+                              {gameReviews.length}
+                            </span>
                           )}
+                        </button>
                       </div>
+
+                      <AnimatePresence mode="wait">
+                        {!showReviewPanel ? (
+                          <motion.div
+                            key="cards"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20"
+                          >
+                            {tradingCards.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                    {tradingCards.map((card, i) => (
+                                        <div key={card.id} className="aspect-[2.5/3.5]">
+                                            <ShinyCard index={i} onClick={() => {
+                                              if (skillTreeMode) {
+                                                setSkillTreeCard(card);
+                                              } else if (blacksmithMode) {
+                                                setBlacksmithCard(card);
+                                              } else {
+                                                setSelectedCard(card);
+                                              }
+                                            }}>
+                                               <div className="absolute inset-0 flex flex-col p-3">
+                                                   <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                                       <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                                       {card.isPurchased && !card.isUnlocked && (
+                                                         <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                                           <DollarSign className="w-4 h-4 text-white" />
+                                                         </div>
+                                                       )}
+                                                   </div>
+                                                   <div className="flex-1 flex flex-col justify-between">
+                                                       <div>
+                                                           <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                                           <div className="flex gap-1 flex-wrap">
+                                                               <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                                                   card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                                                   card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                                                   card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                                   card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                                                   'border-slate-500/50 text-slate-400'
+                                                               }`}>
+                                                                   {card.rarity}
+                                                               </Badge>
+                                                               {card.isPurchased && (
+                                                                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
+                                                                   BOUGHT
+                                                                 </Badge>
+                                                               )}
+                                                           </div>
+                                                       </div>
+                                                   </div>
+                                               </div>
+                                            </ShinyCard>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                                    <Layers className="w-16 h-16 mb-4 opacity-20" />
+                                    <p className="text-lg font-medium">No trading cards found</p>
+                                </div>
+                            )}
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="reviews"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="flex-1 overflow-hidden flex gap-6"
+                          >
+                            {/* Left: Review Composer + Insights */}
+                            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar pb-20">
+                              {/* Game Review Header */}
+                              <div className="flex items-center gap-4 mb-2">
+                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
+                                  <img 
+                                    src={selectedGame.cover_image || selectedGame.cover} 
+                                    alt={selectedGame.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div>
+                                  <h2 className="text-xl font-bold text-white">{selectedGame.title}</h2>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge className="bg-white/10 text-white/70 border-white/20">
+                                      {selectedGame.genre}
+                                    </Badge>
+                                    <div className="flex items-center gap-1 text-white/50 text-sm">
+                                      <Users className="w-3.5 h-3.5" />
+                                      <span>{gameReviews.length} reviews</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Review Composer */}
+                              <ReviewComposer
+                                onSubmit={handleSubmitReview}
+                                isAuthenticated={isAuthenticated}
+                                user={user}
+                                userStats={{
+                                  achievements: user?.unlocked_achievements?.length || 0,
+                                  playTime: '24h'
+                                }}
+                              />
+
+                              {/* Review Insights */}
+                              <ReviewInsights reviews={gameReviews} />
+
+                              {/* Full Reviews List */}
+                              <div className="space-y-3">
+                                <h3 className="text-white font-medium text-sm flex items-center gap-2">
+                                  <TrendingUp className="w-4 h-4 text-cyan-400" />
+                                  All Reviews
+                                </h3>
+                                {gameReviews.length === 0 ? (
+                                  <div 
+                                    className="rounded-2xl p-8 text-center"
+                                    style={{
+                                      background: 'rgba(255, 255, 255, 0.02)',
+                                      border: '1px solid rgba(255, 255, 255, 0.06)'
+                                    }}
+                                  >
+                                    <MessageSquare className="w-12 h-12 text-white/10 mx-auto mb-3" />
+                                    <p className="text-white/40 text-sm">No reviews yet for this game</p>
+                                    <p className="text-white/20 text-xs mt-1">Be the first to share your experience!</p>
+                                  </div>
+                                ) : (
+                                  gameReviews.map((review) => (
+                                    <ReviewCard
+                                      key={review.id}
+                                      review={review}
+                                      variant="default"
+                                      onReact={handleReaction}
+                                      userReaction={userReactions[review.id]}
+                                      isAuthenticated={isAuthenticated}
+                                    />
+                                  ))
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Right: Live Review Feed */}
+                            <div className="w-80 flex-shrink-0 h-full">
+                              <LiveReviewFeed
+                                reviews={gameReviews}
+                                onReact={handleReaction}
+                                userReactions={userReactions}
+                                isAuthenticated={isAuthenticated}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
