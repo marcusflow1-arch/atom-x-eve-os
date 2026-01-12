@@ -1448,15 +1448,16 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
 
   const handleReferenceClick = (reference) => {
     setActiveReference(reference);
+    // Pass background info including isVideo flag for video backgrounds
     if (onBackgroundChange) {
-      onBackgroundChange(reference.background);
+      onBackgroundChange(reference.background, reference.isVideo);
     }
   };
 
   const handleHomeClick = () => {
     setActiveReference(null);
     if (onBackgroundChange) {
-      onBackgroundChange(null);
+      onBackgroundChange(null, false);
     }
   };
 
