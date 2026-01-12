@@ -1498,10 +1498,7 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
         })}
       </div>
 
-      {/* Horizontal Line */}
-      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
-
-      {/* Game Banner + Memories - Below the line */}
+      {/* Game Banner + Memories */}
       <div className="flex items-stretch gap-4 w-full">
         {/* Game Banner */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
@@ -1533,6 +1530,9 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
           />
         </div>
       </div>
+
+      {/* Horizontal Line below Game Banner */}
+      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
