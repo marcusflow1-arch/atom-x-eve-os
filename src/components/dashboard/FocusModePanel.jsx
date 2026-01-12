@@ -1841,7 +1841,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <div className="w-full">
-            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} />
+            <LibraryBannerSection games={ownedGames} onBackgroundChange={onBackgroundChange} navigate={navigate} />
           </div>
           <LibraryGamesSection 
             onSelectGame={handleGameSelect}
