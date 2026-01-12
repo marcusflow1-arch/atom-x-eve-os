@@ -560,22 +560,75 @@ function AIAchievementsView({ onClosePage }) {
                 ))}
               </div>
 
-              {/* Memories Section - Below games */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Memories</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div 
-                      key={i}
-                      className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/30 transition-colors cursor-pointer flex items-center justify-center"
-                    >
-                      <Sparkles className="w-4 h-4 text-white/20" />
-                    </div>
-                  ))}
+            </ShinySidebarBox>
+
+            {/* Game Banner Section - Below Library */}
+            <div className="mt-2">
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Game Banner</h3>
+              <div className="h-[80px] rounded-xl overflow-hidden border border-white/10 bg-white/5 relative cursor-pointer hover:border-cyan-400/30 transition-all">
+                <img 
+                  src={selectedGame?.cover_image || selectedGame?.cover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800'} 
+                  alt="Game Banner" 
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute bottom-2 left-3">
+                  <p className="text-white font-bold text-sm">{selectedGame?.title || 'Select a Game'}</p>
                 </div>
               </div>
+            </div>
 
-            </ShinySidebarBox>
+            {/* Quick Action Boxes - Below Game Banner */}
+            <div className="grid grid-cols-4 gap-2">
+              <QuickActionBox 
+                icon={Users} 
+                label="Friends" 
+                color="cyan"
+                onClick={() => navigate(createPageUrl('Friends'))}
+              />
+              <QuickActionBox 
+                icon={Layers} 
+                label="Skill Tree" 
+                color="purple"
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+              />
+              <QuickActionBox 
+                icon={BookOpen} 
+                label="AI Story" 
+                color="blue"
+                onClick={() => navigate(createPageUrl('AIStory'))}
+              />
+              <QuickActionBox 
+                icon={Swords} 
+                label="AI Battle" 
+                color="red"
+                onClick={() => navigate(createPageUrl('AIBattle'))}
+              />
+              <QuickActionBox 
+                icon={Crown} 
+                label="Season Pass" 
+                color="yellow"
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+              />
+              <QuickActionBox 
+                icon={Trophy} 
+                label="Achievements" 
+                color="orange"
+                onClick={() => navigate(createPageUrl('Achievements'))}
+              />
+              <QuickActionBox 
+                icon={Target} 
+                label="Leaderboard" 
+                color="green"
+                onClick={() => navigate(createPageUrl('Leaderboard'))}
+              />
+              <QuickActionBox 
+                icon={Sparkles} 
+                label="Memories" 
+                color="pink"
+                onClick={() => {}}
+              />
+            </div>
           </div>
 
           {/* RIGHT COLUMN: Achievements Grid (Cards) */}
