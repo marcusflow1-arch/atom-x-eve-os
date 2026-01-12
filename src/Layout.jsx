@@ -585,9 +585,7 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
         } else if (p.includes('/seasonalpass')) {
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
+          headerConfig.hidden = true;
         } else if (p.includes('/blacksmith')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;

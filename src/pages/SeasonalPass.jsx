@@ -18,7 +18,7 @@ export default function SeasonalPass() {
   }, [navigate]);
 
   return (
-    <div className="pt-20">
+    <div className="min-h-screen">
       <SeasonalPassContent />
     </div>
   );
