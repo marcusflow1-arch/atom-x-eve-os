@@ -469,11 +469,8 @@ function AIAchievementsView({ onClosePage }) {
               </motion.button>
             </div>
 
-            {/* Library Section - Now at top */}
-            <ShinySidebarBox className="flex-1 flex flex-col p-5">
-              
-              {/* Library Header */}
-              <h2 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Library</h2>
+            {/* Library Section - Now at top, takes most space */}
+            <ShinySidebarBox className="flex-1 flex flex-col p-5 min-h-0">
               
               {/* Search with Mic */}
               <div className="relative group mb-4">
