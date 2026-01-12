@@ -217,20 +217,25 @@ export default function GameDetailPanel({ gameId, onClose }) {
   // ESC key and arrow keys
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (!isViewingMedia) return;
-      
       if (e.key === 'Escape') {
-        setIsViewingMedia(false);
-        setCurrentMediaIndex(0);
-      } else if (e.key === 'ArrowLeft') {
-        handlePrevious();
-      } else if (e.key === 'ArrowRight') {
-        handleNext();
+        if (isViewingMedia) {
+          setIsViewingMedia(false);
+          setCurrentMediaIndex(0);
+        } else {
+          // Go back to Store when not in media view
+          onClose();
+        }
+      } else if (isViewingMedia) {
+        if (e.key === 'ArrowLeft') {
+          handlePrevious();
+        } else if (e.key === 'ArrowRight') {
+          handleNext();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isViewingMedia, currentMediaIndex, currentContent.length]);
+  }, [isViewingMedia, currentMediaIndex, currentContent.length, onClose]);
 
   // Mouse move handler for arrows
   const handleMouseMove = () => {
@@ -478,22 +483,27 @@ export default function GameDetailPanel({ gameId, onClose }) {
               )}
             </AnimatePresence>
 
-            {/* Subtle UI Hint */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-center"
-              >
-                <h3 className="text-white text-2xl font-bold mb-2">
-                  {currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
-                </h3>
-                <p className="text-white/60 text-sm">
-                  Use arrow keys or click arrows to navigate • ESC to exit
-                </p>
-              </motion.div>
-            </div>
+            {/* Subtle UI Hint - Only visible when hovering */}
+            <AnimatePresence>
+              {showNavArrows && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center"
+                  >
+                    <h3 className="text-white text-2xl font-bold mb-2">
+                      {currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
+                    </h3>
+                    <p className="text-white/60 text-sm">
+                      Use arrow keys or click arrows to navigate • ESC to exit
+                    </p>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1051,115 +1061,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* AI Achievements - Learnable Fighting Styles & Combat Techniques */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-cyan-400" />
-                    AI Achievements
-                  </h3>
 
-                  {/* Side-by-side: Perks List + Card Preview */}
-                  <div className="flex gap-3">
-                    {/* Left: Compact Perks List */}
-                    <div className="flex-1 space-y-1 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
-                      {aiAchievements.perks.map((perk) => (
-                        <button
-                          key={perk.id}
-                          onClick={() => setSelectedAIPerk(perk)}
-                          className={`w-full text-left px-2 py-1.5 rounded-lg transition-all flex items-center gap-2 ${
-                            selectedAIPerk?.id === perk.id
-                              ? 'bg-cyan-500/20 text-white'
-                              : 'text-white/60 hover:bg-white/5 hover:text-white'
-                          }`}
-                        >
-                          <span className="text-base flex-shrink-0">{perk.icon}</span>
-                          <span className="text-[9px] font-medium truncate">{perk.name}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Right: Crystal Card (AI Loot style) */}
-                    <motion.div
-                      className="relative group perspective-1000 flex-shrink-0 cursor-pointer"
-                      style={{ width: '120px' }}
-                      whileHover={{ scale: 1.05 }}
-                      onMouseMove={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = (e.clientX - rect.left) / rect.width - 0.5;
-                        const y = (e.clientY - rect.top) / rect.height - 0.5;
-                        e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
-                      }}
-                    >
-                      <div className="space-y-1.5">
-                        {/* Card Name */}
-                        <div className="text-center">
-                          <p className="text-white font-bold text-[9px] truncate px-1">
-                            {selectedAIPerk?.name || 'Select Perk'}
-                          </p>
-                        </div>
-
-                        {/* Crystal Clear Card */}
-                        <div 
-                          className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/30"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-                            backdropFilter: 'blur(20px) saturate(180%)',
-                            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                          }}
-                        >
-                          {/* XP Badge - Left */}
-                          <div className="absolute top-1.5 left-1.5 z-10">
-                            <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/30">
-                              <Zap className="w-2 h-2 text-cyan-400" />
-                              <span className="text-cyan-300 font-bold text-[7px]">+{aiAchievements.aiXP}</span>
-                            </div>
-                          </div>
-
-                          {/* Points Badge - Right */}
-                          <div className="absolute top-1.5 right-1.5 z-10">
-                            <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-yellow-500/20 border border-yellow-500/30">
-                              <Star className="w-2 h-2 text-yellow-400" />
-                              <span className="text-yellow-300 font-bold text-[7px]">+{aiAchievements.achievementPoints}</span>
-                            </div>
-                          </div>
-
-                          {/* Shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                          
-                          {/* Mystery content or Icon */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            {selectedAIPerk ? (
-                              <span className="text-4xl opacity-60">{selectedAIPerk.icon}</span>
-                            ) : (
-                              <span className="text-5xl text-white/20">?</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Combat Style Label */}
-                        {selectedAIPerk && (
-                          <div className="text-center">
-                            <p className="text-cyan-300 text-[8px] font-medium truncate px-1">
-                              {selectedAIPerk.combatStyle?.split(' - ')[0]}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* AI Training Note */}
-                  <div className="p-2 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-white/5">
-                    <div className="flex items-center gap-1.5">
-                      <Zap className="w-2.5 h-2.5 text-yellow-400" />
-                      <span className="text-[8px] font-bold text-white uppercase tracking-wider">AI Training Compatible</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </motion.div>
           ) : (
