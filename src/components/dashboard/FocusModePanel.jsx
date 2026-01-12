@@ -1792,8 +1792,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Grid layout */}
-      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0">
+      {/* Bottom Section - Grid layout - Pushed down for more space */}
+      <div className="mt-auto pt-16 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <LibraryGamesSection 
