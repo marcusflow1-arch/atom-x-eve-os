@@ -1104,7 +1104,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   );
 }
 
-export default function Achievements({ onExitToLibrary, onClose }) {
+export default function Achievements({ onExitToLibrary, onClose, showCloseButton }) {
   return (
     <div className="h-screen w-full overflow-hidden relative">
       <AchievementsView onExitToLibrary={onExitToLibrary} onClosePage={onClose} />
