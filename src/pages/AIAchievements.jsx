@@ -426,14 +426,51 @@ function AIAchievementsView({ onClosePage }) {
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-8">
         
-        {/* Main Layout: 3 Columns */}
+        {/* Main Layout: 2 Columns */}
         <div className="flex gap-6 h-full overflow-hidden">
           
-          {/* LEFT COLUMN: Quick Action Boxes (Swapped location) */}
-          <div className="w-[200px] flex-shrink-0 flex flex-col gap-4">
-            <h2 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-2">Quick Actions</h2>
+          {/* LEFT COLUMN: Game Banner + Quick Actions + Library */}
+          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
             
-            <div className="grid grid-cols-2 gap-3">
+            {/* Header with Game Banner title */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tighter text-white">
+                Game Banner
+              </h1>
+              
+              {/* Skill Tree Mode Toggle */}
+              <motion.button
+                onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`ml-auto w-8 h-8 rounded-lg flex items-center justify-center border ${
+                  skillTreeMode 
+                    ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
+                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                }`}
+                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
+              >
+                <Layers className="w-4 h-4" />
+              </motion.button>
+
+              {/* Blacksmith Mode Toggle */}
+              <motion.button
+                onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                  blacksmithMode 
+                    ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
+                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                }`}
+                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
+              >
+                <Hammer className="w-4 h-4" />
+              </motion.button>
+            </div>
+
+            {/* Quick Action Boxes - Between Game Banner and Library */}
+            <div className="grid grid-cols-4 gap-2">
               <QuickActionBox 
                 icon={Users} 
                 label="Friends" 
@@ -483,53 +520,15 @@ function AIAchievementsView({ onClosePage }) {
                 onClick={() => {}}
               />
             </div>
-          </div>
 
-          {/* CENTER COLUMN: Game Banner + Memories (Swapped location) */}
-          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
-            
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black tracking-tighter text-white">
-                Game Banner
-              </h1>
-              
-              {/* Skill Tree Mode Toggle */}
-              <motion.button
-                onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`ml-auto w-8 h-8 rounded-lg flex items-center justify-center border ${
-                  skillTreeMode 
-                    ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
-                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                }`}
-                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
-              >
-                <Layers className="w-4 h-4" />
-              </motion.button>
-
-              {/* Blacksmith Mode Toggle */}
-              <motion.button
-                onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                  blacksmithMode 
-                    ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
-                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                }`}
-                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
-              >
-                <Hammer className="w-4 h-4" />
-              </motion.button>
-            </div>
-
-            {/* Shiny Box Container */}
+            {/* Library Section */}
             <ShinySidebarBox className="flex-1 flex flex-col p-5">
               
+              {/* Library Header */}
+              <h2 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Library</h2>
+              
               {/* Search with Mic */}
-              <div className="relative group mb-6">
+              <div className="relative group mb-4">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
                 <input
                   type="text"
@@ -544,7 +543,7 @@ function AIAchievementsView({ onClosePage }) {
               </div>
 
               {/* Genre Filters */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
@@ -570,9 +569,6 @@ function AIAchievementsView({ onClosePage }) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-
-              {/* Divider line */}
-              <div className="h-px bg-white/10 mb-4" />
 
               {/* Game List */}
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
@@ -616,7 +612,7 @@ function AIAchievementsView({ onClosePage }) {
                 ))}
               </div>
 
-              {/* Memories Section - Below divider */}
+              {/* Memories Section - Below games */}
               <div className="mt-4 pt-4 border-t border-white/10">
                 <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Memories</h3>
                 <div className="grid grid-cols-3 gap-2">
