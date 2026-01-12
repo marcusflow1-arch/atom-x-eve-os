@@ -17,10 +17,10 @@ import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
-import ReviewCard from '../components/reviews/ReviewCard';
-import ReviewComposer from '../components/reviews/ReviewComposer';
-import ReviewInsights from '../components/reviews/ReviewInsights';
-import LiveReviewFeed from '../components/reviews/LiveReviewFeed';
+import ReviewCard from '@/components/reviews/ReviewCard';
+import ReviewComposer from '@/components/reviews/ReviewComposer';
+import ReviewInsights from '@/components/reviews/ReviewInsights';
+import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
