@@ -24,6 +24,7 @@ import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { LibraryBannerSection } from '../components/dashboard/FocusModePanel';
 
 // --- Quick Action Box Component ---
 const QuickActionBox = ({ icon: Icon, label, onClick, color = 'cyan' }) => {

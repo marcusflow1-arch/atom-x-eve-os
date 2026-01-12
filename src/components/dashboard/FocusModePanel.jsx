@@ -1386,8 +1386,8 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
   );
 }
 
-// Library Banner Section - Banner aligned to top gap, references to the right
-function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
+// Library Banner Section - Now exported for use in pages
+export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
