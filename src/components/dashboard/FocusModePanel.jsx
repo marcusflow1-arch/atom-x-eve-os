@@ -1321,59 +1321,12 @@ function GameBanner({ game, onChangeBanner }) {
   );
 }
 
-// Quick Access Icons Row - Friends, Skill Tree, AI Story, AI Battle, etc.
+// Quick Access Icons Row - NOW EMPTY, moved to LibraryBannerSection
 function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate }) {
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['leaderboard-users-mini'],
-    queryFn: () => base44.entities.User.list('-level', 5),
-    refetchInterval: 30000,
-  });
-
-  const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
-    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
-  ];
-
   return (
     <div className="h-full flex gap-4">
-      {/* Left Column - Quick Access Icons */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Icons Row */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <motion.button
-                key={action.id}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={action.onClick}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg`}
-                style={{
-                  background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  minWidth: '80px'
-                }}
-              >
-                <Icon className="w-6 h-6 text-white/80" />
-                <span className="text-white/70 text-[10px] font-medium text-center">{action.label}</span>
-              </motion.button>
-            );
-          })}
-
-        </div>
-
-
-      </div>
-
       {/* Right Column: System Status & Calendar Hub */}
-      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
+      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3 ml-auto">
          <DateTimeTile onClick={onDateTimeClick} />
          <AddToCalendarButton 
            onClick={onOpenCalendar} 
