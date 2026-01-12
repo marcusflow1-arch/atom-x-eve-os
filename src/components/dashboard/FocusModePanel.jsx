@@ -1434,7 +1434,7 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
 }
 
 // Library Banner Section - Banner aligned to top gap, references to the right
-function LibraryBannerSection({ games, onBackgroundChange }) {
+function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
@@ -1462,9 +1462,9 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
             initialRefs.push({
               id: plasmaWater.id,
               title: 'Plasma Water',
-              thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200', // Still need a thumbnail, using placeholder or maybe video frame if possible (video thumb not easy)
-              type: 'victory', // arbitrary type for style
-              background: plasmaWater.video_url, // Use the video URL
+              thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200',
+              type: 'victory',
+              background: plasmaWater.video_url,
               game: 'Hero Theme',
               isVideo: true
             });
@@ -1502,10 +1502,20 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
     }
   };
 
+  const quickActions = [
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
+    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
+    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
+    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
+  ];
+
   return (
-    <div className="flex flex-col items-start mb-4">
+    <div className="flex flex-col items-start mb-4 w-full">
       {/* Top Row: Banner + References to the right */}
-      <div className="flex items-stretch gap-4">
+      <div className="flex items-stretch gap-4 w-full">
 
         {/* Game Banner */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
@@ -1538,8 +1548,34 @@ function LibraryBannerSection({ games, onBackgroundChange }) {
         </div>
       </div>
 
-      {/* Horizontal Line below banner - Aligned with banner */}
-      <div className="w-[368px] h-px bg-white/20 mt-3" />
+      {/* Horizontal Line below banner */}
+      <div className="w-full h-px bg-white/20 mt-3 mb-4" />
+
+      {/* Quick Access Icons Row - Between Game Banner and Library */}
+      <div className="w-full flex items-center gap-2 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <motion.button
+              key={action.id}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={action.onClick}
+              className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
+              style={{
+                background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                width: '85px',
+                height: '75px'
+              }}
+            >
+              <Icon className="w-5 h-5 text-white/80" />
+              <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
