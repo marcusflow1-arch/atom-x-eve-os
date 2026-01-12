@@ -1802,8 +1802,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
           <div className="w-full">
             <h3 
-                onClick={() => navigate(createPageUrl('Store') + '?subview=achievements')}
-                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full cursor-pointer hover:scale-105 transition-transform" 
+                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full" 
                 style={{ 
                   background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
                   WebkitBackgroundClip: 'text',
