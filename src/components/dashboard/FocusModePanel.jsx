@@ -1472,18 +1472,36 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
 
   return (
     <div className="flex flex-col items-start w-full">
-      {/* Top Row: Banner + References to the right */}
-      <div className="flex items-stretch gap-4 w-full">
+      {/* Top Row: Quick Access Icons + Memories to the right */}
+      <div className="flex items-center gap-4 w-full">
 
-        {/* Game Banner */}
-        <div className="w-[368px] h-[60px] flex-shrink-0">
-          <GameBanner 
-            game={selectedBannerGame} 
-            onChangeBanner={() => setShowBannerPicker(true)} 
-          />
+        {/* Quick Access Icons Row */}
+        <div className="flex items-center gap-2 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'none' }}>
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <motion.button
+                key={action.id}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={action.onClick}
+                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
+                style={{
+                  background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  width: '85px',
+                  height: '75px'
+                }}
+              >
+                <Icon className="w-5 h-5 text-white/80" />
+                <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
+              </motion.button>
+            );
+          })}
         </div>
 
-        {/* References Section */}
+        {/* References Section (Memories) */}
         <div 
           ref={scrollRef}
           className="flex items-center gap-2 overflow-x-auto" 
@@ -1506,33 +1524,15 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
         </div>
       </div>
 
-      {/* Horizontal Line below banner */}
+      {/* Horizontal Line */}
       <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
-      {/* Quick Access Icons Row - Between Game Banner and Library */}
-      <div className="w-full flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {quickActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <motion.button
-              key={action.id}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={action.onClick}
-              className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
-              style={{
-                background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                width: '85px',
-                height: '75px'
-              }}
-            >
-              <Icon className="w-5 h-5 text-white/80" />
-              <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
-            </motion.button>
-          );
-        })}
+      {/* Game Banner - Below the line */}
+      <div className="w-[368px] h-[60px] flex-shrink-0">
+        <GameBanner 
+          game={selectedBannerGame} 
+          onChangeBanner={() => setShowBannerPicker(true)} 
+        />
       </div>
 
       {/* Banner Picker Modal */}
