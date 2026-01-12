@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer
+  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
+  MessageSquare, Users, Star, TrendingUp
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -16,6 +17,10 @@ import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
+import ReviewCard from '../components/reviews/ReviewCard';
+import ReviewComposer from '../components/reviews/ReviewComposer';
+import ReviewInsights from '../components/reviews/ReviewInsights';
+import LiveReviewFeed from '../components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
