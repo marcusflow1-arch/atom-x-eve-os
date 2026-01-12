@@ -1471,7 +1471,7 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
   ];
 
   return (
-    <div className="flex flex-col items-start mb-4 w-full">
+    <div className="flex flex-col items-start w-full">
       {/* Top Row: Banner + References to the right */}
       <div className="flex items-stretch gap-4 w-full">
 
@@ -1507,10 +1507,10 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
       </div>
 
       {/* Horizontal Line below banner */}
-      <div className="w-full h-px bg-white/20 mt-3 mb-4" />
+      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
       {/* Quick Access Icons Row - Between Game Banner and Library */}
-      <div className="w-full flex items-center gap-2 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
+      <div className="w-full flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
@@ -1794,7 +1794,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       </AnimatePresence>
 
       {/* Bottom Section - Grid layout */}
-      <div className="mt-6 w-full flex gap-6 items-start justify-between min-w-0">
+      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <LibraryGamesSection 
