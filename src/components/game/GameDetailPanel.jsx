@@ -48,6 +48,11 @@ const SystemPreviewCard = ({ type, title, subtitle, onClick }) => (
 
 const SpecsTab = ({ game }) => {
   const specs = game?.system_requirements || {};
+  
+  // Check if we have any actual requirements data
+  const hasRequirements = specs && Object.keys(specs).length > 0 && 
+    (specs.os || specs.processor || specs.memory || specs.graphics || specs.storage);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -64,19 +69,19 @@ const SpecsTab = ({ game }) => {
           <div className="space-y-3 text-sm">
             <div className="flex justify-between border-b border-white/5 pb-2">
               <span className="text-white/40">Developer</span>
-              <span className="text-white">Studio Unknown</span>
+              <span className="text-white">{game.developer || 'Studio Unknown'}</span>
             </div>
             <div className="flex justify-between border-b border-white/5 pb-2">
               <span className="text-white/40">Publisher</span>
-              <span className="text-white">Atom Publishing</span>
+              <span className="text-white">{game.publisher || 'Atom Publishing'}</span>
             </div>
             <div className="flex justify-between border-b border-white/5 pb-2">
               <span className="text-white/40">Release Date</span>
-              <span className="text-white">{game.original_year || '2025'}</span>
+              <span className="text-white">{game.original_year || 'TBA'}</span>
             </div>
             <div className="flex justify-between pt-1">
               <span className="text-white/40">Version</span>
-              <span className="text-white font-mono text-xs">v1.0.4-stable</span>
+              <span className="text-white font-mono text-xs">{game.version || 'v1.0.0'}</span>
             </div>
           </div>
         </div>
@@ -87,28 +92,47 @@ const SpecsTab = ({ game }) => {
             <Cpu className="w-4 h-4 text-blue-400" />
             Hardware Requirements
           </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">OS</span>
-              <span className="text-white">{specs.os || 'Windows 10/11 (64-bit)'}</span>
+          
+          {hasRequirements ? (
+            <div className="space-y-3 text-sm">
+              {specs.os && (
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-white/40">OS</span>
+                  <span className="text-white">{specs.os}</span>
+                </div>
+              )}
+              {specs.processor && (
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-white/40">Processor</span>
+                  <span className="text-white text-right max-w-[200px] truncate">{specs.processor}</span>
+                </div>
+              )}
+              {specs.memory && (
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-white/40">Memory</span>
+                  <span className="text-white">{specs.memory}</span>
+                </div>
+              )}
+              {specs.graphics && (
+                <div className="flex justify-between border-b border-white/5 pb-2">
+                  <span className="text-white/40">Graphics</span>
+                  <span className="text-white text-right max-w-[200px] truncate">{specs.graphics}</span>
+                </div>
+              )}
+              {specs.storage && (
+                <div className="flex justify-between pt-1">
+                  <span className="text-white/40">Storage</span>
+                  <span className="text-white">{specs.storage}</span>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Processor</span>
-              <span className="text-white text-right max-w-[200px] truncate">{specs.processor || 'Intel Core i5 / AMD Ryzen 5'}</span>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <AlertCircle className="w-10 h-10 text-white/20 mb-3" />
+              <p className="text-white/40 text-sm">System requirements not available yet</p>
+              <p className="text-white/20 text-xs mt-1">Check back later for hardware specifications</p>
             </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Memory</span>
-              <span className="text-white">{specs.memory || '16 GB RAM'}</span>
-            </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Graphics</span>
-              <span className="text-white text-right max-w-[200px] truncate">{specs.graphics || 'NVIDIA RTX 3060 / AMD RX 6600'}</span>
-            </div>
-            <div className="flex justify-between pt-1">
-              <span className="text-white/40">Storage</span>
-              <span className="text-white">{specs.storage || '50 GB available space'}</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </motion.div>
