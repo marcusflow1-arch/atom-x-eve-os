@@ -1,3 +1,4 @@
+import AIAchievements from './pages/AIAchievements';
 import AIBattle from './pages/AIBattle';
 import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
@@ -46,11 +47,11 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import AIAchievements from './pages/AIAchievements';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIAchievements": AIAchievements,
     "AIBattle": AIBattle,
     "AIConsole": AIConsole,
     "AINews": AINews,
@@ -99,7 +100,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "AIAchievements": AIAchievements,
 }
 
 export const pagesConfig = {

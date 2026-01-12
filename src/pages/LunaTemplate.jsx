@@ -1557,12 +1557,12 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
-            {/* Main Grid: Hero Left + Leaderboard + 2x2 Right */}
-            <div className="flex-1 flex gap-6 min-h-0">
-              {/* Large Hero Tile - Left (Sumi-e Style) with Video */}
+            {/* TOP SECTION: Game Banner + Memories (directly under header tabs) */}
+            <div className="flex gap-6 mb-6">
+              {/* Large Hero Tile - Game Banner (Sumi-e Style) with Video */}
               <LegendaryTile
                 onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[1.5] relative overflow-hidden"
+                className="flex-[2] h-48 relative overflow-hidden"
               >
                 <video
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
@@ -1573,9 +1573,99 @@ export default function LunaTemplate() {
                   className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
+                <div className="absolute bottom-4 left-6 z-10">
+                  <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
+                </div>
               </LegendaryTile>
 
-              {/* Leaderboard Tile - Middle */}
+              {/* Memories Section */}
+              <ConsoleTile className="flex-1 h-48 p-5 flex flex-col">
+                <h3 className="text-[#CCCCCC] text-sm font-semibold uppercase tracking-wider mb-3" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Memories</h3>
+                <div className="flex-1 grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <div 
+                      key={i}
+                      className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/30 transition-colors cursor-pointer flex items-center justify-center"
+                    >
+                      <Sparkles className="w-4 h-4 text-white/20" />
+                    </div>
+                  ))}
+                </div>
+              </ConsoleTile>
+            </div>
+
+            {/* Divider Line under Game Banner */}
+            <div className="h-px bg-white/10 mb-6" />
+
+            {/* QUICK ACCESS BOXES - Under the Game Banner line */}
+            <div className="flex gap-4 mb-6">
+              {/* Friends */}
+              <ConsoleTile
+                onClick={() => setShowFriendsHub(true)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Users className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
+              </ConsoleTile>
+
+              {/* AI Skill Tree */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
+              </ConsoleTile>
+
+              {/* AI Story */}
+              <ConsoleTile
+                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <BookOpen className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Story</span>
+              </ConsoleTile>
+
+              {/* AI Battle */}
+              <ConsoleTile
+                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Swords className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Battle</span>
+              </ConsoleTile>
+
+              {/* Season Pass */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
+              </ConsoleTile>
+
+              {/* Achievements */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Achievements'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
+              </ConsoleTile>
+
+              {/* Leaderboard */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Leaderboard'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
+              </ConsoleTile>
+            </div>
+
+            {/* Main Grid: Leaderboard + 2x2 Right */}
+            <div className="flex-1 flex gap-6 min-h-0">
+              {/* Leaderboard Tile - Left */}
               <LeaderboardTile />
 
               {/* Right Side - 2x2 Grid */}
@@ -1612,13 +1702,13 @@ export default function LunaTemplate() {
                     <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
                   </ConsoleTile>
 
-                  {/* Season Pass */}
+                  {/* Aura */}
                   <ConsoleTile
-                    onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                    onClick={() => navigate(createPageUrl('Aura'))}
                     className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
                   >
-                    <Crown className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
+                    <Radio className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Aura</span>
                   </ConsoleTile>
                 </div>
               </div>
@@ -1629,63 +1719,6 @@ export default function LunaTemplate() {
               <span className="text-[#CCCCCC] text-lg font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                 {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </span>
-            </div>
-
-            {/* Bottom Ribbon - Quick Access */}
-            <div className="flex gap-6 h-36 mt-6">
-              {/* Friends */}
-              <ConsoleTile
-                onClick={() => setShowFriendsHub(true)}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <Users className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
-              </ConsoleTile>
-
-              {/* Achievement Cards - Trophy Only */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('Achievements'))}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <Trophy className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievement Cards</span>
-              </ConsoleTile>
-
-              {/* AI Skill Tree */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <Bot className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Skill Tree</span>
-              </ConsoleTile>
-
-              {/* Aura */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('Aura'))}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <Radio className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Aura</span>
-              </ConsoleTile>
-
-              {/* AI Story */}
-              <ConsoleTile
-                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'story'))}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <BookOpen className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Story</span>
-              </ConsoleTile>
-
-              {/* AI Battle */}
-              <ConsoleTile
-                onClick={() => setActiveDrawer(ORBITAL_ITEMS.find(i => i.id === 'battle'))}
-                className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
-              >
-                <Swords className="w-12 h-12 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-base font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>AI Battle</span>
-              </ConsoleTile>
             </div>
 
             {/* SVG Gradient Definitions */}
