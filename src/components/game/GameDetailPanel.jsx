@@ -963,11 +963,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* Achievement Loot - Card Offerings */}
+                {/* Achievement Cards */}
                 <div className="space-y-3">
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     <Database className="w-4 h-4 text-cyan-400" />
-                    Achievement Loot
+                    Achievement Cards
                   </h3>
 
                   <div className="relative">
@@ -981,7 +981,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       <ChevronRight className="w-4 h-4 text-white rotate-180" />
                     </button>
 
-                    <div id="card-scroll-container" className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide px-10">
+                    <div id="card-scroll-container" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide px-10">
                     {[
                       { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
                       { name: 'Cyber Metabolism', type: 'Passive', description: '+10% Regeneration', edition: 'Standard Edition' },
