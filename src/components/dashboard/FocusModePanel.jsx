@@ -1498,14 +1498,21 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
         })}
       </div>
 
+      {/* Spacer between icons and game banner */}
+      <div className="h-6" />
+
       {/* Game Banner + Memories */}
       <div className="flex items-stretch gap-4 w-full">
-        {/* Game Banner */}
-        <div className="w-[368px] h-[60px] flex-shrink-0">
-          <GameBanner 
-            game={selectedBannerGame} 
-            onChangeBanner={() => setShowBannerPicker(true)} 
-          />
+        {/* Game Banner with line underneath */}
+        <div className="w-[368px] flex-shrink-0 flex flex-col">
+          <div className="h-[60px]">
+            <GameBanner 
+              game={selectedBannerGame} 
+              onChangeBanner={() => setShowBannerPicker(true)} 
+            />
+          </div>
+          {/* Horizontal Line only under Game Banner */}
+          <div className="w-full h-px bg-white/20 mt-4" />
         </div>
 
         {/* References Section (Memories) */}
@@ -1530,9 +1537,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
           />
         </div>
       </div>
-
-      {/* Horizontal Line below Game Banner */}
-      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
       {/* Banner Picker Modal */}
       <AnimatePresence>
