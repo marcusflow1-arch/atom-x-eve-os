@@ -78,6 +78,46 @@ const ShinySidebarBox = ({ children, className = "" }) => {
   );
 };
 
+// --- Skill Node Component for Skill Tree ---
+const SkillNode = ({ icon: Icon, name, sp, unlocked, color = 'purple', ultimate = false }) => {
+  const colorStyles = {
+    purple: {
+      bg: unlocked ? 'bg-purple-500/30' : 'bg-white/10',
+      border: unlocked ? 'border-purple-400/50' : 'border-white/20',
+      text: unlocked ? 'text-purple-300' : 'text-white/40',
+      glow: unlocked ? 'shadow-[0_0_15px_rgba(168,85,247,0.4)]' : ''
+    },
+    cyan: {
+      bg: unlocked ? 'bg-cyan-500/30' : 'bg-white/10',
+      border: unlocked ? 'border-cyan-400/50' : 'border-white/20',
+      text: unlocked ? 'text-cyan-300' : 'text-white/40',
+      glow: unlocked ? 'shadow-[0_0_15px_rgba(34,211,238,0.4)]' : ''
+    }
+  };
+
+  const styles = colorStyles[color];
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        className={`relative ${ultimate ? 'w-16 h-16' : 'w-12 h-12'} rounded-xl ${styles.bg} ${styles.border} border-2 flex items-center justify-center cursor-pointer transition-all ${styles.glow}`}
+      >
+        <Icon className={`${ultimate ? 'w-7 h-7' : 'w-5 h-5'} ${styles.text}`} />
+        {unlocked && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center border border-white/30">
+            <Check className="w-2.5 h-2.5 text-white" />
+          </div>
+        )}
+      </motion.div>
+      <span className={`text-[10px] font-medium ${unlocked ? 'text-white/70' : 'text-white/30'}`}>{name}</span>
+      <span className={`text-[9px] px-1.5 py-0.5 rounded ${unlocked ? (color === 'purple' ? 'bg-purple-500/20 text-purple-300' : 'bg-cyan-500/20 text-cyan-300') : 'bg-white/10 text-white/40'}`}>
+        {sp} SP
+      </span>
+    </div>
+  );
+};
+
 function AIAchievementsView({ onClosePage }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
   const navigate = useNavigate();
