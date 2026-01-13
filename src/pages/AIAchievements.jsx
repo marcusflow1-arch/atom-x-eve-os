@@ -5,7 +5,7 @@ import {
   Trophy, Search, Filter, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
-  MessageSquare, Users, Star, TrendingUp, BookOpen, Swords, Crown, Target, Zap
+  MessageSquare, Users, Star, TrendingUp, BookOpen, Swords, Crown, Target
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -99,6 +99,9 @@ function AIAchievementsView({ onClosePage }) {
   // Blacksmith Mode toggle
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
+
+  // Path subpage state
+  const [activePathTab, setActivePathTab] = useState('power'); // 'power' or 'ai'
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -598,7 +601,7 @@ function AIAchievementsView({ onClosePage }) {
             </div>
           </div>
 
-          {/* MIDDLE COLUMN: Card Display */}
+          {/* RIGHT COLUMN: Card on left, Path Box on right */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {selectedGame ? (
               <>
@@ -608,7 +611,6 @@ function AIAchievementsView({ onClosePage }) {
                     {selectedGame.title}
                   </h2>
                   
-                  {/* Grid View Toggle */}
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -618,7 +620,6 @@ function AIAchievementsView({ onClosePage }) {
                     <LayoutGrid className="w-4 h-4" />
                   </motion.button>
                   
-                  {/* Skill Tree Mode Toggle */}
                   <motion.button
                     onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
                     whileHover={{ scale: 1.1 }}
@@ -633,7 +634,6 @@ function AIAchievementsView({ onClosePage }) {
                     <Layers className="w-4 h-4" />
                   </motion.button>
 
-                  {/* Blacksmith Mode Toggle */}
                   <motion.button
                     onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
                     whileHover={{ scale: 1.1 }}
@@ -649,63 +649,242 @@ function AIAchievementsView({ onClosePage }) {
                   </motion.button>
                 </div>
 
-                {/* Card Grid */}
-                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
-                  {tradingCards.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          {tradingCards.map((card, i) => (
-                              <div key={card.id} className="aspect-[2.5/3.5]">
-                                  <ShinyCard index={i} onClick={() => {
-                                    if (skillTreeMode) {
-                                      setSkillTreeCard(card);
-                                    } else if (blacksmithMode) {
-                                      setBlacksmithCard(card);
-                                    } else {
-                                      setSelectedCard(card);
-                                    }
-                                  }}>
-                                     <div className="absolute inset-0 flex flex-col p-3">
-                                         <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                             <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                             {card.isPurchased && !card.isUnlocked && (
-                                               <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
-                                                 <DollarSign className="w-4 h-4 text-white" />
-                                               </div>
-                                             )}
-                                         </div>
-                                         <div className="flex-1 flex flex-col justify-between">
-                                             <div>
-                                                 <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                 <div className="flex gap-1 flex-wrap">
-                                                     <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                         card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                         card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                         card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                         card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                                         'border-slate-500/50 text-slate-400'
-                                                     }`}>
-                                                         {card.rarity}
-                                                     </Badge>
-                                                     {card.isPurchased && (
-                                                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
-                                                         BOUGHT
-                                                       </Badge>
-                                                     )}
-                                                 </div>
-                                             </div>
-                                         </div>
-                                     </div>
-                                  </ShinyCard>
+                {/* Main Content: Card Left + Path Box Right */}
+                <div className="flex-1 flex gap-6 overflow-hidden">
+                  
+                  {/* LEFT: Selected Card Display */}
+                  <div className="w-[280px] flex-shrink-0 flex flex-col">
+                    <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Selected Card</h3>
+                    {tradingCards.length > 0 ? (
+                      <div className="aspect-[2.5/3.5] w-full">
+                        <ShinyCard 
+                          index={0} 
+                          onClick={() => {
+                            const card = tradingCards[0];
+                            if (skillTreeMode) {
+                              setSkillTreeCard(card);
+                            } else if (blacksmithMode) {
+                              setBlacksmithCard(card);
+                            } else {
+                              setSelectedCard(card);
+                            }
+                          }}
+                        >
+                          <div className="absolute inset-0 flex flex-col p-4">
+                            <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-3 border border-white/10">
+                              <img src={tradingCards[0].image} alt={tradingCards[0].title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              {tradingCards[0].isPurchased && !tradingCards[0].isUnlocked && (
+                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                  <DollarSign className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <h3 className="text-white font-bold text-sm leading-tight mb-2">{tradingCards[0].title}</h3>
+                                <div className="flex gap-1 flex-wrap">
+                                  <Badge variant="outline" className={`text-[10px] h-5 px-1.5 border ${
+                                    tradingCards[0].rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                    tradingCards[0].rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                    tradingCards[0].rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                    tradingCards[0].rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                    'border-slate-500/50 text-slate-400'
+                                  }`}>
+                                    {tradingCards[0].rarity}
+                                  </Badge>
+                                  {tradingCards[0].isPurchased && (
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px] h-5 px-1.5">
+                                      BOUGHT
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
+                            </div>
+                          </div>
+                        </ShinyCard>
+                      </div>
+                    ) : (
+                      <div className="aspect-[2.5/3.5] w-full rounded-2xl border border-dashed border-white/20 bg-white/5 flex flex-col items-center justify-center text-white/30">
+                        <Layers className="w-12 h-12 mb-2 opacity-30" />
+                        <p className="text-sm">No card selected</p>
+                      </div>
+                    )}
+
+                    {/* Card Selector - Small thumbnails below */}
+                    {tradingCards.length > 1 && (
+                      <div className="mt-4">
+                        <p className="text-xs text-white/40 mb-2">More Cards ({tradingCards.length})</p>
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          {tradingCards.slice(0, 6).map((card, i) => (
+                            <button
+                              key={card.id}
+                              onClick={() => {
+                                // Move this card to front
+                                const newCards = [...tradingCards];
+                                const [selected] = newCards.splice(i, 1);
+                                newCards.unshift(selected);
+                                // This would need state management, for now just open it
+                                if (skillTreeMode) {
+                                  setSkillTreeCard(card);
+                                } else if (blacksmithMode) {
+                                  setBlacksmithCard(card);
+                                } else {
+                                  setSelectedCard(card);
+                                }
+                              }}
+                              className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all flex-shrink-0"
+                            >
+                              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                            </button>
                           ))}
+                        </div>
                       </div>
-                  ) : (
-                      <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                          <Layers className="w-16 h-16 mb-4 opacity-20" />
-                          <p className="text-lg font-medium">No trading cards found</p>
-                      </div>
-                  )}
+                    )}
+                  </div>
+
+                  {/* RIGHT: Path Box with Subpages */}
+                  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                    {/* Path Tabs */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <button
+                        onClick={() => setActivePathTab('power')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          activePathTab === 'power'
+                            ? 'bg-red-500/20 border border-red-400/30 text-red-300'
+                            : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
+                        }`}
+                      >
+                        <Swords className="w-4 h-4" />
+                        Power Path
+                      </button>
+                      <button
+                        onClick={() => setActivePathTab('ai')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          activePathTab === 'ai'
+                            ? 'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300'
+                            : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        AI Adapt Path
+                      </button>
+                    </div>
+
+                    {/* Path Content Box */}
+                    <ShinySidebarBox className="flex-1 overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        {activePathTab === 'power' ? (
+                          <motion.div
+                            key="power"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="h-full p-6 overflow-y-auto custom-scrollbar"
+                          >
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center border border-red-500/30">
+                                <Swords className="w-6 h-6 text-red-400" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-white">Power Path</h3>
+                                <p className="text-sm text-white/50">Increase raw stats and combat effectiveness</p>
+                              </div>
+                            </div>
+
+                            {/* Power Path Skills */}
+                            <div className="space-y-4">
+                              {[
+                                { name: 'Strength Boost', desc: '+15% Attack Power', icon: Swords, unlocked: true },
+                                { name: 'Fortitude', desc: '+10% Defense', icon: Crown, unlocked: true },
+                                { name: 'Critical Strike', desc: '+5% Crit Chance', icon: Target, unlocked: false },
+                                { name: 'Berserker Rage', desc: '+25% Damage when low HP', icon: Swords, unlocked: false },
+                                { name: 'Iron Will', desc: '+20% Status Resistance', icon: Crown, unlocked: false },
+                              ].map((skill, i) => (
+                                <div 
+                                  key={skill.name}
+                                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                                    skill.unlocked 
+                                      ? 'bg-red-500/10 border-red-500/30' 
+                                      : 'bg-white/5 border-white/10 opacity-60'
+                                  }`}
+                                >
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                    skill.unlocked ? 'bg-red-500/30' : 'bg-white/10'
+                                  }`}>
+                                    <skill.icon className={`w-5 h-5 ${skill.unlocked ? 'text-red-400' : 'text-white/40'}`} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-white">{skill.name}</p>
+                                    <p className="text-sm text-white/50">{skill.desc}</p>
+                                  </div>
+                                  {skill.unlocked ? (
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Unlocked</Badge>
+                                  ) : (
+                                    <Badge className="bg-white/10 text-white/40 border-white/20">Locked</Badge>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="ai"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="h-full p-6 overflow-y-auto custom-scrollbar"
+                          >
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                                <Sparkles className="w-6 h-6 text-cyan-400" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-white">AI Adapt Path</h3>
+                                <p className="text-sm text-white/50">Enhance AI behavior and versatility</p>
+                              </div>
+                            </div>
+
+                            {/* AI Adapt Path Skills */}
+                            <div className="space-y-4">
+                              {[
+                                { name: 'Neural Link', desc: 'AI responds to voice commands', icon: Sparkles, unlocked: true },
+                                { name: 'Adaptive Learning', desc: 'AI learns from your playstyle', icon: TrendingUp, unlocked: true },
+                                { name: 'Emotion Sync', desc: 'AI mirrors your emotional state', icon: Star, unlocked: false },
+                                { name: 'Predictive Actions', desc: 'AI anticipates enemy moves', icon: Target, unlocked: false },
+                                { name: 'Memory Forge', desc: 'AI remembers past encounters', icon: BookOpen, unlocked: false },
+                              ].map((skill, i) => (
+                                <div 
+                                  key={skill.name}
+                                  className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                                    skill.unlocked 
+                                      ? 'bg-cyan-500/10 border-cyan-500/30' 
+                                      : 'bg-white/5 border-white/10 opacity-60'
+                                  }`}
+                                >
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                    skill.unlocked ? 'bg-cyan-500/30' : 'bg-white/10'
+                                  }`}>
+                                    <skill.icon className={`w-5 h-5 ${skill.unlocked ? 'text-cyan-400' : 'text-white/40'}`} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-white">{skill.name}</p>
+                                    <p className="text-sm text-white/50">{skill.desc}</p>
+                                  </div>
+                                  {skill.unlocked ? (
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Unlocked</Badge>
+                                  ) : (
+                                    <Badge className="bg-white/10 text-white/40 border-white/20">Locked</Badge>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </ShinySidebarBox>
+                  </div>
+
                 </div>
               </>
             ) : (
@@ -715,183 +894,6 @@ function AIAchievementsView({ onClosePage }) {
                 <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
               </div>
             )}
-          </div>
-
-          {/* RIGHT COLUMN: Path Selection Box */}
-          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
-            <h3 className="text-lg font-bold text-white">Progression Paths</h3>
-            
-            <ShinySidebarBox className="flex-1 flex flex-col p-5 overflow-hidden">
-              {/* Path Tabs */}
-              <div className="flex gap-2 mb-4">
-                <button
-                  onClick={() => setShowReviewPanel(false)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                    !showReviewPanel
-                      ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-                      : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10'
-                  }`}
-                >
-                  <Zap className="w-4 h-4" />
-                  PowerPath
-                </button>
-                <button
-                  onClick={() => setShowReviewPanel(true)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-                    showReviewPanel
-                      ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/20 border border-purple-400/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                      : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  AIAdaptPath
-                </button>
-              </div>
-
-              {/* Path Content */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <AnimatePresence mode="wait">
-                  {!showReviewPanel ? (
-                    <motion.div
-                      key="powerpath"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="space-y-4"
-                    >
-                      {/* PowerPath Content */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
-                            <Zap className="w-5 h-5 text-cyan-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-bold text-sm">Power Progression</h4>
-                            <p className="text-white/40 text-xs">Strength-based achievements</p>
-                          </div>
-                        </div>
-                        <p className="text-white/60 text-xs leading-relaxed">
-                          Focus on raw power, combat mastery, and completing challenging feats. 
-                          Unlock powerful abilities and equipment through direct accomplishment.
-                        </p>
-                      </div>
-
-                      {/* Power Stats */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Attack Power</p>
-                          <p className="text-xl font-bold text-cyan-400">+245</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Defense</p>
-                          <p className="text-xl font-bold text-blue-400">+180</p>
-                        </div>
-                      </div>
-
-                      {/* Milestones */}
-                      <div>
-                        <h5 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Milestones</h5>
-                        <div className="space-y-2">
-                          {[
-                            { name: 'First Blood', progress: 100, color: 'green' },
-                            { name: 'Champion', progress: 65, color: 'cyan' },
-                            { name: 'Legendary', progress: 30, color: 'orange' },
-                          ].map((milestone) => (
-                            <div key={milestone.name} className="flex items-center gap-3">
-                              <div className="flex-1">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-xs text-white/70">{milestone.name}</span>
-                                  <span className="text-[10px] text-white/40">{milestone.progress}%</span>
-                                </div>
-                                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                  <div 
-                                    className={`h-full rounded-full bg-${milestone.color}-500`}
-                                    style={{ width: `${milestone.progress}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="aiadaptpath"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-4"
-                    >
-                      {/* AIAdaptPath Content */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
-                            <Sparkles className="w-5 h-5 text-purple-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-bold text-sm">AI Adaptation</h4>
-                            <p className="text-white/40 text-xs">Dynamic AI-guided path</p>
-                          </div>
-                        </div>
-                        <p className="text-white/60 text-xs leading-relaxed">
-                          Let AI guide your progression based on your playstyle. 
-                          Adaptive challenges that evolve with your skills and preferences.
-                        </p>
-                      </div>
-
-                      {/* AI Stats */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Adaptability</p>
-                          <p className="text-xl font-bold text-purple-400">87%</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">AI Sync</p>
-                          <p className="text-xl font-bold text-pink-400">92%</p>
-                        </div>
-                      </div>
-
-                      {/* AI Recommendations */}
-                      <div>
-                        <h5 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-2">AI Suggestions</h5>
-                        <div className="space-y-2">
-                          {[
-                            { icon: Target, text: 'Try stealth approach next', color: 'purple' },
-                            { icon: Star, text: 'Explore side quests', color: 'pink' },
-                            { icon: TrendingUp, text: 'Increase difficulty', color: 'purple' },
-                          ].map((suggestion, i) => (
-                            <div 
-                              key={i} 
-                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all cursor-pointer"
-                            >
-                              <suggestion.icon className={`w-4 h-4 text-${suggestion.color}-400`} />
-                              <span className="text-xs text-white/70">{suggestion.text}</span>
-                              <ChevronRight className="w-3 h-3 text-white/30 ml-auto" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Peer Reviews Link */}
-                      <div className="mt-4 pt-4 border-t border-white/10">
-                        <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all">
-                          <div className="flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4 text-purple-400" />
-                            <span className="text-xs text-white/70">View Peer Reviews</span>
-                          </div>
-                          {gameReviews.length > 0 && (
-                            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">
-                              {gameReviews.length}
-                            </Badge>
-                          )}
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </ShinySidebarBox>
           </div>
 
         </div>
