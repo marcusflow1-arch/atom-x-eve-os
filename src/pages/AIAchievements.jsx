@@ -432,41 +432,11 @@ function AIAchievementsView({ onClosePage }) {
           {/* LEFT COLUMN: Library + Game Banner below */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
             
-            {/* Header with mode toggles */}
+            {/* Header */}
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-black tracking-tighter text-white">
                 Library
               </h1>
-              
-              {/* Skill Tree Mode Toggle */}
-              <motion.button
-                onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`ml-auto w-8 h-8 rounded-lg flex items-center justify-center border ${
-                  skillTreeMode 
-                    ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
-                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                }`}
-                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
-              >
-                <Layers className="w-4 h-4" />
-              </motion.button>
-
-              {/* Blacksmith Mode Toggle */}
-              <motion.button
-                onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                  blacksmithMode 
-                    ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
-                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                }`}
-                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
-              >
-                <Hammer className="w-4 h-4" />
-              </motion.button>
             </div>
 
             {/* Library Section - Now at top, takes most space */}
