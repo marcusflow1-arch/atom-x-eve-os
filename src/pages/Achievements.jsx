@@ -690,7 +690,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             <div className="relative z-10 w-full h-full">
               
               {/* Header with Game Name and Controls */}
-              <div className="my-5 absolute top-8 left-12 flex items-center gap-4 z-30">
+              <div className="my-8 absolute top-8 left-12 flex items-center gap-4 z-30">
                 <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
