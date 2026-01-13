@@ -1325,7 +1325,7 @@ function GameBanner({ game, onChangeBanner }) {
 function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate, games, onBackgroundChange }) {
   return (
     <div className="h-full flex gap-6">
-      {/* Left Column: Game Banner Section - pass onBackgroundChange for memories */}
+      {/* Left Column: Game Banner Section */}
       <div className="flex-1 min-w-0">
         <LibraryBannerSection games={games} onBackgroundChange={onBackgroundChange} navigate={navigate} />
       </div>
@@ -1448,16 +1448,15 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
 
   const handleReferenceClick = (reference) => {
     setActiveReference(reference);
-    // Pass background info including isVideo flag for video backgrounds
     if (onBackgroundChange) {
-      onBackgroundChange(reference.background, reference.isVideo);
+      onBackgroundChange(reference.background);
     }
   };
 
   const handleHomeClick = () => {
     setActiveReference(null);
     if (onBackgroundChange) {
-      onBackgroundChange(null, false);
+      onBackgroundChange(null);
     }
   };
 
@@ -1499,21 +1498,17 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
         })}
       </div>
 
-      {/* Spacer between icons and game banner */}
-      <div className="h-6" />
+      {/* Horizontal Line */}
+      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
-      {/* Game Banner + Memories */}
+      {/* Game Banner + Memories - Below the line */}
       <div className="flex items-stretch gap-4 w-full">
-        {/* Game Banner with line underneath */}
-        <div className="w-[368px] flex-shrink-0 flex flex-col">
-          <div className="h-[60px]">
-            <GameBanner 
-              game={selectedBannerGame} 
-              onChangeBanner={() => setShowBannerPicker(true)} 
-            />
-          </div>
-          {/* Horizontal Line only under Game Banner */}
-          <div className="w-full h-px bg-white/20 mt-4" />
+        {/* Game Banner */}
+        <div className="w-[368px] h-[60px] flex-shrink-0">
+          <GameBanner 
+            game={selectedBannerGame} 
+            onChangeBanner={() => setShowBannerPicker(true)} 
+          />
         </div>
 
         {/* References Section (Memories) */}
@@ -1797,8 +1792,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom Section - Grid layout - Pushed down for more space */}
-      <div className="mt-auto pt-16 w-full flex gap-6 items-start justify-between min-w-0">
+      {/* Bottom Section - Grid layout */}
+      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <LibraryGamesSection 
