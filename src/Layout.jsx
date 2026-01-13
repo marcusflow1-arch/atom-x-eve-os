@@ -571,6 +571,7 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = false;
         } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = false;
+          headerConfig.showMenu = true;
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
