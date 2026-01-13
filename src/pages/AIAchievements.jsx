@@ -100,6 +100,9 @@ function AIAchievementsView({ onClosePage }) {
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
 
+  // Path subpage state
+  const [activePathTab, setActivePathTab] = useState('power'); // 'power' or 'ai'
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [activeGenre, setActiveGenre] = useState('All');
