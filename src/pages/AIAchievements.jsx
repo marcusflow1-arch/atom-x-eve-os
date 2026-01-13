@@ -100,9 +100,6 @@ function AIAchievementsView({ onClosePage }) {
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
 
-  // Path subpage state
-  const [activePathTab, setActivePathTab] = useState('power'); // 'power' or 'ai'
-
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [activeGenre, setActiveGenre] = useState('All');
@@ -601,11 +598,11 @@ function AIAchievementsView({ onClosePage }) {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Achievements Grid (Cards) */}
+          {/* MIDDLE COLUMN: Card Display */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {selectedGame ? (
               <>
-                {/* Game Title + Mode Toggles - Positioned between header and cards */}
+                {/* Game Title + Mode Toggles */}
                 <div className="flex items-center gap-3 mb-4">
                   <h2 className="text-xl font-black tracking-tight text-white uppercase">
                     {selectedGame.title}
@@ -652,194 +649,64 @@ function AIAchievementsView({ onClosePage }) {
                   </motion.button>
                 </div>
 
-                {/* Tab Toggle: Cards / Peer Reviews */}
-                <div className="flex items-center gap-2 mb-4">
-                  <button
-                    onClick={() => setShowReviewPanel(false)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      !showReviewPanel
-                        ? 'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300'
-                        : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                    }`}
-                  >
-                    <Layers className="w-4 h-4" />
-                    Card Collection
-                  </button>
-                  <button
-                    onClick={() => setShowReviewPanel(true)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      showReviewPanel
-                        ? 'bg-purple-500/20 border border-purple-400/30 text-purple-300'
-                        : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                    }`}
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Peer Reviews
-                    {gameReviews.length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
-                        {gameReviews.length}
-                      </span>
-                    )}
-                  </button>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {!showReviewPanel ? (
-                    <motion.div
-                      key="cards"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20"
-                    >
-                      {tradingCards.length > 0 ? (
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                              {tradingCards.map((card, i) => (
-                                  <div key={card.id} className="aspect-[2.5/3.5]">
-                                      <ShinyCard index={i} onClick={() => {
-                                        if (skillTreeMode) {
-                                          setSkillTreeCard(card);
-                                        } else if (blacksmithMode) {
-                                          setBlacksmithCard(card);
-                                        } else {
-                                          setSelectedCard(card);
-                                        }
-                                      }}>
-                                         <div className="absolute inset-0 flex flex-col p-3">
-                                             <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                                 <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                 {card.isPurchased && !card.isUnlocked && (
-                                                   <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
-                                                     <DollarSign className="w-4 h-4 text-white" />
-                                                   </div>
-                                                 )}
-                                             </div>
-                                             <div className="flex-1 flex flex-col justify-between">
-                                                 <div>
-                                                     <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                     <div className="flex gap-1 flex-wrap">
-                                                         <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                             card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                             card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                             card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                             card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                                             'border-slate-500/50 text-slate-400'
-                                                         }`}>
-                                                             {card.rarity}
-                                                         </Badge>
-                                                         {card.isPurchased && (
-                                                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
-                                                             BOUGHT
-                                                           </Badge>
-                                                         )}
-                                                     </div>
+                {/* Card Grid */}
+                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
+                  {tradingCards.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                          {tradingCards.map((card, i) => (
+                              <div key={card.id} className="aspect-[2.5/3.5]">
+                                  <ShinyCard index={i} onClick={() => {
+                                    if (skillTreeMode) {
+                                      setSkillTreeCard(card);
+                                    } else if (blacksmithMode) {
+                                      setBlacksmithCard(card);
+                                    } else {
+                                      setSelectedCard(card);
+                                    }
+                                  }}>
+                                     <div className="absolute inset-0 flex flex-col p-3">
+                                         <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                             <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                             {card.isPurchased && !card.isUnlocked && (
+                                               <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                                 <DollarSign className="w-4 h-4 text-white" />
+                                               </div>
+                                             )}
+                                         </div>
+                                         <div className="flex-1 flex flex-col justify-between">
+                                             <div>
+                                                 <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                                 <div className="flex gap-1 flex-wrap">
+                                                     <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                                         card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                                         card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                                         card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                                         card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                                         'border-slate-500/50 text-slate-400'
+                                                     }`}>
+                                                         {card.rarity}
+                                                     </Badge>
+                                                     {card.isPurchased && (
+                                                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
+                                                         BOUGHT
+                                                       </Badge>
+                                                     )}
                                                  </div>
                                              </div>
                                          </div>
-                                      </ShinyCard>
-                                  </div>
-                              ))}
-                          </div>
-                      ) : (
-                          <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                              <Layers className="w-16 h-16 mb-4 opacity-20" />
-                              <p className="text-lg font-medium">No trading cards found</p>
-                          </div>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="reviews"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="flex-1 overflow-hidden flex gap-6"
-                    >
-                      {/* Left: Review Composer + Insights */}
-                      <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar pb-20">
-                        {/* Game Review Header */}
-                        <div className="flex items-center gap-4 mb-2">
-                          <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
-                            <img 
-                              src={selectedGame.cover_image || selectedGame.cover} 
-                              alt={selectedGame.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h2 className="text-xl font-bold text-white">{selectedGame.title}</h2>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge className="bg-white/10 text-white/70 border-white/20">
-                                {selectedGame.genre}
-                              </Badge>
-                              <div className="flex items-center gap-1 text-white/50 text-sm">
-                                <Users className="w-3.5 h-3.5" />
-                                <span>{gameReviews.length} reviews</span>
+                                     </div>
+                                  </ShinyCard>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Review Composer */}
-                        <ReviewComposer
-                          onSubmit={handleSubmitReview}
-                          isAuthenticated={isAuthenticated}
-                          user={user}
-                          userStats={{
-                            achievements: user?.unlocked_achievements?.length || 0,
-                            playTime: '24h'
-                          }}
-                        />
-
-                        {/* Review Insights */}
-                        <ReviewInsights reviews={gameReviews} />
-
-                        {/* Full Reviews List */}
-                        <div className="space-y-3">
-                          <h3 className="text-white font-medium text-sm flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-cyan-400" />
-                            All Reviews
-                          </h3>
-                          {gameReviews.length === 0 ? (
-                            <div 
-                              className="rounded-2xl p-8 text-center"
-                              style={{
-                                background: 'rgba(255, 255, 255, 0.02)',
-                                border: '1px solid rgba(255, 255, 255, 0.06)'
-                              }}
-                            >
-                              <MessageSquare className="w-12 h-12 text-white/10 mx-auto mb-3" />
-                              <p className="text-white/40 text-sm">No reviews yet for this game</p>
-                              <p className="text-white/20 text-xs mt-1">Be the first to share your experience!</p>
-                            </div>
-                          ) : (
-                            gameReviews.map((review) => (
-                              <ReviewCard
-                                key={review.id}
-                                review={review}
-                                variant="default"
-                                onReact={handleReaction}
-                                userReaction={userReactions[review.id]}
-                                isAuthenticated={isAuthenticated}
-                              />
-                            ))
-                          )}
-                        </div>
+                          ))}
                       </div>
-
-                      {/* Right: Live Review Feed */}
-                      <div className="w-80 flex-shrink-0 h-full">
-                        <LiveReviewFeed
-                          reviews={gameReviews}
-                          onReact={handleReaction}
-                          userReactions={userReactions}
-                          isAuthenticated={isAuthenticated}
-                        />
+                  ) : (
+                      <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                          <Layers className="w-16 h-16 mb-4 opacity-20" />
+                          <p className="text-lg font-medium">No trading cards found</p>
                       </div>
-                    </motion.div>
                   )}
-                </AnimatePresence>
+                </div>
               </>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
@@ -848,6 +715,183 @@ function AIAchievementsView({ onClosePage }) {
                 <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
               </div>
             )}
+          </div>
+
+          {/* RIGHT COLUMN: Path Selection Box */}
+          <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-white">Progression Paths</h3>
+            
+            <ShinySidebarBox className="flex-1 flex flex-col p-5 overflow-hidden">
+              {/* Path Tabs */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setShowReviewPanel(false)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                    !showReviewPanel
+                      ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                      : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  <Zap className="w-4 h-4" />
+                  PowerPath
+                </button>
+                <button
+                  onClick={() => setShowReviewPanel(true)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                    showReviewPanel
+                      ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/20 border border-purple-400/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                      : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AIAdaptPath
+                </button>
+              </div>
+
+              {/* Path Content */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <AnimatePresence mode="wait">
+                  {!showReviewPanel ? (
+                    <motion.div
+                      key="powerpath"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-4"
+                    >
+                      {/* PowerPath Content */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                            <Zap className="w-5 h-5 text-cyan-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-bold text-sm">Power Progression</h4>
+                            <p className="text-white/40 text-xs">Strength-based achievements</p>
+                          </div>
+                        </div>
+                        <p className="text-white/60 text-xs leading-relaxed">
+                          Focus on raw power, combat mastery, and completing challenging feats. 
+                          Unlock powerful abilities and equipment through direct accomplishment.
+                        </p>
+                      </div>
+
+                      {/* Power Stats */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Attack Power</p>
+                          <p className="text-xl font-bold text-cyan-400">+245</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Defense</p>
+                          <p className="text-xl font-bold text-blue-400">+180</p>
+                        </div>
+                      </div>
+
+                      {/* Milestones */}
+                      <div>
+                        <h5 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-2">Milestones</h5>
+                        <div className="space-y-2">
+                          {[
+                            { name: 'First Blood', progress: 100, color: 'green' },
+                            { name: 'Champion', progress: 65, color: 'cyan' },
+                            { name: 'Legendary', progress: 30, color: 'orange' },
+                          ].map((milestone) => (
+                            <div key={milestone.name} className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-xs text-white/70">{milestone.name}</span>
+                                  <span className="text-[10px] text-white/40">{milestone.progress}%</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                  <div 
+                                    className={`h-full rounded-full bg-${milestone.color}-500`}
+                                    style={{ width: `${milestone.progress}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="aiadaptpath"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-4"
+                    >
+                      {/* AIAdaptPath Content */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                            <Sparkles className="w-5 h-5 text-purple-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-bold text-sm">AI Adaptation</h4>
+                            <p className="text-white/40 text-xs">Dynamic AI-guided path</p>
+                          </div>
+                        </div>
+                        <p className="text-white/60 text-xs leading-relaxed">
+                          Let AI guide your progression based on your playstyle. 
+                          Adaptive challenges that evolve with your skills and preferences.
+                        </p>
+                      </div>
+
+                      {/* AI Stats */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Adaptability</p>
+                          <p className="text-xl font-bold text-purple-400">87%</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">AI Sync</p>
+                          <p className="text-xl font-bold text-pink-400">92%</p>
+                        </div>
+                      </div>
+
+                      {/* AI Recommendations */}
+                      <div>
+                        <h5 className="text-xs font-bold text-white/60 uppercase tracking-wider mb-2">AI Suggestions</h5>
+                        <div className="space-y-2">
+                          {[
+                            { icon: Target, text: 'Try stealth approach next', color: 'purple' },
+                            { icon: Star, text: 'Explore side quests', color: 'pink' },
+                            { icon: TrendingUp, text: 'Increase difficulty', color: 'purple' },
+                          ].map((suggestion, i) => (
+                            <div 
+                              key={i} 
+                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all cursor-pointer"
+                            >
+                              <suggestion.icon className={`w-4 h-4 text-${suggestion.color}-400`} />
+                              <span className="text-xs text-white/70">{suggestion.text}</span>
+                              <ChevronRight className="w-3 h-3 text-white/30 ml-auto" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Peer Reviews Link */}
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all">
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-purple-400" />
+                            <span className="text-xs text-white/70">View Peer Reviews</span>
+                          </div>
+                          {gameReviews.length > 0 && (
+                            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">
+                              {gameReviews.length}
+                            </Badge>
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ShinySidebarBox>
           </div>
 
         </div>
