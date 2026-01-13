@@ -5,8 +5,8 @@ import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
-  MessageSquare, Users, Star, TrendingUp
-} from 'lucide-react';
+  MessageSquare, Users, Star, TrendingUp } from
+'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
@@ -36,11 +36,11 @@ const ShinySidebarBox = ({ children, className = "" }) => {
         WebkitBackdropFilter: 'blur(20px) saturate(130%)',
         borderColor: 'rgba(255, 255, 255, 0.10)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-      }}
-    >
+      }}>
+
         {children}
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 // --- Achievement Card (Trading Card Style) ---
@@ -84,14 +84,14 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
       onClick={() => onClick(achievement)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ 
-        rotateX, 
-        rotateY, 
-        transformStyle: "preserve-3d" 
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d"
       }}
       whileHover={{ scale: 1.05 }}
-      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
-    >
+      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}>
+
       {/* Card Content */}
       <div className="absolute inset-0 flex flex-col items-center p-4 transform-style-3d">
         {/* Header */}
@@ -125,50 +125,50 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
       </div>
 
       {/* Shine Effect */}
-      <motion.div 
+      <motion.div
         style={{
           opacity: useTransform(rotateX, (val) => Math.abs(val) / 30 + 0.1),
           background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%)",
-          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"]),
+          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"])
         }}
-        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
-      />
+        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay" />
+
 
       {/* Animated Blue Light Corners */}
       <motion.div
         className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none"
         animate={{
           boxShadow: [
-            "0 0 0px rgba(59, 130, 246, 0)",
-            "0 0 20px rgba(59, 130, 246, 0.8)",
-            "0 0 0px rgba(59, 130, 246, 0)"
-          ]
+          "0 0 0px rgba(59, 130, 246, 0)",
+          "0 0 20px rgba(59, 130, 246, 0.8)",
+          "0 0 0px rgba(59, 130, 246, 0)"]
+
         }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         style={{
           borderLeft: "3px solid rgba(59, 130, 246, 0.6)",
           borderBottom: "3px solid rgba(59, 130, 246, 0.6)",
           borderBottomLeftRadius: "0.75rem"
-        }}
-      />
+        }} />
+
       <motion.div
         className="absolute top-0 right-0 w-16 h-16 pointer-events-none"
         animate={{
           boxShadow: [
-            "0 0 0px rgba(59, 130, 246, 0)",
-            "0 0 20px rgba(59, 130, 246, 0.8)",
-            "0 0 0px rgba(59, 130, 246, 0)"
-          ]
+          "0 0 0px rgba(59, 130, 246, 0)",
+          "0 0 20px rgba(59, 130, 246, 0.8)",
+          "0 0 0px rgba(59, 130, 246, 0)"]
+
         }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         style={{
           borderRight: "3px solid rgba(59, 130, 246, 0.6)",
           borderTop: "3px solid rgba(59, 130, 246, 0.6)",
           borderTopRightRadius: "0.75rem"
-        }}
-      />
-    </motion.div>
-  );
+        }} />
+
+    </motion.div>);
+
 };
 
 function AchievementsView({ onExitToLibrary, onClosePage }) {
@@ -185,18 +185,18 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
   const [showGridMenu, setShowGridMenu] = useState(false);
-  
+
   // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
   const [viewMode, setViewMode] = useState('cross');
-  
+
   // Skill Tree Mode toggle
   const [skillTreeMode, setSkillTreeMode] = useState(false);
   const [skillTreeCard, setSkillTreeCard] = useState(null);
-  
+
   // Blacksmith Mode toggle
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
-  
+
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -210,9 +210,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const totalScore = useMemo(() => {
     if (!user?.unlocked_achievements || !localAchievements) return 0;
     let score = 0;
-    Object.values(localAchievements).flat().forEach(ach => {
+    Object.values(localAchievements).flat().forEach((ach) => {
       if (user.unlocked_achievements.includes(ach.id)) {
-        score += (ach.points || 0);
+        score += ach.points || 0;
       }
     });
     // Add base score if new user or for demo
@@ -353,11 +353,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   useEffect(() => {
     const fetchUserCards = async () => {
       if (!user || !selectedGame) return;
-      
+
       try {
-        const cards = await base44.entities.UserCard.filter({ 
+        const cards = await base44.entities.UserCard.filter({
           user_id: user.id,
-          game_name: selectedGame.title 
+          game_name: selectedGame.title
         });
         setUserCards(cards);
       } catch (error) {
@@ -372,11 +372,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   useEffect(() => {
     const fetchReviews = async () => {
       if (!selectedGame) return;
-      
+
       try {
-        const reviews = await base44.entities.Post.filter({ 
+        const reviews = await base44.entities.Post.filter({
           type: 'game_review',
-          game_title: selectedGame.title 
+          game_title: selectedGame.title
         }, '-created_date');
         setGameReviews(reviews);
       } catch (error) {
@@ -396,7 +396,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
           created_by: user.email
         });
         const reactionsMap = {};
-        allUserReactions.forEach(r => {
+        allUserReactions.forEach((r) => {
           reactionsMap[r.target_id] = r.type;
         });
         setUserReactions(reactionsMap);
@@ -409,13 +409,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
   const handleReaction = async (reviewId, reactionType) => {
     if (!isAuthenticated) return;
-    
+
     try {
       const existingReactions = await base44.entities.Reaction.filter({
         target_id: reviewId,
         created_by: user.email
       });
-      
+
       if (existingReactions.length > 0) {
         const existingReaction = existingReactions[0];
         if (existingReaction.type === reactionType) {
@@ -430,12 +430,12 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
           type: reactionType
         });
       }
-      
+
       const allUserReactions = await base44.entities.Reaction.filter({
         created_by: user.email
       });
       const reactionsMap = {};
-      allUserReactions.forEach(r => {
+      allUserReactions.forEach((r) => {
         reactionsMap[r.target_id] = r.type;
       });
       setUserReactions(reactionsMap);
@@ -446,7 +446,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
   const handleSubmitReview = async (reviewData) => {
     if (!isAuthenticated || !selectedGame) return;
-    
+
     try {
       await base44.entities.Post.create({
         title: `Review: ${selectedGame.title}`,
@@ -457,11 +457,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         rating: reviewData.rating,
         community: 'reviews'
       });
-      
+
       // Refresh reviews
-      const reviews = await base44.entities.Post.filter({ 
+      const reviews = await base44.entities.Post.filter({
         type: 'game_review',
-        game_title: selectedGame.title 
+        game_title: selectedGame.title
       }, '-created_date');
       setGameReviews(reviews);
     } catch (err) {
@@ -471,15 +471,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
   const tradingCards = useMemo(() => {
     if (!selectedGame) return [];
-    
+
     const gameAchievements = localAchievements[selectedGame.title] || [];
     const cards = [];
 
-    gameAchievements.forEach(achievement => {
+    gameAchievements.forEach((achievement) => {
       if (achievement.reward) {
-        const userCard = userCards.find(c => c.card_name === achievement.reward.name);
+        const userCard = userCards.find((c) => c.card_name === achievement.reward.name);
         const isUnlocked = user?.unlocked_achievements?.includes(achievement.id);
-        
+
         cards.push({
           id: achievement.id,
           title: achievement.reward.name || achievement.title,
@@ -499,7 +499,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   }, [selectedGame, localAchievements, userCards, user]);
 
   const genres = useMemo(() => {
-    const g = new Set(allGames.map(game => game.genre).filter(Boolean));
+    const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
     return ['All', ...Array.from(g)];
   }, [allGames]);
 
@@ -509,18 +509,18 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
-      
+
       // Up/Down: Change game
       if (key === 'arrowup' || key === 'w') {
         e.preventDefault();
         if (activeGameIndex > 0) {
-          setActiveGameIndex(prev => prev - 1);
+          setActiveGameIndex((prev) => prev - 1);
           setActiveCardIndex(0);
         }
       } else if (key === 'arrowdown' || key === 's') {
         e.preventDefault();
         if (activeGameIndex < filteredGames.length - 1) {
-          setActiveGameIndex(prev => prev + 1);
+          setActiveGameIndex((prev) => prev + 1);
           setActiveCardIndex(0);
         }
       }
@@ -528,14 +528,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       else if (key === 'arrowleft' || key === 'a') {
         e.preventDefault();
         if (activeCardIndex > 0) {
-          setActiveCardIndex(prev => prev - 1);
+          setActiveCardIndex((prev) => prev - 1);
         }
       } else if (key === 'arrowright' || key === 'd') {
         e.preventDefault();
         const currentGame = filteredGames[activeGameIndex];
         const cards = generateCardsForGame(currentGame);
         if (activeCardIndex < cards.length - 1) {
-          setActiveCardIndex(prev => prev + 1);
+          setActiveCardIndex((prev) => prev + 1);
         }
       }
       // Enter: Select card
@@ -558,16 +558,16 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
         // Horizontal (Cards)
-        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+        if (e.deltaX > 0 || e.shiftKey && e.deltaY > 0) {
           const currentGame = filteredGames[activeGameIndex];
           const cards = generateCardsForGame(currentGame);
           if (activeCardIndex < cards.length - 1) {
-            setActiveCardIndex(prev => prev + 1);
+            setActiveCardIndex((prev) => prev + 1);
             lastWheelTime = now;
           }
-        } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
+        } else if (e.deltaX < 0 || e.shiftKey && e.deltaY < 0) {
           if (activeCardIndex > 0) {
-            setActiveCardIndex(prev => prev - 1);
+            setActiveCardIndex((prev) => prev - 1);
             lastWheelTime = now;
           }
         }
@@ -575,13 +575,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         // Vertical (Games)
         if (e.deltaY > 0) {
           if (activeGameIndex < filteredGames.length - 1) {
-            setActiveGameIndex(prev => prev + 1);
+            setActiveGameIndex((prev) => prev + 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
           }
         } else if (e.deltaY < 0) {
           if (activeGameIndex > 0) {
-            setActiveGameIndex(prev => prev - 1);
+            setActiveGameIndex((prev) => prev - 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
           }
@@ -641,7 +641,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [blacksmithCard, skillTreeCard, selectedCard, selectedAchievement, onClosePage, navigate]);
@@ -651,36 +651,36 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       
       <AnimatePresence mode="wait">
         {viewMode === 'cross' ? (
-          /* CROSS INTERFACE VIEW */
-          <motion.div
-            key="cross-interface"
-            className="w-full h-full relative"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+        /* CROSS INTERFACE VIEW */
+        <motion.div
+          key="cross-interface"
+          className="w-full h-full relative"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}>
+
             {/* Dynamic Background */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentCrossGame?.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6 }}
-                className="absolute inset-0 z-0"
-              >
+              key={currentCrossGame?.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0 z-0">
+
                 <div className="absolute inset-0 bg-transparent" />
-                {currentCrossGame?.cover_image && (
-                  <>
+                {currentCrossGame?.cover_image &&
+              <>
                     <img
-                      src={currentCrossGame.cover_image || currentCrossGame.cover}
-                      alt="bg"
-                      className="w-full h-full object-cover opacity-40 blur-sm scale-105"
-                    />
+                  src={currentCrossGame.cover_image || currentCrossGame.cover}
+                  alt="bg"
+                  className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
+
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
                   </>
-                )}
+              }
                 <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
                 <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
               </motion.div>
@@ -690,17 +690,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             <div className="relative z-10 w-full h-full">
               
               {/* Header with Game Name and Controls */}
-              <div className="absolute top-8 left-12 flex items-center gap-4 z-30">
+              <div className="my-5 absolute top-8 left-12 flex items-center gap-4 z-30">
                 <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
                 {/* Grid View Toggle - 4 small squares */}
                 <button
-                  onClick={() => setViewMode('classic')}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                  title="Switch to Grid View"
-                >
+                onClick={() => setViewMode('classic')}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                title="Switch to Grid View">
+
                   <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                     <div className="bg-white/60 hover:bg-white rounded-[2px]" />
                     <div className="bg-white/60 hover:bg-white rounded-[2px]" />
@@ -711,27 +711,27 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Skill Tree Mode Toggle */}
                 <button
-                  onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
-                  className={`p-2 rounded-lg border transition-all ${
-                    skillTreeMode 
-                      ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
-                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
-                  }`}
-                  title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
-                >
+                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
+                className={`p-2 rounded-lg border transition-all ${
+                skillTreeMode ?
+                'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                }
+                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
+
                   <Layers className="w-5 h-5" />
                 </button>
 
                 {/* Blacksmith Mode Toggle */}
                 <button
-                  onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
-                  className={`p-2 rounded-lg border transition-all ${
-                    blacksmithMode 
-                      ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
-                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
-                  }`}
-                  title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
-                >
+                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                className={`p-2 rounded-lg border transition-all ${
+                blacksmithMode ?
+                'bg-orange-500/30 border-orange-400/50 text-orange-300' :
+                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                }
+                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
+
                   <Hammer className="w-5 h-5" />
                 </button>
               </div>
@@ -739,90 +739,90 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               {/* VERTICAL AXIS (Games) */}
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
                 <motion.div
-                  className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
-                  animate={{
-                    y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + 24)}px - ${ITEM_HEIGHT / 2}px)`
-                  }}
-                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
-                >
+                className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+                animate={{
+                  y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + 24)}px - ${ITEM_HEIGHT / 2}px)`
+                }}
+                transition={{ type: "spring", stiffness: 250, damping: 25 }}>
+
                   {filteredGames.map((game, idx) => {
-                    const isActive = idx === activeGameIndex;
-                    return (
-                      <motion.div
-                        key={game.id}
-                        onClick={() => {
-                          setActiveGameIndex(idx);
-                          setActiveCardIndex(0);
-                        }}
-                        animate={{
-                          scale: isActive ? 1.2 : 0.9,
-                          opacity: isActive ? 1 : 0.3,
-                          x: isActive ? 20 : 0
-                        }}
-                        className="flex flex-col items-center gap-2 cursor-pointer w-32"
-                      >
+                  const isActive = idx === activeGameIndex;
+                  return (
+                    <motion.div
+                      key={game.id}
+                      onClick={() => {
+                        setActiveGameIndex(idx);
+                        setActiveCardIndex(0);
+                      }}
+                      animate={{
+                        scale: isActive ? 1.2 : 0.9,
+                        opacity: isActive ? 1 : 0.3,
+                        x: isActive ? 20 : 0
+                      }}
+                      className="flex flex-col items-center gap-2 cursor-pointer w-32">
+
                         <div className={`
                           w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300
-                          ${isActive
-                            ? 'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40'
-                            : 'border border-white/10'
-                          }
-                        `}>
+                          ${isActive ?
+                      'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40' :
+                      'border border-white/10'}
+                        `
+                      }>
                           <img
-                            src={game.cover_image || game.cover}
-                            alt={game.title}
-                            className="w-full h-full object-cover"
-                          />
+                          src={game.cover_image || game.cover}
+                          alt={game.title}
+                          className="w-full h-full object-cover" />
+
                         </div>
                         <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
                           {game.title}
                         </span>
-                      </motion.div>
-                    );
-                  })}
+                      </motion.div>);
+
+                })}
                 </motion.div>
               </div>
 
               {/* HORIZONTAL AXIS (Cards) */}
               <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
                 <motion.div
-                  className="flex items-center gap-8 pl-64 pointer-events-auto"
-                  animate={{
-                    x: -activeCardIndex * (200 + 32)
-                  }}
-                  transition={{ type: "spring", stiffness: 250, damping: 25 }}
-                >
+                className="flex items-center gap-8 pl-64 pointer-events-auto"
+                animate={{
+                  x: -activeCardIndex * (200 + 32)
+                }}
+                transition={{ type: "spring", stiffness: 250, damping: 25 }}>
+
                   {currentCrossCards.map((card, idx) => {
-                    const isActive = idx === activeCardIndex;
-                    return (
-                      <motion.div
-                        key={card.id}
-                        onClick={() => {
-                          setActiveCardIndex(idx);
-                          if (isActive) {
-                            if (skillTreeMode) {
-                              setSkillTreeCard(card);
-                            } else if (blacksmithMode) {
-                              setBlacksmithCard(card);
-                            } else {
-                              setSelectedCard(card);
-                            }
+                  const isActive = idx === activeCardIndex;
+                  return (
+                    <motion.div
+                      key={card.id}
+                      onClick={() => {
+                        setActiveCardIndex(idx);
+                        if (isActive) {
+                          if (skillTreeMode) {
+                            setSkillTreeCard(card);
+                          } else if (blacksmithMode) {
+                            setBlacksmithCard(card);
+                          } else {
+                            setSelectedCard(card);
                           }
-                        }}
-                        animate={{
-                          scale: isActive ? 1.1 : 0.9,
-                          opacity: isActive ? 1 : 0.4,
-                          y: isActive ? 0 : 20
-                        }}
-                        className={`
+                        }
+                      }}
+                      animate={{
+                        scale: isActive ? 1.1 : 0.9,
+                        opacity: isActive ? 1 : 0.4,
+                        y: isActive ? 0 : 20
+                      }}
+                      className={`
                           w-[200px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                           border transition-all duration-300 shadow-2xl
-                          ${isActive
-                            ? 'border-white/40 shadow-blue-500/20'
-                            : 'border-white/5 bg-black/40'
-                          }
-                        `}
-                      >
+                          ${isActive ?
+                      'border-white/40 shadow-blue-500/20' :
+                      'border-white/5 bg-black/40'}
+                        `
+                      }>
+
                         <ShinyCard index={idx}>
                           <div className="absolute inset-0 flex flex-col p-3">
                             <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
@@ -833,54 +833,54 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                               <div>
                                 <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
                                 <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                  card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                  card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                  card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                  card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                  'border-slate-500/50 text-slate-400'
-                                }`}>
+                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                              'border-slate-500/50 text-slate-400'}`
+                              }>
                                   {card.rarity}
                                 </Badge>
                               </div>
                             </div>
                           </div>
                         </ShinyCard>
-                        {isActive && (
-                          <motion.div
-                            layoutId="card-active-border"
-                            className="absolute inset-0 border-4 border-white/60 rounded-xl z-20"
-                            transition={{ duration: 0.2 }}
-                          />
-                        )}
-                      </motion.div>
-                    );
-                  })}
+                        {isActive &&
+                      <motion.div
+                        layoutId="card-active-border"
+                        className="absolute inset-0 border-4 border-white/60 rounded-xl z-20"
+                        transition={{ duration: 0.2 }} />
+
+                      }
+                      </motion.div>);
+
+                })}
                 </motion.div>
               </div>
 
               {/* ACTIVE CARD DETAILS */}
               <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
                 <AnimatePresence mode="wait">
-                  {activeCard && (
-                    <motion.div
-                      key={activeCard.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="space-y-4"
-                    >
+                  {activeCard &&
+                <motion.div
+                  key={activeCard.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4">
+
                       <div className="flex items-center gap-3">
                         <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
                           {currentCrossGame?.genre || 'adventure'}
                         </Badge>
                         <Badge className={`backdrop-blur-md border ${
-                          activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
-                          activeCard.rarity === 'Epic' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
-                          activeCard.rarity === 'Rare' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
-                          activeCard.rarity === 'Mythic' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
-                          'bg-slate-500/20 border-slate-500/40 text-slate-300'
-                        }`}>
+                    activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
+                    activeCard.rarity === 'Epic' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
+                    activeCard.rarity === 'Rare' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
+                    activeCard.rarity === 'Mythic' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
+                    'bg-slate-500/20 border-slate-500/40 text-slate-300'}`
+                    }>
                           {activeCard.rarity}
                         </Badge>
                       </div>
@@ -891,20 +891,20 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                         {activeCard.description}
                       </p>
                     </motion.div>
-                  )}
+                }
                 </AnimatePresence>
               </div>
             </div>
-          </motion.div>
-        ) : (
-          /* CLASSIC SIDEBAR VIEW */
-          <motion.div
-            key="classic-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="h-full w-full"
-          >
+          </motion.div>) : (
+
+        /* CLASSIC SIDEBAR VIEW */
+        <motion.div
+          key="classic-view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="h-full w-full">
+
             {/* Ambient Glow */}
             <div className="absolute inset-0 z-0">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
@@ -928,12 +928,12 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     
                     {/* Cross View Toggle - 4 small squares grid icon */}
                     <motion.button
-                      onClick={() => setViewMode('cross')}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                      title="Switch to Cross View"
-                    >
+                    onClick={() => setViewMode('cross')}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                    title="Switch to Cross View">
+
                       <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                         <div className="bg-white/80 rounded-[2px]" />
                         <div className="bg-white/80 rounded-[2px]" />
@@ -944,31 +944,31 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                     {/* Skill Tree Mode Toggle */}
                     <motion.button
-                      onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                        skillTreeMode 
-                          ? 'bg-purple-500/30 border-purple-400/50 text-purple-300' 
-                          : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                      }`}
-                      title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}
-                    >
+                    onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                    skillTreeMode ?
+                    'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
+                    }
+                    title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
+
                       <Layers className="w-4 h-4" />
                     </motion.button>
 
                     {/* Blacksmith Mode Toggle */}
                     <motion.button
-                      onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                        blacksmithMode 
-                          ? 'bg-orange-500/30 border-orange-400/50 text-orange-300' 
-                          : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                      }`}
-                      title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}
-                    >
+                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                    blacksmithMode ?
+                    'bg-orange-500/30 border-orange-400/50 text-orange-300' :
+                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
+                    }
+                    title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
+
                       <Hammer className="w-4 h-4" />
                     </motion.button>
                   </div>
@@ -980,12 +980,12 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     <div className="relative group mb-6">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
                       <input
-                        type="text"
-                        placeholder="Search games..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
-                      />
+                      type="text"
+                      placeholder="Search games..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl" />
+
                       <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
                         <MicIcon className="w-4 h-4" />
                       </button>
@@ -1000,47 +1000,47 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                             <ChevronDown className="w-4 h-4 text-white/70" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent 
-                          className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
-                          style={{ background: 'rgba(30, 41, 59, 0.7)' }}
-                        >
-                          {genres.map((genre) => (
-                            <DropdownMenuItem
-                              key={genre}
-                              onClick={() => setActiveGenre(genre)}
-                              className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
-                                activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'
-                              }`}
-                            >
+                        <DropdownMenuContent
+                        className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
+                        style={{ background: 'rgba(30, 41, 59, 0.7)' }}>
+
+                          {genres.map((genre) =>
+                        <DropdownMenuItem
+                          key={genre}
+                          onClick={() => setActiveGenre(genre)}
+                          className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
+                          activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'}`
+                          }>
+
                               {genre}
                             </DropdownMenuItem>
-                          ))}
+                        )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
 
                     {/* Game List */}
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                      {filteredGames.map(game => (
-                        <motion.button
-                          key={game.id}
-                          onClick={() => {
-                              setSelectedGame(game);
-                              setSelectedAchievement(null);
-                          }}
-                          className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
-                              selectedGame?.id === game.id 
-                              ? 'shadow-lg border-cyan-400/30' 
-                              : 'hover:border-cyan-400/20 border-transparent'
-                          }`}
-                          style={selectedGame?.id === game.id ? {
-                            background: 'rgba(34, 211, 238, 0.12)',
-                            boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                          } : {
-                            background: 'transparent'
-                          }}
-                          whileHover={{ x: 4 }}
-                        >
+                      {filteredGames.map((game) =>
+                    <motion.button
+                      key={game.id}
+                      onClick={() => {
+                        setSelectedGame(game);
+                        setSelectedAchievement(null);
+                      }}
+                      className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
+                      selectedGame?.id === game.id ?
+                      'shadow-lg border-cyan-400/30' :
+                      'hover:border-cyan-400/20 border-transparent'}`
+                      }
+                      style={selectedGame?.id === game.id ? {
+                        background: 'rgba(34, 211, 238, 0.12)',
+                        boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
+                      } : {
+                        background: 'transparent'
+                      }}
+                      whileHover={{ x: 4 }}>
+
                           {/* Small Box (Image) */}
                           <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
                             <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
@@ -1054,11 +1054,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                             <p className="text-xs text-slate-500 truncate">{game.genre}</p>
                           </div>
 
-                          {selectedGame?.id === game.id && (
-                              <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                          )}
+                          {selectedGame?.id === game.id &&
+                      <div className="w-1 h-8 bg-blue-500 rounded-full" />
+                      }
                         </motion.button>
-                      ))}
+                    )}
                     </div>
 
                   </ShinySidebarBox>
@@ -1066,122 +1066,122 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Center Content: Achievements Grid (Cards) */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
-                  {selectedGame ? (
-                    <>
+                  {selectedGame ?
+                <>
                       {/* Tab Toggle: Cards / Peer Reviews */}
                       <div className="flex items-center gap-2 mb-4">
                         <button
-                          onClick={() => setShowReviewPanel(false)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                            !showReviewPanel
-                              ? 'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300'
-                              : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                          }`}
-                        >
+                      onClick={() => setShowReviewPanel(false)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      !showReviewPanel ?
+                      'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300' :
+                      'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'}`
+                      }>
+
                           <Layers className="w-4 h-4" />
                           Card Collection
                         </button>
                         <button
-                          onClick={() => setShowReviewPanel(true)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                            showReviewPanel
-                              ? 'bg-purple-500/20 border border-purple-400/30 text-purple-300'
-                              : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                          }`}
-                        >
+                      onClick={() => setShowReviewPanel(true)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      showReviewPanel ?
+                      'bg-purple-500/20 border border-purple-400/30 text-purple-300' :
+                      'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'}`
+                      }>
+
                           <MessageSquare className="w-4 h-4" />
                           Peer Reviews
-                          {gameReviews.length > 0 && (
-                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
+                          {gameReviews.length > 0 &&
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
                               {gameReviews.length}
                             </span>
-                          )}
+                      }
                         </button>
                       </div>
 
                       <AnimatePresence mode="wait">
-                        {!showReviewPanel ? (
-                          <motion.div
-                            key="cards"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20"
-                          >
-                            {tradingCards.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                    {tradingCards.map((card, i) => (
-                                        <div key={card.id} className="aspect-[2.5/3.5]">
+                        {!showReviewPanel ?
+                    <motion.div
+                      key="cards"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
+
+                            {tradingCards.length > 0 ?
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                    {tradingCards.map((card, i) =>
+                        <div key={card.id} className="aspect-[2.5/3.5]">
                                             <ShinyCard index={i} onClick={() => {
-                                              if (skillTreeMode) {
-                                                setSkillTreeCard(card);
-                                              } else if (blacksmithMode) {
-                                                setBlacksmithCard(card);
-                                              } else {
-                                                setSelectedCard(card);
-                                              }
-                                            }}>
+                            if (skillTreeMode) {
+                              setSkillTreeCard(card);
+                            } else if (blacksmithMode) {
+                              setBlacksmithCard(card);
+                            } else {
+                              setSelectedCard(card);
+                            }
+                          }}>
                                                <div className="absolute inset-0 flex flex-col p-3">
                                                    <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
                                                        <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                       {card.isPurchased && !card.isUnlocked && (
-                                                         <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
+                                                       {card.isPurchased && !card.isUnlocked &&
+                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
                                                            <DollarSign className="w-4 h-4 text-white" />
                                                          </div>
-                                                       )}
+                                }
                                                    </div>
                                                    <div className="flex-1 flex flex-col justify-between">
                                                        <div>
                                                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
                                                            <div className="flex gap-1 flex-wrap">
                                                                <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                                                   card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                                                   card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                                                   card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                                                   card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                                                   'border-slate-500/50 text-slate-400'
-                                                               }`}>
+                                    card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                    card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                    card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                    card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                    'border-slate-500/50 text-slate-400'}`
+                                    }>
                                                                    {card.rarity}
                                                                </Badge>
-                                                               {card.isPurchased && (
-                                                                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
+                                                               {card.isPurchased &&
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
                                                                    BOUGHT
                                                                  </Badge>
-                                                               )}
+                                    }
                                                            </div>
                                                        </div>
                                                    </div>
                                                </div>
                                             </ShinyCard>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                        )}
+                                </div> :
+
+                      <div className="h-64 flex flex-col items-center justify-center text-slate-500">
                                     <Layers className="w-16 h-16 mb-4 opacity-20" />
                                     <p className="text-lg font-medium">No trading cards found</p>
                                 </div>
-                            )}
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="reviews"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="flex-1 overflow-hidden flex gap-6"
-                          >
+                      }
+                          </motion.div> :
+
+                    <motion.div
+                      key="reviews"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="flex-1 overflow-hidden flex gap-6">
+
                             {/* Left: Review Composer + Insights */}
                             <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar pb-20">
                               {/* Game Review Header */}
                               <div className="flex items-center gap-4 mb-2">
                                 <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
-                                  <img 
-                                    src={selectedGame.cover_image || selectedGame.cover} 
-                                    alt={selectedGame.title}
-                                    className="w-full h-full object-cover"
-                                  />
+                                  <img
+                              src={selectedGame.cover_image || selectedGame.cover}
+                              alt={selectedGame.title}
+                              className="w-full h-full object-cover" />
+
                                 </div>
                                 <div>
                                   <h2 className="text-xl font-bold text-white">{selectedGame.title}</h2>
@@ -1199,14 +1199,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                               {/* Review Composer */}
                               <ReviewComposer
-                                onSubmit={handleSubmitReview}
-                                isAuthenticated={isAuthenticated}
-                                user={user}
-                                userStats={{
-                                  achievements: user?.unlocked_achievements?.length || 0,
-                                  playTime: '24h'
-                                }}
-                              />
+                          onSubmit={handleSubmitReview}
+                          isAuthenticated={isAuthenticated}
+                          user={user}
+                          userStats={{
+                            achievements: user?.unlocked_achievements?.length || 0,
+                            playTime: '24h'
+                          }} />
+
 
                               {/* Review Insights */}
                               <ReviewInsights reviews={gameReviews} />
@@ -1217,120 +1217,120 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                                   <TrendingUp className="w-4 h-4 text-cyan-400" />
                                   All Reviews
                                 </h3>
-                                {gameReviews.length === 0 ? (
-                                  <div 
-                                    className="rounded-2xl p-8 text-center"
-                                    style={{
-                                      background: 'rgba(255, 255, 255, 0.02)',
-                                      border: '1px solid rgba(255, 255, 255, 0.06)'
-                                    }}
-                                  >
+                                {gameReviews.length === 0 ?
+                          <div
+                            className="rounded-2xl p-8 text-center"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              border: '1px solid rgba(255, 255, 255, 0.06)'
+                            }}>
+
                                     <MessageSquare className="w-12 h-12 text-white/10 mx-auto mb-3" />
                                     <p className="text-white/40 text-sm">No reviews yet for this game</p>
                                     <p className="text-white/20 text-xs mt-1">Be the first to share your experience!</p>
-                                  </div>
-                                ) : (
-                                  gameReviews.map((review) => (
-                                    <ReviewCard
-                                      key={review.id}
-                                      review={review}
-                                      variant="default"
-                                      onReact={handleReaction}
-                                      userReaction={userReactions[review.id]}
-                                      isAuthenticated={isAuthenticated}
-                                    />
-                                  ))
-                                )}
+                                  </div> :
+
+                          gameReviews.map((review) =>
+                          <ReviewCard
+                            key={review.id}
+                            review={review}
+                            variant="default"
+                            onReact={handleReaction}
+                            userReaction={userReactions[review.id]}
+                            isAuthenticated={isAuthenticated} />
+
+                          )
+                          }
                               </div>
                             </div>
 
                             {/* Right: Live Review Feed */}
                             <div className="w-80 flex-shrink-0 h-full">
                               <LiveReviewFeed
-                                reviews={gameReviews}
-                                onReact={handleReaction}
-                                userReactions={userReactions}
-                                isAuthenticated={isAuthenticated}
-                              />
+                          reviews={gameReviews}
+                          onReact={handleReaction}
+                          userReactions={userReactions}
+                          isAuthenticated={isAuthenticated} />
+
                             </div>
                           </motion.div>
-                        )}
+                    }
                       </AnimatePresence>
-                    </>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                    </> :
+
+                <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
                       <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
                       <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
                     </div>
-                  )}
+                }
                 </div>
 
               </div>
             </div>
-          </motion.div>
-        )}
+          </motion.div>)
+        }
       </AnimatePresence>
 
       {/* Detail Overlay */}
       <AnimatePresence>
-        {selectedAchievement && (
-          <AchievementDetailOverlay
-            achievement={selectedAchievement}
-            onClose={() => setSelectedAchievement(null)}
-            onTrack={handleTrackAchievement}
-            isTracked={trackedAchievements.includes(selectedAchievement.id)}
-            onShare={handleShareAchievement}
-            onChallenge={handleChallenge} 
-          />
-        )}
+        {selectedAchievement &&
+        <AchievementDetailOverlay
+          achievement={selectedAchievement}
+          onClose={() => setSelectedAchievement(null)}
+          onTrack={handleTrackAchievement}
+          isTracked={trackedAchievements.includes(selectedAchievement.id)}
+          onShare={handleShareAchievement}
+          onChallenge={handleChallenge} />
+
+        }
       </AnimatePresence>
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
-        {selectedCard && !skillTreeMode && (
-          <CardEnhancementOverlay
-            card={selectedCard}
-            onClose={() => setSelectedCard(null)}
-          />
-        )}
+        {selectedCard && !skillTreeMode &&
+        <CardEnhancementOverlay
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)} />
+
+        }
       </AnimatePresence>
 
       {/* Skill Tree Overlay */}
       <AnimatePresence>
-        {skillTreeCard && skillTreeMode && (
-          <SkillTreeOverlay
-            card={skillTreeCard}
-            onClose={() => setSkillTreeCard(null)}
-          />
-        )}
+        {skillTreeCard && skillTreeMode &&
+        <SkillTreeOverlay
+          card={skillTreeCard}
+          onClose={() => setSkillTreeCard(null)} />
+
+        }
       </AnimatePresence>
 
       {/* Blacksmith Overlay */}
       <AnimatePresence>
-        {blacksmithCard && blacksmithMode && (
-          <BlacksmithOverlay
-            card={blacksmithCard}
-            onClose={() => setBlacksmithCard(null)}
-          />
-        )}
+        {blacksmithCard && blacksmithMode &&
+        <BlacksmithOverlay
+          card={blacksmithCard}
+          onClose={() => setBlacksmithCard(null)} />
+
+        }
       </AnimatePresence>
 
       {/* Challenge Modal */}
-      {achievementToChallenge && (
-        <ChallengeFriendModal
-          achievement={achievementToChallenge}
-          isOpen={challengeModalOpen}
-          onClose={() => setChallengeModalOpen(false)} 
-        />
-      )}
+      {achievementToChallenge &&
+      <ChallengeFriendModal
+        achievement={achievementToChallenge}
+        isOpen={challengeModalOpen}
+        onClose={() => setChallengeModalOpen(false)} />
+
+      }
 
       {/* Floating Score Display */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl"
-      >
+        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+
         <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
           <Trophy className="w-5 h-5 text-yellow-400" />
         </div>
@@ -1340,14 +1340,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         </div>
       </motion.div>
 
-    </div>
-  );
+    </div>);
+
 }
 
 export default function Achievements({ onExitToLibrary, onClose, showCloseButton }) {
   return (
     <div className="h-screen w-full overflow-hidden relative">
       <AchievementsView onExitToLibrary={onExitToLibrary} onClosePage={onClose} />
-    </div>
-  );
+    </div>);
+
 }
