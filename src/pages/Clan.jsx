@@ -4,53 +4,144 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { 
     Shield, Plus, Hash, Volume2, Settings, ChevronDown, ChevronRight,
-    Users, Calendar, Target, Vote, Crown, Megaphone, Gamepad2,
-    Send, Search, Bell, Pin, Mic, MicOff, Headphones, PhoneOff,
-    MoreVertical, UserPlus, LogOut, Trash2, Home, Archive, Star,
-    MessageSquare, Video, ScreenShare, Smile, Gift, Image, AtSign, X
+    Users, Calendar, Target, Crown, Megaphone, Gamepad2,
+    Send, Search, Bell, Mic, MicOff, Headphones, PhoneOff,
+    UserPlus, LogOut, Trash2, Sword, Scroll, Gem, Flag,
+    MessageSquare, Smile, Image, Star, Flame, Zap, Award,
+    Castle, Swords, BookOpen, Coins, Map, Sparkles, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Liquid Glass Card Component
-const GlassPanel = ({ children, className = "", intensity = "medium" }) => {
-    const intensityStyles = {
-        light: "bg-white/[0.03] border-white/[0.06]",
-        medium: "bg-white/[0.05] border-white/[0.08]",
-        strong: "bg-white/[0.08] border-white/[0.12]"
+// Guild Banner Component
+const GuildBanner = ({ clan, members }) => (
+    <div className="relative h-48 overflow-hidden rounded-t-2xl">
+        <img 
+            src={clan.banner || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200"} 
+            className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/30 to-purple-900/30 mix-blend-overlay" />
+        
+        {/* Guild Emblem */}
+        <div className="absolute bottom-4 left-6 flex items-end gap-4">
+            <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-amber-500/30 to-amber-700/30 border-2 border-amber-400/50 flex items-center justify-center backdrop-blur-sm shadow-2xl">
+                {clan.icon ? (
+                    <img src={clan.icon} className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                    <Shield className="w-10 h-10 text-amber-400" />
+                )}
+            </div>
+            <div className="pb-1">
+                <div className="flex items-center gap-2 mb-1">
+                    <h1 className="text-2xl font-bold text-white drop-shadow-lg">{clan.name}</h1>
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
+                        <Crown className="w-3 h-3 mr-1" /> Lvl {clan.level || 1}
+                    </Badge>
+                </div>
+                <p className="text-white/60 text-sm flex items-center gap-3">
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {members?.length || 0} Members</span>
+                    <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {clan.reputation || 0} Reputation</span>
+                </p>
+            </div>
+        </div>
+
+        {/* Guild Actions */}
+        <div className="absolute top-4 right-4 flex gap-2">
+            <button className="w-9 h-9 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/60 transition-all">
+                <Settings className="w-4 h-4" />
+            </button>
+        </div>
+    </div>
+);
+
+// Stat Card Component
+const StatCard = ({ icon: Icon, label, value, subtext, color = "amber" }) => {
+    const colors = {
+        amber: "from-amber-500/20 to-amber-600/10 border-amber-500/30 text-amber-400",
+        blue: "from-blue-500/20 to-blue-600/10 border-blue-500/30 text-blue-400",
+        purple: "from-purple-500/20 to-purple-600/10 border-purple-500/30 text-purple-400",
+        green: "from-green-500/20 to-green-600/10 border-green-500/30 text-green-400",
+        red: "from-red-500/20 to-red-600/10 border-red-500/30 text-red-400"
     };
     
     return (
-        <div 
-            className={`backdrop-blur-2xl border rounded-2xl ${intensityStyles[intensity]} ${className}`}
-            style={{ 
-                boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05), 0 4px 24px rgba(0,0,0,0.2)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)'
-            }}
-        >
-            {children}
+        <div className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${colors[color]} border p-4 backdrop-blur-sm`}>
+            <Icon className={`absolute -right-2 -bottom-2 w-16 h-16 opacity-10`} />
+            <div className="relative z-10">
+                <Icon className={`w-5 h-5 mb-2 ${colors[color].split(' ').pop()}`} />
+                <p className="text-2xl font-bold text-white">{value}</p>
+                <p className="text-white/50 text-xs">{label}</p>
+                {subtext && <p className="text-white/30 text-[10px] mt-1">{subtext}</p>}
+            </div>
         </div>
     );
 };
 
-// Voice Status Indicator
-const VoiceStatus = ({ isMuted, isDeafened, isSpeaking }) => (
-    <div className="flex items-center gap-1">
-        {isSpeaking && <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />}
-        {isMuted && <MicOff className="w-3 h-3 text-red-400" />}
-        {isDeafened && <Headphones className="w-3 h-3 text-red-400" />}
+// Channel Item Component
+const ChannelItem = ({ channel, isActive, onClick, type = "text" }) => {
+    const icons = {
+        text: Hash,
+        voice: Volume2,
+        game: Gamepad2,
+        announcement: Megaphone
+    };
+    const Icon = icons[type] || Hash;
+    const iconColors = {
+        text: "text-white/40",
+        voice: "text-green-400",
+        game: "text-purple-400",
+        announcement: "text-amber-400"
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all group ${
+                isActive 
+                    ? 'bg-amber-500/20 text-amber-200 border border-amber-500/30' 
+                    : 'text-white/50 hover:bg-white/5 hover:text-white border border-transparent'
+            }`}
+        >
+            <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : iconColors[type]}`} />
+            <span className="text-sm truncate flex-1 text-left">{channel.name}</span>
+            {type === 'voice' && (
+                <span className="text-[10px] text-white/30">0</span>
+            )}
+        </button>
+    );
+};
+
+// Member Card Component
+const MemberCard = ({ member, isLeader, isOfficer }) => (
+    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-all cursor-pointer group">
+        <div className="relative">
+            <div className={`w-10 h-10 rounded-lg overflow-hidden border-2 ${
+                isLeader ? 'border-amber-400' : isOfficer ? 'border-blue-400' : 'border-white/20'
+            }`}>
+                {member.user?.avatar_url ? (
+                    <img src={member.user.avatar_url} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-white text-sm font-bold">
+                        {member.user?.full_name?.charAt(0) || '?'}
+                    </div>
+                )}
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[#12141a]" />
+        </div>
+        <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-medium truncate flex items-center gap-1.5">
+                {member.user?.full_name || 'Unknown'}
+                {isLeader && <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />}
+                {isOfficer && <Shield className="w-3 h-3 text-blue-400 fill-blue-400" />}
+            </p>
+            <p className="text-white/40 text-[10px] capitalize">{member.role}</p>
+        </div>
     </div>
 );
 
@@ -58,21 +149,18 @@ export default function ClanPage() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [selectedClanId, setSelectedClanId] = useState(null);
-    const [activeView, setActiveView] = useState('home'); // home, chat, voice, events, quests, voting, members
+    const [activeTab, setActiveTab] = useState('hall'); // hall, comms, roster, quests, events, vault
     const [activeChannelId, setActiveChannelId] = useState(null);
     const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
-    const [newChannelData, setNewChannelData] = useState({ name: '', type: 'text', game: '' });
+    const [newChannelData, setNewChannelData] = useState({ name: '', type: 'text' });
     const [message, setMessage] = useState('');
     const [isMuted, setIsMuted] = useState(false);
-    const [isDeafened, setIsDeafened] = useState(false);
-    const [expandedSections, setExpandedSections] = useState({ announcements: true, text: true, voice: true, games: true });
     const scrollRef = useRef(null);
 
     // Fetch Memberships
-    const { data: memberships, isLoading: isMembershipsLoading } = useQuery({
+    const { data: memberships, isLoading } = useQuery({
         queryKey: ['myClanMemberships', user?.id],
         queryFn: async () => {
             if (!user) return [];
@@ -86,7 +174,6 @@ export default function ClanPage() {
         enabled: !!user
     });
 
-    // Initial Selection
     useEffect(() => {
         if (memberships?.length > 0 && !selectedClanId) {
             setSelectedClanId(memberships[0].divisionId);
@@ -102,7 +189,7 @@ export default function ClanPage() {
         enabled: !!activeClan
     });
 
-    // Fetch Messages for active channel
+    // Fetch Messages
     const { data: messages } = useQuery({
         queryKey: ['clanMessages', activeChannelId],
         queryFn: async () => {
@@ -158,7 +245,7 @@ export default function ClanPage() {
         onSuccess: () => {
             queryClient.invalidateQueries(['clanChannels']);
             setIsCreateChannelOpen(false);
-            setNewChannelData({ name: '', type: 'text', game: '' });
+            setNewChannelData({ name: '', type: 'text' });
         }
     });
 
@@ -190,22 +277,25 @@ export default function ClanPage() {
         }
     };
 
-    const toggleSection = (section) => {
-        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-    };
-
-    // Categorize channels
-    const announcementChannels = channels?.filter(c => c.name?.includes('announce') || c.type === 'announcement') || [];
-    const textChannels = channels?.filter(c => c.type === 'text' && !c.name?.includes('announce')) || [];
+    const textChannels = channels?.filter(c => c.type === 'text') || [];
     const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
     const gameChannels = channels?.filter(c => c.type === 'game') || [];
 
-    if (isMembershipsLoading) {
+    const TABS = [
+        { id: 'hall', label: 'Guild Hall', icon: Castle },
+        { id: 'comms', label: 'Comms', icon: MessageSquare },
+        { id: 'roster', label: 'Roster', icon: Users },
+        { id: 'quests', label: 'Quests', icon: Scroll },
+        { id: 'events', label: 'Events', icon: Calendar },
+        { id: 'vault', label: 'Vault', icon: Gem },
+    ];
+
+    if (isLoading) {
         return (
-            <div className="h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #080810 0%, #0d1020 50%, #080810 100%)' }}>
+            <div className="h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0a0c10 0%, #12141a 50%, #0a0c10 100%)' }}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-white/40 text-sm tracking-wider">Connecting to Division...</p>
+                    <Sword className="w-12 h-12 text-amber-400 mx-auto mb-4 animate-pulse" />
+                    <p className="text-white/40 text-sm tracking-wider">Entering Guild Hall...</p>
                 </div>
             </div>
         );
@@ -216,68 +306,73 @@ export default function ClanPage() {
         return (
             <div 
                 className="h-screen flex flex-col items-center justify-center text-white relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #080810 0%, #0d1020 50%, #080810 100%)' }}
+                style={{ background: 'linear-gradient(180deg, #0a0c10 0%, #12141a 50%, #0a0c10 100%)' }}
             >
-                {/* Ambient Glow */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 blur-[150px] rounded-full" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 blur-[150px] rounded-full" />
+                {/* Ambient Effects */}
+                <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-amber-500/5 blur-[150px] rounded-full" />
+                <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-500/5 blur-[150px] rounded-full" />
                 
-                <GlassPanel className="p-12 max-w-md text-center relative z-10" intensity="medium">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6 border border-white/10">
-                        <Shield className="w-10 h-10 text-blue-400" />
+                {/* Decorative Border */}
+                <div className="absolute inset-8 border border-amber-500/10 rounded-3xl pointer-events-none" />
+                <div className="absolute inset-10 border border-amber-500/5 rounded-3xl pointer-events-none" />
+
+                <div className="relative z-10 text-center max-w-lg px-8">
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-700/20 border border-amber-500/30 flex items-center justify-center mx-auto mb-8 shadow-[0_0_60px_rgba(245,158,11,0.2)]">
+                        <Shield className="w-12 h-12 text-amber-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-3">No Active Division</h1>
-                    <p className="text-white/50 mb-8 leading-relaxed">
-                        You're not part of any clan yet. Create your own division or search for one to join.
+                    <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">No Guild Affiliation</h1>
+                    <p className="text-white/50 mb-8 leading-relaxed text-lg">
+                        You have not pledged to any guild. Found your own order or seek out allies to join.
                     </p>
-                    <div className="flex gap-3 justify-center">
+                    <div className="flex gap-4 justify-center">
                         <Button 
                             onClick={() => setIsCreateClanOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-5 rounded-xl font-semibold"
+                            className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white px-8 py-6 rounded-xl font-semibold shadow-[0_0_30px_rgba(245,158,11,0.3)] border border-amber-500/50"
                         >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create Division
+                            <Flag className="w-5 h-5 mr-2" />
+                            Found a Guild
                         </Button>
                         <Button 
-                            onClick={() => setIsSearchOpen(true)}
                             variant="outline"
-                            className="bg-white/5 border-white/10 hover:bg-white/10 text-white px-6 py-5 rounded-xl font-semibold"
+                            className="bg-white/5 border-white/20 hover:bg-white/10 text-white px-8 py-6 rounded-xl font-semibold"
                         >
-                            <Search className="w-4 h-4 mr-2" />
-                            Find Division
+                            <Search className="w-5 h-5 mr-2" />
+                            Find Guild
                         </Button>
                     </div>
-                </GlassPanel>
+                </div>
 
                 {/* Create Clan Dialog */}
                 <Dialog open={isCreateClanOpen} onOpenChange={setIsCreateClanOpen}>
-                    <DialogContent className="bg-[#0d1020]/95 backdrop-blur-3xl border-white/10 text-white rounded-2xl">
+                    <DialogContent className="bg-[#12141a] border-amber-500/20 text-white rounded-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-bold">Create New Division</DialogTitle>
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                <Flag className="w-5 h-5 text-amber-400" /> Found New Guild
+                            </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div>
-                                <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Division Name</label>
+                                <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Guild Name</label>
                                 <Input 
                                     value={newClanData.name}
                                     onChange={e => setNewClanData({...newClanData, name: e.target.value})}
-                                    placeholder="Enter division name..."
-                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                                    placeholder="Enter guild name..."
+                                    className="bg-white/5 border-amber-500/20 text-white h-12 rounded-xl focus:border-amber-500/50"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Description</label>
+                                <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Guild Charter</label>
                                 <Input 
                                     value={newClanData.description}
                                     onChange={e => setNewClanData({...newClanData, description: e.target.value})}
-                                    placeholder="What's your division about?"
-                                    className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                                    placeholder="Describe your guild's purpose..."
+                                    className="bg-white/5 border-amber-500/20 text-white h-12 rounded-xl focus:border-amber-500/50"
                                 />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button variant="ghost" onClick={() => setIsCreateClanOpen(false)} className="text-white/60">Cancel</Button>
-                            <Button onClick={() => createClanMutation.mutate(newClanData)} className="bg-blue-600 hover:bg-blue-700">Create</Button>
+                            <Button onClick={() => createClanMutation.mutate(newClanData)} className="bg-amber-600 hover:bg-amber-700">Found Guild</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -288,623 +383,476 @@ export default function ClanPage() {
     return (
         <div 
             className="h-screen flex overflow-hidden pt-16"
-            style={{ background: 'linear-gradient(135deg, #080810 0%, #0d1020 50%, #080810 100%)' }}
+            style={{ background: 'linear-gradient(180deg, #0a0c10 0%, #12141a 50%, #0a0c10 100%)' }}
         >
-            {/* Ambient Background */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-500/5 blur-[200px] rounded-full" />
-                <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-500/5 blur-[200px] rounded-full" />
-            </div>
-
-            {/* Server List (Far Left) */}
-            <div className="w-[72px] flex-shrink-0 flex flex-col items-center py-4 gap-2 z-20 border-r border-white/[0.06] bg-black/20 backdrop-blur-xl">
-                {/* Clan Icons */}
+            {/* Guild Selector Sidebar */}
+            <div className="w-20 flex-shrink-0 flex flex-col items-center py-4 gap-3 border-r border-white/5 bg-black/20">
                 {memberships?.map((membership) => (
                     <TooltipProvider key={membership.divisionId} delayDuration={0}>
                         <Tooltip>
                             <TooltipTrigger>
                                 <button
                                     onClick={() => setSelectedClanId(membership.divisionId)}
-                                    className={`group relative w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                                    className={`relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 border-2 ${
                                         selectedClanId === membership.divisionId 
-                                            ? 'bg-blue-600 rounded-xl' 
-                                            : 'bg-white/5 hover:bg-white/10 hover:rounded-xl'
+                                            ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)]' 
+                                            : 'bg-white/5 border-white/10 hover:border-white/30'
                                     }`}
                                 >
-                                    {selectedClanId === membership.divisionId && (
-                                        <motion.div 
-                                            layoutId="activeIndicator"
-                                            className="absolute -left-[14px] w-1 h-8 bg-white rounded-r-full"
-                                        />
-                                    )}
                                     {membership.icon ? (
-                                        <img src={membership.icon} className="w-full h-full object-cover rounded-2xl" />
+                                        <img src={membership.icon} className="w-full h-full object-cover rounded-xl" />
                                     ) : (
-                                        <span className="text-white font-bold text-lg">{membership.name?.charAt(0)}</span>
+                                        <span className="text-xl font-bold text-white">{membership.name?.charAt(0)}</span>
                                     )}
                                 </button>
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="bg-black/90 border-white/10 text-white ml-2">
+                            <TooltipContent side="right" className="bg-[#1a1c22] border-amber-500/20 text-white">
                                 <p className="font-semibold">{membership.name}</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 ))}
 
-                <div className="w-8 h-px bg-white/10 my-2" />
+                <div className="w-10 h-px bg-white/10 my-1" />
 
-                {/* Add Server */}
                 <TooltipProvider delayDuration={0}>
                     <Tooltip>
                         <TooltipTrigger>
                             <button
                                 onClick={() => setIsCreateClanOpen(true)}
-                                className="w-12 h-12 rounded-2xl bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-green-400 hover:bg-green-500/10 hover:border-green-400/50 hover:rounded-xl transition-all"
+                                className="w-14 h-14 rounded-xl bg-white/5 border-2 border-dashed border-amber-500/30 flex items-center justify-center text-amber-400 hover:bg-amber-500/10 hover:border-amber-400 transition-all"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-6 h-6" />
                             </button>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="bg-black/90 border-white/10 text-white ml-2">
-                            <p>Create Division</p>
+                        <TooltipContent side="right" className="bg-[#1a1c22] border-amber-500/20 text-white">
+                            <p>Found New Guild</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
             </div>
 
             {activeClan && (
-                <>
-                    {/* Channel Sidebar */}
-                    <div className="w-60 flex-shrink-0 flex flex-col z-10 bg-white/[0.02] backdrop-blur-xl border-r border-white/[0.06]">
-                        {/* Server Header */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger className="h-14 px-4 flex items-center justify-between border-b border-white/[0.06] hover:bg-white/5 transition-colors cursor-pointer outline-none">
-                                <span className="font-bold text-white truncate">{activeClan.name}</span>
-                                <ChevronDown className="w-4 h-4 text-white/40" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56 bg-[#0d1020]/95 backdrop-blur-xl border-white/10 text-white rounded-xl p-1">
-                                <DropdownMenuItem className="hover:bg-white/10 cursor-pointer rounded-lg" onClick={() => setIsCreateChannelOpen(true)}>
-                                    <Plus className="w-4 h-4 mr-2" /> Create Channel
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="hover:bg-white/10 cursor-pointer rounded-lg">
-                                    <UserPlus className="w-4 h-4 mr-2" /> Invite People
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="hover:bg-white/10 cursor-pointer rounded-lg">
-                                    <Settings className="w-4 h-4 mr-2" /> Server Settings
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem className="text-red-400 hover:bg-red-500/20 cursor-pointer rounded-lg">
-                                    <LogOut className="w-4 h-4 mr-2" /> Leave Server
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                <div className="flex-1 flex flex-col min-w-0">
+                    {/* Guild Banner */}
+                    <GuildBanner clan={activeClan} members={members} />
 
-                        {/* Channels */}
-                        <div className="flex-1 overflow-y-auto py-4 px-2 space-y-4 custom-scrollbar">
-                            {/* Home / Overview */}
+                    {/* Navigation Tabs */}
+                    <div className="h-14 flex items-center gap-1 px-6 border-b border-white/5 bg-[#12141a]/80 backdrop-blur-sm">
+                        {TABS.map(tab => (
                             <button
-                                onClick={() => { setActiveView('home'); setActiveChannelId(null); }}
-                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-                                    activeView === 'home' ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    activeTab === tab.id 
+                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                                        : 'text-white/50 hover:text-white hover:bg-white/5 border border-transparent'
                                 }`}
                             >
-                                <Home className="w-4 h-4" />
-                                <span className="text-sm font-medium">Overview</span>
+                                <tab.icon className="w-4 h-4" />
+                                {tab.label}
                             </button>
-
-                            {/* Announcements */}
-                            <div>
-                                <button 
-                                    onClick={() => toggleSection('announcements')}
-                                    className="w-full flex items-center justify-between px-2 py-1 text-white/40 hover:text-white/70 transition-colors"
-                                >
-                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                                        {expandedSections.announcements ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                        Announcements
-                                    </div>
-                                    <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); setNewChannelData({...newChannelData, type: 'announcement'}); setIsCreateChannelOpen(true); }} />
-                                </button>
-                                <AnimatePresence>
-                                    {expandedSections.announcements && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-0.5 mt-1">
-                                            <button
-                                                onClick={() => { setActiveView('announcements'); setActiveChannelId('announcements'); }}
-                                                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                                                    activeChannelId === 'announcements' ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
-                                                }`}
-                                            >
-                                                <Megaphone className="w-4 h-4 text-yellow-400" />
-                                                <span className="text-sm">announcements</span>
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Text Channels */}
-                            <div>
-                                <button 
-                                    onClick={() => toggleSection('text')}
-                                    className="w-full flex items-center justify-between px-2 py-1 text-white/40 hover:text-white/70 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                                        {expandedSections.text ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                        Text Channels
-                                    </div>
-                                    <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 hover:text-white" onClick={(e) => { e.stopPropagation(); setNewChannelData({...newChannelData, type: 'text'}); setIsCreateChannelOpen(true); }} />
-                                </button>
-                                <AnimatePresence>
-                                    {expandedSections.text && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-0.5 mt-1">
-                                            {textChannels.map(channel => (
-                                                <button
-                                                    key={channel.id}
-                                                    onClick={() => { setActiveView('chat'); setActiveChannelId(channel.id); }}
-                                                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                                                        activeChannelId === channel.id ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
-                                                    }`}
-                                                >
-                                                    <Hash className="w-4 h-4" />
-                                                    <span className="text-sm truncate">{channel.name}</span>
-                                                </button>
-                                            ))}
-                                            {textChannels.length === 0 && (
-                                                <p className="text-white/30 text-xs px-3 py-2">No text channels</p>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Voice Channels */}
-                            <div>
-                                <button 
-                                    onClick={() => toggleSection('voice')}
-                                    className="w-full flex items-center justify-between px-2 py-1 text-white/40 hover:text-white/70 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                                        {expandedSections.voice ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                        Voice Channels
-                                    </div>
-                                    <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 hover:text-white" onClick={(e) => { e.stopPropagation(); setNewChannelData({...newChannelData, type: 'voice'}); setIsCreateChannelOpen(true); }} />
-                                </button>
-                                <AnimatePresence>
-                                    {expandedSections.voice && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-0.5 mt-1">
-                                            {voiceChannels.map(channel => (
-                                                <button
-                                                    key={channel.id}
-                                                    onClick={() => { setActiveView('voice'); setActiveChannelId(channel.id); }}
-                                                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                                                        activeChannelId === channel.id ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
-                                                    }`}
-                                                >
-                                                    <Volume2 className="w-4 h-4 text-green-400" />
-                                                    <span className="text-sm truncate">{channel.name}</span>
-                                                </button>
-                                            ))}
-                                            {voiceChannels.length === 0 && (
-                                                <p className="text-white/30 text-xs px-3 py-2">No voice channels</p>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Game Channels */}
-                            <div>
-                                <button 
-                                    onClick={() => toggleSection('games')}
-                                    className="w-full flex items-center justify-between px-2 py-1 text-white/40 hover:text-white/70 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                                        {expandedSections.games ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                        Game Channels
-                                    </div>
-                                    <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 hover:text-white" onClick={(e) => { e.stopPropagation(); setNewChannelData({...newChannelData, type: 'game'}); setIsCreateChannelOpen(true); }} />
-                                </button>
-                                <AnimatePresence>
-                                    {expandedSections.games && (
-                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-0.5 mt-1">
-                                            {gameChannels.map(channel => (
-                                                <button
-                                                    key={channel.id}
-                                                    onClick={() => { setActiveView('chat'); setActiveChannelId(channel.id); }}
-                                                    className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                                                        activeChannelId === channel.id ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
-                                                    }`}
-                                                >
-                                                    <Gamepad2 className="w-4 h-4 text-purple-400" />
-                                                    <span className="text-sm truncate">{channel.name}</span>
-                                                </button>
-                                            ))}
-                                            {gameChannels.length === 0 && (
-                                                <p className="text-white/30 text-xs px-3 py-2">No game channels</p>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </div>
-
-                        {/* Voice Status Bar */}
-                        <GlassPanel className="m-2 p-3" intensity="strong">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-                                        {user?.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
-                                    </div>
-                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#0d1020]" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white text-xs font-semibold truncate">{user?.full_name || user?.email?.split('@')[0]}</p>
-                                    <p className="text-white/40 text-[10px]">Online</p>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <button 
-                                        onClick={() => setIsMuted(!isMuted)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'}`}
-                                    >
-                                        {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                                    </button>
-                                    <button 
-                                        onClick={() => setIsDeafened(!isDeafened)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isDeafened ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'}`}
-                                    >
-                                        {isDeafened ? <PhoneOff className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
-                                    </button>
-                                    <button className="w-8 h-8 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white flex items-center justify-center transition-all">
-                                        <Settings className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </GlassPanel>
+                        ))}
                     </div>
 
-                    {/* Main Content Area */}
-                    <div className="flex-1 flex flex-col min-w-0 relative z-10">
-                        {/* Channel Header */}
-                        <div className="h-14 flex-shrink-0 border-b border-white/[0.06] flex items-center justify-between px-4 bg-white/[0.02] backdrop-blur-xl">
-                            <div className="flex items-center gap-3">
-                                {activeView === 'home' && <Home className="w-5 h-5 text-white/60" />}
-                                {activeView === 'chat' && <Hash className="w-5 h-5 text-white/60" />}
-                                {activeView === 'voice' && <Volume2 className="w-5 h-5 text-green-400" />}
-                                {activeView === 'announcements' && <Megaphone className="w-5 h-5 text-yellow-400" />}
-                                <span className="font-semibold text-white">
-                                    {activeView === 'home' ? 'Overview' : channels?.find(c => c.id === activeChannelId)?.name || 'Channel'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all">
-                                    <Bell className="w-4 h-4" />
-                                </button>
-                                <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all">
-                                    <Pin className="w-4 h-4" />
-                                </button>
-                                <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all">
-                                    <Users className="w-4 h-4" />
-                                </button>
-                                <div className="relative ml-2">
-                                    <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
-                                    <input 
-                                        placeholder="Search..." 
-                                        className="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-1.5 text-xs text-white w-40 focus:ring-1 focus:ring-blue-500/50 outline-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                    {/* Content Area */}
+                    <div className="flex-1 flex overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            {/* Guild Hall */}
+                            {activeTab === 'hall' && (
+                                <motion.div
+                                    key="hall"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+                                >
+                                    {/* MOTD */}
+                                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-900/30 to-purple-900/20 border border-amber-500/20 p-6">
+                                        <Scroll className="absolute right-4 top-4 w-20 h-20 text-amber-500/10" />
+                                        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-3">
+                                            <Megaphone className="w-3 h-3 mr-1" /> Guild Announcement
+                                        </Badge>
+                                        <p className="text-white text-lg font-medium leading-relaxed max-w-3xl">
+                                            "{activeClan.motd || activeClan.description || "Welcome to the guild, brave adventurer. Check the quest board for active missions."}"
+                                        </p>
+                                        <p className="text-white/40 text-sm mt-3">— Guild Master</p>
+                                    </div>
 
-                        {/* Content */}
-                        <div className="flex-1 flex overflow-hidden">
-                            {/* Main Content */}
-                            <div className="flex-1 flex flex-col min-w-0">
-                                <AnimatePresence mode="wait">
-                                    {activeView === 'home' && (
-                                        <motion.div
-                                            key="home"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
-                                        >
-                                            {/* MOTD Banner */}
-                                            <GlassPanel className="relative overflow-hidden p-6" intensity="medium">
-                                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
-                                                <img 
-                                                    src={activeClan.banner || "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200"} 
-                                                    className="absolute inset-0 w-full h-full object-cover opacity-20" 
-                                                />
-                                                <div className="relative z-10">
-                                                    <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 mb-3">
-                                                        <Megaphone className="w-3 h-3 mr-1" /> ANNOUNCEMENT
-                                                    </Badge>
-                                                    <h2 className="text-2xl font-bold text-white mb-2">
-                                                        {activeClan.motd || activeClan.description || "Welcome to the clan!"}
-                                                    </h2>
-                                                    <p className="text-white/50 text-sm">Posted by Commander</p>
-                                                </div>
-                                            </GlassPanel>
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <StatCard icon={Star} label="Guild Level" value={activeClan.level || 1} subtext="Next: 2,500 XP" color="amber" />
+                                        <StatCard icon={Users} label="Members" value={members?.length || 0} subtext="4 Online" color="green" />
+                                        <StatCard icon={Coins} label="Treasury" value="12.5K" subtext="Gold Coins" color="amber" />
+                                        <StatCard icon={Award} label="Reputation" value={activeClan.reputation || 0} subtext="Honored" color="purple" />
+                                    </div>
 
-                                            {/* Stats Grid */}
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <GlassPanel className="p-5" intensity="light">
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                                                            <Star className="w-5 h-5 text-blue-400" />
+                                    {/* Two Column Layout */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Active Quests */}
+                                        <div className="rounded-xl bg-white/[0.02] border border-white/5 p-5">
+                                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                                                <Scroll className="w-5 h-5 text-amber-400" /> Active Quests
+                                            </h3>
+                                            <div className="space-y-3">
+                                                {[1, 2, 3].map(i => (
+                                                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/5 hover:border-amber-500/30 transition-all cursor-pointer">
+                                                        <div className="w-10 h-10 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                                                            <Swords className="w-5 h-5 text-red-400" />
                                                         </div>
-                                                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Lvl {activeClan.level || 1}</Badge>
-                                                    </div>
-                                                    <p className="text-2xl font-bold text-white">{(activeClan.xp || 0).toLocaleString()}</p>
-                                                    <p className="text-white/40 text-xs">Experience Points</p>
-                                                </GlassPanel>
-
-                                                <GlassPanel className="p-5" intensity="light">
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                                            <Users className="w-5 h-5 text-green-400" />
+                                                        <div className="flex-1">
+                                                            <p className="text-white text-sm font-medium">Weekly Dungeon Clear</p>
+                                                            <p className="text-white/40 text-xs">3/5 Completions • 500 XP</p>
                                                         </div>
+                                                        <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-[10px]">Active</Badge>
                                                     </div>
-                                                    <p className="text-2xl font-bold text-white">{members?.length || 0}</p>
-                                                    <p className="text-white/40 text-xs">Members</p>
-                                                </GlassPanel>
-
-                                                <GlassPanel className="p-5" intensity="light">
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                                                            <Crown className="w-5 h-5 text-yellow-400" />
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-2xl font-bold text-white">{activeClan.reputation || 0}</p>
-                                                    <p className="text-white/40 text-xs">Reputation</p>
-                                                </GlassPanel>
+                                                ))}
                                             </div>
+                                        </div>
 
-                                            {/* Events & Quests */}
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <GlassPanel className="p-5" intensity="light">
-                                                    <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4 text-purple-400" /> Upcoming Events
-                                                    </h3>
-                                                    <div className="space-y-3">
-                                                        {events?.slice(0, 3).map(event => (
-                                                            <div key={event.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                                                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-300 text-xs font-bold">
-                                                                    {format(new Date(event.startTime), 'd')}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-white text-sm font-medium">{event.title}</p>
-                                                                    <p className="text-white/40 text-xs">{format(new Date(event.startTime), 'h:mm a')}</p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {(!events || events.length === 0) && (
-                                                            <p className="text-white/30 text-sm text-center py-4">No upcoming events</p>
-                                                        )}
-                                                    </div>
-                                                </GlassPanel>
-
-                                                <GlassPanel className="p-5" intensity="light">
-                                                    <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                                        <Target className="w-4 h-4 text-red-400" /> Active Quests
-                                                    </h3>
-                                                    <div className="space-y-3">
-                                                        <p className="text-white/30 text-sm text-center py-4">No active quests</p>
-                                                    </div>
-                                                </GlassPanel>
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    {(activeView === 'chat' || activeView === 'announcements') && activeChannelId && (
-                                        <motion.div
-                                            key="chat"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="flex-1 flex flex-col"
-                                        >
-                                            {/* Messages */}
-                                            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
-                                                {messages?.map((msg, i) => {
-                                                    const showHeader = i === 0 || messages[i-1].author !== msg.author || (new Date(msg.created_date) - new Date(messages[i-1].created_date) > 300000);
-                                                    return (
-                                                        <div key={msg.id} className={`group ${showHeader ? 'mt-4' : 'mt-1'}`}>
-                                                            {showHeader && (
-                                                                <div className="flex items-center gap-3 mb-1">
-                                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 overflow-hidden flex items-center justify-center text-white font-bold">
-                                                                        {msg.authorAvatar ? (
-                                                                            <img src={msg.authorAvatar} className="w-full h-full object-cover" />
-                                                                        ) : (
-                                                                            msg.author?.charAt(0)
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="flex items-baseline gap-2">
-                                                                        <span className="font-semibold text-white hover:underline cursor-pointer">{msg.author}</span>
-                                                                        <span className="text-[10px] text-white/30">{format(new Date(msg.created_date), 'MMM d, h:mm a')}</span>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="pl-[52px]">
-                                                                <p className="text-white/80 text-sm leading-relaxed">{msg.content}</p>
-                                                            </div>
+                                        {/* Upcoming Events */}
+                                        <div className="rounded-xl bg-white/[0.02] border border-white/5 p-5">
+                                            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                                                <Calendar className="w-5 h-5 text-purple-400" /> Upcoming Events
+                                            </h3>
+                                            <div className="space-y-3">
+                                                {events?.slice(0, 3).map(event => (
+                                                    <div key={event.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer">
+                                                        <div className="w-12 h-12 rounded-lg bg-purple-500/20 border border-purple-500/30 flex flex-col items-center justify-center">
+                                                            <span className="text-[10px] text-purple-300 uppercase">{format(new Date(event.startTime), 'MMM')}</span>
+                                                            <span className="text-lg font-bold text-white">{format(new Date(event.startTime), 'd')}</span>
                                                         </div>
-                                                    );
-                                                })}
-                                                {(!messages || messages.length === 0) && (
-                                                    <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                                                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-                                                            <Hash className="w-8 h-8 text-white/20" />
+                                                        <div>
+                                                            <p className="text-white text-sm font-medium">{event.title}</p>
+                                                            <p className="text-white/40 text-xs">{format(new Date(event.startTime), 'h:mm a')}</p>
                                                         </div>
-                                                        <h3 className="text-xl font-bold text-white mb-2">Welcome to #{channels?.find(c => c.id === activeChannelId)?.name}</h3>
-                                                        <p className="text-white/40 text-sm">This is the start of the channel.</p>
                                                     </div>
+                                                ))}
+                                                {(!events || events.length === 0) && (
+                                                    <p className="text-white/30 text-sm text-center py-6">No scheduled events</p>
                                                 )}
                                             </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
 
-                                            {/* Message Input */}
-                                            <div className="p-4 bg-white/[0.02]">
-                                                <form onSubmit={handleSend} className="relative">
-                                                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                                                        <button type="button" className="text-white/40 hover:text-white transition-colors">
-                                                            <Plus className="w-5 h-5" />
+                            {/* Comms */}
+                            {activeTab === 'comms' && (
+                                <motion.div
+                                    key="comms"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex-1 flex"
+                                >
+                                    {/* Channel List */}
+                                    <div className="w-56 flex-shrink-0 border-r border-white/5 bg-black/20 p-3 space-y-4 overflow-y-auto">
+                                        {/* Text Channels */}
+                                        <div>
+                                            <div className="flex items-center justify-between px-2 mb-2">
+                                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Text Channels</span>
+                                                <Plus className="w-3 h-3 text-white/30 hover:text-white cursor-pointer" onClick={() => { setNewChannelData({...newChannelData, type: 'text'}); setIsCreateChannelOpen(true); }} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                {textChannels.map(channel => (
+                                                    <ChannelItem
+                                                        key={channel.id}
+                                                        channel={channel}
+                                                        isActive={activeChannelId === channel.id}
+                                                        onClick={() => setActiveChannelId(channel.id)}
+                                                        type="text"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Voice Channels */}
+                                        <div>
+                                            <div className="flex items-center justify-between px-2 mb-2">
+                                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Voice Channels</span>
+                                                <Plus className="w-3 h-3 text-white/30 hover:text-white cursor-pointer" onClick={() => { setNewChannelData({...newChannelData, type: 'voice'}); setIsCreateChannelOpen(true); }} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                {voiceChannels.map(channel => (
+                                                    <ChannelItem
+                                                        key={channel.id}
+                                                        channel={channel}
+                                                        isActive={activeChannelId === channel.id}
+                                                        onClick={() => setActiveChannelId(channel.id)}
+                                                        type="voice"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Game Channels */}
+                                        <div>
+                                            <div className="flex items-center justify-between px-2 mb-2">
+                                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Game Channels</span>
+                                                <Plus className="w-3 h-3 text-white/30 hover:text-white cursor-pointer" onClick={() => { setNewChannelData({...newChannelData, type: 'game'}); setIsCreateChannelOpen(true); }} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                {gameChannels.map(channel => (
+                                                    <ChannelItem
+                                                        key={channel.id}
+                                                        channel={channel}
+                                                        isActive={activeChannelId === channel.id}
+                                                        onClick={() => setActiveChannelId(channel.id)}
+                                                        type="game"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Voice Controls */}
+                                        <div className="mt-auto pt-4 border-t border-white/5">
+                                            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.03]">
+                                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs font-bold overflow-hidden">
+                                                    {user?.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-white text-xs font-medium truncate">{user?.full_name?.split(' ')[0]}</p>
+                                                    <p className="text-green-400 text-[10px]">Online</p>
+                                                </div>
+                                                <button 
+                                                    onClick={() => setIsMuted(!isMuted)}
+                                                    className={`w-7 h-7 rounded flex items-center justify-center transition-all ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                                                >
+                                                    {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chat Area */}
+                                    <div className="flex-1 flex flex-col min-w-0">
+                                        {activeChannelId ? (
+                                            <>
+                                                {/* Channel Header */}
+                                                <div className="h-12 flex items-center justify-between px-4 border-b border-white/5">
+                                                    <div className="flex items-center gap-2">
+                                                        <Hash className="w-5 h-5 text-white/40" />
+                                                        <span className="font-semibold text-white">{channels?.find(c => c.id === activeChannelId)?.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                                                            <Search className="w-4 h-4" />
                                                         </button>
+                                                        <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                                                            <Users className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Messages */}
+                                                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
+                                                    {messages?.map((msg, i) => {
+                                                        const showHeader = i === 0 || messages[i-1].author !== msg.author || (new Date(msg.created_date) - new Date(messages[i-1].created_date) > 300000);
+                                                        return (
+                                                            <div key={msg.id} className={showHeader ? 'mt-4' : 'mt-1'}>
+                                                                {showHeader && (
+                                                                    <div className="flex items-center gap-3 mb-1">
+                                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/30 to-amber-700/20 border border-amber-500/30 overflow-hidden flex items-center justify-center">
+                                                                            {msg.authorAvatar ? (
+                                                                                <img src={msg.authorAvatar} className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                <span className="text-amber-300 font-bold">{msg.author?.charAt(0)}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex items-baseline gap-2">
+                                                                            <span className="font-semibold text-amber-300">{msg.author}</span>
+                                                                            <span className="text-[10px] text-white/30">{format(new Date(msg.created_date), 'MMM d, h:mm a')}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                <div className="pl-[52px]">
+                                                                    <p className="text-white/80 text-sm">{msg.content}</p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {(!messages || messages.length === 0) && (
+                                                        <div className="flex flex-col items-center justify-center h-full text-center">
+                                                            <Scroll className="w-12 h-12 text-white/10 mb-4" />
+                                                            <p className="text-white/30">No messages yet. Be the first to speak!</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Message Input */}
+                                                <div className="p-4 border-t border-white/5">
+                                                    <form onSubmit={handleSend} className="flex items-center gap-2 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3">
                                                         <input
                                                             value={message}
                                                             onChange={e => setMessage(e.target.value)}
                                                             placeholder={`Message #${channels?.find(c => c.id === activeChannelId)?.name || 'channel'}`}
                                                             className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/30"
                                                         />
-                                                        <div className="flex items-center gap-2">
-                                                            <button type="button" className="text-white/40 hover:text-white transition-colors">
-                                                                <Gift className="w-5 h-5" />
-                                                            </button>
-                                                            <button type="button" className="text-white/40 hover:text-white transition-colors">
-                                                                <Image className="w-5 h-5" />
-                                                            </button>
-                                                            <button type="button" className="text-white/40 hover:text-white transition-colors">
-                                                                <Smile className="w-5 h-5" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    {activeView === 'voice' && (
-                                        <motion.div
-                                            key="voice"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="flex-1 flex flex-col items-center justify-center"
-                                        >
-                                            <GlassPanel className="p-8 text-center max-w-md" intensity="medium">
-                                                <div className="w-20 h-20 rounded-2xl bg-green-500/20 flex items-center justify-center mx-auto mb-6">
-                                                    <Volume2 className="w-10 h-10 text-green-400" />
+                                                        <button type="button" className="text-white/30 hover:text-white transition-colors">
+                                                            <Smile className="w-5 h-5" />
+                                                        </button>
+                                                        <button 
+                                                            type="submit" 
+                                                            disabled={!message.trim()}
+                                                            className="w-8 h-8 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center text-white transition-all"
+                                                        >
+                                                            <Send className="w-4 h-4" />
+                                                        </button>
+                                                    </form>
                                                 </div>
-                                                <h2 className="text-2xl font-bold text-white mb-2">{channels?.find(c => c.id === activeChannelId)?.name}</h2>
-                                                <p className="text-white/50 mb-6">Voice channel - Click to join</p>
-                                                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-5 rounded-xl">
-                                                    <Mic className="w-4 h-4 mr-2" /> Join Voice
-                                                </Button>
-                                            </GlassPanel>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                                <MessageSquare className="w-16 h-16 text-white/10 mb-4" />
+                                                <p className="text-white/40">Select a channel to start chatting</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
 
-                            {/* Members Sidebar */}
-                            <div className="w-60 flex-shrink-0 border-l border-white/[0.06] bg-white/[0.02] backdrop-blur-xl overflow-y-auto custom-scrollbar py-4 px-3">
-                                <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider px-2 mb-3">Online — {members?.length || 0}</p>
-                                <div className="space-y-1">
-                                    {members?.map(m => (
-                                        <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-all">
-                                            <div className="relative">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 overflow-hidden flex items-center justify-center text-white text-xs font-bold">
-                                                    {m.user?.avatar_url ? <img src={m.user.avatar_url} className="w-full h-full object-cover" /> : m.user?.full_name?.charAt(0)}
-                                                </div>
-                                                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-[#0d1020]" />
+                            {/* Roster */}
+                            {activeTab === 'roster' && (
+                                <motion.div
+                                    key="roster"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex-1 overflow-y-auto p-6"
+                                >
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                            <Users className="w-5 h-5 text-amber-400" /> Guild Roster
+                                        </h2>
+                                        <Button className="bg-amber-600 hover:bg-amber-700 text-white gap-2">
+                                            <UserPlus className="w-4 h-4" /> Invite Member
+                                        </Button>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {members?.map(m => (
+                                            <div 
+                                                key={m.id} 
+                                                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                                                    m.role === 'leader' 
+                                                        ? 'bg-amber-500/10 border-amber-500/30 hover:border-amber-400' 
+                                                        : m.role === 'officer'
+                                                        ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-400'
+                                                        : 'bg-white/[0.02] border-white/10 hover:border-white/30'
+                                                }`}
+                                            >
+                                                <MemberCard 
+                                                    member={m} 
+                                                    isLeader={m.role === 'leader'} 
+                                                    isOfficer={m.role === 'officer'} 
+                                                />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-white text-xs font-medium truncate flex items-center gap-1">
-                                                    {m.user?.full_name || 'Unknown'}
-                                                    {m.role === 'leader' && <Crown className="w-3 h-3 text-yellow-400" />}
-                                                    {m.role === 'officer' && <Shield className="w-3 h-3 text-blue-400" />}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Other tabs placeholder */}
+                            {['quests', 'events', 'vault'].includes(activeTab) && (
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex-1 flex flex-col items-center justify-center"
+                                >
+                                    <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                                        {activeTab === 'quests' && <Scroll className="w-10 h-10 text-white/20" />}
+                                        {activeTab === 'events' && <Calendar className="w-10 h-10 text-white/20" />}
+                                        {activeTab === 'vault' && <Gem className="w-10 h-10 text-white/20" />}
+                                    </div>
+                                    <p className="text-white/40">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} coming soon</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                </>
+                </div>
             )}
 
             {/* Create Channel Dialog */}
             <Dialog open={isCreateChannelOpen} onOpenChange={setIsCreateChannelOpen}>
-                <DialogContent className="bg-[#0d1020]/95 backdrop-blur-3xl border-white/10 text-white rounded-2xl">
+                <DialogContent className="bg-[#12141a] border-amber-500/20 text-white rounded-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold">Create Channel</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div>
-                            <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3 block">Channel Type</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {[
-                                    { type: 'text', icon: Hash, label: 'Text', desc: 'Send messages' },
-                                    { type: 'voice', icon: Volume2, label: 'Voice', desc: 'Voice & video' },
-                                    { type: 'game', icon: Gamepad2, label: 'Game', desc: 'Game-specific' },
-                                    { type: 'announcement', icon: Megaphone, label: 'Announcement', desc: 'News & updates' },
-                                ].map(opt => (
-                                    <button
-                                        key={opt.type}
-                                        onClick={() => setNewChannelData({...newChannelData, type: opt.type})}
-                                        className={`p-4 rounded-xl border transition-all text-left ${
-                                            newChannelData.type === opt.type 
-                                                ? 'bg-blue-500/20 border-blue-500/50' 
-                                                : 'bg-white/5 border-white/10 hover:border-white/20'
-                                        }`}
-                                    >
-                                        <opt.icon className={`w-5 h-5 mb-2 ${newChannelData.type === opt.type ? 'text-blue-400' : 'text-white/40'}`} />
-                                        <p className="text-white font-medium text-sm">{opt.label}</p>
-                                        <p className="text-white/40 text-xs">{opt.desc}</p>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Channel Name</label>
+                            <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Channel Name</label>
                             <Input 
                                 value={newChannelData.name}
                                 onChange={e => setNewChannelData({...newChannelData, name: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
                                 placeholder="new-channel"
-                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                                className="bg-white/5 border-amber-500/20 text-white h-12 rounded-xl"
                             />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Channel Type</label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { type: 'text', icon: Hash, label: 'Text' },
+                                    { type: 'voice', icon: Volume2, label: 'Voice' },
+                                    { type: 'game', icon: Gamepad2, label: 'Game' },
+                                ].map(opt => (
+                                    <button
+                                        key={opt.type}
+                                        onClick={() => setNewChannelData({...newChannelData, type: opt.type})}
+                                        className={`p-3 rounded-xl border transition-all text-center ${
+                                            newChannelData.type === opt.type 
+                                                ? 'bg-amber-500/20 border-amber-500/50' 
+                                                : 'bg-white/5 border-white/10 hover:border-white/20'
+                                        }`}
+                                    >
+                                        <opt.icon className={`w-5 h-5 mx-auto mb-1 ${newChannelData.type === opt.type ? 'text-amber-400' : 'text-white/40'}`} />
+                                        <p className="text-white text-xs">{opt.label}</p>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsCreateChannelOpen(false)} className="text-white/60">Cancel</Button>
-                        <Button 
-                            onClick={() => createChannelMutation.mutate(newChannelData)} 
-                            className="bg-blue-600 hover:bg-blue-700"
-                            disabled={!newChannelData.name}
-                        >
-                            Create Channel
-                        </Button>
+                        <Button onClick={() => createChannelMutation.mutate(newChannelData)} className="bg-amber-600 hover:bg-amber-700" disabled={!newChannelData.name}>Create</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Create Clan Dialog */}
             <Dialog open={isCreateClanOpen} onOpenChange={setIsCreateClanOpen}>
-                <DialogContent className="bg-[#0d1020]/95 backdrop-blur-3xl border-white/10 text-white rounded-2xl">
+                <DialogContent className="bg-[#12141a] border-amber-500/20 text-white rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">Create New Division</DialogTitle>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Flag className="w-5 h-5 text-amber-400" /> Found New Guild
+                        </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div>
-                            <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Division Name</label>
+                            <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Guild Name</label>
                             <Input 
                                 value={newClanData.name}
                                 onChange={e => setNewClanData({...newClanData, name: e.target.value})}
-                                placeholder="Enter division name..."
-                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                                placeholder="Enter guild name..."
+                                className="bg-white/5 border-amber-500/20 text-white h-12 rounded-xl"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Description</label>
+                            <label className="text-xs font-semibold text-amber-400/70 uppercase tracking-wider mb-2 block">Guild Charter</label>
                             <Input 
                                 value={newClanData.description}
                                 onChange={e => setNewClanData({...newClanData, description: e.target.value})}
-                                placeholder="What's your division about?"
-                                className="bg-white/5 border-white/10 text-white h-12 rounded-xl"
+                                placeholder="Describe your guild's purpose..."
+                                className="bg-white/5 border-amber-500/20 text-white h-12 rounded-xl"
                             />
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsCreateClanOpen(false)} className="text-white/60">Cancel</Button>
-                        <Button onClick={() => createClanMutation.mutate(newClanData)} className="bg-blue-600 hover:bg-blue-700">Create</Button>
+                        <Button onClick={() => createClanMutation.mutate(newClanData)} className="bg-amber-600 hover:bg-amber-700">Found Guild</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
