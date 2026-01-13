@@ -1,3 +1,4 @@
+
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -32,12 +33,6 @@ export const NAV_HIERARCHY = [
         name: 'Aura',
         icon: Radio,
         path: createPageUrl('Aura'),
-        subPages: []
-    },
-    {
-        name: 'Clan Hub',
-        icon: Users,
-        path: createPageUrl('ClanHub'),
         subPages: []
     },
 ];
