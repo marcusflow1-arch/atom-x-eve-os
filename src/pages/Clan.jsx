@@ -281,9 +281,48 @@ export default function ClanPage() {
         }
     };
 
-    const textChannels = channels?.filter(c => c.type === 'text') || [];
-    const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
-    const gameChannels = channels?.filter(c => c.type === 'game') || [];
+    // Filter channels based on search
+    const filterChannels = (channelList) => {
+        if (!channelSearch.trim()) return channelList;
+        return channelList.filter(c => c.name.toLowerCase().includes(channelSearch.toLowerCase()));
+    };
+
+    const textChannels = filterChannels(channels?.filter(c => c.type === 'text') || []);
+    const voiceChannels = filterChannels(channels?.filter(c => c.type === 'voice') || []);
+    const gameChannels = filterChannels(channels?.filter(c => c.type === 'game') || []);
+
+    // Voice search handler
+    const startVoiceSearch = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Voice search is not supported in your browser');
+            return;
+        }
+        
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        setIsListening(true);
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setChannelSearch(transcript);
+            setIsSearchingChannels(true);
+            setIsListening(false);
+        };
+        
+        recognition.onerror = () => {
+            setIsListening(false);
+        };
+        
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+        
+        recognition.start();
+    };
 
     const TABS = [
         { id: 'hall', label: 'Guild Hall', icon: Castle },
