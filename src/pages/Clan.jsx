@@ -157,7 +157,11 @@ export default function ClanPage() {
     const [newChannelData, setNewChannelData] = useState({ name: '', type: 'text' });
     const [message, setMessage] = useState('');
     const [isMuted, setIsMuted] = useState(false);
+    const [channelSearch, setChannelSearch] = useState('');
+    const [isSearchingChannels, setIsSearchingChannels] = useState(false);
+    const [isListening, setIsListening] = useState(false);
     const scrollRef = useRef(null);
+    const searchInputRef = useRef(null);
 
     // Fetch Memberships
     const { data: memberships, isLoading } = useQuery({
