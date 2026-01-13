@@ -676,11 +676,50 @@ export default function ClanPage() {
                                                 <div className="h-12 flex items-center justify-between px-4 border-b border-white/5">
                                                     <div className="flex items-center gap-2">
                                                         <Hash className="w-5 h-5 text-white/40" />
-                                                        <span className="font-semibold text-white">{channels?.find(c => c.id === activeChannelId)?.name}</span>
+                                                        {isSearchingChannels ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <input
+                                                                    ref={searchInputRef}
+                                                                    type="text"
+                                                                    value={channelSearch}
+                                                                    onChange={(e) => setChannelSearch(e.target.value)}
+                                                                    onBlur={() => { if (!channelSearch) setIsSearchingChannels(false); }}
+                                                                    onKeyDown={(e) => { if (e.key === 'Escape') { setChannelSearch(''); setIsSearchingChannels(false); } }}
+                                                                    placeholder="Search channels..."
+                                                                    className="bg-transparent text-white font-semibold outline-none placeholder:text-white/30 w-40"
+                                                                    autoFocus
+                                                                />
+                                                                {channelSearch && (
+                                                                    <button 
+                                                                        onClick={() => { setChannelSearch(''); searchInputRef.current?.focus(); }}
+                                                                        className="text-white/40 hover:text-white"
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => { setIsSearchingChannels(true); }}
+                                                                className="font-semibold text-white hover:text-amber-300 transition-colors cursor-pointer"
+                                                            >
+                                                                {channels?.find(c => c.id === activeChannelId)?.name}
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
+                                                        <button 
+                                                            onClick={() => setIsSearchingChannels(true)}
+                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isSearchingChannels ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'}`}
+                                                        >
                                                             <Search className="w-4 h-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={startVoiceSearch}
+                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'}`}
+                                                            title="Voice search"
+                                                        >
+                                                            <Mic className="w-4 h-4" />
                                                         </button>
                                                         <button className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all">
                                                             <Users className="w-4 h-4" />
