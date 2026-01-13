@@ -3,7 +3,6 @@ import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AIStory from './pages/AIStory';
 import AbilityAchievements from './pages/AbilityAchievements';
-import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
@@ -48,6 +47,7 @@ import WorldEvents from './pages/WorldEvents';
 import AIAchievements from './pages/AIAchievements';
 import LunaTemplate from './pages/LunaTemplate';
 import ClanHub from './pages/ClanHub';
+import Achievements from './pages/Achievements';
 import __Layout from './Layout.jsx';
 
 
@@ -57,7 +57,6 @@ export const PAGES = {
     "AINews": AINews,
     "AIStory": AIStory,
     "AbilityAchievements": AbilityAchievements,
-    "Achievements": Achievements,
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
@@ -102,6 +101,7 @@ export const PAGES = {
     "AIAchievements": AIAchievements,
     "LunaTemplate": LunaTemplate,
     "ClanHub": ClanHub,
+    "Achievements": Achievements,
 }
 
 export const pagesConfig = {
