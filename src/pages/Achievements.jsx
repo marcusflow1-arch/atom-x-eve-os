@@ -689,8 +689,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             {/* Interface Layer */}
             <div className="relative z-10 w-full h-full">
               
-              {/* Header with Game Name and Controls - Positioned between header and cards */}
-              <div className="absolute top-24 left-12 flex items-center gap-4 z-30">
+              {/* Header with Game Name and Controls */}
+              <div className="absolute top-8 left-12 flex items-center gap-4 z-30">
                 <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
