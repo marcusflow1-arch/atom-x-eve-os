@@ -47,6 +47,7 @@ import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import AIAchievements from './pages/AIAchievements';
 import LunaTemplate from './pages/LunaTemplate';
+import ClanHub from './pages/ClanHub';
 import __Layout from './Layout.jsx';
 
 
@@ -100,6 +101,7 @@ export const PAGES = {
     "WorldEvents": WorldEvents,
     "AIAchievements": AIAchievements,
     "LunaTemplate": LunaTemplate,
+    "ClanHub": ClanHub,
 }
 
 export const pagesConfig = {
