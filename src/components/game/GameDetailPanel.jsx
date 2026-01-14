@@ -50,44 +50,38 @@ const SpecsTab = ({ game }) => {
   // Enhanced mock data logic for demonstration if actual data is missing
   const specs = game?.system_requirements || {};
   
-  const RequirementSection = ({ title, data, icon: Icon, color }) => (
-    <div className="flex-1 min-w-[300px] bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-md hover:bg-white/[0.07] transition-colors">
+  const RequirementSection = ({ title, data, icon: Icon, color, level = "mid" }) => (
+    <div className={`flex-1 min-w-[300px] border rounded-xl p-6 backdrop-blur-md transition-colors ${
+        level === 'low' ? 'bg-slate-900/40 border-slate-700/50 hover:bg-slate-900/60' :
+        level === 'high' ? 'bg-purple-900/10 border-purple-500/20 hover:bg-purple-900/20' :
+        'bg-white/5 border-white/10 hover:bg-white/[0.07]'
+    }`}>
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-        <div className={`w-8 h-8 rounded-lg ${color} bg-opacity-20 flex items-center justify-center border border-white/10`}>
-          <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
+        <div className={`w-10 h-10 rounded-lg ${color} bg-opacity-20 flex items-center justify-center border border-white/10 shadow-lg`}>
+          <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
         </div>
-        <h4 className="text-white font-bold uppercase tracking-wider text-sm">{title}</h4>
+        <div>
+            <h4 className="text-white font-black uppercase tracking-wider text-sm">{title}</h4>
+            <p className="text-white/40 text-[10px] uppercase tracking-widest">{level === 'low' ? 'Entry Level' : level === 'high' ? 'Enthusiast' : 'Standard'}</p>
+        </div>
       </div>
       
-      <div className="space-y-4">
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">OS</p>
-          <p className="text-white/90 text-sm font-medium">{data.os || 'Windows 10 64-bit'}</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Processor</p>
-          <p className="text-white/90 text-sm font-medium">{data.processor || 'Intel Core i5-4460 or AMD Ryzen 3 1200'}</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Memory</p>
-          <p className="text-white/90 text-sm font-medium">{data.memory || '8 GB RAM'}</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Graphics</p>
-          <p className="text-white/90 text-sm font-medium">{data.graphics || 'NVIDIA GeForce GTX 960 or AMD Radeon R9 380'}</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">DirectX</p>
-          <p className="text-white/90 text-sm font-medium">Version 12</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Network</p>
-          <p className="text-white/90 text-sm font-medium">Broadband Internet connection</p>
-        </div>
-        <div className="group">
-          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Storage</p>
-          <p className="text-white/90 text-sm font-medium">{data.storage || '50 GB available space'}</p>
-        </div>
+      <div className="space-y-5">
+        {[
+            { label: 'OS', value: data.os || 'Windows 10 64-bit' },
+            { label: 'Processor', value: data.processor },
+            { label: 'Memory', value: data.memory },
+            { label: 'Graphics', value: data.graphics },
+            { label: 'DirectX', value: 'Version 12' },
+            { label: 'Storage', value: data.storage },
+            { label: 'Sound Card', value: 'DirectX Compatible' },
+            { label: 'VR Support', value: level === 'high' ? 'Supported' : 'Not Required' }
+        ].map((item, idx) => (
+            <div key={idx} className="group flex flex-col gap-1">
+                <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest group-hover:text-cyan-400 transition-colors">{item.label}</span>
+                <span className="text-white/90 text-sm font-medium border-b border-white/5 pb-1 group-hover:border-cyan-500/30 transition-colors">{item.value}</span>
+            </div>
+        ))}
       </div>
     </div>
   );
@@ -120,14 +114,22 @@ const SpecsTab = ({ game }) => {
 
       {/* Specs Grid */}
       <div className="space-y-6">
-        <h3 className="text-2xl font-black text-white flex items-center gap-3">
-          <Cpu className="w-6 h-6 text-cyan-400" />
-          System Specifications
-        </h3>
+        <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-black text-white flex items-center gap-3">
+            <Cpu className="w-6 h-6 text-cyan-400" />
+            System Specifications
+            </h3>
+            <div className="flex gap-2">
+                <span className="px-2 py-1 rounded bg-white/5 text-[10px] text-white/40 border border-white/10">Windows</span>
+                <span className="px-2 py-1 rounded bg-white/5 text-[10px] text-white/40 border border-white/10">macOS</span>
+                <span className="px-2 py-1 rounded bg-white/5 text-[10px] text-white/40 border border-white/10">SteamOS</span>
+            </div>
+        </div>
         
-        <div className="flex flex-col lg:flex-row gap-6 overflow-x-auto pb-4">
+        <div className="flex flex-col xl:flex-row gap-6 overflow-x-auto pb-4">
           <RequirementSection 
             title="Minimum" 
+            level="low"
             data={{
               os: specs.os || "Windows 10 64-bit",
               processor: "Intel Core i3-8100 or AMD Ryzen 3 1200",
@@ -141,6 +143,7 @@ const SpecsTab = ({ game }) => {
           
           <RequirementSection 
             title="Recommended" 
+            level="mid"
             data={{
               os: "Windows 10/11 64-bit",
               processor: specs.processor || "Intel Core i5-10400 or AMD Ryzen 5 3600",
@@ -154,6 +157,7 @@ const SpecsTab = ({ game }) => {
           
           <RequirementSection 
             title="Ultra (4K)" 
+            level="high"
             data={{
               os: "Windows 11 64-bit",
               processor: "Intel Core i9-12900K or AMD Ryzen 9 5900X",
@@ -168,11 +172,15 @@ const SpecsTab = ({ game }) => {
       </div>
 
       {/* Additional Notes */}
-      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex gap-3">
-        <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-        <div className="text-sm">
-          <p className="text-white/90 font-bold mb-1">Additional Notes</p>
-          <p className="text-white/60">Game requires a 64-bit processor and operating system. Ray tracing features require compatible hardware and Windows 10 version 2004 or newer. SSD highly recommended for optimal loading times.</p>
+      <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-6 flex gap-4 items-start">
+        <AlertCircle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
+        <div className="space-y-2">
+          <p className="text-white font-bold text-sm tracking-wide">PERFORMANCE NOTES</p>
+          <p className="text-white/60 text-sm leading-relaxed">
+            Game requires a 64-bit processor and operating system. Ray tracing features require compatible hardware and Windows 10 version 2004 or newer. 
+            SSD highly recommended for optimal loading times. Online features require a broadband internet connection. 
+            DirectX 12 Ultimate enabled GPU required for advanced graphical features.
+          </p>
         </div>
       </div>
     </motion.div>
@@ -590,10 +598,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-20 p-8 flex justify-between items-start"
+        className="relative z-20 p-8 flex justify-end items-start"
       >
-{/* Back button removed */}
-        
         {/* Tabs Switcher */}
         <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
           <button 
