@@ -116,88 +116,126 @@ const getNodeColor = (type, isPower) => {
 function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerTree, onClick, onHover, onLeave, focusedNodeId, isAnimating }) {
   const isFocused = focusedNodeId === node.id;
   const colorGradient = getNodeColor(node.type, isPowerTree);
-  
+  const isLeftBranch = node.branch === 'left';
+  // If center (no branch), default to right perks unless it's the root/ult where we might want split? 
+  // User asked for "left side... box will come out to the left". "right side... right".
+  // For center nodes (offset 0), let's just put them on the right for consistency, or maybe alternating?
+  // Let's stick to Right for center nodes for now unless specified.
+  const showPerksOnLeft = isLeftBranch;
+
   return (
-    <motion.button
-      onClick={() => onClick(node)}
-      onMouseEnter={() => onHover(node)}
-      onMouseLeave={onLeave}
-      onFocus={() => onHover(node)}
-      onBlur={onLeave}
-      disabled={isLocked && !canUnlock}
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ 
-        scale: 1, 
-        opacity: 1,
-        filter: isLocked && !canUnlock ? 'grayscale(100%)' : 'grayscale(0%)'
-      }}
-      transition={{ delay: node.tier * 0.1, type: 'spring', stiffness: 200 }}
-      whileHover={{ scale: canUnlock || isUnlocked ? 1.15 : 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={`
-        relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300
-        ${isFocused || isSelected ? 'ring-4 ring-white/60 ring-offset-2 ring-offset-transparent' : ''}
-        ${isUnlocked ? 'cursor-pointer' : canUnlock ? 'cursor-pointer' : 'cursor-not-allowed'}
-      `}
-    >
-      {/* Unlock burst animation */}
-      {isAnimating && (
-        <motion.div
-          className={`absolute inset-0 rounded-xl ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`}
-          initial={{ scale: 1, opacity: 0.8 }}
-          animate={{ scale: 2.5, opacity: 0 }}
-          transition={{ duration: 0.6 }}
-        />
-      )}
-      
-      {/* Node Background */}
-      <div className={`
-        absolute inset-0 rounded-xl transition-all duration-300
-        ${isUnlocked 
-          ? `bg-gradient-to-br ${colorGradient} shadow-lg` 
-          : canUnlock 
-            ? 'bg-slate-700/80 border-2 border-dashed border-white/30' 
-            : 'bg-slate-900/60 border border-white/10'
-        }
-      `}>
-        {isUnlocked && (
+    <div className="relative flex items-center justify-center">
+      {/* Main Node Button */}
+      <motion.button
+        onClick={() => onClick(node)}
+        onMouseEnter={() => onHover(node)}
+        onMouseLeave={onLeave}
+        onFocus={() => onHover(node)}
+        onBlur={onLeave}
+        disabled={isLocked && !canUnlock}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          filter: isLocked && !canUnlock ? 'grayscale(100%)' : 'grayscale(0%)'
+        }}
+        transition={{ delay: node.tier * 0.1, type: 'spring', stiffness: 200 }}
+        whileHover={{ scale: canUnlock || isUnlocked ? 1.15 : 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`
+          relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 z-10
+          ${isFocused || isSelected ? 'ring-4 ring-white/60 ring-offset-2 ring-offset-transparent' : ''}
+          ${isUnlocked ? 'cursor-pointer' : canUnlock ? 'cursor-pointer' : 'cursor-not-allowed'}
+        `}
+      >
+        {/* Unlock burst animation */}
+        {isAnimating && (
           <motion.div
-            className="absolute inset-0 rounded-xl"
-            animate={{
-              boxShadow: [
-                `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
-                `0 0 20px ${isPowerTree ? 'rgba(168, 85, 247, 0.5)' : 'rgba(34, 211, 238, 0.5)'}`,
-                `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className={`absolute inset-0 rounded-xl ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`}
+            initial={{ scale: 1, opacity: 0.8 }}
+            animate={{ scale: 2.5, opacity: 0 }}
+            transition={{ duration: 0.6 }}
           />
         )}
-      </div>
-
-      {/* Icon */}
-      <div className={`relative z-10 ${isUnlocked ? 'text-white' : canUnlock ? 'text-white/60' : 'text-white/20'}`}>
-        {isLocked && !canUnlock ? <Lock className="w-4 h-4" /> : getNodeIcon(node.type)}
-      </div>
-
-      {/* Unlocked Checkmark */}
-      {isUnlocked && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"
-        >
-          <Check className="w-3 h-3 text-white" />
-        </motion.div>
-      )}
-
-      {/* Cost Badge */}
-      {!isUnlocked && node.cost > 0 && (
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-[10px] text-yellow-400 font-bold whitespace-nowrap">
-          {node.cost} SP
+        
+        {/* Node Background */}
+        <div className={`
+          absolute inset-0 rounded-xl transition-all duration-300
+          ${isUnlocked 
+            ? `bg-gradient-to-br ${colorGradient} shadow-lg` 
+            : canUnlock 
+              ? 'bg-slate-700/80 border-2 border-dashed border-white/30' 
+              : 'bg-slate-900/60 border border-white/10'
+          }
+        `}>
+          {isUnlocked && (
+            <motion.div
+              className="absolute inset-0 rounded-xl"
+              animate={{
+                boxShadow: [
+                  `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
+                  `0 0 20px ${isPowerTree ? 'rgba(168, 85, 247, 0.5)' : 'rgba(34, 211, 238, 0.5)'}`,
+                  `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          )}
         </div>
-      )}
-    </motion.button>
+
+        {/* Icon */}
+        <div className={`relative z-10 ${isUnlocked ? 'text-white' : canUnlock ? 'text-white/60' : 'text-white/20'}`}>
+          {isLocked && !canUnlock ? <Lock className="w-4 h-4" /> : getNodeIcon(node.type)}
+        </div>
+
+        {/* Unlocked Checkmark */}
+        {isUnlocked && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"
+          >
+            <Check className="w-3 h-3 text-white" />
+          </motion.div>
+        )}
+
+        {/* Cost Badge */}
+        {!isUnlocked && node.cost > 0 && (
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-[10px] text-yellow-400 font-bold whitespace-nowrap">
+            {node.cost} SP
+          </div>
+        )}
+      </motion.button>
+
+      {/* Perk Boxes - Appearing on interaction (selection) */}
+      <AnimatePresence>
+        {isSelected && node.perks && (
+          <motion.div
+            initial={{ opacity: 0, x: showPerksOnLeft ? 20 : -20, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: showPerksOnLeft ? 10 : -10, scale: 0.8 }}
+            className={`absolute flex gap-2 ${showPerksOnLeft ? 'flex-row-reverse right-[110%]' : 'flex-row left-[110%]'}`}
+            style={{ top: '50%', transform: 'translateY(-50%)' }}
+          >
+            {node.perks.map((perk, idx) => (
+              <div 
+                key={idx}
+                className="w-10 h-10 rounded-lg bg-black/60 border border-white/20 flex items-center justify-center backdrop-blur-sm relative group"
+                title={perk.name}
+              >
+                {/* Perk Icon Placeholder */}
+                <div className={`w-2 h-2 rounded-full ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`} />
+                
+                {/* Tooltip for Perk */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-[10px] text-white rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
+                  {perk.name}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
