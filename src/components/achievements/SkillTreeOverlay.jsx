@@ -444,52 +444,13 @@ export default function SkillTreeOverlay({ card, onClose }) {
           </div>
         </div>
 
-        {/* Main Content - Card as Center Origin */}
-        <div className="flex-1 flex items-center justify-center gap-4 overflow-hidden" ref={containerRef}>
+        {/* Main Content - Card Left, Trees Right */}
+        <div className="flex-1 flex gap-8 overflow-hidden" ref={containerRef}>
           
-          {/* Left: Power Tree flowing FROM card */}
-          <div className="flex-1 flex justify-end">
-            <div className="relative rounded-2xl p-4" style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              border: '1px solid rgba(168, 85, 247, 0.2)'
-            }}>
-              {/* Energy trail connector to card */}
-              <div className="absolute top-1/2 -right-8 w-8 h-1 -translate-y-1/2">
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/60 to-transparent rounded-full"
-                  animate={{ opacity: [0.3, 0.8, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                {unlockedPowerNodes.length > 1 && (
-                  <motion.div
-                    className="absolute inset-y-0 left-0 w-2 rounded-full bg-purple-400"
-                    animate={{ x: [0, 24, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  />
-                )}
-              </div>
-              {renderTree(POWER_TREE_NODES, 'power', true)}
-            </div>
-          </div>
-
-          {/* Center: Card as Origin Point */}
-          <div className="flex-shrink-0 flex flex-col items-center justify-center relative z-10">
-            {/* Pulsing origin aura */}
-            <motion.div
-              className="absolute inset-0 rounded-3xl"
-              animate={{
-                boxShadow: [
-                  '0 0 30px rgba(168, 85, 247, 0.2), 0 0 30px rgba(34, 211, 238, 0.2)',
-                  '0 0 60px rgba(168, 85, 247, 0.4), 0 0 60px rgba(34, 211, 238, 0.4)',
-                  '0 0 30px rgba(168, 85, 247, 0.2), 0 0 30px rgba(34, 211, 238, 0.2)',
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-              style={{ margin: -20 }}
-            />
-            
+          {/* Left: Card Display */}
+          <div className="flex-shrink-0 flex flex-col items-center justify-center w-[300px]">
             <div
-              className="relative w-[220px] aspect-[2.5/3.5] perspective-1000"
+              className="relative w-[260px] aspect-[2.5/3.5] perspective-1000"
               onMouseMove={handleCardMouseMove}
               onMouseLeave={handleCardMouseLeave}
             >
@@ -519,11 +480,11 @@ export default function SkillTreeOverlay({ card, onClose }) {
                 />
                 
                 {/* Power indicator overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
                   <div className="text-center">
-                    <h3 className="text-white font-bold text-sm truncate">{card?.title || card?.name}</h3>
-                    <div className="flex items-center justify-center gap-1 mt-1">
-                      <Badge className={`text-[10px] h-5 px-2 border ${
+                    <h3 className="text-white font-bold text-lg truncate">{card?.title || card?.name}</h3>
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <Badge className={`px-3 py-1 border ${
                         card?.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
                         card?.rarity === 'Mythic' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
                         card?.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
@@ -538,42 +499,58 @@ export default function SkillTreeOverlay({ card, onClose }) {
             </div>
 
             {/* Path Commitment Status Below Card */}
-            <div className="mt-4 text-center">
+            <div className="mt-8 text-center">
               {committedPath ? (
-                <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-                  <p className="text-xs text-white/50">Committed to</p>
-                  <p className={`font-bold ${committedPath === 'power' ? 'text-purple-400' : 'text-cyan-400'}`}>
+                <div className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <p className="text-xs text-white/50 mb-1">Current Path</p>
+                  <p className={`font-bold text-lg ${committedPath === 'power' ? 'text-purple-400' : 'text-cyan-400'}`}>
                     {committedPath === 'power' ? 'Power Path' : 'AI Adaptation Path'}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-white/40">Choose a path to commit</p>
+                <div className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <p className="text-xs text-white/50 mb-1">Status</p>
+                  <p className="font-medium text-white/80">Path Selection Available</p>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Right: AI Tree flowing FROM card */}
-          <div className="flex-1 flex justify-start">
-            <div className="relative rounded-2xl p-4" style={{
-              background: 'rgba(100, 120, 140, 0.08)',
-              border: '1px solid rgba(34, 211, 238, 0.2)'
-            }}>
-              {/* Energy trail connector to card */}
-              <div className="absolute top-1/2 -left-8 w-8 h-1 -translate-y-1/2">
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-l from-cyan-500/60 to-transparent rounded-full"
-                  animate={{ opacity: [0.3, 0.8, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                />
-                {unlockedAINodes.length > 1 && (
-                  <motion.div
-                    className="absolute inset-y-0 right-0 w-2 rounded-full bg-cyan-400"
-                    animate={{ x: [0, -24, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  />
-                )}
+          {/* Right: Unified Skill Tree Box */}
+          <div className="flex-1 relative rounded-3xl overflow-hidden border border-white/10 flex flex-col" style={{
+            background: 'rgba(30, 41, 59, 0.4)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: 'inset 0 0 100px rgba(0,0,0,0.3)'
+          }}>
+            {/* Header */}
+            <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 bg-black/20 flex justify-between items-center">
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Skill Progression System</h3>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span className="text-xs text-white/50">Power</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                  <span className="text-xs text-white/50">AI Adaptation</span>
+                </div>
               </div>
-              {renderTree(AI_TREE_NODES, 'ai', false)}
+            </div>
+
+            {/* Side by Side Trees */}
+            <div className="flex-1 flex overflow-hidden relative">
+              {/* Power Path Column */}
+              <div className="flex-1 relative border-r border-white/10 bg-gradient-to-b from-purple-500/5 to-transparent flex items-center justify-center p-4">
+                {renderTree(POWER_TREE_NODES, 'power', true)}
+              </div>
+              
+              {/* AI Path Column */}
+              <div className="flex-1 relative bg-gradient-to-b from-cyan-500/5 to-transparent flex items-center justify-center p-4">
+                {renderTree(AI_TREE_NODES, 'ai', false)}
+              </div>
+
+              {/* Central Divider Decor */}
+              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-white/10 via-white/5 to-transparent -translate-x-1/2" />
             </div>
           </div>
         </div>
