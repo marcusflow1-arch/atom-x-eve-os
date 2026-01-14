@@ -80,10 +80,14 @@ const InventoryCard = ({ card, isSelected, onClick }) => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute inset-0 bg-green-500/20 flex items-center justify-center"
+          className={`absolute inset-0 ${borderColor === 'border-blue-500' ? 'bg-blue-500/20' : 'bg-green-500/20'} flex items-center justify-center`}
         >
-          <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
-            <span className="text-white text-lg font-bold">✓</span>
+          <div className={`w-8 h-8 rounded-full ${borderColor === 'border-blue-500' ? 'bg-blue-500' : 'bg-green-500'} flex items-center justify-center shadow-lg`}>
+            {borderColor === 'border-blue-500' ? (
+              <span className="text-white text-xs font-bold">TARGET</span>
+            ) : (
+              <span className="text-white text-lg font-bold">✓</span>
+            )}
           </div>
         </motion.div>
       )}
