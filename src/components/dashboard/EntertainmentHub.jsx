@@ -76,101 +76,36 @@ const FeaturedContent = ({ onPlay }) => (
   </div>
 );
 
-const AppView = ({ app, onClose }) => (
-  <motion.div 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="w-full h-full flex flex-col relative bg-[#050505]"
-  >
-    {/* Hero Section */}
-    <div className="relative w-full h-[70vh]">
-      <div className="absolute inset-0">
-        <img 
-          src={`https://source.unsplash.com/random/1920x1080?${app.id},cinema`} 
-          alt="Hero" 
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-transparent to-transparent" />
+const AppView = ({ app }) => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="w-full h-full flex flex-col relative bg-[#050505]"
+    >
+      <iframe 
+        src={app.url}
+        className="w-full h-full border-0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        title={app.name}
+      />
+      {/* Fallback/External Link overlay if iframe is blocked (common with major streaming services) */}
+      <div className="absolute top-0 right-0 p-4 pointer-events-none">
+        <a 
+          href={app.url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="pointer-events-auto bg-black/50 hover:bg-black/80 backdrop-blur text-white text-xs px-3 py-1 rounded-full border border-white/10 transition-colors flex items-center gap-1"
+        >
+          Open in New Tab <ChevronRight className="w-3 h-3" />
+        </a>
       </div>
-
-      <div className="absolute top-0 left-0 right-0 p-8 flex justify-between items-start z-20">
-        <div className="flex items-center gap-4">
-          {/* App Logo */}
-          <div className="px-4 py-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-            <app.icon className="w-5 h-5" style={{ color: app.color }} />
-            <span className="font-bold text-white tracking-wide">{app.name}</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <button className="p-3 bg-black/40 backdrop-blur-md rounded-full hover:bg-white/10 transition-colors text-white">
-            <Search className="w-5 h-5" />
-          </button>
-          <button className="p-3 bg-black/40 backdrop-blur-md rounded-full hover:bg-white/10 transition-colors text-white">
-            <User className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 left-0 p-16 z-20 max-w-3xl">
-        <h1 className="text-6xl font-black text-white mb-4 leading-tight">
-          {app.name} Originals
-        </h1>
-        <p className="text-white/80 text-xl mb-8 leading-relaxed">
-          {app.description} Experience exclusive content available only on {app.name}.
-        </p>
-        <button className="px-8 py-4 bg-white text-black font-bold rounded-xl text-lg hover:scale-105 transition-transform flex items-center gap-2">
-          <Play fill="currentColor" className="w-5 h-5" />
-          Start Watching
-        </button>
-      </div>
-    </div>
-
-    {/* Content Rows */}
-    <div className="flex-1 overflow-y-auto px-16 pb-16 -mt-20 relative z-10 custom-scrollbar">
-      <h3 className="text-white font-bold text-2xl mb-6">Trending Now</h3>
-      <div className="grid grid-cols-5 gap-6 mb-12">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl overflow-hidden hover:scale-105 hover:ring-2 ring-white/50 transition-all cursor-pointer relative group shadow-lg">
-             <img 
-               src={`https://source.unsplash.com/random/400x600?movie,${i}`} 
-               alt="Movie Poster" 
-               className="w-full h-full object-cover"
-             />
-             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-               <div className="flex items-center gap-2 text-sm text-white font-bold">
-                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                 <span>4.{8 + i}</span>
-               </div>
-               <button className="mt-2 w-full py-2 bg-white text-black text-xs font-bold rounded">Play</button>
-             </div>
-          </div>
-        ))}
-      </div>
-
-      <h3 className="text-white font-bold text-2xl mb-6">Because you watched Sci-Fi</h3>
-      <div className="grid grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="aspect-video bg-white/5 rounded-xl overflow-hidden hover:scale-105 transition-all cursor-pointer relative group">
-            <img 
-               src={`https://source.unsplash.com/random/600x340?cinema,${i}`} 
-               alt="Thumbnail" 
-               className="w-full h-full object-cover"
-             />
-            <div className="absolute bottom-0 left-0 h-1 bg-red-600 z-20" style={{ width: `${Math.random() * 80 + 20}%` }} />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                <Play className="w-5 h-5 text-white fill-white ml-1" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 export default function EntertainmentHub() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
