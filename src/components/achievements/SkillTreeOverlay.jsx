@@ -5,29 +5,78 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 // Power Tree - Raw stat increases and combat effectiveness
-// Updated to strict grid layout for alignment
+// Updated to strict grid layout for alignment and visibility
+// Added perk definitions
 const POWER_TREE_NODES = [
-  { id: 'power_root', name: 'Core Activation', description: 'Unlock the card\'s latent power potential.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0 },
-  { id: 'power_atk1', name: 'Attack Boost I', description: 'Increase base attack power by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'left', offsetX: -70, offsetY: 100, parent: 'power_root' },
-  { id: 'power_def1', name: 'Defense Boost I', description: 'Increase base defense by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'right', offsetX: 70, offsetY: 100, parent: 'power_root' },
-  { id: 'power_crit', name: 'Critical Strike', description: 'Gain 15% critical hit chance.', type: 'ability', cost: 250, tier: 2, branch: 'left', offsetX: -70, offsetY: 200, parent: 'power_atk1' },
-  { id: 'power_res', name: 'Resilience', description: 'Reduce all incoming damage by 8%.', type: 'ability', cost: 250, tier: 2, branch: 'right', offsetX: 70, offsetY: 200, parent: 'power_def1' },
-  { id: 'power_atk2', name: 'Attack Boost II', description: 'Increase attack power by additional 20%.', type: 'stat', cost: 500, tier: 3, branch: 'left', offsetX: -70, offsetY: 300, parent: 'power_crit' },
-  { id: 'power_def2', name: 'Defense Boost II', description: 'Increase defense by additional 20%.', type: 'stat', cost: 500, tier: 3, branch: 'right', offsetX: 70, offsetY: 300, parent: 'power_res' },
-  { id: 'power_ult', name: 'Overwhelming Force', description: 'Ultimate: All stats increased by 25%. Abilities deal 50% more damage.', type: 'ultimate', cost: 1000, tier: 4, offsetX: 0, offsetY: 400, parent: ['power_atk2', 'power_def2'] },
+  { 
+    id: 'power_root', name: 'Core Activation', description: 'Unlock the card\'s latent power potential.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0,
+    perks: [{name: 'Base Energy', icon: 'zap'}, {name: 'Starter Kit', icon: 'box'}]
+  },
+  { 
+    id: 'power_atk1', name: 'Attack Boost I', description: 'Increase base attack power by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'left', offsetX: -80, offsetY: 80, parent: 'power_root',
+    perks: [{name: '+2% Dmg', icon: 'sword'}, {name: 'Sharpness', icon: 'triangle'}]
+  },
+  { 
+    id: 'power_def1', name: 'Defense Boost I', description: 'Increase base defense by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'right', offsetX: 80, offsetY: 80, parent: 'power_root',
+    perks: [{name: '+2% Armor', icon: 'shield'}, {name: 'Hardened', icon: 'square'}]
+  },
+  { 
+    id: 'power_crit', name: 'Critical Strike', description: 'Gain 15% critical hit chance.', type: 'ability', cost: 250, tier: 2, branch: 'left', offsetX: -80, offsetY: 160, parent: 'power_atk1',
+    perks: [{name: '+5% Crit Dmg', icon: 'target'}, {name: 'Precision', icon: 'eye'}]
+  },
+  { 
+    id: 'power_res', name: 'Resilience', description: 'Reduce all incoming damage by 8%.', type: 'ability', cost: 250, tier: 2, branch: 'right', offsetX: 80, offsetY: 160, parent: 'power_def1',
+    perks: [{name: '+5% HP', icon: 'heart'}, {name: 'Recovery', icon: 'plus'}]
+  },
+  { 
+    id: 'power_atk2', name: 'Attack Boost II', description: 'Increase attack power by additional 20%.', type: 'stat', cost: 500, tier: 3, branch: 'left', offsetX: -80, offsetY: 240, parent: 'power_crit',
+    perks: [{name: 'Power Surge', icon: 'zap'}, {name: 'Force', icon: 'hammer'}]
+  },
+  { 
+    id: 'power_def2', name: 'Defense Boost II', description: 'Increase defense by additional 20%.', type: 'stat', cost: 500, tier: 3, branch: 'right', offsetX: 80, offsetY: 240, parent: 'power_res',
+    perks: [{name: 'Iron Skin', icon: 'hexagon'}, {name: 'Barrier', icon: 'circle'}]
+  },
+  { 
+    id: 'power_ult', name: 'Overwhelming Force', description: 'Ultimate: All stats increased by 25%. Abilities deal 50% more damage.', type: 'ultimate', cost: 1000, tier: 4, offsetX: 0, offsetY: 320, parent: ['power_atk2', 'power_def2'],
+    perks: [{name: 'God Mode', icon: 'crown'}, {name: 'Omnipotence', icon: 'star'}]
+  },
 ];
 
 // AI Adaptation Tree - Behavioral changes and versatility
 // Updated to strict grid layout for alignment
 const AI_TREE_NODES = [
-  { id: 'ai_root', name: 'Neural Link', description: 'Establish connection with AI adaptation systems.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0 },
-  { id: 'ai_morph', name: 'Ability Morph', description: 'Force Push becomes Armor Strip - removes enemy defenses instead of knockback.', type: 'transform', cost: 100, tier: 1, branch: 'left', offsetX: -70, offsetY: 100, parent: 'ai_root' },
-  { id: 'ai_visual', name: 'Visual Override', description: 'Abilities gain new particle effects and execution animations.', type: 'visual', cost: 100, tier: 1, branch: 'right', offsetX: 70, offsetY: 100, parent: 'ai_root' },
-  { id: 'ai_lift', name: 'Graviton Lift', description: 'Replace knockback with enemy suspension + oxygen deprivation effect.', type: 'transform', cost: 250, tier: 2, branch: 'left', offsetX: -70, offsetY: 200, parent: 'ai_morph' },
-  { id: 'ai_adapt', name: 'Adaptive Response', description: 'AI analyzes enemy patterns and suggests optimal ability timing.', type: 'behavior', cost: 250, tier: 2, branch: 'right', offsetX: 70, offsetY: 200, parent: 'ai_visual' },
-  { id: 'ai_chain', name: 'Chain Reaction', description: 'Transformed abilities can trigger secondary effects based on context.', type: 'behavior', cost: 500, tier: 3, branch: 'left', offsetX: -70, offsetY: 300, parent: 'ai_lift' },
-  { id: 'ai_pred', name: 'Predictive Strike', description: 'AI pre-calculates enemy movements for guaranteed hits.', type: 'behavior', cost: 500, tier: 3, branch: 'right', offsetX: 70, offsetY: 300, parent: 'ai_adapt' },
-  { id: 'ai_ult', name: 'Singularity Protocol', description: 'Ultimate: Card gains autonomous decision-making. All abilities become context-aware with unique animations.', type: 'ultimate', cost: 1000, tier: 4, offsetX: 0, offsetY: 400, parent: ['ai_chain', 'ai_pred'] },
+  { 
+    id: 'ai_root', name: 'Neural Link', description: 'Establish connection with AI adaptation systems.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0,
+    perks: [{name: 'Sync', icon: 'wifi'}, {name: 'Backup', icon: 'save'}]
+  },
+  { 
+    id: 'ai_morph', name: 'Ability Morph', description: 'Force Push becomes Armor Strip - removes enemy defenses instead of knockback.', type: 'transform', cost: 100, tier: 1, branch: 'left', offsetX: -80, offsetY: 80, parent: 'ai_root',
+    perks: [{name: 'Flexibility', icon: 'shuffle'}, {name: 'Shift', icon: 'arrow-right'}]
+  },
+  { 
+    id: 'ai_visual', name: 'Visual Override', description: 'Abilities gain new particle effects and execution animations.', type: 'visual', cost: 100, tier: 1, branch: 'right', offsetX: 80, offsetY: 80, parent: 'ai_root',
+    perks: [{name: 'Particles', icon: 'sparkles'}, {name: 'Color', icon: 'palette'}]
+  },
+  { 
+    id: 'ai_lift', name: 'Graviton Lift', description: 'Replace knockback with enemy suspension + oxygen deprivation effect.', type: 'transform', cost: 250, tier: 2, branch: 'left', offsetX: -80, offsetY: 160, parent: 'ai_morph',
+    perks: [{name: 'Anti-Grav', icon: 'upload'}, {name: 'Choke', icon: 'wind'}]
+  },
+  { 
+    id: 'ai_adapt', name: 'Adaptive Response', description: 'AI analyzes enemy patterns and suggests optimal ability timing.', type: 'behavior', cost: 250, tier: 2, branch: 'right', offsetX: 80, offsetY: 160, parent: 'ai_visual',
+    perks: [{name: 'Analysis', icon: 'search'}, {name: 'Reflex', icon: 'clock'}]
+  },
+  { 
+    id: 'ai_chain', name: 'Chain Reaction', description: 'Transformed abilities can trigger secondary effects based on context.', type: 'behavior', cost: 500, tier: 3, branch: 'left', offsetX: -80, offsetY: 240, parent: 'ai_lift',
+    perks: [{name: 'Combo', icon: 'layers'}, {name: 'Explosion', icon: 'bomb'}]
+  },
+  { 
+    id: 'ai_pred', name: 'Predictive Strike', description: 'AI pre-calculates enemy movements for guaranteed hits.', type: 'behavior', cost: 500, tier: 3, branch: 'right', offsetX: 80, offsetY: 240, parent: 'ai_adapt',
+    perks: [{name: 'Oracle', icon: 'eye-off'}, {name: 'Lock-on', icon: 'crosshair'}]
+  },
+  { 
+    id: 'ai_ult', name: 'Singularity Protocol', description: 'Ultimate: Card gains autonomous decision-making. All abilities become context-aware with unique animations.', type: 'ultimate', cost: 1000, tier: 4, offsetX: 0, offsetY: 320, parent: ['ai_chain', 'ai_pred'],
+    perks: [{name: 'Sentience', icon: 'cpu'}, {name: 'Evolution', icon: 'dna'}]
+  },
 ];
 
 const getNodeIcon = (type) => {
