@@ -1,510 +1,322 @@
-
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import * as THREE from 'three';
-import { createPageUrl } from '@/utils';
 import { 
-  Film, Clapperboard, Scissors, Gamepad2, Play, Star, ChevronLeft, ChevronRight,
-  Tv, Music, Video, Camera, Settings, Users, Eye, Lock, Radio, Edit3, Share2, Palette,
-  Search, Mic, MicOff, X 
+  Tv, Film, Play, ShoppingBag, Clapperboard, Monitor, 
+  Mountain, Feather, Search, Bell, User, ChevronRight, 
+  ChevronLeft, Star, Heart, TrendingUp, Menu, X, Maximize2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { useAuth } from '../auth/AuthContext';
-import GameplayClipEditor from './GameplayClipEditor';
 
-// Voice Search Component for Games
-const GameVoiceSearch = ({ onSearch, games, onGameSelect }) => {
-  const [isListening, setIsListening] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredGames, setFilteredGames] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [recognition, setRecognition] = useState(null);
+const STREAMING_APPS = [
+  { id: 'netflix', name: 'Netflix', color: '#E50914', icon: Film, description: 'Unlimited movies, TV shows, and more.' },
+  { id: 'hbo', name: 'HBO Max', color: '#5C2D91', icon: Tv, description: 'Iconic series, award-winning movies, fresh originals.' },
+  { id: 'disney', name: 'Disney+', color: '#113CCF', icon: Star, description: 'The home of Disney, Pixar, Marvel, Star Wars, and Nat Geo.' },
+  { id: 'hulu', name: 'Hulu', color: '#1CE783', icon: Play, description: 'All your favorite TV shows, movies, and originals.' },
+  { id: 'starz', name: 'Starz', color: '#E4B314', icon: Star, description: 'Obsessable original series and hit movies.' },
+  { id: 'showtime', name: 'Showtime', color: '#E31837', icon: Clapperboard, description: 'Critically acclaimed original series and movies.' },
+  { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: ShoppingBag, description: 'Watch movies, TV, and sports.' },
+  { id: 'apple', name: 'Apple TV+', color: '#FFFFFF', icon: Monitor, description: 'Apple Original shows and movies.' },
+  { id: 'peacock', name: 'Peacock', color: '#000000', icon: Feather, description: 'Stream current hits, hundreds of movies, and thousands of episodes.' },
+  { id: 'paramount', name: 'Paramount+', color: '#0064FF', icon: Mountain, description: 'A mountain of entertainment.' },
+];
 
-  // useCallback to stabilize handleSearch, as it's a dependency for useEffect
-  const handleSearch = useCallback((query) => {
-    if (query.length > 0) {
-      const filtered = games.filter(game => 
-        game.title.toLowerCase().includes(query.toLowerCase()) ||
-        game.genre.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredGames(filtered);
-      setShowSuggestions(true);
-      onSearch(query);
-    } else {
-      setShowSuggestions(false);
-      // Following outline: Removed setFilteredGames([]) and onSearch('') from else block
-    }
-  }, [games, onSearch]); // Dependencies for useCallback
-
-  useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
-
-      recognitionInstance.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchTerm(transcript);
-        handleSearch(transcript);
-        setIsListening(false);
-      };
-
-      recognitionInstance.onerror = () => setIsListening(false); // Following outline: Removed console.error
-      recognitionInstance.onend = () => setIsListening(false);
-
-      setRecognition(recognitionInstance);
-    } else {
-      console.warn("Speech Recognition API not supported in this browser.");
-    }
-  }, [handleSearch]); // Added handleSearch dependency
-
-  const startListening = () => {
-    if (recognition && !isListening) {
-      setIsListening(true);
-      // Following outline: Removed setSearchTerm(''), setFilteredGames([]), onSearch('')
-      recognition.start();
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    setShowSuggestions(false);
-    setFilteredGames([]); // Clear filtered games when search term is empty
-    onSearch('');
-  };
-
-  // selectGameAndClear logic is now inline in the onClick, matching the outline's structure.
-  // The original had a separate function, but the outline moved it inline and simplified.
-
-  return (
-    <div className="relative mb-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-3">
-        <Search className="w-5 h-5 text-slate-400" />
-        <Input
-          placeholder="Search your games or say 'Play [game name]'..." // Added ellipsis per outline
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            handleSearch(e.target.value);
-          }}
-          className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder:text-slate-400" // Changed focus-visible to focus per outline
-        />
-        {searchTerm && (
-          <Button onClick={clearSearch} size="icon" variant="ghost" className="h-6 w-6 text-slate-400 hover:text-white">
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-        <Button
-          onClick={startListening}
-          variant="ghost"
-          size="icon"
-          className={`h-8 w-8 ${isListening ? 'text-red-500 animate-pulse bg-red-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
-        >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-        </Button>
-      </div>
-
-      {/* Search Suggestions */}
-      <AnimatePresence>
-        {showSuggestions && filteredGames.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 z-20 mt-2 bg-slate-900/95 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-xl max-h-60 overflow-y-auto"
+const FeaturedContent = ({ onPlay }) => (
+  <div className="relative w-full h-[60vh] rounded-3xl overflow-hidden mb-8 group">
+    <img 
+      src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop" 
+      alt="Featured" 
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+    <div className="absolute bottom-0 left-0 p-12 w-full max-w-3xl">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full uppercase tracking-wider mb-4 inline-block">
+          Trending Now
+        </span>
+        <h1 className="text-6xl font-black text-white mb-4 leading-tight tracking-tight">
+          DUNE: PART TWO
+        </h1>
+        <p className="text-white/80 text-lg mb-8 line-clamp-2 max-w-2xl">
+          Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.
+        </p>
+        <div className="flex gap-4">
+          <button 
+            onClick={onPlay}
+            className="px-8 py-4 bg-white text-black rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform"
           >
-            <div className="p-2">
-              {filteredGames.slice(0, 5).map((game) => (
-                <button
-                  key={game.id}
-                  onClick={() => {
-                    onGameSelect(game);
-                    setShowSuggestions(false);
-                    setSearchTerm('');
-                    // Following outline: Removed onSearch('')
-                  }}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-slate-800/50 rounded-lg transition-colors text-left"
-                >
-                  <img src={game.image} alt={game.title} className="w-10 h-10 object-cover rounded" />
-                  <div>
-                    <p className="text-white font-medium">{game.title}</p>
-                    <p className="text-slate-400 text-sm">{game.genre}</p>
-                  </div>
-                  <Play className="w-4 h-4 text-blue-400 ml-auto" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Play fill="currentColor" className="w-5 h-5" />
+            Watch Trailer
+          </button>
+          <button className="px-8 py-4 bg-white/10 backdrop-blur-md text-white rounded-xl font-bold flex items-center gap-2 hover:bg-white/20 transition-colors">
+            <Heart className="w-5 h-5" />
+            Add to List
+          </button>
+        </div>
+      </motion.div>
     </div>
-  );
-};
+  </div>
+);
 
-const EntertainmentHub = () => {
-  const [activeTab, setActiveTab] = useState('pinned-games');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const gamesPerPage = 12;
-  const { user, isAuthenticated } = useAuth();
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
+const AppView = ({ app, onClose }) => (
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    className="flex-1 h-full flex flex-col relative"
+  >
+    {/* Simulated App Header */}
+    <div className="h-16 border-b border-white/10 flex items-center justify-between px-8 bg-black/40 backdrop-blur-md">
+      <div className="flex items-center gap-4">
+        <div 
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: app.color }}
+        >
+          <app.icon className="w-5 h-5 text-white" />
+        </div>
+        <h2 className="text-xl font-bold text-white tracking-wide">{app.name}</h2>
+      </div>
+      <div className="flex items-center gap-4">
+        <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
+          <Search className="w-5 h-5" />
+        </button>
+        <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
+          <User className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
 
-  // Sample owned games - wrapped in useMemo to prevent recreation on every render
-  const ownedGames = useMemo(() => [
-    { id: '1', title: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200&h=300&fit-crop', genre: 'RPG' },
-    { id: '2', title: 'Elder Scrolls Reborn', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=300&fit-crop', genre: 'Fantasy' },
-    { id: '3', title: 'Half-Life Reconstructed', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&h=300&fit-crop', genre: 'FPS' },
-    { id: '4', title: 'Diablo Eternal', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=200&h=300&fit-crop', genre: 'ARPG' },
-    { id: '5', title: 'StarCraft Ghost', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200&h=300&fit-crop', genre: 'Strategy' },
-    { id: '6', title: 'Metroid Evolved', image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=200&h=300&fit-crop', genre: 'Adventure' },
-    { id: '7', title: 'Final Fantasy XVI', image: 'https://images.unsplash.com/photo-1591154669695-5f2a8d20c089?w=200&h=300&fit-crop', genre: 'JRPG' },
-    { id: '8', title: 'Mass Effect Legacy', image: 'https://images.unsplash.com/photo-1614732444964-6e4fb0aa7e51?w=200&h=300&fit-crop', genre: 'Sci-Fi' },
-    { id: '9', title: 'Witcher IV', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200&h=300&fit-crop', genre: 'RPG' },
-    { id: '10', title: 'Assassins Creed Origins', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=200&h=300&fit-crop', genre: 'Action' },
-    { id: '11', title: 'Call of Duty Future', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=200&h=300&fit-crop', genre: 'FPS' },
-    { id: '12', title: 'Minecraft Evolved', image: 'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=200&h=300&fit-crop', genre: 'Sandbox' },
-    { id: '13', title: 'Overwatch 3', image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=200&h=300&fit-crop', genre: 'Hero Shooter' },
-    { id: '14', title: 'League of Legends 2', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&h=300&fit-crop', genre: 'MOBA' }
-  ], []);
-
-  const streamingServices = useMemo(() => [
-    { name: 'Netflix', icon: 'https://img.icons8.com/color/48/netflix.png', url: 'https://netflix.com', color: '#E50914' },
-    { name: 'Hulu', icon: 'https://img.icons8.com/color/48/hulu.png', url: 'https://hulu.com', color: '#1CE783' },
-    { name: 'Prime Video', icon: 'https://img.icons8.com/color/48/amazon-prime-video.png', url: 'https://primevideo.com', color: '#00A8E1' },
-    { name: 'Disney+', icon: 'https://img.icons8.com/color/48/disney-plus.png', url: 'https://disneyplus.com', color: '#113CCF' },
-    { name: 'Max', icon: 'https://img.icons8.com/color/48/hbo-max.png', url: 'https://max.com', color: '#7B2D8E' },
-    { name: 'Crunchyroll', icon: 'https://img.icons8.com/color/48/crunchyroll.png', url: 'https://crunchyroll.com', color: '#FF6600' },
-    { name: 'YouTube', icon: 'https://img.icons8.com/color/48/youtube-play.png', url: 'https://youtube.com', color: '#FF0000' },
-    { name: 'Twitch', icon: 'https://img.icons8.com/color/48/twitch.png', url: 'https://twitch.tv', color: '#9146FF' },
-    { name: 'Apple TV', icon: 'https://img.icons8.com/color/48/apple-tv.png', url: 'https://tv.apple.com', color: '#000000' },
-    { name: 'Spotify', icon: 'https://img.icons8.com/color/48/spotify.png', url: 'https://spotify.com', color: '#1DB954' }
-  ], []);
-
-  // 3D Animation for background
-  useEffect(() => {
-    if (activeTab !== 'clip-editor') return;
-    
-    const canvas = document.getElementById('entertainment-3d-bg');
-    if (!canvas) return;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-
-    // Add floating geometric shapes for clip editor ambiance
-    const geometry = new THREE.OctahedronGeometry(0.5);
-    const material = new THREE.MeshPhongMaterial({ 
-      color: 0x8b5cf6, 
-      transparent: true, 
-      opacity: 0.3,
-      wireframe: true 
-    });
-
-    const shapes = [];
-    for (let i = 0; i < 8; i++) {
-      const shape = new THREE.Mesh(geometry, material.clone());
-      shape.position.set(
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10
-      );
-      shapes.push(shape);
-      scene.add(shape);
-    }
-
-    // Lighting
-    const light = new THREE.AmbientLight(0x404040, 0.5);
-    scene.add(light);
-    const directional = new THREE.DirectionalLight(0x8b5cf6, 0.8);
-    directional.position.set(5, 5, 5);
-    scene.add(directional);
-
-    camera.position.z = 8;
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      shapes.forEach((shape, index) => {
-        shape.rotation.x += 0.002 + index * 0.0005;
-        shape.rotation.y += 0.003 + index * 0.0003;
-        shape.position.y += Math.sin(Date.now() * 0.001 + index) * 0.001;
-      });
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      // Clean up Three.js resources
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-        rendererRef.current = null;
-      }
-      if (sceneRef.current) {
-        // Dispose of geometry and materials
-        sceneRef.current.traverse((object) => {
-          if (object.isMesh) {
-            if (object.geometry) {
-              object.geometry.dispose();
-            }
-            if (object.material) {
-              if (Array.isArray(object.material)) {
-                object.material.forEach((material) => material.dispose());
-              } else {
-                object.material.dispose();
-              }
-            }
-          }
-        });
-        sceneRef.current = null;
-      }
-    };
-  }, [activeTab]);
-
-  // Filter games based on search - now with stable ownedGames dependency
-  const filteredOwnedGames = useMemo(() => {
-    if (!searchQuery) return ownedGames;
-    return ownedGames.filter(game => 
-      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.genre.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, ownedGames]);
-
-  const handleGameSearch = useCallback((query) => {
-    setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
-  }, []); // No dependencies needed as setSearchQuery and setCurrentPage are stable setters
-
-  const handleGameSelect = useCallback((game) => {
-    console.log('Selected game:', game.title);
-    // Add game launch logic here
-    // Following outline: Removed setSearchQuery('')
-  }, []); // No dependencies needed for this simple logic
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredOwnedGames.length / gamesPerPage);
-  const paginatedGames = filteredOwnedGames.slice((currentPage - 1) * gamesPerPage, currentPage * gamesPerPage);
-
-  const tabs = [
-    { id: 'pinned-games', label: 'Pinned Games', icon: Gamepad2 },
-    { id: 'entertainment', label: 'Entertainment', icon: Tv },
-    { id: 'clip-editor', label: 'Clip Editor', icon: Video }
-  ];
-
-  const GameTile = ({ game }) => (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ scale: 1.05, y: -5 }}
-      className="bg-slate-800/60 rounded-lg overflow-hidden border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 cursor-pointer group"
-    >
-      <div className="relative h-32 overflow-hidden">
-        <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-        <Badge className="absolute top-2 left-2 text-xs" variant="secondary">{game.genre}</Badge>
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
-          <Play className="w-8 h-8 text-white" />
+    {/* App Content Placeholder */}
+    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+      <div className="w-full h-96 rounded-2xl mb-8 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-transparent z-10" />
+        <div 
+          className="absolute inset-0 opacity-30"
+          style={{ backgroundColor: app.color }}
+        />
+        <img 
+          src={`https://source.unsplash.com/random/1200x600?${app.id},movie`} 
+          alt="Hero" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute bottom-8 left-8 z-20">
+          <h3 className="text-4xl font-bold text-white mb-2">{app.name} Originals</h3>
+          <p className="text-white/70 max-w-xl text-lg mb-6">{app.description}</p>
+          <button className="px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors">
+            Start Watching
+          </button>
         </div>
       </div>
-      <div className="p-3">
-        <h4 className="font-semibold text-white text-sm truncate">{game.title}</h4>
-      </div>
-    </motion.div>
-  );
 
-  const StreamingTile = ({ service }) => (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => window.open(service.url, '_blank')}
-      className="bg-slate-800/60 rounded-lg p-4 border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300 cursor-pointer group text-center"
-    >
-      <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-        <img src={service.icon} alt={service.name} className="w-10 h-10 group-hover:scale-110 transition-transform" />
+      <h3 className="text-white font-bold text-lg mb-4">Recommended For You</h3>
+      <div className="grid grid-cols-5 gap-4 mb-8">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="aspect-[2/3] bg-white/5 rounded-xl overflow-hidden hover:scale-105 transition-transform cursor-pointer relative group">
+             <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+               <div className="flex items-center gap-1 text-xs text-white">
+                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                 <span>4.{i}</span>
+               </div>
+             </div>
+             <div className="w-full h-full bg-gradient-to-br from-white/5 to-white/10 animate-pulse" />
+          </div>
+        ))}
       </div>
-      <h4 className="font-semibold text-white text-sm">{service.name}</h4>
-    </motion.div>
-  );
+
+      <h3 className="text-white font-bold text-lg mb-4">Continue Watching</h3>
+      <div className="grid grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="aspect-video bg-white/5 rounded-xl overflow-hidden hover:ring-2 ring-white/20 transition-all cursor-pointer relative">
+            <div className="absolute bottom-0 left-0 h-1 bg-red-600" style={{ width: `${Math.random() * 100}%` }} />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/40 transition-opacity">
+              <Play className="w-12 h-12 text-white fill-white" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </motion.div>
+);
+
+export default function EntertainmentHub() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeApp, setActiveApp] = useState(null);
 
   return (
-    <div 
-      className="flex flex-col relative"
-    >
-      {/* 3D Background for Clip Editor */}
-      {activeTab === 'clip-editor' && (
-        <canvas 
-          id="entertainment-3d-bg" 
-          className="absolute inset-0 pointer-events-none opacity-20 z-0" 
-          style={{ width: '100%', height: '100%' }}
-        />
-      )}
+    <div className="w-full h-full flex bg-[#050505] overflow-hidden text-white font-sans selection:bg-purple-500/30">
+      
+      {/* Collapsible Sidebar */}
+      <motion.div 
+        initial={{ width: 80 }}
+        animate={{ width: sidebarOpen ? 280 : 80 }}
+        className="flex-shrink-0 border-r border-white/5 bg-[#0a0a0a] flex flex-col relative z-20 transition-all duration-300 ease-in-out"
+      >
+        {/* Toggle Handle */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="absolute -right-3 top-12 w-6 h-12 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-600 hover:border-purple-500 transition-colors z-30 shadow-xl"
+        >
+          {sidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        </button>
 
-      <div className="relative z-10">
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 bg-slate-900/50 p-1 rounded-lg max-w-lg mx-auto">
-          {tabs.map((tab) => (
+        {/* Header/Logo Area */}
+        <div className="h-24 flex items-center justify-center border-b border-white/5 mb-2">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <Play className="w-4 h-4 text-white fill-white" />
+              </div>
+              <span className="font-bold text-xl tracking-tight">MEDIA<span className="text-purple-500">HUB</span></span>
+            </div>
+          ) : (
+             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+                <Play className="w-5 h-5 text-white fill-white" />
+              </div>
+          )}
+        </div>
+
+        {/* Apps List */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-2 custom-scrollbar">
+          <button
+            onClick={() => setActiveApp(null)}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              !activeApp 
+                ? 'bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]' 
+                : 'text-white/40 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${!activeApp ? 'bg-purple-600' : 'bg-white/5'}`}>
+              <Menu className="w-5 h-5" />
+            </div>
+            {sidebarOpen && (
+              <motion.span 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="font-semibold whitespace-nowrap"
+              >
+                Dashboard
+              </motion.span>
+            )}
+          </button>
+
+          <div className="h-px bg-white/5 my-4 mx-2" />
+
+          {STREAMING_APPS.map((app) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              key={app.id}
+              onClick={() => setActiveApp(app)}
+              className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${
+                activeApp?.id === app.id 
+                  ? 'bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]' 
+                  : 'text-white/40 hover:text-white hover:bg-white/5'
               }`}
             >
-              <tab.icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <div 
+                className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110"
+                style={{ backgroundColor: activeApp?.id === app.id ? app.color : 'rgba(255,255,255,0.05)' }}
+              >
+                <app.icon className={`w-5 h-5 ${activeApp?.id === app.id ? 'text-white' : 'text-current'}`} />
+              </div>
+              {sidebarOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-start min-w-0"
+                >
+                  <span className="font-semibold whitespace-nowrap truncate w-full text-left">{app.name}</span>
+                  <span className="text-[10px] text-white/30 truncate w-32 text-left">Click to launch</span>
+                </motion.div>
+              )}
             </button>
           ))}
         </div>
+        
+        {/* User Profile / Footer */}
+        <div className="p-4 border-t border-white/5">
+           <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 border-2 border-white/10" />
+             {sidebarOpen && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-left">
+                 <p className="text-sm font-bold">Marcus</p>
+                 <p className="text-xs text-white/40">Premium Plan</p>
+               </motion.div>
+             )}
+           </button>
+        </div>
+      </motion.div>
 
-        {/* Tab Content */}
-        <div className="flex-grow">
-          <AnimatePresence mode="wait">
-            {activeTab === 'pinned-games' && (
-              <motion.div
-                key="pinned-games"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full flex flex-col"
-              >
-                {/* Voice Search Bar */}
-                <GameVoiceSearch 
-                  onSearch={handleGameSearch}
-                  games={ownedGames}
-                  onGameSelect={handleGameSelect}
-                />
-
-                {/* Search Results Info */}
-                {searchQuery && (
-                  <div className="mb-4 text-center">
-                    <p className="text-slate-400">
-                      {filteredOwnedGames.length > 0 
-                        ? `Found ${filteredOwnedGames.length} games matching "${searchQuery}"`
-                        : `No games found matching "${searchQuery}"`
-                      }
-                    </p>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#050505] relative">
+        <AnimatePresence mode="wait">
+          {activeApp ? (
+            <AppView key={activeApp.id} app={activeApp} onClose={() => setActiveApp(null)} />
+          ) : (
+            <motion.div 
+              key="dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 overflow-y-auto custom-scrollbar"
+            >
+              {/* Dashboard Header */}
+              <div className="sticky top-0 z-30 px-8 py-6 bg-[#050505]/80 backdrop-blur-xl flex items-center justify-between">
+                <h1 className="text-2xl font-bold tracking-tight">Entertainment Center</h1>
+                <div className="flex gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input 
+                      type="text" 
+                      placeholder="Search movies, shows..." 
+                      className="bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all w-64"
+                    />
                   </div>
-                )}
+                  <button className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors relative">
+                    <Bell className="w-5 h-5 text-white/70" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  </button>
+                </div>
+              </div>
 
-                {/* Games Grid */}
-                {filteredOwnedGames.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4 max-w-4xl mx-auto">
-                    <AnimatePresence>
-                      {paginatedGames.map((game) => (
-                        <GameTile key={game.id} game={game} />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  // No Results Message
-                  searchQuery && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex-1 flex flex-col items-center justify-center py-10"
+              <div className="px-8 pb-12">
+                <FeaturedContent onPlay={() => setActiveApp(STREAMING_APPS[1])} />
+                
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-purple-500" />
+                    Popular on Your Apps
+                  </h2>
+                </div>
+
+                {/* Horizontal Scroll List */}
+                <div className="flex gap-6 overflow-x-auto pb-8 custom-scrollbar snap-x">
+                  {STREAMING_APPS.slice(0, 6).map((app, i) => (
+                    <div 
+                      key={app.id} 
+                      onClick={() => setActiveApp(app)}
+                      className="flex-shrink-0 w-64 aspect-[2/3] bg-white/5 rounded-2xl overflow-hidden relative group cursor-pointer snap-start border border-white/5 hover:border-white/20 transition-all hover:scale-105"
                     >
-                      <div className="text-center">
-                        <Gamepad2 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-slate-400 mb-2">No Games Found</h3>
-                        <p className="text-slate-500">Try a different search term or browse all games</p>
-                        <Button onClick={() => setSearchQuery('')} className="mt-4" variant="outline">
-                          Clear Search
-                        </Button>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+                      <div className="absolute top-4 left-4 z-20">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-md" style={{ backgroundColor: app.color }}>
+                          <app.icon className="w-4 h-4 text-white" />
+                        </div>
                       </div>
-                    </motion.div>
-                  )
-                )}
-
-                {/* Pagination - only show if there are results */}
-                {filteredOwnedGames.length > 0 && totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-700/50 max-w-4xl mx-auto">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="text-slate-300 border-slate-600"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    
-                    <div className="flex gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 p-0 ${
-                            currentPage === page
-                              ? 'bg-blue-600 text-white'
-                              : 'text-slate-300 border-slate-600'
-                          }`}
-                        >
-                          {page}
-                        </Button>
-                      ))}
+                      <div className="absolute bottom-4 left-4 z-20">
+                        <p className="font-bold text-lg leading-tight mb-1">{app.name} Top Pick</p>
+                        <p className="text-xs text-white/60">Trending today</p>
+                      </div>
+                      <div className="w-full h-full bg-white/5 animate-pulse" />
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="text-slate-300 border-slate-600"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {activeTab === 'entertainment' && (
-              <motion.div
-                key="entertainment"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full"
-              >
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto">
-                  {streamingServices.map((service) => (
-                    <StreamingTile key={service.name} service={service} />
                   ))}
                 </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'clip-editor' && (
-              <motion.div
-                key="clip-editor"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full relative z-10"
-              >
-                <GameplayClipEditor />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
-};
-
-export default EntertainmentHub;
+}
