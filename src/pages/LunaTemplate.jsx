@@ -2547,7 +2547,7 @@ export default function LunaTemplate() {
                </button>
              )}
 
-             <div className="h-full w-full pt-20 overflow-hidden">
+             <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
