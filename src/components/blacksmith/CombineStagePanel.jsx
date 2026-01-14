@@ -191,74 +191,41 @@ const ResultCard = ({ card }) => {
 };
 
 export default function CombineStagePanel({ item, onCombine }) {
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [combineCount, setCombineCount] = useState(1);
+  const [selectedMaterials, setSelectedMaterials] = useState([]);
   const [dropZoneCard, setDropZoneCard] = useState(null);
-  const [autoSelectedCards, setAutoSelectedCards] = useState([]);
   const [isCombining, setIsCombining] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
   const inventory = useMemo(() => generateMockInventory(item), [item]);
-  const maxCombine = 12;
 
   const handleSelectCard = (card) => {
-    if (selectedCard?.id === card.id) {
-      // Deselect
-      setSelectedCard(null);
-      setAutoSelectedCards([]);
+    if (!dropZoneCard) {
+      // If no drop zone card, first click selects it as target
+      setDropZoneCard(card);
+    } else if (dropZoneCard.id === card.id) {
+      // If clicking drop zone card in inventory, remove it from drop zone
+      setDropZoneCard(null);
+      setSelectedMaterials([]); // Reset materials if target removed
     } else {
-      // Select this card and auto-select same type cards
-      setSelectedCard(card);
-      
-      // Find other cards of same type
-      const sameTypeCards = inventory.filter(c => 
-        c.card_type === card.card_type && c.id !== card.id
-      );
-      
-      // Auto-select up to combineCount - 1 additional cards (since we already have the main one)
-      const additionalCards = sameTypeCards.slice(0, combineCount - 1);
-      setAutoSelectedCards(additionalCards);
+      // Toggle material selection
+      if (selectedMaterials.some(c => c.id === card.id)) {
+        setSelectedMaterials(prev => prev.filter(c => c.id !== card.id));
+      } else {
+        setSelectedMaterials(prev => [...prev, card]);
+      }
     }
   };
 
   const handleDropZoneClick = () => {
-    if (selectedCard && !dropZoneCard) {
-      setDropZoneCard(selectedCard);
-    }
-  };
-
-  const handleIncrement = () => {
-    if (combineCount < maxCombine) {
-      const newCount = combineCount + 1;
-      setCombineCount(newCount);
-      
-      // Update auto-selected cards if we have a selection
-      if (selectedCard) {
-        const sameTypeCards = inventory.filter(c => 
-          c.card_type === selectedCard.card_type && c.id !== selectedCard.id
-        );
-        setAutoSelectedCards(sameTypeCards.slice(0, newCount - 1));
-      }
-    }
-  };
-
-  const handleDecrement = () => {
-    if (combineCount > 1) {
-      const newCount = combineCount - 1;
-      setCombineCount(newCount);
-      
-      // Update auto-selected cards
-      if (selectedCard) {
-        const sameTypeCards = inventory.filter(c => 
-          c.card_type === selectedCard.card_type && c.id !== selectedCard.id
-        );
-        setAutoSelectedCards(sameTypeCards.slice(0, newCount - 1));
-      }
+    // Optional: Clicking drop zone removes the card
+    if (dropZoneCard) {
+      setDropZoneCard(null);
+      setSelectedMaterials([]);
     }
   };
 
   const handleCombineStage = async () => {
-    if (!dropZoneCard) return;
+    if (!dropZoneCard || selectedMaterials.length === 0) return;
     
     setIsCombining(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -266,23 +233,25 @@ export default function CombineStagePanel({ item, onCombine }) {
     setIsCombining(false);
     
     if (onCombine) {
-      onCombine(dropZoneCard, [selectedCard, ...autoSelectedCards]);
+      onCombine(dropZoneCard, selectedMaterials);
     }
   };
 
   const resetCombine = () => {
-    setSelectedCard(null);
-    setAutoSelectedCards([]);
+    setSelectedMaterials([]);
     setDropZoneCard(null);
     setShowResult(false);
   };
 
   const isCardSelected = (card) => {
-    if (selectedCard?.id === card.id) return true;
-    return autoSelectedCards.some(c => c.id === card.id);
+    if (dropZoneCard?.id === card.id) return true;
+    return selectedMaterials.some(c => c.id === card.id);
   };
+  
+  const isCardDropTarget = (card) => dropZoneCard?.id === card.id;
+  const isCardMaterial = (card) => selectedMaterials.some(c => c.id === card.id);
 
-  const totalSelected = selectedCard ? 1 + autoSelectedCards.length : 0;
+  const totalSelected = selectedMaterials.length;
 
   if (!item) {
     return (
