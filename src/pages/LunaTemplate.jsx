@@ -1181,23 +1181,7 @@ export default function LunaTemplate() {
         </div>
       }
 
-      {/* Focus Mode Background Overlay - More translucent when custom background is active */}
-      <AnimatePresence>
-        {!uiVisible && !showConsoleMode &&
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-10"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 95, 0.75) 50%, rgba(15, 23, 42, 0.85) 100%)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)'
-            }} />
-
-        }
-      </AnimatePresence>
+      {/* Focus Mode Background Overlay - Removed to show custom background */}
 
       {/* Plasma Water Video Background - Shows when I key is pressed (uiVisible) */}
       <AnimatePresence>
