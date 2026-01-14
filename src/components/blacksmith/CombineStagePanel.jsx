@@ -354,12 +354,13 @@ export default function CombineStagePanel({ item, onCombine }) {
 
           {/* Result */}
           <div className="w-36 h-48 rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center bg-white/[0.02]">
-            {showResult && dropZoneCard ? (
-              <ResultCard card={dropZoneCard} />
+            {/* Show preview result immediately when items selected, or actual result after combine */}
+            {(showResult || (dropZoneCard && selectedMaterials.length > 0)) ? (
+              <ResultCard card={{...dropZoneCard, increment: selectedMaterials.length}} />
             ) : (
               <div className="text-center text-white/30">
                 <Sparkles className="w-10 h-10 mx-auto mb-2" />
-                <p className="text-xs">Result</p>
+                <p className="text-xs">Result Preview</p>
               </div>
             )}
           </div>
