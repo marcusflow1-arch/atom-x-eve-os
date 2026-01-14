@@ -163,7 +163,11 @@ const DropZone = ({ card, onRemove, onClick, hasSelection }) => {
 const ResultCard = ({ card }) => {
   if (!card) return null;
   
-  const newCombineStage = (card.combine_stage || 0) + 1;
+  // Determine increment based on passed props or state? 
+  // ResultCard needs to know how many materials are selected.
+  // We can pass `increment` prop.
+  const increment = card.increment || 1; 
+  const newCombineStage = (card.combine_stage || 0) + increment;
   const borderColor = rarityColors[card?.rarity] || 'border-slate-500';
   
   return (
@@ -191,7 +195,7 @@ const ResultCard = ({ card }) => {
       <div className="absolute top-2 left-2 right-2 flex justify-between">
         <div className="bg-green-500 px-2 py-0.5 rounded flex items-center gap-1">
           <span className="text-xs text-white font-bold">CS{newCombineStage}</span>
-          <span className="text-[10px] text-green-200">+1</span>
+          <span className="text-[10px] text-green-200">+{increment}</span>
         </div>
         <span className="text-xs bg-black/60 px-1.5 py-0.5 rounded text-amber-400">
           {card.enhancement_level || 0}%
