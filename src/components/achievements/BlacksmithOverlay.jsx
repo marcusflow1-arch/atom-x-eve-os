@@ -119,11 +119,11 @@ export default function BlacksmithOverlay({ card, onClose }) {
   };
 
   const handleCombine = () => {
-    if (selectedDuplicates.length < 2) return;
+    if (selectedDuplicates.length < 1) return;
     setIsUpgrading(true);
     
     setTimeout(() => {
-      setCardStars(prev => Math.min(prev + 1, 5));
+      setCardStars(prev => Math.min(prev + selectedDuplicates.length, 5));
       setSelectedDuplicates([]);
       setIsUpgrading(false);
       setShowSuccess(true);
@@ -541,15 +541,15 @@ export default function BlacksmithOverlay({ card, onClose }) {
                       {/* Combine Button */}
                       <Button
                         onClick={handleCombine}
-                        disabled={selectedDuplicates.length < 2 || cardStars >= 5 || isUpgrading}
+                        disabled={selectedDuplicates.length < 1 || cardStars >= 5 || isUpgrading}
                         className={`w-full py-6 text-lg font-bold ${
-                          selectedDuplicates.length >= 2 && cardStars < 5
+                          selectedDuplicates.length >= 1 && cardStars < 5
                             ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white'
                             : 'bg-white/10 text-white/30 cursor-not-allowed'
                         }`}
                       >
                         <Merge className="w-5 h-5 mr-2" />
-                        {cardStars >= 5 ? 'Max Stars Reached' : `Combine ${selectedDuplicates.length} Cards`}
+                        {cardStars >= 5 ? 'Max Stars Reached' : `Combine ${selectedDuplicates.length} Cards (+${selectedDuplicates.length} Stars)`}
                       </Button>
                     </div>
                   </motion.div>
