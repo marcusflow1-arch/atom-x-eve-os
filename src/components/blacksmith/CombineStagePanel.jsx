@@ -277,41 +277,40 @@ export default function CombineStagePanel({ item, onCombine }) {
         <div className="flex items-center justify-between">
           <h3 className="text-white font-bold text-lg">Select Cards</h3>
           
-          {/* Counter - No box */}
+          {/* Status Display */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleDecrement}
-              disabled={combineCount <= 1}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center text-white transition-colors"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <span className="text-white font-bold text-xl min-w-[2ch] text-center">{combineCount}</span>
-            <button
-              onClick={handleIncrement}
-              disabled={combineCount >= maxCombine}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center text-white transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+             <div className="px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white font-medium text-sm">
+                Materials: <span className="text-green-400 font-bold">{totalSelected}</span>
+             </div>
           </div>
         </div>
         
-        <p className="text-white/40 text-sm">{totalSelected}/{combineCount} cards selected</p>
+        <p className="text-white/40 text-sm">
+           {!dropZoneCard ? 'Select a target card first' : 'Select duplicate cards to combine'}
+        </p>
 
         {/* Inventory Grid - 5 columns, 4 rows visible, scrollable */}
         <div 
           className="grid grid-cols-5 gap-3 max-h-[600px] overflow-y-auto pr-2"
           style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}
         >
-          {inventory.map((card) => (
-            <InventoryCard
-              key={card.id}
-              card={card}
-              isSelected={isCardSelected(card)}
-              onClick={() => handleSelectCard(card)}
-            />
-          ))}
+          {inventory.map((card) => {
+             // Pass specific status prop for visual feedback
+             let statusColor = 'border-slate-500'; // default
+             if (isCardDropTarget(card)) statusColor = 'border-blue-500'; // Target = Blue
+             else if (isCardMaterial(card)) statusColor = 'border-green-500'; // Material = Green
+             
+             return (
+              <InventoryCard
+                key={card.id}
+                card={{...card, rarity: isCardDropTarget(card) ? 'Rare' : isCardMaterial(card) ? 'Uncommon' : card.rarity}} // Hack for borderColor usage inside component, or better pass status prop if refactored. 
+                // Actually InventoryCard uses card.rarity for border. Let's pass a custom style prop or hijack.
+                // Better yet, update InventoryCard signature in next find_replace to accept 'status'
+                isSelected={isCardSelected(card)}
+                onClick={() => handleSelectCard(card)}
+              />
+            );
+          })}
         </div>
       </div>
 
