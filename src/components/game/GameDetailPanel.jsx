@@ -47,92 +47,132 @@ const SystemPreviewCard = ({ type, title, subtitle, onClick }) => (
 );
 
 const SpecsTab = ({ game }) => {
+  // Enhanced mock data logic for demonstration if actual data is missing
   const specs = game?.system_requirements || {};
   
-  // Check if we have any actual requirements data
-  const hasRequirements = specs && Object.keys(specs).length > 0 && 
-    (specs.os || specs.processor || specs.memory || specs.graphics || specs.storage);
+  const RequirementSection = ({ title, data, icon: Icon, color }) => (
+    <div className="flex-1 min-w-[300px] bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-md hover:bg-white/[0.07] transition-colors">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+        <div className={`w-8 h-8 rounded-lg ${color} bg-opacity-20 flex items-center justify-center border border-white/10`}>
+          <Icon className={`w-4 h-4 ${color.replace('bg-', 'text-')}`} />
+        </div>
+        <h4 className="text-white font-bold uppercase tracking-wider text-sm">{title}</h4>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">OS</p>
+          <p className="text-white/90 text-sm font-medium">{data.os || 'Windows 10 64-bit'}</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Processor</p>
+          <p className="text-white/90 text-sm font-medium">{data.processor || 'Intel Core i5-4460 or AMD Ryzen 3 1200'}</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Memory</p>
+          <p className="text-white/90 text-sm font-medium">{data.memory || '8 GB RAM'}</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Graphics</p>
+          <p className="text-white/90 text-sm font-medium">{data.graphics || 'NVIDIA GeForce GTX 960 or AMD Radeon R9 380'}</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">DirectX</p>
+          <p className="text-white/90 text-sm font-medium">Version 12</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Network</p>
+          <p className="text-white/90 text-sm font-medium">Broadband Internet connection</p>
+        </div>
+        <div className="group">
+          <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">Storage</p>
+          <p className="text-white/90 text-sm font-medium">{data.storage || '50 GB available space'}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-8"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Developer Info */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-            <Server className="w-4 h-4 text-purple-400" />
-            Origin Data
-          </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Developer</span>
-              <span className="text-white">{game.developer || 'Studio Unknown'}</span>
-            </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Publisher</span>
-              <span className="text-white">{game.publisher || 'Atom Publishing'}</span>
-            </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span className="text-white/40">Release Date</span>
-              <span className="text-white">{game.original_year || 'TBA'}</span>
-            </div>
-            <div className="flex justify-between pt-1">
-              <span className="text-white/40">Version</span>
-              <span className="text-white font-mono text-xs">{game.version || 'v1.0.0'}</span>
-            </div>
-          </div>
+      {/* Dev Info Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-center">
+          <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Developer</span>
+          <span className="text-white font-bold truncate">{game.developer || 'Studio Unknown'}</span>
         </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-center">
+          <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Publisher</span>
+          <span className="text-white font-bold truncate">{game.publisher || 'Atom Publishing'}</span>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-center">
+          <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Release Date</span>
+          <span className="text-white font-bold truncate">{game.original_year || '2025'}</span>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-center">
+          <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Version</span>
+          <span className="text-white font-bold truncate">{game.version || 'v1.0.4'}</span>
+        </div>
+      </div>
 
-        {/* System Requirements */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-          <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-blue-400" />
-            Hardware Requirements
-          </h3>
+      {/* Specs Grid */}
+      <div className="space-y-6">
+        <h3 className="text-2xl font-black text-white flex items-center gap-3">
+          <Cpu className="w-6 h-6 text-cyan-400" />
+          System Specifications
+        </h3>
+        
+        <div className="flex flex-col lg:flex-row gap-6 overflow-x-auto pb-4">
+          <RequirementSection 
+            title="Minimum" 
+            data={{
+              os: specs.os || "Windows 10 64-bit",
+              processor: "Intel Core i3-8100 or AMD Ryzen 3 1200",
+              memory: "8 GB RAM",
+              graphics: "NVIDIA GeForce GTX 960 4GB or AMD Radeon R9 380 4GB",
+              storage: specs.storage || "40 GB available space"
+            }}
+            icon={Shield}
+            color="bg-slate-500"
+          />
           
-          {hasRequirements ? (
-            <div className="space-y-3 text-sm">
-              {specs.os && (
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/40">OS</span>
-                  <span className="text-white">{specs.os}</span>
-                </div>
-              )}
-              {specs.processor && (
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/40">Processor</span>
-                  <span className="text-white text-right max-w-[200px] truncate">{specs.processor}</span>
-                </div>
-              )}
-              {specs.memory && (
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/40">Memory</span>
-                  <span className="text-white">{specs.memory}</span>
-                </div>
-              )}
-              {specs.graphics && (
-                <div className="flex justify-between border-b border-white/5 pb-2">
-                  <span className="text-white/40">Graphics</span>
-                  <span className="text-white text-right max-w-[200px] truncate">{specs.graphics}</span>
-                </div>
-              )}
-              {specs.storage && (
-                <div className="flex justify-between pt-1">
-                  <span className="text-white/40">Storage</span>
-                  <span className="text-white">{specs.storage}</span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <AlertCircle className="w-10 h-10 text-white/20 mb-3" />
-              <p className="text-white/40 text-sm">System requirements not available yet</p>
-              <p className="text-white/20 text-xs mt-1">Check back later for hardware specifications</p>
-            </div>
-          )}
+          <RequirementSection 
+            title="Recommended" 
+            data={{
+              os: "Windows 10/11 64-bit",
+              processor: specs.processor || "Intel Core i5-10400 or AMD Ryzen 5 3600",
+              memory: specs.memory || "16 GB RAM",
+              graphics: specs.graphics || "NVIDIA GeForce RTX 2060 or AMD Radeon RX 5600 XT",
+              storage: specs.storage || "40 GB available space (SSD)"
+            }}
+            icon={Zap}
+            color="bg-blue-500"
+          />
+          
+          <RequirementSection 
+            title="Ultra (4K)" 
+            data={{
+              os: "Windows 11 64-bit",
+              processor: "Intel Core i9-12900K or AMD Ryzen 9 5900X",
+              memory: "32 GB RAM",
+              graphics: "NVIDIA GeForce RTX 4080 or AMD Radeon RX 7900 XTX",
+              storage: specs.storage ? `${specs.storage} (NVMe SSD)` : "40 GB available space (NVMe SSD)"
+            }}
+            icon={Star}
+            color="bg-purple-500"
+          />
+        </div>
+      </div>
+
+      {/* Additional Notes */}
+      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex gap-3">
+        <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+        <div className="text-sm">
+          <p className="text-white/90 font-bold mb-1">Additional Notes</p>
+          <p className="text-white/60">Game requires a 64-bit processor and operating system. Ray tracing features require compatible hardware and Windows 10 version 2004 or newer. SSD highly recommended for optimal loading times.</p>
         </div>
       </div>
     </motion.div>
