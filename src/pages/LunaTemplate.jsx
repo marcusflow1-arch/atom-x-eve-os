@@ -47,6 +47,7 @@ import CommunityPage from './Community';
 import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
+import EntertainmentHub from '../components/dashboard/EntertainmentHub';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
 import { useSkills } from '../components/luna/hooks/useSkills';
@@ -1110,6 +1111,10 @@ export default function LunaTemplate() {
       }
       if (e.key === 'Escape') {
         if (showForumOverlay) setShowForumOverlay(false);
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('panel')) {
+          navigate(createPageUrl('LunaTemplate'));
+        }
       }
     };
     window.addEventListener('keydown', onKey);
@@ -2546,7 +2551,7 @@ export default function LunaTemplate() {
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
-              {activeSubTab === 'entertainment' && <div className="text-white p-8">Entertainment Content Here</div>}
+              {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
           </motion.div>
