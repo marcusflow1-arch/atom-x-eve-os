@@ -480,14 +480,16 @@ export default function SkillTreeOverlay({ card, onClose }) {
             </div>
           </div>
 
-          {/* Right: Unified Skill Tree Box */}
-          <div className="flex-1 relative rounded-3xl overflow-hidden border border-white/10 flex flex-col" style={{
-            background: 'rgba(30, 41, 59, 0.4)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: 'inset 0 0 100px rgba(0,0,0,0.3)'
+          {/* Right: Unified Skill Tree Box with Liquid Glass Finish */}
+          <div className="flex-1 relative rounded-3xl overflow-hidden flex flex-col" style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            backdropFilter: 'blur(40px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
           }}>
             {/* Header */}
-            <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 bg-black/20 flex justify-between items-center">
+            <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 flex justify-between items-center">
               <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">Skill Progression System</h3>
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
