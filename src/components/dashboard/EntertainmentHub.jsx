@@ -3,20 +3,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Tv, Film, Play, ShoppingBag, Clapperboard, Monitor, 
   Mountain, Feather, Search, Bell, User, ChevronRight, 
-  ChevronLeft, Star, Heart, TrendingUp, Menu, X
+  ChevronLeft, Star, Heart, TrendingUp, Menu, X, Zap, Gamepad2, Trophy
 } from 'lucide-react';
 
 const STREAMING_APPS = [
-  { id: 'netflix', name: 'Netflix', color: '#E50914', icon: Film, description: 'Unlimited movies, TV shows, and more.' },
-  { id: 'hbo', name: 'HBO Max', color: '#5C2D91', icon: Tv, description: 'Iconic series, award-winning movies, fresh originals.' },
-  { id: 'disney', name: 'Disney+', color: '#113CCF', icon: Star, description: 'The home of Disney, Pixar, Marvel, Star Wars, and Nat Geo.' },
-  { id: 'hulu', name: 'Hulu', color: '#1CE783', icon: Play, description: 'All your favorite TV shows, movies, and originals.' },
-  { id: 'starz', name: 'Starz', color: '#E4B314', icon: Star, description: 'Obsessable original series and hit movies.' },
-  { id: 'showtime', name: 'Showtime', color: '#E31837', icon: Clapperboard, description: 'Critically acclaimed original series and movies.' },
-  { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: ShoppingBag, description: 'Watch movies, TV, and sports.' },
-  { id: 'apple', name: 'Apple TV+', color: '#FFFFFF', icon: Monitor, description: 'Apple Original shows and movies.' },
-  { id: 'peacock', name: 'Peacock', color: '#000000', icon: Feather, description: 'Stream current hits, hundreds of movies, and thousands of episodes.' },
-  { id: 'paramount', name: 'Paramount+', color: '#0064FF', icon: Mountain, description: 'A mountain of entertainment.' },
+  { id: 'netflix', name: 'Netflix', color: '#E50914', icon: Film, url: 'https://www.netflix.com', description: 'Unlimited movies, TV shows, and more.' },
+  { id: 'max', name: 'Max', color: '#002BE7', icon: Tv, url: 'https://www.max.com', description: 'Iconic series, award-winning movies, fresh originals.' },
+  { id: 'disney', name: 'Disney+', color: '#113CCF', icon: Star, url: 'https://www.disneyplus.com', description: 'The home of Disney, Pixar, Marvel, Star Wars, and Nat Geo.' },
+  { id: 'hulu', name: 'Hulu', color: '#1CE783', icon: Play, url: 'https://www.hulu.com', description: 'All your favorite TV shows, movies, and originals.' },
+  { id: 'prime', name: 'Prime Video', color: '#00A8E1', icon: ShoppingBag, url: 'https://www.amazon.com/primevideo', description: 'Watch movies, TV, and sports.' },
+  { id: 'apple', name: 'Apple TV+', color: '#FFFFFF', icon: Monitor, url: 'https://tv.apple.com', description: 'Apple Original shows and movies.' },
+  { id: 'peacock', name: 'Peacock', color: '#000000', icon: Feather, url: 'https://www.peacocktv.com', description: 'Stream current hits, hundreds of movies, and thousands of episodes.' },
+  { id: 'paramount', name: 'Paramount+', color: '#0064FF', icon: Mountain, url: 'https://www.paramountplus.com', description: 'A mountain of entertainment.' },
+  { id: 'starz', name: 'Starz', color: '#E4B314', icon: Star, url: 'https://www.starz.com', description: 'Obsessable original series and hit movies.' },
+  { id: 'tubi', name: 'Tubi', color: '#F84C1E', icon: Film, url: 'https://tubitv.com', description: 'Watch Free Movies and TV Shows.' },
+  { id: 'pluto', name: 'Pluto TV', color: '#FFFFFF', icon: Tv, url: 'https://pluto.tv', description: 'Drop in. It\'s free.' },
+  { id: 'crunchyroll', name: 'Crunchyroll', color: '#F47521', icon: Zap, url: 'https://www.crunchyroll.com', description: 'The world\'s largest anime collection.' },
+  { id: 'youtube_tv', name: 'YouTube TV', color: '#FF0000', icon: Tv, url: 'https://tv.youtube.com', description: 'Live TV from 100+ channels.' },
+  { id: 'twitch', name: 'Twitch', color: '#9146FF', icon: Gamepad2, url: 'https://www.twitch.tv', description: 'Live streaming for gamers.' },
+  { id: 'sling', name: 'Sling TV', color: '#10069F', icon: Tv, url: 'https://www.sling.com', description: 'Live TV Streaming Service.' },
+  { id: 'espn', name: 'ESPN+', color: '#CC0000', icon: Trophy, url: 'https://plus.espn.com', description: 'Live sports and original shows.' },
 ];
 
 const FeaturedContent = ({ onPlay }) => (
