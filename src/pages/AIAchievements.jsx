@@ -699,167 +699,123 @@ function AIAchievementsView({ onClosePage }) {
                   )}
                 </div>
 
-                {/* RIGHT: Skill Tree Box with Tabs */}
+                {/* RIGHT: Combined Skill Tree Box (Side-by-Side) */}
                 <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
-                  {/* Tab Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-white/10">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setActivePathTab('power')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                          activePathTab === 'power'
-                            ? 'bg-gradient-to-r from-purple-500/30 to-blue-500/20 border border-purple-400/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                            : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                        }`}
-                      >
-                        <Zap className="w-4 h-4" />
-                        Power Path
-                      </button>
-                      <button
-                        onClick={() => setActivePathTab('ai')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                          activePathTab === 'ai'
-                            ? 'bg-gradient-to-r from-cyan-500/30 to-teal-500/20 border border-cyan-400/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-                            : 'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        AI Adaptation Path
-                      </button>
-                    </div>
-                    <div className="text-xs text-white/40">
-                      <span className="text-purple-400 font-bold">1150</span> SP Available
+                  {/* Header Info */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Skill Progression</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-white/40">
+                        <span className="text-purple-400 font-bold">1150</span> SP Available
+                      </div>
+                      <Badge variant="outline" className="text-[10px] border-white/10 bg-white/5">
+                        {selectedGame.title}
+                      </Badge>
                     </div>
                   </div>
 
-                  {/* Skill Tree Content */}
-                  <div className="flex-1 overflow-hidden relative">
-                    <AnimatePresence mode="wait">
-                      {activePathTab === 'power' ? (
-                        <motion.div
-                          key="power-tree"
-                          initial={{ opacity: 0, x: -30 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 30 }}
-                          className="absolute inset-0 p-6 overflow-y-auto custom-scrollbar"
-                        >
-                          {/* Power Path Header */}
-                          <div className="text-center mb-6">
-                            <h3 className="text-lg font-bold text-white">Power Path</h3>
-                            <p className="text-xs text-white/50">Raw strength & combat efficiency</p>
+                  <div className="flex-1 flex overflow-hidden relative">
+                    {/* LEFT COLUMN: Power Path */}
+                    <div className="flex-1 flex flex-col border-r border-white/10 bg-gradient-to-b from-purple-500/[0.02] to-transparent">
+                      <div className="p-4 text-center border-b border-white/5">
+                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/20 text-purple-300 mb-2">
+                          <Swords className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-bold text-white">Power Path</h3>
+                        <p className="text-[10px] text-white/40">Strength & Combat</p>
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="flex flex-col items-center gap-4">
+                          {/* Tier 1 */}
+                          <div className="flex items-center justify-center">
+                            <SkillNode icon={Zap} name="Power Strike" sp={100} unlocked={true} color="purple" />
                           </div>
-
-                          {/* Skill Tree Visual */}
-                          <div className="flex flex-col items-center gap-4">
-                            {/* Tier 1 */}
-                            <div className="flex items-center gap-8">
-                              <SkillNode icon={Zap} name="Power Strike" sp={100} unlocked={true} color="purple" />
-                            </div>
-                            
-                            {/* Connection Line */}
+                          <div className="w-0.5 h-6 bg-purple-500/50" />
+                          
+                          {/* Tier 2 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={TrendingUp} name="Momentum" sp={100} unlocked={true} color="purple" />
+                            <SkillNode icon={Zap} name="Surge" sp={100} unlocked={true} color="purple" />
+                          </div>
+                          <div className="flex items-center justify-center gap-16 w-full">
+                            <div className="w-0.5 h-6 bg-purple-500/30" />
                             <div className="w-0.5 h-6 bg-purple-500/50" />
-                            
-                            {/* Tier 2 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={TrendingUp} name="Momentum" sp={100} unlocked={true} color="purple" />
-                              <SkillNode icon={Zap} name="Surge" sp={100} unlocked={true} color="purple" />
-                            </div>
-                            
-                            {/* Connection Lines */}
-                            <div className="flex items-center gap-16">
-                              <div className="w-0.5 h-6 bg-purple-500/30" />
-                              <div className="w-0.5 h-6 bg-purple-500/50" />
-                            </div>
-                            
-                            {/* Tier 3 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={Crown} name="Dominance" sp={250} unlocked={false} color="purple" />
-                              <SkillNode icon={Swords} name="Fury" sp={250} unlocked={false} color="purple" />
-                            </div>
-                            
-                            {/* Connection Lines */}
-                            <div className="flex items-center gap-16">
-                              <div className="w-0.5 h-6 bg-white/10" />
-                              <div className="w-0.5 h-6 bg-white/10" />
-                            </div>
-                            
-                            {/* Tier 4 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={Target} name="Precision" sp={500} unlocked={false} color="purple" />
-                              <SkillNode icon={Swords} name="Rampage" sp={500} unlocked={false} color="purple" />
-                            </div>
-                            
-                            {/* Connection Line */}
+                          </div>
+                          
+                          {/* Tier 3 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={Crown} name="Dominance" sp={250} unlocked={false} color="purple" />
+                            <SkillNode icon={Swords} name="Fury" sp={250} unlocked={false} color="purple" />
+                          </div>
+                          <div className="flex items-center justify-center gap-16 w-full">
                             <div className="w-0.5 h-6 bg-white/10" />
-                            
-                            {/* Tier 5 - Ultimate */}
-                            <SkillNode icon={Crown} name="Ascendant" sp={1000} unlocked={false} color="purple" ultimate />
+                            <div className="w-0.5 h-6 bg-white/10" />
                           </div>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="ai-tree"
-                          initial={{ opacity: 0, x: 30 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -30 }}
-                          className="absolute inset-0 p-6 overflow-y-auto custom-scrollbar"
-                        >
-                          {/* AI Path Header */}
-                          <div className="text-center mb-6">
-                            <h3 className="text-lg font-bold text-white">AI Adaptation Path</h3>
-                            <p className="text-xs text-white/50">Versatility & behavioral adaptation</p>
-                            <Badge className="mt-2 bg-white/10 text-white/50 border-white/20">Path Locked</Badge>
+                          
+                          {/* Tier 4 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={Target} name="Precision" sp={500} unlocked={false} color="purple" />
+                            <SkillNode icon={Swords} name="Rampage" sp={500} unlocked={false} color="purple" />
                           </div>
+                          <div className="w-0.5 h-6 bg-white/10" />
+                          
+                          {/* Tier 5 */}
+                          <SkillNode icon={Crown} name="Ascendant" sp={1000} unlocked={false} color="purple" ultimate />
+                        </div>
+                      </div>
+                    </div>
 
-                          {/* Skill Tree Visual */}
-                          <div className="flex flex-col items-center gap-4 opacity-60">
-                            {/* Tier 1 */}
-                            <div className="flex items-center gap-8">
-                              <SkillNode icon={Sparkles} name="Neural Link" sp={100} unlocked={false} color="cyan" />
-                            </div>
-                            
-                            {/* Connection Line */}
-                            <div className="w-0.5 h-6 bg-white/10" />
-                            
-                            {/* Tier 2 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={TrendingUp} name="Adaptive" sp={100} unlocked={false} color="cyan" />
-                              <SkillNode icon={Star} name="Instinct" sp={100} unlocked={false} color="cyan" />
-                            </div>
-                            
-                            {/* Connection Lines */}
-                            <div className="flex items-center gap-16">
-                              <div className="w-0.5 h-6 bg-white/10" />
-                              <div className="w-0.5 h-6 bg-white/10" />
-                            </div>
-                            
-                            {/* Tier 3 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={BookOpen} name="Memory" sp={250} unlocked={false} color="cyan" />
-                              <SkillNode icon={Target} name="Predict" sp={250} unlocked={false} color="cyan" />
-                            </div>
-                            
-                            {/* Connection Lines */}
-                            <div className="flex items-center gap-16">
-                              <div className="w-0.5 h-6 bg-white/10" />
-                              <div className="w-0.5 h-6 bg-white/10" />
-                            </div>
-                            
-                            {/* Tier 4 */}
-                            <div className="flex items-center gap-6">
-                              <SkillNode icon={Sparkles} name="Evolve" sp={500} unlocked={false} color="cyan" />
-                              <SkillNode icon={Zap} name="Sync" sp={500} unlocked={false} color="cyan" />
-                            </div>
-                            
-                            {/* Connection Line */}
-                            <div className="w-0.5 h-6 bg-white/10" />
-                            
-                            {/* Tier 5 - Ultimate */}
-                            <SkillNode icon={Sparkles} name="Transcend" sp={1000} unlocked={false} color="cyan" ultimate />
+                    {/* RIGHT COLUMN: AI Path */}
+                    <div className="flex-1 flex flex-col bg-gradient-to-b from-cyan-500/[0.02] to-transparent">
+                      <div className="p-4 text-center border-b border-white/5">
+                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 mb-2">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-bold text-white">AI Adaptation</h3>
+                        <p className="text-[10px] text-white/40">Versatility & Behavior</p>
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="flex flex-col items-center gap-4 opacity-70">
+                          {/* Tier 1 */}
+                          <div className="flex items-center justify-center">
+                            <SkillNode icon={Sparkles} name="Neural Link" sp={100} unlocked={false} color="cyan" />
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <div className="w-0.5 h-6 bg-white/10" />
+                          
+                          {/* Tier 2 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={TrendingUp} name="Adaptive" sp={100} unlocked={false} color="cyan" />
+                            <SkillNode icon={Star} name="Instinct" sp={100} unlocked={false} color="cyan" />
+                          </div>
+                          <div className="flex items-center justify-center gap-16 w-full">
+                            <div className="w-0.5 h-6 bg-white/10" />
+                            <div className="w-0.5 h-6 bg-white/10" />
+                          </div>
+                          
+                          {/* Tier 3 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={BookOpen} name="Memory" sp={250} unlocked={false} color="cyan" />
+                            <SkillNode icon={Target} name="Predict" sp={250} unlocked={false} color="cyan" />
+                          </div>
+                          <div className="flex items-center justify-center gap-16 w-full">
+                            <div className="w-0.5 h-6 bg-white/10" />
+                            <div className="w-0.5 h-6 bg-white/10" />
+                          </div>
+                          
+                          {/* Tier 4 */}
+                          <div className="flex items-center gap-8 justify-center w-full">
+                            <SkillNode icon={Sparkles} name="Evolve" sp={500} unlocked={false} color="cyan" />
+                            <SkillNode icon={Zap} name="Sync" sp={500} unlocked={false} color="cyan" />
+                          </div>
+                          <div className="w-0.5 h-6 bg-white/10" />
+                          
+                          {/* Tier 5 */}
+                          <SkillNode icon={Sparkles} name="Transcend" sp={1000} unlocked={false} color="cyan" ultimate />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </ShinySidebarBox>
               </>
