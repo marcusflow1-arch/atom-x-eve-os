@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Tv, Film, Play, ShoppingBag, Clapperboard, Monitor, 
   Mountain, Feather, Search, Bell, User, ChevronRight, 
-  ChevronLeft, Star, Heart, TrendingUp, Menu, X, Zap, Gamepad2, Trophy
+  ChevronLeft, Star, Heart, TrendingUp, Menu, X, Zap, Gamepad2, Trophy,
+  ExternalLink, Filter, Clock
 } from 'lucide-react';
 
 const STREAMING_APPS = [
@@ -25,56 +26,21 @@ const STREAMING_APPS = [
   { id: 'espn', name: 'ESPN+', color: '#CC0000', icon: Trophy, url: 'https://plus.espn.com', description: 'Live sports and original shows.' },
 ];
 
-const FeaturedContent = ({ onPlay }) => (
-  <div className="relative w-full h-[85vh] overflow-hidden mb-8 group">
-    <img 
-      src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop" 
-      alt="Featured" 
-      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-black/20 to-transparent" />
-    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
-    
-    <div className="absolute bottom-0 left-0 p-16 w-full max-w-4xl">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.8 }}
-      >
-        <div className="flex items-center gap-4 mb-6">
-          <span className="px-4 py-1.5 bg-red-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
-            #1 in Movies Today
-          </span>
-          <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md text-white text-xs font-bold rounded-full uppercase tracking-wider border border-white/20">
-            Sci-Fi Adventure
-          </span>
-        </div>
-        
-        <h1 className="text-7xl md:text-8xl font-black text-white mb-6 leading-none tracking-tighter drop-shadow-2xl">
-          DUNE: PART TWO
-        </h1>
-        
-        <p className="text-white/90 text-xl mb-10 line-clamp-3 max-w-2xl font-medium drop-shadow-md leading-relaxed">
-          Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe.
-        </p>
-        
-        <div className="flex gap-6">
-          <button 
-            onClick={onPlay}
-            className="px-10 py-5 bg-white text-black rounded-2xl font-bold text-lg flex items-center gap-3 hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)]"
-          >
-            <Play fill="currentColor" className="w-6 h-6" />
-            Watch Now
-          </button>
-          <button className="px-10 py-5 bg-white/10 backdrop-blur-xl text-white rounded-2xl font-bold text-lg flex items-center gap-3 hover:bg-white/20 transition-colors border border-white/10">
-            <Heart className="w-6 h-6" />
-            Add to List
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  </div>
-);
+// Mock Data for Aggregated Content
+const AGGREGATED_CONTENT = [
+  { id: 1, title: "Stranger Things", type: "TV Show", serviceId: "netflix", image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070", rating: "9.8", progress: 85 },
+  { id: 2, title: "The Mandalorian", type: "TV Show", serviceId: "disney", image: "https://images.unsplash.com/photo-1605218427368-35b8686e0269?q=80&w=2000", rating: "9.5", progress: 40 },
+  { id: 3, title: "The Boys", type: "TV Show", serviceId: "prime", image: "https://images.unsplash.com/photo-1596727147705-06a880058bc4?q=80&w=2000", rating: "9.6" },
+  { id: 4, title: "House of the Dragon", type: "TV Show", serviceId: "max", image: "https://images.unsplash.com/photo-1533488765986-dfa2a9939acd?q=80&w=2000", rating: "9.4" },
+  { id: 5, title: "The Bear", type: "TV Show", serviceId: "hulu", image: "https://images.unsplash.com/photo-1559563458-52c69f83555f?q=80&w=2000", rating: "9.7" },
+  { id: 6, title: "Ted Lasso", type: "TV Show", serviceId: "apple", image: "https://images.unsplash.com/photo-1522770179533-24471fcdba45?q=80&w=2000", rating: "9.3", progress: 10 },
+  { id: 7, title: "Wednesday", type: "TV Show", serviceId: "netflix", image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=2000", rating: "9.1" },
+  { id: 8, title: "Yellowstone", type: "TV Show", serviceId: "peacock", image: "https://images.unsplash.com/photo-1478147427282-58a87a120781?q=80&w=2000", rating: "8.9" },
+  { id: 9, title: "Reacher", type: "TV Show", serviceId: "prime", image: "https://images.unsplash.com/photo-1615555437812-70b791557930?q=80&w=2000", rating: "9.2" },
+  { id: 10, title: "Loki", type: "TV Show", serviceId: "disney", image: "https://images.unsplash.com/photo-1627845348888-2970b5514f76?q=80&w=2000", rating: "9.4" },
+  { id: 11, title: "Succession", type: "TV Show", serviceId: "max", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2000", rating: "9.9" },
+  { id: 12, title: "Severance", type: "TV Show", serviceId: "apple", image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000", rating: "9.5" }
+];
 
 const AppView = ({ app }) => {
   return (
@@ -93,36 +59,88 @@ const AppView = ({ app }) => {
         title={app.name}
       />
       {/* Fallback/External Link overlay if iframe is blocked (common with major streaming services) */}
-      <div className="absolute top-0 right-0 p-4 pointer-events-none">
+      <div className="absolute top-0 right-0 p-4 pointer-events-none z-50">
         <a 
           href={app.url} 
           target="_blank" 
           rel="noopener noreferrer"
           className="pointer-events-auto bg-black/50 hover:bg-black/80 backdrop-blur text-white text-xs px-3 py-1 rounded-full border border-white/10 transition-colors flex items-center gap-1"
         >
-          Open in New Tab <ChevronRight className="w-3 h-3" />
+          Open in New Tab <ExternalLink className="w-3 h-3" />
         </a>
       </div>
     </motion.div>
   );
 };
 
+// Component for a Content Card (Show/Movie)
+const ContentCard = ({ item, onClick, showProgress = false }) => {
+  const service = STREAMING_APPS.find(app => app.id === item.serviceId);
+  
+  return (
+    <div 
+      onClick={() => onClick(service)}
+      className="group relative aspect-[2/3] bg-white/5 rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-white/20 transition-all hover:scale-[1.02]"
+    >
+      <img 
+        src={item.image} 
+        alt={item.title} 
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+      
+      {/* Service Badge (Top Right) */}
+      <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md border border-white/10 flex items-center gap-1.5 z-10">
+        <service.icon className="w-3 h-3" style={{ color: service.color }} />
+        <span className="text-[10px] font-bold text-white tracking-wide">{service.name}</span>
+      </div>
+
+      {/* Content Info (Bottom) */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+        <p className="text-[10px] font-medium text-white/60 mb-1 uppercase tracking-wider">{item.type}</p>
+        <h3 className="text-white font-bold text-sm leading-tight mb-2 line-clamp-2">{item.title}</h3>
+        
+        {/* Progress Bar for 'Continue Watching' */}
+        {showProgress && item.progress && (
+          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden mb-1">
+            <div 
+              className="h-full rounded-full" 
+              style={{ width: `${item.progress}%`, backgroundColor: service.color }} 
+            />
+          </div>
+        )}
+        
+        {/* Hover Action */}
+        <div className="h-0 group-hover:h-auto overflow-hidden opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <button className="w-full mt-2 py-1.5 bg-white text-black text-xs font-bold rounded flex items-center justify-center gap-1.5 hover:bg-white/90">
+            <Play className="w-3 h-3 fill-black" />
+            Watch on {service.name}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function EntertainmentHub() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeApp, setActiveApp] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  // When an app is selected, the sidebar closes automatically (optional, but cleaner)
+  // When an app is selected, the sidebar closes automatically
   const handleAppSelect = (app) => {
     setActiveApp(app);
     setSidebarOpen(false);
   };
+
+  const CATEGORIES = ['All', 'Movies', 'TV Shows', 'Live TV', 'Sports', 'News'];
 
   return (
     <div className="w-full h-full relative bg-[#050505] overflow-hidden font-sans">
       
       {/* 1. Toggle Arrow - Left Edge (Middle) */}
       <AnimatePresence>
-        {!sidebarOpen && (
+        {!sidebarOpen && !activeApp && (
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -139,7 +157,6 @@ export default function EntertainmentHub() {
       <AnimatePresence>
         {sidebarOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -147,8 +164,6 @@ export default function EntertainmentHub() {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[70]"
               onClick={() => setSidebarOpen(false)}
             />
-
-            {/* Sidebar Content */}
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
@@ -156,7 +171,6 @@ export default function EntertainmentHub() {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="absolute top-0 left-0 bottom-0 w-80 bg-[#0a0a0a]/95 backdrop-blur-xl border-r border-white/10 z-[80] flex flex-col shadow-2xl"
             >
-              {/* Sidebar Header */}
               <div className="h-24 flex items-center justify-between px-6 border-b border-white/5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -172,7 +186,6 @@ export default function EntertainmentHub() {
                 </button>
               </div>
 
-              {/* Apps List */}
               <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 custom-scrollbar">
                 <button
                   onClick={() => handleAppSelect(null)}
@@ -185,152 +198,175 @@ export default function EntertainmentHub() {
                   <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${!activeApp ? 'bg-white/20' : 'bg-white/5'}`}>
                     <Menu className="w-4 h-4" />
                   </div>
-                  <span className="font-bold">Home</span>
+                  <span className="font-bold">Discovery Home</span>
                 </button>
 
                 <div className="h-px bg-white/5 my-4 mx-2" />
-                <p className="px-4 text-xs font-bold text-white/30 uppercase tracking-widest mb-2">Streaming Apps</p>
+                <p className="px-4 text-xs font-bold text-white/30 uppercase tracking-widest mb-2">Connected Services</p>
 
                 {STREAMING_APPS.map((app) => (
                   <button
                     key={app.id}
                     onClick={() => handleAppSelect(app)}
-                    className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${
-                      activeApp?.id === app.id 
-                        ? 'bg-white/10 text-white border border-white/5' 
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                    className="w-full flex items-center gap-4 p-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all group"
                   >
                     <div 
                       className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg"
-                      style={{ backgroundColor: activeApp?.id === app.id ? app.color : 'rgba(255,255,255,0.05)' }}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                     >
-                      <app.icon className={`w-5 h-5 ${activeApp?.id === app.id ? 'text-white' : 'text-current'}`} />
+                      <app.icon className="w-5 h-5 text-current" style={{ color: app.color }} />
                     </div>
-                    <div className="flex flex-col items-start overflow-hidden">
-                      <span className="font-semibold truncate w-full">{app.name}</span>
-                      {activeApp?.id === app.id && (
-                        <span className="text-[10px] text-white/50 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                          Active
-                        </span>
-                      )}
-                    </div>
+                    <span className="font-semibold truncate w-full group-hover:text-white transition-colors">{app.name}</span>
                   </button>
                 ))}
-              </div>
-
-              {/* User Footer */}
-              <div className="p-6 border-t border-white/5 bg-black/20">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 border-2 border-white/10 shadow-sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white">Marcus</p>
-                    <p className="text-xs text-white/40 truncate">Premium Member</p>
-                  </div>
-                </div>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* 3. Main Content - Full Screen */}
+      {/* 3. Main Content - Hub or App View */}
       <div className="w-full h-full overflow-hidden">
         <AnimatePresence mode="wait">
           {activeApp ? (
-            <AppView key={activeApp.id} app={activeApp} onClose={() => setActiveApp(null)} />
+            <div className="w-full h-full relative">
+              {/* Back Button Overlay */}
+              <motion.button
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setActiveApp(null)}
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full text-white/80 hover:text-white flex items-center gap-2 font-semibold text-sm shadow-xl hover:bg-black/80 transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Guide
+              </motion.button>
+              <AppView key={activeApp.id} app={activeApp} />
+            </div>
           ) : (
             <motion.div 
-              key="home"
+              key="hub"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="w-full h-full overflow-y-auto custom-scrollbar bg-[#050505]"
             >
-              {/* Home Header */}
-              <div className="absolute top-0 left-0 right-0 z-30 px-12 py-8 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-                <div className="pointer-events-auto flex gap-6 ml-12"> {/* ml-12 to clear the toggle button */}
-                  {['Movies', 'TV Shows', 'Live TV', 'Sports'].map((tab) => (
-                    <button key={tab} className="text-white/70 hover:text-white font-bold text-lg transition-colors drop-shadow-md">
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-                <div className="pointer-events-auto flex items-center gap-4">
-                  <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 group-focus-within:text-white transition-colors" />
-                    <input 
-                      type="text" 
-                      placeholder="Search..." 
-                      className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:bg-black/60 focus:border-purple-500/50 transition-all w-64"
-                    />
-                  </div>
-                  <button className="p-2.5 bg-black/40 backdrop-blur-md rounded-full hover:bg-white/10 border border-white/10 transition-colors">
-                    <Bell className="w-5 h-5 text-white/80" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Featured Hero */}
-              <FeaturedContent onPlay={() => handleAppSelect(STREAMING_APPS[1])} />
-              
-              {/* Categories */}
-              <div className="px-16 pb-16 space-y-12">
-                
-                {/* Apps Row */}
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                      <TrendingUp className="w-6 h-6 text-purple-500" />
-                      Your Apps
-                    </h2>
-                  </div>
-                  <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar snap-x">
-                    {STREAMING_APPS.map((app) => (
+              {/* Hub Header */}
+              <div className="sticky top-0 z-40 px-12 py-6 bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-8 ml-8">
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Entertainment<span className="text-purple-500">Guide</span></h1>
+                  <div className="h-6 w-px bg-white/10" />
+                  <div className="flex gap-2">
+                    {CATEGORIES.map((cat) => (
                       <button 
-                        key={app.id}
-                        onClick={() => handleAppSelect(app)}
-                        className="flex-shrink-0 w-48 aspect-video bg-white/5 rounded-2xl relative group cursor-pointer border border-white/5 hover:border-white/20 hover:scale-105 transition-all overflow-hidden snap-start"
+                        key={cat} 
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                          activeCategory === cat 
+                            ? 'bg-white text-black' 
+                            : 'text-white/60 hover:text-white hover:bg-white/10'
+                        }`}
                       >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
-                          <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110" style={{ backgroundColor: app.color }}>
-                            <app.icon className="w-6 h-6 text-white" />
-                          </div>
-                          <span className="font-bold text-white">{app.name}</span>
-                        </div>
-                        {/* Background Effect */}
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity" style={{ backgroundColor: app.color }} />
+                        {cat}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Continue Watching */}
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-6">Continue Watching</h2>
-                  <div className="grid grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="aspect-video bg-white/5 rounded-2xl overflow-hidden hover:scale-105 transition-all cursor-pointer relative group border border-white/5 hover:border-white/20">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                        <img src={`https://source.unsplash.com/random/800x450?scifi,${i}`} alt="Show" className="w-full h-full object-cover" />
-                        
-                        <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-                          <h4 className="font-bold text-white mb-2">Show Title {i}</h4>
-                          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-purple-600 rounded-full" style={{ width: `${Math.random() * 60 + 20}%` }} />
-                          </div>
-                        </div>
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-white transition-colors" />
+                    <input 
+                      type="text" 
+                      placeholder="Find movies, shows, sports..." 
+                      className="bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all w-72"
+                    />
+                  </div>
+                  <button className="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors relative">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-purple-500 rounded-full" />
+                  </button>
+                </div>
+              </div>
 
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                          <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 hover:bg-white/30 hover:scale-110 transition-all">
-                            <Play className="w-6 h-6 text-white fill-white ml-1" />
-                          </div>
-                        </div>
-                      </div>
+              <div className="px-16 py-10 space-y-12">
+                
+                {/* Section 1: Jump Back In (Resume) */}
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-purple-500" />
+                      <h2 className="text-xl font-bold text-white">Jump Back In</h2>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-6 gap-6">
+                    {AGGREGATED_CONTENT.filter(item => item.progress).map((item) => (
+                      <ContentCard key={item.id} item={item} onClick={handleAppSelect} showProgress={true} />
                     ))}
                   </div>
-                </div>
+                </section>
+
+                {/* Section 2: Trending Across Services */}
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="w-5 h-5 text-blue-500" />
+                      <h2 className="text-xl font-bold text-white">Trending Across Services</h2>
+                    </div>
+                    <button className="text-sm text-white/50 hover:text-white flex items-center gap-1 transition-colors">
+                      View All <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-6 gap-6">
+                    {AGGREGATED_CONTENT.slice(0, 6).map((item) => (
+                      <ContentCard key={item.id} item={item} onClick={handleAppSelect} />
+                    ))}
+                  </div>
+                </section>
+
+                {/* Section 3: New Releases */}
+                <section>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <Zap className="w-5 h-5 text-yellow-500" />
+                      <h2 className="text-xl font-bold text-white">Fresh Arrivals</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs text-white/40 uppercase tracking-wider font-bold mr-2">Filtered By:</span>
+                       <div className="flex -space-x-2">
+                         {STREAMING_APPS.slice(0, 4).map(app => (
+                           <div key={app.id} className="w-6 h-6 rounded-full border-2 border-[#050505] flex items-center justify-center bg-white/10" style={{backgroundColor: app.color}}>
+                             <app.icon className="w-3 h-3 text-white" />
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-6 gap-6">
+                    {AGGREGATED_CONTENT.slice(6, 12).map((item) => (
+                      <ContentCard key={item.id} item={item} onClick={handleAppSelect} />
+                    ))}
+                  </div>
+                </section>
+
+                {/* Section 4: Browse By Service */}
+                <section className="pb-12">
+                   <h2 className="text-xl font-bold text-white mb-6">Browse by Service</h2>
+                   <div className="grid grid-cols-8 gap-4">
+                     {STREAMING_APPS.map((app) => (
+                       <button
+                         key={app.id}
+                         onClick={() => handleAppSelect(app)}
+                         className="aspect-square bg-white/5 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/10 hover:scale-105 transition-all group border border-white/5 hover:border-white/20"
+                       >
+                         <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110" style={{ backgroundColor: app.color }}>
+                           <app.icon className="w-5 h-5 text-white" />
+                         </div>
+                         <span className="text-xs font-bold text-white/60 group-hover:text-white">{app.name}</span>
+                       </button>
+                     ))}
+                   </div>
+                </section>
 
               </div>
             </motion.div>
