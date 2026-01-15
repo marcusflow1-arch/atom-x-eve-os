@@ -115,23 +115,16 @@ export default function CardEnhancementOverlay({ card, onClose }) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Left Panel: Selected Card & Actions - Independent Box */}
+        {/* Left Panel: Selected Card & Actions - No Box, Just Content */}
         <motion.div 
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="w-1/3 rounded-3xl overflow-hidden flex flex-col relative p-6"
-          style={{
-            background: 'rgba(30, 41, 59, 0.4)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
-          }}
+          className="w-1/3 flex flex-col relative p-6 items-center justify-center"
         >
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             {/* Interactive Liquid Glass Card Container */}
             <div 
-              className="relative group perspective-1000 w-full max-w-[220px] aspect-[2.5/3.5]"
+              className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]"
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
             >
