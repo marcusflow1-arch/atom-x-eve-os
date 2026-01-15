@@ -1174,12 +1174,11 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed top-0 left-0 bottom-0 w-[260px] z-[35] pointer-events-auto"
+          className="fixed bottom-0 left-0 w-[400px] h-[600px] z-[35] pointer-events-auto"
           style={{
-            height: '100vh',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            alignItems: 'flex-end',
+            justifyContent: 'flex-start'
           }}>
 
           <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
