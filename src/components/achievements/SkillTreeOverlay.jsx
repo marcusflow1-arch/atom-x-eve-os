@@ -79,6 +79,42 @@ const AI_TREE_NODES = [
   },
 ];
 
+// Neutral Tree - Utility and Support
+const NEUTRAL_TREE_NODES = [
+  { 
+    id: 'neutral_root', name: 'Balance Core', description: 'Unlock balanced utility and support capabilities.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0,
+    perks: [{name: 'Stability', icon: 'scale'}, {name: 'Focus', icon: 'circle'}]
+  },
+  { 
+    id: 'neutral_util1', name: 'Utility Boost I', description: 'Increase resource generation by 10%.', type: 'utility', cost: 100, tier: 1, branch: 'left', offsetX: -80, offsetY: 80, parent: 'neutral_root',
+    perks: [{name: '+Res', icon: 'battery'}, {name: 'Efficiency', icon: 'percent'}]
+  },
+  { 
+    id: 'neutral_supp1', name: 'Support Boost I', description: 'Increase healing received by 10%.', type: 'support', cost: 100, tier: 1, branch: 'right', offsetX: 80, offsetY: 80, parent: 'neutral_root',
+    perks: [{name: '+Heal', icon: 'heart'}, {name: 'Aid', icon: 'plus'}]
+  },
+  { 
+    id: 'neutral_speed', name: 'Speed Boost', description: 'Increase movement/action speed by 15%.', type: 'utility', cost: 250, tier: 2, branch: 'left', offsetX: -80, offsetY: 160, parent: 'neutral_util1',
+    perks: [{name: 'Haste', icon: 'wind'}, {name: 'Quick', icon: 'clock'}]
+  },
+  { 
+    id: 'neutral_aura', name: 'Aura', description: 'Passive aura that buffs nearby allies.', type: 'support', cost: 250, tier: 2, branch: 'right', offsetX: 80, offsetY: 160, parent: 'neutral_supp1',
+    perks: [{name: 'Buff', icon: 'users'}, {name: 'Radius', icon: 'rss'}]
+  },
+  { 
+    id: 'neutral_util2', name: 'Utility Boost II', description: 'Reduce cooldowns by 15%.', type: 'utility', cost: 500, tier: 3, branch: 'left', offsetX: -80, offsetY: 240, parent: 'neutral_speed',
+    perks: [{name: 'CDR', icon: 'refresh-ccw'}, {name: 'Flow', icon: 'zap'}]
+  },
+  { 
+    id: 'neutral_supp2', name: 'Support Boost II', description: 'Buff ally stats by 10%.', type: 'support', cost: 500, tier: 3, branch: 'right', offsetX: 80, offsetY: 240, parent: 'neutral_aura',
+    perks: [{name: 'Empower', icon: 'arrow-up'}, {name: 'Teamwork', icon: 'handshake'}]
+  },
+  { 
+    id: 'neutral_ult', name: 'Perfect Harmony', description: 'Ultimate: Combine effects of both other paths at 50% efficiency for a short duration.', type: 'ultimate', cost: 1000, tier: 4, offsetX: 0, offsetY: 320, parent: ['neutral_util2', 'neutral_supp2'],
+    perks: [{name: 'Unity', icon: 'infinity'}, {name: 'Balance', icon: 'scale'}]
+  },
+];
+
 const getNodeIcon = (type) => {
   switch (type) {
     case 'core': return <Sparkles className="w-5 h-5" />;
@@ -88,12 +124,14 @@ const getNodeIcon = (type) => {
     case 'transform': return <Wind className="w-5 h-5" />;
     case 'visual': return <Eye className="w-5 h-5" />;
     case 'behavior': return <Brain className="w-5 h-5" />;
+    case 'utility': return <Bolt className="w-5 h-5" />;
+    case 'support': return <Shield className="w-5 h-5" />;
     default: return <Shield className="w-5 h-5" />;
   }
 };
 
-const getNodeColor = (type, isPower) => {
-  if (isPower) {
+const getNodeColor = (type, treeType) => {
+  if (treeType === 'power') {
     switch (type) {
       case 'core': return 'from-purple-500 to-purple-700';
       case 'stat': return 'from-blue-500 to-blue-700';
@@ -101,7 +139,16 @@ const getNodeColor = (type, isPower) => {
       case 'ultimate': return 'from-orange-500 to-red-600';
       default: return 'from-slate-500 to-slate-700';
     }
+  } else if (treeType === 'neutral') {
+    switch (type) {
+      case 'core': return 'from-gray-500 to-gray-700';
+      case 'utility': return 'from-yellow-500 to-yellow-700';
+      case 'support': return 'from-green-500 to-green-700';
+      case 'ultimate': return 'from-slate-200 to-white';
+      default: return 'from-slate-500 to-slate-700';
+    }
   } else {
+    // AI
     switch (type) {
       case 'core': return 'from-cyan-500 to-cyan-700';
       case 'transform': return 'from-teal-500 to-teal-700';
@@ -113,9 +160,9 @@ const getNodeColor = (type, isPower) => {
   }
 };
 
-function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerTree, onClick, onHover, onLeave, focusedNodeId, isAnimating }) {
+function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, treeType, onClick, onHover, onLeave, focusedNodeId, isAnimating }) {
   const isFocused = focusedNodeId === node.id;
-  const colorGradient = getNodeColor(node.type, isPowerTree);
+  const colorGradient = getNodeColor(node.type, treeType);
   const isLeftBranch = node.branch === 'left';
   // If center (no branch), default to right perks unless it's the root/ult where we might want split? 
   // User asked for "left side... box will come out to the left". "right side... right".
@@ -151,7 +198,7 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
         {/* Unlock burst animation */}
         {isAnimating && (
           <motion.div
-            className={`absolute inset-0 rounded-xl ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`}
+            className={`absolute inset-0 rounded-xl ${treeType === 'power' ? 'bg-purple-400' : treeType === 'neutral' ? 'bg-yellow-400' : 'bg-cyan-400'}`}
             initial={{ scale: 1, opacity: 0.8 }}
             animate={{ scale: 2.5, opacity: 0 }}
             transition={{ duration: 0.6 }}
@@ -173,9 +220,9 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
               className="absolute inset-0 rounded-xl"
               animate={{
                 boxShadow: [
-                  `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
-                  `0 0 20px ${isPowerTree ? 'rgba(168, 85, 247, 0.5)' : 'rgba(34, 211, 238, 0.5)'}`,
-                  `0 0 10px ${isPowerTree ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
+                  `0 0 10px ${treeType === 'power' ? 'rgba(168, 85, 247, 0.3)' : treeType === 'neutral' ? 'rgba(250, 204, 21, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
+                  `0 0 20px ${treeType === 'power' ? 'rgba(168, 85, 247, 0.5)' : treeType === 'neutral' ? 'rgba(250, 204, 21, 0.5)' : 'rgba(34, 211, 238, 0.5)'}`,
+                  `0 0 10px ${treeType === 'power' ? 'rgba(168, 85, 247, 0.3)' : treeType === 'neutral' ? 'rgba(250, 204, 21, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`,
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -224,7 +271,7 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
                 title={perk.name}
               >
                 {/* Perk Icon Placeholder */}
-                <div className={`w-2 h-2 rounded-full ${isPowerTree ? 'bg-purple-400' : 'bg-cyan-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${treeType === 'power' ? 'bg-purple-400' : treeType === 'neutral' ? 'bg-yellow-400' : 'bg-cyan-400'}`} />
                 
                 {/* Tooltip for Perk */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-[10px] text-white rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
@@ -240,7 +287,7 @@ function SkillNode({ node, isUnlocked, isSelected, isLocked, canUnlock, isPowerT
 }
 
 // Connection line between nodes with energy trail animation
-function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked, isPowerTree }) {
+function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked, treeType }) {
   // Simplified straight lines without flashy animations
   const angle = Math.atan2(toY - fromY, toX - fromX);
   const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
@@ -260,7 +307,7 @@ function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked, isPowerTree }) {
     >
       <div className={`w-full h-full transition-colors duration-500 ${
         isUnlocked 
-          ? isPowerTree ? 'bg-purple-500/40' : 'bg-cyan-500/40'
+          ? treeType === 'power' ? 'bg-purple-500/40' : treeType === 'neutral' ? 'bg-yellow-500/40' : 'bg-cyan-500/40'
           : 'bg-white/5'
       }`} />
     </div>
@@ -268,9 +315,10 @@ function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked, isPowerTree }) {
 }
 
 export default function SkillTreeOverlay({ card, onClose }) {
-  const [committedPath, setCommittedPath] = useState(null); // null, 'power', or 'ai'
+  const [committedPath, setCommittedPath] = useState(null); // null, 'power', 'ai', or 'neutral'
   const [unlockedPowerNodes, setUnlockedPowerNodes] = useState(['power_root']);
   const [unlockedAINodes, setUnlockedAINodes] = useState(['ai_root']);
+  const [unlockedNeutralNodes, setUnlockedNeutralNodes] = useState(['neutral_root']);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [focusedNodeId, setFocusedNodeId] = useState(null);
   const [skillPoints, setSkillPoints] = useState(2000); // Demo SP
@@ -307,7 +355,11 @@ export default function SkillTreeOverlay({ card, onClose }) {
   };
 
   const canUnlockNode = useCallback((node, treeType) => {
-    const unlockedNodes = treeType === 'power' ? unlockedPowerNodes : unlockedAINodes;
+    let unlockedNodes;
+    if (treeType === 'power') unlockedNodes = unlockedPowerNodes;
+    else if (treeType === 'neutral') unlockedNodes = unlockedNeutralNodes;
+    else unlockedNodes = unlockedAINodes;
+
     if (unlockedNodes.includes(node.id)) return false;
     if (node.cost > skillPoints) return false;
     
@@ -320,12 +372,15 @@ export default function SkillTreeOverlay({ card, onClose }) {
       return node.parent.some(p => unlockedNodes.includes(p));
     }
     return unlockedNodes.includes(node.parent);
-  }, [unlockedPowerNodes, unlockedAINodes, skillPoints, committedPath]);
+  }, [unlockedPowerNodes, unlockedAINodes, unlockedNeutralNodes, skillPoints, committedPath]);
 
   const handleUnlockNode = (node, treeType) => {
     if (!canUnlockNode(node, treeType)) return;
     
-    const setUnlocked = treeType === 'power' ? setUnlockedPowerNodes : setUnlockedAINodes;
+    let setUnlocked;
+    if (treeType === 'power') setUnlocked = setUnlockedPowerNodes;
+    else if (treeType === 'neutral') setUnlocked = setUnlockedNeutralNodes;
+    else setUnlocked = setUnlockedAINodes;
     
     // Commit to path on first non-root unlock
     if (!committedPath && node.tier > 0) {
@@ -359,7 +414,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
   };
 
   // Render connection lines between nodes
-  const renderConnections = (nodes, unlockedNodes, isPowerTree) => {
+  const renderConnections = (nodes, unlockedNodes, treeType) => {
     const connections = [];
     
     nodes.forEach(node => {
@@ -381,7 +436,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
             toX={toPos.x + 120}
             toY={toPos.y}
             isUnlocked={isUnlocked}
-            isPowerTree={isPowerTree}
+            treeType={treeType}
             isAnimating={isAnimating}
           />
         );
@@ -391,9 +446,31 @@ export default function SkillTreeOverlay({ card, onClose }) {
     return connections;
   };
 
-  const renderTree = (nodes, treeType, isPowerTree) => {
-    const unlockedNodes = treeType === 'power' ? unlockedPowerNodes : unlockedAINodes;
+  const renderTree = (nodes, treeType) => {
+    let unlockedNodes;
+    if (treeType === 'power') unlockedNodes = unlockedPowerNodes;
+    else if (treeType === 'neutral') unlockedNodes = unlockedNeutralNodes;
+    else unlockedNodes = unlockedAINodes;
+
     const isTreeLocked = committedPath && committedPath !== treeType;
+
+    const getTitle = () => {
+      if (treeType === 'power') return 'Power Path';
+      if (treeType === 'neutral') return 'Neutral Path';
+      return 'AI Adaptation Path';
+    };
+
+    const getDescription = () => {
+      if (treeType === 'power') return 'Raw strength & combat efficiency';
+      if (treeType === 'neutral') return 'Balance, support & utility';
+      return 'Versatility & behavioral adaptation';
+    };
+
+    const getTitleColor = () => {
+      if (treeType === 'power') return 'text-purple-300';
+      if (treeType === 'neutral') return 'text-yellow-300';
+      return 'text-cyan-300';
+    };
 
     return (
       <div className={`relative flex flex-col items-center p-4 rounded-2xl transition-all duration-500 ${
@@ -401,11 +478,11 @@ export default function SkillTreeOverlay({ card, onClose }) {
       }`}>
         {/* Tree Header */}
         <div className="text-center mb-4">
-          <h3 className={`text-lg font-bold ${isPowerTree ? 'text-purple-300' : 'text-cyan-300'}`}>
-            {isPowerTree ? 'Power Path' : 'AI Adaptation Path'}
+          <h3 className={`text-lg font-bold ${getTitleColor()}`}>
+            {getTitle()}
           </h3>
           <p className="text-xs text-white/50">
-            {isPowerTree ? 'Raw strength & combat efficiency' : 'Versatility & behavioral adaptation'}
+            {getDescription()}
           </p>
           {isTreeLocked && (
             <Badge className="mt-2 bg-red-500/20 text-red-400 border-red-500/30">
@@ -417,7 +494,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
         {/* Tree Container with positioned nodes */}
         <div className="relative w-[240px] h-[420px]">
           {/* Connection Lines */}
-          {renderConnections(nodes, unlockedNodes, isPowerTree)}
+          {renderConnections(nodes, unlockedNodes, treeType)}
           
           {/* Skill Nodes */}
           {nodes.map(node => {
@@ -441,7 +518,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
                   isSelected={hoveredNode?.id === node.id}
                   isLocked={isLocked}
                   canUnlock={canUnlock}
-                  isPowerTree={isPowerTree}
+                  treeType={treeType}
                   onClick={(n) => handleUnlockNode(n, treeType)}
                   onHover={setHoveredNode}
                   onLeave={() => setHoveredNode(null)}
@@ -554,8 +631,8 @@ export default function SkillTreeOverlay({ card, onClose }) {
               {committedPath ? (
                 <div className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
                   <p className="text-xs text-white/50 mb-1">Current Path</p>
-                  <p className={`font-bold text-lg ${committedPath === 'power' ? 'text-purple-400' : 'text-cyan-400'}`}>
-                    {committedPath === 'power' ? 'Power Path' : 'AI Adaptation Path'}
+                  <p className={`font-bold text-lg ${committedPath === 'power' ? 'text-purple-400' : committedPath === 'neutral' ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                    {committedPath === 'power' ? 'Power Path' : committedPath === 'neutral' ? 'Neutral Path' : 'AI Adaptation Path'}
                   </p>
                 </div>
               ) : (
@@ -584,6 +661,10 @@ export default function SkillTreeOverlay({ card, onClose }) {
                   <span className="text-xs text-white/50">Power</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <span className="text-xs text-white/50">Neutral</span>
+                </div>
+                <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
                   <span className="text-xs text-white/50">AI Adaptation</span>
                 </div>
@@ -594,16 +675,18 @@ export default function SkillTreeOverlay({ card, onClose }) {
             <div className="flex-1 flex overflow-hidden relative">
               {/* Power Path Column */}
               <div className="flex-1 relative border-r border-white/10 bg-gradient-to-b from-purple-500/5 to-transparent flex items-center justify-center p-4">
-                {renderTree(POWER_TREE_NODES, 'power', true)}
+                {renderTree(POWER_TREE_NODES, 'power')}
+              </div>
+
+              {/* Neutral Path Column */}
+              <div className="flex-1 relative border-r border-white/10 bg-gradient-to-b from-yellow-500/5 to-transparent flex items-center justify-center p-4">
+                {renderTree(NEUTRAL_TREE_NODES, 'neutral')}
               </div>
               
               {/* AI Path Column */}
               <div className="flex-1 relative bg-gradient-to-b from-cyan-500/5 to-transparent flex items-center justify-center p-4">
-                {renderTree(AI_TREE_NODES, 'ai', false)}
+                {renderTree(AI_TREE_NODES, 'ai')}
               </div>
-
-              {/* Central Divider Decor */}
-              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-white/10 via-white/5 to-transparent -translate-x-1/2" />
             </div>
           </div>
         </div>
