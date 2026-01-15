@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GenreSelector from '@/components/profile/GenreSelector';
 import { 
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
@@ -576,50 +577,12 @@ export default function GenreMastery({ onClose }) {
 
 
 
-      {/* LEFT SIDEBAR: Genre Selection (Updated UI) */}
-      <div className="w-32 h-full flex flex-col justify-center px-4 z-20 border-r border-white/10 bg-white/[0.02] backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.2)] relative">
-        <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/50 to-transparent z-10" />
-        <div className="overflow-y-auto no-scrollbar py-8 flex flex-col gap-5 items-center">
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="flex flex-col gap-4 w-full items-center"
-          >
-            {GENRES.map((genre) => {
-              const Icon = genre.icon;
-              const isSelected = selectedGenre?.id === genre.id;
-              
-              return (
-                <motion.button
-                  key={genre.id}
-                  variants={itemVariants}
-                  onClick={() => setSelectedGenre(genre)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group relative flex flex-col items-center justify-center gap-2 py-4 w-full rounded-xl overflow-hidden"
-                >
-                  {/* 5% Opacity Background Box */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${genre.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
-                  
-                  <Icon className={`w-8 h-8 relative z-10 transition-all ${isSelected ? 'text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]' : 'text-slate-400 group-hover:text-white'}`} />
-                  
-                  <div className="relative z-10 flex flex-col items-center">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
-                      {genre.name}
-                    </span>
-                  </div>
-
-                  {isSelected && (
-                    <motion.div layoutId="activeBar" className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-full bg-gradient-to-b ${genre.color}`} />
-                  )}
-                </motion.button>
-              );
-            })}
-          </motion.div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/50 to-transparent z-10" />
-      </div>
+      {/* LEFT SIDEBAR: Genre Selection (New Component) */}
+      <GenreSelector 
+        genres={GENRES} 
+        selectedGenre={selectedGenre} 
+        onSelect={setSelectedGenre} 
+      />
 
       {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
       <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
