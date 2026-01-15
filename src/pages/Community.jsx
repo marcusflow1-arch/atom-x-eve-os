@@ -239,134 +239,143 @@ export default function CommunityPage() {
                     
                     {activeTab === 'home' ? (
                         <>
-                            {/* HOME TAB */}
-                            {/* Left Column: What We're Building (25%) */}
+                            {/* HOME TAB - RECONSTRUCTED UI */}
+                            
+                            {/* Left Column: Recent Discussions (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
-                                <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">WHAT WE'RE BUILDING</h2>
+                                <div className="flex items-center px-2">
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Recent Discussions</h2>
                                 </div>
-                                <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
-                                    {[
-                                        { title: 'Cross-Platform Play', desc: 'Unified gaming across all devices', status: 'In Development' },
-                                        { title: 'AI Companion System', desc: 'Your personal gaming assistant', status: 'Beta Testing' },
-                                        { title: 'Blockchain Rewards', desc: 'Earn crypto for achievements', status: 'Coming Soon' },
-                                        { title: 'VR Integration', desc: 'Immersive virtual reality support', status: 'In Development' },
-                                        { title: 'Social Guilds 2.0', desc: 'Enhanced clan management', status: 'Planning' },
-                                        { title: 'Tournament System', desc: 'Compete for prizes globally', status: 'Beta Testing' }
-                                    ].map((project, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex flex-col gap-1 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-white text-sm font-semibold">{project.title}</p>
-                                                <Badge className="text-xs bg-blue-500/20 text-blue-400 border-blue-500/30">{project.status}</Badge>
-                                            </div>
-                                            <p className="text-white/40 text-xs">{project.desc}</p>
-                                        </div>
-                                    ))}
-                                    <button className="mt-3 w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-white text-sm font-semibold hover:from-blue-500/30 hover:to-purple-500/30 transition-all">
-                                        <MessageSquare className="w-4 h-4 inline mr-2" />
-                                        Send Us Suggestions
-                                    </button>
-                                </LiquidGlassCard>
+                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+                                    {loading ? (
+                                        [1, 2, 3].map(i => <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />)
+                                    ) : (
+                                        (posts.slice(0, 4).length > 0 ? posts.slice(0, 4) : [
+                                            { id: 'm1', user: { full_name: 'GamerQueen22', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }, title: 'Best RPGs of 2026?', created_date: new Date().toISOString() },
+                                            { id: 'm2', user: { full_name: 'NeonRider', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' }, title: 'Hidden gems in the store', created_date: new Date(Date.now() - 3600000).toISOString() },
+                                            { id: 'm3', user: { full_name: 'PixelMaster', avatar_url: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' }, title: 'Tournament highlights', created_date: new Date(Date.now() - 7200000).toISOString() }
+                                        ]).map((post) => (
+                                            <LiquidGlassCard 
+                                                key={post.id} 
+                                                className="p-4 flex gap-3 items-start group cursor-pointer" 
+                                                hover={true}
+                                                onClick={() => setSelectedPost(post)}
+                                            >
+                                                <div className="relative">
+                                                    <img 
+                                                        src={post.user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user?.id || 'user'}`} 
+                                                        alt="avatar" 
+                                                        className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
+                                                    />
+                                                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start">
+                                                        <h4 className="text-white text-sm font-bold truncate">{post.user?.full_name || post.user?.username || 'User'}</h4>
+                                                        <span className="text-white/30 text-[10px]">
+                                                            {new Date(post.created_date).getHours() % 12 || 12} hours ago
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-white/70 text-sm font-medium leading-tight mt-1 line-clamp-2">
+                                                        {post.title}
+                                                    </p>
+                                                    <div className="flex items-center gap-3 mt-2 text-white/30">
+                                                        <MessageSquare className="w-3 h-3 hover:text-cyan-400" />
+                                                        <span className="text-[10px]">12</span>
+                                                        <div className="flex-1" />
+                                                        <Badge className="bg-white/5 hover:bg-white/10 text-white/50 border-0 text-[10px] h-5 px-2">
+                                                            {post.genre || 'General'}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </LiquidGlassCard>
+                                        ))
+                                    )}
+                                </div>
                             </div>
 
                             {/* Center Column: Trending Topics (50%) */}
                             <div className="col-span-6 flex flex-col gap-6">
                                 <div className="flex items-center justify-center px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">TRENDING UPDATES</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Trending Topics</h2>
                                 </div>
-                                <div className="flex-1 flex flex-col gap-4">
-                                    {/* Trending Abilities & Equipment */}
-                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                                <Sparkles className="w-5 h-5 text-white" />
+                                <div className="grid grid-cols-2 gap-4 h-full">
+                                    {[
+                                        { title: 'Esports Futures', posts: '1.2K Posts', icon: Swords, color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_30px_rgba(59,130,246,0.3)]' },
+                                        { title: 'Indie Gems', posts: '850 Posts', icon: Gamepad2, color: 'from-purple-500 to-indigo-500', glow: 'shadow-[0_0_30px_rgba(168,85,247,0.3)]' },
+                                        { title: 'Strategy Meta', posts: '2.1K Posts', icon: TrendingUp, color: 'from-emerald-400 to-teal-500', glow: 'shadow-[0_0_30px_rgba(16,185,129,0.3)]' },
+                                        { title: 'Hardware Talk', posts: '540 Posts', icon: Bot, color: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_30px_rgba(249,115,22,0.3)]' }
+                                    ].map((topic, i) => (
+                                        <LiquidGlassCard 
+                                            key={i} 
+                                            className={`relative p-6 flex flex-col items-center justify-center text-center group overflow-hidden ${i === 0 ? 'row-span-2 aspect-auto' : 'aspect-square'}`}
+                                            hover={true}
+                                        >
+                                            {/* Glow Effect */}
+                                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-gradient-to-br ${topic.color}`} />
+                                            
+                                            <div className={`
+                                                mb-4 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3
+                                                ${i === 0 ? 'w-24 h-24' : 'w-16 h-16'}
+                                                bg-gradient-to-br ${topic.color} ${topic.glow}
+                                            `}>
+                                                <topic.icon className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} text-white`} strokeWidth={1.5} />
                                             </div>
-                                            <div>
-                                                <h3 className="text-white font-bold text-base">New Abilities & Equipment</h3>
-                                                <p className="text-cyan-300 text-xs">Latest unlockables</p>
+                                            
+                                            <h3 className={`font-bold text-white mb-1 ${i === 0 ? 'text-2xl' : 'text-lg'}`}>
+                                                {topic.title}
+                                            </h3>
+                                            <p className="text-white/50 text-xs font-medium bg-white/10 px-3 py-1 rounded-full">
+                                                {topic.posts}
+                                            </p>
+                                            
+                                            {/* Decorative lines */}
+                                            <div className="absolute top-0 right-0 p-4 opacity-20">
+                                                <div className="w-16 h-16 border-t-2 border-r-2 border-white rounded-tr-3xl" />
                                             </div>
-                                        </div>
-                                        <p className="text-white/60 text-sm">Discover the newest legendary weapons, armor sets, and special abilities added this week. Enhance your gameplay with cutting-edge gear.</p>
-                                    </LiquidGlassCard>
-
-                                    {/* Trending AI Features */}
-                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                                                <Bot className="w-5 h-5 text-white" />
+                                            <div className="absolute bottom-0 left-0 p-4 opacity-20">
+                                                <div className="w-8 h-8 border-b-2 border-l-2 border-white rounded-bl-xl" />
                                             </div>
-                                            <div>
-                                                <h3 className="text-white font-bold text-base">AI Platform Updates</h3>
-                                                <p className="text-cyan-300 text-xs">Powered by innovation</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-sm">Experience our latest AI-driven features: smart matchmaking, personalized recommendations, and adaptive difficulty systems.</p>
-                                    </LiquidGlassCard>
-
-                                    {/* Upcoming Games */}
-                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                                                <Gamepad2 className="w-5 h-5 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-white font-bold text-base">Coming Soon</h3>
-                                                <p className="text-cyan-300 text-xs">New releases</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-sm">Get ready for upcoming AAA titles and exclusive indie releases. Pre-order now to secure early access and special bonuses.</p>
-                                    </LiquidGlassCard>
-
-                                    {/* Dev Updates */}
-                                    <LiquidGlassCard className="flex-1 p-5" hover={true}>
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                                                <Radio className="w-5 h-5 text-white" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-white font-bold text-base">Live Dev Stream</h3>
-                                                <p className="text-cyan-300 text-xs">Behind the scenes</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-sm">Join our live stream every Friday at 3PM PST. Watch us code, answer questions, and share exclusive insights into development.</p>
-                                    </LiquidGlassCard>
+                                        </LiquidGlassCard>
+                                    ))}
                                 </div>
                             </div>
 
-                            {/* Right Column: ATOM×EVE News (25%) */}
+                            {/* Right Column: Game Recommendations (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
                                 <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide">ATOM×EVE NEWS</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Game Recommendations</h2>
                                 </div>
-                                <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto" hover={false}>
+                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
                                     {[
-                                        { title: 'Platform Milestone: 1M Users!', time: '2 hours ago', type: 'Celebration' },
-                                        { title: 'New Partnership with Epic Games', time: '5 hours ago', type: 'Partnership' },
-                                        { title: 'AI Update 3.5 Released', time: '1 day ago', type: 'Release' },
-                                        { title: 'Community Event This Weekend', time: '1 day ago', type: 'Event' },
-                                        { title: 'Developer AMA Tomorrow 3PM PST', time: '2 days ago', type: 'Live Stream' },
-                                        { title: 'Q4 Roadmap Announced', time: '3 days ago', type: 'Announcement' }
-                                    ].map((news, i) => (
-                                        <div 
-                                            key={i}
-                                            className="flex items-start gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
-                                        >
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                                                <Star className="w-4 h-4 text-white" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-white text-sm font-semibold line-clamp-2">{news.title}</p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <Badge className="text-[10px] bg-cyan-500/20 text-cyan-400 border-cyan-500/30 px-2 py-0">{news.type}</Badge>
-                                                    <span className="text-white/30 text-xs">{news.time}</span>
+                                        { title: 'Astroforge', genre: 'Sci-Fi Adventure', image: 'https://images.unsplash.com/photo-1614728853970-300dc0486d13?w=400' },
+                                        { title: 'Neon Rivals', genre: 'Cyberpunk Action', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' },
+                                        { title: 'Ethereal', genre: 'Puzzle Platformer', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400' }
+                                    ].map((game, i) => (
+                                        <div key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-lg shadow-black/20">
+                                            <img 
+                                                src={game.image} 
+                                                alt={game.title} 
+                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                                            
+                                            <div className="absolute top-3 right-3">
+                                                <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                                                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                                                 </div>
+                                            </div>
+
+                                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                                                <h3 className="text-white font-bold text-lg mb-1">{game.title}</h3>
+                                                <p className="text-white/60 text-xs mb-3">{game.genre}</p>
+                                                <Button className="w-full bg-cyan-500/80 hover:bg-cyan-400 text-white border-0 rounded-xl font-bold tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform group-hover:translate-y-0 translate-y-2 opacity-90 group-hover:opacity-100">
+                                                    PLAY NOW
+                                                </Button>
                                             </div>
                                         </div>
                                     ))}
-                                </LiquidGlassCard>
+                                </div>
                             </div>
                         </>
                     ) : (
