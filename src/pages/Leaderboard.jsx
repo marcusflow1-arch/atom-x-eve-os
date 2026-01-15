@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import UserProfileOverlay from '@/components/profile/UserProfileOverlay';
 
 // Leaderboard Categories
 const LEADERBOARD_TABS = [
@@ -61,7 +62,7 @@ const RankBadge = ({ rank }) => {
   );
 };
 
-const LeaderboardRow = ({ player, activeTab, index }) => {
+const LeaderboardRow = ({ player, activeTab, index, onClick }) => {
   const getStatValue = () => {
     switch (activeTab) {
       case 'achievements': return player.achievements;
@@ -83,6 +84,7 @@ const LeaderboardRow = ({ player, activeTab, index }) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
+      onClick={() => onClick(player)}
       className={`flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-white/5 cursor-pointer group ${
         player.rank <= 3 ? 'bg-white/[0.03]' : ''
       }`}
@@ -128,6 +130,7 @@ export default function Leaderboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overall');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   // Escape key to go back to Luna
   React.useEffect(() => {
@@ -348,6 +351,7 @@ export default function Leaderboard() {
                   player={player} 
                   activeTab={activeTab}
                   index={index}
+                  onClick={setSelectedPlayer}
                 />
               ))}
               {filteredData.length === 0 && (
@@ -360,6 +364,25 @@ export default function Leaderboard() {
           )}
         </div>
       </div>
+
+      {/* User Profile Overlay for Selected Player */}
+      <UserProfileOverlay 
+        isOpen={!!selectedPlayer} 
+        onClose={() => setSelectedPlayer(null)} 
+        profileUser={selectedPlayer ? {
+          ...selectedPlayer,
+          avatar_url: selectedPlayer.avatar,
+          gamer_score: selectedPlayer.score,
+          achievements: selectedPlayer.achievements,
+          // Add mock/default data for fields not in leaderboard view
+          bio: selectedPlayer.bio || `Level ${selectedPlayer.level} Player`,
+          social_profile: {
+            tagline: `Rank #${selectedPlayer.rank} on Leaderboard`,
+            playstyle: 'Competitive'
+          }
+        } : null}
+        readOnly={true}
+      />
     </div>
   );
 }

@@ -29,8 +29,14 @@ const LiquidGlassCard = ({ children, className = "" }) => (
   </div>
 );
 
-export default function UserProfileOverlay({ isOpen, onClose }) {
-  const { user, avatar, updateUserData, refreshUserData } = useAuth();
+export default function UserProfileOverlay({ isOpen, onClose, profileUser, readOnly = false }) {
+  const { user: authUser, avatar: authAvatar, updateUserData, refreshUserData } = useAuth();
+  
+  // Use passed profileUser or fall back to authenticated user
+  const displayUser = profileUser || authUser;
+  // If viewing another user, use their avatar data if available, or fall back to authAvatar if it's the same user, or mock/empty
+  const displayAvatar = profileUser ? (profileUser.avatar_data || {}) : authAvatar; 
+
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,25 +60,25 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
   });
 
   useEffect(() => {
-    if (user) {
+    if (displayUser) {
       setFormData({
-        username: user.username || '',
-        bio: user.bio || '',
-        avatar_url: user.avatar_url || '',
-        streaming_profile: user.streaming_profile || {
+        username: displayUser.username || displayUser.full_name || '',
+        bio: displayUser.bio || '',
+        avatar_url: displayUser.avatar_url || '',
+        streaming_profile: displayUser.streaming_profile || {
           twitch_username: '',
           youtube_channel: '',
           twitter_handle: '',
           stream_bio: ''
         },
-        social_profile: user.social_profile || {
+        social_profile: displayUser.social_profile || {
           tagline: '',
           favorite_games: [],
           playstyle: ''
         }
       });
     }
-  }, [user]);
+  }, [displayUser]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -102,12 +108,12 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const stats = {
-    gamerScore: user?.gamer_score || 0,
-    achievements: user?.unlocked_achievements?.length || 0,
-    hoursPlayed: user?.total_playtime || 0,
-    level: avatar?.level || 1,
-    followers: user?.follower_count || 0,
-    following: user?.following_count || 0
+    gamerScore: displayUser?.gamer_score || displayUser?.score || 0,
+    achievements: displayUser?.unlocked_achievements?.length || displayUser?.achievements || 0,
+    hoursPlayed: displayUser?.total_playtime || 0,
+    level: displayUser?.level || displayAvatar?.level || 1,
+    followers: displayUser?.follower_count || 0,
+    following: displayUser?.following_count || 0
   };
 
   return (
@@ -140,38 +146,40 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
                       <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-black text-white tracking-tight">Your Profile</h1>
-                      <p className="text-white/40 text-sm">Manage your ATOM×EVE identity</p>
+                      <h1 className="text-2xl font-black text-white tracking-tight">{readOnly ? (displayUser?.username || 'Player Profile') : 'Your Profile'}</h1>
+                      <p className="text-white/40 text-sm">{readOnly ? 'View player stats and details' : 'Manage your ATOM×EVE identity'}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {isEditing ? (
-                      <>
+                    {!readOnly && (
+                      isEditing ? (
+                        <>
+                          <Button
+                            onClick={() => setIsEditing(false)}
+                            variant="outline"
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {isSaving ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                        </>
+                      ) : (
                         <Button
-                          onClick={() => setIsEditing(false)}
-                          variant="outline"
-                          className="border-white/20 text-white hover:bg-white/10"
+                          onClick={() => setIsEditing(true)}
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
                         >
-                          Cancel
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Profile
                         </Button>
-                        <Button
-                          onClick={handleSave}
-                          disabled={isSaving}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          {isSaving ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        onClick={() => setIsEditing(true)}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Button>
+                      )
                     )}
                     <button
                       onClick={onClose}
@@ -239,7 +247,7 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
                                   </div>
                                 )}
                               </div>
-                              {isEditing && (
+                              {isEditing && !readOnly && (
                                 <label className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl">
                                   <Upload className="w-8 h-8 text-white" />
                                   <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
@@ -492,19 +500,19 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
                               Level {stats.level}
                             </h3>
                             <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                              {avatar?.social_influence || 0} Influence
+                              {displayAvatar?.social_influence || 0} Influence
                             </Badge>
                           </div>
 
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-white/60">Progress to Level {stats.level + 1}</span>
-                              <span className="text-white font-mono">{avatar?.experience || 0} / {(stats.level * 1000)}</span>
+                              <span className="text-white font-mono">{displayAvatar?.experience || 0} / {(stats.level * 1000)}</span>
                             </div>
                             <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                               <div 
                                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-                                style={{ width: `${((avatar?.experience || 0) / (stats.level * 1000)) * 100}%` }}
+                                style={{ width: `${((displayAvatar?.experience || 0) / (stats.level * 1000)) * 100}%` }}
                               />
                             </div>
                           </div>
@@ -537,7 +545,7 @@ export default function UserProfileOverlay({ isOpen, onClose }) {
                             { label: 'Total Score', value: stats.gamerScore, icon: Flame },
                             { label: 'Level', value: stats.level, icon: TrendingUp },
                             { label: 'Achievements', value: stats.achievements, icon: Target },
-                            { label: 'Games Owned', value: user?.purchased_items?.length || 0, icon: Zap },
+                            { label: 'Games Owned', value: displayUser?.purchased_items?.length || 0, icon: Zap },
                           ].map((stat, i) => (
                             <LiquidGlassCard key={i} className="p-3 text-center group">
                               <stat.icon className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
