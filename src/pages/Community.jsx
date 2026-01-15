@@ -299,7 +299,7 @@ export default function CommunityPage() {
                                 <div className="flex items-center justify-center px-2">
                                     <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Trending Topics</h2>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 h-full">
+                                <div className="grid grid-cols-2 gap-4">
                                     {[
                                         { title: 'Esports Futures', posts: '1.2K Posts', icon: Swords, color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_30px_rgba(59,130,246,0.3)]' },
                                         { title: 'Indie Gems', posts: '850 Posts', icon: Gamepad2, color: 'from-purple-500 to-indigo-500', glow: 'shadow-[0_0_30px_rgba(168,85,247,0.3)]' },
@@ -308,7 +308,7 @@ export default function CommunityPage() {
                                     ].map((topic, i) => (
                                         <LiquidGlassCard 
                                             key={i} 
-                                            className={`relative p-6 flex flex-col items-center justify-center text-center group overflow-hidden ${i === 0 ? 'row-span-2 aspect-auto' : 'aspect-square'}`}
+                                            className="relative p-6 flex flex-col items-center justify-center text-center group overflow-hidden aspect-square"
                                             hover={true}
                                         >
                                             {/* Glow Effect */}
@@ -316,13 +316,13 @@ export default function CommunityPage() {
                                             
                                             <div className={`
                                                 mb-4 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3
-                                                ${i === 0 ? 'w-24 h-24' : 'w-16 h-16'}
+                                                w-16 h-16
                                                 bg-gradient-to-br ${topic.color} ${topic.glow}
                                             `}>
-                                                <topic.icon className={`${i === 0 ? 'w-10 h-10' : 'w-7 h-7'} text-white`} strokeWidth={1.5} />
+                                                <topic.icon className="w-8 h-8 text-white" strokeWidth={1.5} />
                                             </div>
                                             
-                                            <h3 className={`font-bold text-white mb-1 ${i === 0 ? 'text-2xl' : 'text-lg'}`}>
+                                            <h3 className="font-bold text-white mb-1 text-lg">
                                                 {topic.title}
                                             </h3>
                                             <p className="text-white/50 text-xs font-medium bg-white/10 px-3 py-1 rounded-full">
