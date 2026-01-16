@@ -642,6 +642,19 @@ export default function SkillTreeOverlay({ card, onClose }) {
                 </div>
               )}
             </div>
+
+            {/* Perks Section */}
+            <div className="mt-6 w-full">
+              <p className="text-xs text-center text-white/50 font-bold uppercase tracking-widest mb-3">Perks</p>
+              <div className="flex justify-center gap-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-16 h-20 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center relative overflow-hidden group hover:border-white/30 transition-all cursor-pointer">
+                    <div className="text-white/20 text-xl font-bold group-hover:text-white/40 transition-colors">?</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Right: Unified Skill Tree Box with Liquid Glass Finish */}
