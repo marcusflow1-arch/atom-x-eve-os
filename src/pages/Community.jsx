@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ArrowLeft, Search, Mic, Bell, User, MessageSquare, TrendingUp, Users, Gamepad2, Swords, Shield, Trophy, Target, Sparkles, Bot, Radio, Star, X } from 'lucide-react';
+import { Plus, ArrowLeft, Search, Mic, Bell, User, MessageSquare, TrendingUp, Users, Gamepad2, Swords, Shield, Trophy, Target, Sparkles, Bot, Radio, Star, X, Image as ImageIcon, Link as LinkIcon, Hash, Send, Layers, ScrollText, ChevronRight } from 'lucide-react';
 import VirtualizedPostList from '../components/community/VirtualizedPostList';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -32,6 +32,7 @@ export default function CommunityPage() {
     const [selectedGenre, setSelectedGenre] = useState('all');
     const [trendingTopics, setTrendingTopics] = useState([]);
     const [activeTab, setActiveTab] = useState('home'); // 'home' or 'discussions'
+    const [recentlyVisited, setRecentlyVisited] = useState([]); // Mock history
     const [allGames, setAllGames] = useState([
         'Cyberpunk 2088', 'Astroforge', 'Neon Rivals', 'Shadow Protocol', 
         'Star Conquest', 'Digital Frontiers', 'Elden Ring', 'Minecraft',
@@ -241,26 +242,41 @@ export default function CommunityPage() {
                         <>
                             {/* HOME TAB - RECONSTRUCTED UI */}
                             
-                            {/* Left Column: Recent Discussions (25%) */}
+                            {/* Left Column: Recently Visited Topics (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
                                 <div className="flex items-center px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Recent Discussions</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Recently Visited</h2>
                                 </div>
-                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
-                                    {loading ? (
-                                        [1, 2, 3].map(i => <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />)
-                                    ) : (
-                                        (posts.slice(0, 4).length > 0 ? posts.slice(0, 4) : [
-                                            { id: 'm1', user: { full_name: 'GamerQueen22', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }, title: 'Best RPGs of 2026?', created_date: new Date().toISOString() },
-                                            { id: 'm2', user: { full_name: 'NeonRider', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' }, title: 'Hidden gems in the store', created_date: new Date(Date.now() - 3600000).toISOString() },
-                                            { id: 'm3', user: { full_name: 'PixelMaster', avatar_url: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' }, title: 'Tournament highlights', created_date: new Date(Date.now() - 7200000).toISOString() }
-                                        ]).map((post) => (
-                                            <LiquidGlassCard 
-                                                key={post.id} 
-                                                className="p-4 flex gap-3 items-start group cursor-pointer" 
-                                                hover={true}
-                                                onClick={() => setSelectedPost(post)}
-                                            >
+                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+                                    {/* Mock Recently Visited - using posts for now as "topics" */}
+                                    {(posts.slice(0, 5).length > 0 ? posts.slice(0, 5) : [
+                                        { id: 'm1', user: { full_name: 'GamerQueen22', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' }, title: 'Best RPGs of 2026?', created_date: new Date().toISOString(), topic: 'RPG' },
+                                        { id: 'm2', user: { full_name: 'NeonRider', avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' }, title: 'Hidden gems in the store', created_date: new Date(Date.now() - 3600000).toISOString(), topic: 'Store' },
+                                        { id: 'm3', user: { full_name: 'PixelMaster', avatar_url: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' }, title: 'Tournament highlights', created_date: new Date(Date.now() - 7200000).toISOString(), topic: 'Esports' }
+                                    ]).map((post, idx) => (
+                                        <LiquidGlassCard 
+                                            key={post.id || idx} 
+                                            className="p-4 flex gap-3 items-center group cursor-pointer bg-white/5 hover:bg-white/10" 
+                                            hover={true}
+                                            onClick={() => {
+                                                setSelectedPost(post);
+                                                setActiveTab('discussions'); // Navigate to discussion
+                                            }}
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10 text-white">
+                                                 <Hash className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-white text-sm font-bold truncate">{post.title}</h4>
+                                                <p className="text-white/40 text-xs mt-0.5 truncate">
+                                                    Visited {new Date(post.created_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                            <ArrowLeft className="w-4 h-4 text-white/20 group-hover:text-white rotate-180 transition-colors" />
+                                        </LiquidGlassCard>
+                                    ))}
+                                </div>
+                            </div>
                                                 <div className="relative">
                                                     <img 
                                                         src={post.user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user?.id || 'user'}`} 
@@ -299,17 +315,24 @@ export default function CommunityPage() {
                                 <div className="flex items-center justify-center px-2">
                                     <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Trending Topics</h2>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-4 h-[calc(100vh-16rem)] overflow-y-auto custom-scrollbar">
                                     {[
                                         { title: 'Esports Futures', posts: '1.2K Posts', icon: Swords, color: 'from-blue-500 to-cyan-400', glow: 'shadow-[0_0_30px_rgba(59,130,246,0.3)]' },
                                         { title: 'Indie Gems', posts: '850 Posts', icon: Gamepad2, color: 'from-purple-500 to-indigo-500', glow: 'shadow-[0_0_30px_rgba(168,85,247,0.3)]' },
                                         { title: 'Strategy Meta', posts: '2.1K Posts', icon: TrendingUp, color: 'from-emerald-400 to-teal-500', glow: 'shadow-[0_0_30px_rgba(16,185,129,0.3)]' },
-                                        { title: 'Hardware Talk', posts: '540 Posts', icon: Bot, color: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_30px_rgba(249,115,22,0.3)]' }
+                                        { title: 'Hardware Talk', posts: '540 Posts', icon: Bot, color: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_30px_rgba(249,115,22,0.3)]' },
+                                        { title: 'Game Development', posts: '320 Posts', icon: Layers, color: 'from-pink-500 to-rose-500', glow: 'shadow-[0_0_30px_rgba(244,63,94,0.3)]' },
+                                        { title: 'Lore & Story', posts: '1.5K Posts', icon: ScrollText, color: 'from-amber-400 to-yellow-500', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.3)]' }
                                     ].map((topic, i) => (
                                         <LiquidGlassCard 
                                             key={i} 
-                                            className="relative p-6 flex flex-col items-center justify-center text-center group overflow-hidden aspect-square"
+                                            className="relative p-6 flex flex-col items-center justify-center text-center group overflow-hidden aspect-square cursor-pointer"
                                             hover={true}
+                                            onClick={() => {
+                                                // Navigate to discussions for this topic
+                                                setActiveSection(topic.title.toLowerCase().replace(' ', '_'));
+                                                setActiveTab('discussions');
+                                            }}
                                         >
                                             {/* Glow Effect */}
                                             <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-gradient-to-br ${topic.color}`} />
@@ -341,38 +364,37 @@ export default function CommunityPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Game Recommendations (25%) */}
+                            {/* Right Column: Game Forums (25%) */}
                             <div className="col-span-3 flex flex-col gap-6">
                                 <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Game Recommendations</h2>
+                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Game Forums</h2>
                                 </div>
-                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+                                <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
                                     {[
-                                        { title: 'Astroforge', genre: 'Sci-Fi Adventure', image: 'https://images.unsplash.com/photo-1614728853970-300dc0486d13?w=400' },
-                                        { title: 'Neon Rivals', genre: 'Cyberpunk Action', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' },
-                                        { title: 'Ethereal', genre: 'Puzzle Platformer', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400' }
+                                        { title: 'Astroforge', genre: 'Sci-Fi Adventure', posts: '12K', active: '1.2K' },
+                                        { title: 'Neon Rivals', genre: 'Cyberpunk Action', posts: '8.5K', active: '900' },
+                                        { title: 'Ethereal', genre: 'Puzzle Platformer', posts: '3.2K', active: '450' },
+                                        { title: 'Cyberpunk 2088', genre: 'RPG', posts: '45K', active: '5.6K' },
+                                        { title: 'Shadow Protocol', genre: 'Stealth', posts: '2.1K', active: '120' }
                                     ].map((game, i) => (
-                                        <div key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer shadow-lg shadow-black/20">
-                                            <img 
-                                                src={game.image} 
-                                                alt={game.title} 
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                                            
-                                            <div className="absolute top-3 right-3">
-                                                <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                                                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                        <div 
+                                            key={i} 
+                                            className="group flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all cursor-pointer"
+                                            onClick={() => {
+                                                setActiveGame(game.title);
+                                                setActiveTab('discussions');
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center text-white font-bold text-sm">
+                                                    {game.title.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-white font-bold text-sm group-hover:text-cyan-400 transition-colors">{game.title}</h3>
+                                                    <p className="text-white/30 text-[10px]">{game.genre} • {game.active} online</p>
                                                 </div>
                                             </div>
-
-                                            <div className="absolute bottom-0 left-0 right-0 p-4">
-                                                <h3 className="text-white font-bold text-lg mb-1">{game.title}</h3>
-                                                <p className="text-white/60 text-xs mb-3">{game.genre}</p>
-                                                <Button className="w-full bg-cyan-500/80 hover:bg-cyan-400 text-white border-0 rounded-xl font-bold tracking-wide shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform group-hover:translate-y-0 translate-y-2 opacity-90 group-hover:opacity-100">
-                                                    PLAY NOW
-                                                </Button>
-                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
                                         </div>
                                     ))}
                                 </div>
@@ -404,40 +426,75 @@ export default function CommunityPage() {
                         </LiquidGlassCard>
                     </div>
 
-                    {/* Center Column: Posts Feed (60%) */}
-                    <div className="col-span-8 flex flex-col gap-6">
-                        <div className="flex items-center justify-between px-2">
-                            <h2 className="text-sm font-bold text-white/80 tracking-wide">
-                                {activeSection === 'general_discussion' ? 'GENERAL DISCUSSIONS' : 'POSTS FEED'}
-                            </h2>
-                            <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="newest">Newest</SelectItem>
-                                    <SelectItem value="popular">Popular</SelectItem>
-                                </SelectContent>
-                            </Select>
+                    {/* Center Column: Revamped Posts Feed (60%) */}
+                    <div className="col-span-8 flex flex-col gap-6 h-full overflow-hidden">
+                        
+                        {/* Feed Header & Create Post */}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between px-2">
+                                <h2 className="text-sm font-bold text-white/80 tracking-wide">
+                                    {activeGame ? `FORUM: ${activeGame.toUpperCase()}` : 'COMMUNITY FEED'}
+                                </h2>
+                                <div className="flex items-center gap-3">
+                                    <Select value={sortBy} onValueChange={setSortBy}>
+                                        <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="newest">Newest</SelectItem>
+                                            <SelectItem value="popular">Popular</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* "What's on your mind?" Input Box */}
+                            <LiquidGlassCard className="p-4 flex gap-4 items-center" hover={false}>
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                                    <User className="w-5 h-5" />
+                                </div>
+                                <button 
+                                    onClick={() => setShowCreateForm(true)}
+                                    className="flex-1 text-left bg-white/5 hover:bg-white/10 rounded-full px-6 py-3 text-white/50 text-sm transition-all"
+                                >
+                                    Start a discussion about {activeGame || 'anything'}...
+                                </button>
+                                <Button 
+                                    onClick={() => setShowCreateForm(true)}
+                                    size="icon" 
+                                    className="rounded-full bg-blue-600 hover:bg-blue-500"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                </Button>
+                            </LiquidGlassCard>
                         </div>
-                        <LiquidGlassCard className="flex-1 p-4 overflow-y-auto" hover={false}>
+
+                        {/* Feed Content */}
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
                             <AnimatePresence mode="wait">
                                 {selectedPost ? (
                                     <motion.div
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
+                                        className="bg-[#0f1419]/80 backdrop-blur-xl rounded-2xl border border-white/10 p-6 min-h-full"
                                     >
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
                                             onClick={() => setSelectedPost(null)}
-                                            className="mb-4"
+                                            className="mb-6 hover:bg-white/10 -ml-2"
                                         >
-                                            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
                                         </Button>
+                                        
                                         <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
-                                        <div className="mt-6">
+                                        
+                                        <div className="mt-8 border-t border-white/10 pt-6">
+                                            <h3 className="text-white font-bold mb-6 flex items-center gap-2">
+                                                <MessageSquare className="w-4 h-4 text-cyan-400" />
+                                                Comments ({comments.length})
+                                            </h3>
                                             <CommentSection
                                                 postId={selectedPost.id}
                                                 comments={comments}
@@ -454,32 +511,37 @@ export default function CommunityPage() {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="h-full"
+                                        className="space-y-4 pb-20"
                                     >
                                         {loading ? (
-                                            <div className="space-y-3">
-                                                {[1,2,3,4].map(i => (
-                                                    <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
-                                                ))}
-                                            </div>
+                                            [1,2,3,4].map(i => (
+                                                <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
+                                            ))
                                         ) : posts.length > 0 ? (
-                                            <VirtualizedPostList
-                                              posts={posts}
-                                              selectedPost={selectedPost}
-                                              onVote={handleVote}
-                                              onSelect={setSelectedPost}
-                                            />
+                                            posts.map(post => (
+                                                <div key={post.id} onClick={() => setSelectedPost(post)}>
+                                                    <PostCard post={post} onVote={handleVote} />
+                                                </div>
+                                            ))
                                         ) : (
-                                            <div className="flex flex-col items-center justify-center py-20 text-center">
-                                                <MessageSquare className="w-12 h-12 text-white/20 mb-4" />
-                                                <h3 className="text-lg font-bold text-white/60">No discussions yet</h3>
-                                                <p className="text-white/40 text-sm mt-2">Be the first to start a conversation!</p>
+                                            <div className="flex flex-col items-center justify-center py-32 text-center bg-white/5 rounded-3xl border border-white/5 border-dashed">
+                                                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                                                    <MessageSquare className="w-8 h-8 text-white/20" />
+                                                </div>
+                                                <h3 className="text-xl font-bold text-white/60">No discussions yet</h3>
+                                                <p className="text-white/40 text-sm mt-2 max-w-xs mx-auto">Be the first to start a conversation in this community!</p>
+                                                <Button 
+                                                    onClick={() => setShowCreateForm(true)}
+                                                    className="mt-6 bg-blue-600 hover:bg-blue-500 rounded-full px-8"
+                                                >
+                                                    Create Post
+                                                </Button>
                                             </div>
                                         )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </LiquidGlassCard>
+                        </div>
                     </div>
 
                     {/* Right Column: Topics (17.5%) */}
