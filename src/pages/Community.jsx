@@ -277,38 +277,6 @@ export default function CommunityPage() {
                                     ))}
                                 </div>
                             </div>
-                                                <div className="relative">
-                                                    <img 
-                                                        src={post.user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user?.id || 'user'}`} 
-                                                        alt="avatar" 
-                                                        className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
-                                                    />
-                                                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-start">
-                                                        <h4 className="text-white text-sm font-bold truncate">{post.user?.full_name || post.user?.username || 'User'}</h4>
-                                                        <span className="text-white/30 text-[10px]">
-                                                            {new Date(post.created_date).getHours() % 12 || 12} hours ago
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-white/70 text-sm font-medium leading-tight mt-1 line-clamp-2">
-                                                        {post.title}
-                                                    </p>
-                                                    <div className="flex items-center gap-3 mt-2 text-white/30">
-                                                        <MessageSquare className="w-3 h-3 hover:text-cyan-400" />
-                                                        <span className="text-[10px]">12</span>
-                                                        <div className="flex-1" />
-                                                        <Badge className="bg-white/5 hover:bg-white/10 text-white/50 border-0 text-[10px] h-5 px-2">
-                                                            {post.genre || 'General'}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </LiquidGlassCard>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
 
                             {/* Center Column: Trending Topics (50%) */}
                             <div className="col-span-6 flex flex-col gap-6">
