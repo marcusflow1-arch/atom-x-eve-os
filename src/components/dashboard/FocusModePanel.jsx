@@ -1760,8 +1760,14 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           onOpenCalendar={onOpenCalendar}
           onDateTimeClick={handleDateTimeClick}
           navigate={navigate}
-          games={ownedGames}
-          onBackgroundChange={onBackgroundChange}
+        />
+      </div>
+
+      {/* Banner Section - Moved Down */}
+      <div className="w-full mt-4 mb-4">
+        <LibraryBannerSection 
+           games={ownedGames}
+           onBackgroundChange={onBackgroundChange}
         />
       </div>
 
