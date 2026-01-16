@@ -5,9 +5,12 @@ import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
-  MessageSquare, Users, Star, TrendingUp } from
+  MessageSquare, Users, Star, TrendingUp, SlidersHorizontal } from
 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { allMockGames } from '../components/store/mockData';
@@ -971,53 +974,84 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                       <Hammer className="w-4 h-4" />
                     </motion.button>
+
+                    {/* Filter Drawer Trigger - New Feature */}
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center border bg-blue-500/20 border-blue-400/30 text-blue-300 hover:bg-blue-500/30"
+                          title="Open Filters"
+                        >
+                          <SlidersHorizontal className="w-4 h-4" />
+                        </motion.button>
+                      </SheetTrigger>
+                      <SheetContent side="right" className="w-[300px] border-l border-white/10 bg-slate-950/95 backdrop-blur-xl text-white">
+                        <SheetHeader>
+                          <SheetTitle className="text-white">Filters & Options</SheetTitle>
+                        </SheetHeader>
+                        <div className="py-6 flex flex-col gap-6">
+                          
+                          {/* Search in Drawer */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Search</label>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                              <Input
+                                placeholder="Search games..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="bg-white/5 border-white/10 pl-9 text-white placeholder:text-white/30"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Genre Filter in Drawer */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Genre</label>
+                            <Select value={activeGenre} onValueChange={setActiveGenre}>
+                              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                <SelectValue placeholder="Select Genre" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                {genres.map((genre) => (
+                                  <SelectItem key={genre} value={genre} className="focus:bg-white/10 focus:text-white">
+                                    {genre}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Additional Options */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">View Mode</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button 
+                                onClick={() => setViewMode('cross')}
+                                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all ${viewMode === 'cross' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
+                              >
+                                Cross View
+                              </button>
+                              <button 
+                                onClick={() => setViewMode('classic')}
+                                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
+                              >
+                                Grid View
+                              </button>
+                            </div>
+                          </div>
+
+                        </div>
+                      </SheetContent>
+                    </Sheet>
                   </div>
 
                   {/* Shiny Box Container */}
                   <ShinySidebarBox className="flex-1 flex flex-col p-5">
                     
-                    {/* Search with Mic */}
-                    <div className="relative group mb-6">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                      <input
-                      type="text"
-                      placeholder="Search games..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl" />
-
-                      <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-                        <MicIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Genre Filters - Liquid Glass Dropdown */}
-                    <div className="mb-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-white transition-all focus:outline-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:bg-white/20">
-                            <span>{activeGenre === 'All' ? 'All Genres' : activeGenre}</span>
-                            <ChevronDown className="w-4 h-4 text-white/70" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                        className="w-[280px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-xl p-1 text-white z-50 max-h-60 overflow-y-auto custom-scrollbar"
-                        style={{ background: 'rgba(30, 41, 59, 0.7)' }}>
-
-                          {genres.map((genre) =>
-                        <DropdownMenuItem
-                          key={genre}
-                          onClick={() => setActiveGenre(genre)}
-                          className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:bg-white/10 focus:text-white ${
-                          activeGenre === genre ? 'bg-blue-600/30 text-blue-200' : 'text-slate-300 hover:text-white'}`
-                          }>
-
-                              {genre}
-                            </DropdownMenuItem>
-                        )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                    {/* Filters moved to seamless right-side menu */}
 
                     {/* Game List */}
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
