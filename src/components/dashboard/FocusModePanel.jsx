@@ -1391,8 +1391,48 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
   );
 }
 
-// Library Banner Section - Now exported for use in pages
-export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
+// New QuickActionsBar Component
+function QuickActionsBar({ navigate }) {
+  const quickActions = [
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
+    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
+    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
+    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
+  ];
+
+  return (
+    <div className="flex items-center gap-2 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
+      {quickActions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <motion.button
+            key={action.id}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={action.onClick}
+            className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
+            style={{
+              background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              width: '85px',
+              height: '75px'
+            }}
+          >
+            <Icon className="w-5 h-5 text-white/80" />
+            <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
+export function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
@@ -1460,47 +1500,9 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
     }
   };
 
-  const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
-    { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('Achievements')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
-  ];
-
   return (
     <div className="flex flex-col items-start w-full">
-      {/* Top Row: Quick Access Icons */}
-      <div className="flex items-center gap-2 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
-        {quickActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <motion.button
-              key={action.id}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={action.onClick}
-              className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
-              style={{
-                background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                width: '85px',
-                height: '75px'
-              }}
-            >
-              <Icon className="w-5 h-5 text-white/80" />
-              <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Horizontal Line */}
-
-      {/* Game Banner + Memories - Below the line */}
+      {/* Game Banner + Memories */}
       <div className="flex items-stretch gap-4 w-full">
         {/* Game Banner */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
