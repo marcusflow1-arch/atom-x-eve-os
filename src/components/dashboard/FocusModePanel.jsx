@@ -1499,7 +1499,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, navigate }) {
       </div>
 
       {/* Horizontal Line */}
-      <div className="w-full h-px bg-white/20 mt-4 mb-6" />
 
       {/* Game Banner + Memories - Below the line */}
       <div className="flex items-stretch gap-4 w-full">
