@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { X, Zap, Sparkles, Shield, TrendingUp, Bolt, Flame, Brain, Eye, Wind, Lock, Check } from 'lucide-react';
+import { X, Zap, Sparkles, Shield, TrendingUp, Bolt, Flame, Brain, Eye, Wind, Lock, Check, Filter, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -323,6 +323,7 @@ export default function SkillTreeOverlay({ card, onClose }) {
   const [focusedNodeId, setFocusedNodeId] = useState(null);
   const [skillPoints, setSkillPoints] = useState(2000); // Demo SP
   const [recentlyUnlocked, setRecentlyUnlocked] = useState(null); // For unlock animations
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const containerRef = useRef(null);
 
   // Lock body scroll when overlay is open
@@ -552,9 +553,86 @@ export default function SkillTreeOverlay({ card, onClose }) {
         className="relative w-full max-w-7xl h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Filter Drawer */}
+        <AnimatePresence>
+          {isFilterDrawerOpen && (
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="absolute top-0 bottom-0 left-0 w-[200px] z-50 rounded-l-3xl overflow-hidden"
+              style={{
+                background: 'rgba(15, 23, 42, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '10px 0 30px rgba(0,0,0,0.5)'
+              }}
+            >
+              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-cyan-400" />
+                    Filters
+                  </h3>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Status Filters */}
+                  <div>
+                    <label className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3 block">Status</label>
+                    <div className="space-y-2">
+                      {['Unlocked', 'Available', 'Locked', 'Maxed'].map(filter => (
+                        <div key={filter} className="flex items-center gap-3 group cursor-pointer">
+                          <div className="w-4 h-4 rounded border border-white/20 group-hover:border-cyan-400 transition-colors" />
+                          <span className="text-sm text-white/60 group-hover:text-white transition-colors">{filter}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Type Filters */}
+                  <div>
+                    <label className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3 block">Type</label>
+                    <div className="space-y-2">
+                      {['Core', 'Stat', 'Ability', 'Ultimate'].map(type => (
+                        <div key={type} className="flex items-center gap-3 group cursor-pointer">
+                          <div className="w-4 h-4 rounded border border-white/20 group-hover:border-purple-400 transition-colors" />
+                          <span className="text-sm text-white/60 group-hover:text-white transition-colors">{type}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cost Range */}
+                  <div>
+                    <label className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3 block">Cost</label>
+                    <div className="px-1">
+                      <div className="h-1 bg-white/10 rounded-full mb-2">
+                         <div className="h-full w-2/3 bg-cyan-500 rounded-full" />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-white/40">
+                        <span>0</span>
+                        <span>1000+</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 relative">
           <div className="flex items-center gap-4">
+             <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+              className={`mr-2 transition-colors ${isFilterDrawerOpen ? 'bg-white/10 text-white' : 'text-white/50 hover:text-white'}`}
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+            </Button>
             <h1 className="text-3xl font-black text-white">{card?.title || card?.name || 'Card'}</h1>
             <Badge className="text-lg px-4 py-1 bg-purple-600/30 border-purple-500/50 text-purple-200">
               Skill Tree
