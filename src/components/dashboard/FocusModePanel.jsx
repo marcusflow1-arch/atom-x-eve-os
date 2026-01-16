@@ -1321,13 +1321,13 @@ function GameBanner({ game, onChangeBanner }) {
   );
 }
 
-// Quick Access Icons Row - Contains Game Banner, Memories, Quick Actions, and System Status
-function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate, games, onBackgroundChange }) {
+// Quick Access Icons Row
+function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate }) {
   return (
     <div className="h-full flex gap-6">
-      {/* Left Column: Game Banner Section */}
+      {/* Left Column: Quick Actions */}
       <div className="flex-1 min-w-0">
-        <LibraryBannerSection games={games} onBackgroundChange={onBackgroundChange} navigate={navigate} />
+        <QuickActionsBar navigate={navigate} />
       </div>
       
       {/* Right Column: System Status & Calendar Hub */}
