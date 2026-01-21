@@ -45,6 +45,25 @@ export default function GameWorkspace({ game, clan, onBack }) {
         enabled: !!clan && !!game
     });
     
+    // Fetch Members active in this game (Workspace presence)
+    // In a real app with presence, we'd filter by current location/status.
+    // For now, we'll fetch clan members who play this game.
+    const { data: activeMembers } = useQuery({
+        queryKey: ['workspaceMembers', clan.id, game.id],
+        queryFn: async () => {
+            // Fetch clan members
+            const members = await base44.entities.ClanMember.filter({ divisionId: clan.id });
+            // Mock "active in workspace" status for a subset
+            return members.map(m => ({
+                ...m,
+                isActive: Math.random() > 0.6 // Randomly assign active status
+            })).sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? 1 : -1);
+        },
+        enabled: !!clan && !!game
+    });
+
+    const activeCount = activeMembers?.filter(m => m.isActive).length || 0;
+
     // Mock Chat Messages (In real app, fetch messages for channel `game_${game.id}`)
     const [messages, setMessages] = useState([
         { id: 1, user: 'CommanderShepard', text: 'Raid starts in 30 mins. Gear check!', time: '10:00 AM' },
@@ -96,7 +115,7 @@ export default function GameWorkspace({ game, clan, onBack }) {
                             <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-400 border-green-500/20 px-1.5 h-5">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
-                                    12 Active
+                                    {activeCount} Active
                                 </Badge>
                             </div>
                         </div>
@@ -176,15 +195,26 @@ export default function GameWorkspace({ game, clan, onBack }) {
                         <h2 className="text-xl font-bold text-white">{ZONES.find(z => z.id === activeZone)?.label}</h2>
                     </div>
                     <div className="flex items-center gap-4">
+                        {/* Active Workspace Members */}
                         <div className="flex -space-x-2">
-                            {[1,2,3].map(i => (
-                                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-700 flex items-center justify-center text-xs">
-                                    P{i}
+                            {activeMembers?.slice(0, 4).map((member, i) => (
+                                <div 
+                                    key={member.id || i} 
+                                    className={`w-8 h-8 rounded-full border-2 border-[#0a0c10] flex items-center justify-center text-xs font-bold overflow-hidden relative ${
+                                        member.isActive ? 'bg-slate-700 text-white' : 'bg-slate-800 text-white/30 grayscale'
+                                    }`}
+                                    title={member.userId}
+                                >
+                                    {/* Ideally show Avatar image if available, fallback to initial */}
+                                    {member.userId ? member.userId[0].toUpperCase() : 'M'}
+                                    {member.isActive && <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-[#0a0c10]" />}
                                 </div>
                             ))}
-                            <div className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-800 flex items-center justify-center text-xs text-white/50">
-                                +4
-                            </div>
+                            {(activeMembers?.length || 0) > 4 && (
+                                <div className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-800 flex items-center justify-center text-xs text-white/50">
+                                    +{(activeMembers.length - 4)}
+                                </div>
+                            )}
                         </div>
                         <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2">
                             <UserPlus className="w-4 h-4" /> Invite
