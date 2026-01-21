@@ -43,6 +43,69 @@ export default function ClanPage() {
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
 
+    // Fetch Memberships
+    const { data: memberships, isLoading } = useQuery({
+        queryKey: ['myClanMemberships', user?.id],
+        queryFn: async () => {
+            if (!user) return [];
+            const members = await base44.entities.ClanMember.filter({ userId: user.id });
+            const divisions = await Promise.all(members.map(async (m) => {
+                const d = await base44.entities.Division.get(m.divisionId);
+                return d ? { ...d, divisionId: d.id } : null;
+            }));
+            return divisions.filter(d => d);
+        },
+        enabled: !!user
+    });
+
+    useEffect(() => {
+        if (memberships?.length > 0 && !selectedClanId) {
+            setSelectedClanId(memberships[0].divisionId);
+        }
+    }, [memberships]);
+
+    const activeClan = memberships?.find(c => c.divisionId === selectedClanId);
+
+    // Fetch Members for active clan
+    const { data: members } = useQuery({
+        queryKey: ['clanMembers', activeClan?.id],
+        queryFn: async () => {
+            if (!activeClan) return [];
+            return await base44.entities.ClanMember.filter({ divisionId: activeClan.id });
+        },
+        enabled: !!activeClan
+    });
+
+    // Check for leader status for management access
+    const isLeader = members?.find(m => m.userId === user?.id)?.role === 'leader';
+
+    // Fetch Active Voice Rooms
+    const { data: activeVoiceRooms } = useQuery({
+        queryKey: ['activeVoiceRooms', activeClan?.id],
+        queryFn: async () => {
+            if (!activeClan) return [];
+            // Mocking active rooms for overview visibility
+            // In production: base44.entities.VoiceRoom.filter({ clanId: activeClan.id, isEmpty: false })
+            return [
+                { id: '1', topic: 'General Lounge', participants: [1,2] },
+                { id: '2', topic: 'Officer Meeting', participants: [] }
+            ]; 
+        },
+        enabled: !!activeClan
+    });
+
+    // Create Clan Mutation
+    const createClanMutation = useMutation({
+        mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
+        onSuccess: (res) => {
+            if (res.data.success) {
+                queryClient.invalidateQueries(['myClanMemberships']);
+                setIsCreateClanOpen(false);
+                setSelectedClanId(res.data.division.id);
+            }
+        }
+    });
+
     // Update presence when viewing Clan Overview
     useEffect(() => {
         if (activeClan && !selectedGame) {
@@ -103,6 +166,27 @@ export default function ClanPage() {
         }
     }, [location.state, activeClan?.id, user?.id]); // Only run when clan/user loads
 
+    // Keyboard Navigation for XMB
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!activeClan) return;
+
+            if (e.key === 'ArrowRight') {
+                setActiveModeIndex(prev => {
+                    let next = prev + 1;
+                    if (next >= XMB_MODES.length) return prev;
+                    if (XMB_MODES[next].leaderOnly && !isLeader) return prev;
+                    return next;
+                });
+            } else if (e.key === 'ArrowLeft') {
+                setActiveModeIndex(prev => Math.max(prev - 1, 0));
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeClan, isLeader]);
+
     // Conflict Warning
     if (sessionConflict) {
         return (
@@ -126,90 +210,6 @@ export default function ClanPage() {
             </div>
         );
     }
-
-    // Fetch Memberships
-    const { data: memberships, isLoading } = useQuery({
-        queryKey: ['myClanMemberships', user?.id],
-        queryFn: async () => {
-            if (!user) return [];
-            const members = await base44.entities.ClanMember.filter({ userId: user.id });
-            const divisions = await Promise.all(members.map(async (m) => {
-                const d = await base44.entities.Division.get(m.divisionId);
-                return d ? { ...d, divisionId: d.id } : null;
-            }));
-            return divisions.filter(d => d);
-        },
-        enabled: !!user
-    });
-
-    useEffect(() => {
-        if (memberships?.length > 0 && !selectedClanId) {
-            setSelectedClanId(memberships[0].divisionId);
-        }
-    }, [memberships]);
-
-    const activeClan = memberships?.find(c => c.divisionId === selectedClanId);
-
-    // Fetch Members for active clan
-    const { data: members } = useQuery({
-        queryKey: ['clanMembers', activeClan?.id],
-        queryFn: async () => {
-            if (!activeClan) return [];
-            return await base44.entities.ClanMember.filter({ divisionId: activeClan.id });
-        },
-        enabled: !!activeClan
-    });
-
-    // Fetch Active Voice Rooms
-    const { data: activeVoiceRooms } = useQuery({
-        queryKey: ['activeVoiceRooms', activeClan?.id],
-        queryFn: async () => {
-            if (!activeClan) return [];
-            // Mocking active rooms for overview visibility
-            // In production: base44.entities.VoiceRoom.filter({ clanId: activeClan.id, isEmpty: false })
-            return [
-                { id: '1', topic: 'General Lounge', participants: [1,2] },
-                { id: '2', topic: 'Officer Meeting', participants: [] }
-            ]; 
-        },
-        enabled: !!activeClan
-    });
-
-    // Create Clan Mutation
-    const createClanMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
-        onSuccess: (res) => {
-            if (res.data.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-                setIsCreateClanOpen(false);
-                setSelectedClanId(res.data.division.id);
-            }
-        }
-    });
-
-    // Check for leader status for management access
-    const isLeader = members?.find(m => m.userId === user?.id)?.role === 'leader';
-
-    // Keyboard Navigation for XMB
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (!activeClan) return;
-
-            if (e.key === 'ArrowRight') {
-                setActiveModeIndex(prev => {
-                    let next = prev + 1;
-                    if (next >= XMB_MODES.length) return prev;
-                    if (XMB_MODES[next].leaderOnly && !isLeader) return prev;
-                    return next;
-                });
-            } else if (e.key === 'ArrowLeft') {
-                setActiveModeIndex(prev => Math.max(prev - 1, 0));
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeClan, isLeader]);
 
     // Render Logic
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
