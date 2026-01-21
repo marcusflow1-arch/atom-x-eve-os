@@ -52,44 +52,90 @@ export default function VoiceRoomManager({ clanId, gameId }) {
         const newRoom = {
             id: Date.now().toString(),
             topic: newRoomTopic,
+            isTemporary: true,
             participants: []
         };
-        setRooms([...rooms, newRoom]);
+        // Add new room then join it immediately (join logic handles the state update for participants)
+        setRooms(prev => [...prev, newRoom]);
         setNewRoomTopic('');
         setIsCreateOpen(false);
-        handleJoinRoom(newRoom.id);
+        
+        // Small timeout to ensure state update before joining
+        setTimeout(() => handleJoinRoom(newRoom.id), 0);
     };
 
     const handleJoinRoom = (roomId) => {
         if (activeRoomId === roomId) return;
         
-        // Leave current
-        if (activeRoomId) {
-            setRooms(prev => prev.map(r => r.id === activeRoomId ? {
+        setRooms(prev => {
+            // 1. Remove user from ALL rooms first
+            let newRooms = prev.map(r => ({
                 ...r,
-                participants: r.participants.filter(p => p.id !== user?.id)
-            } : r));
-        }
+                participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
+            }));
 
-        // Join new
+            // 2. Filter out empty temporary rooms
+            newRooms = newRooms.filter(r => !r.isTemporary || r.participants.length > 0);
+
+            // 3. Add user to target room (if it still exists or is the one being joined)
+            // Note: If the room was just created, it might be empty but we are about to join it, so we need to ensure it exists or we are adding to it.
+            // Actually, if we created it, it's in the list. If we join an existing empty room (rare edge case if async), we should handle it.
+            // But simplified: We map again to add the user.
+            
+            const targetRoomExists = newRooms.some(r => r.id === roomId);
+            if (!targetRoomExists) {
+                // If target room was removed (e.g. edge case), we can't join. 
+                // But for the create flow, we must ensure it's not removed.
+                // The filter above removes empty temp rooms. If we just created it, it IS empty.
+                // So we need to EXCLUDE the target room from being removed if it's empty.
+                
+                // Let's redo the logic properly:
+                
+                // A. Clean up old rooms (excluding target room)
+                const cleanedRooms = prev.map(r => ({
+                    ...r,
+                    participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
+                })).filter(r => {
+                    // Keep if not temporary OR has participants OR is the target room we are joining
+                    return (!r.isTemporary || r.participants.length > 0 || r.id === roomId);
+                });
+
+                // B. Add to new room
+                return cleanedRooms.map(r => r.id === roomId ? {
+                    ...r,
+                    participants: [...r.participants, { 
+                        id: user?.id || 'me', 
+                        name: user?.username || 'Me', 
+                        speaking: false, 
+                        muted: false 
+                    }]
+                } : r);
+            }
+
+            return newRooms.map(r => r.id === roomId ? {
+                ...r,
+                participants: [...r.participants, { 
+                    id: user?.id || 'me', 
+                    name: user?.username || 'Me', 
+                    speaking: false, 
+                    muted: false 
+                }]
+            } : r);
+        });
+
         setActiveRoomId(roomId);
-        setRooms(prev => prev.map(r => r.id === roomId ? {
-            ...r,
-            participants: [...r.participants, { 
-                id: user?.id || 'me', 
-                name: user?.username || 'Me', 
-                speaking: false, 
-                muted: false 
-            }]
-        } : r));
     };
 
     const handleLeaveRoom = () => {
         if (!activeRoomId) return;
-        setRooms(prev => prev.map(r => r.id === activeRoomId ? {
-            ...r,
-            participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
-        } : r));
+        
+        setRooms(prev => {
+            return prev.map(r => ({
+                ...r,
+                participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
+            })).filter(r => !r.isTemporary || r.participants.length > 0);
+        });
+        
         setActiveRoomId(null);
     };
 
@@ -201,7 +247,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
 
                                 <div className="flex flex-wrap gap-2 min-h-[40px]">
                                     {room.participants.length === 0 && (
-                                        <span className="text-xs text-white/20 italic">Empty - Auto-closing soon</span>
+                                        <span className="text-xs text-white/20 italic">Empty</span>
                                     )}
                                     {room.participants.map(p => (
                                         <div key={p.id} className="relative group">
