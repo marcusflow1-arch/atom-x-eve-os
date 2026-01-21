@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/components/auth/AuthContext';
+import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
+import PartyManager from '@/components/clan/party/PartyManager';
 
 // Mock Data for Assignments/Objectives
 const OBJECTIVES = [
@@ -224,39 +226,15 @@ export default function GameWorkspace({ game, clan, onBack }) {
                     )}
 
                     {activeZone === 'voice' && (
-                        <div className="p-8 space-y-6">
-                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="font-bold text-lg flex items-center gap-2">
-                                        <Headphones className="w-5 h-5 text-green-400" /> Alpha Squad
-                                    </h3>
-                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Live</Badge>
-                                </div>
-                                <div className="flex gap-4">
-                                    {[1,2,3,4].map(i => (
-                                        <div key={i} className="flex flex-col items-center gap-2">
-                                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-green-500/50 flex items-center justify-center relative">
-                                                <Mic className="w-6 h-6 text-white" />
-                                                <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping opacity-20" />
-                                            </div>
-                                            <span className="text-xs font-bold">User {i}</span>
-                                        </div>
-                                    ))}
-                                    <button className="w-16 h-16 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-white/30 hover:text-white hover:border-white/50 transition-all">
-                                        <Plus className="w-6 h-6" />
-                                    </button>
-                                </div>
-                                <div className="mt-6 flex justify-center">
-                                    <Button className="bg-green-600 hover:bg-green-500 text-white px-8 rounded-full">
-                                        Join Channel
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+                        <VoiceRoomManager clanId={clan?.id} gameId={game?.id} />
+                    )}
+
+                    {activeZone === 'party' && (
+                        <PartyManager clanId={clan?.id} gameId={game?.id} />
                     )}
 
                     {/* Placeholder for other zones */}
-                    {['exploration', 'strategy', 'party'].includes(activeZone) && (
+                    {['exploration', 'strategy'].includes(activeZone) && (
                         <div className="flex flex-col items-center justify-center h-full text-white/30">
                             {React.createElement(ZONES.find(z => z.id === activeZone).icon, { className: "w-20 h-20 mb-4 opacity-20" })}
                             <p className="text-lg">Zone Module Initializing...</p>
