@@ -14,7 +14,7 @@ export default function Farm() {
     const gameId = query.get('gameId');
     
     // Context from navigation (Clan Workspace)
-    const { from, clanId } = location.state || {};
+    const { from, clanId, activeZone } = location.state || {};
 
     const { data: game } = useQuery({
         queryKey: ['game', gameId],
@@ -30,9 +30,13 @@ export default function Farm() {
 
     const handleBack = () => {
         if (from === 'clan' && clanId) {
-            // Navigate back to Clan page/workspace
-            // We might need to handle the specific tab/game context if Clan page supports it via URL params
-            navigate(-1); // Simple back for now, or construct URL
+            navigate('/clan', { 
+                state: { 
+                    restoreGameId: gameId, 
+                    restoreClanId: clanId,
+                    restoreZone: activeZone 
+                } 
+            });
         } else {
             navigate('/library');
         }

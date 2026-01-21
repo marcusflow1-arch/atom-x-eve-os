@@ -30,12 +30,12 @@ const ZONES = [
     { id: 'voice', label: 'Voice Rooms', icon: Mic, desc: 'Tactical Audio Channels' },
 ];
 
-export default function GameWorkspace({ game, clan, onBack }) {
+export default function GameWorkspace({ game, clan, onBack, initialZone }) {
     const { user } = useAuth();
-    const [activeZone, setActiveZone] = useState('chat');
+    const [activeZone, setActiveZone] = useState(initialZone || 'chat');
     
     // Visited zones state for lazy loading
-    const [visitedZones, setVisitedZones] = useState({ chat: true });
+    const [visitedZones, setVisitedZones] = useState({ [initialZone || 'chat']: true });
 
     const handleZoneChange = (zoneId) => {
         setActiveZone(zoneId);

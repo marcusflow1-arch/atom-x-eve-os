@@ -15,7 +15,8 @@ export default function FarmingZone({ game, clan }) {
         navigate(`/farm?gameId=${game.id}`, { 
             state: { 
                 from: 'clan', 
-                clanId: clan.id 
+                clanId: clan.id,
+                activeZone: 'farming'
             } 
         });
     };

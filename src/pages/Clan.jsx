@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -32,6 +33,7 @@ const XMB_MODES = [
 
 export default function ClanPage() {
     const { user } = useAuth();
+    const location = useLocation();
     const queryClient = useQueryClient();
     const [selectedClanId, setSelectedClanId] = useState(null);
     const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
@@ -39,6 +41,31 @@ export default function ClanPage() {
     const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
+    const [initialZone, setInitialZone] = useState(null);
+
+    // Restore state from navigation (e.g. returning from Farm page)
+    useEffect(() => {
+        const restoreState = async () => {
+            if (location.state?.restoreGameId) {
+                // Ensure we are on the 'games' tab
+                const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
+                if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+
+                // Fetch the game details to restore the workspace
+                const game = await base44.entities.Game.get(location.state.restoreGameId);
+                if (game) {
+                    setSelectedGame(game);
+                    if (location.state.restoreZone) {
+                        setInitialZone(location.state.restoreZone);
+                    }
+                }
+                
+                // Clear state to prevent re-running
+                window.history.replaceState({}, document.title);
+            }
+        };
+        restoreState();
+    }, [location.state]);
 
     // Fetch Memberships
     const { data: memberships, isLoading } = useQuery({
@@ -184,7 +211,11 @@ export default function ClanPage() {
                         <GameWorkspace 
                             game={selectedGame} 
                             clan={activeClan} 
-                            onBack={() => setSelectedGame(null)} 
+                            initialZone={initialZone}
+                            onBack={() => {
+                                setSelectedGame(null);
+                                setInitialZone(null);
+                            }} 
                         />
                     </motion.div>
                 )}
