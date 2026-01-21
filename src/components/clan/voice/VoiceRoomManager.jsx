@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -19,6 +19,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [isDeafened, setIsDeafened] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newRoomTopic, setNewRoomTopic] = useState('');
+    const [previewRoomId, setPreviewRoomId] = useState(null);
 
     // Mock Rooms Data
     const [rooms, setRooms] = useState([
@@ -183,6 +184,76 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                 )}
             </AnimatePresence>
 
+            {/* Join Confirmation Dialog */}
+            <Dialog open={!!previewRoomId} onOpenChange={(open) => !open && setPreviewRoomId(null)}>
+                <DialogContent className="bg-[#12141a] border-white/10 text-white sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Headphones className="w-5 h-5 text-green-400" />
+                            Join Voice Channel
+                        </DialogTitle>
+                        <DialogDescription className="text-white/50">
+                            Confirm connection to this voice room.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    {(() => {
+                        const room = rooms.find(r => r.id === previewRoomId);
+                        if (!room) return null;
+                        
+                        return (
+                            <div className="py-4">
+                                <div className="bg-white/5 rounded-lg p-4 border border-white/5 mb-4">
+                                    <h3 className="font-bold text-lg text-white mb-1">{room.topic}</h3>
+                                    <p className="text-xs text-white/40">{room.isTemporary ? 'Temporary Room' : 'Permanent Channel'}</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-xs font-medium text-white/40 uppercase tracking-wider">
+                                        <span>Participants ({room.participants.length})</span>
+                                        {room.participants.length > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/> Live</span>}
+                                    </div>
+                                    
+                                    <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2">
+                                        {room.participants.length === 0 ? (
+                                            <div className="text-center py-6 text-white/20 italic bg-white/[0.02] rounded-lg">
+                                                Room is empty
+                                            </div>
+                                        ) : (
+                                            room.participants.map(p => (
+                                                <div key={p.id} className="flex items-center justify-between bg-white/[0.03] p-2 rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className={`w-8 h-8 border-2 ${p.speaking ? 'border-green-500' : 'border-transparent'}`}>
+                                                            <AvatarFallback className="bg-slate-700 text-[10px]">{p.name[0]}</AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="text-sm text-white/90">{p.name}</span>
+                                                    </div>
+                                                    {p.speaking && <Volume2 className="w-4 h-4 text-green-500 animate-pulse" />}
+                                                    {p.muted && <MicOff className="w-3.5 h-3.5 text-red-400/70" />}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="ghost" onClick={() => setPreviewRoomId(null)} className="hover:bg-white/10">Cancel</Button>
+                        <Button 
+                            className="bg-green-600 hover:bg-green-500 text-white" 
+                            onClick={() => {
+                                handleJoinRoom(previewRoomId);
+                                setPreviewRoomId(null);
+                            }}
+                        >
+                            <Mic className="w-4 h-4 mr-2" /> Connect
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Room List */}
             <ScrollArea className="flex-1 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -238,7 +309,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                                             size="sm" 
                                             variant="ghost" 
                                             className="h-6 text-xs bg-white/5 hover:bg-white/10 text-white/70"
-                                            onClick={() => handleJoinRoom(room.id)}
+                                            onClick={() => setPreviewRoomId(room.id)}
                                         >
                                             Join
                                         </Button>
