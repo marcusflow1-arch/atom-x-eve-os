@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
 import { 
     Mic, MicOff, Headphones, User, Plus, X, 
     Volume2, Radio, Users, LogOut, Lock, Target
@@ -44,11 +45,17 @@ export default function VoiceRoomManager({ clanId, gameId }) {
 
     const queryClient = useQueryClient();
 
+    // Import hook if not already imported (it's not at top level, assuming standard import behaviour or using dynamic import?) 
+    // Wait, I can't import inside function. I missed adding the import statement at the top.
+    // I will fix imports in a separate call or do it here if possible.
+    // Let's assume I will fix imports next.
+    
     const { data: rooms = [] } = useQuery({
         queryKey: ['voiceRooms', clanId, gameId],
         queryFn: () => base44.entities.VoiceRoom.filter(isClanWide ? { clanId } : { clanId, gameId }),
-        refetchInterval: 3000
     });
+
+    useEntitySubscription('VoiceRoom', ['voiceRooms', clanId, gameId]);
 
     // Check permissions
     const { data: clanMember } = useQuery({
