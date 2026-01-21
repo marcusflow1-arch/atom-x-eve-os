@@ -41,10 +41,13 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
         updatePresenceContext({
             type: 'game',
             name: game.title,
-            id: game.id
+            id: game.id,
+            zoneId: activeZone // Track specific zone for granular recovery
         });
-        
-        // Cleanup: Set back to clan when leaving workspace
+    }, [game.id, clan.id, activeZone]);
+
+    // Cleanup when unmounting component (leaving workspace)
+    useEffect(() => {
         return () => {
             updatePresenceContext({
                 type: 'clan',
@@ -52,7 +55,7 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
                 id: clan.id
             });
         };
-    }, [game.id, clan.id]);
+    }, []);
 
     const handleZoneChange = (zoneId) => {
         setActiveZone(zoneId);

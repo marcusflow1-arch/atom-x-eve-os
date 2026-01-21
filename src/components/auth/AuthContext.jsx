@@ -32,16 +32,41 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [showSignUp, setShowSignUp] = useState(false);
     const [isLoginFlow, setIsLoginFlow] = useState(false);
+    const sessionId = React.useRef(Math.random().toString(36).substring(7));
+    const [sessionConflict, setSessionConflict] = useState(false);
 
-    // Presence Heartbeat
+    // Presence Heartbeat & Conflict Resolution
     useEffect(() => {
         if (!user) return;
 
         const updateHeartbeat = async () => {
+            if (sessionConflict) return; // Stop if another tab took over
+
             try {
+                // Check if we've been overridden by another session recently
+                const freshUser = await base44.auth.me();
+                const remoteSessionId = freshUser?.current_activity?.sessionId;
+                
+                // If there's a remote session ID, it's different from ours, and it was updated recently (< 2 mins), we have a conflict
+                const lastSeen = new Date(freshUser?.last_seen || 0);
+                const now = new Date();
+                const isRecent = (now - lastSeen) < 120000; // 2 mins
+
+                if (remoteSessionId && remoteSessionId !== sessionId.current && isRecent) {
+                    console.log("Session conflict detected. Pausing heartbeat.");
+                    setSessionConflict(true);
+                    return;
+                }
+
+                // If no conflict, proceed
                 await base44.auth.updateMe({
                     last_seen: new Date().toISOString(),
-                    presence_status: 'online'
+                    presence_status: 'online',
+                    // Merge existing activity with our session ID to claim it
+                    current_activity: { 
+                        ...(freshUser?.current_activity || {}), 
+                        sessionId: sessionId.current 
+                    }
                 });
             } catch (e) {
                 console.error("Heartbeat failed", e);
@@ -54,17 +79,23 @@ export const AuthProvider = ({ children }) => {
         // Update every minute
         const interval = setInterval(updateHeartbeat, 60000);
         return () => clearInterval(interval);
-    }, [user?.id]);
+    }, [user?.id, sessionConflict]);
 
     const updatePresenceContext = async (activity) => {
         if (!user) return;
+        
+        // When explicitly updating context, we force claim the session
+        setSessionConflict(false); 
+        
+        const activityWithSession = { ...activity, sessionId: sessionId.current };
+        
         try {
             await base44.auth.updateMe({
-                current_activity: activity,
+                current_activity: activityWithSession,
                 last_seen: new Date().toISOString()
             });
             // Optimistic update
-            setUser(prev => ({ ...prev, current_activity: activity }));
+            setUser(prev => ({ ...prev, current_activity: activityWithSession }));
         } catch (e) {
             console.error("Failed to update presence context", e);
         }
@@ -253,6 +284,8 @@ export const AuthProvider = ({ children }) => {
         refreshUserData,
         isLoginFlow,
         updatePresenceContext,
+        sessionConflict,
+        claimSession: () => setSessionConflict(false)
         };
 
         return (

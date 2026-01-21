@@ -42,7 +42,7 @@ export default function ClanPage() {
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
-    const { updatePresenceContext } = useAuth();
+    const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
 
     // Update presence when viewing Clan Overview
     useEffect(() => {
@@ -55,15 +55,14 @@ export default function ClanPage() {
         }
     }, [activeClan?.id, selectedGame]);
 
-    // Restore state from navigation (e.g. returning from Farm page)
+    // Restore state logic (Navigation OR Last Known State)
     useEffect(() => {
         const restoreState = async () => {
+            // 1. Priority: Explicit Navigation State (Returning from Farm Page)
             if (location.state?.restoreGameId) {
-                // Ensure we are on the 'games' tab
                 const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
                 if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
 
-                // Fetch the game details to restore the workspace
                 const game = await base44.entities.Game.get(location.state.restoreGameId);
                 if (game) {
                     setSelectedGame(game);
@@ -71,13 +70,63 @@ export default function ClanPage() {
                         setInitialZone(location.state.restoreZone);
                     }
                 }
-                
-                // Clear state to prevent re-running
                 window.history.replaceState({}, document.title);
+                return;
+            }
+
+            // 2. Fallback: Last Known Stable Context (Crash Recovery/Reload)
+            // Only restore if we are 'idle' (not in a specific requested state) and have a saved context
+            if (!selectedGame && user?.current_activity?.type === 'game' && user.current_activity.id) {
+                // Check if the saved activity belongs to this clan (simple check)
+                // In a real app we'd check if the game is associated with this clan context
+                console.log("Restoring last stable context:", user.current_activity);
+                
+                try {
+                    const game = await base44.entities.Game.get(user.current_activity.id);
+                    if (game) {
+                        // Switch to Games tab
+                        const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
+                        if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+                        
+                        setSelectedGame(game);
+                        if (user.current_activity.zoneId) {
+                            setInitialZone(user.current_activity.zoneId);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to restore context", e);
+                }
             }
         };
-        restoreState();
-    }, [location.state]);
+        
+        if (activeClan && user) {
+            restoreState();
+        }
+    }, [location.state, activeClan?.id, user?.id]); // Only run when clan/user loads
+
+    // Conflict Warning
+    if (sessionConflict) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-black/90 z-50 text-center">
+                <div className="max-w-md p-8 bg-[#12141a] border border-red-500/30 rounded-2xl">
+                    <Activity className="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
+                    <h2 className="text-xl font-bold text-white mb-2">Connection Paused</h2>
+                    <p className="text-white/60 mb-6">
+                        You are active in another window or device. We've paused this session to prevent state conflicts.
+                    </p>
+                    <Button 
+                        onClick={() => {
+                            claimSession();
+                            window.location.reload();
+                        }}
+                        className="bg-red-600 hover:bg-red-500 text-white w-full"
+                    >
+                        Resume Here
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     // Fetch Memberships
     const { data: memberships, isLoading } = useQuery({
