@@ -169,6 +169,18 @@ export const AuthProvider = ({ children }) => {
                         last_login: new Date().toISOString()
                     });
 
+                    // Attempt state recovery on login/load
+                    try {
+                        const recovery = await base44.functions.invoke('recoverState');
+                        if (recovery.data?.restored && recovery.data?.activity) {
+                            console.log('State recovered:', recovery.data.changes);
+                            // Update local user state with recovered activity
+                            setUser(prev => ({ ...prev, current_activity: recovery.data.activity }));
+                        }
+                    } catch (err) {
+                        console.warn('State recovery failed:', err);
+                    }
+
                     if (!currentUser.unlocked_achievements?.includes('first_login')) {
                         console.log("Granting First Login Achievement");
                         const updatedAchievements = [...(currentUser.unlocked_achievements || []), 'first_login'];
