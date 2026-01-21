@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 
 export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const { user } = useAuth();
-    const [filter, setFilter] = useState('all'); // all, assigned, active
+    const [filters, setFilters] = useState([]); // Array of active filters
     const [search, setSearch] = useState('');
 
     const { data: games, isLoading } = useQuery({
@@ -40,13 +40,19 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                 ownedIds.includes(g.id) || assignedGameIds.includes(g.id)
             ).map(g => {
                 const assignment = myAssignments.find(a => a.targetId === g.id);
+                // Mock statuses for demonstration
+                const activePlayers = Math.floor(Math.random() * 25);
+                const isFarming = Math.random() > 0.8; 
+                const isRecruiting = Math.random() > 0.7;
+
                 return {
                     ...g,
                     isAssigned: !!assignment,
                     assignmentPriority: assignment?.priority,
                     isOwned: ownedIds.includes(g.id),
-                    // Mocking active players for now as we don't have real-time presence
-                    activePlayers: Math.floor(Math.random() * 10), 
+                    activePlayers,
+                    isFarming,
+                    isRecruiting
                 };
             });
 
@@ -64,20 +70,34 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
         if (!games) return [];
         return games.filter(game => {
             const matchesSearch = game.title.toLowerCase().includes(search.toLowerCase());
-            const matchesFilter = 
-                filter === 'all' ? true :
-                filter === 'assigned' ? game.isAssigned :
-                filter === 'owned' ? game.isOwned : true;
             
-            return matchesSearch && matchesFilter;
+            // Check all active filters
+            const matchesFilters = filters.length === 0 || filters.every(f => {
+                if (f === 'assigned') return game.isAssigned;
+                if (f === 'active') return game.activePlayers > 0;
+                if (f === 'farming') return game.isFarming;
+                if (f === 'recruiting') return game.isRecruiting;
+                return true;
+            });
+            
+            return matchesSearch && matchesFilters;
         });
-    }, [games, search, filter]);
+    }, [games, search, filters]);
 
-    const filters = [
-        { id: 'all', label: 'All Games' },
-        { id: 'assigned', label: 'Assigned', icon: Target },
-        { id: 'owned', label: 'My Library', icon: Check },
+    const availableFilters = [
+        { id: 'assigned', label: 'Assigned to me', icon: Target },
+        { id: 'active', label: 'Active now', icon: Zap },
+        { id: 'farming', label: 'Farming', icon: Clock },
+        { id: 'recruiting', label: 'Recruiting', icon: Users },
     ];
+
+    const toggleFilter = (id) => {
+        setFilters(prev => 
+            prev.includes(id) 
+                ? prev.filter(f => f !== id)
+                : [...prev, id]
+        );
+    };
 
     if (isLoading) return <div className="text-white/40 text-center p-8">Loading Game Library...</div>;
 
@@ -86,20 +106,23 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             {/* Controls */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
-                    {filters.map(f => (
-                        <button
-                            key={f.id}
-                            onClick={() => setFilter(f.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                filter === f.id 
-                                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
-                                    : 'text-white/50 hover:text-white hover:bg-white/5 border border-transparent'
-                            }`}
-                        >
-                            {f.icon && <f.icon className="w-3.5 h-3.5" />}
-                            {f.label}
-                        </button>
-                    ))}
+                    {availableFilters.map(f => {
+                        const isActive = filters.includes(f.id);
+                        return (
+                            <button
+                                key={f.id}
+                                onClick={() => toggleFilter(f.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    isActive
+                                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+                                        : 'text-white/50 hover:text-white hover:bg-white/5 border border-transparent'
+                                }`}
+                            >
+                                {f.icon && <f.icon className="w-3.5 h-3.5" />}
+                                {f.label}
+                            </button>
+                        );
+                    })}
                 </div>
                 
                 <div className="relative w-full md:w-64">
@@ -144,9 +167,14 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                                     <Target className="w-3 h-3 mr-1" /> ASSIGNED
                                 </Badge>
                             )}
-                            {game.isOwned && !game.isAssigned && (
-                                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 backdrop-blur-md">
-                                    OWNED
+                            {game.isFarming && (
+                                <Badge className="bg-green-500/20 text-green-300 border-green-500/30 backdrop-blur-md">
+                                    <Clock className="w-3 h-3 mr-1" /> FARMING
+                                </Badge>
+                            )}
+                            {game.isRecruiting && (
+                                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 backdrop-blur-md">
+                                    <Users className="w-3 h-3 mr-1" /> RECRUITING
                                 </Badge>
                             )}
                             </div>
