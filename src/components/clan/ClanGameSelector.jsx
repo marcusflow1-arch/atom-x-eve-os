@@ -1,32 +1,63 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Gamepad2, Users, Target, Clock, Zap } from 'lucide-react';
+import { Search, Filter, Gamepad2, Users, Target, Clock, Zap, Check } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
-    const [filter, setFilter] = useState('all'); // all, assigned, active, recruiting
+    const { user } = useAuth();
+    const [filter, setFilter] = useState('all'); // all, assigned, active
     const [search, setSearch] = useState('');
 
-    // Fetch Games associated with Clan (Mock logic for now as we don't have a direct link in schema yet, 
-    // but we can list all games and pretend they are clan games or use a specific list if available)
-    // In a real app, we'd fetch clan.supported_games or similar. 
-    // For now, we'll list all games and add some mock status.
     const { data: games, isLoading } = useQuery({
-        queryKey: ['clanGames', clanId],
+        queryKey: ['clanGamesSelector', clanId, user?.id],
         queryFn: async () => {
-            const response = await base44.entities.Game.list();
-            // Mocking clan-specific data for these games
-            return response.map(g => ({
-                ...g,
-                activePlayers: Math.floor(Math.random() * 20),
-                isAssigned: Math.random() > 0.8,
-                status: ['active', 'farming', 'recruiting'][Math.floor(Math.random() * 3)],
-                clanPriority: Math.floor(Math.random() * 5) + 1
-            })).sort((a, b) => b.clanPriority - a.clanPriority);
-        }
+            // 1. Fetch User Data for Owned Games
+            const ownedIds = user?.purchased_items || [];
+
+            // 2. Fetch Assignments for this user (or all)
+            // We fetch assignments to know which games are "Assigned"
+            const assignments = await base44.entities.ClanAssignment.filter({ 
+                clanId: clanId,
+                type: 'game'
+            });
+            
+            // Filter assignments relevant to this user
+            const myAssignments = assignments.filter(a => 
+                a.assigneeId === 'all' || a.assigneeId === user?.id
+            );
+            const assignedGameIds = myAssignments.map(a => a.targetId);
+
+            // 3. Fetch All Games (Optimization: In a real large app, we would fetch only by IDs)
+            // For now, we fetch a reasonable list or all to filter on client
+            const allGames = await base44.entities.Game.list();
+
+            // 4. Merge and Filter
+            const relevantGames = allGames.filter(g => 
+                ownedIds.includes(g.id) || assignedGameIds.includes(g.id)
+            ).map(g => {
+                const assignment = myAssignments.find(a => a.targetId === g.id);
+                return {
+                    ...g,
+                    isAssigned: !!assignment,
+                    assignmentPriority: assignment?.priority,
+                    isOwned: ownedIds.includes(g.id),
+                    // Mocking active players for now as we don't have real-time presence
+                    activePlayers: Math.floor(Math.random() * 10), 
+                };
+            });
+
+            // Sort: Assigned first, then owned
+            return relevantGames.sort((a, b) => {
+                if (a.isAssigned && !b.isAssigned) return -1;
+                if (!a.isAssigned && b.isAssigned) return 1;
+                return 0;
+            });
+        },
+        enabled: !!user && !!clanId
     });
 
     const filteredGames = useMemo(() => {
@@ -36,8 +67,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             const matchesFilter = 
                 filter === 'all' ? true :
                 filter === 'assigned' ? game.isAssigned :
-                filter === 'active' ? game.activePlayers > 5 :
-                filter === 'recruiting' ? game.status === 'recruiting' : true;
+                filter === 'owned' ? game.isOwned : true;
             
             return matchesSearch && matchesFilter;
         });
@@ -46,8 +76,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const filters = [
         { id: 'all', label: 'All Games' },
         { id: 'assigned', label: 'Assigned', icon: Target },
-        { id: 'active', label: 'Active Now', icon: Zap },
-        { id: 'recruiting', label: 'Recruiting', icon: Users },
+        { id: 'owned', label: 'My Library', icon: Check },
     ];
 
     if (isLoading) return <div className="text-white/40 text-center p-8">Loading Game Library...</div>;
@@ -110,16 +139,16 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
 
                             {/* Status Badges */}
                             <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                                {game.isAssigned && (
-                                    <Badge className="bg-amber-500/90 text-black border-none font-bold shadow-lg animate-pulse">
-                                        <Target className="w-3 h-3 mr-1" /> ASSIGNED
-                                    </Badge>
-                                )}
-                                {game.status === 'recruiting' && (
-                                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30 backdrop-blur-md">
-                                        RECUITING
-                                    </Badge>
-                                )}
+                            {game.isAssigned && (
+                                <Badge className="bg-amber-500/90 text-black border-none font-bold shadow-lg animate-pulse">
+                                    <Target className="w-3 h-3 mr-1" /> ASSIGNED
+                                </Badge>
+                            )}
+                            {game.isOwned && !game.isAssigned && (
+                                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 backdrop-blur-md">
+                                    OWNED
+                                </Badge>
+                            )}
                             </div>
 
                             {/* Content */}
