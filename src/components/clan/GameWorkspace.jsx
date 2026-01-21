@@ -233,25 +233,25 @@ export default function GameWorkspace({ game, clan, onBack }) {
                     
                     {visitedZones.chat && (
                         <div className="h-full w-full" style={{ display: activeZone === 'chat' ? 'block' : 'none' }}>
-                            <ChatZone game={game} user={user} />
+                            <ChatZone game={game} clan={clan} user={user} />
                         </div>
                     )}
 
                     {visitedZones.farming && (
                         <div className="h-full w-full" style={{ display: activeZone === 'farming' ? 'block' : 'none' }}>
-                            <FarmingZone game={game} />
+                            <FarmingZone game={game} clan={clan} />
                         </div>
                     )}
 
                     {visitedZones.exploration && (
                         <div className="h-full w-full" style={{ display: activeZone === 'exploration' ? 'block' : 'none' }}>
-                            <ExplorationZone game={game} />
+                            <ExplorationZone game={game} clan={clan} />
                         </div>
                     )}
 
                     {visitedZones.strategy && (
                         <div className="h-full w-full" style={{ display: activeZone === 'strategy' ? 'block' : 'none' }}>
-                            <StrategyZone game={game} />
+                            <StrategyZone game={game} clan={clan} />
                         </div>
                     )}
 
