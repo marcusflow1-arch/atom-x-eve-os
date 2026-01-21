@@ -5,6 +5,8 @@ import {
     Settings, Shield, Sword, Target, ChevronRight, Hash,
     Plus, Video, Headphones, UserPlus, Send, X
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,12 +15,6 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/components/auth/AuthContext';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import PartyManager from '@/components/clan/party/PartyManager';
-
-// Mock Data for Assignments/Objectives
-const OBJECTIVES = [
-    { id: 1, title: 'Weekly Raid Clear', progress: 2, total: 5, type: 'raid' },
-    { id: 2, title: 'Farm 500 Iron Ore', progress: 340, total: 500, type: 'farming' },
-];
 
 const ZONES = [
     { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
@@ -33,8 +29,23 @@ export default function GameWorkspace({ game, clan, onBack }) {
     const { user } = useAuth();
     const [activeZone, setActiveZone] = useState('chat');
     const [message, setMessage] = useState('');
+
+    // Fetch Game-Specific Assignments/Objectives
+    const { data: objectives } = useQuery({
+        queryKey: ['gameObjectives', clan.id, game.id],
+        queryFn: async () => {
+            const assignments = await base44.entities.ClanAssignment.filter({
+                clanId: clan.id,
+                targetId: game.id,
+                status: 'pending' // Only show active/pending objectives
+            });
+            // Filter only objective/game types
+            return assignments.filter(a => ['game', 'objective'].includes(a.type));
+        },
+        enabled: !!clan && !!game
+    });
     
-    // Mock Chat Messages
+    // Mock Chat Messages (In real app, fetch messages for channel `game_${game.id}`)
     const [messages, setMessages] = useState([
         { id: 1, user: 'CommanderShepard', text: 'Raid starts in 30 mins. Gear check!', time: '10:00 AM' },
         { id: 2, user: 'LeeroyJenkins', text: 'I am ready!', time: '10:05 AM' },
@@ -96,24 +107,33 @@ export default function GameWorkspace({ game, clan, onBack }) {
                 <div className="p-4 border-b border-white/5 bg-white/5">
                     <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Active Objectives</h3>
                     <div className="space-y-2">
-                        {OBJECTIVES.map(obj => (
-                            <div key={obj.id} className="p-3 rounded-lg bg-black/40 border border-white/10">
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className="text-sm font-medium text-white/90">{obj.title}</span>
-                                    <Target className="w-3 h-3 text-amber-400" />
+                        {objectives?.length > 0 ? (
+                            objectives.map(obj => (
+                                <div key={obj.id} className="p-3 rounded-lg bg-black/40 border border-white/10">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <span className="text-sm font-medium text-white/90">{obj.targetName || 'Objective'}</span>
+                                        <Target className="w-3 h-3 text-amber-400" />
+                                    </div>
+                                    <p className="text-xs text-white/60 mb-2 line-clamp-2">{obj.notes || 'No details provided.'}</p>
+                                    <div className="flex justify-between mt-1 items-center">
+                                        <Badge variant="outline" className={`text-[9px] h-4 px-1 ${
+                                            obj.priority === 'critical' ? 'text-red-400 border-red-500/30' : 
+                                            obj.priority === 'priority' ? 'text-amber-400 border-amber-500/30' : 
+                                            'text-blue-400 border-blue-500/30'
+                                        }`}>
+                                            {obj.priority}
+                                        </Badge>
+                                        <span className="text-[9px] text-white/40">
+                                            {obj.dueDate ? new Date(obj.dueDate).toLocaleDateString() : 'No due date'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
-                                    <div 
-                                        className="h-full bg-amber-500 rounded-full" 
-                                        style={{ width: `${(obj.progress / obj.total) * 100}%` }}
-                                    />
-                                </div>
-                                <div className="flex justify-between mt-1">
-                                    <span className="text-[10px] text-white/40">{obj.type}</span>
-                                    <span className="text-[10px] text-white/60">{obj.progress}/{obj.total}</span>
-                                </div>
+                            ))
+                        ) : (
+                            <div className="p-4 text-center text-white/30 text-xs">
+                                No active objectives
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
 
