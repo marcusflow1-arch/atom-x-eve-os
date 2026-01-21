@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import ClanGameSelector from '@/components/clan/ClanGameSelector';
 import GameWorkspace from '@/components/clan/GameWorkspace';
+import AssignmentList from '@/components/clan/assignments/AssignmentList';
+import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -281,17 +283,32 @@ export default function ClanPage() {
                                     <ClanGameSelector 
                                         clanId={activeClan.id} 
                                         userId={user?.id}
-                                        onSelectGame={(game) => {
-                                            setSelectedGame(game);
-                                            // Optional: Move UI deeper or just set state to show workspace overlay
-                                            console.log("Selected game:", game.title);
-                                        }} 
+                                        onSelectGame={(game) => setSelectedGame(game)} 
                                     />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'assignments' && (
+                                <div className="w-full mt-4">
+                                    {/* If Leader, show Manager toggle? For now, we put Manager in Settings/Management tab or split view. 
+                                        Let's just show List for everyone here, and Management in the Management tab as requested. 
+                                    */}
+                                    <AssignmentList 
+                                        clanId={activeClan.id} 
+                                        userId={user?.id} 
+                                        onSelectGame={(game) => setSelectedGame(game)}
+                                    />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'management' && (
+                                <div className="w-full max-w-4xl mt-4">
+                                    <AssignmentManager clanId={activeClan.id} members={members} />
                                 </div>
                             )}
                             
                             {/* Placeholder for other modes */}
-                            {!['overview', 'games'].includes(XMB_MODES[activeModeIndex].id) && (
+                            {!['overview', 'games', 'assignments', 'management'].includes(XMB_MODES[activeModeIndex].id) && (
                                 <div className="mt-12 opacity-30 flex flex-col items-center">
                                     <Zap className="w-12 h-12 mb-4" />
                                     <p>Module Online - Awaiting Input</p>
