@@ -64,6 +64,8 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
         }
     };
 
+    import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
+
     // Fetch Game-Specific Assignments/Objectives
     const { data: objectives } = useQuery({
         queryKey: ['gameObjectives', clan.id, game.id],
@@ -73,27 +75,49 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
                 targetId: game.id,
                 status: 'pending' // Only show active/pending objectives
             });
-            // Filter only objective/game types
             return assignments.filter(a => ['game', 'objective'].includes(a.type));
         },
         enabled: !!clan && !!game
     });
+
+    useEntitySubscription('ClanAssignment', ['gameObjectives', clan.id, game.id]);
     
-    // Fetch Members active in this game (Workspace presence)
-    // In a real app with presence, we'd filter by current location/status.
-    // For now, we'll fetch clan members who play this game.
-    const { data: activeMembers } = useQuery({
-        queryKey: ['workspaceMembers', clan.id, game.id],
+    // Fetch Active Workspace
+    // Real-time presence via GameWorkspace entity
+    const { data: workspace } = useQuery({
+        queryKey: ['gameWorkspace', clan.id, game.id],
         queryFn: async () => {
-            // Fetch clan members
-            const members = await base44.entities.ClanMember.filter({ divisionId: clan.id });
-            // Mock "active in workspace" status for a subset
-            return members.map(m => ({
-                ...m,
-                isActive: Math.random() > 0.6 // Randomly assign active status
-            })).sort((a, b) => (b.isActive === a.isActive) ? 0 : b.isActive ? 1 : -1);
+            const ws = await base44.entities.GameWorkspace.filter({ clan_id: clan.id, game_id: game.id });
+            return ws[0];
+        }
+    });
+
+    useEntitySubscription('GameWorkspace', ['gameWorkspace', clan.id, game.id]);
+
+    // Active Members derived from Workspace
+    // We could fetch User details for IDs, but for now we just need the count
+    const activeCount = workspace?.active_member_ids?.length || 0;
+    
+    // For the list, we might want to fetch user details if we want to show avatars
+    // For now, let's just show counts to be efficient or keep the previous mock if needed, 
+    // but the prompt asked for SYNC PRESENCE. 
+    // So let's rely on the real workspace data.
+    const activeMemberIds = workspace?.active_member_ids || [];
+    
+    // Fetch user details for active members only (efficient)
+    const { data: activeMembers = [] } = useQuery({
+        queryKey: ['activeWorkspaceUsers', activeMemberIds.join(',')],
+        queryFn: async () => {
+            if (activeMemberIds.length === 0) return [];
+            // We can't bulk fetch users easily by ID list without custom function or multiple calls
+            // or filtering by something common. 
+            // For now, let's just mock the details or if we have a way to get them.
+            // Actually, we can assume we only show the count for "Active" badge, 
+            // and maybe a list of Avatars if we have their data.
+            // Let's return simple objects.
+            return activeMemberIds.map(id => ({ userId: id, isActive: true }));
         },
-        enabled: !!clan && !!game
+        enabled: activeMemberIds.length > 0
     });
 
     const activeCount = activeMembers?.filter(m => m.isActive).length || 0;

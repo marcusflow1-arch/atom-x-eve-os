@@ -36,64 +36,66 @@ export default function PartyManager({ clanId, gameId }) {
         linkedTask: 'none'
     });
 
-    // Mock Assignments/Farming Tasks
-    const mockTasks = [
-        { id: 't1', type: 'assignment', label: 'Weekly Raid' },
-        { id: 't2', type: 'farming', label: 'Iron Route A' },
-        { id: 't3', type: 'assignment', label: 'PvP Tournament' }
-    ];
+    // Real Data Fetching
+    import { useQuery } from '@tanstack/react-query';
+    import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
+    import { base44 } from '@/api/base44Client';
 
-    // Mock Parties
-    const [parties, setParties] = useState([
-        {
-            id: '1', leader: { name: 'Vanguard', id: 'u1' }, size: 6, current: 4,
-            goal: 'Grandmaster Nightfall', status: 'forming', micRequired: true,
-            context: 'pve', linkedTask: 't1',
-            members: [{id: 'u1'}, {id: 'u2'}, {id: 'u3'}, {id: 'u4'}]
-        },
-        {
-            id: '2', leader: { name: 'Drifter', id: 'u5' }, size: 4, current: 1,
-            goal: 'Gambit Prime', status: 'forming', micRequired: false,
-            context: 'pvp', linkedTask: 'none',
-            members: [{id: 'u5'}]
+    const { data: parties = [] } = useQuery({
+        queryKey: ['clanParties', clanId, gameId],
+        queryFn: async () => {
+             const items = await base44.entities.Party.filter({ 
+                 clanId, 
+                 gameId, 
+                 status: { $ne: 'completed' } 
+             });
+             // Enrich leader names (optional optimization: fetch users in bulk or just show ID)
+             // For now, keeping it simple
+             return items;
         }
-    ]);
+    });
 
-    const handleCreateParty = () => {
+    useEntitySubscription('Party', ['clanParties', clanId, gameId]);
+
+    const handleCreateParty = async () => {
         if (!newParty.goal.trim()) return;
-        const party = {
-            id: Date.now().toString(),
-            leader: { name: user?.username || 'Me', id: user?.id || 'me' },
-            size: newParty.size[0],
-            current: 1,
-            goal: newParty.goal,
-            status: 'forming',
-            micRequired: newParty.micRequired,
-            context: newParty.context,
-            linkedTask: newParty.linkedTask,
-            members: [{id: user?.id || 'me'}]
-        };
-        setParties([party, ...parties]);
-        setIsCreateOpen(false);
-        setNewParty({ goal: '', size: [4], micRequired: false, context: 'general', linkedTask: 'none' });
+        
+        try {
+            await base44.entities.Party.create({
+                clanId,
+                gameId,
+                leaderId: user.id,
+                goal: newParty.goal,
+                description: newParty.context, // Storing context in description for now
+                maxSize: newParty.size[0],
+                status: 'forming',
+                micRequired: newParty.micRequired,
+                assignmentId: newParty.linkedTask !== 'none' ? newParty.linkedTask : null,
+                members: [user.id],
+                lastActive: new Date().toISOString()
+            });
+            setIsCreateOpen(false);
+            setNewParty({ goal: '', size: [4], micRequired: false, context: 'general', linkedTask: 'none' });
+        } catch (e) {
+            console.error("Failed to create party", e);
+        }
     };
 
     const getContextBadge = (ctx) => {
-        switch(ctx) {
-            case 'farming': return { label: 'Farming', color: 'text-emerald-400 border-emerald-500/30' };
-            case 'raid': return { label: 'Raid', color: 'text-purple-400 border-purple-500/30' };
-            case 'pvp': return { label: 'PvP', color: 'text-red-400 border-red-500/30' };
-            default: return { label: 'General', color: 'text-blue-400 border-blue-500/30' };
-        }
+        // Fallback or mapping
+        const label = ctx || 'General';
+        if (label.toLowerCase().includes('farm')) return { label: 'Farming', color: 'text-emerald-400 border-emerald-500/30' };
+        if (label.toLowerCase().includes('raid')) return { label: 'Raid', color: 'text-purple-400 border-purple-500/30' };
+        if (label.toLowerCase().includes('pvp')) return { label: 'PvP', color: 'text-red-400 border-red-500/30' };
+        return { label: 'General', color: 'text-blue-400 border-blue-500/30' };
     };
 
-    const handleJoin = (partyId) => {
-        setParties(parties.map(p => {
-            if (p.id === partyId && p.current < p.size) {
-                return { ...p, current: p.current + 1, members: [...p.members, {id: 'me'}] };
-            }
-            return p;
-        }));
+    const handleJoin = async (partyId) => {
+        await base44.functions.invoke('managePartyMembership', {
+            action: 'join',
+            partyId
+        });
+        // Subscription will update UI
     };
 
     return (
@@ -226,14 +228,14 @@ export default function PartyManager({ clanId, gameId }) {
                                     <h4 className="font-bold text-white text-lg">{party.goal}</h4>
                                     <div className="flex items-center gap-2 text-xs text-white/40 mt-1">
                                         <Crown className="w-3 h-3 text-amber-400" />
-                                        Leader: <span className="text-white/60">{party.leader.name}</span>
+                                        Leader: <span className="text-white/60">{party.leaderId === user?.id ? 'Me' : 'Unknown'}</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
                                     <Badge variant="outline" className={`
                                         ${party.status === 'full' ? 'border-red-500/30 text-red-400' : 'border-green-500/30 text-green-400'}
                                     `}>
-                                        {party.current}/{party.size} Players
+                                        {party.members?.length || 0}/{party.maxSize} Players
                                     </Badge>
                                     {party.micRequired && (
                                         <div className="flex items-center gap-1 text-[10px] text-blue-400">
@@ -247,9 +249,9 @@ export default function PartyManager({ clanId, gameId }) {
                             <div className="flex items-center justify-between mt-4">
                                 <div className="flex -space-x-2">
                                     {/* Existing Members */}
-                                    {party.members.map((m, i) => (
-                                        <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-800 flex items-center justify-center relative">
-                                            {m.id === party.leader.id ? (
+                                    {(party.members || []).map((mId, i) => (
+                                        <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-800 flex items-center justify-center relative" title={mId}>
+                                            {mId === party.leaderId ? (
                                                 <Crown className="w-3 h-3 text-amber-400" />
                                             ) : (
                                                 <span className="text-[10px] font-bold text-white/50">{i + 1}</span>
@@ -257,7 +259,7 @@ export default function PartyManager({ clanId, gameId }) {
                                         </div>
                                     ))}
                                     {/* Empty Slots */}
-                                    {[...Array(party.size - party.members.length)].map((_, i) => (
+                                    {[...Array(Math.max(0, (party.maxSize || 0) - (party.members?.length || 0)))].map((_, i) => (
                                         <div key={`empty-${i}`} className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-white/5 flex items-center justify-center border-dashed border-white/20">
                                             <span className="text-[10px] text-white/10">?</span>
                                         </div>
@@ -271,7 +273,7 @@ export default function PartyManager({ clanId, gameId }) {
                                     <Button 
                                         size="sm" 
                                         onClick={() => handleJoin(party.id)}
-                                        disabled={party.current >= party.size}
+                                        disabled={(party.members?.length || 0) >= party.maxSize}
                                         className="h-8 bg-white/10 hover:bg-white/20 text-white border border-white/10"
                                     >
                                         Join Squad
