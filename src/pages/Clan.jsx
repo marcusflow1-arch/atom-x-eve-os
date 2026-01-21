@@ -32,7 +32,7 @@ const XMB_MODES = [
 ];
 
 export default function ClanPage() {
-    const { user } = useAuth();
+    const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
     const location = useLocation();
     const queryClient = useQueryClient();
     const [selectedClanId, setSelectedClanId] = useState(null);
@@ -42,7 +42,6 @@ export default function ClanPage() {
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
-    const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
 
     // Update presence when viewing Clan Overview
     useEffect(() => {
