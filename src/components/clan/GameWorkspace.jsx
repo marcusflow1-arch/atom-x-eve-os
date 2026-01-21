@@ -19,6 +19,7 @@ import ChatZone from '@/components/clan/zones/ChatZone';
 import FarmingZone from '@/components/clan/zones/FarmingZone';
 import ExplorationZone from '@/components/clan/zones/ExplorationZone';
 import StrategyZone from '@/components/clan/zones/StrategyZone';
+import ZoneChatPanel from '@/components/clan/shared/ZoneChatPanel';
 
 const ZONES = [
     { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
@@ -256,14 +257,36 @@ export default function GameWorkspace({ game, clan, onBack }) {
                     )}
 
                     {visitedZones.voice && (
-                        <div className="h-full w-full" style={{ display: activeZone === 'voice' ? 'block' : 'none' }}>
-                            <VoiceRoomManager clanId={clan?.id} gameId={game?.id} />
+                        <div className="h-full w-full flex" style={{ display: activeZone === 'voice' ? 'flex' : 'none' }}>
+                            <div className="flex-1 min-w-0">
+                                <VoiceRoomManager clanId={clan?.id} gameId={game?.id} />
+                            </div>
+                            <div className="w-80 flex-shrink-0 border-l border-white/5 bg-black/20">
+                                <ZoneChatPanel 
+                                    clanId={clan?.id} 
+                                    gameId={game?.id} 
+                                    zoneId="voice" 
+                                    title="Voice Comms" 
+                                    className="bg-transparent" 
+                                />
+                            </div>
                         </div>
                     )}
 
                     {visitedZones.party && (
-                        <div className="h-full w-full" style={{ display: activeZone === 'party' ? 'block' : 'none' }}>
-                            <PartyManager clanId={clan?.id} gameId={game?.id} />
+                        <div className="h-full w-full flex" style={{ display: activeZone === 'party' ? 'flex' : 'none' }}>
+                            <div className="flex-1 min-w-0">
+                                <PartyManager clanId={clan?.id} gameId={game?.id} />
+                            </div>
+                            <div className="w-80 flex-shrink-0 border-l border-white/5 bg-black/20">
+                                <ZoneChatPanel 
+                                    clanId={clan?.id} 
+                                    gameId={game?.id} 
+                                    zoneId="party" 
+                                    title="LFG Chat" 
+                                    className="bg-transparent" 
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
