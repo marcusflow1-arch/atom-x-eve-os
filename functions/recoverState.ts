@@ -18,9 +18,20 @@ Deno.serve(async (req) => {
         let hasChanges = false;
         const log = [];
 
+        // Safe fetch helper
+        const safeGet = async (entityName, id) => {
+            try {
+                if (!id) return null;
+                return await base44.entities[entityName].get(id);
+            } catch (e) {
+                console.warn(`Failed to fetch ${entityName} ${id}`, e);
+                return null;
+            }
+        };
+
         // 1. Validate Clan
         if (activity.clanId) {
-            const clan = await base44.entities.Clan.get(activity.clanId);
+            const clan = await safeGet('Clan', activity.clanId);
             if (!clan) {
                 activity.clanId = null;
                 hasChanges = true;
@@ -30,7 +41,7 @@ Deno.serve(async (req) => {
 
         // 2. Validate Workspace
         if (activity.workspaceId) {
-             const ws = await base44.entities.GameWorkspace.get(activity.workspaceId);
+             const ws = await safeGet('GameWorkspace', activity.workspaceId);
              if (!ws) {
                  activity.workspaceId = null;
                  hasChanges = true;
@@ -51,7 +62,7 @@ Deno.serve(async (req) => {
 
         // 3. Validate Party
         if (activity.partyId) {
-            const party = await base44.entities.Party.get(activity.partyId);
+            const party = await safeGet('Party', activity.partyId);
             if (!party) {
                 activity.partyId = null;
                 hasChanges = true;
@@ -59,12 +70,6 @@ Deno.serve(async (req) => {
             } else {
                 const members = party.members || [];
                 if (!members.includes(user.id)) {
-                    // If party exists but I'm not in it -> I was kicked or left.
-                    // But if I just disconnected, I might have been removed by cleanup?
-                    // If cleanup removed me, I want to rejoin?
-                    // Usually parties are stricter. If I'm out, I'm out.
-                    // But for "State Recovery", maybe we trust the party entity over the stale user context?
-                    // YES. If I'm not in party list, I shouldn't think I am.
                     activity.partyId = null;
                     hasChanges = true;
                     log.push('User not in party member list, cleared context');
@@ -74,15 +79,12 @@ Deno.serve(async (req) => {
         
         // 4. Validate Voice
         if (activity.voiceRoomId) {
-             const room = await base44.entities.VoiceRoom.get(activity.voiceRoomId);
+             const room = await safeGet('VoiceRoom', activity.voiceRoomId);
              if (!room) {
                  activity.voiceRoomId = null;
                  hasChanges = true;
                  log.push('Voice room not found, cleared');
              }
-             // We don't force-add to voice participants here, 
-             // because voice requires active WebRTC connection which must be re-established by client.
-             // Keeping the ID allows client to attempt auto-rejoin.
         }
 
         // Update user if needed or just confirm presence
@@ -104,6 +106,7 @@ Deno.serve(async (req) => {
 
     } catch (error) {
          console.error('recoverState error:', error);
-         return Response.json({ error: error.message }, { status: 500 });
+         // Don't fail the whole app if recovery fails, just return null activity
+         return Response.json({ restored: false, error: error.message });
     }
 });

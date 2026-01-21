@@ -287,6 +287,47 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- MODERATION: DELETE MESSAGE ---
+        if (action === 'delete_message') {
+            const { messageId } = data;
+            const message = await base44.entities.ClanMessage.get(messageId);
+            if (!message) return new Response(JSON.stringify({ error: 'Message not found' }), { status: 404, headers: corsHeaders });
+
+            // If own message, allow delete. If not, check Officer+
+            if (message.author !== user.id) {
+                const actor = await base44.entities.ClanMember.filter({ divisionId: message.divisionId, userId: user.id });
+                if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                    return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+                }
+            }
+
+            await base44.entities.ClanMessage.delete(messageId);
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // --- MODERATION: MUTE MEMBER (Using ModerationAction entity) ---
+        if (action === 'mute_member') {
+            const { divisionId, targetUserId, durationMinutes, reason } = data;
+            
+            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                 return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
+            }
+
+            // Create Moderation Action
+            await base44.entities.ModerationAction.create({
+                type: 'mute',
+                target_user_id: targetUserId,
+                moderator_id: user.id,
+                scope_type: 'clan',
+                scope_id: divisionId,
+                reason: reason || 'Violation of clan rules',
+                expires_at: new Date(Date.now() + (durationMinutes || 60) * 60000).toISOString()
+            });
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: corsHeaders });
 
     } catch (error) {

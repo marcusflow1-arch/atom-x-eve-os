@@ -62,7 +62,13 @@ export default function ClanChat({ clan, channel }) {
     });
 
     const deleteMessageMutation = useMutation({
-        mutationFn: (msgId) => base44.entities.ClanMessage.delete(msgId),
+        mutationFn: async (msgId) => {
+            const res = await base44.functions.invoke('clanSystem', { 
+                action: 'delete_message', 
+                data: { messageId: msgId }
+            });
+            if (!res.ok) throw new Error(res.data?.error || 'Failed to delete message');
+        },
         onSuccess: () => queryClient.invalidateQueries(['clanMessages'])
     });
 
