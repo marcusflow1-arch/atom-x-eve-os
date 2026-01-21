@@ -3,6 +3,8 @@ import { Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ZoneChatPanel from '@/components/clan/shared/ZoneChatPanel';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,13 +23,18 @@ export default function FarmingZone({ game, clan }) {
         });
     };
 
-    // Mock farming data
-    const farmRoutes = [
-        { id: 1, title: 'Iron Route A', description: 'Best loop for iron ore. 500/hr.', author: 'Miner49er', type: 'Resource' },
-        { id: 2, title: 'Rare Drop: Excalibur', description: 'Boss rotation for sword drop chance.', author: 'KingArthur', type: 'Boss' },
-        { id: 3, title: 'XP Grind Spot', description: 'Elite mobs respawn every 2 mins.', author: 'GrindLord', type: 'XP' },
-        { id: 4, title: 'Herb Gathering', description: 'Safe route for high tier herbs.', author: 'GreenThumb', type: 'Resource' },
-    ];
+    // Fetch farming data
+    const { data: routesResponse } = useQuery({
+        queryKey: ['farmRoutes', game?.id, clan?.id],
+        queryFn: async () => {
+             if (!game?.id || !clan?.id) return { routes: [] };
+             const res = await base44.functions.invoke('getFarmRoutes', { gameId: game.id, clanId: clan.id });
+             return res.data;
+        },
+        enabled: !!game?.id && !!clan?.id
+    });
+
+    const farmRoutes = routesResponse?.routes || [];
 
     return (
         <div className="h-full flex">
