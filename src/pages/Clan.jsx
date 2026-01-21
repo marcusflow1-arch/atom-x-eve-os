@@ -12,6 +12,8 @@ import GameWorkspace from '@/components/clan/GameWorkspace';
 import AssignmentList from '@/components/clan/assignments/AssignmentList';
 import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
 import ClanOverview from '@/components/clan/ClanOverview';
+import ClanChat from '@/components/clan/ClanChat';
+import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,27 +97,29 @@ export default function ClanPage() {
         }
     });
 
+    // Check for leader status for management access
+    const isLeader = members?.find(m => m.userId === user?.id)?.role === 'leader';
+
     // Keyboard Navigation for XMB
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!activeClan) return;
 
             if (e.key === 'ArrowRight') {
-                setActiveModeIndex(prev => Math.min(prev + 1, XMB_MODES.length - 1));
+                setActiveModeIndex(prev => {
+                    let next = prev + 1;
+                    if (next >= XMB_MODES.length) return prev;
+                    if (XMB_MODES[next].leaderOnly && !isLeader) return prev;
+                    return next;
+                });
             } else if (e.key === 'ArrowLeft') {
                 setActiveModeIndex(prev => Math.max(prev - 1, 0));
-            } else if (e.key === 'ArrowDown') {
-                // Implement contextual depth based on active mode
-                // For now just basic index tracking
-                setContextIndex(prev => prev + 1);
-            } else if (e.key === 'ArrowUp') {
-                setContextIndex(prev => Math.max(prev - 1, 0));
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeClan]);
+    }, [activeClan, isLeader]);
 
     // Render Logic
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
@@ -237,6 +241,9 @@ export default function ClanPage() {
                         // Hide items too far away to cleaner look
                         if (distance > 3) return null;
 
+                        // Filter management if not leader
+                        if (mode.leaderOnly && !isLeader) return null;
+
                         return (
                             <div 
                                 key={mode.id}
@@ -319,17 +326,22 @@ export default function ClanPage() {
                                 </div>
                             )}
 
+                            {XMB_MODES[activeModeIndex].id === 'chat' && (
+                                <div className="w-full max-w-4xl h-[600px] mt-4">
+                                    {/* Pass a default 'general' channel object since we don't have channels yet */}
+                                    <ClanChat clan={activeClan} channel={{ id: 'general', name: 'General' }} />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'voice' && (
+                                <div className="w-full max-w-4xl h-[600px] mt-4 bg-black/20 rounded-2xl border border-white/10 overflow-hidden">
+                                    <VoiceRoomManager clanId={activeClan.id} gameId={null} />
+                                </div>
+                            )}
+
                             {XMB_MODES[activeModeIndex].id === 'management' && (
                                 <div className="w-full max-w-4xl mt-4">
                                     <AssignmentManager clanId={activeClan.id} members={members} />
-                                </div>
-                            )}
-                            
-                            {/* Placeholder for other modes */}
-                            {!['overview', 'games', 'assignments', 'management'].includes(XMB_MODES[activeModeIndex].id) && (
-                                <div className="mt-12 opacity-30 flex flex-col items-center">
-                                    <Zap className="w-12 h-12 mb-4" />
-                                    <p>Module Online - Awaiting Input</p>
                                 </div>
                             )}
                         </motion.div>
