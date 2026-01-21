@@ -56,6 +56,12 @@ Deno.serve(async (req) => {
         // --- INVITE MEMBER ---
         if (action === 'invite_member') {
             const { divisionId, inviteeEmail } = data;
+
+            // Verify permissions (leader/officer)
+            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
+                 return new Response(JSON.stringify({ error: 'Not authorized to invite' }), { status: 403, headers: corsHeaders });
+            }
             
             // Resolve email to ID
             const users = await base44.asServiceRole.entities.User.filter({ email: inviteeEmail });
@@ -87,6 +93,12 @@ Deno.serve(async (req) => {
             const { eventId } = data;
             const event = await base44.entities.ClanEvent.get(eventId);
             if (!event) return new Response(JSON.stringify({ error: 'Event not found' }), { status: 404, headers: corsHeaders });
+
+            // Verify clan membership
+            const member = await base44.entities.ClanMember.filter({ divisionId: event.divisionId, userId: user.id });
+            if (!member.length) {
+                return new Response(JSON.stringify({ error: 'Must be a clan member to join event' }), { status: 403, headers: corsHeaders });
+            }
 
             let participants = event.participants || [];
             if (participants.includes(user.id)) {

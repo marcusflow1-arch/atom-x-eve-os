@@ -30,6 +30,15 @@ Deno.serve(async (req) => {
                 if (updatedMembers.includes(user.id)) {
                     return Response.json({ message: 'Already joined', party });
                 }
+                
+                // Verify clan membership for this party
+                if (party.clanId) {
+                    const clanMembers = await base44.entities.ClanMember.filter({ divisionId: party.clanId, userId: user.id });
+                    if (!clanMembers.length) {
+                        return Response.json({ error: 'Must be a clan member to join this party' }, { status: 403 });
+                    }
+                }
+
                 if (updatedMembers.length >= party.maxSize) {
                     return Response.json({ error: 'Party is full' }, { status: 409 });
                 }
@@ -68,7 +77,14 @@ Deno.serve(async (req) => {
 
             case 'kick':
                 if (party.leaderId !== user.id) {
-                    return Response.json({ error: 'Only leader can kick' }, { status: 403 });
+                    // Check if officer/leader of clan (Override)
+                    // Note: clanSystem uses 'divisionId' for ClanMember.
+                    const clanMembers = await base44.entities.ClanMember.filter({ divisionId: party.clanId, userId: user.id });
+                    const isOfficer = clanMembers.length > 0 && ['leader', 'officer'].includes(clanMembers[0].role);
+                    
+                    if (!isOfficer) {
+                        return Response.json({ error: 'Only party leader or clan officers can kick' }, { status: 403 });
+                    }
                 }
                 if (!targetUserId) {
                     return Response.json({ error: 'Target user required for kick' }, { status: 400 });
