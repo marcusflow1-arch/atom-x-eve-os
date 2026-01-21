@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { motion } from 'framer-motion';
-import { Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, Settings } from 'lucide-react';
+import { Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, Settings, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -136,16 +136,30 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                     <p className="text-xs text-white/50">Top 5% of active clans</p>
                 </GlassCard>
 
-                <GlassCard className="relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Sword className="w-24 h-24 text-white" />
+                <GlassCard className="relative overflow-hidden group cursor-pointer hover:border-white/20 transition-all" onClick={() => onChangeTab('chat')}>
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <MessageSquare className="w-24 h-24 text-white" />
                     </div>
                     <div className="relative z-10">
-                        <h3 className="text-white font-bold mb-1">Guild Reputation</h3>
-                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
-                            {clan.reputation || 0}
+                        <h3 className="text-white font-bold mb-1">Recent Comms</h3>
+                        <div className="space-y-2 mt-4">
+                            {/* Simple visual mock of last message since we don't query messages here yet */}
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold">L</div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-white/80 truncate">Check the announcements...</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 opacity-60">
+                                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold">M</div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-white/80 truncate">Raid at 8?</p>
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-xs text-white/40 mt-2">Very Honorable</p>
+                        <p className="text-[10px] text-cyan-400 mt-4 flex items-center gap-1 group-hover:underline">
+                            Open Chat <ArrowRight className="w-3 h-3" />
+                        </p>
                     </div>
                 </GlassCard>
 
