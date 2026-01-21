@@ -38,6 +38,18 @@ export default function PartyManager({ clanId, gameId }) {
         linkedTask: 'none'
     });
 
+    const { data: mockTasks = [] } = useQuery({
+        queryKey: ['availableAssignments', clanId, gameId],
+        queryFn: async () => {
+             const items = await base44.entities.ClanAssignment.filter({
+                 clanId,
+                 targetId: gameId,
+                 status: 'pending'
+             });
+             return items.map(i => ({ id: i.id, label: i.title || i.targetName, type: 'assignment' }));
+        }
+    });
+
     // Real Data Fetching
     const { data: parties = [] } = useQuery({
         queryKey: ['clanParties', clanId, gameId],
