@@ -86,14 +86,16 @@ export default function AuraGamesCrossView() {
     const onKey = (e) => {
       if (!genreData.length) return;
       if (selectedGame) return; // don't navigate while modal open
-      if (e.key === "ArrowRight") {
+      const k = e.key.toLowerCase();
+      
+      if (e.key === "ArrowRight" || k === "d") {
         setActiveGameIdx((i) => Math.min(i + 1, (currentGenre?.items?.length || 1) - 1));
-      } else if (e.key === "ArrowLeft") {
+      } else if (e.key === "ArrowLeft" || k === "a") {
         setActiveGameIdx((i) => Math.max(i - 1, 0));
-      } else if (e.key === "ArrowDown") {
+      } else if (e.key === "ArrowDown" || k === "s") {
         setActiveGenreIdx((g) => Math.min(g + 1, genreData.length - 1));
         setActiveGameIdx(0);
-      } else if (e.key === "ArrowUp") {
+      } else if (e.key === "ArrowUp" || k === "w") {
         setActiveGenreIdx((g) => Math.max(g - 1, 0));
         setActiveGameIdx(0);
       }
@@ -109,12 +111,24 @@ export default function AuraGamesCrossView() {
     const now = Date.now();
     if (now - wheelCooldownRef.current < 160) return; // throttle
     wheelCooldownRef.current = now;
-    if (e.deltaY > 0) {
-      setActiveGenreIdx((g) => Math.min(g + 1, Math.max(genreData.length - 1, 0)));
-      setActiveGameIdx(0);
-    } else if (e.deltaY < 0) {
-      setActiveGenreIdx((g) => Math.max(g - 1, 0));
-      setActiveGameIdx(0);
+
+    // Support both horizontal (games) and vertical (genres) scrolling
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      // Horizontal scroll -> Games
+      if (e.deltaX > 0) {
+        setActiveGameIdx((i) => Math.min(i + 1, (currentGenre?.items?.length || 1) - 1));
+      } else {
+        setActiveGameIdx((i) => Math.max(i - 1, 0));
+      }
+    } else {
+      // Vertical scroll -> Genres
+      if (e.deltaY > 0) {
+        setActiveGenreIdx((g) => Math.min(g + 1, Math.max(genreData.length - 1, 0)));
+        setActiveGameIdx(0);
+      } else {
+        setActiveGenreIdx((g) => Math.max(g - 1, 0));
+        setActiveGameIdx(0);
+      }
     }
   };
 
