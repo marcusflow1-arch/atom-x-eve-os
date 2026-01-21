@@ -41,146 +41,85 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [maxUsers, setMaxUsers] = useState(10);
     const [linkedObjective, setLinkedObjective] = useState('');
 
-    // Mock Rooms Data
-    const [rooms, setRooms] = useState(isClanWide ? [
-        { 
-            id: '1', 
-            topic: 'General Lounge', 
-            isLocked: false, 
-            maxParticipants: 20,
-            participants: [
-                { id: 'u1', name: 'CmdrShepard', speaking: true, muted: false },
-                { id: 'u2', name: 'Garrus', speaking: false, muted: true }
-            ] 
+    // React Query for Rooms
+    import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+    const queryClient = useQueryClient();
+
+    const { data: rooms = [] } = useQuery({
+        queryKey: ['voiceRooms', clanId, gameId],
+        queryFn: () => base44.entities.VoiceRoom.filter(isClanWide ? { clanId } : { clanId, gameId }),
+        refetchInterval: 3000
+    });
+
+    // Check permissions
+    const { data: clanMember } = useQuery({
+        queryKey: ['clanMember', clanId, user?.id],
+        queryFn: async () => {
+             const ms = await base44.entities.ClanMember.filter({ clan_id: clanId, user_id: user?.id });
+             return ms[0];
         },
-        { 
-            id: '2', 
-            topic: 'Officer Meeting', 
-            isLocked: true, 
-            maxParticipants: 10,
-            participants: [] 
+        enabled: !!user?.id
+    });
+    const canManageVoice = ['officer', 'leader'].includes(clanMember?.role);
+    
+    // Generic Voice Action Mutation
+    const voiceActionMutation = useMutation({
+        mutationFn: async (payload) => {
+            const res = await base44.functions.invoke('manageVoiceRoom', payload);
+            if (!res.ok) throw new Error(res.data?.error || 'Action failed');
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['voiceRooms']);
         }
-    ] : [
-        // Game specific mock rooms would go here
-        { 
-            id: '3', 
-            topic: 'Raid Group A', 
-            isLocked: false, 
-            maxParticipants: 6,
-            participants: [] 
-        }
-    ]);
+    });
 
-    // Simulated "Speaking" visualizer
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setRooms(prev => prev.map(room => ({
-                ...room,
-                participants: room.participants.map(p => ({
-                    ...p,
-                    speaking: p.muted ? false : Math.random() > 0.7 // Random speaking toggle
-                }))
-            })));
-        }, 300);
-        return () => clearInterval(interval);
-    }, []);
+    // Simulated "Speaking" visualizer (Purely frontend for now)
+    // In real WebRTC, this would hook into audio streams
+    // Skipping backend update for speaking state to avoid thrashing
 
-    const handleCreateRoom = () => {
+
+    const handleCreateRoom = async () => {
         if (!newRoomTopic.trim()) return;
-        const newRoom = {
-            id: Date.now().toString(),
-            topic: newRoomTopic,
-            isTemporary: true,
-            isLocked: isPrivate,
-            maxParticipants: maxUsers,
-            linkedObjectiveId: linkedObjective || null,
-            participants: []
-        };
-        // Add new room then join it immediately (join logic handles the state update for participants)
-        setRooms(prev => [...prev, newRoom]);
-        setNewRoomTopic('');
-        setIsPrivate(false);
-        setMaxUsers(10);
-        setLinkedObjective('');
-        setIsCreateOpen(false);
         
-        // Small timeout to ensure state update before joining
-        setTimeout(() => handleJoinRoom(newRoom.id), 0);
+        // Use standard Entity Create
+        try {
+            const room = await base44.entities.VoiceRoom.create({
+                clanId,
+                gameId, // can be undefined if clan-wide
+                topic: newRoomTopic,
+                isTemporary: true,
+                isLocked: isPrivate,
+                maxParticipants: maxUsers,
+                linkedObjectiveId: linkedObjective || null,
+                participants: []
+            });
+            
+            await handleJoinRoom(room.id);
+
+            setNewRoomTopic('');
+            setIsPrivate(false);
+            setMaxUsers(10);
+            setLinkedObjective('');
+            setIsCreateOpen(false);
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    const handleJoinRoom = (roomId) => {
+    const handleJoinRoom = async (roomId) => {
         if (activeRoomId === roomId) return;
         
-        setRooms(prev => {
-            // 1. Remove user from ALL rooms first
-            let newRooms = prev.map(r => ({
-                ...r,
-                participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
-            }));
-
-            // 2. Filter out empty temporary rooms
-            newRooms = newRooms.filter(r => !r.isTemporary || r.participants.length > 0);
-
-            // 3. Add user to target room (if it still exists or is the one being joined)
-            // Note: If the room was just created, it might be empty but we are about to join it, so we need to ensure it exists or we are adding to it.
-            // Actually, if we created it, it's in the list. If we join an existing empty room (rare edge case if async), we should handle it.
-            // But simplified: We map again to add the user.
-            
-            const targetRoomExists = newRooms.some(r => r.id === roomId);
-            if (!targetRoomExists) {
-                // If target room was removed (e.g. edge case), we can't join. 
-                // But for the create flow, we must ensure it's not removed.
-                // The filter above removes empty temp rooms. If we just created it, it IS empty.
-                // So we need to EXCLUDE the target room from being removed if it's empty.
-                
-                // Let's redo the logic properly:
-                
-                // A. Clean up old rooms (excluding target room)
-                const cleanedRooms = prev.map(r => ({
-                    ...r,
-                    participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
-                })).filter(r => {
-                    // Keep if not temporary OR has participants OR is the target room we are joining
-                    return (!r.isTemporary || r.participants.length > 0 || r.id === roomId);
-                });
-
-                // B. Add to new room
-                return cleanedRooms.map(r => r.id === roomId ? {
-                    ...r,
-                    participants: [...r.participants, { 
-                        id: user?.id || 'me', 
-                        name: user?.username || 'Me', 
-                        speaking: false, 
-                        muted: false 
-                    }]
-                } : r);
-            }
-
-            return newRooms.map(r => r.id === roomId ? {
-                ...r,
-                participants: [...r.participants, { 
-                    id: user?.id || 'me', 
-                    name: user?.username || 'Me', 
-                    speaking: false, 
-                    muted: false 
-                }]
-            } : r);
-        });
-
         setActiveRoomId(roomId);
+        voiceActionMutation.mutate({ action: 'join', roomId });
     };
 
-    const handleLeaveRoom = () => {
+    const handleLeaveRoom = async () => {
         if (!activeRoomId) return;
-        
-        setRooms(prev => {
-            return prev.map(r => ({
-                ...r,
-                participants: r.participants.filter(p => p.id !== (user?.id || 'me'))
-            })).filter(r => !r.isTemporary || r.participants.length > 0);
-        });
+        const roomId = activeRoomId;
         
         setActiveRoomId(null);
+        voiceActionMutation.mutate({ action: 'kick', roomId, targetUserId: user?.id });
     };
 
     return (
@@ -469,6 +408,32 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                                             <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black px-2 py-1 rounded text-[10px] text-white opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
                                                 {p.name}
                                             </div>
+                                            
+                                            {/* Moderation Controls Overlay */}
+                                            {canManageVoice && p.id !== (user?.id || 'me') && (
+                                                <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition-opacity z-20 backdrop-blur-[1px]">
+                                                    <button 
+                                                        className="p-1 hover:text-red-400 text-white/80" 
+                                                        title="Kick"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            voiceActionMutation.mutate({ action: 'kick', roomId: room.id, targetUserId: p.id });
+                                                        }}
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        className="p-1 hover:text-amber-400 text-white/80" 
+                                                        title="Force Mute"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            voiceActionMutation.mutate({ action: 'mute_participant', roomId: room.id, targetUserId: p.id, state: !p.muted });
+                                                        }}
+                                                    >
+                                                        <MicOff className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

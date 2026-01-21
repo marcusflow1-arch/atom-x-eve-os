@@ -107,8 +107,18 @@ Deno.serve(async (req) => {
             const assignment = await base44.entities.Assignment.get(assignmentId);
             if (!assignment) return Response.json({ error: 'Not found' }, { status: 404 });
 
-            if (!await checkRole(assignment.clanId, 'officer')) {
-                return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+            // Allow member to complete/start their OWN assignment, or officers to manage all
+            let isAllowed = false;
+            if (await checkRole(assignment.clanId, 'officer')) {
+                isAllowed = true;
+            } else if (assignment.assignedMemberIds.includes(user.id)) {
+                // Assignee can mark in_progress or completed (or maybe pending if resetting?)
+                // Let's allow status changes for assignee
+                isAllowed = true;
+            }
+
+            if (!isAllowed) {
+                 return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
             }
 
             const updatedAssignment = await base44.entities.Assignment.update(assignmentId, {
@@ -126,6 +136,19 @@ Deno.serve(async (req) => {
             });
 
             return Response.json(updatedAssignment);
+        }
+
+        if (action === 'delete') {
+            const { assignmentId } = payload;
+            const assignment = await base44.entities.Assignment.get(assignmentId);
+            if (!assignment) return Response.json({ error: 'Not found' }, { status: 404 });
+
+            if (!await checkRole(assignment.clanId, 'officer')) {
+                return Response.json({ error: 'Insufficient permissions' }, { status: 403 });
+            }
+
+            await base44.entities.Assignment.delete(assignmentId);
+            return Response.json({ success: true });
         }
 
         return Response.json({ error: 'Invalid action' }, { status: 400 });
