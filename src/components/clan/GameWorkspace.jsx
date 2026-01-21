@@ -213,6 +213,14 @@ export default function GameWorkspace({ game, clan, onBack }) {
                                 </div>
                             )}
                         </div>
+                        <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleZoneChange('voice')}
+                            className="bg-transparent hover:bg-green-500/10 text-green-400 border-green-500/30 gap-2 hidden md:flex"
+                        >
+                            <Mic className="w-4 h-4" /> Join Voice
+                        </Button>
                         <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2">
                             <UserPlus className="w-4 h-4" /> Invite
                         </Button>
