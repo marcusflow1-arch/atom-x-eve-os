@@ -28,6 +28,18 @@ export default function Farm() {
         enabled: !!clanId
     });
 
+    const { data: publicRoutes } = useQuery({
+        queryKey: ['farmRoutes', 'public', gameId],
+        queryFn: () => base44.entities.FarmRoute.filter({ gameId, isPublic: true }),
+        enabled: !!gameId
+    });
+
+    const { data: clanRoutes } = useQuery({
+        queryKey: ['farmRoutes', 'clan', gameId, clanId],
+        queryFn: () => base44.entities.FarmRoute.filter({ gameId, clanId }),
+        enabled: !!gameId && !!clanId
+    });
+
     const handleBack = () => {
         if (from === 'clan' && clanId) {
             navigate('/clan', { 
@@ -108,19 +120,61 @@ export default function Farm() {
                     </div>
                 </div>
 
+                {clanId && (
+                    <div className="mt-8 mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                             <h3 className="text-lg font-bold text-cyan-400 flex items-center gap-2">
+                                <Target className="w-5 h-5" />
+                                {clan?.name || 'Clan'} Routes
+                             </h3>
+                             <Button size="sm" variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                                + Add Clan Route
+                             </Button>
+                        </div>
+                        
+                        {clanRoutes?.length === 0 ? (
+                            <div className="bg-cyan-950/10 border border-cyan-500/20 rounded-xl p-8 text-center text-cyan-200/50">
+                                No clan-specific routes yet. Create one to share with your squad.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {clanRoutes?.map(route => (
+                                    <div key={route.id} className="bg-cyan-950/10 hover:bg-cyan-900/20 border border-cyan-500/20 rounded-xl p-4 transition-all cursor-pointer group relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                             <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">Clan Exclusive</Badge>
+                                        </div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-bold text-cyan-100">{route.title}</h4>
+                                        </div>
+                                        <Badge variant="outline" className="text-xs border-cyan-500/30 text-cyan-400 mb-2">{route.type}</Badge>
+                                        <p className="text-sm text-cyan-200/60 mb-4 line-clamp-2">{route.description}</p>
+                                        <div className="flex items-center gap-2 text-xs text-cyan-200/40 mb-4">
+                                            <span>By {route.authorId || 'Member'}</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" variant="secondary" className="w-full h-8 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30">View Route</Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="mt-8">
                     <h3 className="text-lg font-bold mb-4">Community Routes</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[1,2,3,4,5,6].map(i => (
-                            <div key={i} className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-4 transition-all cursor-pointer">
+                        {publicRoutes?.map(route => (
+                            <div key={route.id} className="bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl p-4 transition-all cursor-pointer">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-bold">Route #{i}49</h4>
-                                    <Badge variant="outline" className="text-xs">Resource</Badge>
+                                    <h4 className="font-bold">{route.title}</h4>
+                                    <Badge variant="outline" className="text-xs">{route.type}</Badge>
                                 </div>
+                                <p className="text-sm text-white/60 mb-4 line-clamp-2">{route.description}</p>
                                 <div className="flex items-center gap-2 text-xs text-white/40 mb-4">
-                                    <span>By Farmer{i}</span>
+                                    <span>By {route.authorId || 'User'}</span>
                                     <span>•</span>
-                                    <span>Updated 2h ago</span>
+                                    <span>Public</span>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="secondary" className="w-full h-8 text-xs">View Map</Button>
@@ -128,6 +182,11 @@ export default function Farm() {
                                 </div>
                             </div>
                         ))}
+                        {(!publicRoutes || publicRoutes.length === 0) && (
+                            <div className="col-span-full text-center py-12 text-white/30 italic border border-dashed border-white/10 rounded-xl">
+                                No public routes found for this game.
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
