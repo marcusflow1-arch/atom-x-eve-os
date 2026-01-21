@@ -15,7 +15,7 @@ const GlassCard = ({ children, className = "" }) => (
     </div>
 );
 
-export default function ClanOverview({ clan, onChangeTab }) {
+export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [isDismantleOpen, setIsDismantleOpen] = useState(false);
@@ -148,6 +148,23 @@ export default function ClanOverview({ clan, onChangeTab }) {
                         <p className="text-xs text-white/40 mt-2">Very Honorable</p>
                     </div>
                 </GlassCard>
+
+                {activeVoiceRooms?.length > 0 && (
+                     <GlassCard className="relative overflow-hidden border-green-500/30 bg-green-900/10">
+                        <div className="absolute top-0 right-0 p-4 opacity-20 animate-pulse">
+                            <Mic className="w-24 h-24 text-green-400" />
+                        </div>
+                        <div className="relative z-10">
+                            <h3 className="text-green-300 font-bold mb-1 flex items-center gap-2">
+                                <Mic className="w-4 h-4" /> Active Voice
+                            </h3>
+                            <div className="text-4xl font-black text-white">
+                                {activeVoiceRooms.length}
+                            </div>
+                            <p className="text-xs text-green-400/60 mt-2">Rooms Live Now</p>
+                        </div>
+                    </GlassCard>
+                )}
             </div>
 
             {/* Content Columns */}

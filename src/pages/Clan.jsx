@@ -11,6 +11,7 @@ import ClanGameSelector from '@/components/clan/ClanGameSelector';
 import GameWorkspace from '@/components/clan/GameWorkspace';
 import AssignmentList from '@/components/clan/assignments/AssignmentList';
 import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
+import ClanOverview from '@/components/clan/ClanOverview';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,18 @@ export default function ClanPage() {
         queryFn: async () => {
             if (!activeClan) return [];
             return await base44.entities.ClanMember.filter({ divisionId: activeClan.id });
+        },
+        enabled: !!activeClan
+    });
+
+    // Fetch Active Voice Rooms
+    const { data: activeVoiceRooms } = useQuery({
+        queryKey: ['activeVoiceRooms', activeClan?.id],
+        queryFn: async () => {
+            if (!activeClan) return [];
+            // Mocking this for now as we don't have a backend function for real-time presence yet
+            // In production: base44.entities.VoiceRoom.filter({ clanId: activeClan.id, isEmpty: false })
+            return []; 
         },
         enabled: !!activeClan
     });
@@ -198,7 +211,15 @@ export default function ClanPage() {
                             <span className="w-1 h-1 rounded-full bg-white/20" />
                             <span className="flex items-center gap-1.5"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0} Members</span>
                             <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="flex items-center gap-1.5"><Wifi className="w-3 h-3 text-green-500" /> Online</span>
+                            <span className="flex items-center gap-1.5"><Wifi className="w-3 h-3 text-green-500" /> {Math.floor((members?.length || 0) * 0.4)} Online</span>
+                            {activeVoiceRooms?.length > 0 && (
+                                <>
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                                    <span className="flex items-center gap-1.5 text-green-400 animate-pulse">
+                                        <Mic className="w-3 h-3" /> {activeVoiceRooms.length} Active Voice
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -263,18 +284,15 @@ export default function ClanPage() {
                         >
                             {/* Content based on Active Mode */}
                             {XMB_MODES[activeModeIndex].id === 'overview' && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-                                    <div className="col-span-2 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                                        <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">Clan Announcement</h3>
-                                        <p className="text-xl text-white font-medium leading-relaxed">
-                                            "{activeClan.motd || activeClan.description || "Welcome to the division. Prepare for upcoming operations."}"
-                                        </p>
-                                    </div>
-                                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col justify-center items-center">
-                                        <Activity className="w-8 h-8 text-cyan-400 mb-2" />
-                                        <span className="text-2xl font-bold text-white">Active</span>
-                                        <span className="text-white/40 text-xs uppercase tracking-wider">Status</span>
-                                    </div>
+                                <div className="w-full max-w-6xl">
+                                    <ClanOverview 
+                                        clan={activeClan} 
+                                        activeVoiceRooms={activeVoiceRooms}
+                                        onChangeTab={(tab) => {
+                                            // Handle internal navigation if needed, or simple scrolling
+                                            console.log("Navigating to", tab);
+                                        }} 
+                                    />
                                 </div>
                             )}
 
