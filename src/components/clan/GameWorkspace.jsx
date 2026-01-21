@@ -15,6 +15,10 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/components/auth/AuthContext';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import PartyManager from '@/components/clan/party/PartyManager';
+import ChatZone from '@/components/clan/zones/ChatZone';
+import FarmingZone from '@/components/clan/zones/FarmingZone';
+import ExplorationZone from '@/components/clan/zones/ExplorationZone';
+import StrategyZone from '@/components/clan/zones/StrategyZone';
 
 const ZONES = [
     { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
@@ -28,7 +32,16 @@ const ZONES = [
 export default function GameWorkspace({ game, clan, onBack }) {
     const { user } = useAuth();
     const [activeZone, setActiveZone] = useState('chat');
-    const [message, setMessage] = useState('');
+    
+    // Visited zones state for lazy loading
+    const [visitedZones, setVisitedZones] = useState({ chat: true });
+
+    const handleZoneChange = (zoneId) => {
+        setActiveZone(zoneId);
+        if (!visitedZones[zoneId]) {
+            setVisitedZones(prev => ({ ...prev, [zoneId]: true }));
+        }
+    };
 
     // Fetch Game-Specific Assignments/Objectives
     const { data: objectives } = useQuery({
@@ -64,23 +77,7 @@ export default function GameWorkspace({ game, clan, onBack }) {
 
     const activeCount = activeMembers?.filter(m => m.isActive).length || 0;
 
-    // Mock Chat Messages (In real app, fetch messages for channel `game_${game.id}`)
-    const [messages, setMessages] = useState([
-        { id: 1, user: 'CommanderShepard', text: 'Raid starts in 30 mins. Gear check!', time: '10:00 AM' },
-        { id: 2, user: 'LeeroyJenkins', text: 'I am ready!', time: '10:05 AM' },
-    ]);
 
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!message.trim()) return;
-        setMessages([...messages, {
-            id: Date.now(),
-            user: user?.username || 'Me',
-            text: message,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
-        setMessage('');
-    };
 
     return (
         <div className="flex h-full w-full bg-[#0a0c10] text-white overflow-hidden relative">
@@ -165,7 +162,7 @@ export default function GameWorkspace({ game, clan, onBack }) {
                         return (
                             <button
                                 key={zone.id}
-                                onClick={() => setActiveZone(zone.id)}
+                                onClick={() => handleZoneChange(zone.id)}
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group text-left ${
                                     isActive 
                                         ? 'bg-blue-600/20 border border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.2)]' 
@@ -224,70 +221,41 @@ export default function GameWorkspace({ game, clan, onBack }) {
 
                 {/* Zone Content */}
                 <div className="flex-1 overflow-hidden relative">
-                    {activeZone === 'chat' && (
-                        <div className="flex flex-col h-full">
-                            <ScrollArea className="flex-1 p-6">
-                                <div className="space-y-4">
-                                    {messages.map((msg) => (
-                                        <div key={msg.id} className="group flex gap-4 hover:bg-white/5 p-2 rounded-lg transition-colors -mx-2">
-                                            <Avatar className="w-10 h-10 border border-white/10">
-                                                <AvatarFallback className="bg-slate-700 text-white font-bold">{msg.user[0]}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="font-bold text-amber-400">{msg.user}</span>
-                                                    <span className="text-[10px] text-white/30">{msg.time}</span>
-                                                </div>
-                                                <p className="text-white/80 text-sm mt-1">{msg.text}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                            <div className="p-4 border-t border-white/10 bg-black/20">
-                                <form onSubmit={handleSendMessage} className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 cursor-pointer hover:text-white" />
-                                        <input 
-                                            value={message}
-                                            onChange={(e) => setMessage(e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-                                            placeholder={`Message #${activeZone}...`}
-                                        />
-                                    </div>
-                                    <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-xl">
-                                        <Send className="w-5 h-5" />
-                                    </Button>
-                                </form>
-                            </div>
+                    {/* Zones - State Preserved via display:none logic */}
+                    
+                    {visitedZones.chat && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'chat' ? 'block' : 'none' }}>
+                            <ChatZone game={game} user={user} />
                         </div>
                     )}
 
-                    {activeZone === 'farming' && (
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {['Iron Route A', 'Rare Drop: Excalibur', 'XP Grind Spot'].map((item, i) => (
-                                <div key={i} className="aspect-video bg-black/40 border border-white/10 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 hover:bg-amber-500/5 transition-all cursor-pointer group">
-                                    <Target className="w-10 h-10 text-white/20 group-hover:text-amber-400 mb-3 transition-colors" />
-                                    <span className="font-bold text-white/80">{item}</span>
-                                    <Badge variant="outline" className="mt-2 border-white/10 text-white/40">View Details</Badge>
-                                </div>
-                            ))}
+                    {visitedZones.farming && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'farming' ? 'block' : 'none' }}>
+                            <FarmingZone game={game} />
                         </div>
                     )}
 
-                    {activeZone === 'voice' && (
-                        <VoiceRoomManager clanId={clan?.id} gameId={game?.id} />
+                    {visitedZones.exploration && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'exploration' ? 'block' : 'none' }}>
+                            <ExplorationZone game={game} />
+                        </div>
                     )}
 
-                    {activeZone === 'party' && (
-                        <PartyManager clanId={clan?.id} gameId={game?.id} />
+                    {visitedZones.strategy && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'strategy' ? 'block' : 'none' }}>
+                            <StrategyZone game={game} />
+                        </div>
                     )}
 
-                    {/* Placeholder for other zones */}
-                    {['exploration', 'strategy'].includes(activeZone) && (
-                        <div className="flex flex-col items-center justify-center h-full text-white/30">
-                            {React.createElement(ZONES.find(z => z.id === activeZone).icon, { className: "w-20 h-20 mb-4 opacity-20" })}
-                            <p className="text-lg">Zone Module Initializing...</p>
+                    {visitedZones.voice && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'voice' ? 'block' : 'none' }}>
+                            <VoiceRoomManager clanId={clan?.id} gameId={game?.id} />
+                        </div>
+                    )}
+
+                    {visitedZones.party && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'party' ? 'block' : 'none' }}>
+                            <PartyManager clanId={clan?.id} gameId={game?.id} />
                         </div>
                     )}
                 </div>
