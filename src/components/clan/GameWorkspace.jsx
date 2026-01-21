@@ -95,7 +95,6 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
 
     // Active Members derived from Workspace
     // We could fetch User details for IDs, but for now we just need the count
-    const activeCount = workspace?.active_member_ids?.length || 0;
     
     // For the list, we might want to fetch user details if we want to show avatars
     // For now, let's just show counts to be efficient or keep the previous mock if needed, 
