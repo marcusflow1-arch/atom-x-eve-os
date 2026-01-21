@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
+import { base44 } from '@/api/base44Client';
 import { 
     Users, Plus, Target, Mic, Shield, 
     Crown, UserPlus, LogIn, ChevronRight
@@ -37,10 +39,6 @@ export default function PartyManager({ clanId, gameId }) {
     });
 
     // Real Data Fetching
-    import { useQuery } from '@tanstack/react-query';
-    import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
-    import { base44 } from '@/api/base44Client';
-
     const { data: parties = [] } = useQuery({
         queryKey: ['clanParties', clanId, gameId],
         queryFn: async () => {

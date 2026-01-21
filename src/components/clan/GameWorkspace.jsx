@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import PartyManager from '@/components/clan/party/PartyManager';
 import ChatZone from '@/components/clan/zones/ChatZone';
@@ -63,8 +64,6 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
             setVisitedZones(prev => ({ ...prev, [zoneId]: true }));
         }
     };
-
-    import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
 
     // Fetch Game-Specific Assignments/Objectives
     const { data: objectives } = useQuery({
