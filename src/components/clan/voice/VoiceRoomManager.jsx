@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Mic, MicOff, Headphones, User, Plus, X, 
-    Volume2, Radio, Users, LogOut
+    Volume2, Radio, Users, LogOut, Lock, Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -20,17 +24,31 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newRoomTopic, setNewRoomTopic] = useState('');
     const [previewRoomId, setPreviewRoomId] = useState(null);
+    
+    // New Room Config State
+    const [isPrivate, setIsPrivate] = useState(false);
+    const [maxUsers, setMaxUsers] = useState(10);
+    const [linkedObjective, setLinkedObjective] = useState('');
 
     // Mock Rooms Data
     const [rooms, setRooms] = useState([
         { 
-            id: '1', topic: 'Raid Planning', participants: [
+            id: '1', 
+            topic: 'Raid Planning', 
+            isLocked: true, 
+            maxParticipants: 10,
+            linkedObjectiveId: 'obj1',
+            participants: [
                 { id: 'u1', name: 'CmdrShepard', speaking: true, muted: false },
                 { id: 'u2', name: 'Garrus', speaking: false, muted: true }
             ] 
         },
         { 
-            id: '2', topic: 'Casual Farming', participants: [] 
+            id: '2', 
+            topic: 'Casual Farming', 
+            isLocked: false,
+            maxParticipants: 4,
+            participants: [] 
         }
     ]);
 
@@ -54,11 +72,17 @@ export default function VoiceRoomManager({ clanId, gameId }) {
             id: Date.now().toString(),
             topic: newRoomTopic,
             isTemporary: true,
+            isLocked: isPrivate,
+            maxParticipants: maxUsers,
+            linkedObjectiveId: linkedObjective || null,
             participants: []
         };
         // Add new room then join it immediately (join logic handles the state update for participants)
         setRooms(prev => [...prev, newRoom]);
         setNewRoomTopic('');
+        setIsPrivate(false);
+        setMaxUsers(10);
+        setLinkedObjective('');
         setIsCreateOpen(false);
         
         // Small timeout to ensure state update before joining
@@ -201,11 +225,28 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                         const room = rooms.find(r => r.id === previewRoomId);
                         if (!room) return null;
                         
+                        const isFull = room.maxParticipants && room.participants.length >= room.maxParticipants;
+                        const isLocked = room.isLocked;
+
                         return (
                             <div className="py-4">
-                                <div className="bg-white/5 rounded-lg p-4 border border-white/5 mb-4">
-                                    <h3 className="font-bold text-lg text-white mb-1">{room.topic}</h3>
-                                    <p className="text-xs text-white/40">{room.isTemporary ? 'Temporary Room' : 'Permanent Channel'}</p>
+                                <div className="bg-white/5 rounded-lg p-4 border border-white/5 mb-4 relative overflow-hidden">
+                                    <h3 className="font-bold text-lg text-white mb-1 flex items-center gap-2">
+                                        {room.topic}
+                                        {isLocked && <Lock className="w-4 h-4 text-red-400" />}
+                                    </h3>
+                                    <p className="text-xs text-white/40 mb-2">{room.isTemporary ? 'Temporary Room' : 'Permanent Channel'}</p>
+                                    
+                                    <div className="flex gap-2">
+                                        <Badge variant="outline" className={`border-white/10 ${isFull ? 'text-red-400' : 'text-white/60'}`}>
+                                            {room.participants.length} / {room.maxParticipants || '∞'} Users
+                                        </Badge>
+                                        {room.linkedObjectiveId && (
+                                            <Badge variant="outline" className="border-amber-500/20 text-amber-400">
+                                                Objective Linked
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3">
@@ -241,15 +282,25 @@ export default function VoiceRoomManager({ clanId, gameId }) {
 
                     <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="ghost" onClick={() => setPreviewRoomId(null)} className="hover:bg-white/10">Cancel</Button>
-                        <Button 
-                            className="bg-green-600 hover:bg-green-500 text-white" 
-                            onClick={() => {
-                                handleJoinRoom(previewRoomId);
-                                setPreviewRoomId(null);
-                            }}
-                        >
-                            <Mic className="w-4 h-4 mr-2" /> Connect
-                        </Button>
+                        {(() => {
+                             const room = rooms.find(r => r.id === previewRoomId);
+                             const isFull = room && room.maxParticipants && room.participants.length >= room.maxParticipants;
+                             const isLocked = room && room.isLocked;
+                             
+                             return (
+                                <Button 
+                                    className={`${isFull || isLocked ? 'bg-white/10 text-white/50' : 'bg-green-600 hover:bg-green-500 text-white'}`}
+                                    disabled={isFull || isLocked}
+                                    onClick={() => {
+                                        handleJoinRoom(previewRoomId);
+                                        setPreviewRoomId(null);
+                                    }}
+                                >
+                                    {isLocked ? <Lock className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />} 
+                                    {isLocked ? 'Locked' : isFull ? 'Room Full' : 'Connect'}
+                                </Button>
+                             );
+                        })()}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -282,6 +333,46 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                                     />
                                     <p className="text-xs text-white/40">Room creates instantly and closes when empty.</p>
                                 </div>
+                                
+                                {/* Advanced Options (Simulated Leader/Officer Access) */}
+                                <div className="space-y-4 pt-2 border-t border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-white text-sm">Private Channel</Label>
+                                            <p className="text-[10px] text-white/40">Only invited members can join</p>
+                                        </div>
+                                        <Switch checked={isPrivate} onCheckedChange={setIsPrivate} />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <Label className="text-white text-sm">Max Participants</Label>
+                                            <span className="text-xs text-white/60">{maxUsers} Users</span>
+                                        </div>
+                                        <Slider 
+                                            value={[maxUsers]} 
+                                            onValueChange={([v]) => setMaxUsers(v)} 
+                                            max={40} 
+                                            min={2} 
+                                            step={1} 
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-white text-sm">Link Objective (Optional)</Label>
+                                        <Select value={linkedObjective} onValueChange={setLinkedObjective}>
+                                            <SelectTrigger className="bg-white/5 border-white/10 text-white h-9">
+                                                <SelectValue placeholder="None" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">None</SelectItem>
+                                                <SelectItem value="obj1">Raid: Molten Core</SelectItem>
+                                                <SelectItem value="obj2">Weekly Farm</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
                                 <Button onClick={handleCreateRoom} className="w-full bg-blue-600 hover:bg-blue-500">
                                     Start Room
                                 </Button>
@@ -301,14 +392,28 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                                 `}
                             >
                                 <div className="flex justify-between items-start mb-4">
-                                    <h3 className="font-bold text-white truncate pr-8">{room.topic}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-white truncate">{room.topic}</h3>
+                                        {room.isLocked && <Lock className="w-3 h-3 text-white/40" />}
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1 mb-3">
+                                        <Badge variant="outline" className="text-[10px] h-4 px-1 text-white/30 border-white/10 gap-1">
+                                            <Users className="w-3 h-3" /> {room.participants.length}/{room.maxParticipants || '∞'}
+                                        </Badge>
+                                        {room.linkedObjectiveId && (
+                                            <Badge variant="outline" className="text-[10px] h-4 px-1 text-amber-400/70 border-amber-500/20 gap-1">
+                                                <Target className="w-3 h-3" /> Objective Linked
+                                            </Badge>
+                                        )}
+                                    </div>
+
                                     {isConnected ? (
-                                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">Connected</Badge>
+                                        <Badge className="absolute top-4 right-4 bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">Connected</Badge>
                                     ) : (
                                         <Button 
                                             size="sm" 
                                             variant="ghost" 
-                                            className="h-6 text-xs bg-white/5 hover:bg-white/10 text-white/70"
+                                            className="absolute top-4 right-4 h-6 text-xs bg-white/5 hover:bg-white/10 text-white/70"
                                             onClick={() => setPreviewRoomId(room.id)}
                                         >
                                             Join
