@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { motion } from 'framer-motion';
-import { Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, Settings, MessageSquare } from 'lucide-react';
+import { Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, Settings, MessageSquare, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthContext';
+import { base44 } from '@/api/base44Client';
 
 export default function VoiceRoomManager({ clanId, gameId }) {
     const { user, updatePresenceContext } = useAuth();
