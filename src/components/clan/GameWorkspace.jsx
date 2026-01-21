@@ -1,0 +1,269 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    ArrowLeft, Map as MapIcon, Wheat, Brain, Users, MessageSquare, Mic, 
+    Settings, Shield, Sword, Target, ChevronRight, Hash,
+    Plus, Video, Headphones, UserPlus, Send, X
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/components/auth/AuthContext';
+
+// Mock Data for Assignments/Objectives
+const OBJECTIVES = [
+    { id: 1, title: 'Weekly Raid Clear', progress: 2, total: 5, type: 'raid' },
+    { id: 2, title: 'Farm 500 Iron Ore', progress: 340, total: 500, type: 'farming' },
+];
+
+const ZONES = [
+    { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
+    { id: 'farming', label: 'Farming', icon: Wheat, desc: 'Resource Targets & Drop Tables' },
+    { id: 'strategy', label: 'Strategy', icon: Brain, desc: 'Planning & Tactics Board' },
+    { id: 'party', label: 'Party Formation', icon: Users, desc: 'LFG & Squad Management' },
+    { id: 'chat', label: 'Game Chat', icon: MessageSquare, desc: 'General Comms' },
+    { id: 'voice', label: 'Voice Rooms', icon: Mic, desc: 'Tactical Audio Channels' },
+];
+
+export default function GameWorkspace({ game, clan, onBack }) {
+    const { user } = useAuth();
+    const [activeZone, setActiveZone] = useState('chat');
+    const [message, setMessage] = useState('');
+    
+    // Mock Chat Messages
+    const [messages, setMessages] = useState([
+        { id: 1, user: 'CommanderShepard', text: 'Raid starts in 30 mins. Gear check!', time: '10:00 AM' },
+        { id: 2, user: 'LeeroyJenkins', text: 'I am ready!', time: '10:05 AM' },
+    ]);
+
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!message.trim()) return;
+        setMessages([...messages, {
+            id: Date.now(),
+            user: user?.username || 'Me',
+            text: message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]);
+        setMessage('');
+    };
+
+    return (
+        <div className="flex h-full w-full bg-[#0a0c10] text-white overflow-hidden relative">
+            {/* Background Art */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src={game.cover_image || game.cover} 
+                    className="w-full h-full object-cover opacity-20 blur-2xl"
+                    alt="Game Art"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0c10] via-[#0a0c10]/90 to-transparent" />
+            </div>
+
+            {/* Sidebar: Navigation & Objectives */}
+            <div className="w-80 flex-shrink-0 z-10 flex flex-col border-r border-white/5 bg-black/40 backdrop-blur-md">
+                {/* Header */}
+                <div className="p-6 border-b border-white/5">
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={onBack}
+                        className="text-white/50 hover:text-white mb-4 -ml-2 gap-2"
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Back to Clan
+                    </Button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                            <img src={game.cover_image || game.cover} className="w-full h-full object-cover" alt={game.title} />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-lg leading-tight">{game.title}</h2>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-400 border-green-500/20 px-1.5 h-5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
+                                    12 Active
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Objectives / Goals */}
+                <div className="p-4 border-b border-white/5 bg-white/5">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Active Objectives</h3>
+                    <div className="space-y-2">
+                        {OBJECTIVES.map(obj => (
+                            <div key={obj.id} className="p-3 rounded-lg bg-black/40 border border-white/10">
+                                <div className="flex justify-between items-start mb-1">
+                                    <span className="text-sm font-medium text-white/90">{obj.title}</span>
+                                    <Target className="w-3 h-3 text-amber-400" />
+                                </div>
+                                <div className="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                                    <div 
+                                        className="h-full bg-amber-500 rounded-full" 
+                                        style={{ width: `${(obj.progress / obj.total) * 100}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-1">
+                                    <span className="text-[10px] text-white/40">{obj.type}</span>
+                                    <span className="text-[10px] text-white/60">{obj.progress}/{obj.total}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Functional Zones Navigation */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2 px-2">Operational Zones</h3>
+                    {ZONES.map(zone => {
+                        const Icon = zone.icon;
+                        const isActive = activeZone === zone.id;
+                        return (
+                            <button
+                                key={zone.id}
+                                onClick={() => setActiveZone(zone.id)}
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group text-left ${
+                                    isActive 
+                                        ? 'bg-blue-600/20 border border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.2)]' 
+                                        : 'hover:bg-white/5 border border-transparent'
+                                }`}
+                            >
+                                <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/50 group-hover:text-white'}`}>
+                                    <Icon className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <p className={`text-sm font-bold ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>{zone.label}</p>
+                                    <p className="text-[10px] text-white/30">{zone.desc}</p>
+                                </div>
+                                {isActive && <ChevronRight className="w-4 h-4 text-blue-400 ml-auto" />}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col z-10 bg-gradient-to-br from-slate-900/50 to-slate-900/80 backdrop-blur-sm">
+                {/* Zone Header */}
+                <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-black/20">
+                    <div className="flex items-center gap-3">
+                        {ZONES.find(z => z.id === activeZone)?.icon && React.createElement(ZONES.find(z => z.id === activeZone).icon, { className: "w-5 h-5 text-white/60" })}
+                        <h2 className="text-xl font-bold text-white">{ZONES.find(z => z.id === activeZone)?.label}</h2>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="flex -space-x-2">
+                            {[1,2,3].map(i => (
+                                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-700 flex items-center justify-center text-xs">
+                                    P{i}
+                                </div>
+                            ))}
+                            <div className="w-8 h-8 rounded-full border-2 border-[#0a0c10] bg-slate-800 flex items-center justify-center text-xs text-white/50">
+                                +4
+                            </div>
+                        </div>
+                        <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2">
+                            <UserPlus className="w-4 h-4" /> Invite
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Zone Content */}
+                <div className="flex-1 overflow-hidden relative">
+                    {activeZone === 'chat' && (
+                        <div className="flex flex-col h-full">
+                            <ScrollArea className="flex-1 p-6">
+                                <div className="space-y-4">
+                                    {messages.map((msg) => (
+                                        <div key={msg.id} className="group flex gap-4 hover:bg-white/5 p-2 rounded-lg transition-colors -mx-2">
+                                            <Avatar className="w-10 h-10 border border-white/10">
+                                                <AvatarFallback className="bg-slate-700 text-white font-bold">{msg.user[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex-1">
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="font-bold text-amber-400">{msg.user}</span>
+                                                    <span className="text-[10px] text-white/30">{msg.time}</span>
+                                                </div>
+                                                <p className="text-white/80 text-sm mt-1">{msg.text}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                            <div className="p-4 border-t border-white/10 bg-black/20">
+                                <form onSubmit={handleSendMessage} className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 cursor-pointer hover:text-white" />
+                                        <input 
+                                            value={message}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
+                                            placeholder={`Message #${activeZone}...`}
+                                        />
+                                    </div>
+                                    <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-xl">
+                                        <Send className="w-5 h-5" />
+                                    </Button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeZone === 'farming' && (
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {['Iron Route A', 'Rare Drop: Excalibur', 'XP Grind Spot'].map((item, i) => (
+                                <div key={i} className="aspect-video bg-black/40 border border-white/10 rounded-2xl flex flex-col items-center justify-center hover:border-amber-500/50 hover:bg-amber-500/5 transition-all cursor-pointer group">
+                                    <Target className="w-10 h-10 text-white/20 group-hover:text-amber-400 mb-3 transition-colors" />
+                                    <span className="font-bold text-white/80">{item}</span>
+                                    <Badge variant="outline" className="mt-2 border-white/10 text-white/40">View Details</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeZone === 'voice' && (
+                        <div className="p-8 space-y-6">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="font-bold text-lg flex items-center gap-2">
+                                        <Headphones className="w-5 h-5 text-green-400" /> Alpha Squad
+                                    </h3>
+                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Live</Badge>
+                                </div>
+                                <div className="flex gap-4">
+                                    {[1,2,3,4].map(i => (
+                                        <div key={i} className="flex flex-col items-center gap-2">
+                                            <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-green-500/50 flex items-center justify-center relative">
+                                                <Mic className="w-6 h-6 text-white" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-green-500 animate-ping opacity-20" />
+                                            </div>
+                                            <span className="text-xs font-bold">User {i}</span>
+                                        </div>
+                                    ))}
+                                    <button className="w-16 h-16 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-white/30 hover:text-white hover:border-white/50 transition-all">
+                                        <Plus className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                <div className="mt-6 flex justify-center">
+                                    <Button className="bg-green-600 hover:bg-green-500 text-white px-8 rounded-full">
+                                        Join Channel
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Placeholder for other zones */}
+                    {['exploration', 'strategy', 'party'].includes(activeZone) && (
+                        <div className="flex flex-col items-center justify-center h-full text-white/30">
+                            {React.createElement(ZONES.find(z => z.id === activeZone).icon, { className: "w-20 h-20 mb-4 opacity-20" })}
+                            <p className="text-lg">Zone Module Initializing...</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

@@ -8,6 +8,7 @@ import {
     Wifi, Activity, Zap, Search, Plus, ArrowLeft
 } from 'lucide-react';
 import ClanGameSelector from '@/components/clan/ClanGameSelector';
+import GameWorkspace from '@/components/clan/GameWorkspace';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -149,7 +150,7 @@ export default function ClanPage() {
     return (
         <div className="h-screen w-full relative overflow-hidden bg-[#0a0c10] text-white font-sans selection:bg-cyan-500/30">
             
-            {/* Game Workspace Overlay (Placeholder for next step) */}
+            {/* Game Workspace Overlay */}
             <AnimatePresence>
                 {selectedGame && (
                     <motion.div
@@ -158,21 +159,11 @@ export default function ClanPage() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="absolute inset-0 z-50 bg-[#0a0c10] flex flex-col"
                     >
-                        {/* Temporary Header for Workspace */}
-                        <div className="p-6 border-b border-white/10 flex items-center gap-4 bg-black/20 backdrop-blur-md">
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => setSelectedGame(null)}
-                                className="text-white/50 hover:text-white"
-                            >
-                                <ArrowLeft className="w-6 h-6" />
-                            </Button>
-                            <h2 className="text-2xl font-bold text-white">{selectedGame.title} <span className="text-white/40 font-normal">Command Center</span></h2>
-                        </div>
-                        <div className="flex-1 flex items-center justify-center">
-                            <p className="text-white/30">Game Workspace Loading...</p>
-                        </div>
+                        <GameWorkspace 
+                            game={selectedGame} 
+                            clan={activeClan} 
+                            onBack={() => setSelectedGame(null)} 
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>
