@@ -5,8 +5,9 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { 
     Shield, Gamepad2, MessageSquare, Mic, 
     ClipboardList, Settings, Crown, Users, 
-    Wifi, Activity, Zap, Search, Plus
+    Wifi, Activity, Zap, Search, Plus, ArrowLeft
 } from 'lucide-react';
+import ClanGameSelector from '@/components/clan/ClanGameSelector';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ export default function ClanPage() {
     const [contextIndex, setContextIndex] = useState(0); // Vertical selection index
     const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
+    const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
 
     // Fetch Memberships
     const { data: memberships, isLoading } = useQuery({
@@ -146,6 +148,35 @@ export default function ClanPage() {
 
     return (
         <div className="h-screen w-full relative overflow-hidden bg-[#0a0c10] text-white font-sans selection:bg-cyan-500/30">
+            
+            {/* Game Workspace Overlay (Placeholder for next step) */}
+            <AnimatePresence>
+                {selectedGame && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute inset-0 z-50 bg-[#0a0c10] flex flex-col"
+                    >
+                        {/* Temporary Header for Workspace */}
+                        <div className="p-6 border-b border-white/10 flex items-center gap-4 bg-black/20 backdrop-blur-md">
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setSelectedGame(null)}
+                                className="text-white/50 hover:text-white"
+                            >
+                                <ArrowLeft className="w-6 h-6" />
+                            </Button>
+                            <h2 className="text-2xl font-bold text-white">{selectedGame.title} <span className="text-white/40 font-normal">Command Center</span></h2>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center">
+                            <p className="text-white/30">Game Workspace Loading...</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* 1. Dynamic Background Layer */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
@@ -255,9 +286,16 @@ export default function ClanPage() {
                             )}
 
                             {XMB_MODES[activeModeIndex].id === 'games' && (
-                                <div className="text-center mt-12">
-                                    <p className="text-white/30 text-lg">Select a game to enter command center</p>
-                                    {/* Game list will go here in next step */}
+                                <div className="w-full mt-4">
+                                    <ClanGameSelector 
+                                        clanId={activeClan.id} 
+                                        userId={user?.id}
+                                        onSelectGame={(game) => {
+                                            setSelectedGame(game);
+                                            // Optional: Move UI deeper or just set state to show workspace overlay
+                                            console.log("Selected game:", game.title);
+                                        }} 
+                                    />
                                 </div>
                             )}
                             
