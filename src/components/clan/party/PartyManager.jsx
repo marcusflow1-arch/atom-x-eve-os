@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -18,21 +20,31 @@ export default function PartyManager({ clanId, gameId }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newParty, setNewParty] = useState({
         goal: '',
-        size: '4',
+        size: [4],
         micRequired: false,
-        minLevel: ''
+        context: 'general',
+        linkedTask: 'none'
     });
+
+    // Mock Assignments/Farming Tasks
+    const mockTasks = [
+        { id: 't1', type: 'assignment', label: 'Weekly Raid' },
+        { id: 't2', type: 'farming', label: 'Iron Route A' },
+        { id: 't3', type: 'assignment', label: 'PvP Tournament' }
+    ];
 
     // Mock Parties
     const [parties, setParties] = useState([
         {
             id: '1', leader: { name: 'Vanguard', id: 'u1' }, size: 6, current: 4,
             goal: 'Grandmaster Nightfall', status: 'forming', micRequired: true,
+            context: 'pve', linkedTask: 't1',
             members: [{id: 'u1'}, {id: 'u2'}, {id: 'u3'}, {id: 'u4'}]
         },
         {
             id: '2', leader: { name: 'Drifter', id: 'u5' }, size: 4, current: 1,
             goal: 'Gambit Prime', status: 'forming', micRequired: false,
+            context: 'pvp', linkedTask: 'none',
             members: [{id: 'u5'}]
         }
     ]);
@@ -42,16 +54,27 @@ export default function PartyManager({ clanId, gameId }) {
         const party = {
             id: Date.now().toString(),
             leader: { name: user?.username || 'Me', id: user?.id || 'me' },
-            size: parseInt(newParty.size),
+            size: newParty.size[0],
             current: 1,
             goal: newParty.goal,
             status: 'forming',
             micRequired: newParty.micRequired,
+            context: newParty.context,
+            linkedTask: newParty.linkedTask,
             members: [{id: user?.id || 'me'}]
         };
         setParties([party, ...parties]);
         setIsCreateOpen(false);
-        setNewParty({ goal: '', size: '4', micRequired: false, minLevel: '' });
+        setNewParty({ goal: '', size: [4], micRequired: false, context: 'general', linkedTask: 'none' });
+    };
+
+    const getContextBadge = (ctx) => {
+        switch(ctx) {
+            case 'farming': return { label: 'Farming', color: 'text-emerald-400 border-emerald-500/30' };
+            case 'raid': return { label: 'Raid', color: 'text-purple-400 border-purple-500/30' };
+            case 'pvp': return { label: 'PvP', color: 'text-red-400 border-red-500/30' };
+            default: return { label: 'General', color: 'text-blue-400 border-blue-500/30' };
+        }
     };
 
     const handleJoin = (partyId) => {
@@ -82,9 +105,10 @@ export default function PartyManager({ clanId, gameId }) {
                         <DialogHeader>
                             <DialogTitle>Form New Squad</DialogTitle>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
+                        <div className="space-y-5 py-2">
+                            {/* Goal Input */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/70">Squad Goal</label>
+                                <Label className="text-white/80">Squad Goal</Label>
                                 <Input 
                                     placeholder="e.g. Dungeon Speedrun" 
                                     value={newParty.goal}
@@ -92,37 +116,78 @@ export default function PartyManager({ clanId, gameId }) {
                                     className="bg-white/5 border-white/10 text-white"
                                 />
                             </div>
+
+                            {/* Zone Context & Size */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/70">Max Size</label>
+                                    <Label className="text-white/80">Context</Label>
                                     <Select 
-                                        value={newParty.size} 
-                                        onValueChange={(val) => setNewParty({...newParty, size: val})}
+                                        value={newParty.context} 
+                                        onValueChange={(val) => setNewParty({...newParty, context: val})}
                                     >
                                         <SelectTrigger className="bg-white/5 border-white/10 text-white">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                            <SelectItem value="3">3 Players</SelectItem>
-                                            <SelectItem value="4">4 Players</SelectItem>
-                                            <SelectItem value="6">6 Players</SelectItem>
-                                            <SelectItem value="12">12 Players (Raid)</SelectItem>
+                                            <SelectItem value="general">General</SelectItem>
+                                            <SelectItem value="farming">Farming</SelectItem>
+                                            <SelectItem value="raid">Raid</SelectItem>
+                                            <SelectItem value="pvp">PvP</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-white/70">Requirements</label>
-                                    <div 
-                                        className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${newParty.micRequired ? 'bg-blue-500/20 border-blue-500 text-blue-300' : 'bg-white/5 border-white/10 text-white/50'}`}
-                                        onClick={() => setNewParty({...newParty, micRequired: !newParty.micRequired})}
-                                    >
-                                        <Mic className="w-4 h-4" />
-                                        <span className="text-sm">Mic Required</span>
+                                    <div className="flex justify-between">
+                                        <Label className="text-white/80">Size</Label>
+                                        <span className="text-xs text-white/50">{newParty.size[0]} Players</span>
                                     </div>
+                                    <Slider 
+                                        value={newParty.size} 
+                                        onValueChange={(val) => setNewParty({...newParty, size: val})} 
+                                        min={2} max={12} step={1}
+                                        className="py-2"
+                                    />
                                 </div>
                             </div>
-                            <Button onClick={handleCreateParty} className="w-full bg-blue-600 hover:bg-blue-500 mt-2">
-                                Post LFG
+
+                            {/* Link Task */}
+                            <div className="space-y-2">
+                                <Label className="text-white/80">Link Assignment (Optional)</Label>
+                                <Select 
+                                    value={newParty.linkedTask} 
+                                    onValueChange={(val) => setNewParty({...newParty, linkedTask: val})}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                        <SelectValue placeholder="None" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                        <SelectItem value="none">None</SelectItem>
+                                        {mockTasks.map(task => (
+                                            <SelectItem key={task.id} value={task.id}>
+                                                {task.type === 'assignment' ? '📋' : '🌾'} {task.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Requirements Toggle */}
+                            <div 
+                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${newParty.micRequired ? 'bg-blue-500/10 border-blue-500/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
+                                onClick={() => setNewParty({...newParty, micRequired: !newParty.micRequired})}
+                            >
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${newParty.micRequired ? 'bg-blue-500 text-white' : 'bg-white/10'}`}>
+                                    <Mic className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium">Microphone Required</p>
+                                    <p className="text-[10px] opacity-60">Voice chat participation mandatory</p>
+                                </div>
+                            </div>
+
+                            <Button onClick={handleCreateParty} className="w-full bg-blue-600 hover:bg-blue-500 py-6 text-base font-bold shadow-lg shadow-blue-900/20">
+                                <Plus className="w-5 h-5 mr-2" />
+                                Post Party
                             </Button>
                         </div>
                     </DialogContent>
@@ -138,6 +203,16 @@ export default function PartyManager({ clanId, gameId }) {
                         >
                             <div className="flex justify-between items-start mb-3">
                                 <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${getContextBadge(party.context).color}`}>
+                                            {getContextBadge(party.context).label}
+                                        </Badge>
+                                        {party.linkedTask !== 'none' && (
+                                            <Badge variant="outline" className="text-[10px] h-5 px-1.5 text-amber-400 border-amber-500/30">
+                                                <Target className="w-3 h-3 mr-1" /> Linked
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <h4 className="font-bold text-white text-lg">{party.goal}</h4>
                                     <div className="flex items-center gap-2 text-xs text-white/40 mt-1">
                                         <Crown className="w-3 h-3 text-amber-400" />
