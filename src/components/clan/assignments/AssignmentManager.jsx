@@ -17,22 +17,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 export default function AssignmentManager({ clanId, members }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newAssignment, setNewAssignment] = useState({
-        type: 'game',
-        targetName: '',
+        type: 'objective',
+        gameId: '', // We'll map this to targetId for Game Workspace visibility
+        targetName: '', // The title of the assignment
         priority: 'recommended',
-        assigneeId: 'all', // 'all' or specific user ID
+        assigneeId: 'all', 
         dueDate: undefined,
         notes: ''
     });
 
+    // Fetch Games for Selection
+    const { data: games } = useQuery({
+        queryKey: ['availableGames'],
+        queryFn: async () => await base44.entities.Game.list()
+    });
+
     const createMutation = useMutation({
         mutationFn: async (data) => {
-            // await base44.entities.ClanAssignment.create({ ...data, clanId, status: 'pending' });
-            console.log('Created assignment:', data);
+            // We map gameId to targetId so it appears in that Game's workspace
+            const payload = {
+                ...data,
+                targetId: data.gameId || 'general', // Use gameId as targetId
+                clanId,
+                status: 'pending'
+            };
+            // In a real app: await base44.entities.ClanAssignment.create(payload);
+            console.log('Created assignment:', payload);
+            
+            // For demo purposes, we can simulate adding it to local state if needed, 
+            // but the mock list below is static.
         },
         onSuccess: () => {
             setIsCreateOpen(false);
-            setNewAssignment({ type: 'game', targetName: '', priority: 'recommended', assigneeId: 'all', notes: '' });
+            setNewAssignment({ 
+                type: 'objective', gameId: '', targetName: '', 
+                priority: 'recommended', assigneeId: 'all', notes: '' 
+            });
         }
     });
 
@@ -51,7 +71,26 @@ export default function AssignmentManager({ clanId, members }) {
                             <DialogTitle>Issue New Directive</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
-                            {/* Type & Target */}
+                            {/* Game Selection (Context) */}
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-white/50 uppercase">Relevant Game</label>
+                                <Select 
+                                    value={newAssignment.gameId} 
+                                    onValueChange={(val) => setNewAssignment({...newAssignment, gameId: val})}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                        <SelectValue placeholder="Select a Game..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                        <SelectItem value="general">General (No Game)</SelectItem>
+                                        {games?.map(g => (
+                                            <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Type & Priority */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-white/50 uppercase">Type</label>
@@ -63,9 +102,9 @@ export default function AssignmentManager({ clanId, members }) {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                            <SelectItem value="game">Game</SelectItem>
                                             <SelectItem value="objective">Objective</SelectItem>
                                             <SelectItem value="achievement">Achievement</SelectItem>
+                                            <SelectItem value="game">Game Session</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -88,11 +127,13 @@ export default function AssignmentManager({ clanId, members }) {
                                 </div>
                             </div>
 
-                            {/* Target Name */}
+                            {/* Objective Title */}
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/50 uppercase">Target Name</label>
+                                <label className="text-xs font-bold text-white/50 uppercase">
+                                    {newAssignment.type === 'achievement' ? 'Achievement Name' : 'Objective Title'}
+                                </label>
                                 <Input 
-                                    placeholder="e.g. Destiny 2 or 'Complete Raid'"
+                                    placeholder={newAssignment.type === 'achievement' ? "e.g. 'Unbroken' Title" : "e.g. Complete Weekly Raid"}
                                     value={newAssignment.targetName}
                                     onChange={(e) => setNewAssignment({...newAssignment, targetName: e.target.value})}
                                     className="bg-white/5 border-white/10 text-white"
