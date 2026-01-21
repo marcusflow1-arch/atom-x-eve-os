@@ -33,6 +33,43 @@ export const AuthProvider = ({ children }) => {
     const [showSignUp, setShowSignUp] = useState(false);
     const [isLoginFlow, setIsLoginFlow] = useState(false);
 
+    // Presence Heartbeat
+    useEffect(() => {
+        if (!user) return;
+
+        const updateHeartbeat = async () => {
+            try {
+                await base44.auth.updateMe({
+                    last_seen: new Date().toISOString(),
+                    presence_status: 'online'
+                });
+            } catch (e) {
+                console.error("Heartbeat failed", e);
+            }
+        };
+
+        // Initial update
+        updateHeartbeat();
+
+        // Update every minute
+        const interval = setInterval(updateHeartbeat, 60000);
+        return () => clearInterval(interval);
+    }, [user?.id]);
+
+    const updatePresenceContext = async (activity) => {
+        if (!user) return;
+        try {
+            await base44.auth.updateMe({
+                current_activity: activity,
+                last_seen: new Date().toISOString()
+            });
+            // Optimistic update
+            setUser(prev => ({ ...prev, current_activity: activity }));
+        } catch (e) {
+            console.error("Failed to update presence context", e);
+        }
+    };
+
     // Function to refresh user and avatar data
     const refreshUserData = async () => {
         if (!user && !loading) {
@@ -215,9 +252,10 @@ export const AuthProvider = ({ children }) => {
         setShowSignUp,
         refreshUserData,
         isLoginFlow,
-    };
+        updatePresenceContext,
+        };
 
-    return (
+        return (
         <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>

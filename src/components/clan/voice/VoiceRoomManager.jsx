@@ -17,9 +17,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth/AuthContext';
 
 export default function VoiceRoomManager({ clanId, gameId }) {
-    const { user } = useAuth();
+    const { user, updatePresenceContext } = useAuth();
     const [activeRoomId, setActiveRoomId] = useState(null);
     const isClanWide = !gameId; // If no gameId, it's clan-wide
+
+    useEffect(() => {
+        if (activeRoomId) {
+            const room = rooms.find(r => r.id === activeRoomId);
+            base44.auth.updateMe({ voice_room_id: activeRoomId });
+        } else {
+            base44.auth.updateMe({ voice_room_id: null });
+        }
+    }, [activeRoomId]);
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);

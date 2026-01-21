@@ -19,6 +19,7 @@ import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
+import Farm from './pages/Farm';
 import Friends from './pages/Friends';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
@@ -48,7 +49,6 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Farm from './pages/Farm';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +74,7 @@ export const PAGES = {
     "CrossGameFusion": CrossGameFusion,
     "EnvGuide": EnvGuide,
     "Events": Events,
+    "Farm": Farm,
     "Friends": Friends,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
@@ -103,7 +104,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Farm": Farm,
 }
 
 export const pagesConfig = {

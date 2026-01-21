@@ -16,8 +16,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/components/auth/AuthContext';
 
 export default function PartyManager({ clanId, gameId }) {
-    const { user } = useAuth();
+    const { user, updatePresenceContext } = useAuth();
+    const [activePartyId, setActivePartyId] = useState(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    // Sync party presence
+    useEffect(() => {
+        if (activePartyId) {
+            base44.auth.updateMe({ party_id: activePartyId });
+        } else {
+            base44.auth.updateMe({ party_id: null });
+        }
+    }, [activePartyId]);
     const [newParty, setNewParty] = useState({
         goal: '',
         size: [4],

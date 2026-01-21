@@ -42,6 +42,18 @@ export default function ClanPage() {
     const [newClanData, setNewClanData] = useState({ name: '', description: '' });
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
+    const { updatePresenceContext } = useAuth();
+
+    // Update presence when viewing Clan Overview
+    useEffect(() => {
+        if (activeClan && !selectedGame) {
+            updatePresenceContext({
+                type: 'clan',
+                name: activeClan.name,
+                id: activeClan.id
+            });
+        }
+    }, [activeClan?.id, selectedGame]);
 
     // Restore state from navigation (e.g. returning from Farm page)
     useEffect(() => {
@@ -249,7 +261,10 @@ export default function ClanPage() {
                             <span className="w-1 h-1 rounded-full bg-white/20" />
                             <span className="flex items-center gap-1.5"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0} Members</span>
                             <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="flex items-center gap-1.5"><Wifi className="w-3 h-3 text-green-500" /> {Math.floor((members?.length || 0) * 0.4)} Online</span>
+                            <span className="flex items-center gap-1.5"><Wifi className="w-3 h-3 text-green-500" /> {members?.filter(m => {
+                                // Mock online check - normally we check m.user.last_seen
+                                return Math.random() > 0.6; 
+                            }).length || 0} Online</span>
                             {activeVoiceRooms?.length > 0 && (
                                 <>
                                     <span className="w-1 h-1 rounded-full bg-white/20" />

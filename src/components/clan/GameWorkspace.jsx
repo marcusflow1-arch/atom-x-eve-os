@@ -31,11 +31,28 @@ const ZONES = [
 ];
 
 export default function GameWorkspace({ game, clan, onBack, initialZone }) {
-    const { user } = useAuth();
+    const { user, updatePresenceContext } = useAuth();
     const [activeZone, setActiveZone] = useState(initialZone || 'chat');
     
     // Visited zones state for lazy loading
     const [visitedZones, setVisitedZones] = useState({ [initialZone || 'chat']: true });
+
+    useEffect(() => {
+        updatePresenceContext({
+            type: 'game',
+            name: game.title,
+            id: game.id
+        });
+        
+        // Cleanup: Set back to clan when leaving workspace
+        return () => {
+            updatePresenceContext({
+                type: 'clan',
+                name: clan.name,
+                id: clan.id
+            });
+        };
+    }, [game.id, clan.id]);
 
     const handleZoneChange = (zoneId) => {
         setActiveZone(zoneId);
