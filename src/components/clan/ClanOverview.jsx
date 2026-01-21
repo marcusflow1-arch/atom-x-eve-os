@@ -164,18 +164,28 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                 </GlassCard>
 
                 {activeVoiceRooms?.length > 0 && (
-                     <GlassCard className="relative overflow-hidden border-green-500/30 bg-green-900/10">
+                     <GlassCard className="relative overflow-hidden border-green-500/30 bg-green-900/10 cursor-pointer hover:bg-green-900/20 transition-all" onClick={() => onChangeTab('voice')}>
                         <div className="absolute top-0 right-0 p-4 opacity-20 animate-pulse">
                             <Mic className="w-24 h-24 text-green-400" />
                         </div>
                         <div className="relative z-10">
                             <h3 className="text-green-300 font-bold mb-1 flex items-center gap-2">
-                                <Mic className="w-4 h-4" /> Active Voice
+                                <Mic className="w-4 h-4" /> Clan Voice
                             </h3>
-                            <div className="text-4xl font-black text-white">
+                            <div className="text-4xl font-black text-white mb-2">
                                 {activeVoiceRooms.length}
                             </div>
-                            <p className="text-xs text-green-400/60 mt-2">Rooms Live Now</p>
+                            <div className="space-y-1">
+                                {activeVoiceRooms.slice(0, 2).map((room, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-xs text-green-100/70">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                        {room.topic || "General Voice"}
+                                    </div>
+                                ))}
+                                {activeVoiceRooms.length > 2 && (
+                                    <p className="text-[10px] text-green-400/50">+{activeVoiceRooms.length - 2} more</p>
+                                )}
+                            </div>
                         </div>
                     </GlassCard>
                 )}

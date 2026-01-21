@@ -19,6 +19,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 export default function VoiceRoomManager({ clanId, gameId }) {
     const { user } = useAuth();
     const [activeRoomId, setActiveRoomId] = useState(null);
+    const isClanWide = !gameId; // If no gameId, it's clan-wide
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -31,13 +32,12 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [linkedObjective, setLinkedObjective] = useState('');
 
     // Mock Rooms Data
-    const [rooms, setRooms] = useState([
+    const [rooms, setRooms] = useState(isClanWide ? [
         { 
             id: '1', 
-            topic: 'Raid Planning', 
-            isLocked: true, 
-            maxParticipants: 10,
-            linkedObjectiveId: 'obj1',
+            topic: 'General Lounge', 
+            isLocked: false, 
+            maxParticipants: 20,
             participants: [
                 { id: 'u1', name: 'CmdrShepard', speaking: true, muted: false },
                 { id: 'u2', name: 'Garrus', speaking: false, muted: true }
@@ -45,9 +45,18 @@ export default function VoiceRoomManager({ clanId, gameId }) {
         },
         { 
             id: '2', 
-            topic: 'Casual Farming', 
-            isLocked: false,
-            maxParticipants: 4,
+            topic: 'Officer Meeting', 
+            isLocked: true, 
+            maxParticipants: 10,
+            participants: [] 
+        }
+    ] : [
+        // Game specific mock rooms would go here
+        { 
+            id: '3', 
+            topic: 'Raid Group A', 
+            isLocked: false, 
+            maxParticipants: 6,
             participants: [] 
         }
     ]);
@@ -305,8 +314,19 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                 </DialogContent>
             </Dialog>
 
+            {/* Header for Context */}
+            <div className="px-6 pt-6 pb-2">
+                <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                    {isClanWide ? (
+                        <><Users className="w-4 h-4" /> Clan Wide Channels</>
+                    ) : (
+                        <><Target className="w-4 h-4" /> Tactical Game Comms</>
+                    )}
+                </h3>
+            </div>
+
             {/* Room List */}
-            <ScrollArea className="flex-1 p-6">
+            <ScrollArea className="flex-1 p-6 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Create Room Card */}
                     <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -315,7 +335,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
                                 <div className="w-12 h-12 rounded-full bg-white/5 group-hover:bg-white/10 flex items-center justify-center transition-colors">
                                     <Plus className="w-6 h-6" />
                                 </div>
-                                <span className="font-medium">Create Voice Room</span>
+                                <span className="font-medium">Create {isClanWide ? 'General' : 'Game'} Room</span>
                             </button>
                         </DialogTrigger>
                         <DialogContent className="bg-[#12141a] border-white/10 text-white">

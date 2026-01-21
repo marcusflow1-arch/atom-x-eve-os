@@ -78,9 +78,12 @@ export default function ClanPage() {
         queryKey: ['activeVoiceRooms', activeClan?.id],
         queryFn: async () => {
             if (!activeClan) return [];
-            // Mocking this for now as we don't have a backend function for real-time presence yet
+            // Mocking active rooms for overview visibility
             // In production: base44.entities.VoiceRoom.filter({ clanId: activeClan.id, isEmpty: false })
-            return []; 
+            return [
+                { id: '1', topic: 'General Lounge', participants: [1,2] },
+                { id: '2', topic: 'Officer Meeting', participants: [] }
+            ]; 
         },
         enabled: !!activeClan
     });
