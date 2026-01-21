@@ -20,7 +20,12 @@ export default function FormsPage() {
         totalSteps: 3,
         formStatus: "active",
         requiresApproval: true,
-        aiValidationEnabled: true
+        aiValidationEnabled: true,
+        controllerNavigationEnabled: true,
+        hapticFeedbackEnabled: true,
+        soundFeedbackProfile: "sci-fi",
+        animationStyle: "hologram",
+        glassBlurIntensity: 40
     };
 
     // Mock Steps (Section 1.3)
@@ -188,6 +193,8 @@ export default function FormsPage() {
                     aiAssistanceEnabled={true}
                     autosaveEnabled={true}
                     versioningEnabled={true}
+                    glassBlurIntensity={mockForm.glassBlurIntensity}
+                    animationStyle={mockForm.animationStyle}
                 >
                     <div className="flex flex-col gap-6">
                         

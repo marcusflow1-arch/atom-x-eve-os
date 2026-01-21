@@ -32,6 +32,8 @@ const UniversalFormContainer = ({
     aiAssistanceEnabled = false,
     autosaveEnabled = false,
     versioningEnabled = false,
+    glassBlurIntensity = 20,
+    animationStyle = 'fade',
     className,
     children
 }) => {
@@ -41,6 +43,14 @@ const UniversalFormContainer = ({
         'dark-glass': 'bg-black/40',
         'holo-metal': 'bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-t border-cyan-400/20'
     };
+
+    // Animation Variants
+    const animations = {
+        fade: { initial: { opacity: 0 }, animate: { opacity: 1 } },
+        slide: { initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 } },
+        morph: { initial: { opacity: 0, scale: 0.9, borderRadius: "50%" }, animate: { opacity: 1, scale: 1, borderRadius: "24px" } },
+        hologram: { initial: { opacity: 0, scaleY: 0 }, animate: { opacity: 1, scaleY: 1 } }
+    }[animationStyle] || { initial: { opacity: 0 }, animate: { opacity: 1 } };
 
     // Access Level Icons
     const AccessIcon = {
@@ -124,11 +134,12 @@ const UniversalFormContainer = ({
 
                 {/* Form Content Container */}
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
+                    initial={animations.initial}
+                    animate={animations.animate}
+                    transition={{ delay: 0.1, duration: 0.4, ease: "circOut" }}
+                    style={{ backdropFilter: `blur(${glassBlurIntensity}px)` }}
                     className={cn(
-                        "rounded-3xl border border-white/10 backdrop-blur-xl overflow-hidden relative min-h-[600px]",
+                        "rounded-3xl border border-white/10 overflow-hidden relative min-h-[600px]",
                         themeStyles[visualTheme]
                     )}
                 >
