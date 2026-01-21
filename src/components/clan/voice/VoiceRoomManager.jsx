@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
     Mic, MicOff, Headphones, User, Plus, X, 
     Volume2, Radio, Users, LogOut, Lock, Target
@@ -41,8 +42,6 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [maxUsers, setMaxUsers] = useState(10);
     const [linkedObjective, setLinkedObjective] = useState('');
 
-    // React Query for Rooms
-    import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
     const queryClient = useQueryClient();
 
     const { data: rooms = [] } = useQuery({
