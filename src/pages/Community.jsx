@@ -223,15 +223,12 @@ export default function CommunityPage() {
                 {/* Header Section - Fixed Title */}
                 <div className="flex flex-col gap-6 px-2">
                     {!activeGame && (
-                    <div className="flex items-center justify-between">
-                        {/* Left: Logo/Brand */}
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                <MessageSquare className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
-                                <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">FORUMS</span>
+                    <div className="flex items-center justify-center mt-2">
+                        {/* Center: Logo/Brand */}
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <MessageSquare className="w-4 h-4" />
                             </div>
                         </div>
                     </div>
