@@ -1,25 +1,56 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Mic, Plus, MessageCircle, Clock, Hash } from 'lucide-react';
+import { Users, Mic, Plus, MessageCircle, Clock, Hash, Trophy, Target, Bug, Calendar } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
 
 // Mock Data Generators
 const generateMockContent = (topic) => {
-    if (!topic) return [];
+    if (!topic) return { rooms: [], posts: [] };
     
-    // Voice Rooms Mock
-    const rooms = [
-        { id: 'v1', name: `${topic === 'farming' ? 'Boss Rush' : 'Chill Chat'}`, users: 4, max: 8, tags: ['Mic Required'] },
-        { id: 'v2', name: 'New Players Welcome', users: 2, max: 6, tags: ['Noob Friendly'] },
-    ];
+    let rooms = [];
+    let posts = [];
 
-    // Posts Mock
-    const posts = [
-        { id: 'p1', title: `Need help with ${topic} quest`, author: 'PlayerOne', time: '2m ago', replies: 5, upvotes: 12 },
-        { id: 'p2', title: 'Best strategy for this season?', author: 'ProGamer', time: '15m ago', replies: 24, upvotes: 89 },
-        { id: 'p3', title: 'Looking for group - fast clear', author: 'SpeedRunner', time: '1h ago', replies: 0, upvotes: 3 },
-    ];
+    switch(topic) {
+        case 'achievements':
+            rooms = [
+                { id: 'v1', name: 'Platinum Hunting', users: 3, max: 4, tags: ['Serious'] },
+                { id: 'v2', name: 'Secret Finding', users: 5, max: 8, tags: ['Spoilers'] }
+            ];
+            posts = [
+                { id: 'p1', title: 'Hidden trophy in Level 4?', author: 'TrophyHunter', time: '10m ago', replies: 8, upvotes: 42 },
+                { id: 'p2', title: '100% Completion Guide', author: 'GuideMaker', time: '2h ago', replies: 156, upvotes: 890 }
+            ];
+            break;
+        case 'farming':
+            rooms = [
+                { id: 'v1', name: 'Boss Rush Mode', users: 4, max: 4, tags: ['High Level'] },
+                { id: 'v2', name: 'Material Farming', users: 2, max: 4, tags: ['Chill'] }
+            ];
+            posts = [
+                { id: 'p1', title: 'Best spot for Rare Crystal?', author: 'Miner49er', time: '5m ago', replies: 3, upvotes: 12 },
+                { id: 'p2', title: 'Efficiency Spreadsheets', author: 'MathWiz', time: '1d ago', replies: 45, upvotes: 300 }
+            ];
+            break;
+        case 'recruitment':
+            rooms = [
+                { id: 'v1', name: 'Interviews Open', users: 2, max: 10, tags: ['Clan'] },
+            ];
+            posts = [
+                { id: 'p1', title: 'Looking for active guild (NA)', author: 'SoloPlayer', time: '30m ago', replies: 2, upvotes: 5 },
+                { id: 'p2', title: 'Top 10 Guild Recruiting', author: 'GuildLeader', time: '4h ago', replies: 12, upvotes: 45 }
+            ];
+            break;
+        default:
+             rooms = [
+                { id: 'v1', name: 'General Chat', users: 12, max: 20, tags: ['Casual'] },
+                { id: 'v2', name: 'New Players', users: 4, max: 10, tags: ['Help'] }
+            ];
+            posts = [
+                { id: 'p1', title: 'This game is amazing!', author: 'Newbie', time: '1h ago', replies: 10, upvotes: 100 },
+                { id: 'p2', title: 'Patch notes discussion', author: 'Mod', time: '3h ago', replies: 88, upvotes: 250 }
+            ];
+    }
 
     return { rooms, posts };
 };
@@ -80,6 +111,7 @@ export default function FarmTopicContent({ topic, gameId }) {
         <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             key={topic}
             className="h-full overflow-y-auto p-8 pt-4 custom-scrollbar"
         >
@@ -116,8 +148,8 @@ export default function FarmTopicContent({ topic, gameId }) {
                             </LiquidGlassCard>
                         ))}
                         
-                        <Button className="w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl">
-                            <Plus className="w-4 h-4 mr-2" /> Start a new discussion in {topic}
+                        <Button className="w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl uppercase tracking-wider text-xs font-bold">
+                            <Plus className="w-4 h-4 mr-2" /> New {topic} Thread
                         </Button>
                     </div>
                 </div>
@@ -166,12 +198,13 @@ export default function FarmTopicContent({ topic, gameId }) {
                     <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/10 rounded-xl p-4 mt-6">
                         <div className="flex items-start gap-3">
                             <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-                                <Sparkles className="w-4 h-4" />
+                                <Trophy className="w-4 h-4" />
                             </div>
                             <div>
                                 <h4 className="text-sm font-bold text-white mb-1">Topic Tip</h4>
                                 <p className="text-xs text-white/50 leading-relaxed">
-                                    Posts in <span className="text-white font-bold">{topic}</span> are automatically tagged with your current loadout to help others understand your context.
+                                    You are viewing <span className="text-white font-bold capitalize">{topic}</span>. 
+                                    Content is filtered to show relevant guides and discussions.
                                 </p>
                             </div>
                         </div>

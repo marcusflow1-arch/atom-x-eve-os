@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Users, Mic2, MessageSquare, Plus, ArrowLeft, 
@@ -14,7 +15,21 @@ import FarmTopicContent from './FarmTopicContent';
 import { toast } from 'sonner';
 
 export default function FarmGameView({ game, onBack }) {
-    const [activeTopic, setActiveTopic] = useState(null); // 'achievements', 'farming', 'recruitment', etc.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTopic = searchParams.get('topic');
+    
+    const setActiveTopic = (topic) => {
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            if (topic) {
+                newParams.set('topic', topic);
+            } else {
+                newParams.delete('topic');
+            }
+            return newParams;
+        });
+    };
+
     const isOwned = game.tags?.includes('Owned');
 
     const handleAction = (action) => {
