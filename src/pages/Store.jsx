@@ -1314,46 +1314,42 @@ export default function Store() {
                                         </div>
                                     </div>
 
-                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres */}
-                                    <div className="absolute top-48 left-0 right-0 z-20 h-16 flex items-center justify-center">
-                                        <div className="relative w-full max-w-5xl mx-auto overflow-hidden px-12">
-                                            <motion.div 
-                                                className="flex items-center gap-6 pl-[50%]"
-                                                animate={{ 
-                                                    x: `calc(-${activeSubCategoryIndex * (140 + 24)}px - 70px)` // Center active item (width roughly 140px)
-                                                }}
-                                                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                                            >
-                                                {SUB_CATEGORIES.map((subCat, idx) => {
-                                                    const isActive = idx === activeSubCategoryIndex;
-                                                    return (
-                                                        <motion.button
-                                                            key={subCat}
-                                                            onClick={() => setActiveSubCategoryIndex(idx)}
-                                                            animate={{ 
-                                                                scale: isActive ? 1.1 : 0.9,
-                                                                opacity: isActive ? 1 : 0.5
-                                                            }}
-                                                            className={`
-                                                                flex-shrink-0 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
-                                                                ${isActive 
-                                                                    ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
-                                                                    : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
-                                                                }
-                                                            `}
-                                                        >
-                                                            <span className="text-sm font-bold uppercase tracking-wider">
-                                                                {subCat}
-                                                            </span>
-                                                        </motion.button>
-                                                    );
-                                                })}
-                                            </motion.div>
-                                            
-                                            {/* Fade Edges */}
-                                            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-slate-900/0 to-transparent pointer-events-none" />
-                                            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-900/0 to-transparent pointer-events-none" />
-                                        </div>
+                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres, Left Aligned */}
+                                    <div className="absolute top-48 left-12 right-0 z-20 h-14 flex items-center justify-start overflow-hidden mask-linear-fade-right">
+                                        <motion.div 
+                                            className="flex items-center gap-3"
+                                            animate={{ 
+                                                x: -activeSubCategoryIndex * (110 + 12) + (activeSubCategoryIndex > 0 ? 50 : 0)
+                                            }}
+                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                                        >
+                                            {SUB_CATEGORIES.map((subCat, idx) => {
+                                                const isActive = idx === activeSubCategoryIndex;
+                                                return (
+                                                    <motion.button
+                                                        key={subCat}
+                                                        onClick={() => setActiveSubCategoryIndex(idx)}
+                                                        animate={{ 
+                                                            scale: isActive ? 1.0 : 0.9, 
+                                                            opacity: isActive ? 1 : 0.5
+                                                        }}
+                                                        className={`
+                                                            flex-shrink-0 px-3 py-1.5 rounded-full border transition-all duration-300 whitespace-nowrap
+                                                            ${isActive 
+                                                                ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.2)]' 
+                                                                : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                                                            }
+                                                        `}
+                                                        // Reduced size by ~20% via padding/text size adjustments
+                                                        style={{ transformOrigin: 'left center' }} 
+                                                    >
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                                                            {subCat}
+                                                        </span>
+                                                    </motion.button>
+                                                );
+                                            })}
+                                        </motion.div>
                                     </div>
 
                                     {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
