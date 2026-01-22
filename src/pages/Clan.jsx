@@ -25,10 +25,10 @@ import { Input } from '@/components/ui/input';
 const XMB_MODES = [
     { id: 'overview', label: 'Overview', icon: Shield },
     { id: 'games', label: 'Games', icon: Gamepad2 },
-    { id: 'chat', label: 'Clan Chat', icon: MessageSquare },
-    { id: 'voice', label: 'Voice', icon: Mic },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList },
-    { id: 'management', label: 'Management', icon: Settings, leaderOnly: true },
+    { id: 'chat', label: 'Clan Chat', icon: MessageSquare, restricted: true },
+    { id: 'voice', label: 'Voice', icon: Mic, restricted: true },
+    { id: 'assignments', label: 'Assignments', icon: ClipboardList, restricted: true },
+    { id: 'management', label: 'Management', icon: Settings, restricted: true },
 ];
 
 export default function ClanPage() {
@@ -76,8 +76,9 @@ export default function ClanPage() {
         enabled: !!activeClan
     });
 
-    // Check for leader status for management access
-    const isLeader = members?.find(m => m.userId === user?.id)?.role === 'leader';
+    // Check for leader/officer status for management access
+    const currentUserRole = members?.find(m => m.userId === user?.id)?.role;
+    const isPrivileged = currentUserRole === 'leader' || currentUserRole === 'officer';
 
     // Fetch Active Voice Rooms
     const { data: activeVoiceRooms } = useQuery({
@@ -175,7 +176,7 @@ export default function ClanPage() {
                 setActiveModeIndex(prev => {
                     let next = prev + 1;
                     if (next >= XMB_MODES.length) return prev;
-                    if (XMB_MODES[next].leaderOnly && !isLeader) return prev;
+                    if (XMB_MODES[next].restricted && !isPrivileged) return prev;
                     return next;
                 });
             } else if (e.key === 'ArrowLeft') {
@@ -294,17 +295,17 @@ export default function ClanPage() {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
             </div>
 
-            {/* 2. Top Header (Clan Identity) */}
-            <div className="absolute top-0 left-0 right-0 h-32 z-20 flex flex-col items-center justify-center pointer-events-none">
-                <div className="flex items-center gap-4 mb-2">
-                    <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                        {activeClan.icon ? <img src={activeClan.icon} className="w-full h-full object-cover rounded-xl" /> : <Shield className="w-6 h-6 text-white/50" />}
+            {/* 2. Top Header (Clan Identity) - Repositioned above XMB */}
+            <div className="absolute top-[20%] left-0 right-0 z-20 flex flex-col items-center justify-center pointer-events-none transition-all duration-500">
+                <div className="flex flex-col items-center gap-4 mb-2">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                        {activeClan.icon ? <img src={activeClan.icon} className="w-full h-full object-cover rounded-xl" /> : <Shield className="w-8 h-8 text-white/50" />}
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
+                    <div className="text-center">
+                        <h1 className="text-4xl font-black tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
                             {activeClan.name}
                         </h1>
-                        <div className="flex items-center gap-3 text-xs font-medium uppercase tracking-widest text-white/40">
+                        <div className="flex items-center justify-center gap-3 text-xs font-medium uppercase tracking-widest text-white/40">
                             <span className="flex items-center gap-1.5"><Crown className="w-3 h-3 text-amber-500" /> LVL {activeClan.level || 1}</span>
                             <span className="w-1 h-1 rounded-full bg-white/20" />
                             <span className="flex items-center gap-1.5"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0} Members</span>
@@ -338,8 +339,8 @@ export default function ClanPage() {
                         // Hide items too far away to cleaner look
                         if (distance > 3) return null;
 
-                        // Filter management if not leader
-                        if (mode.leaderOnly && !isLeader) return null;
+                        // Filter restricted items if not privileged (leader/officer)
+                        if (mode.restricted && !isPrivileged) return null;
 
                         return (
                             <div 
