@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Mic, Sparkles, Upload, FileText, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const FormFieldRenderer = ({ field, value, onChange, error }) => {
+const FormFieldRenderer = ({ field, value, onChange, error, disabled = false }) => {
     
     // Helper to handle simple change events
     const handleChange = (val) => {
-        onChange(field.fieldId, val);
+        if (!disabled) {
+            onChange(field.fieldId, val);
+        }
     };
 
     const renderInput = () => {
@@ -28,9 +30,11 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
                             value={value || ''}
                             onChange={(e) => handleChange(e.target.value)}
                             maxLength={field.characterLimit}
+                            disabled={disabled}
                             className={cn(
                                 "bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 transition-all",
-                                field.fieldType === 'ai-assisted-input' && "pr-10"
+                                field.fieldType === 'ai-assisted-input' && "pr-10",
+                                disabled && "opacity-50 cursor-not-allowed"
                             )}
                         />
                         {field.fieldType === 'ai-assisted-input' && (
@@ -48,7 +52,11 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
                         value={value || ''}
                         onChange={(e) => handleChange(e.target.value)}
                         maxLength={field.characterLimit}
-                        className="bg-black/20 border-white/10 text-white placeholder:text-white/20 min-h-[120px] focus:border-cyan-500/50 transition-all resize-none"
+                        disabled={disabled}
+                        className={cn(
+                            "bg-black/20 border-white/10 text-white placeholder:text-white/20 min-h-[120px] focus:border-cyan-500/50 transition-all resize-none",
+                            disabled && "opacity-50 cursor-not-allowed"
+                        )}
                     />
                 );
 
@@ -61,13 +69,17 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
                         onChange={(e) => handleChange(Number(e.target.value))}
                         min={field.minValue}
                         max={field.maxValue}
-                        className="bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 w-full"
+                        disabled={disabled}
+                        className={cn(
+                            "bg-black/20 border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/50 w-full",
+                            disabled && "opacity-50 cursor-not-allowed"
+                        )}
                     />
                 );
 
             case 'slider':
                 return (
-                    <div className="py-2 px-1">
+                    <div className={cn("py-2 px-1", disabled && "opacity-50 pointer-events-none")}>
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs text-white/40 font-mono">{field.minValue || 0}</span>
                             <span className="text-sm font-bold text-cyan-400 font-mono">{value || (field.minValue || 0)}</span>
@@ -79,6 +91,7 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
                             max={field.maxValue || 100}
                             step={1}
                             onValueChange={(vals) => handleChange(vals[0])}
+                            disabled={disabled}
                             className="cursor-pointer"
                         />
                     </div>
@@ -86,8 +99,8 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
 
             case 'dropdown':
                 return (
-                    <Select value={value} onValueChange={handleChange}>
-                        <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                    <Select value={value} onValueChange={handleChange} disabled={disabled}>
+                        <SelectTrigger className={cn("bg-black/20 border-white/10 text-white", disabled && "opacity-50 cursor-not-allowed")}>
                             <SelectValue placeholder={field.placeholderText || "Select an option"} />
                         </SelectTrigger>
                         <SelectContent className="bg-[#1a1f2e] border-white/10 text-white">
@@ -102,10 +115,11 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
 
             case 'toggle':
                 return (
-                    <div className="flex items-center gap-3">
+                    <div className={cn("flex items-center gap-3", disabled && "opacity-50")}>
                         <Switch 
                             checked={!!value}
                             onCheckedChange={handleChange}
+                            disabled={disabled}
                             className="data-[state=checked]:bg-cyan-500"
                         />
                         <span className="text-sm text-white/60">
@@ -116,11 +130,12 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
 
             case 'checkbox':
                 return (
-                    <div className="flex items-center space-x-2">
+                    <div className={cn("flex items-center space-x-2", disabled && "opacity-50")}>
                         <Checkbox 
                             id={field.fieldId} 
                             checked={!!value}
                             onCheckedChange={handleChange}
+                            disabled={disabled}
                             className="border-white/20 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
                         />
                         <label
@@ -134,17 +149,22 @@ const FormFieldRenderer = ({ field, value, onChange, error }) => {
 
             case 'voice-input':
                 return (
-                    <div className="flex gap-2">
+                    <div className={cn("flex gap-2", disabled && "opacity-50")}>
                         <div className="relative flex-1">
                             <Input 
                                 value={value || ''}
                                 onChange={(e) => handleChange(e.target.value)}
                                 placeholder="Press microphone to speak..."
+                                disabled={disabled}
                                 className="bg-black/20 border-white/10 text-white pl-10"
                             />
                             <Mic className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                         </div>
-                        <Button variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20">
+                        <Button 
+                            variant="outline" 
+                            disabled={disabled}
+                            className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20"
+                        >
                             <Mic className="w-4 h-4" />
                         </Button>
                     </div>
