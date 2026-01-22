@@ -1347,7 +1347,7 @@ export default function Store() {
                                     </div>
 
                                     {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
-                                    <div className="absolute top-64 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
+                                    <div className="absolute top-80 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
                                         <div className="w-full">
                                             <motion.div 
                                                 key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
