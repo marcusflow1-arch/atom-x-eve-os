@@ -3,15 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { 
     ClipboardList, CheckCircle2, XCircle, AlertCircle, 
-    Gamepad2, Trophy, Target, ArrowRight, Clock
+    Gamepad2, Trophy, Target, ArrowRight, Clock, Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import AssignmentManager from './AssignmentManager';
 
-export default function AssignmentList({ clanId, userId, onSelectGame }) {
+export default function AssignmentList({ clanId, userId, onSelectGame, isLeader, members }) {
     const queryClient = useQueryClient();
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'manage'
 
     // Fetch Assignments
     const { data: assignments, isLoading } = useQuery({
@@ -84,14 +86,50 @@ export default function AssignmentList({ clanId, userId, onSelectGame }) {
         }
     };
 
+    // Management View
+    if (viewMode === 'manage' && isLeader) {
+        return (
+            <div className="w-full max-w-4xl mx-auto space-y-4">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Settings className="w-6 h-6 text-cyan-400" />
+                        Assignment Control
+                    </h2>
+                    <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setViewMode('list')}
+                        className="text-white/50 hover:text-white"
+                    >
+                        Back to Assessments
+                    </Button>
+                </div>
+                <AssignmentManager clanId={clanId} members={members} />
+            </div>
+        );
+    }
+
     if (isLoading) return <div className="text-white/40 text-center py-8">Loading directives...</div>;
 
     return (
         <div className="w-full max-w-4xl mx-auto space-y-4">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <ClipboardList className="w-6 h-6 text-cyan-400" />
-                Active Directives
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <ClipboardList className="w-6 h-6 text-cyan-400" />
+                    Active Directives
+                </h2>
+                {isLeader && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setViewMode('manage')}
+                        className="text-white/50 hover:text-white hover:bg-white/10"
+                        title="Assignment Settings"
+                    >
+                        <Settings className="w-5 h-5" />
+                    </Button>
+                )}
+            </div>
 
             <div className="grid gap-4">
                 {assignments?.map((assignment) => {
