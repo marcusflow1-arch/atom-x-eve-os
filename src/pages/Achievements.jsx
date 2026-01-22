@@ -1373,6 +1373,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         {(selectedCard || blacksmithCard) && (
           <AchievementWorkspace 
             card={selectedCard || blacksmithCard} 
+            initialMode={interactionMode}
             onClose={() => {
               setSelectedCard(null);
               setBlacksmithCard(null);
