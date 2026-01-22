@@ -450,36 +450,74 @@ export default function Store() {
 
     const activeGame = null; // No single active game in this new "List View" mode until hovered/selected
 
-    // Navigation Handler
+    // Navigation Handler (Updated for Dual Horizontal Rows)
     useEffect(() => {
         if (storeMode !== 'store' || loading || genreData.length === 0 || viewMode !== 'cross') return;
 
+        // Simple focus state to toggle between controlling Genres (row 1) or Sub-Cats (row 2)
+        // 0 = Genre Row, 1 = Sub-Cat Row
+        // We'll use a ref or just simplify: Up/Down switches rows, Left/Right navigates current row
+        // But since we don't have visual focus state distinct from "active item", let's assume:
+        // Top Row (Genres) is dominant. Sub-cats update based on Genre.
+        // Let's keep it simple: Arrow Keys = Sub-Cats (since that's the "content" filter), 
+        // Shift + Arrows = Genres? Or maybe PageUp/Down for Genres?
+        
+        // Actually, let's try a smarter approach:
+        // W/S (Up/Down) = Switch between Genre selection and Sub-Cat selection? 
+        // No, that's complex state.
+        
+        // Let's map:
+        // A/D (Left/Right) = Navigate Sub-Categories (Fine tuning)
+        // Q/E (Shoulder buttons) = Navigate Genres (Broad switching)
+        // OR
+        // Up/Down = Navigate Genres (Since they are "higher" level, even if visually horizontal?) 
+        // User asked for "Left and Right" for both.
+        
         const handleKeyDown = (e) => {
             const key = e.key.toLowerCase();
             
-            // Horizontal: Switch Genre
+            // Row 1: Genres (Use Shift + Left/Right OR just Up/Down to switch "focus" to top row?)
+            // Let's use W/S (Up/Down) to change Genres for now as it's a "Vertical" hierarchy logically (Parent -> Child),
+            // even if displayed horizontally.
+            // visual: Top Row vs Bottom Row.
+            
+            if (key === 'w' || key === 'arrowup') {
+                 // Move "Up" to Genres -> actually let's make Up/Down cycle genres to keep it simple with 1D input devices
+                 // Wait, user wants Left/Right for both.
+                 // Let's use standard grid nav logic.
+                 // We need a "focusRow" state, but we don't have one exposed.
+                 
+                 // Fallback: 
+                 // Arrows = Sub-Categories (most frequent action)
+                 // Shift + Arrows = Genres
+            }
+
             if (key === 'arrowleft' || key === 'a') {
                 e.preventDefault();
-                setActiveGenreIndex(prev => {
-                    const newIndex = prev > 0 ? prev - 1 : prev;
-                    return newIndex;
-                });
-                setActiveSubCategoryIndex(0); // Reset sub-cat on genre change
+                if (e.shiftKey) {
+                    // Shift + Left = Previous Genre
+                    setActiveGenreIndex(prev => {
+                        const newIndex = prev > 0 ? prev - 1 : prev;
+                        return newIndex;
+                    });
+                    setActiveSubCategoryIndex(0);
+                } else {
+                    // Left = Previous Sub-Category
+                    setActiveSubCategoryIndex(prev => prev > 0 ? prev - 1 : prev);
+                }
             } else if (key === 'arrowright' || key === 'd') {
                 e.preventDefault();
-                setActiveGenreIndex(prev => {
-                    const newIndex = prev < genreData.length - 1 ? prev + 1 : prev;
-                    return newIndex;
-                });
-                setActiveSubCategoryIndex(0);
-            } 
-            // Vertical: Switch Sub-Category
-            else if (key === 'arrowup' || key === 'w') {
-                e.preventDefault();
-                setActiveSubCategoryIndex(prev => prev > 0 ? prev - 1 : prev);
-            } else if (key === 'arrowdown' || key === 's') {
-                e.preventDefault();
-                setActiveSubCategoryIndex(prev => prev < SUB_CATEGORIES.length - 1 ? prev + 1 : prev);
+                if (e.shiftKey) {
+                    // Shift + Right = Next Genre
+                    setActiveGenreIndex(prev => {
+                        const newIndex = prev < genreData.length - 1 ? prev + 1 : prev;
+                        return newIndex;
+                    });
+                    setActiveSubCategoryIndex(0);
+                } else {
+                    // Right = Next Sub-Category
+                    setActiveSubCategoryIndex(prev => prev < SUB_CATEGORIES.length - 1 ? prev + 1 : prev);
+                }
             }
         };
 
@@ -1278,49 +1316,50 @@ export default function Store() {
                                         </div>
                                     </div>
 
-                                    {/* 2. VERTICAL AXIS (Sub-Categories) - Left Side */}
-                                    <div className="absolute top-52 bottom-0 left-0 w-64 z-20 flex flex-col items-center pointer-events-none">
-                                        {/* Background for Sidebar */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-                                        
-                                        <motion.div 
-                                            className="flex flex-col items-start gap-2 py-32 pl-12 w-full pointer-events-auto"
-                                            animate={{ 
-                                                y: `calc(35vh - ${activeSubCategoryIndex * 50}px)`
-                                            }}
-                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                                        >
-                                            {SUB_CATEGORIES.map((subCat, idx) => {
-                                                const isActive = idx === activeSubCategoryIndex;
-                                                return (
-                                                    <motion.button
-                                                        key={subCat}
-                                                        onClick={() => setActiveSubCategoryIndex(idx)}
-                                                        animate={{ 
-                                                            x: isActive ? 20 : 0,
-                                                            scale: isActive ? 1.1 : 0.9,
-                                                            opacity: isActive ? 1 : 0.4
-                                                        }}
-                                                        className={`text-left px-4 py-3 rounded-r-xl transition-all duration-300 w-48 relative group flex items-center gap-3`}
-                                                    >
-                                                        {isActive && (
-                                                            <motion.div 
-                                                                layoutId="subcat-active-indicator"
-                                                                className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 rounded-full" 
-                                                            />
-                                                        )}
-                                                        <span className={`text-lg font-bold tracking-wide ${isActive ? 'text-white text-shadow-glow' : 'text-white/60'}`}>
-                                                            {subCat}
-                                                        </span>
-                                                        {isActive && <ChevronRight className="w-4 h-4 text-cyan-400" />}
-                                                    </motion.button>
-                                                );
-                                            })}
-                                        </motion.div>
+                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres */}
+                                    <div className="absolute top-48 left-0 right-0 z-20 h-16 flex items-center justify-center">
+                                        <div className="relative w-full max-w-5xl mx-auto overflow-hidden px-12">
+                                            <motion.div 
+                                                className="flex items-center gap-6 pl-[50%]"
+                                                animate={{ 
+                                                    x: `calc(-${activeSubCategoryIndex * (140 + 24)}px - 70px)` // Center active item (width roughly 140px)
+                                                }}
+                                                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                                            >
+                                                {SUB_CATEGORIES.map((subCat, idx) => {
+                                                    const isActive = idx === activeSubCategoryIndex;
+                                                    return (
+                                                        <motion.button
+                                                            key={subCat}
+                                                            onClick={() => setActiveSubCategoryIndex(idx)}
+                                                            animate={{ 
+                                                                scale: isActive ? 1.1 : 0.9,
+                                                                opacity: isActive ? 1 : 0.5
+                                                            }}
+                                                            className={`
+                                                                flex-shrink-0 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                                                                ${isActive 
+                                                                    ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
+                                                                    : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                                                                }
+                                                            `}
+                                                        >
+                                                            <span className="text-sm font-bold uppercase tracking-wider">
+                                                                {subCat}
+                                                            </span>
+                                                        </motion.button>
+                                                    );
+                                                })}
+                                            </motion.div>
+                                            
+                                            {/* Fade Edges */}
+                                            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-slate-900/0 to-transparent pointer-events-none" />
+                                            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-900/0 to-transparent pointer-events-none" />
+                                        </div>
                                     </div>
 
-                                    {/* 3. MAIN CONTENT (Game Grid) */}
-                                    <div className="absolute top-52 bottom-0 left-64 right-0 z-10 overflow-y-auto custom-scrollbar p-8">
+                                    {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Removed Left Padding */}
+                                    <div className="absolute top-64 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar p-8">
                                         <div className="max-w-7xl mx-auto">
                                             <motion.div 
                                                 key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
