@@ -37,7 +37,7 @@ export default function ClanPage() {
     const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
     const location = useLocation();
     const queryClient = useQueryClient();
-    const [selectedClanId, setSelectedClanId] = useState(null);
+    const [activeClanId, setActiveClanId] = useState(null);
     const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
     const [contextIndex, setContextIndex] = useState(0); // Vertical selection index
     const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
@@ -61,12 +61,19 @@ export default function ClanPage() {
     });
 
     useEffect(() => {
-        if (memberships?.length > 0 && !selectedClanId) {
-            setSelectedClanId(memberships[0].divisionId);
+        if (memberships?.length > 0 && !activeClanId) {
+            setActiveClanId(memberships[0].divisionId);
         }
     }, [memberships]);
 
-    const activeClan = memberships?.find(c => c.divisionId === selectedClanId);
+    // Verify activeClanId is still valid (user wasn't kicked)
+    useEffect(() => {
+        if (activeClanId && memberships && !memberships.find(c => c.divisionId === activeClanId)) {
+            setActiveClanId(null);
+        }
+    }, [memberships, activeClanId]);
+
+    const activeClan = memberships?.find(c => c.divisionId === activeClanId);
 
     // Fetch Members for active clan
     const { data: members } = useQuery({
@@ -88,7 +95,7 @@ export default function ClanPage() {
         onSuccess: (res) => {
             if (res.data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
-                setSelectedClanId(null);
+                setActiveClanId(null);
             } else {
                 alert(res.data.error || 'Failed to leave clan');
             }
@@ -100,7 +107,7 @@ export default function ClanPage() {
         onSuccess: (res) => {
             if (res.data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
-                setSelectedClanId(null);
+                setActiveClanId(null);
             } else {
                 alert(res.data.error || 'Failed to disband clan');
             }
@@ -129,7 +136,7 @@ export default function ClanPage() {
             if (res.data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
                 setIsCreateClanOpen(false);
-                setSelectedClanId(res.data.division.id);
+                setActiveClanId(res.data.division.id);
             }
         }
     });
@@ -243,7 +250,7 @@ export default function ClanPage() {
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
 
     if (!activeClan) {
-        return <ClanIntro onClanCreated={(clanId) => setSelectedClanId(clanId)} onClanJoined={(clanId) => setSelectedClanId(clanId)} />;
+        return <ClanIntro onClanCreated={(clanId) => setActiveClanId(clanId)} onClanJoined={(clanId) => setActiveClanId(clanId)} />;
     }
 
     return (
