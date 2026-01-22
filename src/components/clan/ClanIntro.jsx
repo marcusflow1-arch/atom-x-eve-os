@@ -60,13 +60,13 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
             const action = isPrivate ? 'request_join' : 'join_clan';
             return base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
         },
-        onSuccess: (res, variables) => {
+        onSuccess: async (res, variables) => {
             if (res.data.success) {
                 if (variables.isPrivate) {
                     // Show success toast for application
                     alert("Application sent successfully!"); // In real app use toast
                 } else {
-                    queryClient.invalidateQueries(['myClanMemberships']);
+                    await queryClient.invalidateQueries(['myClanMemberships']);
                     if (onClanJoined) onClanJoined(variables.clanId);
                 }
             } else {
