@@ -47,10 +47,10 @@ Deno.serve(async (req) => {
             });
 
             await base44.entities.ClanMember.create({
-                divisionId: newDivision.id,
-                userId: user.id,
+                clan_id: newDivision.id,
+                user_id: user.id,
                 role: 'leader',
-                joinedAt: new Date().toISOString()
+                joined_at: new Date().toISOString()
             });
 
             return new Response(JSON.stringify({ success: true, division: newDivision }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
             const { divisionId, inviteeEmail } = data;
 
             // Verify permissions (leader/officer)
-            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
                  return new Response(JSON.stringify({ error: 'Not authorized to invite' }), { status: 403, headers: corsHeaders });
             }
@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
             await base44.entities.Division.delete(divisionId);
             
             // Clean up members
-            const members = await base44.entities.ClanMember.filter({ divisionId });
+            const members = await base44.entities.ClanMember.filter({ clan_id: divisionId });
             for(const m of members) {
                 await base44.entities.ClanMember.delete(m.id);
             }
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
         if (action === 'create_channel') {
              const { divisionId, name, type } = data;
              // Verify permissions (leader/officer)
-             const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+             const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
              if (!member.length || (member[0].role !== 'leader' && member[0].role !== 'officer')) {
                   return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
              }
@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
             if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
 
             // Check if already a member
-            const existingMember = await base44.entities.ClanMember.filter({ userId: user.id, divisionId });
+            const existingMember = await base44.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
             if (existingMember.length > 0) {
                 return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
             }
@@ -205,10 +205,10 @@ Deno.serve(async (req) => {
             }
 
             await base44.entities.ClanMember.create({
-                divisionId,
-                userId: user.id,
+                clan_id: divisionId,
+                user_id: user.id,
                 role: 'member',
-                joinedAt: new Date().toISOString(),
+                joined_at: new Date().toISOString(),
                 contributionPoints: 0
             });
 
@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
             if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
 
             // Check if already a member
-            const existingMember = await base44.entities.ClanMember.filter({ userId: user.id, divisionId });
+            const existingMember = await base44.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
             if (existingMember.length > 0) {
                 return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
             }
@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
         if (action === 'leave_clan') {
             const { divisionId } = data;
             
-            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!member.length) {
                 return new Response(JSON.stringify({ error: 'Not a member' }), { status: 404, headers: corsHeaders });
             }
@@ -276,12 +276,12 @@ Deno.serve(async (req) => {
             const { divisionId, targetUserId } = data;
 
             // Verify permissions (leader/officer)
-            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
             }
 
-            const target = await base44.entities.ClanMember.filter({ divisionId, userId: targetUserId });
+            const target = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: targetUserId });
             if (!target.length) {
                 return new Response(JSON.stringify({ error: 'Target not found' }), { status: 404, headers: corsHeaders });
             }
@@ -312,12 +312,12 @@ Deno.serve(async (req) => {
             const { divisionId, targetUserId, newRole } = data; // newRole: 'officer' or 'member'
 
             // Verify permissions (leader only)
-            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!actor.length || actor[0].role !== 'leader') {
                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
             }
 
-            const target = await base44.entities.ClanMember.filter({ divisionId, userId: targetUserId });
+            const target = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: targetUserId });
             if (!target.length) {
                 return new Response(JSON.stringify({ error: 'Target not found' }), { status: 404, headers: corsHeaders });
             }
@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
 
             // If own message, allow delete. If not, check Officer+
             if (message.author !== user.id) {
-                const actor = await base44.entities.ClanMember.filter({ divisionId: message.divisionId, userId: user.id });
+                const actor = await base44.entities.ClanMember.filter({ clan_id: message.divisionId, user_id: user.id });
                 if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
                     return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
                 }
@@ -353,7 +353,7 @@ Deno.serve(async (req) => {
         if (action === 'mute_member') {
             const { divisionId, targetUserId, durationMinutes, reason } = data;
             
-            const actor = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const actor = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!actor.length || (actor[0].role !== 'leader' && actor[0].role !== 'officer')) {
                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
             }
