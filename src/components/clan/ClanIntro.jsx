@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/components/auth/AuthContext';
 
-export default function ClanIntro({ onClanCreated }) {
+export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [viewState, setViewState] = useState('hero'); // 'hero' | 'browse'
