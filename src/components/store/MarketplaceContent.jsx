@@ -603,93 +603,59 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
       <div className="px-2 pb-6">
         {/* Main Layout */}
         <div className="flex flex-col gap-6">
-          
-          {/* Developer Limited Edition Section - Full Width */}
-          <DeveloperLimitedEdition />
 
           {/* Bottom Section: Split Layout */}
           <div className="flex gap-8">
-            {/* Left Vertical Rarity Filter (PS3 Style) */}
-            <div className="w-48 flex-shrink-0 hidden lg:flex flex-col justify-center sticky top-24 h-[calc(100vh-120px)] py-10">
-               <div className="flex flex-col gap-1 relative">
-                 {/* Decorative vertical line */}
-                 <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-                 
-                 {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r, i) => {
-                    const style = rarityStyles[r];
-                    const isActive = filters.rarities.includes(r);
-                    return (
-                      <motion.button
-                        key={r}
-                        onClick={() => setFilters(prev => ({
-                          ...prev,
-                          rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r] // Toggle but exclusive-ish feel or multi? Standard filter implies multi, but XMB implies single focus. Keeping multi-toggle capability but using single-select visual focus.
-                        }))}
-                        onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [r] }))} // Auto-select on hover for "XMB feel"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className={`
-                          group relative pl-6 py-3 text-left transition-all duration-300
-                          ${isActive ? 'scale-110 origin-left' : 'scale-100 opacity-40 hover:opacity-100'}
-                        `}
-                      >
-                        {/* Active Indicator Dot */}
-                        {isActive && (
-                          <motion.div 
-                            layoutId="rarityActiveDot"
-                            className={`absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]`} 
-                          />
-                        )}
-                        
-                        <span className={`
-                          text-lg font-black uppercase tracking-tighter transition-all block
-                          ${isActive ? `text-transparent bg-clip-text bg-gradient-to-r ${style.text.replace('text-', 'from-')} to-white` : 'text-white'}
-                        `}>
-                          {r}
-                        </span>
-                        
-                        {isActive && (
-                          <motion.span 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            className={`text-[10px] font-medium tracking-widest uppercase ${style.text} block`}
-                          >
-                            Filter Active
-                          </motion.span>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                  
-                  {/* Clear Filter Option */}
-                  <motion.button
-                    onClick={() => setFilters(prev => ({ ...prev, rarities: [] }))}
-                    onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [] }))}
-                    className={`
-                      group relative pl-6 py-3 text-left transition-all duration-300 mt-4
-                      ${filters.rarities.length === 0 ? 'scale-110 origin-left opacity-100' : 'scale-100 opacity-30 hover:opacity-80'}
-                    `}
-                  >
-                    {filters.rarities.length === 0 && (
-                      <motion.div 
-                        layoutId="rarityActiveDot"
-                        className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]" 
-                      />
-                    )}
-                    <span className="text-base font-bold uppercase tracking-tight text-white">All</span>
-                  </motion.button>
+            {/* Left Vertical Genre Filter */}
+            <div className="w-56 flex-shrink-0 hidden lg:flex flex-col sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
+               <div className="flex-1 overflow-y-auto no-scrollbar py-4 pr-4">
+                 <div className="flex flex-col gap-2 relative border-l border-white/10 pl-6">
+                   {/* Decorative Active Line Logic would go here if needed, simplified for scroll */}
+                   
+                   {GENRE_CONFIG.map((genre, i) => {
+                      const isActive = filters.genre === genre.label;
+                      return (
+                        <motion.button
+                          key={genre.label}
+                          onClick={() => handleGenreSelect(genre)}
+                          onMouseEnter={() => handleGenreSelect(genre)}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.03 }}
+                          className={`
+                            group relative py-2 text-left transition-all duration-300
+                            ${isActive ? 'scale-110 origin-left opacity-100' : 'scale-100 opacity-40 hover:opacity-80'}
+                          `}
+                        >
+                          {isActive && (
+                            <motion.div 
+                              layoutId="genreActiveDot"
+                              className="absolute left-[-26.5px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]" 
+                            />
+                          )}
+                          
+                          <span className={`
+                            text-lg font-black uppercase tracking-tighter transition-all block truncate
+                            ${isActive ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-white' : 'text-white'}
+                          `}>
+                            {genre.label}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                 </div>
                </div>
             </div>
 
             {/* Right Content */}
             <div className="flex-1 flex flex-col gap-6 min-w-0">
-            {/* Enhanced Marketplace Header */}
-            <div className="flex flex-col gap-6 mb-8">
-              {/* Controls Row */}
-              <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-2 relative group/search">
-                  <div className="relative">
+            {/* Enhanced Marketplace Header & Filter Bar */}
+            <div className="flex flex-col gap-4 mb-4">
+              {/* Top Bar: Search, Sort Tabs, View Toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 backdrop-blur-md sticky top-0 z-20">
+
+                {/* Search */}
+                <div className="relative group/search flex-1 min-w-[200px] max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
                     <input 
                       type="text" 
@@ -698,105 +664,84 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         setInternalSearchTerm(e.target.value);
                         if (onSearchChange) onSearchChange(e.target.value);
                       }}
-                      placeholder="Search marketplace..." 
-                      className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-10 py-2 text-sm text-white placeholder:text-white/30 w-64 focus:w-80 transition-all outline-none"
+                      placeholder="Search..." 
+                      className="w-full bg-black/20 hover:bg-black/40 focus:bg-black/40 border border-transparent focus:border-white/20 rounded-xl pl-10 pr-10 py-2 text-sm text-white placeholder:text-white/30 transition-all outline-none"
                     />
                     <Mic className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 hover:text-cyan-400 cursor-pointer transition-colors" />
-                  </div>
-                  
-                  {/* Grid/List View Toggles Moved Next to Search */}
-                  <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/5">
-                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                      <List className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                      <Grid className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
 
-                {/* Removed Feature Bar and Sort Select */}
-              </div>
-
-              {/* Horizontal Genre Scroller (The "Boxes") */}
-              <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
-                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-              >
-                {GENRE_CONFIG.map((genre) => {
-                  const isActive = filters.genre === genre.label;
-                  const Icon = genre.icon;
-                  return (
-                    <motion.button
-                      key={genre.label}
-                      onClick={() => handleGenreSelect(genre)}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                        flex flex-col items-center justify-center gap-2 w-24 h-24 flex-shrink-0 rounded-2xl border transition-all duration-300 relative overflow-hidden group
-                        ${isActive 
-                          ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
-                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                        }
-                      `}
+                {/* Sort Options */}
+                <div className="flex items-center bg-black/20 rounded-xl p-1 gap-1 overflow-x-auto no-scrollbar">
+                  {[
+                    { id: 'featured', label: 'Trending', icon: TrendingUp },
+                    { id: 'reviews', label: 'Top Rated', icon: Star },
+                    { id: 'new', label: 'New Releases', icon: Sparkles }
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setSortBy(opt.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap ${
+                        sortBy === opt.id 
+                          ? 'bg-white/10 text-white shadow-sm' 
+                          : 'text-white/40 hover:text-white hover:bg-white/5'
+                      }`}
                     >
-                      <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-cyan-500 text-black' : 'bg-white/5 text-white/50 group-hover:text-white group-hover:bg-white/10'}`}>
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-cyan-300' : 'text-white/40 group-hover:text-white'}`}>
-                        {genre.label}
-                      </span>
-                      
-                      {/* Active Indicator Line */}
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activeGenreLine"
-                          className="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500" 
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
+                      <opt.icon className="w-3 h-3" />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* View Toggles */}
+                <div className="flex items-center gap-1 bg-black/20 rounded-xl p-1">
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-sm' : 'text-white/40 hover:text-white'}`}>
+                      <Grid className="w-4 h-4" />
+                    </button>
+                </div>
               </div>
 
-              {/* Item Types Scroller */}
-              <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+              {/* Secondary Filters (Item Type) - Horizontal Scroll if needed */}
+               <div 
+                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 {ITEM_TYPES.map((type) => {
                   const isActive = filters.itemType === type.id;
                   const Icon = type.icon;
                   return (
-                    <motion.button
+                    <button
                       key={type.id}
                       onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.95 }}
                       className={`
-                        flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all duration-300 whitespace-nowrap
                         ${isActive 
-                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' 
-                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                          ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300' 
+                          : 'bg-transparent border-transparent text-white/40 hover:bg-white/5 hover:text-white'
                         }
                       `}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span className="text-xs font-bold uppercase tracking-wide">{type.name}</span>
-                    </motion.button>
+                      <Icon className="w-3.5 h-3.5" />
+                      <span className="text-[11px] font-bold uppercase tracking-wide">{type.name}</span>
+                    </button>
                   );
                 })}
               </div>
-
-
             </div>
 
             {/* Results */}
-            <div className="mb-8">
-              
+            <div className="flex-1 min-h-0">
+
+              {/* Featured Section inside Grid Area */}
+              <div className="mb-6">
+                <DeveloperLimitedEdition />
+              </div>
+
               {/* Inner Scroll Container for Results */}
               <div 
-                className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
+                className="h-[calc(100vh-280px)] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
                 style={{
                   background: 'rgba(255, 255, 255, 0.02)',
                   backdropFilter: 'blur(8px)',
