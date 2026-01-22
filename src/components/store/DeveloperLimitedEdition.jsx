@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check, Network, Video, Play, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check, Network, Video, Play, Shield, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { useCart } from '../CartContext';
+import OctagonSkillTree from '@/components/dashboard/OctagonSkillTree';
 
 // Developer data with their games and limited edition cards
 const DEVELOPERS = [
@@ -721,53 +722,58 @@ export default function DeveloperLimitedEdition() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute inset-0 p-6 flex flex-col items-center justify-center"
+                    className="absolute inset-0 flex flex-col custom-scrollbar overflow-y-auto"
                   >
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      {/* Simple Skill Tree Mockup */}
-                      <div className="flex flex-col items-center gap-8 relative z-10">
-                        {/* Root Node */}
-                        <div className="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                          <img src={selectedCard?.image} className="w-12 h-12 rounded-full object-cover opacity-80" />
-                        </div>
-                        
-                        {/* Connecting Lines */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ zIndex: -1 }}>
-                           <path d="M 0 32 L -60 100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none" />
-                           <path d="M 0 32 L 60 100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none" />
-                           <path d="M -60 132 L -90 200" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                           <path d="M 60 132 L 90 200" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-                        </svg>
-
-                        {/* Level 2 Nodes */}
-                        <div className="flex gap-20">
-                           <div className="flex flex-col items-center gap-2">
-                              <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
-                                 <Sparkles className="w-5 h-5 text-purple-400" />
-                              </div>
-                              <span className="text-[10px] text-white/50 uppercase tracking-wider">Mastery</span>
-                           </div>
-                           <div className="flex flex-col items-center gap-2">
-                              <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
-                                 <Shield className="w-5 h-5 text-blue-400" />
-                              </div>
-                              <span className="text-[10px] text-white/50 uppercase tracking-wider">Defense</span>
-                           </div>
-                        </div>
-
-                        {/* Level 3 Nodes (Locked) */}
-                        <div className="flex gap-32 opacity-50">
-                           <div className="w-10 h-10 rounded-full bg-black/40 border border-white/5 flex items-center justify-center">
-                              <div className="w-2 h-2 rounded-full bg-white/20" />
-                           </div>
-                           <div className="w-10 h-10 rounded-full bg-black/40 border border-white/5 flex items-center justify-center">
-                              <div className="w-2 h-2 rounded-full bg-white/20" />
-                           </div>
-                        </div>
+                    <div className="flex-1 flex flex-col items-center py-8">
+                      {/* Scaled Octagon Skill Tree to fit */}
+                      <div className="scale-75 origin-center -my-8">
+                        <OctagonSkillTree />
                       </div>
-                      
-                      <div className="absolute top-4 right-4 bg-black/40 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/60">
-                        Skill Tree Preview
+
+                      {/* Card Perks Section */}
+                      <div className="w-full px-8 mt-4">
+                        <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <Zap className="w-3 h-3 text-yellow-400" />
+                          Card Perks & Bonuses
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-cyan-500/30 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                              <Sparkles className="w-4 h-4 text-cyan-400" />
+                            </div>
+                            <div>
+                              <div className="text-white font-bold text-xs">Cosmic Resonance</div>
+                              <div className="text-white/50 text-[10px]">+15% Ability Power</div>
+                            </div>
+                          </div>
+                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/30 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                              <Shield className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <div>
+                              <div className="text-white font-bold text-xs">Void Shield</div>
+                              <div className="text-white/50 text-[10px]">Absorbs 500 Damage</div>
+                            </div>
+                          </div>
+                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-amber-500/30 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                              <Star className="w-4 h-4 text-amber-400" />
+                            </div>
+                            <div>
+                              <div className="text-white font-bold text-xs">Legendary Status</div>
+                              <div className="text-white/50 text-[10px]">+10 Reputation</div>
+                            </div>
+                          </div>
+                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-green-500/30 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                              <Network className="w-4 h-4 text-green-400" />
+                            </div>
+                            <div>
+                              <div className="text-white font-bold text-xs">Synergy Boost</div>
+                              <div className="text-white/50 text-[10px]">+5% Team Stats</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

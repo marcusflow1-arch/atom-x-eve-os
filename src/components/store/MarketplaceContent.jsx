@@ -6,7 +6,7 @@ import {
   Gamepad2, Package, Zap, Shield, X, Grid, List,
   Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus,
   ArrowUpDown, Filter, PlayCircle, Video, Code,
-  Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid
+  Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid, Mic, MicOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ const MARKETPLACE_ITEMS = [
 ];
 
 const GENRE_CONFIG = [
+  { label: 'All Cards', icon: Grid },
   { label: 'All Genres', icon: LayoutGrid },
   { label: 'Action', icon: Crosshair },
   { label: 'RPG', icon: Shield },
@@ -161,104 +162,50 @@ const ListItemCard = ({ item, onClick }) => {
   );
 };
 
-// Filter Sidebar
-const FilterSection = ({ title, children, defaultOpen = true }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  return (
-    <div className="border-b border-white/10 py-4">
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-left">
-        <h3 className="text-white font-bold text-sm">{title}</h3>
-        <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {isOpen && <div className="mt-3">{children}</div>}
-    </div>
-  );
-};
+// Hook for Voice Input
+const useVoiceInput = (onResult) => {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
-const FilterSidebar = ({ filters, setFilters, availableGames }) => {
-  const { itemType, game, priceRange, rarities } = filters;
+  React.useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
 
-  const toggleRarity = (r) => {
-    setFilters(prev => ({
-      ...prev,
-      rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
-    }));
+      recognitionRef.current.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        onResult(result);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, [onResult]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
   };
 
-  return (
-    <div 
-      className="w-[220px] flex-shrink-0 p-4 rounded-3xl h-fit"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-      }}
-    >
-      <FilterSection title="Item Type">
-        <div className="space-y-1">
-          {ITEM_TYPES.map(type => (
-            <button
-              key={type.id}
-              onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                itemType === type.id ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              {itemType === type.id && <ChevronRight className="w-3 h-3" />}
-              {type.name}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      <FilterSection title="Game">
-        <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar">
-          <button
-            onClick={() => setFilters(prev => ({ ...prev, game: 'All Games' }))}
-            className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-              game === 'All Games' ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
-            }`}
-          >
-            {game === 'All Games' && <ChevronRight className="w-3 h-3" />}
-            All Games
-          </button>
-          {availableGames.map(gameName => (
-            <button
-              key={gameName}
-              onClick={() => setFilters(prev => ({ ...prev, game: gameName }))}
-              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
-                game === gameName ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              {game === gameName && <ChevronRight className="w-3 h-3" />}
-              {gameName}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      <FilterSection title="Rarity">
-        <div className="space-y-1.5">
-          {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
-            const style = rarityStyles[r];
-            return (
-              <label key={r} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={rarities.includes(r)}
-                  onCheckedChange={() => toggleRarity(r)}
-                  className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
-                />
-                <span className={`text-sm ${style.text}`}>{r}</span>
-              </label>
-            );
-          })}
-        </div>
-      </FilterSection>
-    </div>
-  );
+  return { isListening, toggleListening };
 };
+
+const FilterSidebar = () => null; // Removed as requested to move logic to top cross scroll
 
 // Enhanced Item Detail Modal with Preview and Recommendations
 const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
@@ -569,7 +516,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             <div className="flex flex-col gap-6 mb-8">
               {/* Controls Row */}
               <div className="flex items-center justify-between">
-                 <div className="relative group/search">
+                 <div className="relative group/search w-full max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
                   <input 
                     type="text" 
@@ -578,31 +525,15 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                       setInternalSearchTerm(e.target.value);
                       if (onSearchChange) onSearchChange(e.target.value);
                     }}
-                    placeholder="Search marketplace..." 
-                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 w-64 focus:w-80 transition-all outline-none"
+                    placeholder={isListening ? "Listening..." : "Search marketplace..."}
+                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-12 py-2 text-sm text-white placeholder:text-white/30 w-full transition-all outline-none"
                   />
-                </div>
-
-                <div className="flex items-center gap-3">
-                   <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-black/20 border border-white/10 text-white text-sm rounded-full px-4 py-2 outline-none focus:border-white/30 hover:bg-white/5 transition-colors"
+                  <button 
+                    onClick={toggleListening}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors ${isListening ? 'bg-red-500/20 text-red-400' : 'text-white/40 hover:text-white'}`}
                   >
-                    <option value="featured">Featured</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="reviews">Top Rated</option>
-                  </select>
-
-                  <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/5">
-                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                      <List className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                      <Grid className="w-4 h-4" />
-                    </button>
-                  </div>
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -617,7 +548,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                   return (
                     <motion.button
                       key={genre.label}
-                      onClick={() => setFilters(prev => ({ ...prev, genre: genre.label }))}
+                      onClick={() => handleGenreSelect(genre.label)}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       className={`
@@ -711,6 +642,20 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             {/* Results */}
             <div className="mb-8">
               
+              {/* Back Button if in item view (and not all cards mode) */}
+              {viewLevel === 'items' && filters.genre !== 'All Cards' && filters.game !== 'All Games' && (
+                <button 
+                  onClick={() => {
+                    setViewLevel('games');
+                    setFilters(prev => ({ ...prev, game: 'All Games' }));
+                  }}
+                  className="mb-4 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back to Games
+                </button>
+              )}
+
               {/* Inner Scroll Container for Results */}
               <div 
                 className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
@@ -721,13 +666,47 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
-                {viewMode === 'list' ? (
-                  <div className="space-y-2 p-2">
-                    {filteredItems.map(item => (
-                      <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
+                {viewLevel === 'games' ? (
+                  // GAMES GRID VIEW
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 p-4">
+                    {displayedGames.map((game) => (
+                      <motion.div
+                        key={game.name}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        whileHover={{ scale: 1.03, y: -5 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleGameSelect(game.name)}
+                        className="cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-slate-900"
+                      >
+                        {/* Game Cover */}
+                        <img 
+                          src={game.image} 
+                          alt={game.name} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                        
+                        {/* Game Info */}
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <h3 className="text-white font-bold text-lg mb-1 leading-tight">{game.name}</h3>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-cyan-400 font-medium">{game.genre}</span>
+                            <span className="text-white/50">{game.itemCount} Items</span>
+                          </div>
+                        </div>
+                      </motion.div>
                     ))}
+                    
+                    {displayedGames.length === 0 && (
+                      <div className="col-span-full text-center py-16">
+                        <Gamepad2 className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                        <p className="text-white/50">No games found in this genre</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
+                  // ITEMS GRID VIEW
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
                     {filteredItems.map(item => {
                       const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
@@ -778,13 +757,13 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         </motion.div>
                       );
                     })}
-                  </div>
-                )}
-
-                {filteredItems.length === 0 && (
-                  <div className="text-center py-16">
-                    <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                    <p className="text-white/50">No items found matching your criteria</p>
+                    
+                    {filteredItems.length === 0 && (
+                      <div className="col-span-full text-center py-16">
+                        <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                        <p className="text-white/50">No items found</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
