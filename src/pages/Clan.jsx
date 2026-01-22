@@ -80,6 +80,31 @@ export default function ClanPage() {
     // Check for leader/officer status for management access
     const currentUserRole = members?.find(m => m.userId === user?.id)?.role;
     const isPrivileged = currentUserRole === 'leader' || currentUserRole === 'officer';
+    const isLeader = currentUserRole === 'leader';
+
+    const leaveClanMutation = useMutation({
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'leave_clan', data: { divisionId: activeClan.id } }),
+        onSuccess: (res) => {
+            if (res.data.success) {
+                queryClient.invalidateQueries(['myClanMemberships']);
+                setSelectedClanId(null);
+            } else {
+                alert(res.data.error || 'Failed to leave clan');
+            }
+        }
+    });
+
+    const disbandClanMutation = useMutation({
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'delete_clan', data: { divisionId: activeClan.id } }),
+        onSuccess: (res) => {
+            if (res.data.success) {
+                queryClient.invalidateQueries(['myClanMemberships']);
+                setSelectedClanId(null);
+            } else {
+                alert(res.data.error || 'Failed to disband clan');
+            }
+        }
+    });
 
     // Fetch Active Voice Rooms
     const { data: activeVoiceRooms } = useQuery({
