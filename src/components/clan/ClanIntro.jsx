@@ -26,9 +26,23 @@ export default function ClanIntro({ onClanCreated }) {
         queryFn: async () => {
             // Fetch top 50 clans sorted by level/reputation
             // In a real scenario, we might want pagination
+            // Filter only to available clans (public or private) that user is not in?
+            // For now, listing all is fine as join logic checks membership
             return await base44.entities.Division.list();
         }
     });
+
+    // Check membership status for each clan to disable join button if already joined
+    const { data: myMemberships } = useQuery({
+        queryKey: ['myClanMemberships', user?.id],
+        queryFn: async () => {
+            if (!user) return [];
+            return await base44.entities.ClanMember.filter({ userId: user.id });
+        },
+        enabled: !!user
+    });
+
+    const isMember = (clanId) => myMemberships?.some(m => m.divisionId === clanId);
 
     const createClanMutation = useMutation({
         mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
