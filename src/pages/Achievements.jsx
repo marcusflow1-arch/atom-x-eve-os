@@ -210,13 +210,12 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
   const [viewMode, setViewMode] = useState('cross');
 
-  // Skill Tree Mode toggle
-  const [skillTreeMode, setSkillTreeMode] = useState(false);
-  const [skillTreeCard, setSkillTreeCard] = useState(null);
+  // Interaction Mode: 'forge', 'inspect', 'manage'
+  const [interactionMode, setInteractionMode] = useState('forge');
 
-  // Blacksmith Mode toggle
-  const [blacksmithMode, setBlacksmithMode] = useState(false);
-  const [blacksmithCard, setBlacksmithCard] = useState(null);
+  // Legacy modes (kept for compatibility or removal)
+  const [skillTreeCard, setSkillTreeCard] = useState(null);
+  const [blacksmithCard, setBlacksmithCard] = useState(null); // Deprecated by interactionMode logic
 
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
