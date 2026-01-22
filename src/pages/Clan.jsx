@@ -53,8 +53,6 @@ export default function ClanPage() {
             localStorage.removeItem('activeClanId');
         }
     }, [activeClanId]);
-    const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
-    const [initialZone, setInitialZone] = useState(null);
 
     // Fetch Memberships
     const { data: memberships, isLoading } = useQuery({
