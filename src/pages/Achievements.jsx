@@ -764,45 +764,39 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
-                {/* Grid View Toggle - 4 small squares */}
+                {/* Grid View Toggle */}
                 <button
-                onClick={() => setViewMode('classic')}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                title="Switch to Grid View">
-
-                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                  </div>
+                  onClick={() => setViewMode('classic')}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                  title="Switch to Grid View"
+                >
+                  <LayoutGrid className="w-5 h-5" />
                 </button>
 
-                {/* Skill Tree Mode Toggle */}
-                <button
-                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
-                className={`p-2 rounded-lg border transition-all ${
-                skillTreeMode ?
-                'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                }
-                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
-
-                  <Layers className="w-5 h-5" />
-                </button>
-
-                {/* Blacksmith Mode Toggle */}
-                <button
-                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
-                className={`p-2 rounded-lg border transition-all ${
-                blacksmithMode ?
-                'bg-orange-500/30 border-orange-400/50 text-orange-300' :
-                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                }
-                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
-
-                  <Hammer className="w-5 h-5" />
-                </button>
+                {/* Interaction Mode Toggles */}
+                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10 backdrop-blur-md">
+                  <button
+                    onClick={() => setInteractionMode('forge')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'forge' ? 'bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'text-white/40 hover:text-white'}`}
+                  >
+                    <Hammer className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Forge</span>
+                  </button>
+                  <button
+                    onClick={() => setInteractionMode('inspect')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'inspect' ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'text-white/40 hover:text-white'}`}
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Inspect</span>
+                  </button>
+                  <button
+                    onClick={() => setInteractionMode('manage')}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'manage' ? 'bg-slate-500/20 text-slate-300 shadow-[0_0_10px_rgba(148,163,184,0.2)]' : 'text-white/40 hover:text-white'}`}
+                  >
+                    <Package className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Manage</span>
+                  </button>
+                </div>
               </div>
 
               {/* VERTICAL AXIS (Games) */}
