@@ -1223,60 +1223,61 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     
-                                    {/* 1. LEFT SIDEBAR (Vertical Genres) - Vertical Stack with Text Under */}
-                                    <div className="w-32 flex-shrink-0 h-full overflow-y-auto no-scrollbar pb-24 flex flex-col gap-4 pt-4 px-2 items-center">
-                                        <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 text-center w-full">Genres</h3>
-                                        <div className="space-y-6 w-full flex flex-col items-center">
-                                            {genreData.map((genre, idx) => {
-                                                const isActive = idx === activeGenreIndex;
-                                                const Icon = genre.icon;
-                                                return (
-                                                    <motion.button
-                                                        key={genre.id}
-                                                        onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
-                                                        onMouseEnter={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
-                                                        className="group flex flex-col items-center gap-2 relative outline-none"
-                                                        whileHover={{ scale: 1.05 }}
-                                                    >
-                                                        {/* Icon Box */}
-                                                        <div className={`
-                                                            w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 border
-                                                            ${isActive 
-                                                                ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.4)] text-cyan-300 scale-110' 
-                                                                : 'bg-white/5 border-white/10 text-white/40 group-hover:text-white group-hover:border-white/20'
-                                                            }
-                                                        `}>
-                                                            <Icon className="w-7 h-7" />
-                                                        </div>
 
-                                                        {/* Text Label - Underneath */}
-                                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center transition-colors ${isActive ? 'text-white text-shadow-glow' : 'text-white/40 group-hover:text-white/70'}`}>
-                                                            {genre.label}
-                                                        </span>
-                                                    </motion.button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
 
                                     {/* 2. RIGHT CONTENT AREA (Sub-Cats + Games) */}
                                     <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-4">
                                         
                                         {/* Header / Tools Section */}
                                         <div className="flex flex-col gap-6 mb-8">
+                                            
+                                            {/* Genre Filter Bar (Community Style) */}
                                             <div className="flex items-center justify-between">
-                                                {/* Breadcrumbs */}
-                                                <div className="flex items-center gap-3 text-white/50 text-sm font-medium tracking-wider uppercase">
-                                                    <div className="flex items-center gap-2">
+                                                <div className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2">
+                                                    {/* Static Options */}
+                                                    <motion.button
+                                                        onClick={() => { /* Handle 'All Games' logic if needed, currently just visual or resets */ }}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-cyan-400 scale-105 font-black"
+                                                    >
                                                         <Gamepad2 className="w-4 h-4" />
-                                                        <span>Store</span>
-                                                    </div>
-                                                    <ChevronRight className="w-4 h-4" />
-                                                    <span className="text-white">{currentNavGenre.label}</span>
+                                                        <span className="text-sm uppercase tracking-wide">All Games</span>
+                                                    </motion.button>
+                                                    
+                                                    <motion.button
+                                                        onClick={() => { /* Handle 'All Cards' */ }}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-white/60 hover:text-white font-medium"
+                                                    >
+                                                        <LayoutGrid className="w-4 h-4" />
+                                                        <span className="text-sm uppercase tracking-wide">All Cards</span>
+                                                    </motion.button>
+
+                                                    <div className="w-px h-6 bg-white/10 mx-2" />
+
+                                                    {/* Scrollable Genres */}
+                                                    {genreData.map((genre, idx) => {
+                                                        const Icon = genre.icon;
+                                                        const isActive = idx === activeGenreIndex;
+                                                        return (
+                                                            <motion.button
+                                                                key={genre.id}
+                                                                onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${isActive ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}
+                                                            >
+                                                                <Icon className="w-4 h-4" />
+                                                                <span className="text-sm uppercase tracking-wide">{genre.label}</span>
+                                                            </motion.button>
+                                                        );
+                                                    })}
                                                 </div>
 
-                                                {/* Tools */}
-                                                <div className="flex items-center gap-3">
+                                                {/* Tools (Right Aligned) */}
+                                                <div className="flex items-center gap-3 ml-4">
                                                     <button 
                                                         onClick={() => setShowAndroidOnly(!showAndroidOnly)}
                                                         className={`p-2 rounded-lg border transition-all ${
