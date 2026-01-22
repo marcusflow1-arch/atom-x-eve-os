@@ -1221,194 +1221,159 @@ export default function Store() {
                                 </AnimatePresence>
 
                                 {/* Interface Layer */}
-                                <div className="relative z-10 w-full h-full pt-20"> {/* pt-20 for header space */}
+                                <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     
-                                    {/* Breadcrumb moved slightly down */}
-                                    <div className="absolute top-24 left-12 flex items-center gap-4 text-white/50 text-sm font-medium tracking-wider uppercase z-30">
-                                        <div className="flex items-center gap-2">
-                                            <Gamepad2 className="w-4 h-4" />
-                                            <Smartphone className="w-3.5 h-3.5" />
-                                            <span>Store</span>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4" />
-                                        <span className="text-white">{currentNavGenre.label}</span>
-
-                                        {/* Android Filter Button */}
-                                        <button 
-                                            onClick={() => setShowAndroidOnly(!showAndroidOnly)}
-                                            className={`ml-2 p-1.5 rounded-lg border transition-all group ${
-                                                showAndroidOnly
-                                                    ? 'bg-green-500/20 border-green-400/50 text-green-300'
-                                                    : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/60 hover:text-white'
-                                            }`}
-                                            title="Android Games"
-                                        >
-                                            <Smartphone className="w-3.5 h-3.5" />
-                                        </button>
-
-                                        <div className="relative group/search ml-2">
-                                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
-                                            <input 
-                                                type="text" 
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                placeholder="Search..." 
-                                                className="bg-white/10 hover:bg-white/20 focus:bg-white/20 border border-white/10 focus:border-white/30 rounded-lg pl-7 pr-3 py-1 text-xs text-white placeholder:text-white/30 w-24 focus:w-40 transition-all outline-none"
-                                            />
-                                        </div>
-
-                                        {/* Classic UI Toggle Button */}
-                                        <button 
-                                            onClick={() => setViewMode('classic')}
-                                            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all group"
-                                            title="Switch to Classic Grid View"
-                                        >
-                                            <LayoutGrid className="w-3.5 h-3.5 text-white/60 group-hover:text-white" />
-                                        </button>
-                                    </div>
-
-                                    {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top Left */}
-                                    <div 
-                                        className="absolute top-40 left-0 right-0 z-20 h-28 flex items-center overflow-x-auto scrollbar-hide px-12"
-                                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                                {genreData.map((genre, idx) => {
-                                                    const isActive = idx === activeGenreIndex;
-                                                    const Icon = genre.icon;
-                                                    return (
-                                                        <motion.div
-                                                            key={genre.id}
-                                                            onClick={() => {
-                                                                setActiveGenreIndex(idx);
-                                                                setActiveSubCategoryIndex(0);
-                                                            }}
-                                                            animate={{ 
-                                                                scale: isActive ? 1.1 : 0.8,
-                                                                opacity: isActive ? 1 : 0.4
-                                                            }}
-                                                            className="flex flex-col items-center gap-3 cursor-pointer flex-shrink-0 w-[120px]"
-                                                        >
-                                                            <div className={`
-                                                                w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300
-                                                                ${isActive 
-                                                                    ? 'bg-white/20 text-white shadow-[0_0_20px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
-                                                                    : 'bg-white/5 text-white/60 border border-white/10'
-                                                                }
-                                                            `}>
-                                                                <Icon className="w-7 h-7" />
-                                                            </div>
-                                                            <span className={`text-[10px] font-bold uppercase tracking-widest text-center transition-colors ${isActive ? 'text-white' : 'text-white/40'}`}>
-                                                                {genre.label}
-                                                            </span>
-                                                        </motion.div>
-                                                    );
-                                                })}
-                                        </div>
-                                    </div>
-
-                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres, Left Aligned */}
-                                    <div 
-                                        className="absolute top-64 left-0 right-0 z-20 h-14 flex items-center justify-center overflow-x-auto scrollbar-hide px-12"
-                                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            {SUB_CATEGORIES.map((subCat, idx) => {
-                                                const isActive = idx === activeSubCategoryIndex;
+                                    {/* 1. LEFT SIDEBAR (Vertical Genres) - XMB Style */}
+                                    <div className="w-64 flex-shrink-0 h-full overflow-y-auto no-scrollbar pb-24 flex flex-col gap-2 pt-4">
+                                        <h3 className="text-white/30 text-xs font-bold uppercase tracking-widest px-4 mb-2">Genres</h3>
+                                        <div className="space-y-1">
+                                            {genreData.map((genre, idx) => {
+                                                const isActive = idx === activeGenreIndex;
+                                                const Icon = genre.icon;
                                                 return (
                                                     <motion.button
-                                                        key={subCat}
-                                                        onClick={() => setActiveSubCategoryIndex(idx)}
-                                                        animate={{ 
-                                                            scale: isActive ? 1.0 : 0.9, 
-                                                            opacity: isActive ? 1 : 0.5
-                                                        }}
-                                                        className={`
-                                                            flex-shrink-0 px-3 py-1.5 rounded-full border transition-all duration-300 whitespace-nowrap
-                                                            ${isActive 
-                                                                ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_10px_rgba(34,211,238,0.2)]' 
-                                                                : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
-                                                            }
-                                                        `}
-                                                        // Reduced size by ~20% via padding/text size adjustments
-                                                        style={{ transformOrigin: 'left center' }} 
+                                                        key={genre.id}
+                                                        onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
+                                                        onMouseEnter={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
+                                                        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
+                                                            isActive ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:bg-white/5 hover:text-white/80'
+                                                        }`}
                                                     >
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                                                            {subCat}
-                                                        </span>
+                                                        {isActive && (
+                                                            <motion.div 
+                                                                layoutId="activeGenreGlow"
+                                                                className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent" 
+                                                                transition={{ duration: 0.3 }}
+                                                            />
+                                                        )}
+                                                        <div className={`relative z-10 p-2 rounded-lg transition-colors ${isActive ? 'bg-white text-black' : 'bg-white/5 group-hover:bg-white/10'}`}>
+                                                            <Icon className="w-5 h-5" />
+                                                        </div>
+                                                        <span className="relative z-10 text-sm font-bold uppercase tracking-wider">{genre.label}</span>
                                                     </motion.button>
                                                 );
                                             })}
                                         </div>
                                     </div>
 
-                                    {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
-                                    <div className="absolute top-80 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
-                                        <div className="w-full">
-                                            <motion.div 
-                                                key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
-                                                initial={{ opacity: 0, x: 20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                {/* Header moved to far left, removed centering */}
-                                                <div className="flex flex-col items-start gap-2 mb-8 border-b border-white/10 pb-4 w-full">
-                                                    <h2 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
-                                                        <span className="text-white/30 font-medium">{currentNavGenre.label}</span>
-                                                        <ChevronRight className="w-6 h-6 text-white/20" />
-                                                        <span className="text-cyan-400 text-shadow-glow">{activeSubCategory}</span>
-                                                    </h2>
-                                                    <div className="flex items-center gap-4 text-white/40 text-sm font-mono uppercase tracking-widest">
-                                                        <div className="h-px w-12 bg-cyan-500/50" />
-                                                        <span>{displayedGames.length} titles available</span>
+                                    {/* 2. RIGHT CONTENT AREA (Sub-Cats + Games) */}
+                                    <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-4">
+                                        
+                                        {/* Header / Tools Section */}
+                                        <div className="flex flex-col gap-6 mb-8">
+                                            <div className="flex items-center justify-between">
+                                                {/* Breadcrumbs */}
+                                                <div className="flex items-center gap-3 text-white/50 text-sm font-medium tracking-wider uppercase">
+                                                    <div className="flex items-center gap-2">
+                                                        <Gamepad2 className="w-4 h-4" />
+                                                        <span>Store</span>
                                                     </div>
+                                                    <ChevronRight className="w-4 h-4" />
+                                                    <span className="text-white">{currentNavGenre.label}</span>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                                    {displayedGames.map((game, idx) => (
-                                                        <motion.div
-                                                            key={game.id}
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: idx * 0.05 }}
-                                                            whileHover={{ y: -8, scale: 1.02 }}
-                                                            onClick={() => handleNavigateToGame(game.id)}
-                                                            onMouseEnter={() => setHoveredGame(game)}
-                                                            className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all"
-                                                        >
-                                                            <img 
-                                                                src={game.cover_image || game.image} 
-                                                                alt={game.title} 
-                                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                                                            />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                                            
-                                                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
-                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                                            </div>
-
-                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                                                <div className="flex items-center justify-between text-xs text-white/60">
-                                                                    <span>{game.genre}</span>
-                                                                    <div className="flex items-center gap-1 text-yellow-500">
-                                                                        <Star className="w-3 h-3 fill-current" />
-                                                                        <span>{game.rating}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    ))}
+                                                {/* Tools */}
+                                                <div className="flex items-center gap-3">
+                                                    <button 
+                                                        onClick={() => setShowAndroidOnly(!showAndroidOnly)}
+                                                        className={`p-2 rounded-lg border transition-all ${
+                                                            showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                                                        }`}
+                                                    >
+                                                        <Smartphone className="w-4 h-4" />
+                                                    </button>
                                                     
-                                                    {/* Filler Cards if few games */}
-                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
-                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
-                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
-                                                        </div>
-                                                    ))}
+                                                    <div className="relative group/search">
+                                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                                                        <input 
+                                                            type="text" 
+                                                            value={searchTerm}
+                                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                                            placeholder="Search..." 
+                                                            className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-9 pr-4 py-1.5 text-sm text-white w-32 focus:w-48 transition-all outline-none"
+                                                        />
+                                                    </div>
+
+                                                    <button onClick={() => setViewMode('classic')} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-all">
+                                                        <LayoutGrid className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                            </motion.div>
+                                            </div>
+
+                                            {/* Sub-Categories (Trending, etc.) */}
+                                            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-2">
+                                                {SUB_CATEGORIES.map((subCat, idx) => {
+                                                    const isActive = idx === activeSubCategoryIndex;
+                                                    return (
+                                                        <motion.button
+                                                            key={subCat}
+                                                            onClick={() => setActiveSubCategoryIndex(idx)}
+                                                            animate={{ opacity: isActive ? 1 : 0.6, scale: isActive ? 1.05 : 1 }}
+                                                            className={`
+                                                                flex-shrink-0 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                                                                ${isActive 
+                                                                    ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
+                                                                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white hover:border-white/30'
+                                                                }
+                                                            `}
+                                                        >
+                                                            <span className="text-xs font-bold uppercase tracking-wider">{subCat}</span>
+                                                        </motion.button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
+
+                                        {/* Game Grid */}
+                                        <motion.div 
+                                            key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
+                                        >
+                                            {displayedGames.map((game, idx) => (
+                                                <motion.div
+                                                    key={game.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.05 }}
+                                                    whileHover={{ y: -8, scale: 1.02 }}
+                                                    onClick={() => handleNavigateToGame(game.id)}
+                                                    onMouseEnter={() => setHoveredGame(game)}
+                                                    className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all"
+                                                >
+                                                    <img 
+                                                        src={game.cover_image || game.image} 
+                                                        alt={game.title} 
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                    
+                                                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
+                                                        <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                    </div>
+
+                                                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                        <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                                        <div className="flex items-center justify-between text-xs text-white/60">
+                                                            <span>{game.genre}</span>
+                                                            <div className="flex items-center gap-1 text-yellow-500">
+                                                                <Star className="w-3 h-3 fill-current" />
+                                                                <span>{game.rating}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                            
+                                            {/* Filler Cards */}
+                                            {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                                <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                                    <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                                                </div>
+                                            ))}
+                                        </motion.div>
                                     </div>
                                 </div>
                             </>
