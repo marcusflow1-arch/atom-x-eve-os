@@ -410,14 +410,86 @@ export default function Store() {
         genreData
     } = useGameFilters(games, loading);
 
-    const {
-        activeGenreIndex,
-        activeGameIndex,
-        currentGenre: currentNavGenre,
-        activeGame,
-        setActiveGenreIndex,
-        setActiveGameIndex
-    } = useStoreNavigation(genreData, loading, viewMode, storeMode, handleNavigateToGame);
+    // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
+    const [activeGenreIndex, setActiveGenreIndex] = useState(0);
+    const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
+    const [isNavigating, setIsNavigating] = useState(false);
+    
+    // Derived state
+    const currentNavGenre = genreData[activeGenreIndex];
+    
+    // Mock Sub-Categories (as requested)
+    const SUB_CATEGORIES = useMemo(() => {
+        const defaults = ['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'];
+        if (!currentNavGenre) return defaults;
+        
+        switch(currentNavGenre.label) {
+            case 'Action': return ['Adventure', 'Fighting', 'Platformer', 'Stealth', 'Beat \'em up'];
+            case 'RPG': return ['Action RPG', 'Turn-Based', 'JRPG', 'Tactical', 'MMORPG'];
+            case 'Shooter': return ['First-Person', 'Third-Person', 'Tactical', 'Hero Shooter', 'Battle Royale'];
+            case 'Strategy': return ['RTS', 'Turn-Based', '4X', 'Tower Defense', 'Grand Strategy'];
+            case 'Horror': return ['Survival', 'Psychological', 'Action Horror', 'Gothic', 'Slasher'];
+            case 'Racing': return ['Sim', 'Arcade', 'Kart', 'Street', 'Off-Road'];
+            case 'Sports': return ['Sim', 'Arcade', 'Management', 'Extreme', 'Team'];
+            default: return defaults;
+        }
+    }, [currentNavGenre]);
+
+    const activeSubCategory = SUB_CATEGORIES[activeSubCategoryIndex] || SUB_CATEGORIES[0];
+
+    // Filtered Games based on Genre + Mock Sub-Category logic
+    // (In a real app, we would filter by actual tags. Here we simulate "showing a list of games")
+    const displayedGames = useMemo(() => {
+        if (!currentNavGenre) return [];
+        // For demo: shuffle or filter slightly to make lists look different per sub-cat
+        // We'll just return all genre items for now, maybe reversed or sliced to simulate variety
+        // User said: "It will show you all the games in action"
+        // We'll just show the genre items. In a real implementation we'd match tags.
+        return currentNavGenre.items; 
+    }, [currentNavGenre, activeSubCategory]);
+
+    const activeGame = null; // No single active game in this new "List View" mode until hovered/selected
+
+    // Navigation Handler
+    useEffect(() => {
+        if (storeMode !== 'store' || loading || genreData.length === 0 || viewMode !== 'cross') return;
+
+        const handleKeyDown = (e) => {
+            const key = e.key.toLowerCase();
+            
+            // Horizontal: Switch Genre
+            if (key === 'arrowleft' || key === 'a') {
+                e.preventDefault();
+                setActiveGenreIndex(prev => {
+                    const newIndex = prev > 0 ? prev - 1 : prev;
+                    return newIndex;
+                });
+                setActiveSubCategoryIndex(0); // Reset sub-cat on genre change
+            } else if (key === 'arrowright' || key === 'd') {
+                e.preventDefault();
+                setActiveGenreIndex(prev => {
+                    const newIndex = prev < genreData.length - 1 ? prev + 1 : prev;
+                    return newIndex;
+                });
+                setActiveSubCategoryIndex(0);
+            } 
+            // Vertical: Switch Sub-Category
+            else if (key === 'arrowup' || key === 'w') {
+                e.preventDefault();
+                setActiveSubCategoryIndex(prev => prev > 0 ? prev - 1 : prev);
+            } else if (key === 'arrowdown' || key === 's') {
+                e.preventDefault();
+                setActiveSubCategoryIndex(prev => prev < SUB_CATEGORIES.length - 1 ? prev + 1 : prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeGenreIndex, activeSubCategoryIndex, genreData, loading, viewMode, storeMode, SUB_CATEGORIES]);
+
+    // Keep activeGameIndex for API compatibility if needed, though unused in grid nav currently
+    const activeGameIndex = 0; 
+    const setActiveGameIndex = () => {};
 
     // Scroll active genre into view for Classic Mode
     useEffect(() => {
@@ -1157,140 +1229,160 @@ export default function Store() {
                                         </button>
                                     </div>
 
-                                    {/* VERTICAL AXIS (Genres) */}
-                                    <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
-                                        <motion.div 
-                                            className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
-                                            animate={{ 
-                                                y: `calc(${CROSS_Y_VH}vh - ${activeGenreIndex * (ITEM_HEIGHT + ITEM_GAP)}px - ${ITEM_HEIGHT/2}px)`
-                                            }}
-                                            transition={{ type: "spring", stiffness: 250, damping: 25 }}
-                                        >
-                                            {genreData.map((genre, idx) => {
-                                                const isActive = idx === activeGenreIndex;
-                                                const Icon = genre.icon;
-                                                return (
-                                                    <motion.div
-                                                        key={genre.id}
-                                                        onClick={() => {
-                                                            setActiveGenreIndex(idx);
-                                                            setActiveGameIndex(0);
-                                                        }}
-                                                        animate={{ 
-                                                            scale: isActive ? 1.2 : 0.9,
-                                                            opacity: isActive ? 1 : 0.3,
-                                                            x: isActive ? 20 : 0
-                                                        }}
-                                                        className="flex flex-col items-center gap-2 cursor-pointer w-32"
-                                                    >
-                                                        <div className={`
-                                                            w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300
-                                                            ${isActive 
-                                                                ? 'bg-white/20 text-white shadow-[0_0_30px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
-                                                                : 'bg-white/5 text-white/60 border border-white/10 backdrop-blur-sm'
-                                                            }
-                                                        `}>
-                                                            <Icon className="w-8 h-8" />
-                                                        </div>
-                                                        <span className={`text-xs font-bold uppercase tracking-widest text-center ${isActive ? 'text-white' : 'text-transparent group-hover:text-white/40'}`}>
-                                                            {genre.label}
-                                                        </span>
-                                                    </motion.div>
-                                                );
-                                            })}
-                                        </motion.div>
+                                    {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top */}
+                                    <div className="absolute top-24 left-0 right-0 z-20 h-24 flex items-center justify-center">
+                                        <div className="relative w-full max-w-6xl mx-auto overflow-hidden px-12">
+                                            <motion.div 
+                                                className="flex items-center gap-8 pl-[50%]"
+                                                animate={{ 
+                                                    x: `calc(-${activeGenreIndex * (120 + 32)}px - 60px)` // Center active item
+                                                }}
+                                                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                                            >
+                                                {genreData.map((genre, idx) => {
+                                                    const isActive = idx === activeGenreIndex;
+                                                    const Icon = genre.icon;
+                                                    return (
+                                                        <motion.div
+                                                            key={genre.id}
+                                                            onClick={() => {
+                                                                setActiveGenreIndex(idx);
+                                                                setActiveSubCategoryIndex(0);
+                                                            }}
+                                                            animate={{ 
+                                                                scale: isActive ? 1.1 : 0.8,
+                                                                opacity: isActive ? 1 : 0.4
+                                                            }}
+                                                            className="flex flex-col items-center gap-3 cursor-pointer flex-shrink-0 w-[120px]"
+                                                        >
+                                                            <div className={`
+                                                                w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300
+                                                                ${isActive 
+                                                                    ? 'bg-white/20 text-white shadow-[0_0_20px_rgba(255,255,255,0.2)] backdrop-blur-md border border-white/20' 
+                                                                    : 'bg-white/5 text-white/60 border border-white/10'
+                                                                }
+                                                            `}>
+                                                                <Icon className="w-7 h-7" />
+                                                            </div>
+                                                            <span className={`text-[10px] font-bold uppercase tracking-widest text-center transition-colors ${isActive ? 'text-white' : 'text-white/40'}`}>
+                                                                {genre.label}
+                                                            </span>
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                            </motion.div>
+                                            
+                                            {/* Fade Edges */}
+                                            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900/0 to-transparent pointer-events-none" />
+                                            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900/0 to-transparent pointer-events-none" />
+                                        </div>
                                     </div>
 
-                                    {/* HORIZONTAL AXIS (Games) */}
-                                    <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
+                                    {/* 2. VERTICAL AXIS (Sub-Categories) - Left Side */}
+                                    <div className="absolute top-52 bottom-0 left-0 w-64 z-20 flex flex-col items-center pointer-events-none">
+                                        {/* Background for Sidebar */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                                        
                                         <motion.div 
-                                            className="flex items-center gap-8 pl-64 pointer-events-auto"
+                                            className="flex flex-col items-start gap-2 py-32 pl-12 w-full pointer-events-auto"
                                             animate={{ 
-                                                x: -activeGameIndex * (210 + 32)
+                                                y: `calc(35vh - ${activeSubCategoryIndex * 50}px)`
                                             }}
-                                            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
                                         >
-                                            {currentNavGenre.items.map((game, idx) => {
-                                                const isActive = idx === activeGameIndex;
-                                                
+                                            {SUB_CATEGORIES.map((subCat, idx) => {
+                                                const isActive = idx === activeSubCategoryIndex;
                                                 return (
-                                                    <motion.div
-                                                        key={game.id}
-                                                        onClick={() => {
-                                                            setActiveGameIndex(idx);
-                                                            if (isActive) handleNavigateToGame(game.id);
-                                                        }}
+                                                    <motion.button
+                                                        key={subCat}
+                                                        onClick={() => setActiveSubCategoryIndex(idx)}
                                                         animate={{ 
+                                                            x: isActive ? 20 : 0,
                                                             scale: isActive ? 1.1 : 0.9,
-                                                            opacity: isActive ? 1 : 0.4,
-                                                            y: isActive ? 0 : 20
+                                                            opacity: isActive ? 1 : 0.4
                                                         }}
-                                                        className={`
-                                                            w-[210px] aspect-[3/4] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
-                                                            border transition-all duration-300 shadow-2xl
-                                                            ${isActive 
-                                                                ? 'border-white/40 shadow-blue-500/20' 
-                                                                : 'border-white/5 bg-black/40'
-                                                            }
-                                                        `}
+                                                        className={`text-left px-4 py-3 rounded-r-xl transition-all duration-300 w-48 relative group flex items-center gap-3`}
                                                     >
-                                                        <img 
-                                                            src={game.cover_image || game.image} 
-                                                            alt={game.title} 
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        {!isActive && <div className="absolute inset-0 bg-black/50" />}
                                                         {isActive && (
                                                             <motion.div 
-                                                                layoutId="game-active-border"
-                                                                className="absolute inset-0 border-4 border-white/60 rounded-xl z-20" 
-                                                                transition={{ duration: 0.2 }}
+                                                                layoutId="subcat-active-indicator"
+                                                                className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 rounded-full" 
                                                             />
                                                         )}
-                                                        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
-                                                            <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                                        </div>
-                                                    </motion.div>
+                                                        <span className={`text-lg font-bold tracking-wide ${isActive ? 'text-white text-shadow-glow' : 'text-white/60'}`}>
+                                                            {subCat}
+                                                        </span>
+                                                        {isActive && <ChevronRight className="w-4 h-4 text-cyan-400" />}
+                                                    </motion.button>
                                                 );
                                             })}
                                         </motion.div>
                                     </div>
 
-                                    {/* ACTIVE ITEM DETAILS */}
-                                    <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
-                                        <AnimatePresence mode="wait">
-                                            {activeGame && (
-                                                <motion.div
-                                                    key={activeGame.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -20 }}
-                                                    transition={{ duration: 0.3 }}
-                                                    className="space-y-4"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                                                            {activeGame.genre}
-                                                        </Badge>
-                                                        <div className="flex items-center gap-1 text-yellow-400">
-                                                            <Star className="w-4 h-4 fill-current" />
-                                                            <span className="font-bold">{activeGame.rating || '4.5'}</span>
+                                    {/* 3. MAIN CONTENT (Game Grid) */}
+                                    <div className="absolute top-52 bottom-0 left-64 right-0 z-10 overflow-y-auto custom-scrollbar p-8">
+                                        <div className="max-w-7xl mx-auto">
+                                            <motion.div 
+                                                key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <div className="flex items-center gap-4 mb-6">
+                                                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                                        <span className="text-white/40">{currentNavGenre.label}</span>
+                                                        <ChevronRight className="w-5 h-5 text-white/20" />
+                                                        <span className="text-cyan-400">{activeSubCategory}</span>
+                                                    </h2>
+                                                    <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                                                    <span className="text-white/40 text-sm">{displayedGames.length} titles</span>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                    {displayedGames.map((game, idx) => (
+                                                        <motion.div
+                                                            key={game.id}
+                                                            initial={{ opacity: 0, y: 20 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: idx * 0.05 }}
+                                                            whileHover={{ y: -8, scale: 1.02 }}
+                                                            onClick={() => handleNavigateToGame(game.id)}
+                                                            onMouseEnter={() => setHoveredGame(game)}
+                                                            className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all"
+                                                        >
+                                                            <img 
+                                                                src={game.cover_image || game.image} 
+                                                                alt={game.title} 
+                                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                            
+                                                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
+                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                            </div>
+
+                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                                                <div className="flex items-center justify-between text-xs text-white/60">
+                                                                    <span>{game.genre}</span>
+                                                                    <div className="flex items-center gap-1 text-yellow-500">
+                                                                        <Star className="w-3 h-3 fill-current" />
+                                                                        <span>{game.rating}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                    
+                                                    {/* Filler Cards if few games */}
+                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
                                                         </div>
-                                                        {activeGame.aiEnhanced && (
-                                                            <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/40">
-                                                                AI Enhanced
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl">
-                                                        {activeGame.title}
-                                                    </h1>
-                                                    <p className="text-lg text-white/70 line-clamp-3 max-w-xl drop-shadow-md">
-                                                        {activeGame.description}
-                                                    </p>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        </div>
                                     </div>
                                 </div>
                             </>
