@@ -420,6 +420,8 @@ export default function ClanPage() {
                                         clanId={activeClan.id} 
                                         userId={user?.id} 
                                         onSelectGame={(game) => setSelectedGame(game)}
+                                        isLeader={isPrivileged}
+                                        members={members}
                                     />
                                 </div>
                             )}
