@@ -445,6 +445,7 @@ export default function DeveloperLimitedEdition() {
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
   const [justAdded, setJustAdded] = useState(false);
+  const [activeSubPage, setActiveSubPage] = useState('skill_tree');
   
   const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
   const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
