@@ -526,7 +526,7 @@ export default function CommunityPage() {
                             </div>
 
                             {/* Right Column: Topics Filter (3/12) - Clean Minimal Style */}
-                            <div className="hidden lg:flex col-span-3 flex-col gap-6 pl-4 border-l border-white/5">
+                            <div className="hidden lg:flex col-span-3 flex-col gap-6 pl-4 border-l border-white/5 pt-[7.75rem]">
                                 <h2 className="text-sm font-bold text-white/40 tracking-wide uppercase px-2">
                                     Forum Topics
                                 </h2>
