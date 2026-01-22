@@ -1267,16 +1267,15 @@ export default function Store() {
                                         </button>
                                     </div>
 
-                                    {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top */}
-                                    <div className="absolute top-24 left-0 right-0 z-20 h-24 flex items-center justify-center">
-                                        <div className="relative w-full max-w-6xl mx-auto overflow-hidden px-12">
-                                            <motion.div 
-                                                className="flex items-center gap-8 pl-[50%]"
-                                                animate={{ 
-                                                    x: `calc(-${activeGenreIndex * (120 + 32)}px - 60px)` // Center active item
-                                                }}
-                                                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                                            >
+                                    {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top Left */}
+                                    <div className="absolute top-24 left-12 right-0 z-20 h-24 flex items-center justify-start overflow-hidden mask-linear-fade-right">
+                                        <motion.div 
+                                            className="flex items-center gap-4"
+                                            animate={{ 
+                                                x: -activeGenreIndex * (120 + 16) + (activeGenreIndex > 0 ? 100 : 0) // Keep active somewhat visible but mostly left aligned
+                                            }}
+                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                                        >
                                                 {genreData.map((genre, idx) => {
                                                     const isActive = idx === activeGenreIndex;
                                                     const Icon = genre.icon;
@@ -1310,9 +1309,8 @@ export default function Store() {
                                                 })}
                                             </motion.div>
                                             
-                                            {/* Fade Edges */}
-                                            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900/0 to-transparent pointer-events-none" />
-                                            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900/0 to-transparent pointer-events-none" />
+                                            {/* Right Fade Only (Since aligned left) */}
+                                            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900 via-slate-900/50 to-transparent pointer-events-none" />
                                         </div>
                                     </div>
 
@@ -1358,26 +1356,29 @@ export default function Store() {
                                         </div>
                                     </div>
 
-                                    {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Removed Left Padding */}
-                                    <div className="absolute top-64 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar p-8">
-                                        <div className="max-w-7xl mx-auto">
+                                    {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
+                                    <div className="absolute top-64 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
+                                        <div className="w-full">
                                             <motion.div 
                                                 key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
                                                 initial={{ opacity: 0, x: 20 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ duration: 0.3 }}
                                             >
-                                                <div className="flex items-center gap-4 mb-6">
-                                                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                                                        <span className="text-white/40">{currentNavGenre.label}</span>
-                                                        <ChevronRight className="w-5 h-5 text-white/20" />
-                                                        <span className="text-cyan-400">{activeSubCategory}</span>
+                                                {/* Header moved to far left, removed centering */}
+                                                <div className="flex flex-col items-start gap-2 mb-8 border-b border-white/10 pb-4 w-full">
+                                                    <h2 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                                                        <span className="text-white/30 font-medium">{currentNavGenre.label}</span>
+                                                        <ChevronRight className="w-6 h-6 text-white/20" />
+                                                        <span className="text-cyan-400 text-shadow-glow">{activeSubCategory}</span>
                                                     </h2>
-                                                    <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-                                                    <span className="text-white/40 text-sm">{displayedGames.length} titles</span>
+                                                    <div className="flex items-center gap-4 text-white/40 text-sm font-mono uppercase tracking-widest">
+                                                        <div className="h-px w-12 bg-cyan-500/50" />
+                                                        <span>{displayedGames.length} titles available</span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                                                     {displayedGames.map((game, idx) => (
                                                         <motion.div
                                                             key={game.id}
