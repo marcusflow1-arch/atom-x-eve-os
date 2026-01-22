@@ -279,12 +279,19 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
 
                                                     <Button 
                                                         size="sm"
-                                                        onClick={() => joinClanMutation.mutate({ clanId: clan.id, isPrivate: clan.isPrivate })}
-                                                        disabled={joinClanMutation.isPending || isMember(clan.id)}
-                                                        className={`border ${isMember(clan.id) ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'}`}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isMember(clan.id)) {
+                                                                if (onClanJoined) onClanJoined(clan.id);
+                                                            } else {
+                                                                joinClanMutation.mutate({ clanId: clan.id, isPrivate: clan.isPrivate });
+                                                            }
+                                                        }}
+                                                        disabled={joinClanMutation.isPending}
+                                                        className={`border ${isMember(clan.id) ? 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'}`}
                                                     >
                                                         {isMember(clan.id) 
-                                                            ? 'Joined' 
+                                                            ? 'Enter' 
                                                             : joinClanMutation.isPending 
                                                                 ? 'Processing...' 
                                                                 : (clan.isPrivate ? 'Request' : 'Join')
