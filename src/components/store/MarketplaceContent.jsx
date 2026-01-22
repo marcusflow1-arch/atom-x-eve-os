@@ -739,12 +739,12 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                       className={`
                         flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
                         ${isActive 
-                          ? \`bg-gradient-to-r \${style.bg ? style.bg.replace('bg-', 'from-') : 'from-slate-500'} to-transparent border-white/30 text-white shadow-lg\` 
+                          ? `bg-gradient-to-r ${style.bg ? style.bg.replace('bg-', 'from-') : 'from-slate-500'} to-transparent border-white/30 text-white shadow-lg` 
                           : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
                         }
                       `}
                     >
-                      <span className={\`text-xs font-bold uppercase tracking-wide \${isActive ? 'text-white' : style.text}\`}>{r}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wide ${isActive ? 'text-white' : style.text}`}>{r}</span>
                     </motion.button>
                   );
                 })}
