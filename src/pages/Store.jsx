@@ -1242,17 +1242,7 @@ export default function Store() {
                                                         className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-cyan-400 scale-105 font-black"
                                                     >
                                                         <Gamepad2 className="w-4 h-4" />
-                                                        <span className="text-sm uppercase tracking-wide">All Games</span>
-                                                    </motion.button>
-                                                    
-                                                    <motion.button
-                                                        onClick={() => { /* Handle 'All Cards' */ }}
-                                                        whileHover={{ scale: 1.05 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-white/60 hover:text-white font-medium"
-                                                    >
-                                                        <LayoutGrid className="w-4 h-4" />
-                                                        <span className="text-sm uppercase tracking-wide">All Cards</span>
+                                                        <span className="text-sm uppercase tracking-wide">All</span>
                                                     </motion.button>
 
                                                     <div className="w-px h-6 bg-white/10 mx-2" />
@@ -1304,12 +1294,14 @@ export default function Store() {
                                                 </div>
                                             </div>
 
-                                            {/* Store Title Block (Matching Community Page) */}
-                                            <div className="flex items-center gap-4 px-2">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                            {/* Breadcrumbs - Restored above Trending */}
+                                            <div className="flex items-center gap-3 text-white/50 text-sm font-medium tracking-wider uppercase px-2">
+                                                <div className="flex items-center gap-2">
                                                     <Gamepad2 className="w-4 h-4" />
+                                                    <span>Store</span>
                                                 </div>
-                                                <h1 className="text-xl font-bold tracking-wide text-white">GAME STORE</h1>
+                                                <ChevronRight className="w-4 h-4" />
+                                                <span className="text-white">{currentNavGenre.label}</span>
                                             </div>
 
                                             {/* Sub-Categories (Trending, etc.) */}
