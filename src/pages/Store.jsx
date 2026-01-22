@@ -1226,7 +1226,7 @@ export default function Store() {
 
 
                                     {/* 2. RIGHT CONTENT AREA (Sub-Cats + Games) */}
-                                    <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-4">
+                                    <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-14">
                                         
                                         {/* Header / Tools Section */}
                                         <div className="flex flex-col gap-6 mb-8">
@@ -1302,6 +1302,14 @@ export default function Store() {
                                                         <LayoutGrid className="w-4 h-4" />
                                                     </button>
                                                 </div>
+                                            </div>
+
+                                            {/* Store Title Block (Matching Community Page) */}
+                                            <div className="flex items-center gap-4 px-2">
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                                    <Gamepad2 className="w-4 h-4" />
+                                                </div>
+                                                <h1 className="text-xl font-bold tracking-wide text-white">GAME STORE</h1>
                                             </div>
 
                                             {/* Sub-Categories (Trending, etc.) */}
