@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
             const { divisionId, updates } = data;
             
             // Verify user is leader
-            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!member.length || member[0].role !== 'leader') {
                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
             }
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
         if (action === 'delete_clan') {
             const { divisionId } = data;
              // Verify user is leader
-            const member = await base44.entities.ClanMember.filter({ divisionId, userId: user.id });
+            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!member.length || member[0].role !== 'leader') {
                  return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403, headers: corsHeaders });
             }

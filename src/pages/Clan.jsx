@@ -56,9 +56,9 @@ export default function ClanPage() {
         queryKey: ['myClanMemberships', user?.id],
         queryFn: async () => {
             if (!user) return [];
-            const members = await base44.entities.ClanMember.filter({ userId: user.id });
+            const members = await base44.entities.ClanMember.filter({ user_id: user.id });
             const divisions = await Promise.all(members.map(async (m) => {
-                const d = await base44.entities.Division.get(m.divisionId);
+                const d = await base44.entities.Division.get(m.clan_id);
                 return d ? { ...d, divisionId: d.id } : null;
             }));
             return divisions.filter(d => d);
@@ -85,13 +85,13 @@ export default function ClanPage() {
         queryKey: ['clanMembers', activeClan?.id],
         queryFn: async () => {
             if (!activeClan) return [];
-            return await base44.entities.ClanMember.filter({ divisionId: activeClan.id });
+            return await base44.entities.ClanMember.filter({ clan_id: activeClan.id });
         },
         enabled: !!activeClan
     });
 
     // Check for leader/officer status for management access
-    const currentUserRole = members?.find(m => m.userId === user?.id)?.role;
+    const currentUserRole = members?.find(m => m.user_id === user?.id)?.role;
     const isPrivileged = currentUserRole === 'leader' || currentUserRole === 'officer';
     const isLeader = currentUserRole === 'leader';
 

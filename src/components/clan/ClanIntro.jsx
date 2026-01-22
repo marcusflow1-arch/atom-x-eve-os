@@ -37,12 +37,12 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
         queryKey: ['myClanMemberships', user?.id],
         queryFn: async () => {
             if (!user) return [];
-            return await base44.entities.ClanMember.filter({ userId: user.id });
+            return await base44.entities.ClanMember.filter({ user_id: user.id });
         },
         enabled: !!user
     });
 
-    const isMember = (clanId) => myMemberships?.some(m => m.divisionId === clanId);
+    const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
     const createClanMutation = useMutation({
         mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
