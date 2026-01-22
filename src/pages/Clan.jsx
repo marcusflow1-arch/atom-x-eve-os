@@ -242,7 +242,7 @@ export default function ClanPage() {
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
 
     if (!activeClan) {
-        return <ClanIntro onClanCreated={(clanId) => setSelectedClanId(clanId)} />;
+        return <ClanIntro onClanCreated={(clanId) => setSelectedClanId(clanId)} onClanJoined={(clanId) => setSelectedClanId(clanId)} />;
     }
 
     return (
