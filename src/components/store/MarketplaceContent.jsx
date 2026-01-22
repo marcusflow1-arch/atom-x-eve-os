@@ -675,31 +675,54 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
                     {filteredItems.map(item => {
                       const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
                       return (
-                        <div 
+                        <motion.div 
                           key={item.id} 
+                          layout
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ y: -5, scale: 1.02 }}
                           onClick={() => setSelectedItem(item)}
-                          className="cursor-pointer group hover:scale-[1.02] transition-all bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/10 shadow-lg relative overflow-hidden"
+                          className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
                         >
-                          <div className="aspect-square bg-slate-800/50 rounded-xl overflow-hidden mb-3 relative">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                            {item.isNew && (
-                              <Badge className="absolute top-2 left-2 bg-cyan-500 text-black font-bold text-[10px] px-1.5 shadow-lg">NEW</Badge>
-                            )}
+                          {/* Image Container */}
+                          <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                            
+                            {/* Top Badges */}
+                            <div className="absolute top-2 left-2 flex gap-1">
+                              {item.isNew && (
+                                <Badge className="bg-cyan-500 text-black font-bold text-[10px] px-1.5 shadow-lg backdrop-blur-md">NEW</Badge>
+                              )}
+                            </div>
+
+                            {/* Bottom Info inside Image */}
+                            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                               <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5 backdrop-blur-md shadow-lg`}>{item.rarity}</Badge>
+                            </div>
                           </div>
-                          <h3 className="text-blue-300 text-sm font-medium line-clamp-2 mb-2 group-hover:text-orange-400 transition-colors">{item.name}</h3>
-                          <div className="flex items-center mb-2">
-                            {[...Array(5)].map((_, i) => <Star key={i} className={`w-3 h-3 ${i < Math.floor(item.seller.rating) ? 'text-orange-400 fill-current' : 'text-slate-600'}`} />)}
-                            <span className="text-white/50 text-xs ml-1">{item.reviews}</span>
+
+                          {/* Content */}
+                          <div className="flex-1 flex flex-col">
+                            <h3 className="text-white font-bold text-sm line-clamp-2 mb-1 group-hover:text-cyan-400 transition-colors leading-snug">{item.name}</h3>
+                            <p className="text-white/40 text-xs mb-2">{item.game}</p>
+                            
+                            <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2">
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-white/40 uppercase">Price</span>
+                                <span className="text-white font-bold text-sm">{(item.price || 0).toLocaleString()} <span className="text-cyan-400 text-xs">AGP</span></span>
+                              </div>
+                              <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded">
+                                <Star className="w-3 h-3 text-orange-400 fill-current" />
+                                <span className="text-white text-xs font-medium">{item.seller.rating}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-white font-bold">{(item.price || 0).toLocaleString()} AGP</span>
-                            <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5`}>{item.rarity}</Badge>
-                          </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
