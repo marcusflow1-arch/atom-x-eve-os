@@ -572,7 +572,7 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
-          headerConfig.title = "";
+          headerConfig.title = "Achievement Cards";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/leaderboard')) {
@@ -636,6 +636,12 @@ function LayoutContent({ children, currentPageName }) {
                         <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
                       </div>
                     </button>
+
+                    {!showLunaHeaderBar && headerConfig.title && (
+                      <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-4">
+                        {headerConfig.title}
+                      </span>
+                    )}
 
                     {showLunaHeaderBar && (
                       <>
