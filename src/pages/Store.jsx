@@ -1304,7 +1304,7 @@ export default function Store() {
                                                         </motion.div>
                                                     );
                                                 })}
-                                            </motion.div>
+                                        </div>
                                             
                                         </div>
                                     </div>
