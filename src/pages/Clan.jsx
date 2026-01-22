@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -23,19 +23,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 
 // XMB Mode Items Configuration
-// Restricted items are only visible to Leaders and Officers
+// Only Overview and Games Chat are visible as requested
 const XMB_MODES = [
     { id: 'overview', label: 'Overview', icon: Shield },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
-    { id: 'chat', label: 'Clan Chat', icon: MessageSquare, restricted: true },
-    { id: 'voice', label: 'Voice', icon: Mic, restricted: true },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList, restricted: true },
-    { id: 'management', label: 'Management', icon: Settings, restricted: true },
+    { id: 'games_chat', label: 'Games Chat', icon: MessageSquare },
 ];
 
 export default function ClanPage() {
     const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     // Initialize activeClanId from localStorage if available
     const [activeClanId, setActiveClanId] = useState(() => {
@@ -395,47 +392,16 @@ export default function ClanPage() {
                                 </div>
                             )}
 
-                            {XMB_MODES[activeModeIndex].id === 'games' && (
+                            {XMB_MODES[activeModeIndex].id === 'games_chat' && (
                                 <div className="w-full mt-4">
                                     <ClanGameSelector 
                                         clanId={activeClan.id} 
                                         userId={user?.id}
-                                        onSelectGame={(game) => setSelectedGame(game)} 
+                                        onSelectGame={(game) => {
+                                            // Navigate to Community page for the selected game
+                                            navigate('/community', { state: { selectedGame: game } });
+                                        }} 
                                     />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'assignments' && (
-                                <div className="w-full mt-4">
-                                    {/* If Leader, show Manager toggle? For now, we put Manager in Settings/Management tab or split view. 
-                                        Let's just show List for everyone here, and Management in the Management tab as requested. 
-                                    */}
-                                    <AssignmentList 
-                                        clanId={activeClan.id} 
-                                        userId={user?.id} 
-                                        onSelectGame={(game) => setSelectedGame(game)}
-                                        isLeader={isPrivileged}
-                                        members={members}
-                                    />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'chat' && (
-                                <div className="w-full max-w-4xl h-[600px] mt-4">
-                                    {/* Pass a default 'general' channel object since we don't have channels yet */}
-                                    <ClanChat clan={activeClan} channel={{ id: 'general', name: 'General' }} />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'voice' && (
-                                <div className="w-full max-w-4xl h-[600px] mt-4 bg-black/20 rounded-2xl border border-white/10 overflow-hidden">
-                                    <VoiceRoomManager clanId={activeClan.id} gameId={null} />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'management' && (
-                                <div className="w-full max-w-4xl mt-4">
-                                    <AssignmentManager clanId={activeClan.id} members={members} />
                                 </div>
                             )}
                         </motion.div>

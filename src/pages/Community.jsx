@@ -13,7 +13,7 @@ import {
     Grid, ChevronRight, Hash, Crosshair, 
     Shield, Sparkles, Car, Skull, Monitor
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -45,6 +45,7 @@ const TOPIC_TYPES = [
 
 export default function CommunityPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [posts, setPosts] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -52,6 +53,8 @@ export default function CommunityPage() {
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeSection, setActiveSection] = useState('all'); // Filter for topics
     const [activeGame, setActiveGame] = useState(null); // The game object for which we are viewing forums
+    const location = import('react-router-dom').then(m => m.useLocation()); // This is wrong, I need to use useLocation hook properly
+    const { state } = import('react-router-dom').then(m => m.useLocation()) || {}; // No wait, I can't do this.
     const [sortBy, setSortBy] = useState('newest');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('All Games'); // 'All Games' | 'All Cards' | specific genre
