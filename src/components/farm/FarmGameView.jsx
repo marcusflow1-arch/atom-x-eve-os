@@ -142,7 +142,7 @@ export default function FarmGameView({ game, onBack }) {
 
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 overflow-hidden relative z-10 bg-[#0f1419]">
-                <FarmTopicContent topic={activeTopic} gameId={game.id} />
+                <FarmTopicContent topic={activeTopic} gameId={game.id} isOwned={isOwned} />
             </div>
         </div>
     );
