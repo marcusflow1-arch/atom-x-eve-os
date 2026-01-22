@@ -607,8 +607,43 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
           {/* Developer Limited Edition Section - Full Width */}
           <DeveloperLimitedEdition />
 
-          {/* Bottom Section: Results */}
-          <div className="flex flex-col gap-6">
+          {/* Bottom Section: Split Layout */}
+          <div className="flex gap-8">
+            {/* Left Vertical Rarity Filter */}
+            <div className="w-20 flex-shrink-0 hidden lg:flex flex-col gap-4 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar py-2">
+               <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest text-center mb-2" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Rarity</div>
+               {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
+                  const style = rarityStyles[r];
+                  const isActive = filters.rarities.includes(r);
+                  return (
+                    <motion.button
+                      key={r}
+                      onClick={() => setFilters(prev => ({
+                        ...prev,
+                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
+                      }))}
+                      whileHover={{ scale: 1.1, x: 2 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        w-full aspect-[2/3] rounded-xl border transition-all duration-300 relative group flex flex-col items-center justify-center gap-2
+                        ${isActive 
+                          ? `${style.bg} ${style.border} shadow-[0_0_15px_currentColor] opacity-100` 
+                          : 'bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10'
+                        }
+                      `}
+                      title={r}
+                    >
+                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-current opacity-50'}`} />
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? style.text : 'text-current opacity-50'}`} style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                        {r}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+            </div>
+
+            {/* Right Content */}
+            <div className="flex-1 flex flex-col gap-6 min-w-0">
             {/* Enhanced Marketplace Header */}
             <div className="flex flex-col gap-6 mb-8">
               {/* Controls Row */}
@@ -713,36 +748,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 })}
               </div>
 
-              {/* Rarity Scroller */}
-              <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
-                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-              >
-                {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
-                  const style = rarityStyles[r];
-                  const isActive = filters.rarities.includes(r);
-                  return (
-                    <motion.button
-                      key={r}
-                      onClick={() => setFilters(prev => ({
-                        ...prev,
-                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
-                      }))}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                        px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all
-                        ${isActive 
-                          ? `${style.bg} ${style.border} ${style.text} shadow-[0_0_10px_currentColor] opacity-100` 
-                          : 'bg-white/5 border-white/10 text-white/30 hover:text-white/60'
-                        }
-                      `}
-                    >
-                      {r}
-                    </motion.button>
-                  );
-                })}
-              </div>
+
             </div>
 
             {/* Results */}
@@ -865,6 +871,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 )}
               </div>
             </div>
+          </div>
           </div>
         </div>
 
