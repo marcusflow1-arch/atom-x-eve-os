@@ -1305,8 +1305,6 @@ export default function Store() {
                                                     );
                                                 })}
                                         </div>
-                                            
-                                        </div>
                                     </div>
 
                                     {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres, Left Aligned */}
