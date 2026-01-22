@@ -1190,15 +1190,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                     {tradingCards.map((card, i) =>
                         <div key={card.id} className="aspect-[2.5/3.5]">
-                                            <ShinyCard index={i} onClick={() => {
-                            if (skillTreeMode) {
-                              setSkillTreeCard(card);
-                            } else if (blacksmithMode) {
-                              setBlacksmithCard(card);
-                            } else {
-                              setSelectedCard(card);
-                            }
-                          }}>
+                                            <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
                                                <div className="absolute inset-0 flex flex-col p-3">
                                                    <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
                                                        <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
