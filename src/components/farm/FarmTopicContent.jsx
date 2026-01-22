@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Mic, Plus, MessageCircle, Clock, Hash, Trophy, Target, Bug, Calendar, Lock } from 'lucide-react';
+import { Users, Mic, Plus, MessageCircle, Clock, Hash, Trophy, Target, Bug, Calendar, Lock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { INTENTS } from './IntentSelector';
+
+// Rate limits (ms)
+const POST_COOLDOWN = 60000; // 1 minute
+const ROOM_COOLDOWN = 120000; // 2 minutes
 
 // Mock Data Generators with enhanced fields
 const generateMockContent = (topic) => {
@@ -22,8 +27,9 @@ const generateMockContent = (topic) => {
                 { id: 'v2', name: 'Secret Finding', users: 5, max: 8, tags: ['Spoilers'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'Hidden trophy in Level 4?', author: 'TrophyHunter', time: '10m ago', replies: 8, upvotes: 42, isFriend: true },
-                { id: 'p2', title: '100% Completion Guide', author: 'GuideMaker', time: '2h ago', replies: 156, upvotes: 890, isFriend: false }
+                { id: 'p1', title: 'Hidden trophy in Level 4?', author: 'TrophyHunter', time: '10m ago', replies: 8, upvotes: 42, isFriend: true, active: true },
+                { id: 'p2', title: '100% Completion Guide', author: 'GuideMaker', time: '2h ago', replies: 156, upvotes: 890, isFriend: false, active: true },
+                { id: 'p3', title: 'Need help with collectables', author: 'Collector101', time: '2d ago', replies: 1, upvotes: 2, isFriend: false, active: false }
             ];
             break;
         case 'farming':
@@ -32,8 +38,8 @@ const generateMockContent = (topic) => {
                 { id: 'v2', name: 'Material Farming', users: 2, max: 4, tags: ['Chill'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'Best spot for Rare Crystal?', author: 'Miner49er', time: '5m ago', replies: 3, upvotes: 12, isFriend: false },
-                { id: 'p2', title: 'Efficiency Spreadsheets', author: 'MathWiz', time: '1d ago', replies: 45, upvotes: 300, isFriend: false }
+                { id: 'p1', title: 'Best spot for Rare Crystal?', author: 'Miner49er', time: '5m ago', replies: 3, upvotes: 12, isFriend: false, active: true },
+                { id: 'p2', title: 'Efficiency Spreadsheets', author: 'MathWiz', time: '1d ago', replies: 45, upvotes: 300, isFriend: false, active: true }
             ];
             break;
         case 'recruitment':
@@ -41,8 +47,9 @@ const generateMockContent = (topic) => {
                 { id: 'v1', name: 'Interviews Open', users: 2, max: 10, tags: ['Clan'], isClan: true, active: true },
             ];
             posts = [
-                { id: 'p1', title: 'Looking for active guild (NA)', author: 'SoloPlayer', time: '30m ago', replies: 2, upvotes: 5, isFriend: false },
-                { id: 'p2', title: 'Top 10 Guild Recruiting', author: 'GuildLeader', time: '4h ago', replies: 12, upvotes: 45, isFriend: false }
+                { id: 'p1', title: 'Looking for active guild (NA)', author: 'SoloPlayer', time: '30m ago', replies: 2, upvotes: 5, isFriend: false, active: true },
+                { id: 'p2', title: 'Top 10 Guild Recruiting', author: 'GuildLeader', time: '4h ago', replies: 12, upvotes: 45, isFriend: false, active: true },
+                { id: 'p3', title: 'LF Casual Group', author: 'WeekendWarrior', time: '3d ago', replies: 0, upvotes: 1, isFriend: false, active: false }
             ];
             break;
         default:
@@ -51,21 +58,24 @@ const generateMockContent = (topic) => {
                 { id: 'v2', name: 'New Players', users: 4, max: 10, tags: ['Help'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'This game is amazing!', author: 'Newbie', time: '1h ago', replies: 10, upvotes: 100, isFriend: false },
-                { id: 'p2', title: 'Patch notes discussion', author: 'Mod', time: '3h ago', replies: 88, upvotes: 250, isFriend: false }
+                { id: 'p1', title: 'This game is amazing!', author: 'Newbie', time: '1h ago', replies: 10, upvotes: 100, isFriend: false, active: true },
+                { id: 'p2', title: 'Patch notes discussion', author: 'Mod', time: '3h ago', replies: 88, upvotes: 250, isFriend: false, active: true }
             ];
     }
+
+    // Simulate high activity for soft-lock demo
+    const isChaotic = topic === 'general' && posts.length > 50; // Mock threshold
 
     // Sort Logic: Active/Upvotes first, then friends/relevance
     posts.sort((a, b) => b.upvotes - a.upvotes);
     
-    return { rooms, posts };
+    return { rooms, posts, isChaotic };
 };
 
 const filterByIntent = (content, intent) => {
     if (!intent) return content;
     
-    const { rooms, posts } = content;
+    const { rooms, posts, isChaotic } = content;
     
     // Logic to prioritize content based on intent
     // This is a simple example, in real app it would be more complex queries
@@ -82,12 +92,15 @@ const filterByIntent = (content, intent) => {
          sortedRooms.sort((a, b) => (a.users < a.max ? -1 : 1)); // Open slots first
     }
     
-    return { rooms: sortedRooms, posts: sortedPosts };
+    return { rooms: sortedRooms, posts: sortedPosts, isChaotic };
 };
 
-import { INTENTS } from './IntentSelector';
-
 export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomRequest, intent }) {
+    // State for rate limiting and UI control
+    const [lastPostTime, setLastPostTime] = useState(0);
+    const [lastRoomTime, setLastRoomTime] = useState(0);
+    const [showInactive, setShowInactive] = useState(false);
+    
     if (!topic) {
         return (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -138,9 +151,11 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
     }
 
     const rawContent = generateMockContent(topic);
-    const { rooms, posts } = filterByIntent(rawContent, intent);
+    const { rooms, posts, isChaotic } = filterByIntent(rawContent, intent);
     
     const activeIntent = intent ? INTENTS[intent.toUpperCase()] : null;
+    const activePosts = posts.filter(p => p.active !== false);
+    const inactivePosts = posts.filter(p => p.active === false);
 
     // Handlers
     const handleJoinVoice = (room) => {
@@ -161,6 +176,20 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
             toast.error("Ownership Required", { description: "You must own the game to post discussions." });
             return;
         }
+
+        if (isChaotic) {
+             toast.error("Topic Locked", { description: "Posting is temporarily disabled due to high activity." });
+             return;
+        }
+
+        const now = Date.now();
+        if (now - lastPostTime < POST_COOLDOWN) {
+            const remaining = Math.ceil((POST_COOLDOWN - (now - lastPostTime)) / 1000);
+            toast.warning("Slow Down", { description: `Please wait ${remaining}s before posting again.` });
+            return;
+        }
+
+        setLastPostTime(now);
         toast.success("Opening post editor...");
     };
 
@@ -169,6 +198,18 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
             toast.error("Ownership Required", { description: "You must own the game to create rooms." });
             return;
         }
+
+        const now = Date.now();
+        if (now - lastRoomTime < ROOM_COOLDOWN) {
+            const remaining = Math.ceil((ROOM_COOLDOWN - (now - lastRoomTime)) / 1000);
+             toast.warning("Rate Limit", { description: `Please wait ${remaining}s before creating another room.` });
+            return;
+        }
+
+        // Mock Duplicate Check (would be against real room list)
+        // if (rooms.some(r => r.name === newRoomName)) ...
+
+        setLastRoomTime(now);
         toast.success("Creating voice room...");
     };
 
@@ -196,6 +237,19 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
                     </div>
                 )}
 
+                {/* Soft Lock Banner */}
+                {isChaotic && (
+                     <div className="lg:col-span-3 mb-2">
+                        <div className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/10 backdrop-blur-sm">
+                            <AlertTriangle className="w-5 h-5 text-red-400" />
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold text-red-400">Slow Mode Active</h3>
+                                <p className="text-xs text-white/60">High traffic detected. Posting is temporarily paused to maintain quality.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* LEFT COLUMN: Discussions (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
@@ -204,7 +258,7 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
                     </div>
 
                     <div className="space-y-3">
-                        {posts.map((post, i) => (
+                        {activePosts.map((post, i) => (
                             <LiquidGlassCard key={post.id} className="p-4 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors" hover={false}>
                                 <div className="flex flex-col items-center gap-1 min-w-[3rem]">
                                     <span className="font-bold text-white/80">{post.upvotes}</span>
@@ -227,13 +281,57 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
                                 </div>
                             </LiquidGlassCard>
                         ))}
+
+                        {/* Inactive / Collapsed Posts */}
+                        {inactivePosts.length > 0 && (
+                            <div className="mt-4">
+                                <button 
+                                    onClick={() => setShowInactive(!showInactive)}
+                                    className="flex items-center gap-2 text-xs font-medium text-white/40 hover:text-white/60 transition-colors mb-3 ml-2"
+                                >
+                                    {showInactive ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                    {showInactive ? 'Hide' : 'Show'} Inactive Discussions ({inactivePosts.length})
+                                </button>
+                                
+                                <AnimatePresence>
+                                    {showInactive && (
+                                        <motion.div 
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="space-y-3 overflow-hidden"
+                                        >
+                                            {inactivePosts.map((post, i) => (
+                                                <div key={post.id} className="p-4 flex items-center gap-4 rounded-xl border border-white/5 bg-white/[0.02] opacity-60">
+                                                    <div className="flex flex-col items-center gap-1 min-w-[3rem] grayscale opacity-50">
+                                                        <span className="font-bold text-white/80">{post.upvotes}</span>
+                                                        <span className="text-[10px] text-white/30 uppercase">Votes</span>
+                                                    </div>
+                                                    
+                                                    <div className="flex-1">
+                                                        <h4 className="text-white font-medium text-lg leading-tight mb-1">{post.title}</h4>
+                                                        <div className="flex items-center gap-3 text-xs text-white/40">
+                                                            <span>@{post.author}</span>
+                                                            <span>•</span>
+                                                            <span>{post.time}</span>
+                                                            <span className="text-white/20 uppercase text-[10px] border border-white/10 px-1 rounded">Archived</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
                         
                         <Button 
                             onClick={handleCreatePost}
-                            className={`w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl uppercase tracking-wider text-xs font-bold ${!isOwned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isChaotic}
+                            className={`w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl uppercase tracking-wider text-xs font-bold ${(!isOwned || isChaotic) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {!isOwned ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />} 
-                            New {topic} Thread
+                            {!isOwned ? <Lock className="w-4 h-4 mr-2" /> : isChaotic ? <AlertTriangle className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />} 
+                            {isChaotic ? 'Topic Locked' : `New ${topic} Thread`}
                         </Button>
                     </div>
                 </div>
@@ -286,7 +384,8 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
                         <Button 
                             variant="outline" 
                             onClick={handleCreateRoom}
-                            className={`w-full border-white/10 text-white/60 hover:text-white hover:bg-white/5 ${!isOwned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isChaotic}
+                            className={`w-full border-white/10 text-white/60 hover:text-white hover:bg-white/5 ${(!isOwned || isChaotic) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {!isOwned ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                             Create Room
