@@ -59,6 +59,24 @@ export default function CommunityPage() {
     const [filteredGames, setFilteredGames] = useState([]); // Games after genre and search filter
 
     const { isAuthenticated } = useAuth();
+    const genreScrollRef = useRef(null);
+
+    // Horizontal scroll support for genres
+    useEffect(() => {
+        const el = genreScrollRef.current;
+        if (el) {
+            const onWheel = (e) => {
+                if (e.deltaY === 0) return;
+                // Only hijack if we can actually scroll
+                if (el.scrollWidth > el.clientWidth) {
+                    e.preventDefault();
+                    el.scrollLeft += e.deltaY;
+                }
+            };
+            el.addEventListener('wheel', onWheel, { passive: false });
+            return () => el.removeEventListener('wheel', onWheel);
+        }
+    }, []);
 
     // Fetch all games
     useEffect(() => {
@@ -222,7 +240,7 @@ export default function CommunityPage() {
                 
                 {/* Header Section (Title) - Now at the top */}
                 {!activeGame && (
-                    <div className="flex items-center gap-4 px-2">
+                    <div className="flex items-center gap-4 px-2 mt-12 mb-4">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
                             <MessageSquare className="w-4 h-4" />
                         </div>
@@ -233,7 +251,10 @@ export default function CommunityPage() {
                 {/* Genre Filter Bar + Search - Moved Below Header */}
                 {!activeGame && (
                     <div className="flex items-center justify-between px-2 gap-4">
-                        <div className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide">
+                        <div 
+                            ref={genreScrollRef}
+                            className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide cursor-grab active:cursor-grabbing"
+                        >
                             {/* Static Options */}
                             <motion.button
                                 onClick={() => setSelectedGenre('All Games')}
