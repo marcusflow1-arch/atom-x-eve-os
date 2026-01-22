@@ -15,6 +15,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
 import ClanHub from './pages/ClanHub';
+import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
@@ -48,7 +49,6 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Community from './pages/Community';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +70,7 @@ export const PAGES = {
     "Checkout": Checkout,
     "Clan": Clan,
     "ClanHub": ClanHub,
+    "Community": Community,
     "CrossGameFusion": CrossGameFusion,
     "EnvGuide": EnvGuide,
     "Events": Events,
@@ -103,7 +104,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Community": Community,
 }
 
 export const pagesConfig = {

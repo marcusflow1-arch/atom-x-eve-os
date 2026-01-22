@@ -1234,18 +1234,29 @@ export default function Store() {
                                             {/* Genre Filter Bar (Community Style) */}
                                             <div className="flex items-center justify-between">
                                                 <div className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2">
-                                                    {/* Static Options */}
-                                                    <motion.button
-                                                        onClick={() => { /* Handle 'All Games' logic if needed, currently just visual or resets */ }}
-                                                        whileHover={{ scale: 1.05 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-cyan-400 scale-105 font-black"
-                                                    >
+                                                    {/* Store Label (Replaces first All) */}
+                                                    <div className="flex items-center gap-2 text-white/50 text-sm font-medium tracking-wider uppercase select-none">
                                                         <Gamepad2 className="w-4 h-4" />
-                                                        <span className="text-sm uppercase tracking-wide">All</span>
-                                                    </motion.button>
+                                                        <span>Store</span>
+                                                        <ChevronRight className="w-4 h-4" />
+                                                    </div>
 
                                                     <div className="w-px h-6 bg-white/10 mx-2" />
+
+                                                    {/* Static All Button */}
+                                                    <motion.button
+                                                        onClick={() => { 
+                                                            setActiveGenreIndex(0); 
+                                                            setActiveSubCategoryIndex(0);
+                                                            // Logic to reset filters if needed
+                                                        }}
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-cyan-400 font-bold"
+                                                    >
+                                                        <LayoutGrid className="w-4 h-4" />
+                                                        <span className="text-sm uppercase tracking-wide">All</span>
+                                                    </motion.button>
 
                                                     {/* Scrollable Genres */}
                                                     {genreData.map((genre, idx) => {
@@ -1294,15 +1305,7 @@ export default function Store() {
                                                 </div>
                                             </div>
 
-                                            {/* Breadcrumbs - Restored above Trending */}
-                                            <div className="flex items-center gap-3 text-white/50 text-sm font-medium tracking-wider uppercase px-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Gamepad2 className="w-4 h-4" />
-                                                    <span>Store</span>
-                                                </div>
-                                                <ChevronRight className="w-4 h-4" />
-                                                <span className="text-white">{currentNavGenre.label}</span>
-                                            </div>
+                                            {/* Breadcrumbs Removed as requested */}
 
                                             {/* Sub-Categories (Trending, etc.) */}
                                             <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-2">
