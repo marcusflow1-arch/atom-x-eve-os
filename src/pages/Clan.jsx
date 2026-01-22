@@ -15,6 +15,7 @@ import AssignmentManager from '@/components/clan/assignments/AssignmentManager';
 import ClanOverview from '@/components/clan/ClanOverview';
 import ClanChat from '@/components/clan/ClanChat';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
+import ClanIntro from '@/components/clan/ClanIntro';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -216,45 +217,7 @@ export default function ClanPage() {
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
 
     if (!activeClan) {
-        return (
-            <div className="h-screen flex flex-col items-center justify-center text-white relative overflow-hidden bg-[#0f1419]">
-                <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f1419] to-black z-0" />
-                <div className="relative z-10 text-center max-w-lg px-8">
-                    <Shield className="w-20 h-20 text-white/20 mx-auto mb-6" />
-                    <h1 className="text-3xl font-bold mb-4">No Clan Affiliation</h1>
-                    <p className="text-white/50 mb-8">Initialize a new division or await recruitment.</p>
-                    <Button 
-                        onClick={() => setIsCreateClanOpen(true)}
-                        className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-6 rounded-xl"
-                    >
-                        Found New Clan
-                    </Button>
-                </div>
-                
-                <Dialog open={isCreateClanOpen} onOpenChange={setIsCreateClanOpen}>
-                    <DialogContent className="bg-[#12141a] border-white/10 text-white rounded-2xl">
-                        <DialogHeader><DialogTitle>Establish New Division</DialogTitle></DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <Input 
-                                value={newClanData.name}
-                                onChange={e => setNewClanData({...newClanData, name: e.target.value})}
-                                placeholder="Division Name"
-                                className="bg-white/5 border-white/10 text-white"
-                            />
-                            <Input 
-                                value={newClanData.description}
-                                onChange={e => setNewClanData({...newClanData, description: e.target.value})}
-                                placeholder="Manifesto / Description"
-                                className="bg-white/5 border-white/10 text-white"
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button onClick={() => createClanMutation.mutate(newClanData)}>Initialize</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        );
+        return <ClanIntro onClanCreated={(clanId) => setSelectedClanId(clanId)} />;
     }
 
     return (
