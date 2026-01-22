@@ -1243,20 +1243,7 @@ export default function Store() {
 
                                                     <div className="w-px h-6 bg-white/10 mx-2" />
 
-                                                    {/* Static All Button */}
-                                                    <motion.button
-                                                        onClick={() => { 
-                                                            setActiveGenreIndex(0); 
-                                                            setActiveSubCategoryIndex(0);
-                                                            // Logic to reset filters if needed
-                                                        }}
-                                                        whileHover={{ scale: 1.05 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        className="flex items-center gap-2 py-2 whitespace-nowrap transition-all text-cyan-400 font-bold"
-                                                    >
-                                                        <LayoutGrid className="w-4 h-4" />
-                                                        <span className="text-sm uppercase tracking-wide">All</span>
-                                                    </motion.button>
+                                                    {/* Static All Button Removed */}
 
                                                     {/* Scrollable Genres */}
                                                     {genreData.map((genre, idx) => {
