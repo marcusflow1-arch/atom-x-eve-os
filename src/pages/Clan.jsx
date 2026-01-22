@@ -186,7 +186,7 @@ export default function ClanPage() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeClan, isLeader]);
+    }, [activeClan, isPrivileged]);
 
     // Conflict Warning
     if (sessionConflict) {
