@@ -1,61 +1,68 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Mic, Plus, MessageCircle, Clock, Hash, Trophy, Target, Bug, Calendar } from 'lucide-react';
+import { Users, Mic, Plus, MessageCircle, Clock, Hash, Trophy, Target, Bug, Calendar, Lock } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
-// Mock Data Generators
+// Mock Data Generators with enhanced fields
 const generateMockContent = (topic) => {
     if (!topic) return { rooms: [], posts: [] };
     
     let rooms = [];
     let posts = [];
 
+    // Base timestamp for relative time calculation if needed
+    const now = new Date();
+
     switch(topic) {
         case 'achievements':
             rooms = [
-                { id: 'v1', name: 'Platinum Hunting', users: 3, max: 4, tags: ['Serious'] },
-                { id: 'v2', name: 'Secret Finding', users: 5, max: 8, tags: ['Spoilers'] }
+                { id: 'v1', name: 'Platinum Hunting', users: 3, max: 4, tags: ['Serious'], isClan: false, active: true },
+                { id: 'v2', name: 'Secret Finding', users: 5, max: 8, tags: ['Spoilers'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'Hidden trophy in Level 4?', author: 'TrophyHunter', time: '10m ago', replies: 8, upvotes: 42 },
-                { id: 'p2', title: '100% Completion Guide', author: 'GuideMaker', time: '2h ago', replies: 156, upvotes: 890 }
+                { id: 'p1', title: 'Hidden trophy in Level 4?', author: 'TrophyHunter', time: '10m ago', replies: 8, upvotes: 42, isFriend: true },
+                { id: 'p2', title: '100% Completion Guide', author: 'GuideMaker', time: '2h ago', replies: 156, upvotes: 890, isFriend: false }
             ];
             break;
         case 'farming':
             rooms = [
-                { id: 'v1', name: 'Boss Rush Mode', users: 4, max: 4, tags: ['High Level'] },
-                { id: 'v2', name: 'Material Farming', users: 2, max: 4, tags: ['Chill'] }
+                { id: 'v1', name: 'Boss Rush Mode', users: 4, max: 4, tags: ['High Level'], isClan: true, active: true },
+                { id: 'v2', name: 'Material Farming', users: 2, max: 4, tags: ['Chill'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'Best spot for Rare Crystal?', author: 'Miner49er', time: '5m ago', replies: 3, upvotes: 12 },
-                { id: 'p2', title: 'Efficiency Spreadsheets', author: 'MathWiz', time: '1d ago', replies: 45, upvotes: 300 }
+                { id: 'p1', title: 'Best spot for Rare Crystal?', author: 'Miner49er', time: '5m ago', replies: 3, upvotes: 12, isFriend: false },
+                { id: 'p2', title: 'Efficiency Spreadsheets', author: 'MathWiz', time: '1d ago', replies: 45, upvotes: 300, isFriend: false }
             ];
             break;
         case 'recruitment':
             rooms = [
-                { id: 'v1', name: 'Interviews Open', users: 2, max: 10, tags: ['Clan'] },
+                { id: 'v1', name: 'Interviews Open', users: 2, max: 10, tags: ['Clan'], isClan: true, active: true },
             ];
             posts = [
-                { id: 'p1', title: 'Looking for active guild (NA)', author: 'SoloPlayer', time: '30m ago', replies: 2, upvotes: 5 },
-                { id: 'p2', title: 'Top 10 Guild Recruiting', author: 'GuildLeader', time: '4h ago', replies: 12, upvotes: 45 }
+                { id: 'p1', title: 'Looking for active guild (NA)', author: 'SoloPlayer', time: '30m ago', replies: 2, upvotes: 5, isFriend: false },
+                { id: 'p2', title: 'Top 10 Guild Recruiting', author: 'GuildLeader', time: '4h ago', replies: 12, upvotes: 45, isFriend: false }
             ];
             break;
         default:
              rooms = [
-                { id: 'v1', name: 'General Chat', users: 12, max: 20, tags: ['Casual'] },
-                { id: 'v2', name: 'New Players', users: 4, max: 10, tags: ['Help'] }
+                { id: 'v1', name: 'General Chat', users: 12, max: 20, tags: ['Casual'], isClan: false, active: true },
+                { id: 'v2', name: 'New Players', users: 4, max: 10, tags: ['Help'], isClan: false, active: true }
             ];
             posts = [
-                { id: 'p1', title: 'This game is amazing!', author: 'Newbie', time: '1h ago', replies: 10, upvotes: 100 },
-                { id: 'p2', title: 'Patch notes discussion', author: 'Mod', time: '3h ago', replies: 88, upvotes: 250 }
+                { id: 'p1', title: 'This game is amazing!', author: 'Newbie', time: '1h ago', replies: 10, upvotes: 100, isFriend: false },
+                { id: 'p2', title: 'Patch notes discussion', author: 'Mod', time: '3h ago', replies: 88, upvotes: 250, isFriend: false }
             ];
     }
 
+    // Sort Logic: Active/Upvotes first, then friends/relevance
+    posts.sort((a, b) => b.upvotes - a.upvotes);
+    
     return { rooms, posts };
 };
 
-export default function FarmTopicContent({ topic, gameId }) {
+export default function FarmTopicContent({ topic, gameId, isOwned }) {
     if (!topic) {
         return (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -107,6 +114,36 @@ export default function FarmTopicContent({ topic, gameId }) {
 
     const { rooms, posts } = generateMockContent(topic);
 
+    // Handlers
+    const handleJoinVoice = (room) => {
+        if (!isOwned) {
+            toast.error("Ownership Required", { description: "You must own the game to join voice rooms." });
+            return;
+        }
+        if (room.isClan) {
+            // Placeholder for clan check
+            toast.info("Clan Access", { description: "Verifying clan membership..." });
+            // In real app, check user.clanId === room.clanId
+        }
+        toast.success(`Joined ${room.name}`);
+    };
+
+    const handleCreatePost = () => {
+        if (!isOwned) {
+            toast.error("Ownership Required", { description: "You must own the game to post discussions." });
+            return;
+        }
+        toast.success("Opening post editor...");
+    };
+
+    const handleCreateRoom = () => {
+        if (!isOwned) {
+            toast.error("Ownership Required", { description: "You must own the game to create rooms." });
+            return;
+        }
+        toast.success("Creating voice room...");
+    };
+
     return (
         <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -135,7 +172,8 @@ export default function FarmTopicContent({ topic, gameId }) {
                                 <div className="flex-1">
                                     <h4 className="text-white font-medium text-lg leading-tight mb-1">{post.title}</h4>
                                     <div className="flex items-center gap-3 text-xs text-white/40">
-                                        <span className="hover:text-blue-400 transition-colors">@{post.author}</span>
+                                        <span className={`hover:text-blue-400 transition-colors ${post.isFriend ? 'text-blue-300 font-medium' : ''}`}>@{post.author}</span>
+                                        {post.isFriend && <span className="bg-blue-500/20 text-blue-300 px-1.5 rounded text-[10px]">FRIEND</span>}
                                         <span>•</span>
                                         <span>{post.time}</span>
                                     </div>
@@ -148,8 +186,12 @@ export default function FarmTopicContent({ topic, gameId }) {
                             </LiquidGlassCard>
                         ))}
                         
-                        <Button className="w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl uppercase tracking-wider text-xs font-bold">
-                            <Plus className="w-4 h-4 mr-2" /> New {topic} Thread
+                        <Button 
+                            onClick={handleCreatePost}
+                            className={`w-full py-6 bg-white/5 border border-white/10 hover:bg-white/10 text-white/50 border-dashed rounded-xl uppercase tracking-wider text-xs font-bold ${!isOwned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {!isOwned ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />} 
+                            New {topic} Thread
                         </Button>
                     </div>
                 </div>
@@ -181,16 +223,31 @@ export default function FarmTopicContent({ topic, gameId }) {
                                             {tag}
                                         </span>
                                     ))}
+                                    {room.isClan && (
+                                        <span className="text-[10px] uppercase font-bold text-purple-300 bg-purple-500/20 px-2 py-1 rounded border border-purple-500/20">
+                                            CLAN ONLY
+                                        </span>
+                                    )}
                                 </div>
 
-                                <Button size="sm" className="w-full mt-1 bg-blue-600/80 hover:bg-blue-600 text-white rounded-lg">
-                                    <Mic className="w-3 h-3 mr-2" /> Join Voice
+                                <Button 
+                                    size="sm" 
+                                    onClick={() => handleJoinVoice(room)}
+                                    className={`w-full mt-1 rounded-lg ${!isOwned ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-blue-600/80 hover:bg-blue-600 text-white'}`}
+                                >
+                                    {!isOwned ? <Lock className="w-3 h-3 mr-2" /> : <Mic className="w-3 h-3 mr-2" />}
+                                    Join Voice
                                 </Button>
                             </LiquidGlassCard>
                         ))}
 
-                        <Button variant="outline" className="w-full border-white/10 text-white/60 hover:text-white hover:bg-white/5">
-                            <Plus className="w-4 h-4 mr-2" /> Create Room
+                        <Button 
+                            variant="outline" 
+                            onClick={handleCreateRoom}
+                            className={`w-full border-white/10 text-white/60 hover:text-white hover:bg-white/5 ${!isOwned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {!isOwned ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                            Create Room
                         </Button>
                     </div>
 
