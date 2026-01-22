@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Shield, Crosshair, Gamepad2, Trophy, Monitor, Car, Skull, Music, Zap, Heart, Sparkles } from 'lucide-react';
+import { Shield, Crosshair, Gamepad2, Trophy, Monitor, Car, Skull, Music, Zap, Heart, Sparkles, LayoutGrid } from 'lucide-react';
 
 /**
  * Hook for managing game filters and categorization
