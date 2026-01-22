@@ -398,8 +398,7 @@ export default function ClanPage() {
                                         clanId={activeClan.id} 
                                         userId={user?.id}
                                         onSelectGame={(game) => {
-                                            // Navigate to Community page for the selected game
-                                            navigate('/community', { state: { selectedGame: game } });
+                                            setSelectedGame(game);
                                         }} 
                                     />
                                 </div>
