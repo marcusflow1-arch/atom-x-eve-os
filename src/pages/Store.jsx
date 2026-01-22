@@ -1341,7 +1341,7 @@ export default function Store() {
                                                     </motion.button>
                                                 );
                                             })}
-                                        </motion.div>
+                                        </div>
                                     </div>
 
                                     {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
