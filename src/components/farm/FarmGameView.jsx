@@ -70,6 +70,14 @@ export default function FarmGameView({ game, onBack }) {
         toast.success(`Action: ${action}`);
     };
 
+    const handleBack = () => {
+        if (activeTopic) {
+            setActiveTopic(null); // Clear topic, go to "Topic Selection" / Intent state
+        } else {
+            onBack(); // Go to Global Farm Hub
+        }
+    };
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             {/* GAME HEADER */}
@@ -85,10 +93,11 @@ export default function FarmGameView({ game, onBack }) {
                         <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="self-start text-white/50 hover:text-white hover:bg-white/10 -ml-2"
-                            onClick={onBack}
+                            className="self-start text-white/50 hover:text-white hover:bg-white/10 -ml-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:bg-white/10"
+                            onClick={handleBack}
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Hub
+                            <ArrowLeft className="w-4 h-4 mr-2" /> 
+                            {activeTopic ? 'Back to Game Overview' : 'Back to Hub'}
                         </Button>
                         
                         {!isOwned && (

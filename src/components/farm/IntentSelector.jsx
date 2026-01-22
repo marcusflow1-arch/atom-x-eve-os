@@ -51,7 +51,7 @@ export default function IntentSelector({ onSelect, onSkip }) {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 + (index * 0.1) }}
                                 onClick={() => onSelect(intent.id)}
-                                className="group relative flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all duration-300"
+                                className="group relative flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500"
                             >
                                 <div className={`p-4 rounded-2xl ${intent.bg} ${intent.color} group-hover:scale-110 transition-transform duration-300`}>
                                     <intent.icon className="w-8 h-8" />
@@ -71,7 +71,7 @@ export default function IntentSelector({ onSelect, onSkip }) {
                     >
                         <button 
                             onClick={onSkip}
-                            className="text-white/30 hover:text-white/60 text-sm font-medium transition-colors"
+                            className="text-white/30 hover:text-white/60 text-sm font-medium transition-colors focus:outline-none focus-visible:underline focus-visible:text-white"
                         >
                             Skip for now
                         </button>

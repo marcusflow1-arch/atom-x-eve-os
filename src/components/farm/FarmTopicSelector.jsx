@@ -31,6 +31,7 @@ export default function FarmTopicSelector({ activeTopic, onSelect }) {
                         onClick={() => onSelect(topic.id)}
                         className={`
                             relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:bg-white/10
                             ${isActive 
                                 ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)] ring-1 ring-white/20' 
                                 : 'bg-transparent text-white/40 hover:text-white/80 hover:bg-white/5'
