@@ -609,37 +609,77 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
 
           {/* Bottom Section: Split Layout */}
           <div className="flex gap-8">
-            {/* Left Vertical Rarity Filter */}
-            <div className="w-20 flex-shrink-0 hidden lg:flex flex-col gap-4 sticky top-24 h-[calc(100vh-120px)] overflow-y-auto no-scrollbar py-2">
-               <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest text-center mb-2" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Rarity</div>
-               {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
-                  const style = rarityStyles[r];
-                  const isActive = filters.rarities.includes(r);
-                  return (
-                    <motion.button
-                      key={r}
-                      onClick={() => setFilters(prev => ({
-                        ...prev,
-                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
-                      }))}
-                      whileHover={{ scale: 1.1, x: 2 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                        w-full aspect-[2/3] rounded-xl border transition-all duration-300 relative group flex flex-col items-center justify-center gap-2
-                        ${isActive 
-                          ? `${style.bg} ${style.border} shadow-[0_0_15px_currentColor] opacity-100` 
-                          : 'bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10'
-                        }
-                      `}
-                      title={r}
-                    >
-                      <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-current opacity-50'}`} />
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? style.text : 'text-current opacity-50'}`} style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                        {r}
-                      </span>
-                    </motion.button>
-                  );
-                })}
+            {/* Left Vertical Rarity Filter (PS3 Style) */}
+            <div className="w-48 flex-shrink-0 hidden lg:flex flex-col justify-center sticky top-24 h-[calc(100vh-120px)] py-10">
+               <div className="flex flex-col gap-1 relative">
+                 {/* Decorative vertical line */}
+                 <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                 
+                 {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r, i) => {
+                    const style = rarityStyles[r];
+                    const isActive = filters.rarities.includes(r);
+                    return (
+                      <motion.button
+                        key={r}
+                        onClick={() => setFilters(prev => ({
+                          ...prev,
+                          rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r] // Toggle but exclusive-ish feel or multi? Standard filter implies multi, but XMB implies single focus. Keeping multi-toggle capability but using single-select visual focus.
+                        }))}
+                        onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [r] }))} // Auto-select on hover for "XMB feel"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className={`
+                          group relative pl-6 py-3 text-left transition-all duration-300
+                          ${isActive ? 'scale-110 origin-left' : 'scale-100 opacity-40 hover:opacity-100'}
+                        `}
+                      >
+                        {/* Active Indicator Dot */}
+                        {isActive && (
+                          <motion.div 
+                            layoutId="rarityActiveDot"
+                            className={`absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]`} 
+                          />
+                        )}
+                        
+                        <span className={`
+                          text-2xl font-black uppercase tracking-tighter transition-all block
+                          ${isActive ? `text-transparent bg-clip-text bg-gradient-to-r ${style.text.replace('text-', 'from-')} to-white` : 'text-white'}
+                        `}>
+                          {r}
+                        </span>
+                        
+                        {isActive && (
+                          <motion.span 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            className={`text-[10px] font-medium tracking-widest uppercase ${style.text} block`}
+                          >
+                            Filter Active
+                          </motion.span>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                  
+                  {/* Clear Filter Option */}
+                  <motion.button
+                    onClick={() => setFilters(prev => ({ ...prev, rarities: [] }))}
+                    onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [] }))}
+                    className={`
+                      group relative pl-6 py-3 text-left transition-all duration-300 mt-4
+                      ${filters.rarities.length === 0 ? 'scale-110 origin-left opacity-100' : 'scale-100 opacity-30 hover:opacity-80'}
+                    `}
+                  >
+                    {filters.rarities.length === 0 && (
+                      <motion.div 
+                        layoutId="rarityActiveDot"
+                        className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]" 
+                      />
+                    )}
+                    <span className="text-xl font-bold uppercase tracking-tight text-white">All</span>
+                  </motion.button>
+               </div>
             </div>
 
             {/* Right Content */}
