@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer, Eye, Package,
+  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
   MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
   Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
 'lucide-react';
@@ -19,7 +19,7 @@ import AchievementDetailOverlay from '../components/achievements/AchievementDeta
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
-import AchievementWorkspace from '../components/achievements/AchievementWorkspace';
+import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
@@ -210,12 +210,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
   const [viewMode, setViewMode] = useState('cross');
 
-  // Interaction Mode: 'forge', 'inspect', 'manage'
-  const [interactionMode, setInteractionMode] = useState('forge');
-
-  // Legacy modes (kept for compatibility or removal)
+  // Skill Tree Mode toggle
+  const [skillTreeMode, setSkillTreeMode] = useState(false);
   const [skillTreeCard, setSkillTreeCard] = useState(null);
-  const [blacksmithCard, setBlacksmithCard] = useState(null); // Deprecated by interactionMode logic
+
+  // Blacksmith Mode toggle
+  const [blacksmithMode, setBlacksmithMode] = useState(false);
+  const [blacksmithCard, setBlacksmithCard] = useState(null);
 
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
@@ -764,39 +765,45 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
-                {/* Grid View Toggle */}
+                {/* Grid View Toggle - 4 small squares */}
                 <button
-                  onClick={() => setViewMode('classic')}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                  title="Switch to Grid View"
-                >
-                  <LayoutGrid className="w-5 h-5" />
+                onClick={() => setViewMode('classic')}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                title="Switch to Grid View">
+
+                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                  </div>
                 </button>
 
-                {/* Interaction Mode Toggles */}
-                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10 backdrop-blur-md">
-                  <button
-                    onClick={() => setInteractionMode('forge')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'forge' ? 'bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'text-white/40 hover:text-white'}`}
-                  >
-                    <Hammer className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Forge</span>
-                  </button>
-                  <button
-                    onClick={() => setInteractionMode('inspect')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'inspect' ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'text-white/40 hover:text-white'}`}
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Inspect</span>
-                  </button>
-                  <button
-                    onClick={() => setInteractionMode('manage')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${interactionMode === 'manage' ? 'bg-slate-500/20 text-slate-300 shadow-[0_0_10px_rgba(148,163,184,0.2)]' : 'text-white/40 hover:text-white'}`}
-                  >
-                    <Package className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Manage</span>
-                  </button>
-                </div>
+                {/* Skill Tree Mode Toggle */}
+                <button
+                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
+                className={`p-2 rounded-lg border transition-all ${
+                skillTreeMode ?
+                'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                }
+                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
+
+                  <Layers className="w-5 h-5" />
+                </button>
+
+                {/* Blacksmith Mode Toggle */}
+                <button
+                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                className={`p-2 rounded-lg border transition-all ${
+                blacksmithMode ?
+                'bg-orange-500/30 border-orange-400/50 text-orange-300' :
+                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                }
+                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
+
+                  <Hammer className="w-5 h-5" />
+                </button>
               </div>
 
               {/* VERTICAL AXIS (Games) */}
@@ -863,7 +870,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       onClick={() => {
                         setActiveCardIndex(idx);
                         if (isActive) {
-                          setSelectedCard(card);
+                          if (skillTreeMode) {
+                            setSkillTreeCard(card);
+                          } else if (blacksmithMode) {
+                            setBlacksmithCard(card);
+                          } else {
+                            setSelectedCard(card);
+                          }
                         }
                       }}
                       animate={{
@@ -983,41 +996,51 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       Achievements
                     </h1>
                     
-                    {/* Cross View Toggle */}
+                    {/* Cross View Toggle - 4 small squares grid icon */}
                     <motion.button
-                      onClick={() => setViewMode('cross')}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                      title="Switch to Cross View"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
+                    onClick={() => setViewMode('cross')}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                    title="Switch to Cross View">
+
+                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                      </div>
                     </motion.button>
 
-                    {/* Interaction Mode Toggles */}
-                    <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
-                      <button
-                        onClick={() => setInteractionMode('forge')}
-                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'forge' ? 'bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'text-white/40 hover:text-white'}`}
-                        title="Forge Mode"
-                      >
-                        <Hammer className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setInteractionMode('inspect')}
-                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'inspect' ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'text-white/40 hover:text-white'}`}
-                        title="Inspect Mode"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setInteractionMode('manage')}
-                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'manage' ? 'bg-slate-500/20 text-slate-300 shadow-[0_0_10px_rgba(148,163,184,0.2)]' : 'text-white/40 hover:text-white'}`}
-                        title="Manage Mode"
-                      >
-                        <Package className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {/* Skill Tree Mode Toggle */}
+                    <motion.button
+                    onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                    skillTreeMode ?
+                    'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
+                    }
+                    title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
+
+                      <Layers className="w-4 h-4" />
+                    </motion.button>
+
+                    {/* Blacksmith Mode Toggle */}
+                    <motion.button
+                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                    blacksmithMode ?
+                    'bg-orange-500/30 border-orange-400/50 text-orange-300' :
+                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
+                    }
+                    title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
+
+                      <Hammer className="w-4 h-4" />
+                    </motion.button>
 
                     {/* Filter Drawer Trigger - New Feature */}
                     <Sheet>
@@ -1190,7 +1213,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                     {tradingCards.map((card, i) =>
                         <div key={card.id} className="aspect-[2.5/3.5]">
-                                            <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
+                                            <ShinyCard index={i} onClick={() => {
+                            if (skillTreeMode) {
+                              setSkillTreeCard(card);
+                            } else if (blacksmithMode) {
+                              setBlacksmithCard(card);
+                            } else {
+                              setSelectedCard(card);
+                            }
+                          }}>
                                                <div className="absolute inset-0 flex flex-col p-3">
                                                    <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
                                                        <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
@@ -1356,7 +1387,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       </AnimatePresence>
 
+      {/* Card Enhancement Overlay */}
+      <AnimatePresence>
+        {selectedCard && !skillTreeMode &&
+        <CardEnhancementOverlay
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)} />
 
+        }
+      </AnimatePresence>
 
       {/* Skill Tree Overlay */}
       <AnimatePresence>
@@ -1368,18 +1407,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       </AnimatePresence>
 
-      {/* New Workspace Overlay - Replaces Blacksmith/Detail overlays for Cards */}
+      {/* Blacksmith Overlay */}
       <AnimatePresence>
-        {(selectedCard || blacksmithCard) && (
-          <AchievementWorkspace 
-            card={selectedCard || blacksmithCard} 
-            initialMode={interactionMode}
-            onClose={() => {
-              setSelectedCard(null);
-              setBlacksmithCard(null);
-            }} 
-          />
-        )}
+        {blacksmithCard && blacksmithMode &&
+        <BlacksmithOverlay
+          card={blacksmithCard}
+          onClose={() => setBlacksmithCard(null)} />
+
+        }
       </AnimatePresence>
 
       {/* Challenge Modal */}
