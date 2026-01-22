@@ -37,11 +37,22 @@ export default function ClanPage() {
     const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
     const location = useLocation();
     const queryClient = useQueryClient();
-    const [activeClanId, setActiveClanId] = useState(null);
+    // Initialize activeClanId from localStorage if available
+    const [activeClanId, setActiveClanId] = useState(() => {
+        return localStorage.getItem('activeClanId') || null;
+    });
     const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
-    const [contextIndex, setContextIndex] = useState(0); // Vertical selection index
-    const [isCreateClanOpen, setIsCreateClanOpen] = useState(false);
-    const [newClanData, setNewClanData] = useState({ name: '', description: '' });
+    const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
+    const [initialZone, setInitialZone] = useState(null);
+
+    // Persist activeClanId to localStorage
+    useEffect(() => {
+        if (activeClanId) {
+            localStorage.setItem('activeClanId', activeClanId);
+        } else {
+            localStorage.removeItem('activeClanId');
+        }
+    }, [activeClanId]);
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
 
@@ -61,15 +72,14 @@ export default function ClanPage() {
     });
 
     useEffect(() => {
-        if (memberships?.length > 0 && !activeClanId) {
-            setActiveClanId(memberships[0].divisionId);
-        }
-    }, [memberships]);
-
-    // Verify activeClanId is still valid (user wasn't kicked)
-    useEffect(() => {
-        if (activeClanId && memberships && !memberships.find(c => c.divisionId === activeClanId)) {
-            setActiveClanId(null);
+        if (memberships?.length > 0) {
+            // If no active clan, or current active clan is not in memberships (kicked), default to first
+            if (!activeClanId || !memberships.find(c => c.divisionId === activeClanId)) {
+                setActiveClanId(memberships[0].divisionId);
+            }
+        } else if (memberships && memberships.length === 0) {
+             // If memberships loaded and empty, clear active clan
+             setActiveClanId(null);
         }
     }, [memberships, activeClanId]);
 
@@ -129,17 +139,7 @@ export default function ClanPage() {
         enabled: !!activeClan
     });
 
-    // Create Clan Mutation
-    const createClanMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
-        onSuccess: (res) => {
-            if (res.data.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-                setIsCreateClanOpen(false);
-                setActiveClanId(res.data.division.id);
-            }
-        }
-    });
+    // Create Clan Mutation removed - handled by ClanIntro
 
     // Update presence when viewing Clan Overview
     useEffect(() => {
