@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 
 // XMB Mode Items Configuration
+// Restricted items are only visible to Leaders and Officers
 const XMB_MODES = [
     { id: 'overview', label: 'Overview', icon: Shield },
     { id: 'games', label: 'Games', icon: Gamepad2 },
