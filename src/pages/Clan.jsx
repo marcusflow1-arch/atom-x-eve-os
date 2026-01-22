@@ -258,9 +258,9 @@ export default function ClanPage() {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
             </div>
 
-            {/* 2. Top Header (Clan Identity) - Repositioned above XMB */}
-            <div className="absolute top-[20%] left-0 right-0 z-20 flex flex-col items-center justify-center pointer-events-none transition-all duration-500">
-                <div className="flex flex-col items-center gap-4 mb-2">
+            {/* 2. Top Header (Clan Identity) - Repositioned below XMB, just above content */}
+            <div className="absolute top-[25%] left-0 right-0 z-20 flex flex-col items-center justify-center pointer-events-none transition-all duration-500">
+                <div className="flex flex-col items-center gap-2 mb-2">
                     <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                         {activeClan.icon ? <img src={activeClan.icon} className="w-full h-full object-cover rounded-xl" /> : <Shield className="w-8 h-8 text-white/50" />}
                     </div>
@@ -290,8 +290,8 @@ export default function ClanPage() {
                 </div>
             </div>
 
-            {/* 3. XMB Horizontal Navigation Axis */}
-            <div className="absolute top-[35%] left-0 right-0 z-30 flex items-center justify-center h-20">
+            {/* 3. XMB Horizontal Navigation Axis - Moved to top */}
+            <div className="absolute top-[12%] left-0 right-0 z-30 flex items-center justify-center h-20">
                 <div className="flex items-center gap-12 px-12">
                     {XMB_MODES.map((mode, index) => {
                         const isActive = index === activeModeIndex;
@@ -339,8 +339,8 @@ export default function ClanPage() {
             </div>
 
             {/* 4. Vertical Contextual Axis (Content Area) */}
-            <div className="absolute top-[calc(35%+80px)] left-0 right-0 bottom-0 z-20 overflow-hidden">
-                <div className="h-full w-full max-w-5xl mx-auto px-8 py-8 flex flex-col items-center">
+            <div className="absolute top-[40%] left-0 right-0 bottom-0 z-20 overflow-hidden">
+                <div className="h-full w-full max-w-5xl mx-auto px-8 py-4 flex flex-col items-center">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeModeIndex}
