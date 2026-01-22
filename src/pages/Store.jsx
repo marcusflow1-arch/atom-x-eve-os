@@ -1223,10 +1223,10 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     
-                                    {/* 1. LEFT SIDEBAR (Vertical Genres) - Enhanced Box Style */}
-                                    <div className="w-72 flex-shrink-0 h-full overflow-y-auto no-scrollbar pb-24 flex flex-col gap-4 pt-4 px-2">
-                                        <h3 className="text-white/30 text-xs font-bold uppercase tracking-widest px-2 mb-2">Genres</h3>
-                                        <div className="space-y-3">
+                                    {/* 1. LEFT SIDEBAR (Vertical Genres) - Vertical Stack with Text Under */}
+                                    <div className="w-32 flex-shrink-0 h-full overflow-y-auto no-scrollbar pb-24 flex flex-col gap-4 pt-4 px-2 items-center">
+                                        <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 text-center w-full">Genres</h3>
+                                        <div className="space-y-6 w-full flex flex-col items-center">
                                             {genreData.map((genre, idx) => {
                                                 const isActive = idx === activeGenreIndex;
                                                 const Icon = genre.icon;
@@ -1235,44 +1235,24 @@ export default function Store() {
                                                         key={genre.id}
                                                         onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
                                                         onMouseEnter={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
-                                                        className={`group w-full flex items-center gap-4 p-2 rounded-2xl transition-all duration-300 relative ${
-                                                            isActive ? 'bg-white/5' : 'hover:bg-white/5'
-                                                        }`}
+                                                        className="group flex flex-col items-center gap-2 relative outline-none"
+                                                        whileHover={{ scale: 1.05 }}
                                                     >
-                                                        {/* Icon Box - Restored "Shiny Box" Look */}
+                                                        {/* Icon Box */}
                                                         <div className={`
-                                                            w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-300 border
+                                                            w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 border
                                                             ${isActive 
-                                                                ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)] text-cyan-300 scale-110' 
+                                                                ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.4)] text-cyan-300 scale-110' 
                                                                 : 'bg-white/5 border-white/10 text-white/40 group-hover:text-white group-hover:border-white/20'
                                                             }
                                                         `}>
-                                                            <Icon className="w-6 h-6" />
+                                                            <Icon className="w-7 h-7" />
                                                         </div>
 
-                                                        {/* Text Label - To the Right */}
-                                                        <div className="flex flex-col items-start">
-                                                            <span className={`text-sm font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-white' : 'text-white/40 group-hover:text-white/80'}`}>
-                                                                {genre.label}
-                                                            </span>
-                                                            {isActive && (
-                                                                <motion.span 
-                                                                    initial={{ opacity: 0 }} 
-                                                                    animate={{ opacity: 1 }} 
-                                                                    className="text-[10px] text-cyan-400 font-medium tracking-wide"
-                                                                >
-                                                                    {genre.items.length} Titles
-                                                                </motion.span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        {/* Active Indicator Line */}
-                                                        {isActive && (
-                                                            <motion.div 
-                                                                layoutId="activeGenreBar"
-                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-500 rounded-r-full" 
-                                                            />
-                                                        )}
+                                                        {/* Text Label - Underneath */}
+                                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center transition-colors ${isActive ? 'text-white text-shadow-glow' : 'text-white/40 group-hover:text-white/70'}`}>
+                                                            {genre.label}
+                                                        </span>
                                                     </motion.button>
                                                 );
                                             })}
