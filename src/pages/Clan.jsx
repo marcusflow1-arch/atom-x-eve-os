@@ -230,7 +230,7 @@ export default function ClanPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute inset-0 z-50 bg-[#0a0c10] flex flex-col"
+                        className="absolute inset-0 z-50 flex flex-col"
                     >
                         <GameWorkspace 
                             game={selectedGame} 

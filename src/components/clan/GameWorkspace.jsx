@@ -123,21 +123,43 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
 
 
     return (
-        <div className="flex h-full w-full bg-[#0a0c10] text-white overflow-hidden relative">
+        <div 
+            className="flex h-full w-full text-white overflow-hidden relative"
+            style={{
+                background: 'radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%)', // Blue-black radial
+            }}
+        >
+            {/* Liquid Marble Effect Overlay */}
+            <div 
+                className="absolute inset-0 pointer-events-none opacity-30 z-0"
+                style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 2000 2000' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
+                    filter: 'contrast(150%) brightness(100%)',
+                    backgroundSize: 'cover'
+                }}
+            />
+
             {/* Background Art */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 opacity-40 mix-blend-overlay">
                 <img 
                     src={game.cover_image || game.cover} 
-                    className="w-full h-full object-cover opacity-20 blur-2xl"
+                    className="w-full h-full object-cover blur-3xl"
                     alt="Game Art"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0c10] via-[#0a0c10]/90 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
             </div>
 
             {/* Sidebar: Navigation & Objectives */}
-            <div className="w-80 flex-shrink-0 z-10 flex flex-col border-r border-white/5 bg-black/40 backdrop-blur-md">
+            <div 
+                className="w-80 flex-shrink-0 z-10 flex flex-col backdrop-blur-3xl"
+                style={{ 
+                    background: 'rgba(15, 23, 42, 0.4)', // Dark blue tint
+                    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                }}
+            >
                 {/* Header */}
-                <div className="p-6 border-b border-white/5">
+                <div className="p-6 border-b border-white/10">
                     <Button 
                         variant="ghost" 
                         size="sm" 
@@ -163,12 +185,21 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
                 </div>
 
                 {/* Objectives / Goals */}
-                <div className="p-4 border-b border-white/5 bg-white/5">
-                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Active Objectives</h3>
+                <div className="p-4 border-b border-white/10 bg-black/20">
+                    <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <Target className="w-3 h-3 text-blue-400" /> Active Objectives
+                    </h3>
                     <div className="space-y-2">
                         {objectives?.length > 0 ? (
                             objectives.map(obj => (
-                                <div key={obj.id} className="p-3 rounded-lg bg-black/40 border border-white/10">
+                                <div 
+                                    key={obj.id} 
+                                    className="p-3 rounded-xl border transition-all hover:border-blue-500/30"
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                                    }}
+                                >
                                     <div className="flex justify-between items-start mb-1">
                                         <span className="text-sm font-medium text-white/90">{obj.targetName || 'Objective'}</span>
                                         <Target className="w-3 h-3 text-amber-400" />
@@ -206,20 +237,28 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
                             <button
                                 key={zone.id}
                                 onClick={() => handleZoneChange(zone.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group text-left ${
+                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-300 group text-left relative overflow-hidden ${
                                     isActive 
-                                        ? 'bg-blue-600/20 border border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.2)]' 
-                                        : 'hover:bg-white/5 border border-transparent'
+                                        ? 'shadow-[0_0_20px_rgba(59,130,246,0.15)]' 
+                                        : 'hover:bg-white/5'
                                 }`}
+                                style={isActive ? {
+                                    background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)',
+                                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                                    borderLeft: '3px solid #3b82f6'
+                                } : {
+                                    border: '1px solid transparent',
+                                    borderLeft: '3px solid transparent'
+                                }}
                             >
-                                <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/50 group-hover:text-white'}`}>
+                                <div className={`p-2 rounded-lg transition-colors ${isActive ? 'bg-blue-500 text-white shadow-lg' : 'bg-white/5 text-white/40 group-hover:text-white group-hover:bg-white/10'}`}>
                                     <Icon className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <p className={`text-sm font-bold ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>{zone.label}</p>
+                                    <p className={`text-sm font-bold transition-colors ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>{zone.label}</p>
                                     <p className="text-[10px] text-white/30">{zone.desc}</p>
                                 </div>
-                                {isActive && <ChevronRight className="w-4 h-4 text-blue-400 ml-auto" />}
+                                {isActive && <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-500/10 to-transparent pointer-events-none" />}
                             </button>
                         );
                     })}
@@ -227,9 +266,15 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col z-10 bg-gradient-to-br from-slate-900/50 to-slate-900/80 backdrop-blur-sm">
+            <div className="flex-1 flex flex-col z-10 bg-transparent">
                 {/* Zone Header */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-black/20">
+                <div 
+                    className="h-16 flex items-center justify-between px-6 backdrop-blur-md"
+                    style={{
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                    }}
+                >
                     <div className="flex items-center gap-3">
                         {ZONES.find(z => z.id === activeZone)?.icon && React.createElement(ZONES.find(z => z.id === activeZone).icon, { className: "w-5 h-5 text-white/60" })}
                         <h2 className="text-xl font-bold text-white">{ZONES.find(z => z.id === activeZone)?.label}</h2>

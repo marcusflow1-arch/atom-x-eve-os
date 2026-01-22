@@ -92,32 +92,46 @@ export default function ClanChat({ clan, channel }) {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-900/30 backdrop-blur-sm rounded-r-2xl">
+        <div 
+            className="flex flex-col h-full rounded-r-3xl overflow-hidden"
+            style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
+            }}
+        >
             {/* Header */}
-            <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 flex-shrink-0">
+            <div 
+                className="h-16 flex items-center justify-between px-6 flex-shrink-0"
+                style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}
+            >
                 <div className="flex items-center gap-3">
-                    <Hash className="w-5 h-5 text-slate-400" />
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                        <Hash className="w-4 h-4 text-blue-400" />
+                    </div>
                     <div>
-                        <h3 className="font-bold text-white">{channel.name}</h3>
-                        <p className="text-xs text-white/40">General Clan Comms</p>
+                        <h3 className="font-bold text-white tracking-wide">{channel.name}</h3>
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider">Secure Channel</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                <div className="flex items-center gap-3">
+                    <div className="relative group">
+                        <Search className="w-3.5 h-3.5 text-white/30 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-blue-400 transition-colors" />
                         <input 
-                            placeholder="Search..." 
-                            className="bg-slate-800/50 border-none rounded-full pl-9 pr-4 py-1.5 text-xs text-white w-48 focus:ring-1 focus:ring-white/20 outline-none"
+                            placeholder="Search logs..." 
+                            className="bg-black/20 border border-white/5 rounded-full pl-9 pr-4 py-1.5 text-xs text-white w-48 focus:outline-none focus:border-blue-500/30 focus:bg-black/40 transition-all placeholder:text-white/20"
                         />
                     </div>
-                    <Button variant="ghost" size="icon" className="text-white/40 hover:text-white">
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-white hover:bg-white/5">
                         <Bell className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-2" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3" ref={scrollRef}>
                 {messages?.map((msg, i) => {
                     const isMe = msg.userId === user.id;
                     const showHeader = i === 0 || messages[i-1].author !== msg.author || (new Date(msg.created_date) - new Date(messages[i-1].created_date) > 300000);
@@ -195,34 +209,54 @@ export default function ClanChat({ clan, channel }) {
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-slate-900/50 border-t border-white/10">
+            <div 
+                className="p-4 backdrop-blur-xl"
+                style={{ 
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.05)' 
+                }}
+            >
                 <form onSubmit={handleSend} className="relative flex flex-col gap-2">
                     {canModerate && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-1">
                             <button
                                 type="button"
                                 onClick={() => setIsAnnouncement(!isAnnouncement)}
-                                className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-colors ${
+                                className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full transition-all ${
                                     isAnnouncement 
-                                        ? 'bg-amber-500 text-black' 
-                                        : 'bg-white/5 text-white/40 hover:text-white/60'
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20' 
+                                        : 'bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 border border-white/5'
                                 }`}
                             >
                                 <Megaphone className="w-3 h-3" /> Announcement
                             </button>
                         </div>
                     )}
-                    <div className="relative">
+                    <div className="relative group">
                         <Input
                             value={message}
                             onChange={e => setMessage(e.target.value)}
-                            placeholder={isAnnouncement ? "Post announcement..." : `Message #${channel.name}`}
-                            className={`bg-slate-800 border-white/10 h-12 rounded-xl pl-4 pr-12 text-white focus:ring-blue-500/50 focus:border-blue-500 ${isAnnouncement ? 'border-amber-500/50 ring-1 ring-amber-500/20' : ''}`}
+                            placeholder={isAnnouncement ? "Broadcast announcement..." : `Message #${channel.name}`}
+                            className={`
+                                h-14 rounded-2xl pl-5 pr-14 text-white transition-all
+                                ${isAnnouncement 
+                                    ? 'bg-amber-950/20 border-amber-500/30 focus:border-amber-500/50 placeholder:text-amber-500/30' 
+                                    : 'bg-black/40 border-white/10 focus:border-blue-500/40 focus:bg-black/60 placeholder:text-white/20'
+                                }
+                                backdrop-blur-md shadow-inner
+                            `}
                         />
                         <Button 
                             type="submit" 
                             size="icon"
-                            className={`absolute right-2 top-2 h-8 w-8 rounded-lg ${isAnnouncement ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                            className={`
+                                absolute right-2 top-2 h-10 w-10 rounded-xl transition-all shadow-lg
+                                ${isAnnouncement 
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:brightness-110' 
+                                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:brightness-110'
+                                }
+                                ${!message.trim() ? 'opacity-50 grayscale' : 'opacity-100'}
+                            `}
                             disabled={!message.trim()}
                         >
                             <Send className="w-4 h-4" />
