@@ -215,6 +215,35 @@ Deno.serve(async (req) => {
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // --- REQUEST JOIN (Private Clans) ---
+        if (action === 'request_join') {
+            const { divisionId, message } = data;
+            const division = await base44.entities.Division.get(divisionId);
+            if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
+
+            // Check if already a member
+            const existingMember = await base44.entities.ClanMember.filter({ userId: user.id, divisionId });
+            if (existingMember.length > 0) {
+                return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
+            }
+
+            // Check if already pending
+            const existingApp = await base44.entities.ClanApplication.filter({ userId: user.id, divisionId, status: 'pending' });
+            if (existingApp.length > 0) {
+                return new Response(JSON.stringify({ error: 'Application already pending' }), { status: 400, headers: corsHeaders });
+            }
+
+            await base44.entities.ClanApplication.create({
+                divisionId,
+                userId: user.id,
+                message: message || '',
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            });
+
+            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         // --- LEAVE CLAN ---
         if (action === 'leave_clan') {
             const { divisionId } = data;

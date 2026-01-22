@@ -42,11 +42,21 @@ export default function ClanIntro({ onClanCreated }) {
     });
 
     const joinClanMutation = useMutation({
-        mutationFn: (clanId) => base44.functions.invoke('clanSystem', { action: 'join_clan', data: { clanId } }),
-        onSuccess: (res) => {
+        mutationFn: ({ clanId, isPrivate }) => {
+            const action = isPrivate ? 'request_join' : 'join_clan';
+            return base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
+        },
+        onSuccess: (res, variables) => {
             if (res.data.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-                // Auto-redirect handled by parent detecting new membership
+                if (variables.isPrivate) {
+                    // Show success toast for application
+                    alert("Application sent successfully!"); // In real app use toast
+                } else {
+                    queryClient.invalidateQueries(['myClanMemberships']);
+                    // Auto-redirect handled by parent detecting new membership
+                }
+            } else {
+                console.error(res.data.error);
             }
         }
     });
@@ -250,11 +260,11 @@ export default function ClanIntro({ onClanCreated }) {
 
                                                     <Button 
                                                         size="sm"
-                                                        onClick={() => joinClanMutation.mutate(clan.id)}
+                                                        onClick={() => joinClanMutation.mutate({ clanId: clan.id, isPrivate: clan.isPrivate })}
                                                         disabled={joinClanMutation.isPending}
                                                         className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                                     >
-                                                        {joinClanMutation.isPending ? 'Joining...' : (clan.isPrivate ? 'Request' : 'Join')}
+                                                        {joinClanMutation.isPending ? 'Processing...' : (clan.isPrivate ? 'Request' : 'Join')}
                                                     </Button>
                                                 </div>
                                             </div>
