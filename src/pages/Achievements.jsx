@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
+  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer, Eye, Package,
   MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
   Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
 'lucide-react';
