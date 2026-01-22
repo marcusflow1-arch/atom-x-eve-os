@@ -5,7 +5,8 @@ import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
-  MessageSquare, Users, Star, TrendingUp, SlidersHorizontal } from
+  MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
+  Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -27,6 +28,23 @@ import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+
+// Icon mapping for genres
+const GENRE_ICONS = {
+  'Action': Crosshair,
+  'RPG': Shield,
+  'Strategy': Trophy,
+  'Simulation': Monitor,
+  'Sports': Trophy,
+  'Racing': Car,
+  'Horror': Skull,
+  'Shooter': Crosshair,
+  'Music': Music,
+  'Adventure': Gamepad2,
+  'Puzzle': Zap,
+  'Romance': Heart,
+  'Sci-Fi': Sparkles,
+};
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -691,9 +709,58 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
             {/* Interface Layer */}
             <div className="relative z-10 w-full h-full">
+
+              {/* HORIZONTAL GENRE FILTER (Top) */}
+              <div 
+                className="absolute top-20 left-0 right-0 z-40 h-20 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
+                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+              >
+                <div className="flex items-center gap-4">
+                  {/* All Games Option */}
+                  <motion.button
+                    onClick={() => { setActiveGenre('All'); setActiveGameIndex(0); setActiveCardIndex(0); }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                      ${activeGenre === 'All' 
+                        ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
+                        : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                      }
+                    `}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">All</span>
+                  </motion.button>
+
+                  {/* Genre Options */}
+                  {genres.filter(g => g !== 'All').map((genre) => {
+                    const isActive = activeGenre === genre;
+                    const Icon = GENRE_ICONS[genre] || Gamepad2;
+                    return (
+                      <motion.button
+                        key={genre}
+                        onClick={() => { setActiveGenre(genre); setActiveGameIndex(0); setActiveCardIndex(0); }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`
+                          flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                          ${isActive 
+                            ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
+                            : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                          }
+                        `}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">{genre}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
               
               {/* Header with Game Name and Controls */}
-              <div className="absolute top-32 left-12 flex items-center gap-4 z-30">
+              <div className="absolute top-44 left-12 flex items-center gap-4 z-30">
                 <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
