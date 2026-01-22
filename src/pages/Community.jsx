@@ -276,7 +276,7 @@ export default function CommunityPage() {
                                 <span className="text-sm uppercase tracking-wide">All Cards</span>
                             </motion.button>
 
-                            <div className="w-px h-6 bg-white/10 mx-2" />
+                            <ChevronRight className="w-4 h-4 text-white/20 mx-2" />
 
                             {/* Scrollable Genres */}
                             {GENRE_CONFIG.map((genre) => {
