@@ -572,16 +572,12 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
 
             {/* Results */}
             <div className="flex-1 min-w-0">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <p className="text-white/50 text-sm">
-                  {filteredItems.length > 0 ? `1-${Math.min(filteredItems.length, 48)} of ${filteredItems.length} results` : 'No results'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative group/search">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
+            {/* Enhanced Marketplace Header */}
+            <div className="flex flex-col gap-6 mb-8">
+              {/* Controls Row */}
+              <div className="flex items-center justify-between">
+                 <div className="relative group/search">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
                   <input 
                     type="text" 
                     value={searchTerm}
@@ -589,35 +585,73 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                       setInternalSearchTerm(e.target.value);
                       if (onSearchChange) onSearchChange(e.target.value);
                     }}
-                    placeholder="Search..." 
-                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder:text-white/30 w-32 focus:w-48 transition-all outline-none"
+                    placeholder="Search marketplace..." 
+                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/30 w-64 focus:w-80 transition-all outline-none"
                   />
                 </div>
-                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                  <button onClick={() => setViewMode('list')} className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white/10' : ''}`}>
-                    <List className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white/10' : ''}`}>
-                    <Grid className="w-4 h-4" />
-                  </button>
+
+                <div className="flex items-center gap-3">
+                   <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-black/20 border border-white/10 text-white text-sm rounded-full px-4 py-2 outline-none focus:border-white/30 hover:bg-white/5 transition-colors"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="reviews">Top Rated</option>
+                  </select>
+
+                  <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/5">
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                      <Grid className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <select
-                  value={filters.genre}
-                  onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
-                  className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-                >
-                  {GENRES.map(genre => <option key={genre} value={genre}>{genre}</option>)}
-                </select>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-                >
-                  <option value="featured">Sort by: Featured</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="reviews">Avg. Customer Review</option>
-                </select>
+              </div>
+
+              {/* Horizontal Genre Scroller (The "Boxes") */}
+              <div 
+                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+              >
+                {GENRE_CONFIG.map((genre) => {
+                  const isActive = filters.genre === genre.label;
+                  const Icon = genre.icon;
+                  return (
+                    <motion.button
+                      key={genre.label}
+                      onClick={() => setFilters(prev => ({ ...prev, genre: genre.label }))}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        flex flex-col items-center justify-center gap-2 w-24 h-24 flex-shrink-0 rounded-2xl border transition-all duration-300 relative overflow-hidden group
+                        ${isActive 
+                          ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                        }
+                      `}
+                    >
+                      <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-cyan-500 text-black' : 'bg-white/5 text-white/50 group-hover:text-white group-hover:bg-white/10'}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-cyan-300' : 'text-white/40 group-hover:text-white'}`}>
+                        {genre.label}
+                      </span>
+                      
+                      {/* Active Indicator Line */}
+                      {isActive && (
+                        <motion.div 
+                          layoutId="activeGenreLine"
+                          className="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500" 
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
 
