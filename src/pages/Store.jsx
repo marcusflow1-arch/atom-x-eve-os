@@ -1306,8 +1306,6 @@ export default function Store() {
                                                 })}
                                             </motion.div>
                                             
-                                            {/* Right Fade Only (Since aligned left) */}
-                                            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900 via-slate-900/50 to-transparent pointer-events-none" />
                                         </div>
                                     </div>
 
