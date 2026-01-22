@@ -337,7 +337,7 @@ export default function EntertainmentHub() {
                       <h2 className="text-xl font-bold text-white">Jump Back In</h2>
                     </div>
                   </div>
-                  <div className="grid grid-cols-6 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {AGGREGATED_CONTENT.filter(item => item.progress).map((item) => (
                       <ContentCard key={item.id} item={item} onClick={handleAppSelect} showProgress={true} />
                     ))}
@@ -355,7 +355,7 @@ export default function EntertainmentHub() {
                       View All <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-6 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {AGGREGATED_CONTENT.slice(0, 6).map((item) => (
                       <ContentCard key={item.id} item={item} onClick={handleAppSelect} />
                     ))}
@@ -380,7 +380,7 @@ export default function EntertainmentHub() {
                        </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-6 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {AGGREGATED_CONTENT.slice(6, 12).map((item) => (
                       <ContentCard key={item.id} item={item} onClick={handleAppSelect} />
                     ))}
@@ -390,7 +390,7 @@ export default function EntertainmentHub() {
                 {/* Section 4: Browse By Service */}
                 <section className="pb-12">
                    <h2 className="text-xl font-bold text-white mb-6">Browse by Service</h2>
-                   <div className="grid grid-cols-8 gap-4">
+                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                      {STREAMING_APPS.map((app) => (
                        <button
                          key={app.id}
