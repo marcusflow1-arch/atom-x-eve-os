@@ -1,30 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Mic, Filter, Grid, Users, Mic2, Gamepad2, ChevronRight, Hash, Shield, Trophy, Target, Sparkles, MessageSquare, Plus } from 'lucide-react';
+import { Search, Mic, Filter, Grid, Users, Mic2, Gamepad2, ChevronRight, Hash, Shield, Trophy, Target, Sparkles, MessageSquare, Plus, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 import { MOCK_FARM_GAMES } from './farmData';
 
 export default function FarmHub({ onSelectGame }) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [isListening, setIsListening] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
-    const [activeFilter, setActiveFilter] = useState('all'); // all, owned, trending
     
+    // Filters
+    const [genreFilter, setGenreFilter] = useState('all');
+    const [activityFilter, setActivityFilter] = useState('any'); // any, high (>10k), medium (>5k)
+    const [ownedOnly, setOwnedOnly] = useState(false);
+    
+    const recognitionRef = useRef(null);
+
+    // Initialize Speech Recognition
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+            
+            recognitionRef.current.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                setSearchQuery(transcript);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onerror = (event) => {
+                console.error("Speech recognition error", event.error);
+                setIsListening(false);
+            };
+            
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, []);
+
+    const toggleVoiceSearch = () => {
+        if (!recognitionRef.current) {
+            alert("Voice search is not supported in this browser.");
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            recognitionRef.current.start();
+            setIsListening(true);
+        }
+    };
+    
+    // Logic: Apply filters before rendering
     const filteredGames = MOCK_FARM_GAMES.filter(g => {
-        const matchesSearch = g.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = activeFilter === 'all' || 
-                              (activeFilter === 'owned' && g.tags.includes('Owned')) ||
-                              (activeFilter === 'trending' && g.activeUsers > 10000);
-        return matchesSearch && matchesFilter;
+        // 1. Search Query (Text or Voice result)
+        const matchesSearch = g.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              g.genre.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // 2. Genre Filter
+        const matchesGenre = genreFilter === 'all' || g.genre === genreFilter;
+        
+        // 3. Activity Level
+        let matchesActivity = true;
+        if (activityFilter === 'high') matchesActivity = g.activeUsers > 15000;
+        if (activityFilter === 'medium') matchesActivity = g.activeUsers > 5000 && g.activeUsers <= 15000;
+        
+        // 4. Owned Filter
+        const matchesOwned = !ownedOnly || g.tags.includes('Owned');
+
+        return matchesSearch && matchesGenre && matchesActivity && matchesOwned;
     });
+
+    // Extract unique genres for filter
+    const genres = ['all', ...new Set(MOCK_FARM_GAMES.map(g => g.genre))];
 
     return (
         <div className="flex flex-col gap-8 h-full">
             {/* Hero Search Section */}
-            <div className="flex flex-col items-center justify-center pt-12 pb-6 gap-6 text-center">
+            <div className="flex flex-col items-center justify-center pt-12 pb-6 gap-6 text-center px-4">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -38,49 +102,126 @@ export default function FarmHub({ onSelectGame }) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="w-full max-w-2xl relative"
+                    className="w-full max-w-2xl relative z-20"
                 >
                     <div className="relative group">
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className={`absolute inset-0 bg-blue-500/20 rounded-full blur-xl transition-opacity ${isListening ? 'opacity-100 animate-pulse' : 'opacity-0 group-hover:opacity-100'}`} />
                         <Input 
                             className="w-full h-14 pl-12 pr-12 rounded-full bg-white/5 border-white/10 text-lg text-white placeholder:text-white/30 focus:border-blue-400/50 focus:bg-white/10 transition-all shadow-xl"
-                            placeholder="Search for a game..."
+                            placeholder={isListening ? "Listening..." : "Search for a game..."}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
-                        <button className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors group/mic">
-                            <Mic className="text-white/40 group-hover/mic:text-white w-5 h-5" />
+                        
+                        <button 
+                            onClick={toggleVoiceSearch}
+                            className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${
+                                isListening ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-white/40 hover:text-white'
+                            }`}
+                        >
+                            {isListening ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
                         </button>
                     </div>
                 </motion.div>
 
-                {/* Filters */}
+                {/* Filter Toggles */}
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="flex items-center gap-2"
+                    className="w-full max-w-2xl"
                 >
-                    {['all', 'owned', 'trending'].map(filter => (
-                        <button
-                            key={filter}
-                            onClick={() => setActiveFilter(filter)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                activeFilter === filter 
-                                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' 
-                                    : 'bg-white/5 text-white/40 border border-transparent hover:bg-white/10'
-                            }`}
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                         <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setFilterOpen(!filterOpen)}
+                            className={`rounded-full gap-2 transition-all ${filterOpen ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                         >
-                            {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                        </button>
-                    ))}
-                    <button 
-                        onClick={() => setFilterOpen(!filterOpen)}
-                        className="p-2 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                    >
-                        <Filter className="w-4 h-4" />
-                    </button>
+                            <Filter className="w-4 h-4" />
+                            Filters
+                            {filterOpen ? <ChevronRight className="w-4 h-4 rotate-90" /> : <ChevronRight className="w-4 h-4" />}
+                        </Button>
+                        
+                        {/* Quick Filter Chips (visible even if closed) */}
+                        {!filterOpen && (
+                             <div className="flex gap-2">
+                                {ownedOnly && (
+                                    <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30 flex gap-1 items-center cursor-pointer" onClick={() => setOwnedOnly(false)}>
+                                        Owned <X className="w-3 h-3" />
+                                    </Badge>
+                                )}
+                                {genreFilter !== 'all' && (
+                                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30 flex gap-1 items-center cursor-pointer" onClick={() => setGenreFilter('all')}>
+                                        {genreFilter} <X className="w-3 h-3" />
+                                    </Badge>
+                                )}
+                             </div>
+                        )}
+                    </div>
+
+                    <AnimatePresence>
+                        {filterOpen && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-left backdrop-blur-md">
+                                    
+                                    {/* Genre Filter */}
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold text-white/40 uppercase tracking-wider">Genre</Label>
+                                        <Select value={genreFilter} onValueChange={setGenreFilter}>
+                                            <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                                                <SelectValue placeholder="All Genres" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {genres.map(g => (
+                                                    <SelectItem key={g} value={g} className="capitalize">
+                                                        {g === 'all' ? 'All Genres' : g}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Activity Filter */}
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold text-white/40 uppercase tracking-wider">Activity</Label>
+                                        <Select value={activityFilter} onValueChange={setActivityFilter}>
+                                            <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                                                <SelectValue placeholder="Any Activity" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="any">Any Activity</SelectItem>
+                                                <SelectItem value="medium">Medium (&gt; 5k)</SelectItem>
+                                                <SelectItem value="high">High (&gt; 15k)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Owned Toggle */}
+                                    <div className="space-y-2 flex flex-col justify-center">
+                                        <Label className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Ownership</Label>
+                                        <div className="flex items-center gap-3">
+                                            <Switch 
+                                                checked={ownedOnly} 
+                                                onCheckedChange={setOwnedOnly} 
+                                                id="owned-mode"
+                                            />
+                                            <Label htmlFor="owned-mode" className="text-sm font-medium text-white cursor-pointer">
+                                                Show Owned Games Only
+                                            </Label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
             </div>
 
@@ -137,13 +278,19 @@ export default function FarmHub({ onSelectGame }) {
                 ) : (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-white/30">
                         <Gamepad2 className="w-12 h-12 mb-4 opacity-50" />
-                        <p>No games found matching your search.</p>
+                        <p className="text-lg font-medium">No games found</p>
+                        <p className="text-sm opacity-50">Try adjusting your search or filters</p>
                         <Button 
                             variant="link" 
-                            className="text-blue-400"
-                            onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}
+                            className="text-blue-400 mt-2"
+                            onClick={() => { 
+                                setSearchQuery(''); 
+                                setGenreFilter('all');
+                                setActivityFilter('any');
+                                setOwnedOnly(false);
+                            }}
                         >
-                            Clear filters
+                            Clear all filters
                         </Button>
                     </div>
                 )}
