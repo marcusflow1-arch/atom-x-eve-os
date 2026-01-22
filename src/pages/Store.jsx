@@ -1268,14 +1268,11 @@ export default function Store() {
                                     </div>
 
                                     {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top Left */}
-                                    <div className="absolute top-24 left-12 right-0 z-20 h-24 flex items-center justify-start overflow-hidden mask-linear-fade-right">
-                                        <motion.div 
-                                            className="flex items-center gap-4"
-                                            animate={{ 
-                                                x: -activeGenreIndex * (120 + 16) + (activeGenreIndex > 0 ? 100 : 0) // Keep active somewhat visible but mostly left aligned
-                                            }}
-                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                                        >
+                                    <div 
+                                        className="absolute top-40 left-0 right-0 z-20 h-28 flex items-center overflow-x-auto scrollbar-hide px-12"
+                                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+                                    >
+                                        <div className="flex items-center gap-4">
                                                 {genreData.map((genre, idx) => {
                                                     const isActive = idx === activeGenreIndex;
                                                     const Icon = genre.icon;
