@@ -588,108 +588,225 @@ export default function DeveloperLimitedEdition() {
           </div>
         </div>
 
-        {/* Middle - Card Info & Selector */}
-        <div className="flex-1 flex flex-col">
-          {/* Card Information Header */}
-          {selectedCard && (
-            <div className="mb-3 pb-4 border-b border-white/10">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h2 className="text-lg font-bold text-white mb-1">{selectedCard.name}</h2>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{selectedCard.type}</Badge>
-                    <Badge className={`${rarityColors[selectedCard.rarity]?.bg} ${rarityColors[selectedCard.rarity]?.text} border-none text-[10px]`}>{selectedCard.rarity}</Badge>
-                    <span className="text-amber-400/80 text-[10px]">{selectedCard.tag}</span>
+        {/* Middle - Split Container */}
+        <div className="flex-1 flex gap-6">
+          {/* Condensed Info (35%) */}
+          <div className="w-[35%] flex flex-col border-r border-white/10 pr-6">
+            {/* Card Information Header */}
+            {selectedCard && (
+              <div className="mb-3 pb-4 border-b border-white/10">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-white mb-1">{selectedCard.name}</h2>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{selectedCard.type}</Badge>
+                      <Badge className={`${rarityColors[selectedCard.rarity]?.bg} ${rarityColors[selectedCard.rarity]?.text} border-none text-[10px]`}>{selectedCard.rarity}</Badge>
+                    </div>
+                    <span className="text-amber-400/80 text-[10px] block mt-1">{selectedCard.tag}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-white/40 text-[10px]">Card ID</p>
-                  <p className="text-white font-mono text-sm">#{String(selectedCard.id).padStart(4, '0')}</p>
-                </div>
-              </div>
 
-              {/* Stats */}
-              <div className="mb-3">
-                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Statistics</h3>
-                <div className="grid grid-cols-5 gap-2">
-                  {Object.entries({
-                    Power: 50 + (selectedCard.id * 7) % 50,
-                    Defense: 30 + (selectedCard.id * 11) % 40,
-                    Speed: 20 + (selectedCard.id * 13) % 30,
-                    Synergy: 15 + (selectedCard.id * 5) % 35,
-                    Durability: 40 + (selectedCard.id * 9) % 40,
-                  }).map(([key, value]) => (
-                    <div key={key} className="text-center">
-                      <div className="text-[9px] text-white/40 uppercase mb-0.5">{key}</div>
-                      <div className="text-base font-bold text-white">{value}</div>
-                      <div className="w-full h-0.5 bg-white/10 rounded-full mt-0.5 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                          style={{ width: `${value}%` }}
-                        />
+                {/* Stats */}
+                <div className="mb-3">
+                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Statistics</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.entries({
+                      Power: 50 + (selectedCard.id * 7) % 50,
+                      Defense: 30 + (selectedCard.id * 11) % 40,
+                      Speed: 20 + (selectedCard.id * 13) % 30,
+                    }).map(([key, value]) => (
+                      <div key={key} className="text-center">
+                        <div className="text-[9px] text-white/40 uppercase mb-0.5">{key}</div>
+                        <div className="text-base font-bold text-white">{value}</div>
+                        <div className="w-full h-0.5 bg-white/10 rounded-full mt-0.5 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{ width: `${value}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Abilities */}
+                <div className="mb-3">
+                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Abilities</h3>
+                  <div className="space-y-1.5">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-white font-semibold text-xs">Primary Effect</h4>
+                        <p className="text-white/60 text-[10px] line-clamp-2">Enhances {selectedCard.type.toLowerCase()} capabilities by {20 + (selectedCard.id * 3) % 30}%</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Abilities */}
-              <div className="mb-3">
-                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Abilities</h3>
-                <div className="space-y-1.5">
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-white font-semibold text-xs">Primary Effect</h4>
-                      <p className="text-white/60 text-[10px]">Enhances {selectedCard.type.toLowerCase()} capabilities by {20 + (selectedCard.id * 3) % 30}%</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-white font-semibold text-xs">Passive Bonus</h4>
-                      <p className="text-white/60 text-[10px]">Grants bonus experience in related genre activities</p>
-                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Lore */}
-              <div>
-                <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Lore</h3>
-                <p className="text-white/70 text-xs italic leading-relaxed">
-                  This {selectedCard.rarity.toLowerCase()} {selectedCard.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension.
-                </p>
+                {/* Lore */}
+                <div>
+                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Lore</h3>
+                  <p className="text-white/70 text-xs italic leading-relaxed line-clamp-3">
+                    This {selectedCard.rarity.toLowerCase()} {selectedCard.type.toLowerCase()} was forged in the depths of legendary battles.
+                  </p>
+                </div>
               </div>
+            )}
+            
+            {/* Select Card Header */}
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Info className="w-3 h-3 text-purple-400" />
+              Select Card
+            </h4>
+            
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+               {currentGame?.limitedCards.map((card) => {
+                  const isSelected = selectedCard?.id === card.id;
+                  const rarity = rarityColors[card.rarity] || rarityColors.Common;
+                  return (
+                    <motion.div
+                      key={card.id}
+                      onClick={() => handleCardClick(card)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`flex-shrink-0 w-16 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
+                        isSelected 
+                          ? `${rarity.border} ring-2 ring-white/20` 
+                          : 'border-white/10 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={card.image} className="w-full h-full object-cover" />
+                    </motion.div>
+                  );
+               })}
             </div>
-          )}
-          
-          {/* Select Card Header - aligned with buy button */}
-          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Info className="w-3 h-3 text-purple-400" />
-            Select Card
-          </h4>
-          
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-             {currentGame?.limitedCards.map((card) => {
-                const isSelected = selectedCard?.id === card.id;
-                const rarity = rarityColors[card.rarity] || rarityColors.Common;
-                return (
+          </div>
+
+          {/* New Subpages Section */}
+          <div className="flex-1 flex flex-col h-full">
+            {/* Subpage Tabs */}
+            <div className="flex items-center gap-6 mb-6 border-b border-white/10 pb-2 h-[52px]">
+              <button
+                onClick={() => setActiveSubPage('skill_tree')}
+                className={`flex items-center gap-2 text-sm font-bold transition-all relative h-full ${
+                  activeSubPage === 'skill_tree' ? 'text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <Network className="w-4 h-4" />
+                Skill Tree
+                {activeSubPage === 'skill_tree' && (
+                  <motion.div layoutId="subTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveSubPage('live_view')}
+                className={`flex items-center gap-2 text-sm font-bold transition-all relative h-full ${
+                  activeSubPage === 'live_view' ? 'text-white' : 'text-white/40 hover:text-white'
+                }`}
+              >
+                <Video className="w-4 h-4" />
+                Live View
+                {activeSubPage === 'live_view' && (
+                  <motion.div layoutId="subTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
+                )}
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 relative bg-white/[0.02] rounded-xl border border-white/5 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {activeSubPage === 'skill_tree' ? (
                   <motion.div
-                    key={card.id}
-                    onClick={() => handleCardClick(card)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex-shrink-0 h-[135px] aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative ${
-                      isSelected 
-                        ? `${rarity.border} ring-2 ring-white/20` 
-                        : 'border-white/10 opacity-60 hover:opacity-100'
-                    }`}
+                    key="skill_tree"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute inset-0 p-6 flex flex-col items-center justify-center"
                   >
-                    <img src={card.image} className="w-full h-full object-cover" />
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {/* Simple Skill Tree Mockup */}
+                      <div className="flex flex-col items-center gap-8 relative z-10">
+                        {/* Root Node */}
+                        <div className="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                          <img src={selectedCard?.image} className="w-12 h-12 rounded-full object-cover opacity-80" />
+                        </div>
+                        
+                        {/* Connecting Lines */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" style={{ zIndex: -1 }}>
+                           <path d="M 0 32 L -60 100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none" />
+                           <path d="M 0 32 L 60 100" stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none" />
+                           <path d="M -60 132 L -90 200" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                           <path d="M 60 132 L 90 200" stroke="rgba(255,255,255,0.1)" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+                        </svg>
+
+                        {/* Level 2 Nodes */}
+                        <div className="flex gap-20">
+                           <div className="flex flex-col items-center gap-2">
+                              <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
+                                 <Sparkles className="w-5 h-5 text-purple-400" />
+                              </div>
+                              <span className="text-[10px] text-white/50 uppercase tracking-wider">Mastery</span>
+                           </div>
+                           <div className="flex flex-col items-center gap-2">
+                              <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
+                                 <Shield className="w-5 h-5 text-blue-400" />
+                              </div>
+                              <span className="text-[10px] text-white/50 uppercase tracking-wider">Defense</span>
+                           </div>
+                        </div>
+
+                        {/* Level 3 Nodes (Locked) */}
+                        <div className="flex gap-32 opacity-50">
+                           <div className="w-10 h-10 rounded-full bg-black/40 border border-white/5 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white/20" />
+                           </div>
+                           <div className="w-10 h-10 rounded-full bg-black/40 border border-white/5 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white/20" />
+                           </div>
+                        </div>
+                      </div>
+                      
+                      <div className="absolute top-4 right-4 bg-black/40 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/60">
+                        Skill Tree Preview
+                      </div>
+                    </div>
                   </motion.div>
-                );
-             })}
+                ) : (
+                  <motion.div
+                    key="live_view"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute inset-0 bg-black flex items-center justify-center group"
+                  >
+                    {/* Placeholder Video View */}
+                    <img 
+                      src={currentGame?.cover} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm group-hover:scale-105 transition-transform duration-1000" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
+                    
+                    <div className="relative z-10 flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-all cursor-pointer shadow-2xl">
+                        <Play className="w-6 h-6 text-white fill-current ml-1" />
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-white font-bold tracking-wider">Watch Demonstration</h3>
+                        <p className="text-white/50 text-xs mt-1">See {selectedCard?.name} in action</p>
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/40">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        LIVE PREVIEW
+                      </div>
+                      <span>00:45 / 02:30</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
