@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import FarmHub from '@/components/farm/FarmHub';
 import FarmGameView from '@/components/farm/FarmGameView';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { getFarmGameById } from '@/components/farm/farmData';
 
 export default function FarmPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [view, setView] = useState('hub'); // 'hub' | 'game'
     const [selectedGame, setSelectedGame] = useState(null);
 
+    // Handle Deep Linking & Navigation Entry
+    useEffect(() => {
+        const gameId = searchParams.get('gameId');
+        if (gameId) {
+            const game = getFarmGameById(gameId);
+            if (game) {
+                setSelectedGame(game);
+                setView('game');
+            }
+        } else {
+            // Reset if no param (e.g. back navigation)
+            if (view !== 'hub') {
+                 // Keep current state if user is navigating within app, 
+                 // but if they hit back to /Farm, maybe show Hub.
+                 // For now, let's rely on manual state for in-app nav, 
+                 // and params for initial load.
+            }
+        }
+    }, [searchParams]);
+
     const handleSelectGame = (game) => {
+        setSearchParams({ gameId: game.id });
         setSelectedGame(game);
         setView('game');
     };
 
     const handleBackToHub = () => {
+        setSearchParams({});
         setView('hub');
-        // Small delay to clear selection after animation starts if we were doing fancy transitions
         setTimeout(() => setSelectedGame(null), 300);
     };
 

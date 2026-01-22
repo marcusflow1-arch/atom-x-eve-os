@@ -11,8 +11,23 @@ import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 import FarmTopicSelector from './FarmTopicSelector';
 import FarmTopicContent from './FarmTopicContent';
 
+import { toast } from 'sonner';
+
 export default function FarmGameView({ game, onBack }) {
     const [activeTopic, setActiveTopic] = useState(null); // 'achievements', 'farming', 'recruitment', etc.
+    const isOwned = game.tags?.includes('Owned');
+
+    const handleAction = (action) => {
+        if (!isOwned) {
+            toast.error("Ownership Required", {
+                description: `You must own ${game.title} to ${action}.`,
+                icon: <Shield className="w-4 h-4 text-red-400" />
+            });
+            return;
+        }
+        // Logic for action would go here
+        toast.success(`Action: ${action}`);
+    };
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -25,14 +40,23 @@ export default function FarmGameView({ game, onBack }) {
                 </div>
 
                 <div className="relative z-20 px-8 pt-8 pb-6 flex flex-col gap-6">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="self-start text-white/50 hover:text-white hover:bg-white/10 -ml-2"
-                        onClick={onBack}
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Hub
-                    </Button>
+                    <div className="flex justify-between w-full">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="self-start text-white/50 hover:text-white hover:bg-white/10 -ml-2"
+                            onClick={onBack}
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Hub
+                        </Button>
+                        
+                        {!isOwned && (
+                            <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-full text-yellow-500 text-xs font-bold">
+                                <Shield className="w-3 h-3" />
+                                GUEST MODE
+                            </div>
+                        )}
+                    </div>
 
                     <div className="flex items-end justify-between">
                         <div className="flex items-end gap-6">
@@ -77,11 +101,17 @@ export default function FarmGameView({ game, onBack }) {
                             animate={{ opacity: 1, x: 0 }}
                             className="flex items-center gap-3 mb-2"
                         >
-                            <Button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full">
+                            <Button 
+                                onClick={() => handleAction('join voice')}
+                                className={`rounded-full border ${isOwned ? 'bg-white/5 hover:bg-white/10 text-white border-white/10' : 'bg-white/5 text-white/40 border-white/5 cursor-not-allowed'}`}
+                            >
                                 <Mic2 className="w-4 h-4 mr-2" />
                                 Join Voice
                             </Button>
-                            <Button className="bg-blue-600 hover:bg-blue-500 text-white rounded-full">
+                            <Button 
+                                onClick={() => handleAction('create a post')}
+                                className={`rounded-full ${isOwned ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-white/5 text-white/40 border border-white/5 cursor-not-allowed'}`}
+                            >
                                 <Plus className="w-4 h-4 mr-2" />
                                 New Post
                             </Button>

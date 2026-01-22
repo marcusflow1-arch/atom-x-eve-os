@@ -1234,22 +1234,19 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
                         {activeDetailTab === 'discussion' && (
                           <motion.div key="discussion" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                             <div className="flex justify-between items-center">
-                               <h3 className="font-bold text-lg">Community Threads</h3>
-                               <Button size="sm" variant="secondary">New Topic</Button>
+                             <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 rounded-2xl border border-white/10">
+                               <MessageSquare className="w-16 h-16 text-white/20 mb-4" />
+                               <h3 className="text-xl font-bold text-white mb-2">Join the Conversation</h3>
+                               <p className="text-white/50 max-w-md mb-6">
+                                 Connect with other players, share strategies, and find groups in the dedicated Farm Page for {selectedGame.title}.
+                               </p>
+                               <Button 
+                                 className="bg-blue-600 hover:bg-blue-500 rounded-full px-8 py-6 text-lg"
+                                 onClick={() => navigate(createPageUrl('Farm') + `?gameId=g4`)} // Mocking ID g4 for demo
+                               >
+                                 Enter Farm Page
+                               </Button>
                              </div>
-                             {[1,2,3,4].map(i => (
-                               <div key={i} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 flex gap-4">
-                                  <div className="flex-1">
-                                     <h4 className="text-white font-medium mb-1">Anyone found the hidden chest in Level {i}?</h4>
-                                     <p className="text-white/40 text-xs">Posted by User{i} • 2 hours ago</p>
-                                  </div>
-                                  <div className="text-right">
-                                     <div className="text-white font-bold">{10 * i}</div>
-                                     <div className="text-white/40 text-xs">Replies</div>
-                                  </div>
-                               </div>
-                             ))}
                           </motion.div>
                         )}
                         
