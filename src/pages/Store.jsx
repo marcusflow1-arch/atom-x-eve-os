@@ -1312,14 +1312,11 @@ export default function Store() {
                                     </div>
 
                                     {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres, Left Aligned */}
-                                    <div className="absolute top-48 left-12 right-0 z-20 h-14 flex items-center justify-start overflow-hidden mask-linear-fade-right">
-                                        <motion.div 
-                                            className="flex items-center gap-3"
-                                            animate={{ 
-                                                x: -activeSubCategoryIndex * (110 + 12) + (activeSubCategoryIndex > 0 ? 50 : 0)
-                                            }}
-                                            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                                        >
+                                    <div 
+                                        className="absolute top-64 left-0 right-0 z-20 h-14 flex items-center justify-center overflow-x-auto scrollbar-hide px-12"
+                                        onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+                                    >
+                                        <div className="flex items-center gap-3">
                                             {SUB_CATEGORIES.map((subCat, idx) => {
                                                 const isActive = idx === activeSubCategoryIndex;
                                                 return (
