@@ -67,7 +67,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                     alert("Application sent successfully!"); // In real app use toast
                 } else {
                     queryClient.invalidateQueries(['myClanMemberships']);
-                    // Auto-redirect handled by parent detecting new membership
+                    if (onClanJoined) onClanJoined(variables.clanId);
                 }
             } else {
                 console.error(res.data.error);
