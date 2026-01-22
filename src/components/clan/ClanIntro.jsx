@@ -218,7 +218,12 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                                 filteredClans.map((clan) => (
                                     <div 
                                         key={clan.id}
-                                        className="group relative rounded-2xl bg-[#12141a] border border-white/5 hover:border-cyan-400/30 overflow-hidden transition-all hover:transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-900/10"
+                                        onClick={() => {
+                                            if (isMember(clan.id) && onClanJoined) {
+                                                onClanJoined(clan.id);
+                                            }
+                                        }}
+                                        className="group relative rounded-2xl bg-[#12141a] border border-white/5 hover:border-cyan-400/30 overflow-hidden transition-all hover:transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-900/10 cursor-pointer"
                                     >
                                         {/* Banner */}
                                         <div className="h-32 bg-black/50 relative">
