@@ -19,7 +19,7 @@ import AchievementDetailOverlay from '../components/achievements/AchievementDeta
 import ChallengeFriendModal from '../components/community/ChallengeFriendModal';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
-import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
+import AchievementWorkspace from '../components/achievements/AchievementWorkspace';
 import ShinyCard from '../components/shared/ShinyCard';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
@@ -1387,15 +1387,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       </AnimatePresence>
 
-      {/* Card Enhancement Overlay */}
-      <AnimatePresence>
-        {selectedCard && !skillTreeMode &&
-        <CardEnhancementOverlay
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)} />
 
-        }
-      </AnimatePresence>
 
       {/* Skill Tree Overlay */}
       <AnimatePresence>
@@ -1407,14 +1399,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       </AnimatePresence>
 
-      {/* Blacksmith Overlay */}
+      {/* New Workspace Overlay - Replaces Blacksmith/Detail overlays for Cards */}
       <AnimatePresence>
-        {blacksmithCard && blacksmithMode &&
-        <BlacksmithOverlay
-          card={blacksmithCard}
-          onClose={() => setBlacksmithCard(null)} />
-
-        }
+        {(selectedCard || blacksmithCard) && (
+          <AchievementWorkspace 
+            card={selectedCard || blacksmithCard} 
+            onClose={() => {
+              setSelectedCard(null);
+              setBlacksmithCard(null);
+            }} 
+          />
+        )}
       </AnimatePresence>
 
       {/* Challenge Modal */}
