@@ -234,43 +234,38 @@ export default function CommunityPage() {
                             </div>
                         </div>
 
-                        {/* Right: Actions (Back / Create) */}
+                        {/* Right: Actions (Back / Create) - Removed and relocated */}
                         <div className="flex items-center gap-4">
-                            {activeGame && (
-                                <>
-                                    <Button 
-                                        variant="ghost" 
-                                        onClick={() => {
-                                            setActiveGame(null);
-                                            setSelectedPost(null);
-                                            setSelectedGenre('All Games');
-                                            setActiveSection('all');
-                                        }}
-                                        className="text-sm font-bold tracking-wider text-white/60 hover:text-white"
-                                    >
-                                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                                    </Button>
-                                    <Button 
-                                        onClick={() => setShowCreateForm(true)}
-                                        className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-6"
-                                    >
-                                        <Plus className="w-4 h-4 mr-2" /> New Post
-                                    </Button>
-                                </>
-                            )}
                         </div>
                     </div>
 
-                    {/* Search Bar - Moved below title, above genres */}
-                    <div className="relative w-full max-w-md">
-                        <input 
-                            type="text" 
-                            placeholder={activeGame ? "Search this forum..." : "Search games..."}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-10"
-                        />
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    {/* Search Bar & Back Button */}
+                    <div className="flex items-center gap-4 w-full max-w-xl">
+                        {activeGame && (
+                            <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                    setActiveGame(null);
+                                    setSelectedPost(null);
+                                    setSelectedGenre('All Games');
+                                    setActiveSection('all');
+                                }}
+                                className="text-white/60 hover:text-white shrink-0"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </Button>
+                        )}
+                        <div className="relative w-full">
+                            <input 
+                                type="text" 
+                                placeholder={activeGame ? "Search this forum..." : "Search games..."}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-10"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        </div>
                     </div>
                 </div>
 
@@ -428,20 +423,29 @@ export default function CommunityPage() {
                                                 exit={{ opacity: 0 }}
                                                 className="space-y-4"
                                             >
-                                                {/* Sort Bar inside feed */}
-                                                <div className="flex items-center justify-between mb-4 px-1">
-                                                    <h2 className="text-sm font-bold text-white/60 tracking-wide uppercase">
+                                                {/* Sort Bar & New Post */}
+                                                <div className="flex items-end justify-between mb-4 px-1">
+                                                    <h2 className="text-sm font-bold text-white/60 tracking-wide uppercase pb-2">
                                                         {activeSection === 'all' ? 'All Posts' : TOPIC_TYPES.find(t => t.id === activeSection)?.label}
                                                     </h2>
-                                                    <Select value={sortBy} onValueChange={setSortBy}>
-                                                        <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="newest">Newest</SelectItem>
-                                                            <SelectItem value="popular">Popular</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <div className="flex flex-col gap-2 items-end">
+                                                        <Button 
+                                                            onClick={() => setShowCreateForm(true)}
+                                                            size="sm"
+                                                            className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-4 h-7 text-xs"
+                                                        >
+                                                            <Plus className="w-3 h-3 mr-1" /> New Post
+                                                        </Button>
+                                                        <Select value={sortBy} onValueChange={setSortBy}>
+                                                            <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="newest">Newest</SelectItem>
+                                                                <SelectItem value="popular">Popular</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
                                                 </div>
 
                                                 {loading ? (
