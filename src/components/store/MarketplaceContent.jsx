@@ -6,7 +6,7 @@ import {
   Gamepad2, Package, Zap, Shield, X, Grid, List,
   Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus,
   ArrowUpDown, Filter, PlayCircle, Video, Code,
-  Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid, Mic, MicOff
+  Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid, Mic
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,18 +36,18 @@ const MARKETPLACE_ITEMS = [
 ];
 
 const GENRE_CONFIG = [
-  { label: 'All Cards', icon: Grid },
-  { label: 'All Genres', icon: LayoutGrid },
-  { label: 'Action', icon: Crosshair },
-  { label: 'RPG', icon: Shield },
-  { label: 'Shooter', icon: Crosshair },
-  { label: 'Sci-Fi', icon: Sparkles },
-  { label: 'Strategy', icon: Trophy },
-  { label: 'Adventure', icon: Gamepad2 },
-  { label: 'Sports', icon: Trophy },
-  { label: 'Racing', icon: Car },
-  { label: 'Simulation', icon: Monitor },
-  { label: 'Horror', icon: Skull },
+  { label: 'All Cards', icon: Grid, type: 'special', id: 'all_cards' },
+  { label: 'All Games', icon: Gamepad2, type: 'special', id: 'all_games' },
+  { label: 'Action', icon: Crosshair, type: 'genre' },
+  { label: 'RPG', icon: Shield, type: 'genre' },
+  { label: 'Shooter', icon: Crosshair, type: 'genre' },
+  { label: 'Sci-Fi', icon: Sparkles, type: 'genre' },
+  { label: 'Strategy', icon: Trophy, type: 'genre' },
+  { label: 'Adventure', icon: Gamepad2, type: 'genre' },
+  { label: 'Sports', icon: Trophy, type: 'genre' },
+  { label: 'Racing', icon: Car, type: 'genre' },
+  { label: 'Simulation', icon: Monitor, type: 'genre' },
+  { label: 'Horror', icon: Skull, type: 'genre' },
 ];
 
 const ITEM_TYPES = [
@@ -162,50 +162,104 @@ const ListItemCard = ({ item, onClick }) => {
   );
 };
 
-// Hook for Voice Input
-const useVoiceInput = (onResult) => {
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
-
-  React.useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event) => {
-        const result = event.results[0][0].transcript;
-        onResult(result);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech error:', event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-  }, [onResult]);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
-    }
-  };
-
-  return { isListening, toggleListening };
+// Filter Sidebar
+const FilterSection = ({ title, children, defaultOpen = true }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-white/10 py-4">
+      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between w-full text-left">
+        <h3 className="text-white font-bold text-sm">{title}</h3>
+        <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && <div className="mt-3">{children}</div>}
+    </div>
+  );
 };
 
-const FilterSidebar = () => null; // Removed as requested to move logic to top cross scroll
+const FilterSidebar = ({ filters, setFilters, availableGames }) => {
+  const { itemType, game, priceRange, rarities } = filters;
+
+  const toggleRarity = (r) => {
+    setFilters(prev => ({
+      ...prev,
+      rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
+    }));
+  };
+
+  return (
+    <div 
+      className="w-[220px] flex-shrink-0 p-4 rounded-3xl h-fit"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+      }}
+    >
+      <FilterSection title="Item Type">
+        <div className="space-y-1">
+          {ITEM_TYPES.map(type => (
+            <button
+              key={type.id}
+              onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
+              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
+                itemType === type.id ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              {itemType === type.id && <ChevronRight className="w-3 h-3" />}
+              {type.name}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Game">
+        <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+          <button
+            onClick={() => setFilters(prev => ({ ...prev, game: 'All Games' }))}
+            className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
+              game === 'All Games' ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            {game === 'All Games' && <ChevronRight className="w-3 h-3" />}
+            All Games
+          </button>
+          {availableGames.map(gameName => (
+            <button
+              key={gameName}
+              onClick={() => setFilters(prev => ({ ...prev, game: gameName }))}
+              className={`w-full text-left px-2 py-1.5 rounded text-sm transition-colors flex items-center gap-2 ${
+                game === gameName ? 'text-orange-400 font-medium' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              {game === gameName && <ChevronRight className="w-3 h-3" />}
+              {gameName}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      <FilterSection title="Rarity">
+        <div className="space-y-1.5">
+          {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
+            const style = rarityStyles[r];
+            return (
+              <label key={r} className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={rarities.includes(r)}
+                  onCheckedChange={() => toggleRarity(r)}
+                  className="border-white/30 data-[state=checked]:bg-orange-500 w-4 h-4"
+                />
+                <span className={`text-sm ${style.text}`}>{r}</span>
+              </label>
+            );
+          })}
+        </div>
+      </FilterSection>
+    </div>
+  );
+};
 
 // Enhanced Item Detail Modal with Preview and Recommendations
 const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
@@ -424,38 +478,62 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('grid');
+  
+  // 'cards' | 'games'
+  const [browseMode, setBrowseMode] = useState('cards'); 
 
   const [filters, setFilters] = useState({
-    genre: 'All Genres',
+    genre: 'All Cards', // Can be 'All Cards', 'All Games', or a specific genre
     game: 'All Games',
     itemType: 'all',
     priceRange: [0, 200000],
     rarities: [],
   });
 
-  // Get available games based on selected genre
-  const availableGames = useMemo(() => {
-    if (filters.genre === 'All Genres') {
-      return [...new Set(MARKETPLACE_ITEMS.map(item => item.game))].sort();
+  // Get available games based on selected genre (for games view)
+  const availableGamesList = useMemo(() => {
+    let games = [];
+    if (filters.genre === 'All Cards' || filters.genre === 'All Games') {
+      games = [...new Set(MARKETPLACE_ITEMS.map(item => item.game))];
+    } else {
+      games = [...new Set(MARKETPLACE_ITEMS.filter(item => item.genre === filters.genre).map(item => item.game))];
     }
-    return [...new Set(MARKETPLACE_ITEMS.filter(item => item.genre === filters.genre).map(item => item.game))].sort();
+    return games.map(gameTitle => {
+      const item = MARKETPLACE_ITEMS.find(i => i.game === gameTitle);
+      return {
+        title: gameTitle,
+        image: item?.image, // Placeholder, ideally use a cover prop
+        genre: item?.genre,
+        itemCount: MARKETPLACE_ITEMS.filter(i => i.game === gameTitle).length
+      };
+    }).sort((a, b) => a.title.localeCompare(b.title));
   }, [filters.genre]);
-
-  // Reset game filter when genre changes if selected game is not in the new genre
-  React.useEffect(() => {
-    if (filters.game !== 'All Games' && !availableGames.includes(filters.game)) {
-      setFilters(prev => ({ ...prev, game: 'All Games' }));
-    }
-  }, [availableGames, filters.game]);
 
   const filteredItems = useMemo(() => {
     return MARKETPLACE_ITEMS.filter(item => {
       const searchMatch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const genreMatch = filters.genre === 'All Genres' || item.genre === filters.genre;
+      
+      // Filter logic changes based on mode
+      let genreMatch = true;
+      if (browseMode === 'cards') {
+         // If browsing cards, "All Cards" means show all. "All Games" is not a card state.
+         // If a genre is selected in 'cards' mode, usually we might show cards for that genre,
+         // BUT user said: "instead of typically seeing the cards for each genre you're gonna see the game first"
+         // So if filters.genre is a specific Genre, we are likely in 'games' mode.
+         // However, if we clicked a Game to get here, filters.game is set.
+         if (filters.genre !== 'All Cards' && filters.genre !== 'All Games' && filters.game === 'All Games') {
+             // If we have a genre selected but no game selected, we shouldn't be in 'cards' mode usually,
+             // unless we want to support "Show all cards in Genre". 
+             // But user wants "Show Games First". So we probably won't be here often.
+             genreMatch = item.genre === filters.genre;
+         }
+      }
+      
       const gameMatch = filters.game === 'All Games' || item.game === filters.game;
       const itemTypeMatch = filters.itemType === 'all' || item.itemType === filters.itemType;
       const priceMatch = item.price >= filters.priceRange[0] && item.price <= filters.priceRange[1];
       const rarityMatch = filters.rarities.length === 0 || filters.rarities.includes(item.rarity);
+      
       return searchMatch && genreMatch && gameMatch && itemTypeMatch && priceMatch && rarityMatch;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -463,7 +541,26 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
       if (sortBy === 'reviews') return (b.reviews || 0) - (a.reviews || 0);
       return (b.views || 0) - (a.views || 0);
     });
-  }, [searchTerm, filters, sortBy]);
+  }, [searchTerm, filters, sortBy, browseMode]);
+
+  const handleGenreSelect = (genreItem) => {
+    if (genreItem.id === 'all_cards') {
+      setBrowseMode('cards');
+      setFilters(prev => ({ ...prev, genre: 'All Cards', game: 'All Games' }));
+    } else if (genreItem.id === 'all_games') {
+      setBrowseMode('games');
+      setFilters(prev => ({ ...prev, genre: 'All Games', game: 'All Games' }));
+    } else {
+      // Specific Genre -> Show Games
+      setBrowseMode('games');
+      setFilters(prev => ({ ...prev, genre: genreItem.label, game: 'All Games' }));
+    }
+  };
+
+  const handleGameSelect = (gameTitle) => {
+    setBrowseMode('cards');
+    setFilters(prev => ({ ...prev, game: gameTitle }));
+  };
 
   const popularItems = [...MARKETPLACE_ITEMS].sort((a, b) => b.views - a.views);
 
@@ -516,25 +613,34 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             <div className="flex flex-col gap-6 mb-8">
               {/* Controls Row */}
               <div className="flex items-center justify-between">
-                 <div className="relative group/search w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
-                  <input 
-                    type="text" 
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setInternalSearchTerm(e.target.value);
-                      if (onSearchChange) onSearchChange(e.target.value);
-                    }}
-                    placeholder={isListening ? "Listening..." : "Search marketplace..."}
-                    className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-12 py-2 text-sm text-white placeholder:text-white/30 w-full transition-all outline-none"
-                  />
-                  <button 
-                    onClick={toggleListening}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors ${isListening ? 'bg-red-500/20 text-red-400' : 'text-white/40 hover:text-white'}`}
-                  >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
+                 <div className="flex items-center gap-2 relative group/search">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within/search:text-white/80 transition-colors" />
+                    <input 
+                      type="text" 
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setInternalSearchTerm(e.target.value);
+                        if (onSearchChange) onSearchChange(e.target.value);
+                      }}
+                      placeholder="Search marketplace..." 
+                      className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-10 pr-10 py-2 text-sm text-white placeholder:text-white/30 w-64 focus:w-80 transition-all outline-none"
+                    />
+                    <Mic className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 hover:text-cyan-400 cursor-pointer transition-colors" />
+                  </div>
+                  
+                  {/* Grid/List View Toggles Moved Next to Search */}
+                  <div className="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/5">
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                      <Grid className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+
+                {/* Removed Feature Bar and Sort Select */}
               </div>
 
               {/* Horizontal Genre Scroller (The "Boxes") */}
@@ -548,7 +654,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                   return (
                     <motion.button
                       key={genre.label}
-                      onClick={() => handleGenreSelect(genre.label)}
+                      onClick={() => handleGenreSelect(genre)}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       className={`
@@ -642,20 +748,6 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             {/* Results */}
             <div className="mb-8">
               
-              {/* Back Button if in item view (and not all cards mode) */}
-              {viewLevel === 'items' && filters.genre !== 'All Cards' && filters.game !== 'All Games' && (
-                <button 
-                  onClick={() => {
-                    setViewLevel('games');
-                    setFilters(prev => ({ ...prev, game: 'All Games' }));
-                  }}
-                  className="mb-4 flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to Games
-                </button>
-              )}
-
               {/* Inner Scroll Container for Results */}
               <div 
                 className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
@@ -666,39 +758,34 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                   border: '1px solid rgba(255, 255, 255, 0.06)'
                 }}
               >
-                {viewLevel === 'games' ? (
-                  // GAMES GRID VIEW
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 p-4">
-                    {displayedGames.map((game) => (
-                      <motion.div
-                        key={game.name}
-                        initial={{ opacity: 0, scale: 0.95 }}
+                {browseMode === 'games' ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
+                    {availableGamesList.map(game => (
+                      <motion.div 
+                        key={game.title} 
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.03, y: -5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleGameSelect(game.name)}
-                        className="cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border border-white/5 bg-slate-900"
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        onClick={() => handleGameSelect(game.title)}
+                        className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
                       >
-                        {/* Game Cover */}
-                        <img 
-                          src={game.image} 
-                          alt={game.name} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-                        
-                        {/* Game Info */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h3 className="text-white font-bold text-lg mb-1 leading-tight">{game.name}</h3>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-cyan-400 font-medium">{game.genre}</span>
-                            <span className="text-white/50">{game.itemCount} Items</span>
+                        {/* Game Image */}
+                        <div className="aspect-[4/3] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
+                          <img src={game.image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=600&fit=crop"} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                          
+                          <div className="absolute top-2 left-2">
+                            <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-[10px]">{game.genre}</Badge>
                           </div>
+                        </div>
+
+                        <div className="text-center">
+                          <h3 className="text-white font-bold text-lg mb-1 group-hover:text-cyan-400 transition-colors">{game.title}</h3>
+                          <p className="text-white/40 text-xs">{game.itemCount} Items Available</p>
                         </div>
                       </motion.div>
                     ))}
-                    
-                    {displayedGames.length === 0 && (
+                    {availableGamesList.length === 0 && (
                       <div className="col-span-full text-center py-16">
                         <Gamepad2 className="w-12 h-12 text-white/20 mx-auto mb-4" />
                         <p className="text-white/50">No games found in this genre</p>
@@ -706,65 +793,75 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                     )}
                   </div>
                 ) : (
-                  // ITEMS GRID VIEW
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
-                    {filteredItems.map(item => {
-                      const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
-                      return (
-                        <motion.div 
-                          key={item.id} 
-                          layout
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ y: -5, scale: 1.02 }}
-                          onClick={() => setSelectedItem(item)}
-                          className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
-                        >
-                          {/* Image Container */}
-                          <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                            
-                            {/* Top Badges */}
-                            <div className="absolute top-2 left-2 flex gap-1">
-                              {item.isNew && (
-                                <Badge className="bg-cyan-500 text-black font-bold text-[10px] px-1.5 shadow-lg backdrop-blur-md">NEW</Badge>
-                              )}
-                            </div>
+                  <>
+                    {/* Items Grid/List View */}
+                    {viewMode === 'list' ? (
+                      <div className="space-y-2 p-2">
+                        {filteredItems.map(item => (
+                          <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
+                        {filteredItems.map(item => {
+                          const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
+                          return (
+                            <motion.div 
+                              key={item.id} 
+                              layout
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              whileHover={{ y: -5, scale: 1.02 }}
+                              onClick={() => setSelectedItem(item)}
+                              className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
+                            >
+                              {/* Image Container */}
+                              <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                                
+                                {/* Top Badges */}
+                                <div className="absolute top-2 left-2 flex gap-1">
+                                  {item.isNew && (
+                                    <Badge className="bg-cyan-500 text-black font-bold text-[10px] px-1.5 shadow-lg backdrop-blur-md">NEW</Badge>
+                                  )}
+                                </div>
 
-                            {/* Bottom Info inside Image */}
-                            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                               <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5 backdrop-blur-md shadow-lg`}>{item.rarity}</Badge>
-                            </div>
-                          </div>
+                                {/* Bottom Info inside Image */}
+                                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                                   <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5 backdrop-blur-md shadow-lg`}>{item.rarity}</Badge>
+                                </div>
+                              </div>
 
-                          {/* Content */}
-                          <div className="flex-1 flex flex-col">
-                            <h3 className="text-white font-bold text-sm line-clamp-2 mb-1 group-hover:text-cyan-400 transition-colors leading-snug">{item.name}</h3>
-                            <p className="text-white/40 text-xs mb-2">{item.game}</p>
-                            
-                            <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2">
-                              <div className="flex flex-col">
-                                <span className="text-[10px] text-white/40 uppercase">Price</span>
-                                <span className="text-white font-bold text-sm">{(item.price || 0).toLocaleString()} <span className="text-cyan-400 text-xs">AGP</span></span>
+                              {/* Content */}
+                              <div className="flex-1 flex flex-col">
+                                <h3 className="text-white font-bold text-sm line-clamp-2 mb-1 group-hover:text-cyan-400 transition-colors leading-snug">{item.name}</h3>
+                                <p className="text-white/40 text-xs mb-2">{item.game}</p>
+                                
+                                <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2">
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] text-white/40 uppercase">Price</span>
+                                    <span className="text-white font-bold text-sm">{(item.price || 0).toLocaleString()} <span className="text-cyan-400 text-xs">AGP</span></span>
+                                  </div>
+                                  <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded">
+                                    <Star className="w-3 h-3 text-orange-400 fill-current" />
+                                    <span className="text-white text-xs font-medium">{item.seller.rating}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded">
-                                <Star className="w-3 h-3 text-orange-400 fill-current" />
-                                <span className="text-white text-xs font-medium">{item.seller.rating}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                    
-                    {filteredItems.length === 0 && (
-                      <div className="col-span-full text-center py-16">
-                        <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/50">No items found</p>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     )}
-                  </div>
+
+                    {filteredItems.length === 0 && (
+                      <div className="text-center py-16">
+                        <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                        <p className="text-white/50">No items found matching your criteria</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

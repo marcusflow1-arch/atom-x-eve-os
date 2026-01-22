@@ -1,10 +1,113 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check, Network, Video, Play, Shield, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check, Network, Video, Play, Shield, Zap, TrendingUp, Bolt, Wind, Eye, Brain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { useCart } from '../CartContext';
-import OctagonSkillTree from '@/components/dashboard/OctagonSkillTree';
+
+// --- SKILL TREE CONSTANTS & COMPONENTS ---
+
+const POWER_TREE_NODES = [
+  { 
+    id: 'power_root', name: 'Core Activation', description: 'Unlock the card\'s latent power potential.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0,
+    perks: [{name: 'Base Energy', icon: 'zap'}, {name: 'Starter Kit', icon: 'box'}]
+  },
+  { 
+    id: 'power_atk1', name: 'Attack Boost I', description: 'Increase base attack power by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'left', offsetX: -60, offsetY: 70, parent: 'power_root',
+    perks: [{name: '+2% Dmg', icon: 'sword'}, {name: 'Sharpness', icon: 'triangle'}]
+  },
+  { 
+    id: 'power_def1', name: 'Defense Boost I', description: 'Increase base defense by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'right', offsetX: 60, offsetY: 70, parent: 'power_root',
+    perks: [{name: '+2% Armor', icon: 'shield'}, {name: 'Hardened', icon: 'square'}]
+  },
+  { 
+    id: 'power_crit', name: 'Critical Strike', description: 'Gain 15% critical hit chance.', type: 'ability', cost: 250, tier: 2, branch: 'left', offsetX: -60, offsetY: 140, parent: 'power_atk1',
+    perks: [{name: '+5% Crit Dmg', icon: 'target'}, {name: 'Precision', icon: 'eye'}]
+  },
+  { 
+    id: 'power_res', name: 'Resilience', description: 'Reduce all incoming damage by 8%.', type: 'ability', cost: 250, tier: 2, branch: 'right', offsetX: 60, offsetY: 140, parent: 'power_def1',
+    perks: [{name: '+5% HP', icon: 'heart'}, {name: 'Recovery', icon: 'plus'}]
+  },
+  { 
+    id: 'power_ult', name: 'Overwhelming Force', description: 'Ultimate: All stats increased by 25%.', type: 'ultimate', cost: 1000, tier: 3, offsetX: 0, offsetY: 210, parent: ['power_crit', 'power_res'],
+    perks: [{name: 'God Mode', icon: 'crown'}, {name: 'Omnipotence', icon: 'star'}]
+  },
+];
+
+const getNodeIcon = (type) => {
+  switch (type) {
+    case 'core': return <Sparkles className="w-4 h-4" />;
+    case 'stat': return <TrendingUp className="w-4 h-4" />;
+    case 'ability': return <Zap className="w-4 h-4" />;
+    case 'ultimate': return <Bolt className="w-4 h-4" />;
+    default: return <Shield className="w-4 h-4" />;
+  }
+};
+
+const getNodeColor = (type) => {
+  switch (type) {
+    case 'core': return 'from-purple-500 to-purple-700';
+    case 'stat': return 'from-blue-500 to-blue-700';
+    case 'ability': return 'from-indigo-500 to-indigo-700';
+    case 'ultimate': return 'from-orange-500 to-red-600';
+    default: return 'from-slate-500 to-slate-700';
+  }
+};
+
+function SkillNode({ node, isUnlocked, isLocked, onClick }) {
+  const colorGradient = getNodeColor(node.type);
+  
+  return (
+    <div className="relative flex items-center justify-center">
+      <motion.button
+        onClick={() => onClick(node)}
+        disabled={isLocked}
+        whileHover={{ scale: isLocked ? 1 : 1.15 }}
+        whileTap={{ scale: 0.95 }}
+        className={`
+          relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 z-10
+          ${isUnlocked ? 'cursor-pointer' : !isLocked ? 'cursor-pointer' : 'cursor-not-allowed'}
+        `}
+      >
+        <div className={`
+          absolute inset-0 rounded-lg transition-all duration-300
+          ${isUnlocked 
+            ? `bg-gradient-to-br ${colorGradient} shadow-lg` 
+            : !isLocked 
+              ? 'bg-slate-700/80 border-2 border-dashed border-white/30' 
+              : 'bg-slate-900/60 border border-white/10'
+          }
+        `} />
+        
+        <div className={`relative z-10 ${isUnlocked ? 'text-white' : !isLocked ? 'text-white/60' : 'text-white/20'}`}>
+          {getNodeIcon(node.type)}
+        </div>
+      </motion.button>
+    </div>
+  );
+}
+
+function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked }) {
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+  
+  return (
+    <div
+      className="absolute origin-left"
+      style={{
+        left: fromX + 20, 
+        top: fromY + 20,
+        width: length,
+        height: 2,
+        transform: `rotate(${angle}rad)`,
+        transformOrigin: '0 50%',
+        zIndex: 0
+      }}
+    >
+      <div className={`w-full h-full transition-colors duration-500 ${isUnlocked ? 'bg-purple-500/40' : 'bg-white/5'}`} />
+    </div>
+  );
+}
 
 // Developer data with their games and limited edition cards
 const DEVELOPERS = [
@@ -722,59 +825,93 @@ export default function DeveloperLimitedEdition() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute inset-0 flex flex-col custom-scrollbar overflow-y-auto"
+                    className="absolute inset-0 p-4 flex flex-col overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex-1 flex flex-col items-center py-8">
-                      {/* Scaled Octagon Skill Tree to fit */}
-                      <div className="scale-75 origin-center -my-8">
-                        <OctagonSkillTree />
+                    <div className="flex flex-col items-center min-h-full pb-10">
+                      
+                      {/* Tree Container */}
+                      <div className="relative w-[300px] h-[300px] mb-8 mt-4 flex-shrink-0">
+                        {/* Render Connections */}
+                        {POWER_TREE_NODES.map(node => {
+                          if (!node.parent) return null;
+                          const parents = Array.isArray(node.parent) ? node.parent : [node.parent];
+                          const nodePos = { x: node.offsetX + 130, y: node.offsetY };
+                          
+                          return parents.map(parentId => {
+                            const parent = POWER_TREE_NODES.find(n => n.id === parentId);
+                            if (!parent) return null;
+                            const parentPos = { x: parent.offsetX + 130, y: parent.offsetY };
+                            // Mock unlocked state for visual demo
+                            const isUnlocked = ['power_root', 'power_atk1', 'power_def1'].includes(parentId);
+                            
+                            return (
+                              <ConnectionLine
+                                key={`${parentId}-${node.id}`}
+                                fromX={parentPos.x}
+                                fromY={parentPos.y}
+                                toX={nodePos.x}
+                                toY={nodePos.y}
+                                isUnlocked={isUnlocked}
+                              />
+                            );
+                          });
+                        })}
+
+                        {/* Render Nodes */}
+                        {POWER_TREE_NODES.map(node => {
+                          // Mock unlocked state
+                          const isUnlocked = ['power_root', 'power_atk1', 'power_def1'].includes(node.id);
+                          const isLocked = !isUnlocked && !['power_crit', 'power_res'].includes(node.id);
+                          
+                          return (
+                            <div 
+                              key={node.id}
+                              className="absolute"
+                              style={{ 
+                                left: node.offsetX + 130, 
+                                top: node.offsetY 
+                              }}
+                            >
+                              <SkillNode 
+                                node={node} 
+                                isUnlocked={isUnlocked}
+                                isLocked={isLocked}
+                                onClick={() => {}}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      {/* Card Perks Section */}
-                      <div className="w-full px-8 mt-4">
-                        <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-                          <Zap className="w-3 h-3 text-yellow-400" />
-                          Card Perks & Bonuses
-                        </h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-cyan-500/30 transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                              <Sparkles className="w-4 h-4 text-cyan-400" />
-                            </div>
-                            <div>
-                              <div className="text-white font-bold text-xs">Cosmic Resonance</div>
-                              <div className="text-white/50 text-[10px]">+15% Ability Power</div>
-                            </div>
-                          </div>
-                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-purple-500/30 transition-colors">
+                      {/* Perks Section (Below Tree) */}
+                      <div className="w-full max-w-sm mt-auto">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="h-px bg-white/10 flex-1" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Active Perks</span>
+                          <div className="h-px bg-white/10 flex-1" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-white/5 border border-white/10 p-2 rounded-lg flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                              <Shield className="w-4 h-4 text-purple-400" />
+                              <Zap className="w-4 h-4 text-purple-400" />
                             </div>
                             <div>
-                              <div className="text-white font-bold text-xs">Void Shield</div>
-                              <div className="text-white/50 text-[10px]">Absorbs 500 Damage</div>
+                              <div className="text-xs font-bold text-white">Power Surge</div>
+                              <div className="text-[9px] text-white/50">+15% Damage</div>
                             </div>
                           </div>
-                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-amber-500/30 transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                              <Star className="w-4 h-4 text-amber-400" />
+                          <div className="bg-white/5 border border-white/10 p-2 rounded-lg flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                              <Shield className="w-4 h-4 text-blue-400" />
                             </div>
                             <div>
-                              <div className="text-white font-bold text-xs">Legendary Status</div>
-                              <div className="text-white/50 text-[10px]">+10 Reputation</div>
-                            </div>
-                          </div>
-                          <div className="bg-black/20 border border-white/10 rounded-lg p-3 flex items-center gap-3 hover:border-green-500/30 transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                              <Network className="w-4 h-4 text-green-400" />
-                            </div>
-                            <div>
-                              <div className="text-white font-bold text-xs">Synergy Boost</div>
-                              <div className="text-white/50 text-[10px]">+5% Team Stats</div>
+                              <div className="text-xs font-bold text-white">Iron Skin</div>
+                              <div className="text-[9px] text-white/50">+10% Armor</div>
                             </div>
                           </div>
                         </div>
                       </div>
+
                     </div>
                   </motion.div>
                 ) : (
