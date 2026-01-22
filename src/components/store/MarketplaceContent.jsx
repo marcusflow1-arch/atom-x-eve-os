@@ -643,7 +643,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         )}
                         
                         <span className={`
-                          text-2xl font-black uppercase tracking-tighter transition-all block
+                          text-lg font-black uppercase tracking-tighter transition-all block
                           ${isActive ? `text-transparent bg-clip-text bg-gradient-to-r ${style.text.replace('text-', 'from-')} to-white` : 'text-white'}
                         `}>
                           {r}
@@ -677,7 +677,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]" 
                       />
                     )}
-                    <span className="text-xl font-bold uppercase tracking-tight text-white">All</span>
+                    <span className="text-base font-bold uppercase tracking-tight text-white">All</span>
                   </motion.button>
                </div>
             </div>
