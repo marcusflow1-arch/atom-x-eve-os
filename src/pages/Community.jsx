@@ -52,10 +52,16 @@ export default function CommunityPage() {
     const [showCreateForm, useStateShowCreateForm] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeSection, setActiveSection] = useState('all'); // Filter for topics
-    const [activeGame, setActiveGame] = useState(null); // The game object for which we are viewing forums
-    const location = import('react-router-dom').then(m => m.useLocation()); // This is wrong, I need to use useLocation hook properly
-    const { state } = import('react-router-dom').then(m => m.useLocation()) || {}; // No wait, I can't do this.
+    // Initialize activeGame from navigation state if available
+    const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null); 
     const [sortBy, setSortBy] = useState('newest');
+
+    // Sync activeGame when location state changes (e.g. from Clan navigation)
+    useEffect(() => {
+        if (location.state?.selectedGame) {
+            setActiveGame(location.state.selectedGame);
+        }
+    }, [location.state]);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('All Games'); // 'All Games' | 'All Cards' | specific genre
     const [allGames, setAllGames] = useState([]); // All game entities
