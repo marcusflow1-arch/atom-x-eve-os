@@ -563,15 +563,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
           {/* Developer Limited Edition Section - Full Width */}
           <DeveloperLimitedEdition />
 
-          {/* Bottom Section: Sidebar + Results */}
-          <div className="flex gap-6">
-            {/* Sidebar */}
-            <aside className="hidden lg:block">
-              <FilterSidebar filters={filters} setFilters={setFilters} availableGames={availableGames} />
-            </aside>
-
-            {/* Results */}
-            <div className="flex-1 min-w-0">
+          {/* Bottom Section: Results */}
+          <div className="flex flex-col gap-6">
             {/* Enhanced Marketplace Header */}
             <div className="flex flex-col gap-6 mb-8">
               {/* Controls Row */}
@@ -649,6 +642,66 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                           className="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500" 
                         />
                       )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Item Types Scroller */}
+              <div 
+                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+              >
+                {ITEM_TYPES.map((type) => {
+                  const isActive = filters.itemType === type.id;
+                  const Icon = type.icon;
+                  return (
+                    <motion.button
+                      key={type.id}
+                      onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                        ${isActive 
+                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' 
+                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                        }
+                      `}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-xs font-bold uppercase tracking-wide">{type.name}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Rarity Scroller */}
+              <div 
+                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+              >
+                {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map(r => {
+                  const style = rarityStyles[r];
+                  const isActive = filters.rarities.includes(r);
+                  return (
+                    <motion.button
+                      key={r}
+                      onClick={() => setFilters(prev => ({
+                        ...prev,
+                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [...prev.rarities, r]
+                      }))}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all
+                        ${isActive 
+                          ? `${style.bg} ${style.border} ${style.text} shadow-[0_0_10px_currentColor] opacity-100` 
+                          : 'bg-white/5 border-white/10 text-white/30 hover:text-white/60'
+                        }
+                      `}
+                    >
+                      {r}
                     </motion.button>
                   );
                 })}
