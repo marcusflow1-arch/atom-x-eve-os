@@ -5,7 +5,8 @@ import {
   Sparkles, DollarSign, Eye, Heart, ShoppingCart,
   Gamepad2, Package, Zap, Shield, X, Grid, List,
   Ghost, Footprints, Gem, Check, Truck, Award, Users, Plus,
-  ArrowUpDown, Filter, PlayCircle, Video, Code
+  ArrowUpDown, Filter, PlayCircle, Video, Code,
+  Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,7 +35,19 @@ const MARKETPLACE_ITEMS = [
   { id: 'cm1', name: 'Void Crystals Bundle (x100)', price: 12000, rarity: 'Rare', game: 'Elder Scrolls: Reborn', genre: 'RPG', category: 'Materials', itemType: 'Crafting Materials', subcategory: 'Enchanting', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', seller: { name: 'CrafterSupply', rating: 4.6, sales: 2340 }, views: 1890, description: 'High-quality void crystals used for enchanting legendary gear. Stack of 100.', stats: { Quality: 95 }, reviews: 456, prime: false, playstyle: 'Crafting', developer: { name: 'Bethesda', logo: 'B' }, isNew: false, previewUrl: null },
 ];
 
-const GENRES = ['All Genres', 'Action', 'RPG', 'Shooter', 'Sci-Fi', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror'];
+const GENRE_CONFIG = [
+  { label: 'All Genres', icon: LayoutGrid },
+  { label: 'Action', icon: Crosshair },
+  { label: 'RPG', icon: Shield },
+  { label: 'Shooter', icon: Crosshair },
+  { label: 'Sci-Fi', icon: Sparkles },
+  { label: 'Strategy', icon: Trophy },
+  { label: 'Adventure', icon: Gamepad2 },
+  { label: 'Sports', icon: Trophy },
+  { label: 'Racing', icon: Car },
+  { label: 'Simulation', icon: Monitor },
+  { label: 'Horror', icon: Skull },
+];
 
 const ITEM_TYPES = [
   { id: 'all', name: 'All Items', icon: Grid },
@@ -463,7 +476,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   const searchTerm = propSearchTerm !== undefined ? propSearchTerm : internalSearchTerm;
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortBy, setSortBy] = useState('featured');
-  const [viewMode, setViewMode] = useState('list');
+  const [viewMode, setViewMode] = useState('grid');
 
   const [filters, setFilters] = useState({
     genre: 'All Genres',
