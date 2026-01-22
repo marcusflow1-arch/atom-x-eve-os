@@ -415,8 +415,25 @@ export default function Store() {
     const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
     
+    const genreContainerRef = useRef(null);
+    const subCatContainerRef = useRef(null);
+
     // Derived state
     const currentNavGenre = genreData[activeGenreIndex];
+
+    const handleWheelScroll = (e, index, setIndex, maxIndex) => {
+        // Simple scroll wheel handler
+        if (Math.abs(e.deltaY) > 10) {
+            e.preventDefault();
+            // Debounce or threshold check could be added here if it's too sensitive
+            // For now relying on standard React event rate
+            const direction = e.deltaY > 0 ? 1 : -1;
+            const newIndex = Math.min(Math.max(index + direction, 0), maxIndex);
+            if (newIndex !== index) {
+                setIndex(newIndex);
+            }
+        }
+    };
     
     // Mock Sub-Categories (as requested)
     const SUB_CATEGORIES = useMemo(() => {
@@ -1267,12 +1284,16 @@ export default function Store() {
                                         </button>
                                     </div>
 
-                                    {/* 1. HORIZONTAL AXIS (Genres) - Fixed at Top Left */}
-                                    <div className="absolute top-24 left-12 right-0 z-20 h-24 flex items-center justify-start overflow-hidden mask-linear-fade-right">
+                                    {/* 1. HORIZONTAL AXIS (Genres) - Moved Down & Centered */}
+                                    <div 
+                                        className="absolute top-40 left-0 right-0 z-20 h-24 flex items-center justify-center overflow-hidden"
+                                        onWheel={(e) => handleWheelScroll(e, activeGenreIndex, setActiveGenreIndex, genreData.length - 1)}
+                                    >
                                         <motion.div 
                                             className="flex items-center gap-4"
                                             animate={{ 
-                                                x: -activeGenreIndex * (120 + 16) + (activeGenreIndex > 0 ? 100 : 0) // Keep active somewhat visible but mostly left aligned
+                                                // Center logic: 50% screen width - (index * itemWidthWithGap) - halfItemWidth
+                                                x: `calc(50vw - ${activeGenreIndex * (120 + 16)}px - 60px)` 
                                             }}
                                             transition={{ type: "spring", stiffness: 200, damping: 25 }}
                                         >
@@ -1309,17 +1330,22 @@ export default function Store() {
                                                 })}
                                             </motion.div>
                                             
-                                            {/* Right Fade Only (Since aligned left) */}
+                                            {/* Fade Edges */}
+                                            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900 via-slate-900/50 to-transparent pointer-events-none" />
                                             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900 via-slate-900/50 to-transparent pointer-events-none" />
-                                        </div>
                                     </div>
 
-                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Just Below Genres, Left Aligned */}
-                                    <div className="absolute top-48 left-12 right-0 z-20 h-14 flex items-center justify-start overflow-hidden mask-linear-fade-right">
+                                    {/* 2. HORIZONTAL AXIS (Sub-Categories) - Moved Down & Centered */}
+                                    <div 
+                                        className="absolute top-64 left-0 right-0 z-20 h-14 flex items-center justify-center overflow-hidden"
+                                        onWheel={(e) => handleWheelScroll(e, activeSubCategoryIndex, setActiveSubCategoryIndex, SUB_CATEGORIES.length - 1)}
+                                    >
                                         <motion.div 
                                             className="flex items-center gap-3"
                                             animate={{ 
-                                                x: -activeSubCategoryIndex * (110 + 12) + (activeSubCategoryIndex > 0 ? 50 : 0)
+                                                // Center logic: 50% screen width - (index * approxWidthWithGap) - halfItemWidth
+                                                // Approx width: 110px + 12px gap = 122px
+                                                x: `calc(50vw - ${activeSubCategoryIndex * (110 + 12)}px - 55px)`
                                             }}
                                             transition={{ type: "spring", stiffness: 200, damping: 25 }}
                                         >
@@ -1340,8 +1366,7 @@ export default function Store() {
                                                                 : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
                                                             }
                                                         `}
-                                                        // Reduced size by ~20% via padding/text size adjustments
-                                                        style={{ transformOrigin: 'left center' }} 
+                                                        style={{ transformOrigin: 'center center' }} 
                                                     >
                                                         <span className="text-[10px] font-bold uppercase tracking-wider">
                                                             {subCat}
@@ -1350,10 +1375,14 @@ export default function Store() {
                                                 );
                                             })}
                                         </motion.div>
+                                        
+                                        {/* Fade Edges */}
+                                        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900/0 to-transparent pointer-events-none" />
+                                        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900/0 to-transparent pointer-events-none" />
                                     </div>
 
                                     {/* 3. MAIN CONTENT (Game Grid) - Adjusted Top & Aligned Left */}
-                                    <div className="absolute top-64 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
+                                    <div className="absolute top-80 bottom-0 left-0 right-0 z-10 overflow-y-auto custom-scrollbar px-12 py-8">
                                         <div className="w-full">
                                             <motion.div 
                                                 key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
