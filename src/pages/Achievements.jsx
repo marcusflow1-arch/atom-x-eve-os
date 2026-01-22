@@ -995,51 +995,41 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       Achievements
                     </h1>
                     
-                    {/* Cross View Toggle - 4 small squares grid icon */}
+                    {/* Cross View Toggle */}
                     <motion.button
-                    onClick={() => setViewMode('cross')}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                    title="Switch to Cross View">
-
-                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                      </div>
+                      onClick={() => setViewMode('cross')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                      title="Switch to Cross View"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
                     </motion.button>
 
-                    {/* Skill Tree Mode Toggle */}
-                    <motion.button
-                    onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                    skillTreeMode ?
-                    'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
-                    }
-                    title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
-
-                      <Layers className="w-4 h-4" />
-                    </motion.button>
-
-                    {/* Blacksmith Mode Toggle */}
-                    <motion.button
-                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                    blacksmithMode ?
-                    'bg-orange-500/30 border-orange-400/50 text-orange-300' :
-                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
-                    }
-                    title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
-
-                      <Hammer className="w-4 h-4" />
-                    </motion.button>
+                    {/* Interaction Mode Toggles */}
+                    <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
+                      <button
+                        onClick={() => setInteractionMode('forge')}
+                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'forge' ? 'bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' : 'text-white/40 hover:text-white'}`}
+                        title="Forge Mode"
+                      >
+                        <Hammer className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setInteractionMode('inspect')}
+                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'inspect' ? 'bg-blue-500/20 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' : 'text-white/40 hover:text-white'}`}
+                        title="Inspect Mode"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setInteractionMode('manage')}
+                        className={`p-1.5 rounded-md transition-all ${interactionMode === 'manage' ? 'bg-slate-500/20 text-slate-300 shadow-[0_0_10px_rgba(148,163,184,0.2)]' : 'text-white/40 hover:text-white'}`}
+                        title="Manage Mode"
+                      >
+                        <Package className="w-4 h-4" />
+                      </button>
+                    </div>
 
                     {/* Filter Drawer Trigger - New Feature */}
                     <Sheet>
