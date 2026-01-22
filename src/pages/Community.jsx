@@ -220,59 +220,59 @@ export default function CommunityPage() {
 
             <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-6rem)] flex flex-col gap-6">
                 
-                {/* Header Section */}
-                <LiquidGlassCard className="px-6 py-4 flex items-center justify-between flex-shrink-0" hover={false}>
-                    {/* Left: Logo/Brand */}
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <MessageSquare className="w-5 h-5" />
+                {/* Header Section - Transparent & Reorganized */}
+                <div className="flex flex-col gap-6 px-2">
+                    <div className="flex items-center justify-between">
+                        {/* Left: Logo/Brand */}
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <MessageSquare className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold tracking-wide text-white">{activeGame ? activeGame.title.toUpperCase() : 'COMMUNITY'}</h1>
+                                <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">{activeGame ? 'GAME FORUM' : 'FORUMS'}</span>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold tracking-wide text-white">{activeGame ? activeGame.title.toUpperCase() : 'COMMUNITY'}</h1>
-                            <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">{activeGame ? 'GAME FORUM' : 'FORUMS'}</span>
+
+                        {/* Right: Actions (Back / Create) */}
+                        <div className="flex items-center gap-4">
+                            {activeGame && (
+                                <>
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => {
+                                            setActiveGame(null);
+                                            setSelectedPost(null);
+                                            setSelectedGenre('All Games');
+                                            setActiveSection('all');
+                                        }}
+                                        className="text-sm font-bold tracking-wider text-white/60 hover:text-white"
+                                    >
+                                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                                    </Button>
+                                    <Button 
+                                        onClick={() => setShowCreateForm(true)}
+                                        className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-6"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" /> New Post
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {/* Center: Navigation (Back button if in game) */}
-                    {activeGame && (
-                        <div className="flex items-center gap-8">
-                            <Button 
-                                variant="ghost" 
-                                onClick={() => {
-                                    setActiveGame(null);
-                                    setSelectedPost(null);
-                                    setSelectedGenre('All Games');
-                                    setActiveSection('all');
-                                }}
-                                className="text-sm font-bold tracking-wider text-white/60 hover:text-white"
-                            >
-                                <ArrowLeft className="w-4 h-4 mr-2" /> Back to All Forums
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Right: Search & Create */}
-                    <div className="flex items-center gap-6">
-                        <div className="relative">
-                            <input 
-                                type="text" 
-                                placeholder={activeGame ? "Search this forum..." : "Search games..."}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-64 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all"
-                            />
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        </div>
-                        {activeGame && (
-                            <Button 
-                                onClick={() => setShowCreateForm(true)}
-                                className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-6"
-                            >
-                                <Plus className="w-4 h-4 mr-2" /> New Post
-                            </Button>
-                        )}
+                    {/* Search Bar - Moved below title, above genres */}
+                    <div className="relative w-full max-w-md">
+                        <input 
+                            type="text" 
+                            placeholder={activeGame ? "Search this forum..." : "Search games..."}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-10"
+                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     </div>
-                </LiquidGlassCard>
+                </div>
 
                 {/* Genre Filter Bar (Only show if NOT in a specific game forum) */}
                 {!activeGame && (
@@ -475,36 +475,41 @@ export default function CommunityPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Topics Filter (3/12) */}
-                            <div className="hidden lg:flex col-span-3 flex-col gap-4">
-                                <div className="flex items-center justify-between px-2">
-                                    <h2 className="text-sm font-bold text-white/80 tracking-wide uppercase">Forum Topics</h2>
-                                </div>
-                                <LiquidGlassCard className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto" hover={false}>
+                            {/* Right Column: Topics Filter (3/12) - Clean Minimal Style */}
+                            <div className="hidden lg:flex col-span-3 flex-col gap-6 pl-4 border-l border-white/5">
+                                <h2 className="text-sm font-bold text-white/40 tracking-wide uppercase px-2">
+                                    Forum Topics
+                                </h2>
+                                <div className="flex flex-col gap-1">
                                     {TOPIC_TYPES.map((topic) => (
-                                        <Button
+                                        <button
                                             key={topic.id}
-                                            variant="ghost"
                                             onClick={() => {
                                                 setActiveSection(topic.id);
                                                 setSelectedPost(null);
                                             }}
-                                            className={`flex items-center gap-3 px-3 py-6 rounded-xl transition-all text-left justify-start ${
+                                            className={`flex items-center gap-3 px-2 py-3 transition-all text-left group relative ${
                                                 activeSection === topic.id 
-                                                    ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400' 
-                                                    : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-transparent'
+                                                    ? 'text-cyan-400' 
+                                                    : 'text-white/60 hover:text-white'
                                             }`}
                                         >
-                                            <div className={`w-8 h-8 rounded-lg ${activeSection === topic.id ? 'bg-cyan-500 text-black' : 'bg-white/10 text-white/50'} flex items-center justify-center flex-shrink-0 transition-colors`}>
-                                                <topic.icon className="w-4 h-4" />
-                                            </div>
-                                            <span className="font-bold text-sm">{topic.label}</span>
-                                        </Button>
+                                            <topic.icon className={`w-4 h-4 ${activeSection === topic.id ? 'text-cyan-400' : 'text-white/40 group-hover:text-white'}`} />
+                                            <span className="font-medium text-sm">{topic.label}</span>
+                                            
+                                            {/* Underline Effect */}
+                                            {activeSection === topic.id && (
+                                                <motion.div 
+                                                    layoutId="topicUnderline"
+                                                    className="absolute bottom-0 left-0 right-0 h-px bg-cyan-400"
+                                                />
+                                            )}
+                                        </button>
                                     ))}
-                                </LiquidGlassCard>
+                                </div>
 
-                                {/* Activity / Stats Card Placeholder */}
-                                <LiquidGlassCard className="p-6" hover={false}>
+                                {/* Activity / Stats - Minimal */}
+                                <div className="mt-4 px-2">
                                     <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                                         <Target className="w-4 h-4 text-purple-400" />
                                         Forum Activity
@@ -519,7 +524,7 @@ export default function CommunityPage() {
                                             <div className="text-[10px] uppercase tracking-wider text-white/40">Replies</div>
                                         </div>
                                     </div>
-                                </LiquidGlassCard>
+                                </div>
                             </div>
                         </>
                     )}
