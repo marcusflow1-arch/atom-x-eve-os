@@ -62,7 +62,7 @@ const generateMockContent = (topic) => {
     return { rooms, posts };
 };
 
-export default function FarmTopicContent({ topic, gameId, isOwned }) {
+export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomRequest }) {
     if (!topic) {
         return (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -125,7 +125,7 @@ export default function FarmTopicContent({ topic, gameId, isOwned }) {
             toast.info("Clan Access", { description: "Verifying clan membership..." });
             // In real app, check user.clanId === room.clanId
         }
-        toast.success(`Joined ${room.name}`);
+        onJoinRoomRequest(room);
     };
 
     const handleCreatePost = () => {

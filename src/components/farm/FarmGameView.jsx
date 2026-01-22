@@ -11,12 +11,16 @@ import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 // Component Imports
 import FarmTopicSelector from './FarmTopicSelector';
 import FarmTopicContent from './FarmTopicContent';
+import VoiceRoomPreviewModal from './voice/VoiceRoomPreviewModal';
+import ActiveVoiceControls from './voice/ActiveVoiceControls';
 
 import { toast } from 'sonner';
 
 export default function FarmGameView({ game, onBack }) {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTopic = searchParams.get('topic');
+    const [selectedRoom, setSelectedRoom] = useState(null); // For preview modal
+    const [activeVoiceRoom, setActiveVoiceRoom] = useState(null); // Currently joined room
     
     const setActiveTopic = (topic) => {
         setSearchParams(prev => {
@@ -31,6 +35,25 @@ export default function FarmGameView({ game, onBack }) {
     };
 
     const isOwned = game.tags?.includes('Owned');
+
+    const handleJoinRequest = (room) => {
+        if (activeVoiceRoom) {
+            toast.error("Already in a call", { description: "Please leave your current voice room first." });
+            return;
+        }
+        setSelectedRoom(room);
+    };
+
+    const confirmJoinRoom = (room) => {
+        setActiveVoiceRoom(room);
+        setSelectedRoom(null);
+        toast.success(`Joined ${room.name}`, { description: "Mic is live." });
+    };
+
+    const handleLeaveVoice = () => {
+        setActiveVoiceRoom(null);
+        toast.info("Disconnected", { description: "You left the voice room." });
+    };
 
     const handleAction = (action) => {
         if (!isOwned) {
@@ -142,8 +165,30 @@ export default function FarmGameView({ game, onBack }) {
 
             {/* MAIN CONTENT AREA */}
             <div className="flex-1 overflow-hidden relative z-10 bg-[#0f1419]">
-                <FarmTopicContent topic={activeTopic} gameId={game.id} isOwned={isOwned} />
+                <FarmTopicContent 
+                    topic={activeTopic} 
+                    gameId={game.id} 
+                    isOwned={isOwned} 
+                    onJoinRoomRequest={handleJoinRequest}
+                />
             </div>
+
+            {/* Voice Overlays */}
+            <VoiceRoomPreviewModal 
+                room={selectedRoom} 
+                isOpen={!!selectedRoom} 
+                onClose={() => setSelectedRoom(null)} 
+                onConfirm={confirmJoinRoom} 
+            />
+            
+            <AnimatePresence>
+                {activeVoiceRoom && (
+                    <ActiveVoiceControls 
+                        room={activeVoiceRoom} 
+                        onLeave={handleLeaveVoice} 
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }
