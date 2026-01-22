@@ -7,8 +7,8 @@ import InspectView from './InspectView';
 import ManageView from './ManageView';
 import { Button } from '@/components/ui/button';
 
-export default function AchievementWorkspace({ card, onClose }) {
-  const [mode, setMode] = useState('forge'); // forge, inspect, manage
+export default function AchievementWorkspace({ card, onClose, initialMode = 'forge' }) {
+  const [mode, setMode] = useState(initialMode); // forge, inspect, manage
   const [liveStats, setLiveStats] = useState(null);
 
   // Update stats from Forge to Display
