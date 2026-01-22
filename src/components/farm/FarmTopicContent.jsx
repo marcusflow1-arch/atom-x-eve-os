@@ -62,7 +62,32 @@ const generateMockContent = (topic) => {
     return { rooms, posts };
 };
 
-export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomRequest }) {
+const filterByIntent = (content, intent) => {
+    if (!intent) return content;
+    
+    const { rooms, posts } = content;
+    
+    // Logic to prioritize content based on intent
+    // This is a simple example, in real app it would be more complex queries
+    let sortedRooms = [...rooms];
+    let sortedPosts = [...posts];
+
+    if (intent === 'help') {
+        sortedRooms.sort((a, b) => (a.tags.includes('Help') ? -1 : 1));
+        sortedPosts.sort((a, b) => (a.title.toLowerCase().includes('help') ? -1 : 1));
+    } else if (intent === 'achievements') {
+        sortedRooms.sort((a, b) => (a.tags.includes('Serious') ? -1 : 1));
+        sortedPosts.sort((a, b) => (a.title.toLowerCase().includes('trophy') ? -1 : 1));
+    } else if (intent === 'group') {
+         sortedRooms.sort((a, b) => (a.users < a.max ? -1 : 1)); // Open slots first
+    }
+    
+    return { rooms: sortedRooms, posts: sortedPosts };
+};
+
+import { INTENTS } from './IntentSelector';
+
+export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomRequest, intent }) {
     if (!topic) {
         return (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -112,7 +137,10 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
         );
     }
 
-    const { rooms, posts } = generateMockContent(topic);
+    const rawContent = generateMockContent(topic);
+    const { rooms, posts } = filterByIntent(rawContent, intent);
+    
+    const activeIntent = intent ? INTENTS[intent.toUpperCase()] : null;
 
     // Handlers
     const handleJoinVoice = (room) => {
@@ -154,6 +182,20 @@ export default function FarmTopicContent({ topic, gameId, isOwned, onJoinRoomReq
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
                 
+                {/* Intent Banner if active */}
+                {activeIntent && (
+                    <div className="lg:col-span-3 mb-2">
+                        <div className={`flex items-center gap-3 p-4 rounded-xl border border-white/10 ${activeIntent.bg} backdrop-blur-sm`}>
+                            <activeIntent.icon className={`w-5 h-5 ${activeIntent.color}`} />
+                            <div className="flex-1">
+                                <h3 className={`text-sm font-bold ${activeIntent.color}`}>Focus: {activeIntent.label}</h3>
+                                <p className="text-xs text-white/60">Content prioritized for your current goal.</p>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-8 text-white/40 hover:text-white" onClick={() => {}}>Change</Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* LEFT COLUMN: Discussions (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">

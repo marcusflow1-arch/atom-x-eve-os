@@ -11,6 +11,7 @@ import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 // Component Imports
 import FarmTopicSelector from './FarmTopicSelector';
 import FarmTopicContent from './FarmTopicContent';
+import IntentSelector from './IntentSelector';
 import VoiceRoomPreviewModal from './voice/VoiceRoomPreviewModal';
 import ActiveVoiceControls from './voice/ActiveVoiceControls';
 
@@ -21,7 +22,9 @@ export default function FarmGameView({ game, onBack }) {
     const activeTopic = searchParams.get('topic');
     const [selectedRoom, setSelectedRoom] = useState(null); // For preview modal
     const [activeVoiceRoom, setActiveVoiceRoom] = useState(null); // Currently joined room
-    
+    const [intent, setIntent] = useState(null); // User's session intent
+    const [showIntentSelector, setShowIntentSelector] = useState(!activeTopic); // Show if no topic pre-selected
+
     const setActiveTopic = (topic) => {
         setSearchParams(prev => {
             const newParams = new URLSearchParams(prev);
@@ -170,6 +173,7 @@ export default function FarmGameView({ game, onBack }) {
                     gameId={game.id} 
                     isOwned={isOwned} 
                     onJoinRoomRequest={handleJoinRequest}
+                    intent={intent}
                 />
             </div>
 
@@ -186,6 +190,12 @@ export default function FarmGameView({ game, onBack }) {
                     <ActiveVoiceControls 
                         room={activeVoiceRoom} 
                         onLeave={handleLeaveVoice} 
+                    />
+                )}
+                {showIntentSelector && (
+                    <IntentSelector 
+                        onSelect={(i) => { setIntent(i); setShowIntentSelector(false); }}
+                        onSkip={() => setShowIntentSelector(false)}
                     />
                 )}
             </AnimatePresence>
