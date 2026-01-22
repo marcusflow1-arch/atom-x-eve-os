@@ -275,10 +275,15 @@ export default function ClanIntro({ onClanCreated }) {
                                                     <Button 
                                                         size="sm"
                                                         onClick={() => joinClanMutation.mutate({ clanId: clan.id, isPrivate: clan.isPrivate })}
-                                                        disabled={joinClanMutation.isPending}
-                                                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                                        disabled={joinClanMutation.isPending || isMember(clan.id)}
+                                                        className={`border ${isMember(clan.id) ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'}`}
                                                     >
-                                                        {joinClanMutation.isPending ? 'Processing...' : (clan.isPrivate ? 'Request' : 'Join')}
+                                                        {isMember(clan.id) 
+                                                            ? 'Joined' 
+                                                            : joinClanMutation.isPending 
+                                                                ? 'Processing...' 
+                                                                : (clan.isPrivate ? 'Request' : 'Join')
+                                                        }
                                                     </Button>
                                                 </div>
                                             </div>
