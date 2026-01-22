@@ -615,70 +615,40 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                  {/* Decorative vertical line */}
                  <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
                  
-                 {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r, i) => {
-                    const style = rarityStyles[r];
-                    const isActive = filters.rarities.includes(r);
+                 {GENRE_CONFIG.map((genre, i) => {
+                    const isActive = filters.genre === genre.label;
+                    const Icon = genre.icon;
                     return (
                       <motion.button
-                        key={r}
-                        onClick={() => setFilters(prev => ({
-                          ...prev,
-                          rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r] // Toggle but exclusive-ish feel or multi? Standard filter implies multi, but XMB implies single focus. Keeping multi-toggle capability but using single-select visual focus.
-                        }))}
-                        onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [r] }))} // Auto-select on hover for "XMB feel"
+                        key={genre.label}
+                        onClick={() => handleGenreSelect(genre)}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                         className={`
-                          group relative pl-6 py-3 text-left transition-all duration-300
-                          ${isActive ? 'scale-110 origin-left' : 'scale-100 opacity-40 hover:opacity-100'}
+                          group relative pl-6 py-3 text-left transition-all duration-300 w-full flex items-center gap-3
+                          ${isActive ? 'scale-105 origin-left' : 'scale-100 opacity-40 hover:opacity-100'}
                         `}
                       >
                         {/* Active Indicator Dot */}
                         {isActive && (
                           <motion.div 
-                            layoutId="rarityActiveDot"
-                            className={`absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]`} 
+                            layoutId="genreActiveDot"
+                            className={`absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]`} 
                           />
                         )}
                         
+                        <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-white'}`} />
+
                         <span className={`
-                          text-lg font-black uppercase tracking-tighter transition-all block
-                          ${isActive ? `text-transparent bg-clip-text bg-gradient-to-r ${style.text.replace('text-', 'from-')} to-white` : 'text-white'}
+                          text-sm font-bold uppercase tracking-wider transition-all block
+                          ${isActive ? 'text-cyan-400' : 'text-white'}
                         `}>
-                          {r}
+                          {genre.label}
                         </span>
-                        
-                        {isActive && (
-                          <motion.span 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            className={`text-[10px] font-medium tracking-widest uppercase ${style.text} block`}
-                          >
-                            Filter Active
-                          </motion.span>
-                        )}
                       </motion.button>
                     );
                   })}
-                  
-                  {/* Clear Filter Option */}
-                  <motion.button
-                    onClick={() => setFilters(prev => ({ ...prev, rarities: [] }))}
-                    onMouseEnter={() => setFilters(prev => ({ ...prev, rarities: [] }))}
-                    className={`
-                      group relative pl-6 py-3 text-left transition-all duration-300 mt-4
-                      ${filters.rarities.length === 0 ? 'scale-110 origin-left opacity-100' : 'scale-100 opacity-30 hover:opacity-80'}
-                    `}
-                  >
-                    {filters.rarities.length === 0 && (
-                      <motion.div 
-                        layoutId="rarityActiveDot"
-                        className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]" 
-                      />
-                    )}
-                    <span className="text-base font-bold uppercase tracking-tight text-white">All</span>
-                  </motion.button>
                </div>
             </div>
 
@@ -718,46 +688,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 {/* Removed Feature Bar and Sort Select */}
               </div>
 
-              {/* Horizontal Genre Scroller (The "Boxes") */}
-              <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
-                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-              >
-                {GENRE_CONFIG.map((genre) => {
-                  const isActive = filters.genre === genre.label;
-                  const Icon = genre.icon;
-                  return (
-                    <motion.button
-                      key={genre.label}
-                      onClick={() => handleGenreSelect(genre)}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                        flex flex-col items-center justify-center gap-2 w-24 h-24 flex-shrink-0 rounded-2xl border transition-all duration-300 relative overflow-hidden group
-                        ${isActive 
-                          ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
-                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                        }
-                      `}
-                    >
-                      <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-cyan-500 text-black' : 'bg-white/5 text-white/50 group-hover:text-white group-hover:bg-white/10'}`}>
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-cyan-300' : 'text-white/40 group-hover:text-white'}`}>
-                        {genre.label}
-                      </span>
-                      
-                      {/* Active Indicator Line */}
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activeGenreLine"
-                          className="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500" 
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
+
 
               {/* Item Types Scroller */}
               <div 
@@ -783,6 +714,37 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                     >
                       <Icon className="w-4 h-4" />
                       <span className="text-xs font-bold uppercase tracking-wide">{type.name}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Rarity Scroller (Horizontal) */}
+              <div 
+                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+              >
+                {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r) => {
+                  const style = rarityStyles[r];
+                  const isActive = filters.rarities.includes(r);
+                  return (
+                    <motion.button
+                      key={r}
+                      onClick={() => setFilters(prev => ({
+                        ...prev,
+                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r]
+                      }))}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
+                        flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                        ${isActive 
+                          ? \`bg-gradient-to-r \${style.bg ? style.bg.replace('bg-', 'from-') : 'from-slate-500'} to-transparent border-white/30 text-white shadow-lg\` 
+                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                        }
+                      `}
+                    >
+                      <span className={\`text-xs font-bold uppercase tracking-wide \${isActive ? 'text-white' : style.text}\`}>{r}</span>
                     </motion.button>
                   );
                 })}
