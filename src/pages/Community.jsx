@@ -209,7 +209,7 @@ export default function CommunityPage() {
     return (
         <PageErrorBoundary pageName="Community">
         <div 
-            className="min-h-screen text-white p-4 sm:p-8 pt-20 overflow-hidden"
+            className="min-h-screen text-white p-4 sm:p-8 pt-32 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             {/* Ambient Background */}
@@ -218,9 +218,9 @@ export default function CommunityPage() {
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
             </div>
 
-            <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-6rem)] flex flex-col gap-6">
+            <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-8rem)] flex flex-col gap-6">
                 
-                {/* Header Section - Transparent & Reorganized */}
+                {/* Header Section - Fixed Title */}
                 <div className="flex flex-col gap-6 px-2">
                     <div className="flex items-center justify-between">
                         {/* Left: Logo/Brand */}
@@ -229,44 +229,25 @@ export default function CommunityPage() {
                                 <MessageSquare className="w-5 h-5" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold tracking-wide text-white">{activeGame ? activeGame.title.toUpperCase() : 'COMMUNITY'}</h1>
-                                <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">{activeGame ? 'GAME FORUM' : 'FORUMS'}</span>
+                                <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
+                                <span className="text-xs text-cyan-300 tracking-[0.2em] uppercase">FORUMS</span>
                             </div>
-                        </div>
-
-                        {/* Right: Actions (Back / Create) - Removed and relocated */}
-                        <div className="flex items-center gap-4">
                         </div>
                     </div>
 
-                    {/* Search Bar & Back Button */}
-                    <div className="flex items-center gap-4 w-full max-w-xl">
-                        {activeGame && (
-                            <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => {
-                                    setActiveGame(null);
-                                    setSelectedPost(null);
-                                    setSelectedGenre('All Games');
-                                    setActiveSection('all');
-                                }}
-                                className="text-white/60 hover:text-white shrink-0"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                            </Button>
-                        )}
-                        <div className="relative w-full">
+                    {/* Search Bar - Only show here if NOT in active game (Hub View) */}
+                    {!activeGame && (
+                        <div className="relative w-full max-w-xl">
                             <input 
                                 type="text" 
-                                placeholder={activeGame ? "Search this forum..." : "Search games..."}
+                                placeholder="Search games..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-10"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Genre Filter Bar (Only show if NOT in a specific game forum) */}
@@ -380,6 +361,78 @@ export default function CommunityPage() {
                         <>
                             {/* Left Column: Feed (9/12) */}
                             <div className="col-span-12 lg:col-span-9 flex flex-col h-full overflow-hidden">
+                                
+                                {/* Game Header Area (Sticky or static at top of column) */}
+                                <div className="mb-6 space-y-6">
+                                    {/* 1. Game Title & Icon */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
+                                            <Gamepad2 className="w-6 h-6 text-cyan-400" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-white tracking-tight">{activeGame.title}</h2>
+                                            <div className="flex items-center gap-2 text-xs text-white/40">
+                                                <Badge variant="outline" className="border-white/10 text-white/50 h-5 px-1.5">{activeGame.genre}</Badge>
+                                                <span>•</span>
+                                                <span>Official Game Forum</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Controls Toolbar: [Back] [Label] [Search] ... [New Post] [Sort] */}
+                                    <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            onClick={() => {
+                                                setActiveGame(null);
+                                                setSelectedPost(null);
+                                                setSelectedGenre('All Games');
+                                                setActiveSection('all');
+                                            }}
+                                            className="text-white/60 hover:text-white shrink-0 -ml-2"
+                                        >
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </Button>
+                                        
+                                        <h2 className="text-sm font-bold text-white tracking-wide uppercase whitespace-nowrap">
+                                            {activeSection === 'all' ? 'All Posts' : TOPIC_TYPES.find(t => t.id === activeSection)?.label}
+                                        </h2>
+
+                                        <div className="relative w-full max-w-md">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search this forum..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-9"
+                                            />
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                                        </div>
+
+                                        <div className="flex-1" /> {/* Spacer */}
+
+                                        <div className="flex items-center gap-3">
+                                            <Button 
+                                                onClick={() => setShowCreateForm(true)}
+                                                size="sm"
+                                                className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-4 h-8 text-xs whitespace-nowrap"
+                                            >
+                                                <Plus className="w-3 h-3 mr-1" /> New Post
+                                            </Button>
+                                            <Select value={sortBy} onValueChange={setSortBy}>
+                                                <SelectTrigger className="w-28 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="newest">Newest</SelectItem>
+                                                    <SelectItem value="popular">Popular</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 pb-20">
                                     <AnimatePresence mode="wait">
                                         {selectedPost ? (
@@ -395,7 +448,7 @@ export default function CommunityPage() {
                                                     onClick={() => setSelectedPost(null)}
                                                     className="mb-6 hover:bg-white/10 -ml-2 text-white/60"
                                                 >
-                                                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Discussions
+                                                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
                                                 </Button>
                                                 
                                                 <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
@@ -423,30 +476,7 @@ export default function CommunityPage() {
                                                 exit={{ opacity: 0 }}
                                                 className="space-y-4"
                                             >
-                                                {/* Sort Bar & New Post */}
-                                                <div className="flex items-end justify-between mb-4 px-1">
-                                                    <h2 className="text-sm font-bold text-white/60 tracking-wide uppercase pb-2">
-                                                        {activeSection === 'all' ? 'All Posts' : TOPIC_TYPES.find(t => t.id === activeSection)?.label}
-                                                    </h2>
-                                                    <div className="flex flex-col gap-2 items-end">
-                                                        <Button 
-                                                            onClick={() => setShowCreateForm(true)}
-                                                            size="sm"
-                                                            className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-4 h-7 text-xs"
-                                                        >
-                                                            <Plus className="w-3 h-3 mr-1" /> New Post
-                                                        </Button>
-                                                        <Select value={sortBy} onValueChange={setSortBy}>
-                                                            <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white text-xs h-8 rounded-full">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="newest">Newest</SelectItem>
-                                                                <SelectItem value="popular">Popular</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
+                                                {/* (Old header removed) */}
 
                                                 {loading ? (
                                                     [1,2,3,4].map(i => (
