@@ -52,6 +52,7 @@ export default function CommunityPage() {
     const [showCreateForm, useStateShowCreateForm] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeSection, setActiveSection] = useState('all'); // Filter for topics
+    
     // Initialize activeGame from navigation state if available
     const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null); 
     const [sortBy, setSortBy] = useState('newest');
@@ -62,6 +63,7 @@ export default function CommunityPage() {
             setActiveGame(location.state.selectedGame);
         }
     }, [location.state]);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('All Games'); // 'All Games' | 'All Cards' | specific genre
     const [allGames, setAllGames] = useState([]); // All game entities
@@ -133,11 +135,6 @@ export default function CommunityPage() {
                 if (activeSection !== 'all') {
                     filter.type = activeSection;
                 }
-            } else {
-                // Global feed logic if needed, but user wants Game Grid as main view
-                // We might only fetch posts if we are in 'All Cards' or some other global view
-                // For now, if no activeGame, we don't fetch posts unless specifically asked (maybe for a global feed)
-                // But the requirement says "middle section showcase all games", so posts are secondary here.
             }
 
             // Only fetch if we are inside a game or we want a global feed (optional)
@@ -182,11 +179,6 @@ export default function CommunityPage() {
         
         try {
             // Simplified moderation check
-            // In production, use the integration
-            /*
-            const modRes = await base44.integrations.Core.InvokeLLM({ ... });
-            if (!modRes.is_safe) { ... }
-            */
         } catch (e) {
             // Ignore for now
         }
