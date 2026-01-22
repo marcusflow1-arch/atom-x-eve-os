@@ -692,7 +692,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
 
               {/* Item Types Scroller */}
               <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                className="flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 {ITEM_TYPES.map((type) => {
@@ -702,18 +702,18 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                     <motion.button
                       key={type.id}
                       onClick={() => setFilters(prev => ({ ...prev, itemType: type.id }))}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className={`
-                        flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                        flex items-center gap-2 py-2 transition-all duration-300 whitespace-nowrap
                         ${isActive 
-                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' 
-                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                          ? 'text-cyan-400 scale-105' 
+                          : 'text-white/60 hover:text-white'
                         }
                       `}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span className="text-xs font-bold uppercase tracking-wide">{type.name}</span>
+                      <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                      <span className={`text-sm uppercase tracking-wide ${isActive ? 'font-black' : 'font-medium'}`}>{type.name}</span>
                     </motion.button>
                   );
                 })}
@@ -721,7 +721,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
 
               {/* Rarity Scroller (Horizontal) */}
               <div 
-                className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2"
+                className="flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r) => {
@@ -734,17 +734,17 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         ...prev,
                         rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r]
                       }))}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className={`
-                        flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
+                        flex items-center gap-2 py-2 transition-all duration-300 whitespace-nowrap
                         ${isActive 
-                          ? `bg-gradient-to-r ${style.bg ? style.bg.replace('bg-', 'from-') : 'from-slate-500'} to-transparent border-white/30 text-white shadow-lg` 
-                          : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
+                          ? `${style.text} scale-105` 
+                          : 'text-white/60 hover:text-white'
                         }
                       `}
                     >
-                      <span className={`text-xs font-bold uppercase tracking-wide ${isActive ? 'text-white' : style.text}`}>{r}</span>
+                      <span className={`text-sm uppercase tracking-wide ${isActive ? 'font-black' : 'font-medium'}`}>{r}</span>
                     </motion.button>
                   );
                 })}
