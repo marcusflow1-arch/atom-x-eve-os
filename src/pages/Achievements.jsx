@@ -863,13 +863,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       onClick={() => {
                         setActiveCardIndex(idx);
                         if (isActive) {
-                          if (skillTreeMode) {
-                            setSkillTreeCard(card);
-                          } else if (blacksmithMode) {
-                            setBlacksmithCard(card);
-                          } else {
-                            setSelectedCard(card);
-                          }
+                          setSelectedCard(card);
                         }
                       }}
                       animate={{
