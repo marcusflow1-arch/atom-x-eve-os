@@ -36,14 +36,14 @@ const StarRating = ({ rating, setRating }) => (
     </div>
 );
 
-export default function CreatePostForm({ onSubmit, onCancel, initialType = 'general_discussion' }) {
-    const [step, setStep] = useState(1);
+export default function CreatePostForm({ onSubmit, onCancel, initialType = 'general_discussion', initialGameTitle = '', initialGameGenre = '' }) {
+    const [step, setStep] = useState(initialGameTitle ? 3 : 1);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
         type: initialType,
-        game_title: '',
-        genre: '',
+        game_title: initialGameTitle,
+        genre: initialGameGenre,
         rating: 0,
         image_url: '',
         community: 'discussions' // used as sub-category/tag
