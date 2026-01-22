@@ -27,10 +27,49 @@ const generateMockContent = (topic) => {
 export default function FarmTopicContent({ topic, gameId }) {
     if (!topic) {
         return (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 text-white/20">
-                <Hash className="w-24 h-24 mb-4 opacity-20" />
-                <h3 className="text-xl font-medium">Select a topic above</h3>
-                <p className="max-w-md mt-2">Choose a category to view discussions, join voice rooms, or find a group.</p>
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="max-w-2xl w-full grid gap-8"
+                >
+                    <div className="space-y-4">
+                        <h2 className="text-3xl font-bold text-white tracking-tight">What are you here to do?</h2>
+                        <p className="text-white/40 text-lg">Select a channel above to filter discussions and voice rooms.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left opacity-60">
+                        <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-3">
+                            <div className="p-3 bg-yellow-500/10 w-fit rounded-xl text-yellow-400">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Find a Squad</h3>
+                                <p className="text-sm text-white/40">Join recruitment channels to find active players.</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-3">
+                            <div className="p-3 bg-green-500/10 w-fit rounded-xl text-green-400">
+                                <Mic className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Voice Chat</h3>
+                                <p className="text-sm text-white/40">Drop into open voice rooms for live comms.</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-3">
+                            <div className="p-3 bg-blue-500/10 w-fit rounded-xl text-blue-400">
+                                <MessageCircle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Strategy & Guides</h3>
+                                <p className="text-sm text-white/40">Share builds and discover hidden secrets.</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         );
     }
