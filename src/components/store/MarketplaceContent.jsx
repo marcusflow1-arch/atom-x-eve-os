@@ -789,9 +789,6 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 )}
               </div>
             </div>
-
-
-            </div>
           </div>
         </div>
 
