@@ -222,6 +222,7 @@ export default function CommunityPage() {
                 
                 {/* Header Section - Fixed Title */}
                 <div className="flex flex-col gap-6 px-2">
+                    {!activeGame && (
                     <div className="flex items-center justify-between">
                         {/* Left: Logo/Brand */}
                         <div className="flex items-center gap-4">
@@ -234,6 +235,7 @@ export default function CommunityPage() {
                             </div>
                         </div>
                     </div>
+                    )}
 
                     {/* Search Bar - Only show here if NOT in active game (Hub View) */}
                     {!activeGame && (
