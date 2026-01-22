@@ -437,14 +437,48 @@ export default function ClanPage() {
                 </div>
             </div>
 
-            {/* 5. Bottom Status Bar */}
+                    {/* 5. Bottom Status Bar & Global Actions */}
             <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none">
                 <div className="flex gap-6 text-xs font-medium text-white/30">
                     <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500/50" /> Voice Systems Normal</span>
                     <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500/50" /> Network Stable</span>
                 </div>
-                <div className="text-right">
-                    <p className="text-white/20 text-[10px] uppercase tracking-[0.2em]">Atom x Eve System OS</p>
+                
+                <div className="flex items-center gap-4 pointer-events-auto">
+                    {/* Disband (Leader Only) or Leave (Everyone else) */}
+                    {activeClan && (
+                        isLeader ? (
+                            <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                onClick={() => {
+                                    if(confirm("Are you sure you want to disband this clan? This cannot be undone.")) {
+                                        disbandClanMutation.mutate();
+                                    }
+                                }}
+                                className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs"
+                            >
+                                Disband Clan
+                            </Button>
+                        ) : (
+                            <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                    if(confirm("Are you sure you want to leave this clan?")) {
+                                        leaveClanMutation.mutate();
+                                    }
+                                }}
+                                className="bg-white/5 hover:bg-white/10 text-white/60 border-white/10 text-xs"
+                            >
+                                Leave Clan
+                            </Button>
+                        )
+                    )}
+                    
+                    <div className="text-right">
+                        <p className="text-white/20 text-[10px] uppercase tracking-[0.2em]">Atom x Eve System OS</p>
+                    </div>
                 </div>
             </div>
         </div>
