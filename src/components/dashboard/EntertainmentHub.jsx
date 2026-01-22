@@ -136,7 +136,21 @@ export default function EntertainmentHub() {
   const CATEGORIES = ['All', 'Movies', 'TV Shows', 'Live TV', 'Sports', 'News'];
 
   return (
-    <div className="w-full h-full relative bg-[#050505] overflow-hidden font-sans">
+    <div 
+      className="w-full h-full relative overflow-hidden font-sans"
+      style={{
+        background: 'radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000000 100%)',
+      }}
+    >
+      {/* Liquid Marble Effect Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-20"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 2000 2000' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
+          filter: 'contrast(150%) brightness(100%)',
+          backgroundSize: 'cover'
+        }}
+      />
       
       {/* 1. Toggle Arrow - Left Edge (Middle) */}
       <AnimatePresence>
@@ -146,14 +160,20 @@ export default function EntertainmentHub() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             onClick={() => setSidebarOpen(true)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-[60] w-8 h-24 bg-white/5 hover:bg-white/10 backdrop-blur-md border-r border-y border-white/10 rounded-r-xl flex items-center justify-center group transition-all"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-[60] w-8 h-24 rounded-r-xl flex items-center justify-center group transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderLeft: 'none'
+            }}
           >
             <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* 2. Overlay Sidebar Menu */}
+      {/* 2. Overlay Sidebar Menu - Styled like Layout Drawer */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -168,8 +188,15 @@ export default function EntertainmentHub() {
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute top-0 left-0 bottom-0 w-80 bg-[#0a0a0a]/95 backdrop-blur-xl border-r border-white/10 z-[80] flex flex-col shadow-2xl"
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-0 left-0 bottom-0 w-80 z-[80] flex flex-col rounded-r-3xl"
+              style={{ 
+                background: 'rgba(100, 120, 140, 0.12)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              }}
             >
               <div className="h-24 flex items-center justify-between px-6 border-b border-white/5">
                 <div className="flex items-center gap-3">
@@ -191,7 +218,7 @@ export default function EntertainmentHub() {
                   onClick={() => handleAppSelect(null)}
                   className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${
                     !activeApp 
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' 
+                      ? 'bg-white/10 text-white border border-white/20' 
                       : 'text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -201,7 +228,7 @@ export default function EntertainmentHub() {
                   <span className="font-bold">Discovery Home</span>
                 </button>
 
-                <div className="h-px bg-white/5 my-4 mx-2" />
+                <div className="h-px bg-white/10 my-4 mx-2" />
                 <p className="px-4 text-xs font-bold text-white/30 uppercase tracking-widest mb-2">Connected Services</p>
 
                 {STREAMING_APPS.map((app) => (
@@ -211,7 +238,7 @@ export default function EntertainmentHub() {
                     className="w-full flex items-center gap-4 p-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all group"
                   >
                     <div 
-                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg"
+                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg border border-white/5"
                       style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                     >
                       <app.icon className="w-5 h-5 text-current" style={{ color: app.color }} />
@@ -226,7 +253,7 @@ export default function EntertainmentHub() {
       </AnimatePresence>
 
       {/* 3. Main Content - Hub or App View */}
-      <div className="w-full h-full overflow-hidden">
+      <div className="w-full h-full overflow-hidden relative z-10">
         <AnimatePresence mode="wait">
           {activeApp ? (
             <div className="w-full h-full relative">
@@ -236,7 +263,11 @@ export default function EntertainmentHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setActiveApp(null)}
-                className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full text-white/80 hover:text-white flex items-center gap-2 font-semibold text-sm shadow-xl hover:bg-black/80 transition-all"
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] px-6 py-2 backdrop-blur-xl rounded-full text-white/80 hover:text-white flex items-center gap-2 font-semibold text-sm shadow-xl transition-all"
+                style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back to Guide
@@ -249,10 +280,17 @@ export default function EntertainmentHub() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-full h-full overflow-y-auto custom-scrollbar bg-[#050505]"
+              className="w-full h-full overflow-y-auto custom-scrollbar"
             >
               {/* Hub Header */}
-              <div className="sticky top-0 z-40 px-12 py-6 bg-[#050505]/95 backdrop-blur-xl border-b border-white/5 flex items-center justify-between">
+              <div 
+                className="sticky top-0 z-40 px-12 py-6 flex items-center justify-between"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  backdropFilter: 'blur(20px)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                }}
+              >
                 <div className="flex items-center gap-8 ml-8">
                   <h1 className="text-2xl font-bold text-white tracking-tight">Entertainment<span className="text-purple-500">Guide</span></h1>
                   <div className="h-6 w-px bg-white/10" />
