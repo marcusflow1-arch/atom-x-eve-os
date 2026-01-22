@@ -71,12 +71,23 @@ export function useGameFilters(games, loading) {
       'Sci-Fi': Sparkles,
     };
     
-    return sortedGenres.map(genre => ({
+    const mappedGenres = sortedGenres.map(genre => ({
       id: genre,
       label: genre,
       items: groups[genre],
       icon: GENRE_ICONS[genre] || Gamepad2
     }));
+
+    // Add "All" genre at the beginning
+    return [
+      {
+        id: 'All',
+        label: 'All',
+        items: filteredGames,
+        icon: LayoutGrid
+      },
+      ...mappedGenres
+    ];
   }, [games, loading, activeCategory, selectedGenres, priceRange, minRating, showAndroidOnly]);
 
   /**
