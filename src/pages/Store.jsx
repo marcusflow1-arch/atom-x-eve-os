@@ -1409,6 +1409,7 @@ export default function Store() {
                                                 </div>
                                             </motion.div>
                                         </div>
+                                    </div>
                                 </div>
                             </>
                         )}
