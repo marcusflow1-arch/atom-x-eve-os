@@ -220,24 +220,7 @@ export default function CommunityPage() {
 
             <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-8rem)] flex flex-col gap-6">
                 
-                {/* Header Section - Fixed Title */}
-                <div className="flex flex-col gap-6 px-2">
 
-
-                    {/* Search Bar - Only show here if NOT in active game (Hub View) */}
-                    {!activeGame && (
-                        <div className="relative w-full max-w-xl">
-                            <input 
-                                type="text" 
-                                placeholder="Search games..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-10"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        </div>
-                    )}
-                </div>
 
                 {/* Genre Filter Bar (Only show if NOT in a specific game forum) */}
                 {!activeGame && (
@@ -287,11 +270,24 @@ export default function CommunityPage() {
 
                 {/* Header Section - Moved Below Genre Filter */}
                 {!activeGame && (
-                    <div className="flex items-center gap-3 px-2">
+                    <div className="flex items-center gap-4 px-2">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
                             <MessageSquare className="w-4 h-4" />
                         </div>
                         <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
+                        
+                        {/* Search Bar - Compact with Mic Icon */}
+                        <div className="relative w-64 ml-2">
+                            <input 
+                                type="text" 
+                                placeholder="Search games..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all pl-9 pr-8"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                            <Mic className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 hover:text-white/60 cursor-pointer" />
+                        </div>
                     </div>
                 )}
 
