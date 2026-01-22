@@ -27,10 +27,13 @@ Deno.serve(async (req) => {
             const { name, description, icon, banner, gameTags } = data;
             
             // Check if user is already in a clan (optional rule, but good for simplicity)
+            // REMOVED restriction to allow multiple clans if desired, or can uncomment if strict
+            /*
             const existingMember = await base44.entities.ClanMember.filter({ userId: user.id });
             if (existingMember.length > 0) {
                  return new Response(JSON.stringify({ error: 'You are already in a clan' }), { status: 400, headers: corsHeaders });
             }
+            */
 
             const newDivision = await base44.entities.Division.create({
                 name,
