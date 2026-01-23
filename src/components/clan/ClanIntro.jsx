@@ -32,11 +32,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
 
     // Auto-redirect if user already has a clan membership
     React.useEffect(() => {
-        if (myMemberships && myMemberships.length > 0 && onClanJoined) {
-            // User is already in a clan, redirect to their first clan
-            console.log('User already in clan, redirecting to overview');
-            onClanJoined(myMemberships[0].clan_id);
-        }
+        // Do not auto-redirect here; ClanPage controls entry based on activeClanId
     }, [myMemberships, onClanJoined]);
 
     // Fetch all clans for browsing
