@@ -280,7 +280,13 @@ export default function ClanPage() {
     // Render Logic
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
 
-    if (!activeClan) {
+    // User not authenticated - show intro to prompt login
+    if (!user) {
+        return <ClanIntro onClanCreated={(clanId) => setActiveClanId(clanId)} onClanJoined={(clanId) => setActiveClanId(clanId)} />;
+    }
+
+    // User authenticated but not in any clan - show intro to join/create
+    if (!activeClan || (memberships && memberships.length === 0)) {
         return <ClanIntro onClanCreated={(clanId) => setActiveClanId(clanId)} onClanJoined={(clanId) => setActiveClanId(clanId)} />;
     }
 
