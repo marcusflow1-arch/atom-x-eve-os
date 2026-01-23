@@ -350,12 +350,11 @@ export default function ClanPage() {
                         >
                             {/* Content based on Active Mode */}
                             {XMB_MODES[activeModeIndex].id === 'overview' && (
-                                <div className="w-full max-w-6xl h-full">
+                                <div className="w-full h-full">
                                     <ClanOverview 
                                         clan={activeClan} 
                                         activeVoiceRooms={activeVoiceRooms}
                                         onChangeTab={(tab) => {
-                                            // Handle internal navigation if needed, or simple scrolling
                                             console.log("Navigating to", tab);
                                         }} 
                                     />
