@@ -78,12 +78,13 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
             return res.data;
         },
         onSuccess: (data) => {
-            if (data.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-                queryClient.invalidateQueries(['allClans']);
+            if (data.success && data.clanId) {
                 setIsCreateOpen(false);
                 setNewClanData({ name: '', description: '', isPrivate: false });
-                if (onClanCreated) onClanCreated(data.clanId || data.division.id);
+                if (onClanCreated) onClanCreated(data.clanId);
+                // Defer membership validation to ClanPage after entry
+                queryClient.invalidateQueries(['myClanMemberships']);
+                queryClient.invalidateQueries(['allClans']);
             } else {
                 alert(data.error || 'Failed to create clan');
             }
