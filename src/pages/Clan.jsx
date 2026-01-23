@@ -463,7 +463,7 @@ export default function ClanPage() {
                 
                 <div className="flex items-center gap-4 pointer-events-auto">
                     {/* Disband (Leader Only) or Leave (Everyone else) */}
-                    {activeClan && (
+                    {clanForRender && (
                         isLeader ? (
                             <Button 
                                 size="sm" 
