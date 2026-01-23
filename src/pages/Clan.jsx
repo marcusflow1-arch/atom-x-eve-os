@@ -253,30 +253,6 @@ export default function ClanPage() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [activeClan, isPrivileged]);
 
-    // Conflict Warning
-    if (sessionConflict) {
-        return (
-            <div className="h-screen flex items-center justify-center bg-black/90 z-50 text-center">
-                <div className="max-w-md p-8 bg-[#12141a] border border-red-500/30 rounded-2xl">
-                    <Activity className="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
-                    <h2 className="text-xl font-bold text-white mb-2">Connection Paused</h2>
-                    <p className="text-white/60 mb-6">
-                        You are active in another window or device. We've paused this session to prevent state conflicts.
-                    </p>
-                    <Button 
-                        onClick={() => {
-                            claimSession();
-                            window.location.reload();
-                        }}
-                        className="bg-red-600 hover:bg-red-500 text-white w-full"
-                    >
-                        Resume Here
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
     // Render Logic
     if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
 
