@@ -270,111 +270,40 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     return (
         <div className="h-full overflow-hidden flex flex-col">
             
-            {/* GUILD NOTIFICATION BAR - Top */}
-            <div className="px-4 py-2 flex items-center justify-center gap-4">
-                <Button
-                    onClick={() => setShowAnnouncements(true)}
-                    className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs px-4"
-                    size="sm"
-                >
-                    <Megaphone className="w-3.5 h-3.5 mr-2" /> Announcements
-                </Button>
-                <Button
-                    onClick={() => setShowSchedule(true)}
-                    className="bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/30 text-xs px-4"
-                    size="sm"
-                >
-                    <Calendar className="w-3.5 h-3.5 mr-2" /> Schedule
-                </Button>
-                <Button
-                    onClick={() => setShowTreasury(true)}
-                    className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs px-4"
-                    size="sm"
-                >
-                    <Coins className="w-3.5 h-3.5 mr-2" /> Treasury
-                </Button>
-                {isOfficer && (
-                    <Button 
-                        onClick={() => setIsInviteOpen(true)}
-                        className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 text-xs px-4"
-                        size="sm"
+            {/* ANNOUNCEMENTS DROPDOWN - Pushed down content when open */}
+            <AnimatePresence>
+                {showAnnouncements && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden border-b border-white/10 bg-amber-500/5"
                     >
-                        <UserPlus className="w-3.5 h-3.5 mr-2" /> Invite
-                    </Button>
+                        <div className="p-4 max-h-64 overflow-y-auto">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                    <Megaphone className="w-4 h-4" /> Clan Announcements
+                                </h3>
+                                <button onClick={() => setShowAnnouncements(false)} className="text-white/40 hover:text-white">
+                                    <ChevronUp className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="space-y-2">
+                                {mockAnnouncements.map((ann) => (
+                                    <div key={ann.id} className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="font-bold text-white text-sm">{ann.title}</h4>
+                                            <Badge className="bg-amber-500/20 text-amber-300 border-none text-[10px]">{ann.author}</Badge>
+                                        </div>
+                                        <p className="text-xs text-white/60">{ann.content}</p>
+                                        <p className="text-[10px] text-white/30 mt-1">{format(ann.date, 'MMM d, yyyy')}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
-                {isLeader && (
-                    <Button 
-                        onClick={() => setIsDismantleOpen(true)}
-                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs px-4"
-                        size="sm"
-                    >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Dismantle
-                    </Button>
-                )}
-            </div>
-
-            {/* HERO HEADER */}
-            <div className="relative w-full h-[160px] rounded-2xl overflow-hidden border border-white/10 mx-auto" style={{ width: 'calc(100% - 2rem)', margin: '0 1rem' }}>
-                <div className="absolute inset-0">
-                    <img 
-                        src={clan.banner || "https://images.unsplash.com/photo-1533130061792-649d45df8c2d?w=1200"} 
-                        className="w-full h-full object-cover"
-                        alt="Banner"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/50 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0a0c10]/80 via-transparent to-[#0a0c10]/50" />
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-4">
-                    {/* Icon */}
-                    <div className="relative flex-shrink-0">
-                        <div className="w-16 h-16 rounded-xl bg-black/50 backdrop-blur-xl border border-white/20 p-1">
-                            <div className="w-full h-full rounded-lg overflow-hidden bg-white/5">
-                                {clan.icon ? (
-                                    <img src={clan.icon} className="w-full h-full object-cover" />
-                                ) : (
-                                    <ShieldAlert className="w-full h-full p-3 text-white/20" />
-                                )}
-                            </div>
-                        </div>
-                        <Badge className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-yellow-500 text-black border-yellow-400 font-bold px-1.5 text-[10px]">
-                            LVL {clan.level}
-                        </Badge>
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl font-black text-white tracking-tight truncate">{clan.name}</h1>
-                        <div className="flex items-center gap-3 text-xs text-white/60 mt-1">
-                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-400" /> {members?.length || 1}</span>
-                            <span className="flex items-center gap-1"><CircleDot className="w-2.5 h-2.5 text-green-400" /> {mockOnlineStatus.filter(m => m.isOnline).length} Online</span>
-                            <span className="flex items-center gap-1"><Trophy className="w-3 h-3 text-yellow-400" /> Rank #42</span>
-                        </div>
-                    </div>
-
-                    {/* XP + Leave */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-48">
-                            <div className="flex justify-between text-[10px] text-white/60 mb-1">
-                                <span>XP</span>
-                                <span>{Math.floor(progress)}%</span>
-                            </div>
-                            <div className="h-2 bg-black/50 rounded-full border border-white/10 overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-blue-600 to-cyan-400" style={{ width: `${progress}%` }} />
-                            </div>
-                        </div>
-                        {!isLeader && (
-                            <Button 
-                                onClick={() => setIsLeaveOpen(true)}
-                                size="sm"
-                                className="bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30"
-                            >
-                                <LogOut className="w-4 h-4" />
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            </AnimatePresence>
 
             {/* MAIN CONTENT AREA - Chat, Roster, Activity */}
             <div className="flex-1 overflow-hidden p-4 flex gap-4">
