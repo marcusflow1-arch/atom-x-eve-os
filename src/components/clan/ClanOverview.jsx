@@ -384,29 +384,6 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                         </div>
                     </LiquidGlassCard>
 
-                    {/* Voice Status */}
-                    {activeVoiceRooms?.length > 0 && (
-                        <LiquidGlassCard className="p-5 bg-green-900/10 border-green-500/20">
-                            <h3 className="text-green-400 font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wider animate-pulse">
-                                <Mic className="w-4 h-4" /> Live Comms
-                            </h3>
-                            <div className="space-y-2">
-                                {activeVoiceRooms.map((room) => (
-                                    <div key={room.id} className="flex items-center justify-between text-sm text-white/80">
-                                        <span>{room.topic || "Voice Channel"}</span>
-                                        <Badge className="bg-green-500/20 text-green-300 border-none text-[10px]">{room.participants.length}</Badge>
-                                    </div>
-                                ))}
-                                <Button 
-                                    size="sm" 
-                                    className="w-full mt-2 bg-green-600/20 hover:bg-green-600/30 text-green-300 border border-green-500/30"
-                                    onClick={() => onChangeTab('voice')}
-                                >
-                                    Join Channel
-                                </Button>
-                            </div>
-                        </LiquidGlassCard>
-                    )}
                 </div>
             </div>
 
