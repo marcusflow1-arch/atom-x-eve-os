@@ -45,33 +45,49 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
     const createClanMutation = useMutation({
-        mutationFn: (data) => base44.functions.invoke('clanSystem', { action: 'create_clan', data }),
-        onSuccess: (res) => {
-            if (res.data.success) {
+        mutationFn: async (clanData) => {
+            const res = await base44.functions.invoke('clanSystem', { action: 'create_clan', data: clanData });
+            return res.data;
+        },
+        onSuccess: (data) => {
+            if (data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
+                queryClient.invalidateQueries(['allClans']);
                 setIsCreateOpen(false);
-                if (onClanCreated) onClanCreated(res.data.division.id);
+                setNewClanData({ name: '', description: '', isPrivate: false });
+                if (onClanCreated) onClanCreated(data.division.id);
+            } else {
+                alert(data.error || 'Failed to create clan');
             }
+        },
+        onError: (error) => {
+            console.error('Create clan error:', error);
+            alert('Failed to create clan. Please try again.');
         }
     });
 
     const joinClanMutation = useMutation({
-        mutationFn: ({ clanId, isPrivate }) => {
+        mutationFn: async ({ clanId, isPrivate }) => {
             const action = isPrivate ? 'request_join' : 'join_clan';
-            return base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
+            const res = await base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
+            return { ...res.data, clanId, isPrivate };
         },
-        onSuccess: async (res, variables) => {
-            if (res.data.success) {
-                if (variables.isPrivate) {
-                    // Show success toast for application
-                    alert("Application sent successfully!"); // In real app use toast
+        onSuccess: async (data) => {
+            if (data.success) {
+                if (data.isPrivate) {
+                    alert("Application sent successfully!");
                 } else {
                     await queryClient.invalidateQueries(['myClanMemberships']);
-                    if (onClanJoined) onClanJoined(variables.clanId);
+                    await queryClient.invalidateQueries(['allClans']);
+                    if (onClanJoined) onClanJoined(data.clanId);
                 }
             } else {
-                console.error(res.data.error);
+                alert(data.error || 'Failed to join clan');
             }
+        },
+        onError: (error) => {
+            console.error('Join clan error:', error);
+            alert('Failed to join clan. Please try again.');
         }
     });
 
