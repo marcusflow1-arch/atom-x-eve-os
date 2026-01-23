@@ -71,22 +71,50 @@ export default function CommunityPage() {
 
     const { isAuthenticated } = useAuth();
     const genreScrollRef = useRef(null);
+    const hoverIntervalRef = useRef(null);
+    const hoverDirRef = useRef(1);
 
-    // Horizontal scroll support for genres
+    // Horizontal scroll support for genres + gentle hover auto-scroll
     useEffect(() => {
         const el = genreScrollRef.current;
-        if (el) {
-            const onWheel = (e) => {
-                if (e.deltaY === 0) return;
-                // Only hijack if we can actually scroll
-                if (el.scrollWidth > el.clientWidth) {
-                    e.preventDefault();
-                    el.scrollLeft += e.deltaY;
-                }
-            };
-            el.addEventListener('wheel', onWheel, { passive: false });
-            return () => el.removeEventListener('wheel', onWheel);
-        }
+        if (!el) return;
+
+        const onWheel = (e) => {
+            if (e.deltaY === 0) return;
+            if (el.scrollWidth > el.clientWidth) {
+                e.preventDefault();
+                el.scrollLeft += e.deltaY;
+            }
+        };
+        el.addEventListener('wheel', onWheel, { passive: false });
+
+        const onEnter = () => {
+            if (hoverIntervalRef.current) return;
+            hoverIntervalRef.current = setInterval(() => {
+                if (!el) return;
+                el.scrollLeft += 1.5 * hoverDirRef.current;
+                if (el.scrollLeft <= 0) hoverDirRef.current = 1;
+                else if (el.scrollLeft + el.clientWidth >= el.scrollWidth) hoverDirRef.current = -1;
+            }, 16);
+        };
+        const onLeave = () => {
+            if (hoverIntervalRef.current) {
+                clearInterval(hoverIntervalRef.current);
+                hoverIntervalRef.current = null;
+            }
+        };
+        el.addEventListener('mouseenter', onEnter);
+        el.addEventListener('mouseleave', onLeave);
+
+        return () => {
+            el.removeEventListener('wheel', onWheel);
+            el.removeEventListener('mouseenter', onEnter);
+            el.removeEventListener('mouseleave', onLeave);
+            if (hoverIntervalRef.current) {
+                clearInterval(hoverIntervalRef.current);
+                hoverIntervalRef.current = null;
+            }
+        };
     }, []);
 
     // Fetch all games
@@ -107,7 +135,7 @@ export default function CommunityPage() {
     useEffect(() => {
         let currentGames = allGames;
 
-        if (selectedGenre !== 'All Games' && selectedGenre !== 'All Cards') {
+        if (selectedGenre !== 'All Games') {
             currentGames = currentGames.filter(game => game.genre === selectedGenre);
         }
 
@@ -251,12 +279,8 @@ export default function CommunityPage() {
 
                 {/* Genre Filter Bar + Search - Moved Below Header */}
                 {!activeGame && (
-                    <div className="flex items-center justify-between px-2 gap-4">
-                        <div 
-                            ref={genreScrollRef}
-                            className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide cursor-grab active:cursor-grabbing"
-                        >
-                            {/* Static Options */}
+                    <div className="px-2">
+                        <div className="flex items-center gap-4">
                             <motion.button
                                 onClick={() => setSelectedGenre('All Games')}
                                 whileHover={{ scale: 1.05 }}
@@ -266,40 +290,34 @@ export default function CommunityPage() {
                                 <Gamepad2 className="w-4 h-4" />
                                 <span className="text-sm uppercase tracking-wide">All Games</span>
                             </motion.button>
-                            
-                            <motion.button
-                                onClick={() => setSelectedGenre('All Cards')}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${selectedGenre === 'All Cards' ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}
+
+                            <div className="h-6 w-px bg-white/20" />
+
+                            <div 
+                                ref={genreScrollRef}
+                                className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide"
                             >
-                                <Grid className="w-4 h-4" />
-                                <span className="text-sm uppercase tracking-wide">All Cards</span>
-                            </motion.button>
-
-                            <ChevronRight className="w-4 h-4 text-white/20 mx-2" />
-
-                            {/* Scrollable Genres */}
-                            {GENRE_CONFIG.map((genre) => {
-                                const Icon = genre.icon;
-                                const isActive = selectedGenre === genre.label;
-                                return (
-                                    <motion.button
-                                        key={genre.label}
-                                        onClick={() => setSelectedGenre(genre.label)}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${isActive ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}
-                                    >
-                                        <Icon className="w-4 h-4" />
-                                        <span className="text-sm uppercase tracking-wide">{genre.label}</span>
-                                    </motion.button>
-                                );
-                            })}
+                                {GENRE_CONFIG.map((genre) => {
+                                    const Icon = genre.icon;
+                                    const isActive = selectedGenre === genre.label;
+                                    return (
+                                        <motion.button
+                                            key={genre.label}
+                                            onClick={() => setSelectedGenre(genre.label)}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${isActive ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                            <span className="text-sm uppercase tracking-wide">{genre.label}</span>
+                                        </motion.button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
-                        {/* Search Bar - Moved here */}
-                        <div className="relative w-64 flex-shrink-0">
+                        {/* Search Bar under All Games */}
+                        <div className="relative mt-3 max-w-md">
                             <input 
                                 type="text" 
                                 placeholder="Search games..."
@@ -319,16 +337,7 @@ export default function CommunityPage() {
                     {/* HUB VIEW: Game Grid */}
                     {!activeGame && (
                         <div className="col-span-12 overflow-y-auto pr-2 custom-scrollbar">
-                             {/* Only show games if we are in 'All Games' or a specific genre, or handle 'All Cards' differently */}
-                             {selectedGenre === 'All Cards' ? (
-                                 <div className="flex flex-col items-center justify-center py-32 text-center bg-white/5 rounded-3xl border border-white/5 border-dashed">
-                                    <Grid className="w-16 h-16 text-white/20 mb-4" />
-                                    <h3 className="text-xl font-bold text-white/60">Trading Cards Forum</h3>
-                                    <p className="text-white/40 text-sm mt-2">Browse discussions about trading cards across all universes.</p>
-                                    <Button className="mt-6" variant="outline" disabled>Coming Soon</Button>
-                                 </div>
-                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
                                     {loading && allGames.length === 0 ? (
                                         [1, 2, 3, 4, 5, 6, 7, 8].map(i => (
                                             <div key={i} className="aspect-video bg-white/5 rounded-2xl animate-pulse" />
@@ -369,7 +378,6 @@ export default function CommunityPage() {
                                         </div>
                                     )}
                                 </div>
-                             )}
                         </div>
                     )}
 
