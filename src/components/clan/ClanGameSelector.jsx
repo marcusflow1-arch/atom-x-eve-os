@@ -12,6 +12,15 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const [filters, setFilters] = useState([]); // Array of active filters
     const [search, setSearch] = useState('');
 
+  // Default global chat pseudo-game
+  const defaultChatGame = {
+      id: 'global_chat',
+      title: 'Adam X Eve',
+      genre: 'Social',
+      cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
+      isGlobalChat: true
+  };
+
     const { data: games, isLoading } = useQuery({
         queryKey: ['clanGamesSelector', clanId, user?.id],
         queryFn: async () => {
@@ -139,6 +148,37 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             {/* Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <AnimatePresence mode="popLayout">
+                    {/* Default Global Chat Card */}
+                    <motion.div
+                        key={defaultChatGame.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => onSelectGame(defaultChatGame)}
+                        className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer bg-slate-900 border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]"
+                    >
+                        <div className="absolute inset-0">
+                            <img 
+                                src={defaultChatGame.cover_image} 
+                                alt={defaultChatGame.title} 
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-5 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                            <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md leading-tight">{defaultChatGame.title}</h3>
+                            <p className="text-white/60 text-xs mb-3 flex items-center gap-1">
+                                <Badge variant="outline" className="border-white/20 text-white/50 text-[10px] h-5 px-1.5">
+                                    {defaultChatGame.genre}
+                                </Badge>
+                            </p>
+                            <div className="text-[11px] text-white/50">Open community chat</div>
+                        </div>
+                        <div className="absolute inset-0 border-2 border-cyan-400/0 group-hover:border-cyan-400/50 rounded-2xl transition-all duration-300 pointer-events-none" />
+                    </motion.div>
+
                     {filteredGames.map((game, idx) => (
                         <motion.div
                             key={game.id}

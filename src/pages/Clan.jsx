@@ -303,14 +303,21 @@ export default function ClanPage() {
                         className="absolute inset-0 z-50 flex flex-col"
                     >
                         <GameWorkspace 
-                            game={selectedGame} 
-                            clan={clanForRender} 
-                            initialZone={initialZone}
-                            onBack={() => {
-                                setSelectedGame(null);
-                                setInitialZone(null);
-                            }} 
-                        />
+                                                game={selectedGame} 
+                                                clan={clanForRender} 
+                                                initialZone={initialZone}
+                                                onBack={() => {
+                                                    setSelectedGame(null);
+                                                    setInitialZone(null);
+                                                }} 
+                                                onGoMainChat={() => setSelectedGame({
+                                                    id: 'global_chat',
+                                                    title: 'Adam X Eve',
+                                                    genre: 'Social',
+                                                    cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
+                                                    isGlobalChat: true
+                                                })}
+                                            />
                     </motion.div>
                 )}
             </AnimatePresence>

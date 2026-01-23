@@ -31,12 +31,15 @@ const ZONES = [
     { id: 'voice', label: 'Voice Rooms', icon: Mic, desc: 'Tactical Audio Channels' },
 ];
 
-export default function GameWorkspace({ game, clan, onBack, initialZone }) {
+export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMainChat }) {
     const { user, updatePresenceContext } = useAuth();
     const [activeZone, setActiveZone] = useState(initialZone || 'chat');
     
     // Visited zones state for lazy loading
     const [visitedZones, setVisitedZones] = useState({ [initialZone || 'chat']: true });
+
+    // Limit zones for global chat
+    const visibleZones = game?.isGlobalChat ? ZONES.filter(z => ['chat','voice'].includes(z.id)) : ZONES;
 
     useEffect(() => {
         updatePresenceContext({
@@ -72,11 +75,11 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
             const assignments = await base44.entities.ClanAssignment.filter({
                 clanId: clan.id,
                 targetId: game.id,
-                status: 'pending' // Only show active/pending objectives
+                status: 'pending'
             });
             return assignments.filter(a => ['game', 'objective'].includes(a.type));
         },
-        enabled: !!clan && !!game
+        enabled: !!clan && !!game && !game?.isGlobalChat
     });
 
     useEntitySubscription('ClanAssignment', ['gameObjectives', clan.id, game.id]);
@@ -88,7 +91,8 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
         queryFn: async () => {
             const ws = await base44.entities.GameWorkspace.filter({ clan_id: clan.id, game_id: game.id });
             return ws[0];
-        }
+        },
+        enabled: !game?.isGlobalChat
     });
 
     useEntitySubscription('GameWorkspace', ['gameWorkspace', clan.id, game.id]);
@@ -160,14 +164,25 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
             >
                 {/* Header */}
                 <div className="p-6 border-b border-white/10">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={onBack}
-                        className="text-white/50 hover:text-white mb-4 -ml-2 gap-2"
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Back to Clan
-                    </Button>
+                    <div className="flex items-center gap-2 mb-4 -ml-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={onBack}
+                            className="text-white/50 hover:text-white gap-2"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Back to Clan
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={onGoMainChat}
+                            className="text-white/70 hover:text-white gap-2"
+                            title="Go to Adam X Eve main chat"
+                        >
+                            <Hash className="w-4 h-4" /> Adam X Eve
+                        </Button>
+                    </div>
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 shadow-lg">
                             <img src={game.cover_image || game.cover} className="w-full h-full object-cover" alt={game.title} />
@@ -230,7 +245,7 @@ export default function GameWorkspace({ game, clan, onBack, initialZone }) {
                 {/* Functional Zones Navigation */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
                     <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2 px-2">Operational Zones</h3>
-                    {ZONES.map(zone => {
+                    {visibleZones.map(zone => {
                         const Icon = zone.icon;
                         const isActive = activeZone === zone.id;
                         return (
