@@ -320,7 +320,7 @@ export default function ClanPage() {
                     >
                         <GameWorkspace 
                             game={selectedGame} 
-                            clan={activeClan} 
+                            clan={clanForRender} 
                             initialZone={initialZone}
                             onBack={() => {
                                 setSelectedGame(null);
