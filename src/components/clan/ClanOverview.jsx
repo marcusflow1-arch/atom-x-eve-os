@@ -306,7 +306,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
             </AnimatePresence>
 
             {/* MAIN CONTENT AREA - Chat, Roster, Activity */}
-            <div className="flex-1 overflow-hidden p-4 flex gap-4">
+            <div className="flex-1 overflow-hidden px-4 pb-4 pt-2 flex gap-4">
                 {/* LEFT PANEL */}
                 <div className={`h-full transition-all duration-300 ${layoutSwapped ? 'w-[55%]' : 'w-[25%]'}`}>
                     {layoutSwapped ? <RosterPanel expanded /> : <ChatPanel />}
