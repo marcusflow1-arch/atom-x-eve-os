@@ -20,20 +20,8 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '', isPrivate: false });
 
-    // Fetch all clans
-    const { data: clans, isLoading } = useQuery({
-        queryKey: ['allClans'],
-        queryFn: async () => {
-            // Fetch top 50 clans sorted by level/reputation
-            // In a real scenario, we might want pagination
-            // Filter only to available clans (public or private) that user is not in?
-            // For now, listing all is fine as join logic checks membership
-            return await base44.entities.Division.list();
-        }
-    });
-
-    // Check membership status for each clan to disable join button if already joined
-    const { data: myMemberships } = useQuery({
+    // Check membership status - if user is already in a clan, redirect them
+    const { data: myMemberships, isLoading: membershipsLoading } = useQuery({
         queryKey: ['myClanMemberships', user?.id],
         queryFn: async () => {
             if (!user) return [];
@@ -42,7 +30,49 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
         enabled: !!user
     });
 
+    // Auto-redirect if user already has a clan membership
+    React.useEffect(() => {
+        if (myMemberships && myMemberships.length > 0 && onClanJoined) {
+            // User is already in a clan, redirect to their first clan
+            console.log('User already in clan, redirecting to overview');
+            onClanJoined(myMemberships[0].clan_id);
+        }
+    }, [myMemberships, onClanJoined]);
+
+    // Fetch all clans for browsing
+    const { data: clans, isLoading } = useQuery({
+        queryKey: ['allClans'],
+        queryFn: async () => {
+            return await base44.entities.Division.list();
+        },
+        enabled: !membershipsLoading && (!myMemberships || myMemberships.length === 0)
+    });
+
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
+
+    // Show loading while checking membership
+    if (membershipsLoading) {
+        return (
+            <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0c10] text-white">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-white/50">Checking clan status...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If user is in a clan, show brief loading while redirect happens
+    if (myMemberships && myMemberships.length > 0) {
+        return (
+            <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0c10] text-white">
+                <div className="text-center">
+                    <Shield className="w-16 h-16 text-cyan-400 mx-auto mb-4 animate-pulse" />
+                    <p className="text-white/50">Entering your clan...</p>
+                </div>
+            </div>
+        );
+    }
 
     const createClanMutation = useMutation({
         mutationFn: async (clanData) => {
