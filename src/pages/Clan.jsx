@@ -81,7 +81,7 @@ export default function ClanPage() {
             
             return validatedDivisions.filter(d => d);
         },
-        enabled: !!user,
+        enabled: !!user && !isTransitioning,
         staleTime: 0, // Always refetch on mount to ensure fresh data
         refetchOnMount: 'always'
     });
