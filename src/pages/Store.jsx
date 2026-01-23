@@ -388,6 +388,7 @@ export default function Store() {
     const scrollTimeoutRef = useRef(null);
     const [hoveredGame, setHoveredGame] = useState(null);
     const genreRefs = useRef([]);
+    const genreScrollRef = useRef(null);
 
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
@@ -1233,7 +1234,15 @@ export default function Store() {
                                             
                                             {/* Genre Filter Bar (Community Style) */}
                                             <div className="flex items-center justify-between">
-                                                <div className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2">
+                                                <div 
+                                                    ref={genreScrollRef}
+                                                    onWheel={(e) => {
+                                                        if (genreScrollRef.current) {
+                                                            genreScrollRef.current.scrollLeft += e.deltaY;
+                                                        }
+                                                    }}
+                                                    className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
+                                                >
                                                     {/* Store Label (Replaces first All) */}
                                                     <div className="flex items-center gap-2 text-white/50 text-sm font-medium tracking-wider uppercase select-none">
                                                         <Gamepad2 className="w-4 h-4" />
