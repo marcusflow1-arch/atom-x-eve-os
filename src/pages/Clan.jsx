@@ -44,6 +44,7 @@ export default function ClanPage() {
     const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
     // Persist activeClanId to localStorage
     useEffect(() => {
@@ -53,6 +54,22 @@ export default function ClanPage() {
             localStorage.removeItem('activeClanId');
         }
     }, [activeClanId]);
+
+    // Handle Clan Entry (Success from Intro)
+    const handleClanEntry = async (clanId) => {
+        console.log("Entering clan transition for:", clanId);
+        setIsTransitioning(true);
+        setActiveClanId(clanId);
+        await refetchMemberships();
+    };
+
+    // Stop transitioning when membership is confirmed
+    useEffect(() => {
+        if (isTransitioning && memberships?.some(m => m.divisionId === activeClanId)) {
+            console.log("Clan transition complete, membership confirmed");
+            setIsTransitioning(false);
+        }
+    }, [memberships, isTransitioning, activeClanId]);
 
     // Fetch Memberships with fresh validation
     const { data: memberships, isLoading, refetch: refetchMemberships } = useQuery({
@@ -108,11 +125,16 @@ export default function ClanPage() {
             }
         } else if (memberships && memberships.length === 0) {
              // User is not in any clan - clear active clan and show intro
-             console.log('No clan memberships found, showing clan intro');
-             setActiveClanId(null);
-             localStorage.removeItem('activeClanId');
+             // BUT only if we are not currently transitioning into a clan
+             if (!isTransitioning) {
+                 console.log('No clan memberships found, showing clan intro');
+                 setActiveClanId(null);
+                 localStorage.removeItem('activeClanId');
+             } else {
+                 console.log('No memberships yet, but transitioning... keeping activeClanId');
+             }
         }
-    }, [memberships, activeClanId]);
+    }, [memberships, activeClanId, isTransitioning]);
 
     const activeClan = memberships?.find(c => c.divisionId === activeClanId);
 
@@ -254,16 +276,24 @@ export default function ClanPage() {
     }, [activeClan, isPrivileged]);
 
     // Render Logic
-    if (isLoading) return <div className="h-screen flex items-center justify-center text-white/50">Accessing Clan Network...</div>;
+    if (isLoading || isTransitioning) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-[#0a0c10] text-white">
+                <Shield className="w-16 h-16 text-cyan-400 mb-6 animate-pulse" />
+                <h2 className="text-xl font-bold tracking-widest mb-2">ACCESSING DIVISION</h2>
+                <p className="text-white/40 text-sm">Synchronizing membership data...</p>
+            </div>
+        );
+    }
 
     // User not authenticated - show intro to prompt login
     if (!user) {
-        return <ClanIntro onClanCreated={(clanId) => setActiveClanId(clanId)} onClanJoined={(clanId) => setActiveClanId(clanId)} />;
+        return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
     // User authenticated but not in any clan - show intro to join/create
     if (!activeClan || (memberships && memberships.length === 0)) {
-        return <ClanIntro onClanCreated={(clanId) => setActiveClanId(clanId)} onClanJoined={(clanId) => setActiveClanId(clanId)} />;
+        return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
     return (

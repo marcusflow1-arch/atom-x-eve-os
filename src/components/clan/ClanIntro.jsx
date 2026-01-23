@@ -87,7 +87,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                 queryClient.invalidateQueries(['allClans']);
                 setIsCreateOpen(false);
                 setNewClanData({ name: '', description: '', isPrivate: false });
-                if (onClanCreated) onClanCreated(data.division.id);
+                if (onClanCreated) onClanCreated(data.clanId || data.division.id);
             } else {
                 alert(data.error || 'Failed to create clan');
             }

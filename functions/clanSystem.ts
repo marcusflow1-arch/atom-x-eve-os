@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
                 joined_at: new Date().toISOString()
             });
 
-            return new Response(JSON.stringify({ success: true, division: newDivision }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ success: true, clanId: newDivision.id, division: newDivision }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         // --- INVITE MEMBER ---
@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
             // Update member count
             await base44.asServiceRole.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
 
-            return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ success: true, clanId: divisionId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         // --- REQUEST JOIN (Private Clans) ---
