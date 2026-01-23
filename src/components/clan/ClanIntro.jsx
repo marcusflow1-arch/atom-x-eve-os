@@ -100,6 +100,31 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
 
     // (duplicate hooks removed)
 
+    const joinClanMutation = useMutation({
+        mutationFn: async ({ clanId, isPrivate }) => {
+            const action = isPrivate ? 'request_join' : 'join_clan';
+            const res = await base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
+            return { ...res.data, clanId, isPrivate };
+        },
+        onSuccess: async (data) => {
+            if (data.success) {
+                if (data.isPrivate) {
+                    alert('Application sent successfully!');
+                } else {
+                    if (onClanJoined) onClanJoined(data.clanId);
+                    queryClient.invalidateQueries(['myClanMemberships']);
+                    queryClient.invalidateQueries(['allClans']);
+                }
+            } else {
+                alert(data.error || 'Failed to join clan');
+            }
+        },
+        onError: (error) => {
+            console.error('Join clan error:', error);
+            alert('Failed to join clan. Please try again.');
+        }
+    });
+
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
     // Show loading while checking membership
