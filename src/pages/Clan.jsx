@@ -55,22 +55,6 @@ export default function ClanPage() {
         }
     }, [activeClanId]);
 
-    // Handle Clan Entry (Success from Intro)
-    const handleClanEntry = async (clanId) => {
-        console.log("Entering clan transition for:", clanId);
-        setIsTransitioning(true);
-        setActiveClanId(clanId);
-        await refetchMemberships();
-    };
-
-    // Stop transitioning when membership is confirmed
-    useEffect(() => {
-        if (isTransitioning && memberships?.some(m => m.divisionId === activeClanId)) {
-            console.log("Clan transition complete, membership confirmed");
-            setIsTransitioning(false);
-        }
-    }, [memberships, isTransitioning, activeClanId]);
-
     // Fetch Memberships with fresh validation
     const { data: memberships, isLoading, refetch: refetchMemberships } = useQuery({
         queryKey: ['myClanMemberships', user?.id],
@@ -101,6 +85,22 @@ export default function ClanPage() {
         staleTime: 0, // Always refetch on mount to ensure fresh data
         refetchOnMount: 'always'
     });
+
+    // Handle Clan Entry (Success from Intro)
+    const handleClanEntry = async (clanId) => {
+        console.log("Entering clan transition for:", clanId);
+        setIsTransitioning(true);
+        setActiveClanId(clanId);
+        await refetchMemberships();
+    };
+
+    // Stop transitioning when membership is confirmed
+    useEffect(() => {
+        if (isTransitioning && memberships?.some(m => m.divisionId === activeClanId)) {
+            console.log("Clan transition complete, membership confirmed");
+            setIsTransitioning(false);
+        }
+    }, [memberships, isTransitioning, activeClanId]);
 
     // Re-validate membership when page becomes visible (tab switch, etc.)
     useEffect(() => {
