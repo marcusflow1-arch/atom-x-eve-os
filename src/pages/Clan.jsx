@@ -344,9 +344,9 @@ export default function ClanPage() {
                 </div>
             </div>
 
-            {/* 4. Vertical Contextual Axis (Content Area) - Now starts closer to top */}
-            <div className="absolute top-[18%] left-0 right-0 bottom-0 z-20 overflow-hidden">
-                <div className="h-full w-full mx-auto px-4 py-2 flex flex-col items-center">
+            {/* 4. Vertical Contextual Axis (Content Area) - Starts just under nav tabs */}
+            <div className="absolute top-36 left-0 right-0 bottom-20 z-20 overflow-hidden">
+                <div className="h-full w-full mx-auto px-4 flex flex-col items-center">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeModeIndex}
