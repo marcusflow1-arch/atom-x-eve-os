@@ -43,7 +43,9 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const { data: clans, isLoading } = useQuery({
         queryKey: ['allClans'],
         queryFn: async () => {
-            return await base44.entities.Division.list();
+            const allClans = await base44.entities.Division.list();
+            // Filter out development/test clans
+            return allClans.filter(clan => !clan.is_development);
         },
         enabled: !membershipsLoading && (!myMemberships || myMemberships.length === 0)
     });
