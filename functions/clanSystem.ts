@@ -191,29 +191,43 @@ Deno.serve(async (req) => {
         // --- JOIN CLAN ---
         if (action === 'join_clan') {
             const { divisionId } = data;
-            const division = await base44.entities.Division.get(divisionId);
-            if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
+            
+            if (!divisionId) {
+                return new Response(JSON.stringify({ success: false, error: 'Division ID is required' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
+            }
+            
+            const division = await base44.asServiceRole.entities.Division.get(divisionId);
+            if (!division) {
+                return new Response(JSON.stringify({ success: false, error: 'Clan not found' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
+            }
 
             // Check if already a member
-            const existingMember = await base44.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
+            const existingMember = await base44.asServiceRole.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
             if (existingMember.length > 0) {
-                return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Already a member' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
             if (division.isPrivate) {
-                 return new Response(JSON.stringify({ error: 'Clan is private' }), { status: 403, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Clan is private. Please request to join.' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
-            await base44.entities.ClanMember.create({
+            await base44.asServiceRole.entities.ClanMember.create({
                 clan_id: divisionId,
                 user_id: user.id,
                 role: 'member',
-                joined_at: new Date().toISOString(),
-                contributionPoints: 0
+                joined_at: new Date().toISOString()
             });
 
             // Update member count
-            await base44.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
+            await base44.asServiceRole.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
 
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
