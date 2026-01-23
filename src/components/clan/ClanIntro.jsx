@@ -99,8 +99,6 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
 
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
-    // (duplicate hooks removed)
-
     // Show loading while checking membership
     if (membershipsLoading) {
         return (
