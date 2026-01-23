@@ -286,37 +286,7 @@ export default function ClanPage() {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
             </div>
 
-            {/* 2. Top Header (Clan Identity) - Restored to top with more spacing */}
-            <div className="absolute top-[12%] left-0 right-0 z-20 flex flex-col items-center justify-center pointer-events-none transition-all duration-500">
-                <div className="flex flex-col items-center gap-2 mb-2">
-                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                        {activeClan.icon ? <img src={activeClan.icon} className="w-full h-full object-cover rounded-xl" /> : <Shield className="w-8 h-8 text-white/50" />}
-                    </div>
-                    <div className="text-center">
-                        <h1 className="text-4xl font-black tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-                            {activeClan.name}
-                        </h1>
-                        <div className="flex items-center justify-center gap-3 text-xs font-medium uppercase tracking-widest text-white/40">
-                            <span className="flex items-center gap-1.5"><Crown className="w-3 h-3 text-amber-500" /> LVL {activeClan.level || 1}</span>
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="flex items-center gap-1.5"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0} Members</span>
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="flex items-center gap-1.5"><Wifi className="w-3 h-3 text-green-500" /> {members?.filter(m => {
-                                // Mock online check - normally we check m.user.last_seen
-                                return Math.random() > 0.6; 
-                            }).length || 0} Online</span>
-                            {activeVoiceRooms?.length > 0 && (
-                                <>
-                                    <span className="w-1 h-1 rounded-full bg-white/20" />
-                                    <span className="flex items-center gap-1.5 text-green-400 animate-pulse">
-                                        <Mic className="w-3 h-3" /> {activeVoiceRooms.length} Active Voice
-                                    </span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* 2. Top Header - Removed clan identity info, now shown in ClanOverview */}
 
             {/* 3. XMB Horizontal Navigation Axis - Below Header */}
             <div className="absolute top-[32%] left-0 right-0 z-30 flex items-center justify-center h-20">
