@@ -265,53 +265,13 @@ export default function GameCardShowcase({ game }) {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px] lg:h-[500px]">
+        <div className="flex flex-col gap-12">
           
-          {/* LEFT: Card Selector & Video (4 cols) */}
-          <div className="lg:col-span-4 flex flex-col gap-4 h-full">
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest px-2">Select Asset</h3>
+          {/* TOP: Main Showcase Area (Card + Avatar) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
             
-            {/* Scrollable List */}
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-              {allCards.map((card, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={isInView ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: idx * 0.1 }}
-                  onClick={() => { setActiveCard(card); setIsInspectMode(false); }}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 group ${
-                    activeCard?.id === card.id 
-                      ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
-                      : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
-                    activeCard?.id === card.id ? 'bg-cyan-500/20 border-cyan-500/30' : 'bg-black/40 border-white/10'
-                  }`}>
-                    {card.category === 'Ability' ? <Zap className="w-5 h-5 text-white/70" /> : <Shield className="w-5 h-5 text-white/70" />}
-                  </div>
-                  <div>
-                    <h4 className={`text-sm font-bold transition-colors ${activeCard?.id === card.id ? 'text-white' : 'text-white/70'}`}>
-                      {card.name}
-                    </h4>
-                    <p className="text-[10px] text-white/40 group-hover:text-white/60">
-                      {card.category} • {card.rarity || 'Common'}
-                    </p>
-                  </div>
-                  {activeCard?.id === card.id && (
-                    <div className="ml-auto">
-                      <Play className="w-3 h-3 text-cyan-400 fill-current" />
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* MIDDLE: 3D Card Stage (4 cols) */}
-          <div className="lg:col-span-4 relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900/0 rounded-3xl border border-white/5 backdrop-blur-sm flex items-center justify-center p-8">
+            {/* Big Card Display */}
+            <div className="relative h-full bg-gradient-to-b from-slate-900/50 to-slate-900/0 rounded-3xl border border-white/5 backdrop-blur-sm flex items-center justify-center p-8 shadow-2xl">
               {activeCard && (
                 <CardViewer3D 
                   card={activeCard} 
@@ -320,20 +280,64 @@ export default function GameCardShowcase({ game }) {
                 />
               )}
             </div>
+
+            {/* Avatar Simulation */}
+            <div className="h-full flex flex-col">
+               <div className="flex items-center justify-between mb-4 px-2">
+                  <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest">Avatar Simulation</h3>
+                  <Badge variant="outline" className="bg-white/5 border-white/10 text-[9px] text-white/40">
+                    <User className="w-3 h-3 mr-1" /> Wireframe Mode
+                  </Badge>
+               </div>
+               
+               <div className="flex-1">
+                 <AvatarWireframe activeCard={activeCard} />
+               </div>
+            </div>
           </div>
 
-          {/* RIGHT: Avatar Integration (4 cols) */}
-          <div className="lg:col-span-4 h-full flex flex-col">
-             <div className="flex items-center justify-between mb-4 px-2">
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest">Avatar Simulation</h3>
-                <Badge variant="outline" className="bg-white/5 border-white/10 text-[9px] text-white/40">
-                  <User className="w-3 h-3 mr-1" /> Wireframe Mode
-                </Badge>
-             </div>
-             
-             <div className="flex-1">
-               <AvatarWireframe activeCard={activeCard} />
-             </div>
+          {/* BOTTOM: Mini Garage (Horizontal Scroll) */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest px-2">Asset Garage</h3>
+            
+            <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide snap-x">
+              {allCards.map((card, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => { setActiveCard(card); setIsInspectMode(false); }}
+                  className={`
+                    min-w-[200px] p-3 rounded-xl border cursor-pointer flex flex-col gap-3 group transition-all snap-start
+                    ${activeCard?.id === card.id 
+                      ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)] scale-105' 
+                      : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                      activeCard?.id === card.id ? 'bg-cyan-500/20 border-cyan-500/30' : 'bg-black/40 border-white/10'
+                    }`}>
+                      {card.category === 'Ability' ? <Zap className="w-4 h-4 text-white/70" /> : <Shield className="w-4 h-4 text-white/70" />}
+                    </div>
+                    {activeCard?.id === card.id && (
+                      <Badge className="bg-cyan-500/20 text-cyan-300 text-[10px] px-1.5 py-0">Active</Badge>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <h4 className={`text-sm font-bold truncate transition-colors ${activeCard?.id === card.id ? 'text-white' : 'text-white/70'}`}>
+                      {card.name}
+                    </h4>
+                    <p className="text-[10px] text-white/40 group-hover:text-white/60">
+                      {card.category} • {card.rarity || 'Common'}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
         </div>
