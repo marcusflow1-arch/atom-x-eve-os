@@ -318,52 +318,30 @@ export default function ClanPage() {
                 </div>
             </div>
 
-            {/* 3. XMB Horizontal Navigation Axis - Moved to top */}
-            <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center h-16">
-                <div className="flex items-center gap-12 px-12">
+            {/* 3. XMB Horizontal Navigation Axis - Centered top */}
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
+                <div className="flex items-center gap-8">
                     {XMB_MODES.map((mode, index) => {
                         const isActive = index === activeModeIndex;
-                        const distance = Math.abs(index - activeModeIndex);
-                        const opacity = Math.max(0.3, 1 - (distance * 0.4));
-                        const scale = isActive ? 1.4 : Math.max(0.8, 1 - (distance * 0.1));
-                        
-                        // Hide items too far away to cleaner look
-                        if (distance > 3) return null;
 
-                        // Filter restricted items if not privileged (leader/officer)
                         if (mode.restricted && !isPrivileged) return null;
 
                         return (
-                            <div 
+                            <button 
                                 key={mode.id}
                                 onClick={() => setActiveModeIndex(index)}
-                                className={`flex flex-col items-center gap-3 transition-all duration-300 cursor-pointer group ${isActive ? 'z-10' : 'z-0'}`}
-                                style={{ opacity, transform: `scale(${scale})` }}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${
+                                    isActive 
+                                        ? 'bg-white/15 text-white border border-white/20' 
+                                        : 'text-white/50 hover:text-white/80'
+                                }`}
                             >
-                                <div className={`
-                                    w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 relative
-                                    ${isActive 
-                                        ? 'bg-white/10 border border-white/20 shadow-[0_0_50px_rgba(255,255,255,0.15)] text-white backdrop-blur-xl' 
-                                        : 'bg-transparent text-white/40 group-hover:text-white/70'}
-                                `}>
-                                    <mode.icon className="w-7 h-7" />
-                                    {isActive && (
-                                        <motion.div 
-                                            layoutId="activeGlow"
-                                            className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        />
-                                    )}
-                                </div>
-                                <span className={`text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${isActive ? 'text-white' : 'text-transparent'}`}>
-                                    {mode.label}
-                                </span>
-                            </div>
+                                <mode.icon className="w-4 h-4" />
+                                <span className="text-sm font-medium">{mode.label}</span>
+                            </button>
                         );
                     })}
                 </div>
-                
-                {/* Horizontal Axis Line */}
-                <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent -z-10" />
             </div>
 
             {/* 4. Vertical Contextual Axis (Content Area) - Now starts closer to top */}
