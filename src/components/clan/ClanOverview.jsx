@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -8,7 +8,7 @@ import {
     Settings, MessageSquare, Mic, UserPlus, Users, Scroll, Activity, 
     Coins, Gem, ShieldAlert, Star, CircleDot, Gamepad2, Clock, 
     TrendingUp, Flame, Zap, Award, ChevronRight, Send, X, Grid3X3,
-    Bell, Megaphone, ArrowLeft
+    Bell, Megaphone, ArrowLeft, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +28,19 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     // Layout swap state: false = chat left/roster right, true = roster left/chat right
     const [layoutSwapped, setLayoutSwapped] = useState(false);
     
-    // Overlay states
+    // Announcements dropdown state
     const [showAnnouncements, setShowAnnouncements] = useState(false);
-    const [showSchedule, setShowSchedule] = useState(false);
-    const [showTreasury, setShowTreasury] = useState(false);
+    
+    // Listen for toggle event from parent
+    useEffect(() => {
+        const handleToggle = (e) => {
+            if (e.detail === 'announcements') {
+                setShowAnnouncements(prev => !prev);
+            }
+        };
+        window.addEventListener('toggleClanPanel', handleToggle);
+        return () => window.removeEventListener('toggleClanPanel', handleToggle);
+    }, []);
 
     const { data: upcomingEvents } = useQuery({
         queryKey: ['clanOverviewEvents', clan.id],
