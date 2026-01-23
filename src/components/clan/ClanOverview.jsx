@@ -162,21 +162,33 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                         </div>
                     </div>
 
-                    {/* XP Bar */}
-                    <div className="w-full md:w-64 mb-3">
-                        <div className="flex justify-between text-xs text-white/70 mb-1 font-bold tracking-wider">
-                            <span>PROGRESS</span>
-                            <span>{Math.floor(progress)}%</span>
+                    {/* XP Bar + Leave Button */}
+                    <div className="w-full md:w-72 mb-3">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                            <div className="flex-1">
+                                <div className="flex justify-between text-xs text-white/70 mb-1 font-bold tracking-wider">
+                                    <span>PROGRESS</span>
+                                    <span>{Math.floor(progress)}%</span>
+                                </div>
+                                <div className="h-3 bg-black/50 rounded-full border border-white/10 overflow-hidden relative">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" 
+                                        style={{ width: `${progress}%` }}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
+                                </div>
+                                <p className="text-[10px] text-white/30 mt-1 text-right">{(clan.xp || 0).toLocaleString()} / 10,000 XP</p>
+                            </div>
+                            {!isLeader && (
+                                <Button 
+                                    onClick={() => setIsLeaveOpen(true)}
+                                    size="sm"
+                                    className="bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/30 flex-shrink-0"
+                                >
+                                    <LogOut className="w-4 h-4 mr-1" /> Leave
+                                </Button>
+                            )}
                         </div>
-                        <div className="h-3 bg-black/50 rounded-full border border-white/10 overflow-hidden relative">
-                            <div 
-                                className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" 
-                                style={{ width: `${progress}%` }}
-                            />
-                            {/* Shine effect on bar */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
-                        </div>
-                        <p className="text-[10px] text-white/30 mt-1 text-right">{(clan.xp || 0).toLocaleString()} / 10,000 XP</p>
                     </div>
                 </div>
             </div>
