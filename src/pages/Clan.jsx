@@ -429,9 +429,9 @@ export default function ClanPage() {
                             {XMB_MODES[activeModeIndex].id === 'games_chat' && (
                                 <div className="w-full h-full">
                                     <ClanGameSelector 
-                                        clanId={activeClan.id} 
-                                        userId={user?.id}
-                                        onSelectGame={(game) => {
+                                       clanId={clanForRender.id} 
+                                       userId={user?.id}
+                                       onSelectGame={(game) => {
                                             setSelectedGame(game);
                                         }} 
                                     />
