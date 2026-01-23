@@ -273,7 +273,7 @@ export default function ClanPage() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeClan, isPrivileged]);
+    }, [clanForRender?.id, isPrivileged]);
 
     // Render Logic
     if (isLoading || isTransitioning) {
