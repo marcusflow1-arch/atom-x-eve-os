@@ -91,7 +91,7 @@ export default function ClanPage() {
         console.log("Entering clan transition for:", clanId);
         setIsTransitioning(true);
         setActiveClanId(clanId);
-        await refetchMemberships();
+        // Do not force a refetch during transition; validation happens after entry
     };
 
     // Stop transitioning when membership is confirmed
@@ -138,14 +138,24 @@ export default function ClanPage() {
 
     const activeClan = memberships?.find(c => c.divisionId === activeClanId);
 
+    // Fallback division fetch so UI can render immediately based on activeClanId
+    const { data: activeDivision } = useQuery({
+        queryKey: ['division', activeClanId],
+        queryFn: async () => (activeClanId ? await base44.entities.Division.get(activeClanId) : null),
+        enabled: !!activeClanId,
+        staleTime: 0,
+    });
+
+    const clanForRender = activeClan || activeDivision || (activeClanId ? { id: activeClanId } : null);
+
     // Fetch Members for active clan
     const { data: members } = useQuery({
-        queryKey: ['clanMembers', activeClan?.id],
+        queryKey: ['clanMembers', clanForRender?.id],
         queryFn: async () => {
-            if (!activeClan) return [];
-            return await base44.entities.ClanMember.filter({ clan_id: activeClan.id });
+            if (!clanForRender?.id) return [];
+            return await base44.entities.ClanMember.filter({ clan_id: clanForRender.id });
         },
-        enabled: !!activeClan
+        enabled: !!clanForRender?.id
     });
 
     // Check for leader/officer status for management access
@@ -154,7 +164,7 @@ export default function ClanPage() {
     const isLeader = currentUserRole === 'leader';
 
     const leaveClanMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'leave_clan', data: { divisionId: activeClan.id } }),
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'leave_clan', data: { divisionId: clanForRender.id } }),
         onSuccess: (res) => {
             if (res.data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
@@ -166,7 +176,7 @@ export default function ClanPage() {
     });
 
     const disbandClanMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'delete_clan', data: { divisionId: activeClan.id } }),
+        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'delete_clan', data: { divisionId: clanForRender.id } }),
         onSuccess: (res) => {
             if (res.data.success) {
                 queryClient.invalidateQueries(['myClanMemberships']);
@@ -196,14 +206,14 @@ export default function ClanPage() {
 
     // Update presence when viewing Clan Overview
     useEffect(() => {
-        if (activeClan && !selectedGame) {
+        if (clanForRender?.id && !selectedGame) {
             updatePresenceContext({
                 type: 'clan',
-                name: activeClan.name,
-                id: activeClan.id
+                name: clanForRender?.name,
+                id: clanForRender.id
             });
         }
-    }, [activeClan?.id, selectedGame]);
+    }, [clanForRender?.id, selectedGame]);
 
     // Restore state logic (Navigation OR Last Known State)
     useEffect(() => {
@@ -249,15 +259,15 @@ export default function ClanPage() {
             }
         };
         
-        if (activeClan && user) {
+        if (clanForRender && user) {
             restoreState();
         }
-    }, [location.state, activeClan?.id, user?.id]); // Only run when clan/user loads
+    }, [location.state, clanForRender?.id, user?.id]); // Only run when clan/user loads
 
     // Keyboard Navigation for XMB
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (!activeClan) return;
+            if (!clanForRender?.id) return;
 
             if (e.key === 'ArrowRight') {
                 setActiveModeIndex(prev => {
