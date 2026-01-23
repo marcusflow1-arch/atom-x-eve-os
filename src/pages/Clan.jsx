@@ -33,7 +33,7 @@ const XMB_MODES = [
 ];
 
 export default function ClanPage() {
-    const { user, updatePresenceContext, sessionConflict, claimSession } = useAuth();
+    const { user, updatePresenceContext } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
