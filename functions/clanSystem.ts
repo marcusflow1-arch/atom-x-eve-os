@@ -236,6 +236,17 @@ Deno.serve(async (req) => {
                 joined_at: new Date().toISOString()
             });
 
+            // Ensure default global chat channel exists for this clan
+            const defaultChannel = await base44.asServiceRole.entities.ClanChannel.filter({ divisionId, name: 'adam-x-eve' });
+            if (defaultChannel.length === 0) {
+                await base44.asServiceRole.entities.ClanChannel.create({
+                    divisionId,
+                    name: 'adam-x-eve',
+                    type: 'text',
+                    position: 0
+                });
+            }
+
             // Update member count (non-blocking but awaited for consistency)
             await base44.asServiceRole.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
 
