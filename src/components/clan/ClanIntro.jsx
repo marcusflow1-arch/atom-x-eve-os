@@ -106,9 +106,10 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                 if (data.isPrivate) {
                     alert("Application sent successfully!");
                 } else {
-                    await queryClient.invalidateQueries(['myClanMemberships']);
-                    await queryClient.invalidateQueries(['allClans']);
                     if (onClanJoined) onClanJoined(data.clanId);
+                    // Defer membership validation to ClanPage after entry
+                    queryClient.invalidateQueries(['myClanMemberships']);
+                    queryClient.invalidateQueries(['allClans']);
                 }
             } else {
                 alert(data.error || 'Failed to join clan');
