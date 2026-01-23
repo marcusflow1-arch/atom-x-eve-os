@@ -288,8 +288,8 @@ export default function ClanPage() {
 
             {/* 2. Top Header - Removed clan identity info, now shown in ClanOverview */}
 
-            {/* 3. XMB Horizontal Navigation Axis - Below Header */}
-            <div className="absolute top-[32%] left-0 right-0 z-30 flex items-center justify-center h-20">
+            {/* 3. XMB Horizontal Navigation Axis - Moved to top */}
+            <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center h-16">
                 <div className="flex items-center gap-12 px-12">
                     {XMB_MODES.map((mode, index) => {
                         const isActive = index === activeModeIndex;
