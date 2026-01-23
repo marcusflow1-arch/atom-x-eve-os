@@ -446,7 +446,7 @@ export default function ClanPage() {
 
                             {XMB_MODES[activeModeIndex].id === 'schedule' && (
                                 <div className="w-full h-full">
-                                    <ClanSchedulePage clan={activeClan} />
+                                    <ClanSchedulePage clan={clanForRender} />
                                 </div>
                             )}
                         </motion.div>
