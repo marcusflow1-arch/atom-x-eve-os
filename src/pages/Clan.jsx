@@ -206,7 +206,7 @@ export default function ClanPage() {
 
     // Update presence when viewing Clan Overview
     useEffect(() => {
-        if (clanForRender?.id && !selectedGame) {
+        if (clanForRender?.id && clanForRender?.name && !selectedGame) {
             updatePresenceContext({
                 type: 'clan',
                 name: clanForRender?.name,
