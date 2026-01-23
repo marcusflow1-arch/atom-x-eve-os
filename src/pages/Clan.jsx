@@ -286,7 +286,7 @@ export default function ClanPage() {
     }, [clanForRender?.id, isPrivileged]);
 
     // Render Logic
-    if (isLoading || isTransitioning) {
+    if (isTransitioning) {
         return (
             <div className="h-screen flex flex-col items-center justify-center bg-[#0a0c10] text-white">
                 <Shield className="w-16 h-16 text-cyan-400 mb-6 animate-pulse" />
