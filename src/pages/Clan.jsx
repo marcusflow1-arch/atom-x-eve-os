@@ -16,6 +16,8 @@ import ClanOverview from '@/components/clan/ClanOverview';
 import ClanChat from '@/components/clan/ClanChat';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
+import ClanTreasuryPage from '@/components/clan/ClanTreasuryPage';
+import ClanSchedulePage from '@/components/clan/ClanSchedulePage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
