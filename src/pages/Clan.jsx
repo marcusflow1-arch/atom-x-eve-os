@@ -440,7 +440,7 @@ export default function ClanPage() {
 
                             {XMB_MODES[activeModeIndex].id === 'treasury' && (
                                 <div className="w-full h-full">
-                                    <ClanTreasuryPage clan={activeClan} />
+                                    <ClanTreasuryPage clan={clanForRender} />
                                 </div>
                             )}
 
