@@ -24,29 +24,29 @@ Deno.serve(async (req) => {
 
         // --- CREATE CLAN ---
         if (action === 'create_clan') {
-            const { name, description, icon, banner, gameTags } = data;
+            const { name, description, icon, banner, gameTags, isPrivate } = data;
             
-            // Check if user is already in a clan (optional rule, but good for simplicity)
-            // REMOVED restriction to allow multiple clans if desired, or can uncomment if strict
-            /*
-            const existingMember = await base44.entities.ClanMember.filter({ userId: user.id });
-            if (existingMember.length > 0) {
-                 return new Response(JSON.stringify({ error: 'You are already in a clan' }), { status: 400, headers: corsHeaders });
+            if (!name || name.trim().length === 0) {
+                return new Response(JSON.stringify({ success: false, error: 'Clan name is required' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
-            */
 
-            const newDivision = await base44.entities.Division.create({
-                name,
-                description,
+            const newDivision = await base44.asServiceRole.entities.Division.create({
+                name: name.trim(),
+                description: description || '',
                 leaderId: user.id,
-                icon: icon || 'https://via.placeholder.com/150',
-                banner: banner || 'https://via.placeholder.com/800x200',
+                icon: icon || '',
+                banner: banner || '',
                 gameTags: gameTags || [],
+                isPrivate: isPrivate || false,
                 level: 1,
+                xp: 0,
+                reputation: 0,
                 memberCount: 1
             });
 
-            await base44.entities.ClanMember.create({
+            await base44.asServiceRole.entities.ClanMember.create({
                 clan_id: newDivision.id,
                 user_id: user.id,
                 role: 'leader',
