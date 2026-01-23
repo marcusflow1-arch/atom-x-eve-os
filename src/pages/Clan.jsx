@@ -23,10 +23,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 
 // XMB Mode Items Configuration
-// Only Overview and Games Chat are visible as requested
 const XMB_MODES = [
     { id: 'overview', label: 'Overview', icon: Shield },
     { id: 'games_chat', label: 'Games Chat', icon: MessageSquare },
+    { id: 'treasury', label: 'Treasury', icon: Zap },
+    { id: 'schedule', label: 'Schedule', icon: ClipboardList },
 ];
 
 export default function ClanPage() {
