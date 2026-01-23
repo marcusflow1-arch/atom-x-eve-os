@@ -376,11 +376,11 @@ export default function ClanPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
-                            className="w-full flex flex-col items-center"
+                            className="w-full h-full flex flex-col items-center"
                         >
                             {/* Content based on Active Mode */}
                             {XMB_MODES[activeModeIndex].id === 'overview' && (
-                                <div className="w-full max-w-6xl">
+                                <div className="w-full max-w-6xl h-full">
                                     <ClanOverview 
                                         clan={activeClan} 
                                         activeVoiceRooms={activeVoiceRooms}
