@@ -287,7 +287,36 @@ export default function ClanPage() {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
             </div>
 
-            {/* 2. Top Header - Removed clan identity info, now shown in ClanOverview */}
+            {/* 2. Clan Info - Top Left under header */}
+            <div className="absolute top-20 left-8 z-30">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md overflow-hidden">
+                        {activeClan.icon ? <img src={activeClan.icon} className="w-full h-full object-cover" /> : <Shield className="w-6 h-6 text-white/50" />}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-white">{activeClan.name}</h2>
+                        <div className="flex items-center gap-2 text-xs text-white/50">
+                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {activeClan.level || 1}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Announcements Dropdown */}
+                <div className="space-y-1">
+                    <button 
+                        onClick={() => {
+                            // Toggle announcements panel in ClanOverview
+                            const event = new CustomEvent('toggleClanPanel', { detail: 'announcements' });
+                            window.dispatchEvent(event);
+                        }}
+                        className="flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors py-1"
+                    >
+                        <MessageSquare className="w-4 h-4" /> Announcements
+                    </button>
+                </div>
+            </div>
 
             {/* 3. XMB Horizontal Navigation Axis - Moved to top */}
             <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-center h-16">
