@@ -271,7 +271,8 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents'].some(s => location.pathname.toLowerCase().includes(s));
+  const showLunaHeaderBar = ['/lunatemplate','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
+    .some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
   const { mode, toggleMode } = useDashboardMode();
@@ -282,6 +283,30 @@ function LayoutContent({ children, currentPageName }) {
 
   const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
+
+  // Legacy route handling: always use LunaTemplate as the dashboard home
+  const legacyPaths = React.useMemo(() => [
+    createPageUrl('AdamXEve').toLowerCase(),
+    createPageUrl('Home').toLowerCase(),
+    '/dashboard'
+  ], []);
+
+  // Redirect legacy locations to LunaTemplate
+  useEffect(() => {
+    const p = location.pathname.toLowerCase();
+    if (p === '/' || p.endsWith('/dashboard') || legacyPaths.includes(p)) {
+      navigate(createPageUrl('LunaTemplate'), { replace: true });
+    }
+  }, [location.pathname, navigate, legacyPaths]);
+
+  // Hide legacy links from the drawer navigation
+  const filteredNavHierarchy = React.useMemo(() => {
+    try {
+      return NAV_HIERARCHY.filter(item => !legacyPaths.includes(item.path.toLowerCase()));
+    } catch {
+      return NAV_HIERARCHY;
+    }
+  }, [legacyPaths]);
 
   useEffect(() => {
     if (!audioRef.current) {
@@ -421,7 +446,7 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex-1 overflow-y-auto p-4">
                 <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
                 <div className="space-y-1">
-                  {NAV_HIERARCHY.map((mainItem) => {
+                  {filteredNavHierarchy.map((mainItem) => {
                     const searchParams = new URLSearchParams(location.search);
                     const isMainActive = location.pathname === mainItem.path && !searchParams.get('panel') && !searchParams.get('subview');
 
