@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
-import CreatePostForm from '../components/community/CreatePostForm';
+import PostComposer from '../components/community/PostComposer';
 import PostCard from '../components/community/PostCard';
 import CommentSection from '../components/community/CommentSection';
 import { Button } from '@/components/ui/button';
@@ -592,7 +592,8 @@ export default function CommunityPage() {
 
             <AnimatePresence>
                 {showCreateForm && (
-                    <CreatePostForm
+                    <PostComposer
+                        isOpen={showCreateForm}
                         onSubmit={handleCreatePost}
                         onCancel={() => useStateShowCreateForm(false)}
                         initialType={activeGame ? 'game_discussion' : 'general_discussion'}
