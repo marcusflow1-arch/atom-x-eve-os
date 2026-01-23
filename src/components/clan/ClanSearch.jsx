@@ -16,7 +16,7 @@ export default function ClanSearch({ onJoinSuccess }) {
         queryFn: async () => {
             // Fetch public clans
             const allClans = await base44.entities.Division.list();
-            return allClans.filter(c => !c.isPrivate);
+            return allClans.filter(c => !c.isPrivate && !c.is_development);
         }
     });
 
