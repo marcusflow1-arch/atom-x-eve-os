@@ -296,11 +296,11 @@ export default function GameCardShowcase({ game }) {
             </div>
           </div>
 
-          {/* BOTTOM: Mini Garage (Horizontal Scroll) */}
+          {/* BOTTOM: Mini Garage (Grid View) */}
           <div className="flex flex-col gap-4">
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest px-2">Asset Garage</h3>
             
-            <div className="flex gap-4 overflow-x-auto pb-4 px-2 scrollbar-hide snap-x">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 px-2">
               {allCards.map((card, idx) => (
                 <motion.div
                   key={idx}
@@ -309,9 +309,9 @@ export default function GameCardShowcase({ game }) {
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => { setActiveCard(card); setIsInspectMode(false); }}
                   className={`
-                    min-w-[200px] p-3 rounded-xl border cursor-pointer flex flex-col gap-3 group transition-all snap-start
+                    p-3 rounded-xl border cursor-pointer flex flex-col gap-3 group transition-all
                     ${activeCard?.id === card.id 
-                      ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)] scale-105' 
+                      ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.15)] scale-105 z-10' 
                       : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'
                     }
                   `}
