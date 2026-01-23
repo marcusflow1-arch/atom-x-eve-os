@@ -94,7 +94,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
         }
     });
 
-    const progress = (clan.xp / 10000) * 100;
+    const progress = ((clan.xp || 0) / 10000) * 100;
     const isLeader = myMemberRecord?.role === 'leader';
     const isOfficer = myMemberRecord?.role === 'officer' || isLeader;
 
@@ -176,7 +176,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                             {/* Shine effect on bar */}
                             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
                         </div>
-                        <p className="text-[10px] text-white/30 mt-1 text-right">{clan.xp.toLocaleString()} / 10,000 XP</p>
+                        <p className="text-[10px] text-white/30 mt-1 text-right">{(clan.xp || 0).toLocaleString()} / 10,000 XP</p>
                     </div>
                 </div>
             </div>
@@ -217,7 +217,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                                     </div>
                                     <span className="font-bold">Rep</span>
                                 </div>
-                                <span className="font-mono text-white">{clanResources.influence.toLocaleString()}</span>
+                                <span className="font-mono text-white">{(clanResources.influence || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </LiquidGlassCard>
