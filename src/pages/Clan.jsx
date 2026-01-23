@@ -278,6 +278,18 @@ export default function ClanPage() {
         return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
+    // Guard: wait for confirmed clan before rendering main UI
+    if (!clanForRender) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-[#0a0c10] text-white">
+                <div className="text-center">
+                    <Shield className="w-16 h-16 text-cyan-400 mb-4 animate-pulse" />
+                    <p className="text-white/50">Preparing your division...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="h-screen w-full relative overflow-hidden bg-[#0a0c10] text-white font-sans selection:bg-cyan-500/30">
             
@@ -401,7 +413,7 @@ export default function ClanPage() {
                             {XMB_MODES[activeModeIndex].id === 'games_chat' && (
                                 <div className="w-full h-full">
                                     <ClanGameSelector 
-                                       clanId={clanForRender.id} 
+                                       clanId={clanForRender?.id} 
                                        userId={user?.id}
                                        onSelectGame={(game) => {
                                             setSelectedGame(game);
