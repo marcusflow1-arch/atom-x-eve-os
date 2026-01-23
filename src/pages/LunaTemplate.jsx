@@ -444,8 +444,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
       }
     };
 
+    let animationFrameId;
+
     function animate() {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
 
@@ -460,10 +462,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
-        if (keysPressed.current.w) direction.z -= 1;
-        if (keysPressed.current.s) direction.z += 1;
-        if (keysPressed.current.a) direction.x -= 1;
-        if (keysPressed.current.d) direction.x += 1;
+        if (keysPressed.current['w']) direction.z -= 1;
+        if (keysPressed.current['s']) direction.z += 1;
+        if (keysPressed.current['a']) direction.x -= 1;
+        if (keysPressed.current['d']) direction.x += 1;
 
         const dirLength = direction.length();
         const isMoving = dirLength > 0.01;
@@ -538,11 +540,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       renderer.dispose();
-      containerRef.current?.removeChild(renderer.domElement);
+      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
     };
   }, [modelUrl, weaponModel, animations]);
 
