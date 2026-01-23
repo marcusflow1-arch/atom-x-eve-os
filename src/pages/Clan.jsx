@@ -98,13 +98,19 @@ export default function ClanPage() {
 
     useEffect(() => {
         if (memberships?.length > 0) {
-            // If no active clan, or current active clan is not in memberships (kicked), default to first
-            if (!activeClanId || !memberships.find(c => c.divisionId === activeClanId)) {
+            // Verify the active clan is still valid
+            const activeClanStillValid = memberships.find(c => c.divisionId === activeClanId);
+            
+            if (!activeClanId || !activeClanStillValid) {
+                // Active clan no longer valid (kicked, clan deleted, etc.) - switch to first valid one
+                console.log('Active clan invalid, switching to first available');
                 setActiveClanId(memberships[0].divisionId);
             }
         } else if (memberships && memberships.length === 0) {
-             // If memberships loaded and empty, clear active clan
+             // User is not in any clan - clear active clan and show intro
+             console.log('No clan memberships found, showing clan intro');
              setActiveClanId(null);
+             localStorage.removeItem('activeClanId');
         }
     }, [memberships, activeClanId]);
 
