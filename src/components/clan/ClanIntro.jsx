@@ -95,6 +95,56 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
         enabled: !membershipsLoading && (!myMemberships || myMemberships.length === 0)
     });
 
+    // Define mutations before any early returns to keep hook order stable
+    const createClanMutation = useMutation({
+        mutationFn: async (clanData) => {
+            const res = await base44.functions.invoke('clanSystem', { action: 'create_clan', data: clanData });
+            return res.data;
+        },
+        onSuccess: (data) => {
+            if (data.success && data.clanId) {
+                setIsCreateOpen(false);
+                setNewClanData({ name: '', description: '', isPrivate: false });
+                if (onClanCreated) onClanCreated(data.clanId);
+                // Defer membership validation to ClanPage after entry
+                queryClient.invalidateQueries(['myClanMemberships']);
+                queryClient.invalidateQueries(['allClans']);
+            } else {
+                alert(data.error || 'Failed to create clan');
+            }
+        },
+        onError: (error) => {
+            console.error('Create clan error:', error);
+            alert('Failed to create clan. Please try again.');
+        }
+    });
+
+    const joinClanMutation = useMutation({
+        mutationFn: async ({ clanId, isPrivate }) => {
+            const action = isPrivate ? 'request_join' : 'join_clan';
+            const res = await base44.functions.invoke('clanSystem', { action, data: { divisionId: clanId } });
+            return { ...res.data, clanId, isPrivate };
+        },
+        onSuccess: async (data) => {
+            if (data.success) {
+                if (data.isPrivate) {
+                    alert("Application sent successfully!");
+                } else {
+                    if (onClanJoined) onClanJoined(data.clanId);
+                    // Defer membership validation to ClanPage after entry
+                    queryClient.invalidateQueries(['myClanMemberships']);
+                    queryClient.invalidateQueries(['allClans']);
+                }
+            } else {
+                alert(data.error || 'Failed to join clan');
+            }
+        },
+        onError: (error) => {
+            console.error('Join clan error:', error);
+            alert('Failed to join clan. Please try again.');
+        }
+    });
+
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
     // Show loading while checking membership
