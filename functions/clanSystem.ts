@@ -220,14 +220,15 @@ Deno.serve(async (req) => {
                 });
             }
 
-            await base44.asServiceRole.entities.ClanMember.create({
+            // Ensure membership creation completes before returning
+            const membership = await base44.asServiceRole.entities.ClanMember.create({
                 clan_id: divisionId,
                 user_id: user.id,
                 role: 'member',
                 joined_at: new Date().toISOString()
             });
 
-            // Update member count
+            // Update member count (non-blocking but awaited for consistency)
             await base44.asServiceRole.entities.Division.update(divisionId, { memberCount: (division.memberCount || 0) + 1 });
 
             return new Response(JSON.stringify({ success: true, clanId: divisionId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
