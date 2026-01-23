@@ -54,20 +54,47 @@ export default function ClanPage() {
         }
     }, [activeClanId]);
 
-    // Fetch Memberships
-    const { data: memberships, isLoading } = useQuery({
+    // Fetch Memberships with fresh validation
+    const { data: memberships, isLoading, refetch: refetchMemberships } = useQuery({
         queryKey: ['myClanMemberships', user?.id],
         queryFn: async () => {
             if (!user) return [];
+            // Fresh fetch to verify membership is still valid
             const members = await base44.entities.ClanMember.filter({ user_id: user.id });
-            const divisions = await Promise.all(members.map(async (m) => {
-                const d = await base44.entities.Division.get(m.clan_id);
-                return d ? { ...d, divisionId: d.id } : null;
+            
+            // Validate each membership by checking if the clan still exists
+            const validatedDivisions = await Promise.all(members.map(async (m) => {
+                try {
+                    const d = await base44.entities.Division.get(m.clan_id);
+                    if (d) {
+                        return { ...d, divisionId: d.id, membershipId: m.id };
+                    }
+                    // Clan no longer exists, membership is stale
+                    return null;
+                } catch (err) {
+                    // Clan doesn't exist or access denied
+                    console.warn('Clan membership validation failed for:', m.clan_id);
+                    return null;
+                }
             }));
-            return divisions.filter(d => d);
+            
+            return validatedDivisions.filter(d => d);
         },
-        enabled: !!user
+        enabled: !!user,
+        staleTime: 0, // Always refetch on mount to ensure fresh data
+        refetchOnMount: 'always'
     });
+
+    // Re-validate membership when page becomes visible (tab switch, etc.)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && user) {
+                refetchMemberships();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [user, refetchMemberships]);
 
     useEffect(() => {
         if (memberships?.length > 0) {
