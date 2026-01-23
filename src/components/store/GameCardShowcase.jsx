@@ -225,12 +225,18 @@ export default function GameCardShowcase({ game }) {
   
   const [activeCard, setActiveCard] = useState(null);
   const [isInspectMode, setIsInspectMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Combine abilities and equipment for the showcase
   const allCards = [
     ...(game.abilities || []).map(c => ({ ...c, category: 'Ability' })),
     ...(game.equipment || []).map(c => ({ ...c, category: 'Equipment' }))
   ];
+
+  // Filter cards based on selection
+  const filteredCards = selectedCategory === 'All' 
+    ? allCards 
+    : allCards.filter(c => c.category === selectedCategory);
 
   // Default to first card
   useEffect(() => {
@@ -297,13 +303,33 @@ export default function GameCardShowcase({ game }) {
           </div>
 
           {/* BOTTOM: Mini Garage (Grid View) */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest px-2">Asset Garage</h3>
+          <div className="flex flex-col gap-6">
             
+            {/* Filter Controls */}
+            <div className="flex items-center gap-4 px-2 border-b border-white/10 pb-4">
+              <span className="text-xs font-bold text-white/40 uppercase tracking-widest mr-2">Asset Garage</span>
+              
+              {['All', 'Ability', 'Equipment'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`
+                    px-4 py-1.5 rounded-full text-xs font-medium transition-all
+                    ${selectedCategory === cat 
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
+                      : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10 border border-transparent'
+                    }
+                  `}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 px-2">
-              {allCards.map((card, idx) => (
+              {filteredCards.map((card, idx) => (
                 <motion.div
-                  key={idx}
+                  key={card.id || idx}
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: idx * 0.05 }}
