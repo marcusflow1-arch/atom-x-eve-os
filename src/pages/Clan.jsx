@@ -301,8 +301,8 @@ export default function ClanPage() {
         return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
-    // User authenticated but not in any clan - show intro to join/create
-    if (!activeClan || (memberships && memberships.length === 0)) {
+    // User authenticated but not in any clan - show intro to join/create (only when no activeClanId and not transitioning)
+    if (activeClanId === null && !isTransitioning) {
         return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
