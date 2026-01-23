@@ -427,6 +427,31 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Leave Clan Dialog */}
+            <Dialog open={isLeaveOpen} onOpenChange={setIsLeaveOpen}>
+                <DialogContent className="bg-slate-900 border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Leave {clan.name}?</DialogTitle>
+                        <DialogDescription className="text-white/60">
+                            Are you sure you want to leave this clan? You can rejoin later if the clan is public or request to rejoin if it's private.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsLeaveOpen(false)}>Cancel</Button>
+                        <Button 
+                            variant="destructive" 
+                            onClick={() => {
+                                leaveMutation.mutate();
+                                setIsLeaveOpen(false);
+                            }}
+                            disabled={leaveMutation.isPending}
+                        >
+                            {leaveMutation.isPending ? 'Leaving...' : 'Leave Clan'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
