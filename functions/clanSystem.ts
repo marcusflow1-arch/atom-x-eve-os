@@ -54,6 +54,14 @@ Deno.serve(async (req) => {
                 joined_at: new Date().toISOString()
             });
 
+            // Create default global chat channel "Adam X Eve" for every new clan
+            await base44.asServiceRole.entities.ClanChannel.create({
+                divisionId: newDivision.id,
+                name: 'adam-x-eve',
+                type: 'text',
+                position: 0
+            });
+
             return new Response(JSON.stringify({ success: true, clanId: newDivision.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
