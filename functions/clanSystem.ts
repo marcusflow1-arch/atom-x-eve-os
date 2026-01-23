@@ -235,22 +235,37 @@ Deno.serve(async (req) => {
         // --- REQUEST JOIN (Private Clans) ---
         if (action === 'request_join') {
             const { divisionId, message } = data;
-            const division = await base44.entities.Division.get(divisionId);
-            if (!division) return new Response(JSON.stringify({ error: 'Clan not found' }), { status: 404, headers: corsHeaders });
+            
+            if (!divisionId) {
+                return new Response(JSON.stringify({ success: false, error: 'Division ID is required' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
+            }
+            
+            const division = await base44.asServiceRole.entities.Division.get(divisionId);
+            if (!division) {
+                return new Response(JSON.stringify({ success: false, error: 'Clan not found' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
+            }
 
             // Check if already a member
-            const existingMember = await base44.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
+            const existingMember = await base44.asServiceRole.entities.ClanMember.filter({ user_id: user.id, clan_id: divisionId });
             if (existingMember.length > 0) {
-                return new Response(JSON.stringify({ error: 'Already a member' }), { status: 400, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Already a member' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
             // Check if already pending
-            const existingApp = await base44.entities.ClanApplication.filter({ userId: user.id, divisionId, status: 'pending' });
+            const existingApp = await base44.asServiceRole.entities.ClanApplication.filter({ userId: user.id, divisionId, status: 'pending' });
             if (existingApp.length > 0) {
-                return new Response(JSON.stringify({ error: 'Application already pending' }), { status: 400, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Application already pending' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
-            await base44.entities.ClanApplication.create({
+            await base44.asServiceRole.entities.ClanApplication.create({
                 divisionId,
                 userId: user.id,
                 message: message || '',
