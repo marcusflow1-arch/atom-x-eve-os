@@ -370,7 +370,7 @@ export default function ClanPage() {
                             )}
 
                             {XMB_MODES[activeModeIndex].id === 'games_chat' && (
-                                <div className="w-full mt-4">
+                                <div className="w-full h-full">
                                     <ClanGameSelector 
                                         clanId={activeClan.id} 
                                         userId={user?.id}
@@ -378,6 +378,18 @@ export default function ClanPage() {
                                             setSelectedGame(game);
                                         }} 
                                     />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'treasury' && (
+                                <div className="w-full h-full">
+                                    <ClanTreasuryPage clan={activeClan} />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'schedule' && (
+                                <div className="w-full h-full">
+                                    <ClanSchedulePage clan={activeClan} />
                                 </div>
                             )}
                         </motion.div>
