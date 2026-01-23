@@ -353,7 +353,7 @@ export default function ClanPage() {
                     <div>
                         <h2 className="text-xl font-bold text-white">{clanForRender?.name || 'Entering Division'}</h2>
                         <div className="flex items-center gap-2 text-xs text-white/50">
-                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {activeClan.level || 1}</span>
+                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
                             <span>•</span>
                             <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}</span>
                         </div>
