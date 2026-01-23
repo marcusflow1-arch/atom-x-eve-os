@@ -334,9 +334,9 @@ export default function ClanPage() {
             {/* 1. Dynamic Background Layer */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
-                {activeClan.banner && (
+                {clanForRender?.banner && (
                     <img 
-                        src={activeClan.banner} 
+                        src={clanForRender.banner} 
                         className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-110" 
                         alt="Background" 
                     />
