@@ -280,21 +280,31 @@ Deno.serve(async (req) => {
         if (action === 'leave_clan') {
             const { divisionId } = data;
             
-            const member = await base44.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
+            if (!divisionId) {
+                return new Response(JSON.stringify({ success: false, error: 'Division ID is required' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
+            }
+            
+            const member = await base44.asServiceRole.entities.ClanMember.filter({ clan_id: divisionId, user_id: user.id });
             if (!member.length) {
-                return new Response(JSON.stringify({ error: 'Not a member' }), { status: 404, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Not a member' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
             if (member[0].role === 'leader') {
-                 return new Response(JSON.stringify({ error: 'Leader cannot leave. Transfer ownership or dismantle clan.' }), { status: 400, headers: corsHeaders });
+                return new Response(JSON.stringify({ success: false, error: 'Leader cannot leave. Transfer ownership or dismantle clan.' }), { 
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+                });
             }
 
-            await base44.entities.ClanMember.delete(member[0].id);
+            await base44.asServiceRole.entities.ClanMember.delete(member[0].id);
 
             // Update member count
-            const division = await base44.entities.Division.get(divisionId);
+            const division = await base44.asServiceRole.entities.Division.get(divisionId);
             if (division) {
-                await base44.entities.Division.update(divisionId, { memberCount: Math.max(0, (division.memberCount || 1) - 1) });
+                await base44.asServiceRole.entities.Division.update(divisionId, { memberCount: Math.max(0, (division.memberCount || 1) - 1) });
             }
 
             return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
