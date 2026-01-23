@@ -417,9 +417,9 @@ export default function ClanPage() {
                             {XMB_MODES[activeModeIndex].id === 'overview' && (
                                 <div className="w-full h-full">
                                     <ClanOverview 
-                                        clan={activeClan} 
-                                        activeVoiceRooms={activeVoiceRooms}
-                                        onChangeTab={(tab) => {
+                                       clan={clanForRender} 
+                                       activeVoiceRooms={activeVoiceRooms}
+                                       onChangeTab={(tab) => {
                                             console.log("Navigating to", tab);
                                         }} 
                                     />
