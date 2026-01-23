@@ -46,14 +46,15 @@ Deno.serve(async (req) => {
                 memberCount: 1
             });
 
-            await base44.asServiceRole.entities.ClanMember.create({
+            // Ensure membership is created before returning success
+            const membership = await base44.asServiceRole.entities.ClanMember.create({
                 clan_id: newDivision.id,
                 user_id: user.id,
                 role: 'leader',
                 joined_at: new Date().toISOString()
             });
 
-            return new Response(JSON.stringify({ success: true, clanId: newDivision.id, division: newDivision }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ success: true, clanId: newDivision.id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         // --- INVITE MEMBER ---
