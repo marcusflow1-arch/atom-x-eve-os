@@ -336,9 +336,9 @@ export default function ClanPage() {
                 <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent -z-10" />
             </div>
 
-            {/* 4. Vertical Contextual Axis (Content Area) */}
-            <div className="absolute top-[45%] left-0 right-0 bottom-0 z-20 overflow-hidden">
-                <div className="h-full w-full max-w-5xl mx-auto px-8 py-4 flex flex-col items-center">
+            {/* 4. Vertical Contextual Axis (Content Area) - Now starts closer to top */}
+            <div className="absolute top-[18%] left-0 right-0 bottom-0 z-20 overflow-hidden">
+                <div className="h-full w-full mx-auto px-4 py-2 flex flex-col items-center">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeModeIndex}
