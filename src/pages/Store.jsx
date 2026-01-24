@@ -1273,7 +1273,7 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
-                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef} onWheel={handleGenreWheel}>
+                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col h-full overflow-y-auto" ref={genreScrollRef} onWheel={handleGenreWheel}>
                                         {/* Store label with arrow - left aligned + active genre pill on scroll up */}
                                         <div className="mb-3 flex items-center gap-2">
                                             <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
