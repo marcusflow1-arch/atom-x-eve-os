@@ -28,7 +28,9 @@ export default function AvatarHomeContainer({ mode, avatarUserId, entryContext }
         const records = await base44.entities.AvatarHomeState.filter({ avatarId: targetId });
         const home = records?.[0];
 
-        const headerName = isSelf ? (me?.full_name || me?.email?.split('@')[0] || 'You') : (home?.name || 'Friend');
+        const myFriends = await base44.entities.Friend.filter({ user_id: me?.id });
+        const frow = myFriends.find(r => String(r.friend_id) === String(targetId));
+        const headerName = isSelf ? (me?.full_name || me?.email?.split('@')[0] || 'You') : (home?.name || frow?.friend_name || 'Friend');
 
         // Fallback content
         const ach = await base44.entities.Achievement.list('-created_date', 6);

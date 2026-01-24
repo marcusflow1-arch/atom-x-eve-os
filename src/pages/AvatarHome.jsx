@@ -103,6 +103,8 @@ export default function AvatarHome() {
           </div>
         </div>
 
+        <AvatarHomeContainer mode={isSelf ? 'self' : 'friend'} avatarUserId={targetUserId || user?.id} entryContext="friends" />
+
         {/* Header / Avatar Presence */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mb-10">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 md:col-span-2">
