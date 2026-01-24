@@ -566,7 +566,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
   // Keyboard and wheel navigation for cross interface
   useEffect(() => {
-    if (viewMode !== 'cross' || isLoading || filteredGames.length === 0) return;
+    if (viewMode !== 'cross' || isLoading || displayGames.length === 0) return;
 
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
@@ -580,7 +580,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       } else if (key === 'arrowdown' || key === 's') {
         e.preventDefault();
-        if (activeGameIndex < filteredGames.length - 1) {
+        if (activeGameIndex < displayGames.length - 1) {
           setActiveGameIndex((prev) => prev + 1);
           setActiveCardIndex(0);
         }
@@ -593,8 +593,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       } else if (key === 'arrowright' || key === 'd') {
         e.preventDefault();
-        const currentGame = filteredGames[activeGameIndex];
-        const cards = generateCardsForGame(currentGame);
+        const currentGame = displayGames[activeGameIndex];
+        const cards = aftermarketMode ? currentCrossCards : generateCardsForGame(currentGame);
         if (activeCardIndex < cards.length - 1) {
           setActiveCardIndex((prev) => prev + 1);
         }
@@ -602,8 +602,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       // Enter: Select card
       else if (key === 'enter') {
         e.preventDefault();
-        const currentGame = filteredGames[activeGameIndex];
-        const cards = generateCardsForGame(currentGame);
+        const currentGame = displayGames[activeGameIndex];
+        const cards = aftermarketMode ? currentCrossCards : generateCardsForGame(currentGame);
         if (cards[activeCardIndex]) {
           setSelectedCard(cards[activeCardIndex]);
         }
@@ -619,14 +619,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
         // Horizontal (Cards)
-        if (e.deltaX > 0 || e.shiftKey && e.deltaY > 0) {
-          const currentGame = filteredGames[activeGameIndex];
-          const cards = generateCardsForGame(currentGame);
-          if (activeCardIndex < cards.length - 1) {
+        const currentGame = displayGames[activeGameIndex];
+        const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
+        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+          if (activeCardIndex < totalCards - 1) {
             setActiveCardIndex((prev) => prev + 1);
             lastWheelTime = now;
           }
-        } else if (e.deltaX < 0 || e.shiftKey && e.deltaY < 0) {
+        } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
           if (activeCardIndex > 0) {
             setActiveCardIndex((prev) => prev - 1);
             lastWheelTime = now;
@@ -635,7 +635,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       } else {
         // Vertical (Games)
         if (e.deltaY > 0) {
-          if (activeGameIndex < filteredGames.length - 1) {
+          if (activeGameIndex < displayGames.length - 1) {
             setActiveGameIndex((prev) => prev + 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
@@ -657,7 +657,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading]);
+  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards]);
 
   // Helper to generate cards for a game
   const generateCardsForGame = useCallback((game) => {
@@ -673,8 +673,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     }));
   }, []);
 
+  // Current game list (inject Black Market Store tile when aftermarketMode)
+  const displayGames = useMemo(() => (
+    aftermarketMode ? [{ id: 'aftermarket-store', title: 'Black Market Store', isAftermarket: true }, ...filteredGames] : filteredGames
+  ), [aftermarketMode, filteredGames]);
+
   // Current game and cards for cross view
-  const currentCrossGame = filteredGames[activeGameIndex];
+  const currentCrossGame = displayGames[activeGameIndex];
   const currentCrossCards = useMemo(
     () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
     [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
@@ -866,7 +871,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 }}
                 transition={{ type: "spring", stiffness: 250, damping: 25 }}>
 
-                  {filteredGames.map((game, idx) => {
+                  {displayGames.map((game, idx) => {
                   const isActive = idx === activeGameIndex;
                   return (
                     <motion.div
@@ -874,7 +879,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       onClick={() => {
                         setActiveGameIndex(idx);
                         setActiveCardIndex(0);
-                        if (aftermarketMode) setAftermarketAll(false);
+                        if (aftermarketMode) {
+                          if (game.isAftermarket) {
+                            setAftermarketAll(true);
+                          } else {
+                            setAftermarketAll(false);
+                          }
+                        }
                       }}
                       animate={{
                         scale: isActive ? 1.2 : 0.9,
@@ -890,10 +901,16 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       'border border-white/10'}
                         `
                       }>
-                          <img
-                          src={game.cover_image || game.cover}
-                          alt={game.title}
-                          className="w-full h-full object-cover" />
+                          {game.isAftermarket ? (
+                            <div className="w-full h-full flex items-center justify-center bg-black/50">
+                              <DollarSign className="w-8 h-8 text-emerald-300" />
+                            </div>
+                          ) : (
+                            <img
+                              src={game.cover_image || game.cover}
+                              alt={game.title}
+                              className="w-full h-full object-cover" />
+                          )}
 
                         </div>
                         <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
