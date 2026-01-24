@@ -376,6 +376,10 @@ export default function Store() {
     }, [searchParams]);
 
     const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
+    // Cross navigation indices declared early to avoid temporal dead zone
+    const [activeGenreIndex, setActiveGenreIndex] = useState(0);
+    const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
+    const [isNavigating, setIsNavigating] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [marketplaceSearchTerm, setMarketplaceSearchTerm] = useState('');
@@ -466,9 +470,6 @@ export default function Store() {
     } = useGameFilters(games, loading);
 
     // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
-    const [activeGenreIndex, setActiveGenreIndex] = useState(0);
-    const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
-    const [isNavigating, setIsNavigating] = useState(false);
     
     // Derived state
     const currentNavGenre = genreData[activeGenreIndex];
