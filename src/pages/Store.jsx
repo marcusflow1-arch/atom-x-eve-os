@@ -415,6 +415,7 @@ export default function Store() {
 
     const handleGenreWheel = (e) => {
       if (!genreData || genreData.length === 0) return;
+      e.preventDefault();
       const now = Date.now();
       if (now - wheelTsRef.current < 120) return; // throttle
       wheelTsRef.current = now;
