@@ -12,7 +12,7 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 340, // Height per row
+    estimateSize: () => 420, // Height per row (increased to prevent overlap)
     overscan: 2,
   });
 
@@ -43,6 +43,7 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
           height: `${rowVirtualizer.getTotalSize()}px`,
           width: '100%',
           position: 'relative',
+          paddingBottom: '8px',
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -59,7 +60,7 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="grid grid-cols-5 gap-4 pb-4"
+              className="grid grid-cols-5 gap-4 pb-6"
             >
               {rowItems.map((item) => (
                 <div
