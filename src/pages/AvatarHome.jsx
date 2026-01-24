@@ -5,6 +5,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import MiniAchievementCard from '@/components/dashboard/MiniAchievementCard';
+import AvatarHomeContainer from '@/components/avatarHome/AvatarHomeContainer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, Gamepad2, House, Quote, ChevronLeft } from 'lucide-react';
