@@ -215,7 +215,7 @@ export default function ClanTreasuryPage({ clan }) {
                     </div>
                 </LiquidGlassCard>
             </div>
-            </>)}}
+            </>)}
             {tab === 'inventory' && (
               <div className="h-full">
                 <div className="grid grid-cols-12 gap-4 h-full">
