@@ -1242,10 +1242,14 @@ export default function Store() {
                                             <ChevronRight className="w-4 h-4 text-white/60" />
                                         </div>
 
-                                        {/* Vertical genre list with subtle out-dent on scroll */}
+                                        {/* Vertical genre list with cross-scroll shift on scroll up */}
                                         <div className="relative">
 
-                                            <div className="flex flex-col gap-2 pl-6 pr-3">
+                                            <motion.div
+                                                initial={false}
+                                                animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
+                                                transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                                                className="flex flex-col gap-2 pl-6 pr-3">
                                                 {genreData.map((genre, idx) => {
                                                     const Icon = genre.icon;
                                                     const isActive = idx === activeGenreIndex;
@@ -1328,8 +1332,8 @@ export default function Store() {
                                             </div>
                                         </div>
 
-                                        {/* Vertical divider between cards and left menu */}
-                                        <div className="hidden xl:block absolute left-[260px] top-0 bottom-0 w-px bg-white/10" />
+                                        {/* Vertical divider between cards and left menu (reduced to 50% height, centered) */}
+                                        <div className="hidden xl:block absolute left-[260px] bg-white/10" style={{ top: '25%', height: '50%', width: '1px' }} />
 
                                         {/* Game Grid */}
                                         <motion.div 

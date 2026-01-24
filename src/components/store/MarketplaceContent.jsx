@@ -757,15 +757,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             <div className="mb-8">
               
               {/* Inner Scroll Container for Results */}
-              <div 
-                className="h-[700px] overflow-y-auto pr-2 custom-scrollbar rounded-3xl p-1"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                }}
-              >
+              <div className="h-[700px] overflow-y-auto pr-2 custom-scrollbar p-1">
                 {browseMode === 'games' ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
                     {availableGamesList.map(game => (
