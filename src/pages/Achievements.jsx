@@ -383,6 +383,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Hover zones to resolve competing scroll areas
   const [hoverZone, setHoverZone] = useState(null); // 'cards' | 'games' | null
   const cardsGridRef = useRef(null);
+  const gamesListRef = useRef(null);
   const getCardsPerRow = useCallback(() => {
     const w = window.innerWidth;
     if (w >= 1280) return 6; // xl
