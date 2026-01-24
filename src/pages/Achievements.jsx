@@ -661,9 +661,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
   const activeCard = currentCrossCards[activeCardIndex];
 
-  // Group cards by developer/company (fallback to series/game name)
-  const cardsByDev = useMemo(() => {
-    const groups = {};
+  // Separate store vs black market groups by seller
+  const { storeGroups, blackGroups } = useMemo(() => {
+    const store = {};
+    const black = {};
     const source = userAllCards && userAllCards.length > 0
       ? userAllCards.map((c, i) => ({
           id: c.id || `usercard-${i}`,
@@ -671,16 +672,21 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
           series: c.game_name || c.series || 'Unknown Studio',
           rarity: c.rarity || 'Rare',
           image: c.image || currentCrossGame?.cover_image || currentCrossGame?.cover,
+          seller_name: c.seller_name || c.vendor || c.source || '' ,
+          acquisition_source: c.acquisition_source || c.acquisition_method || ''
         }))
-      : currentCrossCards;
+      : (currentCrossCards || []);
 
     (source || []).forEach((card) => {
-      const dev = card.series || 'Unknown Studio';
-      if (!groups[dev]) groups[dev] = [];
-      groups[dev].push(card);
+      const seller = (card.seller_name || '').toString();
+      const isStore = (card.acquisition_source === 'store' || card.acquisition_source === 'store_purchase' || seller.toLowerCase().includes('adam x eve'));
+      const target = isStore ? store : black;
+      const key = isStore ? 'Store' : (card.series || 'Unknown Studio');
+      if (!target[key]) target[key] = [];
+      target[key].push(card);
     });
 
-    return groups;
+    return { storeGroups: store, blackGroups: black };
   }, [userAllCards, currentCrossCards, currentCrossGame]);
 
   // Constants for positioning
@@ -1137,13 +1143,56 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
-                          {Object.keys(cardsByDev).length === 0 && (
+                          {Object.keys(storeGroups).length === 0 && Object.keys(blackGroups).length === 0 && (
                             <div className="h-40 flex items-center justify-center text-white/40 text-sm">
                               No purchased cards found
                             </div>
                           )}
 
-                          {Object.entries(cardsByDev).map(([dev, cards]) => (
+                          {/* Store Market Section */}
+                          {Object.keys(storeGroups).length > 0 && (
+                            <div className="mb-8">
+                              <div className="flex flex-col items-center mb-2">
+                                <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10" />
+                                <div className="mt-2 text-xs text-white/70 font-semibold">Store Market Cards</div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                {Object.values(storeGroups).flat().map((card, idx) => (
+                                  <div key={card.id} className="aspect-[2.5/3.5]">
+                                    <ShinyCard index={idx} onClick={() => {
+                                      if (skillTreeMode) setSkillTreeCard(card);
+                                      else if (blacksmithMode) setBlacksmithCard(card);
+                                      else setSelectedCard(card);
+                                    }}>
+                                      <div className="absolute inset-0 flex flex-col p-3">
+                                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-between">
+                                          <div>
+                                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                              'border-slate-500/50 text-slate-400'
+                                            }`}>
+                                              {card.rarity}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </ShinyCard>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Black Market Section by Developer */}
+                          {Object.entries(blackGroups).map(([dev, cards]) => (
                             <div key={dev} className="mb-6">
                               <div className="flex flex-col items-center mb-3">
                                 <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10" />
@@ -1153,13 +1202,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                                 {cards.map((card, idx) => (
                                   <div key={card.id} className="aspect-[2.5/3.5]">
                                     <ShinyCard index={idx} onClick={() => {
-                                      if (skillTreeMode) {
-                                        setSkillTreeCard(card);
-                                      } else if (blacksmithMode) {
-                                        setBlacksmithCard(card);
-                                      } else {
-                                        setSelectedCard(card);
-                                      }
+                                      if (skillTreeMode) setSkillTreeCard(card);
+                                      else if (blacksmithMode) setBlacksmithCard(card);
+                                      else setSelectedCard(card);
                                     }}>
                                       <div className="absolute inset-0 flex flex-col p-3">
                                         <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
@@ -1202,7 +1247,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {/* Header */}
                   <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-black tracking-tighter text-white">
-                      Achievements
+                      {aftermarketMode ? 'Black Market Cards' : 'Achievements'}
                     </h1>
                     
 
