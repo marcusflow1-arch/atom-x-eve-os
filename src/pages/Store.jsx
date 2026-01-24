@@ -394,12 +394,35 @@ export default function Store() {
     const [scrollDir, setScrollDir] = useState('down');
 
     // Cross-scroll: wheel on left genre menu changes active genre
+
+
+    // Navigate with scroll transition
+    const handleNavigateToGame = (id) => {
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
+    };
+
+    // Use filter and navigation hooks
+    const {
+        activeCategory,
+        setActiveCategory,
+        priceRange,
+        setPriceRange,
+        selectedGenres,
+        toggleGenre,
+        minRating,
+        setMinRating,
+        showAndroidOnly,
+        setShowAndroidOnly,
+        genreData
+    } = useGameFilters(games, loading);
+
+    // Cross-scroll (PS3-style) - left genre column
     const leftGenreRefs = useRef([]);
-    const wheelTsRef = useRef(0);
     const handleGenreWheel = (e) => {
         if (!genreData || genreData.length === 0) return;
         setScrollDir(e.deltaY > 0 ? 'down' : 'up');
-        // Let natural scroll occur; active genre syncs via onScroll below
+        // Natural scroll; active genre updates via onScroll listener
     };
 
     // Sync active genre to the item centered in the left column while scrolling
@@ -422,36 +445,15 @@ export default function Store() {
         };
         el.addEventListener('scroll', onScroll, { passive: true });
         return () => el.removeEventListener('scroll', onScroll);
-    }, [genreData.length]);
+    }, [genreData]);
 
-    // Ensure keyboard navigation recenters the focused genre
+    // Ensure keyboard/selection moves keep the focused genre centered
     useEffect(() => {
         const node = leftGenreRefs.current[activeGenreIndex];
         if (node && genreScrollRef.current) {
             node.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [activeGenreIndex]);
-
-    // Navigate with scroll transition
-    const handleNavigateToGame = (id) => {
-        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
-        setShowScrollTransition(true);
-    };
-
-    // Use filter and navigation hooks
-    const {
-        activeCategory,
-        setActiveCategory,
-        priceRange,
-        setPriceRange,
-        selectedGenres,
-        toggleGenre,
-        minRating,
-        setMinRating,
-        showAndroidOnly,
-        setShowAndroidOnly,
-        genreData
-    } = useGameFilters(games, loading);
 
     // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
