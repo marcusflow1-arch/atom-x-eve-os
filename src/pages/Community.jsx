@@ -405,7 +405,7 @@ export default function CommunityPage() {
                                 />
                             </div>
                             {/* Center: Feed (7/12) */}
-                            <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden">
+                            <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden pt-[7.75rem]">
                                 
                                 {/* Controls Toolbar: Back, Search, New Post, Sort */}
                                 <div className="mb-6">

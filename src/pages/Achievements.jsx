@@ -380,6 +380,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [purchasedCountsByGame, setPurchasedCountsByGame] = useState({});
   const purchasedTotalCount = useMemo(() => Object.values(purchasedCountsByGame || {}).reduce((a, b) => a + b, 0), [purchasedCountsByGame]);
 
+  // Hover zones to resolve competing scroll areas
+  const [hoverZone, setHoverZone] = useState(null); // 'cards' | 'games' | null
+  const cardsGridRef = useRef(null);
+  const getCardsPerRow = useCallback(() => {
+    const w = window.innerWidth;
+    if (w >= 1280) return 6; // xl
+    if (w >= 1024) return 5; // lg
+    if (w >= 768) return 4;  // md
+    return 3;                // base
+  }, []);
+
   useEffect(() => {
     const fetchUserCards = async () => {
       if (!user || !selectedGame) return;
@@ -944,7 +955,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
               {/* CARDS GRID (Vertical scroll) */}
               <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-[60vh] z-10 flex items-center pointer-events-none">
-                <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto">
+                <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto"
+                     ref={cardsGridRef}
+                     onMouseEnter={() => setHoverZone('cards')}
+                     onMouseLeave={() => setHoverZone(null)}>
                   <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
 
                   {currentCrossCards.map((card, idx) => {
