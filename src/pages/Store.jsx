@@ -1347,7 +1347,7 @@ export default function Store() {
                                         </div>
 
                                         {/* Vertical divider between cards and left menu (reduced to 50% height, centered) */}
-                                        <div className="hidden xl:block absolute left-[260px] bg-white/10" style={{ top: '25%', height: '50%', width: '1px' }} />
+                                        <div className="hidden xl:block absolute left-[260px] bg-white/10" style={{ top: '25%', bottom: '25%', width: '1px' }} />
 
                                         {/* Game Grid */}
                                         <motion.div 
