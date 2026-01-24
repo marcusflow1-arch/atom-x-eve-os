@@ -959,7 +959,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
 
               {/* CARDS GRID (Vertical scroll) */}
-              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-[60vh] z-10 flex items-center pointer-events-none">
+              <div className="absolute left-0 right-0 top-[48vh] -translate-y-1/2 h-[60vh] z-10 flex items-center pointer-events-none">
                 <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto"
                      ref={cardsGridRef}
                      onMouseEnter={() => setHoverZone('cards')}
