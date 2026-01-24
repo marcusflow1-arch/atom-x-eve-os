@@ -6,7 +6,8 @@ import { ChevronRight, Globe } from 'lucide-react';
 export default function VirtualizedTradeGrid({ items, onSelectItem }) {
   const parentRef = useRef(null);
 
-  const COLUMNS = 5;
+  const COLUMNS = 5; // keep 5 columns like Trading Post UI
+
   const rowCount = Math.ceil(items.length / COLUMNS);
 
   const rowVirtualizer = useVirtualizer({
