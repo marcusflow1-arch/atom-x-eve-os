@@ -523,11 +523,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     return cards;
   }, [selectedGame, localAchievements, userCards, user]);
 
-  // Black Market purchased cards (from marketplace) for current game
-  const blackMarketCards = useMemo(() => {
-    return tradingCards.filter(c => c.isPurchased);
-  }, [tradingCards]);
-
   const genres = useMemo(() => {
     const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
     return ['All', ...Array.from(g)];
@@ -803,11 +798,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   <Hammer className="w-5 h-5" />
                 </button>
 
-                {/* Black Market Cards Toggle */}
+                {/* Aftermarket Cards Toggle */}
                 <button
                   onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
                   className={`p-2 rounded-lg border transition-all ${aftermarketMode ? 'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`}
-                  title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
+                  title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
                 >
                   <Tag className="w-5 h-5" />
                 </button>
@@ -948,7 +943,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl h-[440px] overflow-y-auto p-4 custom-scrollbar"
                   >
                     <div className="grid grid-cols-2 gap-4">
-                      {blackMarketCards.map((card, idx) => (
+                      {currentCrossCards.map((card, idx) => (
                         <div key={card.id} className="aspect-[2.5/3.5]">
                           <ShinyCard index={idx} onClick={() => {
                             setActiveCardIndex(idx);
@@ -986,7 +981,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     </div>
                   </div>
                   <div className="mt-2 text-center text-[11px] font-bold uppercase tracking-widest text-white/70">
-                    Black Market Cards
+                    Aftermarket Parts
                   </div>
                 </div>
               )}
@@ -1091,7 +1086,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       <Hammer className="w-4 h-4" />
                     </motion.button>
 
-                    {/* Black Market Cards Toggle */}
+                    {/* Aftermarket Cards Toggle */}
                     <motion.button
                       onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
                       whileHover={{ scale: 1.1 }}
@@ -1101,7 +1096,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                         'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' :
                         'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
                       }
-                      title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
+                      title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
                     >
                       <Tag className="w-4 h-4" />
                     </motion.button>
