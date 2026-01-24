@@ -653,7 +653,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             </div>
 
             {/* Right Content */}
-            <div className="flex-1 flex flex-col gap-6 min-w-0">
+            <div className="flex-1 flex flex-col gap-6 min-w-0 pt-10">
             {/* Enhanced Marketplace Header */}
             <div className="flex flex-col gap-6 mb-8">
               {/* Controls Row */}
@@ -694,6 +694,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
               <div 
                 className="flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+                style={{ alignItems: 'center' }}
               >
                 {ITEM_TYPES.map((type) => {
                   const isActive = filters.itemType === type.id;
@@ -756,8 +757,8 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             {/* Results */}
             <div className="mb-8">
               
-              {/* Results Container - no inner scroll, full content visible */}
-              <div className="pr-2 p-1 overflow-visible">
+              {/* Results Container - no inner scroll, full content visible and aligned with left rail */}
+              <div className="pr-2 p-1 overflow-visible pt-2">
                 {browseMode === 'games' ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
                     {availableGamesList.map(game => (
