@@ -126,12 +126,19 @@ export default function ClanPage() {
                     setEntryState('intro');
                 }
             } catch (e) {
-                setEntryState('intro');
+                console.warn('resolve_entry failed, falling back to local memberships', e);
+                // Fallback: if we have validated memberships, allow entry
+                if (memberships && memberships.length > 0) {
+                    setEntryState('clan');
+                    setActiveClanId(memberships[0].divisionId);
+                } else {
+                    setEntryState('intro');
+                }
             }
         };
         resolve();
         return () => { cancelled = true; };
-    }, [user?.id]);
+    }, [user?.id, memberships?.length]);
 
     // Re-validate membership when page becomes visible (tab switch, etc.)
     useEffect(() => {
