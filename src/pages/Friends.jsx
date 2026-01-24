@@ -311,6 +311,7 @@ export default function Friends() {
                     <div 
                       key={friend.id}
                       className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
+                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
                     >
                       <div className="flex-shrink-0">
                         <MiniAvatarViewer size={80} />
@@ -413,6 +414,7 @@ export default function Friends() {
                     <div 
                       key={friend.id}
                       className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
+                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
                     >
                       <div className="flex-shrink-0">
                         <MiniAvatarViewer size={80} />
@@ -460,6 +462,7 @@ export default function Friends() {
                     <div 
                       key={friend.id}
                       className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
+                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
                     >
                       <div className="flex-shrink-0">
                         <MiniAvatarViewer size={80} />
