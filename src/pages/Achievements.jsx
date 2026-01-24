@@ -218,6 +218,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
 
+  // Aftermarket Mode (Black Market Cards)
+  const [aftermarketMode, setAftermarketMode] = useState(false);
+  const [aftermarketCards, setAftermarketCards] = useState([]);
+
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -407,6 +411,37 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     fetchReviews();
   }, [selectedGame]);
+
+  // Fetch aftermarket (Black Market) cards for selected game
+  useEffect(() => {
+    if (!aftermarketMode) {
+      setAftermarketCards([]);
+      return;
+    }
+    if (!selectedGame) return;
+    const fetchListings = async () => {
+      try {
+        const listings = await base44.entities.TradeOffer.filter({
+          game_name: selectedGame.title,
+          status: 'active'
+        }, '-created_date');
+        const mapped = listings.map((l) => ({
+          id: l.id,
+          title: l.item_name,
+          series: l.game_name,
+          rarity: l.item_rarity || 'Common',
+          image: l.item_image || (selectedGame.cover_image || selectedGame.cover),
+          description: l.item_description || 'Aftermarket card',
+          stats: { power: l.item_power, level: l.item_level }
+        }));
+        setAftermarketCards(mapped);
+      } catch (e) {
+        console.error('Failed to fetch aftermarket cards:', e);
+        setAftermarketCards([]);
+      }
+    };
+    fetchListings();
+  }, [aftermarketMode, selectedGame]);
 
   // Fetch user reactions
   useEffect(() => {
@@ -635,7 +670,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
   // Current game and cards for cross view
   const currentCrossGame = filteredGames[activeGameIndex];
-  const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
+  const currentCrossCards = useMemo(
+    () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
+    [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
+  );
+  useEffect(() => { setActiveCardIndex(0); }, [aftermarketMode]);
   const activeCard = currentCrossCards[activeCardIndex];
 
   // Constants for positioning
@@ -765,18 +804,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
-                {/* Grid View Toggle - 4 small squares */}
+                {/* Aftermarket Mode Toggle */}
                 <button
-                onClick={() => setViewMode('classic')}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                title="Switch to Grid View">
-
-                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                  </div>
+                onClick={() => setAftermarketMode(!aftermarketMode)}
+                className={`pl-2 pr-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${
+                  aftermarketMode
+                    ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-200'
+                    : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
+                }`}
+                title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}>
+                  <DollarSign className="w-5 h-5" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Black Market Cards</span>
                 </button>
 
                 {/* Skill Tree Mode Toggle */}
