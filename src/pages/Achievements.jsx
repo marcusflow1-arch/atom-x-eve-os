@@ -1208,7 +1208,18 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {selectedGame ?
                 <>
                       {/* Tab Toggle: Cards / Peer Reviews */}
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center gap-3 mb-4">
+                       {/* Aftermarket Toggle (classic view too) */}
+                       <button
+                         onClick={() => setAftermarketMode(!aftermarketMode)}
+                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all border ${
+                           aftermarketMode ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                         }`}
+                         title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}
+                       >
+                         <DollarSign className="w-4 h-4" />
+                         Black Market Cards
+                       </button>
                         <button
                       onClick={() => setShowReviewPanel(false)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
