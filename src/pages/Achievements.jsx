@@ -383,6 +383,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Hover zones to resolve competing scroll areas
   const [hoverZone, setHoverZone] = useState(null); // 'cards' | 'games' | null
   const cardsGridRef = useRef(null);
+  const gamesListRef = useRef(null);
   const getCardsPerRow = useCallback(() => {
     const w = window.innerWidth;
     if (w >= 1280) return 6; // xl
@@ -951,7 +952,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto"
                      ref={cardsGridRef}
                      onMouseEnter={() => setHoverZone('cards')}
-                     onMouseLeave={() => setHoverZone(null)}>
+                     onMouseLeave={() => setHoverZone(null)}
+                     >
                   <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
 
                   {currentCrossCards.map((card, idx) => {
