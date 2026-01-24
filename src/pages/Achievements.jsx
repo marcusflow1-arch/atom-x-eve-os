@@ -943,7 +943,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
 
               {/* CARDS GRID (Vertical scroll) */}
-              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-[48vh] z-10 flex items-center pointer-events-none">
+              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-[60vh] z-10 flex items-center pointer-events-none">
                 <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto">
                   <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
 

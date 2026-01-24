@@ -31,7 +31,7 @@ const ZONES = [
     { id: 'voice', label: 'Voice Rooms', icon: Mic, desc: 'Tactical Audio Channels' },
 ];
 
-export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMainChat }) {
+export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMainChat, quickSwitchLabel, onQuickSwitch }) {
     const { user, updatePresenceContext } = useAuth();
     const [activeZone, setActiveZone] = useState(initialZone || 'chat');
     
@@ -176,11 +176,11 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                         <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={onGoMainChat}
+                            onClick={game?.isGlobalChat ? onQuickSwitch : onGoMainChat}
                             className="text-white/70 hover:text-white gap-2"
-                            title="Go to Adam X Eve main chat"
+                            title={game?.isGlobalChat ? (quickSwitchLabel ? `Back to ${quickSwitchLabel}` : 'Back to previous chat') : 'Go to Adam X Eve main chat'}
                         >
-                            <Hash className="w-4 h-4" /> Adam X Eve
+                            <Hash className="w-4 h-4" /> {game?.isGlobalChat ? (quickSwitchLabel || 'Previous Chat') : 'Adam X Eve'}
                         </Button>
                     </div>
                     <div className="flex items-center gap-3">

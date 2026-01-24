@@ -41,6 +41,7 @@ export default function ClanPage() {
     const [activeClanId, setActiveClanId] = useState(null);
     const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
+  const [lastChatGame, setLastChatGame] = useState(null); // For quick switch back from global chat
     const [initialZone, setInitialZone] = useState(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     // Entry gate state (authoritative)
@@ -363,13 +364,20 @@ export default function ClanPage() {
                                                     setSelectedGame(null);
                                                     setInitialZone(null);
                                                 }} 
-                                                onGoMainChat={() => setSelectedGame({
-                                                    id: 'global_chat',
-                                                    title: 'Adam X Eve',
-                                                    genre: 'Social',
-                                                    cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
-                                                    isGlobalChat: true
-                                                })}
+                                                onGoMainChat={() => {
+                                                    if (selectedGame && !selectedGame.isGlobalChat) {
+                                                      setLastChatGame(selectedGame);
+                                                    }
+                                                    setSelectedGame({
+                                                      id: 'global_chat',
+                                                      title: 'Adam X Eve',
+                                                      genre: 'Social',
+                                                      cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
+                                                      isGlobalChat: true
+                                                    });
+                                                }}
+                                                quickSwitchLabel={lastChatGame?.title}
+                                                onQuickSwitch={() => { if (lastChatGame) setSelectedGame(lastChatGame); }}
                                             />
                     </motion.div>
                 )}
