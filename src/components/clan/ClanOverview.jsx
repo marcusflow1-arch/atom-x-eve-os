@@ -72,7 +72,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
         queryKey: ['clanRecentMessages', clan.id],
         queryFn: async () => {
             const messages = await base44.entities.ClanMessage.filter({ divisionId: clan.id });
-            return messages.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 15);
+            return (messages || []).sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0)).slice(0, 15);
         },
         enabled: !!clan.id
     });
