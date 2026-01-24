@@ -659,7 +659,25 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Current game and cards for cross view
   const currentCrossGame = filteredGames[activeGameIndex];
   const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
-  const activeCard = currentCrossCards[activeCardIndex];
+  const aftermarketCards = useMemo(() => {
+    if (!userAllCards || userAllCards.length === 0) return [];
+    return userAllCards
+      .filter((c) => {
+        const src = (c.acquisition_source || c.acquisition_method || '').toLowerCase();
+        const seller = (c.seller_name || '').toLowerCase();
+        return src.includes('black') || src.includes('market') || (seller && !seller.includes('adam x eve') && !src.includes('store'));
+      })
+      .map((c, i) => ({
+        id: c.id || `bm-${i}`,
+        title: c.card_name || c.title || 'Card',
+        series: c.game_name || c.series || 'Independent',
+        rarity: c.rarity || 'Rare',
+        image: c.image || currentCrossGame?.cover_image || currentCrossGame?.cover,
+        description: c.item_description || c.description || `Aftermarket collectible${c.game_name ? ` from ${c.game_name}`: ''}.`,
+        stats: {}
+      }));
+  }, [userAllCards, currentCrossGame]);
+  const activeCard = (aftermarketMode ? aftermarketCards : currentCrossCards)[activeCardIndex];
 
   // Separate store vs black market groups by seller
   const { storeGroups, blackGroups } = useMemo(() => {
@@ -902,7 +920,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
 
               {/* HORIZONTAL AXIS (Cards) */}
-              {!aftermarketMode && !skillTreeMode && (
+              {!skillTreeMode && (
               <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
                 <motion.div
                 className="flex items-center gap-8 pl-64 pointer-events-auto"
@@ -911,7 +929,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 }}
                 transition={{ type: "spring", stiffness: 250, damping: 25 }}>
 
-                  {currentCrossCards.map((card, idx) => {
+                  {(aftermarketMode ? aftermarketCards : currentCrossCards).map((card, idx) => {
                   const isActive = idx === activeCardIndex;
                   return (
                     <motion.div
@@ -1027,13 +1045,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     </div>
                   </div>
                   <div className="mt-2 text-center text-[11px] font-bold uppercase tracking-widest text-white/70">
-                    Aftermarket Parts
+                    Black Market Cards
                   </div>
                 </div>
               )}
 
               {/* ACTIVE CARD DETAILS */}
-              {(!aftermarketMode && !skillTreeMode) && (
+              {!skillTreeMode && (
               <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
                 <AnimatePresence mode="wait">
                   {activeCard &&
@@ -1047,7 +1065,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                       <div className="flex items-center gap-3">
                         <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                          {currentCrossGame?.genre || 'adventure'}
+                          {aftermarketMode ? 'Black Market' : (currentCrossGame?.genre || 'adventure')}
                         </Badge>
                         <Badge className={`backdrop-blur-md border ${
                     activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
