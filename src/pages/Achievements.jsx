@@ -671,26 +671,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     const handleWheel = (e) => {
       const now = Date.now();
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+      e.preventDefault();
 
-      // If hovering over the games list, scroll games only
-      if (hoverZone === 'games') {
-        if (e.deltaY > 0) {
-          if (activeGameIndex < displayGames.length - 1) {
-            setActiveGameIndex((prev) => prev + 1);
-            setActiveCardIndex(0);
-            lastWheelTime = now;
-          }
-        } else if (e.deltaY < 0) {
-          if (activeGameIndex > 0) {
-            setActiveGameIndex((prev) => prev - 1);
-            setActiveCardIndex(0);
-            lastWheelTime = now;
-          }
-        }
-        return;
-      }
-
-      // Default: cards grid scrolls by full rows
+      // Only affect the cards grid (row-by-row)
       const perRow = getCardsPerRow();
       const currentGame = displayGames[activeGameIndex];
       const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
@@ -709,11 +692,16 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('wheel', handleWheel, { passive: false });
+    const targetEl = cardsGridRef.current;
+    if (targetEl) {
+      targetEl.addEventListener('wheel', handleWheel, { passive: false });
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('wheel', handleWheel);
+      if (targetEl) {
+        targetEl.removeEventListener('wheel', handleWheel);
+      }
     };
   }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards, generateCardsForGame, hoverZone, getCardsPerRow]);
 

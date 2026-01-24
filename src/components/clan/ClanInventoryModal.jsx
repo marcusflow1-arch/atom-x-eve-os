@@ -127,7 +127,7 @@ export default function ClanInventoryModal({ open, onOpenChange, items }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 max-w-[1100px] w-[95vw] h-[85vh] border-white/10 overflow-hidden text-white" style={{
+      <DialogContent hideClose className="p-0 max-w-[1100px] w-[95vw] h-[85vh] border-white/10 overflow-hidden text-white" style={{
         background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)",
         backdropFilter: "blur(40px) saturate(180%)",
         WebkitBackdropFilter: "blur(40px) saturate(180%)",

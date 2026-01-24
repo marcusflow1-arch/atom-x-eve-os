@@ -374,19 +374,19 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                     <Grid3X3 className="w-4 h-4 mr-1" /> Inventory
                 </Button>
             </div>
-            <div className="flex-1 overflow-hidden px-4 pb-4 pt-2 flex gap-4">
+            <div className="flex-1 overflow-hidden px-4 pb-4 pt-2 grid grid-cols-12 gap-4">
                 {/* LEFT PANEL */}
-                <div className={`h-full transition-all duration-300 ${layoutSwapped ? 'w-[55%]' : 'w-[25%]'}`}>
+                <div className={`h-full transition-all duration-300 col-span-12 lg:col-span-3 ${layoutSwapped ? 'order-2' : 'order-1'}`}>
                     {layoutSwapped ? <RosterPanel expanded /> : <ChatPanel />}
                 </div>
 
                 {/* CENTER PANEL (Roster or Chat based on swap) */}
-                <div className={`h-full transition-all duration-300 ${layoutSwapped ? 'w-[25%]' : 'w-[55%]'}`}>
+                <div className={`h-full transition-all duration-300 col-span-12 lg:col-span-6 ${layoutSwapped ? 'order-1' : 'order-2'}`}>
                     {layoutSwapped ? <ChatPanel /> : <RosterPanel expanded />}
                 </div>
 
                 {/* RIGHT PANEL - Activity Log */}
-                <div className="w-[20%] h-full">
+                <div className="h-full col-span-12 lg:col-span-3 order-3">
                     <LiquidGlassCard className="p-4 h-full flex flex-col">
                         <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
                             <Activity className="w-3.5 h-3.5 text-orange-400" /> Activity
