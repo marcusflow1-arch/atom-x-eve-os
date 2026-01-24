@@ -16,6 +16,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+import ClanInventoryModal from '@/components/clan/ClanInventoryModal';
 
 export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     const { user } = useAuth();
@@ -30,6 +31,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     
     // Announcements dropdown state
     const [showAnnouncements, setShowAnnouncements] = useState(false);
+    const [inventoryOpen, setInventoryOpen] = useState(false);
     
     // Listen for toggle event from parent
     useEffect(() => {
@@ -405,6 +407,9 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
             </div>
 
 
+
+            {/* Inventory Modal */}
+            <ClanInventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
 
             {/* Dialogs */}
             <Dialog open={isDismantleOpen} onOpenChange={setIsDismantleOpen}>
