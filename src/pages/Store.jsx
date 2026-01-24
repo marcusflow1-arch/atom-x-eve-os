@@ -389,6 +389,9 @@ export default function Store() {
     const [hoveredGame, setHoveredGame] = useState(null);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
+    const contentScrollRef = useRef(null);
+    const lastScrollTopRef = useRef(0);
+    const [scrollDir, setScrollDir] = useState('down');
 
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
