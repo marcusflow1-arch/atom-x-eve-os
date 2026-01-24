@@ -1295,8 +1295,6 @@ export default function Store() {
                                                     >
                                                         <currentNavGenre.icon className="w-4 h-4 text-cyan-400" />
                                                         <span className="text-sm uppercase tracking-wider text-cyan-400 font-black">{currentNavGenre.label}</span>
-                                                        <span className="text-white/30 text-xs">•</span>
-                                                        <span className="text-[11px] uppercase tracking-wider text-white/60">{activeSubCategory}</span>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
