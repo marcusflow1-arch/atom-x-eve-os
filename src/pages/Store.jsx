@@ -1261,8 +1261,8 @@ export default function Store() {
                                                             key={genre.id}
                                                             onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
                                                             className="group flex items-center gap-2 text-left py-2 pl-0 pr-2"
-                                                            animate={{ x: isActive ? 6 : 0 }}
-                                                            whileHover={{ x: 6 }}
+                                                            animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }}
+                                                            whileHover={{ x: 8 }}
                                                         >
                                                             <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
                                                             <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
