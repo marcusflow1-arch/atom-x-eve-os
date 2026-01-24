@@ -932,6 +932,60 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
               )}
 
+              {/* AFTERMARKET PANEL */}
+              {aftermarketMode && (
+                <div
+                  className="absolute top-44 right-12 w-[420px] z-30"
+                  onMouseEnter={() => setIsHoveringAftermarket(true)}
+                  onMouseLeave={() => setIsHoveringAftermarket(false)}
+                >
+                  <div
+                    className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl h-[440px] overflow-y-auto p-4 custom-scrollbar"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      {currentCrossCards.map((card, idx) => (
+                        <div key={card.id} className="aspect-[2.5/3.5]">
+                          <ShinyCard index={idx} onClick={() => {
+                            setActiveCardIndex(idx);
+                            if (skillTreeMode) {
+                              setSkillTreeCard(card);
+                            } else if (blacksmithMode) {
+                              setBlacksmithCard(card);
+                            } else {
+                              setSelectedCard(card);
+                            }
+                          }}>
+                            <div className="absolute inset-0 flex flex-col p-3">
+                              <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              </div>
+                              <div className="flex-1 flex flex-col justify-between">
+                                <div>
+                                  <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                  <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                    card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                    card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                    card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                    card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                    'border-slate-500/50 text-slate-400'
+                                  }`}>
+                                    {card.rarity}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </ShinyCard>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-center text-[11px] font-bold uppercase tracking-widest text-white/70">
+                    Aftermarket Parts
+                  </div>
+                </div>
+              )}
+
               {/* ACTIVE CARD DETAILS */}
               <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
                 <AnimatePresence mode="wait">
