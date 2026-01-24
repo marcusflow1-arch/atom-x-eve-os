@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer, Tag,
+  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
   MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
   Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
 'lucide-react';
@@ -218,10 +218,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
 
-  // Aftermarket Mode
-  const [aftermarketMode, setAftermarketMode] = useState(false);
-  const [isHoveringAftermarket, setIsHoveringAftermarket] = useState(false);
-
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -371,7 +367,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   }, [selectedGame, localAchievements]);
 
   const [userCards, setUserCards] = useState([]);
-  const [userAllCards, setUserAllCards] = useState([]);
   const [gameReviews, setGameReviews] = useState([]);
   const [userReactions, setUserReactions] = useState({});
   const [showReviewPanel, setShowReviewPanel] = useState(false);
@@ -393,21 +388,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     fetchUserCards();
   }, [user, selectedGame]);
-
-  // Fetch all purchased/user cards for Black Market view
-  useEffect(() => {
-    const fetchAllUserCards = async () => {
-      if (!user || !aftermarketMode) return;
-      try {
-        const all = await base44.entities.UserCard.filter({ user_id: user.id });
-        setUserAllCards(all);
-      } catch (error) {
-        console.error('Failed to fetch all user cards:', error);
-        setUserAllCards([]);
-      }
-    };
-    fetchAllUserCards();
-  }, [user, aftermarketMode]);
 
   // Fetch reviews for selected game
   useEffect(() => {
@@ -539,8 +519,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     return cards;
   }, [selectedGame, localAchievements, userCards, user]);
 
-
-
   const genres = useMemo(() => {
     const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
     return ['All', ...Array.from(g)];
@@ -597,7 +575,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     const handleWheel = (e) => {
       const now = Date.now();
-      if (aftermarketMode && isHoveringAftermarket) return;
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
 
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
@@ -640,7 +617,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading, aftermarketMode, isHoveringAftermarket]);
+  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading]);
 
   // Helper to generate cards for a game
   const generateCardsForGame = useCallback((game) => {
@@ -659,53 +636,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Current game and cards for cross view
   const currentCrossGame = filteredGames[activeGameIndex];
   const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
-  const aftermarketCards = useMemo(() => {
-    if (!userAllCards || userAllCards.length === 0) return [];
-    return userAllCards
-      .filter((c) => {
-        const src = (c.acquisition_source || c.acquisition_method || '').toLowerCase();
-        const seller = (c.seller_name || '').toLowerCase();
-        return src.includes('black') || src.includes('market') || (seller && !seller.includes('adam x eve') && !src.includes('store'));
-      })
-      .map((c, i) => ({
-        id: c.id || `bm-${i}`,
-        title: c.card_name || c.title || 'Card',
-        series: c.game_name || c.series || 'Independent',
-        rarity: c.rarity || 'Rare',
-        image: c.image || currentCrossGame?.cover_image || currentCrossGame?.cover,
-        description: c.item_description || c.description || `Aftermarket collectible${c.game_name ? ` from ${c.game_name}`: ''}.`,
-        stats: {}
-      }));
-  }, [userAllCards, currentCrossGame]);
-  const activeCard = (aftermarketMode ? aftermarketCards : currentCrossCards)[activeCardIndex];
-
-  // Separate store vs black market groups by seller
-  const { storeGroups, blackGroups } = useMemo(() => {
-    const store = {};
-    const black = {};
-    const source = userAllCards && userAllCards.length > 0
-      ? userAllCards.map((c, i) => ({
-          id: c.id || `usercard-${i}`,
-          title: c.card_name || c.title || 'Card',
-          series: c.game_name || c.series || 'Unknown Studio',
-          rarity: c.rarity || 'Rare',
-          image: c.image || currentCrossGame?.cover_image || currentCrossGame?.cover,
-          seller_name: c.seller_name || c.vendor || c.source || '' ,
-          acquisition_source: c.acquisition_source || c.acquisition_method || ''
-        }))
-      : (currentCrossCards || []);
-
-    (source || []).forEach((card) => {
-      const seller = (card.seller_name || '').toString();
-      const isStore = (card.acquisition_source === 'store' || card.acquisition_source === 'store_purchase' || seller.toLowerCase().includes('adam x eve'));
-      const target = isStore ? store : black;
-      const key = isStore ? 'Store' : (card.series || 'Unknown Studio');
-      if (!target[key]) target[key] = [];
-      target[key].push(card);
-    });
-
-    return { storeGroups: store, blackGroups: black };
-  }, [userAllCards, currentCrossCards, currentCrossGame]);
+  const activeCard = currentCrossCards[activeCardIndex];
 
   // Constants for positioning
   const ITEM_HEIGHT = 80;
@@ -834,7 +765,19 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
+                {/* Grid View Toggle - 4 small squares */}
+                <button
+                onClick={() => setViewMode('classic')}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
+                title="Switch to Grid View">
 
+                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
+                  </div>
+                </button>
 
                 {/* Skill Tree Mode Toggle */}
                 <button
@@ -851,7 +794,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Blacksmith Mode Toggle */}
                 <button
-                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false); setAftermarketMode(false);}}
+                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
                 className={`p-2 rounded-lg border transition-all ${
                 blacksmithMode ?
                 'bg-orange-500/30 border-orange-400/50 text-orange-300' :
@@ -860,15 +803,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
 
                   <Hammer className="w-5 h-5" />
-                </button>
-
-                {/* Aftermarket Cards Toggle */}
-                <button
-                  onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
-                  className={`p-2 rounded-lg border transition-all ${aftermarketMode ? 'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`}
-                  title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
-                >
-                  <Tag className="w-5 h-5" />
                 </button>
               </div>
 
@@ -920,7 +854,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
 
               {/* HORIZONTAL AXIS (Cards) */}
-              {!skillTreeMode && (
               <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
                 <motion.div
                 className="flex items-center gap-8 pl-64 pointer-events-auto"
@@ -929,7 +862,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 }}
                 transition={{ type: "spring", stiffness: 250, damping: 25 }}>
 
-                  {(aftermarketMode ? aftermarketCards : currentCrossCards).map((card, idx) => {
+                  {currentCrossCards.map((card, idx) => {
                   const isActive = idx === activeCardIndex;
                   return (
                     <motion.div
@@ -994,64 +927,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 })}
                 </motion.div>
               </div>
-              )}
-
-              {/* AFTERMARKET PANEL */}
-              {aftermarketMode && (
-                <div
-                  className="absolute top-44 right-12 w-[420px] z-30"
-                  onMouseEnter={() => setIsHoveringAftermarket(true)}
-                  onMouseLeave={() => setIsHoveringAftermarket(false)}
-                >
-                  <div
-                    className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl h-[440px] overflow-y-auto p-4 custom-scrollbar"
-                  >
-                    <div className="grid grid-cols-2 gap-4">
-                      {currentCrossCards.map((card, idx) => (
-                        <div key={card.id} className="aspect-[2.5/3.5]">
-                          <ShinyCard index={idx} onClick={() => {
-                            setActiveCardIndex(idx);
-                            if (skillTreeMode) {
-                              setSkillTreeCard(card);
-                            } else if (blacksmithMode) {
-                              setBlacksmithCard(card);
-                            } else {
-                              setSelectedCard(card);
-                            }
-                          }}>
-                            <div className="absolute inset-0 flex flex-col p-3">
-                              <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                              </div>
-                              <div className="flex-1 flex flex-col justify-between">
-                                <div>
-                                  <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                  <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                    card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                    card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                    card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                    card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                    'border-slate-500/50 text-slate-400'
-                                  }`}>
-                                    {card.rarity}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          </ShinyCard>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-2 text-center text-[11px] font-bold uppercase tracking-widest text-white/70">
-                    Black Market Cards
-                  </div>
-                </div>
-              )}
 
               {/* ACTIVE CARD DETAILS */}
-              {!skillTreeMode && (
               <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
                 <AnimatePresence mode="wait">
                   {activeCard &&
@@ -1065,7 +942,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                       <div className="flex items-center gap-3">
                         <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                          {aftermarketMode ? 'Black Market' : (currentCrossGame?.genre || 'adventure')}
+                          {currentCrossGame?.genre || 'adventure'}
                         </Badge>
                         <Badge className={`backdrop-blur-md border ${
                     activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
@@ -1086,8 +963,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     </motion.div>
                 }
                 </AnimatePresence>
-                </div>
-                )}
+              </div>
             </div>
           </motion.div>) : (
 
@@ -1107,156 +983,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             </div>
 
             <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-32">
-
-                {/* Right-side subpage divider and panel (Black Market Cards) */}
-                {aftermarketMode && viewMode === 'classic' && (
-                  <>
-                    {/* Vertical line divider */}
-                    <div className="absolute top-28 bottom-8 right-[460px] w-px bg-white/20 z-30" />
-
-                    {/* Subpage Panel */}
-                    <div
-                      className="absolute top-24 right-8 w-[420px] z-30"
-                      onMouseEnter={() => setIsHoveringAftermarket(true)}
-                      onMouseLeave={() => setIsHoveringAftermarket(false)}
-                    >
-                      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl h-[calc(100vh-12rem)] overflow-hidden flex flex-col">
-                        {/* Header */}
-                        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                          <h3 className="text-white font-bold">Black Market Cards</h3>
-                          <button
-                            onClick={() => setAftermarketMode(false)}
-                            className="text-white/60 hover:text-white text-sm"
-                          >Back</button>
-                        </div>
-
-                        {/* Controls */}
-                        <div className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/15">
-                              All
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <button
-                              onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
-                              className={`px-3 py-1.5 rounded-lg text-xs border ${
-                                skillTreeMode
-                                  ? 'bg-purple-500/30 border-purple-400/50 text-purple-300'
-                                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                              }`}
-                            >
-                              Skill Tree
-                            </button>
-                            <button
-                              onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
-                              className={`px-3 py-1.5 rounded-lg text-xs border ${
-                                blacksmithMode
-                                  ? 'bg-orange-500/30 border-orange-400/50 text-orange-300'
-                                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
-                              }`}
-                            >
-                              Blacksmith
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="hidden">
-                          {Object.keys(storeGroups).length === 0 && Object.keys(blackGroups).length === 0 && (
-                            <div className="h-40 flex items-center justify-center text-white/40 text-sm">
-                              No purchased cards found
-                            </div>
-                          )}
-
-                          {/* Store Market Section */}
-                          {Object.keys(storeGroups).length > 0 && (
-                            <div className="mb-8">
-                              <div className="flex flex-col items-center mb-2">
-                                <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10" />
-                                <div className="mt-2 text-xs text-white/70 font-semibold">Store Market Cards</div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                {Object.values(storeGroups).flat().map((card, idx) => (
-                                  <div key={card.id} className="aspect-[2.5/3.5]">
-                                    <ShinyCard index={idx} onClick={() => {
-                                      if (skillTreeMode) setSkillTreeCard(card);
-                                      else if (blacksmithMode) setBlacksmithCard(card);
-                                      else setSelectedCard(card);
-                                    }}>
-                                      <div className="absolute inset-0 flex flex-col p-3">
-                                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-between">
-                                          <div>
-                                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                              'border-slate-500/50 text-slate-400'
-                                            }`}>
-                                              {card.rarity}
-                                            </Badge>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </ShinyCard>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Black Market Section by Developer */}
-                          {Object.entries(blackGroups).map(([dev, cards]) => (
-                            <div key={dev} className="mb-6">
-                              <div className="flex flex-col items-center mb-3">
-                                <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10" />
-                                <div className="mt-2 text-xs text-white/70 font-semibold">{dev}</div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                {cards.map((card, idx) => (
-                                  <div key={card.id} className="aspect-[2.5/3.5]">
-                                    <ShinyCard index={idx} onClick={() => {
-                                      if (skillTreeMode) setSkillTreeCard(card);
-                                      else if (blacksmithMode) setBlacksmithCard(card);
-                                      else setSelectedCard(card);
-                                    }}>
-                                      <div className="absolute inset-0 flex flex-col p-3">
-                                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-between">
-                                          <div>
-                                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                              'border-slate-500/50 text-slate-400'
-                                            }`}>
-                                              {card.rarity}
-                                            </Badge>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </ShinyCard>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
               
               {/* Main Layout: 2 Columns */}
               <div className="flex gap-8 h-full overflow-hidden">
@@ -1267,10 +993,24 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {/* Header */}
                   <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-black tracking-tighter text-white">
-                      {aftermarketMode ? 'Black Market Cards' : 'Achievements'}
+                      Achievements
                     </h1>
                     
+                    {/* Cross View Toggle - 4 small squares grid icon */}
+                    <motion.button
+                    onClick={() => setViewMode('cross')}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
+                    title="Switch to Cross View">
 
+                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                        <div className="bg-white/80 rounded-[2px]" />
+                      </div>
+                    </motion.button>
 
                     {/* Skill Tree Mode Toggle */}
                     <motion.button
@@ -1289,7 +1029,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                     {/* Blacksmith Mode Toggle */}
                     <motion.button
-                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false); setAftermarketMode(false);}}
+                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
@@ -1300,21 +1040,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
 
                       <Hammer className="w-4 h-4" />
-                    </motion.button>
-
-                    {/* Aftermarket Cards Toggle */}
-                    <motion.button
-                      onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                        aftermarketMode ?
-                        'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' :
-                        'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
-                      }
-                      title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
-                    >
-                      <Tag className="w-4 h-4" />
                     </motion.button>
 
                     {/* Filter Drawer Trigger - New Feature */}
@@ -1442,11 +1167,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Center Content: Achievements Grid (Cards) */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
-                  {(skillTreeMode || aftermarketMode) ? (
-                    <div className="flex-1" />
-                  ) : (
-                    selectedGame ? (
-                      <div>
+                  {selectedGame ?
+                <>
                       {/* Tab Toggle: Cards / Peer Reviews */}
                       <div className="flex items-center gap-2 mb-4">
                         <button
@@ -1504,11 +1226,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                                                    <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
                                                        <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                       {card.isPurchased && !card.isUnlocked && (
+                                                       {card.isPurchased && !card.isUnlocked &&
                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
                                                            <DollarSign className="w-4 h-4 text-white" />
                                                          </div>
-                                                         )}
+                                }
                                                    </div>
                                                    <div className="flex-1 flex flex-col justify-between">
                                                        <div>
@@ -1635,16 +1357,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                           </motion.div>
                     }
                       </AnimatePresence>
-                    </div>) : (
+                    </> :
 
                 <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
                       <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
                       <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
-                      </div>
-                      )
-                      )}
-                      </div>
+                    </div>
+                }
+                </div>
 
               </div>
             </div>
