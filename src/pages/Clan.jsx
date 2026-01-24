@@ -404,19 +404,7 @@ export default function ClanPage() {
                     </div>
                 </div>
                 
-                {/* Announcements Dropdown */}
-                <div className="space-y-1">
-                    <button 
-                        onClick={() => {
-                            // Toggle announcements panel in ClanOverview
-                            const event = new CustomEvent('toggleClanPanel', { detail: 'announcements' });
-                            window.dispatchEvent(event);
-                        }}
-                        className="flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors py-1"
-                    >
-                        <MessageSquare className="w-4 h-4" /> Announcements
-                    </button>
-                </div>
+
             </div>
 
             {/* 3. XMB Horizontal Navigation Axis - Centered top */}
