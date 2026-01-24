@@ -119,6 +119,19 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     const isLeader = myMemberRecord?.role === 'leader';
     const isOfficer = myMemberRecord?.role === 'officer' || isLeader;
 
+    // Nickname & Title editing
+    const [editingMemberId, setEditingMemberId] = useState(null);
+    const [editNickname, setEditNickname] = useState('');
+    const [editTitle, setEditTitle] = useState('');
+
+    const updateMemberMutation = useMutation({
+        mutationFn: ({ id, updates }) => base44.entities.ClanMember.update(id, updates),
+        onSuccess: () => {
+            queryClient.invalidateQueries(['clanMembersList', clan.id]);
+            setEditingMemberId(null);
+        }
+    });
+
     const clanResources = { gold: 14500, gems: 320, influence: clan.reputation || 0 };
 
     // Mock activity feed
@@ -244,12 +257,30 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <p className="text-sm font-bold text-white truncate">
-                                    Agent {member.user_id?.slice(0,6) || 'Unknown'}
-                                </p>
-                                {member.role === 'leader' && <Crown className="w-3.5 h-3.5 text-yellow-400" />}
-                                {member.role === 'officer' && <Star className="w-3.5 h-3.5 text-purple-400" />}
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <p className="text-sm font-bold text-white truncate">
+                                        {member.nickname || `Agent ${member.user_id?.slice(0,6) || 'Unknown'}`}
+                                    </p>
+                                    {member.title && (
+                                        <Badge className="bg-white/10 text-white/70 border-none text-[10px]">
+                                            {member.title}
+                                        </Badge>
+                                    )}
+                                    {member.role === 'leader' && <Crown className="w-3.5 h-3.5 text-yellow-400" />}
+                                    {member.role === 'officer' && <Star className="w-3.5 h-3.5 text-purple-400" />}
+                                </div>
+                                {isOfficer && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-white/40 hover:text-white hover:bg-white/10"
+                                      onClick={() => { setEditingMemberId(member.id); setEditNickname(member.nickname || ''); setEditTitle(member.title || ''); }}
+                                      title="Edit nickname/title"
+                                    >
+                                      <Settings className="w-4 h-4" />
+                                    </Button>
+                                )}
                             </div>
                             <p className="text-[11px] text-white/40 truncate">
                                 {member.currentGame ? (
@@ -260,6 +291,30 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                                     member.status
                                 )}
                             </p>
+                            {isOfficer && editingMemberId === member.id && (
+                                <div className="mt-2 flex items-center gap-2">
+                                    <Input
+                                      value={editNickname}
+                                      onChange={(e) => setEditNickname(e.target.value)}
+                                      placeholder="Nickname"
+                                      className="h-8 bg-white/5 border-white/10 text-white"
+                                    />
+                                    <Input
+                                      value={editTitle}
+                                      onChange={(e) => setEditTitle(e.target.value)}
+                                      placeholder="Title"
+                                      className="h-8 bg-white/5 border-white/10 text-white"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      onClick={() => updateMemberMutation.mutate({ id: member.id, updates: { nickname: editNickname, title: editTitle } })}
+                                      className="h-8 px-3"
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-8 px-3" onClick={() => setEditingMemberId(null)}>Cancel</Button>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 ))}

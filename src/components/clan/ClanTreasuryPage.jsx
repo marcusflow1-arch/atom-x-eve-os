@@ -4,10 +4,12 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { Coins, Gem, Star, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Clock, Users, Trophy, Target } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+import ClanInventoryGrid from './ClanInventoryGrid';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 export default function ClanTreasuryPage({ clan }) {
+    const [tab, setTab] = React.useState('overview');
     // Mock treasury data
     const clanResources = { 
         gold: 14500, 
@@ -44,6 +46,21 @@ export default function ClanTreasuryPage({ clan }) {
 
     return (
         <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-6">
+            <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setTab('overview')}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${tab === 'overview' ? 'bg-white/15 border-white/20 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}
+                >
+                  Overview
+                </button>
+                <button
+                  onClick={() => setTab('inventory')}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${tab === 'inventory' ? 'bg-white/15 border-white/20 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}
+                >
+                  Inventory
+                </button>
+            </div>
+            {tab === 'overview' && (<>
             {/* Resource Cards */}
             <div className="grid grid-cols-3 gap-4">
                 <LiquidGlassCard className="p-6">
@@ -167,6 +184,10 @@ export default function ClanTreasuryPage({ clan }) {
                     </div>
                 </LiquidGlassCard>
             </div>
+            </>)}}
+            {tab === 'inventory' && (
+              <ClanInventoryGrid />
+            )}
         </div>
     );
 }
