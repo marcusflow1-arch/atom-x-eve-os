@@ -564,7 +564,45 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     return ['All', ...Array.from(g)];
   }, [allGames]);
 
-  // Keyboard and wheel navigation for cross interface
+
+
+  // Helper to generate cards for a game
+  const generateCardsForGame = useCallback((game) => {
+    if (!game) return [];
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: `card-${game.id}-${i}`,
+      title: `${game.title} Card ${i + 1}`,
+      series: game.title,
+      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
+      image: game.cover_image || game.cover,
+      description: `A collectible trading card from ${game.title}.`,
+      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
+    }));
+  }, []);
+
+  // Current game list (inject Black Market Store tile when aftermarketMode)
+  const displayGames = useMemo(() => (
+    aftermarketMode ? [{ id: 'aftermarket-store', title: 'Black Market Store', isAftermarket: true }, ...filteredGames] : filteredGames
+  ), [aftermarketMode, filteredGames]);
+
+  // Current game and cards for cross view
+  const currentCrossGame = displayGames[activeGameIndex];
+  const currentCrossCards = useMemo(
+    () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
+    [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
+  );
+  useEffect(() => {
+  if (aftermarketMode) {
+    setAftermarketAll(true);
+    setActiveGameIndex(0); // snap to the first (Black Market Store) tile
+    setActiveCardIndex(0);
+  } else {
+    setAftermarketAll(false);
+  }
+}, [aftermarketMode]);
+  const activeCard = currentCrossCards[activeCardIndex];
+
+  // Keyboard and wheel navigation for cross interface (moved after displayGames init)
   useEffect(() => {
     if (viewMode !== 'cross' || isLoading || displayGames.length === 0) return;
 
@@ -657,43 +695,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards]);
-
-  // Helper to generate cards for a game
-  const generateCardsForGame = useCallback((game) => {
-    if (!game) return [];
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: `card-${game.id}-${i}`,
-      title: `${game.title} Card ${i + 1}`,
-      series: game.title,
-      rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
-      image: game.cover_image || game.cover,
-      description: `A collectible trading card from ${game.title}.`,
-      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
-    }));
-  }, []);
-
-  // Current game list (inject Black Market Store tile when aftermarketMode)
-  const displayGames = useMemo(() => (
-    aftermarketMode ? [{ id: 'aftermarket-store', title: 'Black Market Store', isAftermarket: true }, ...filteredGames] : filteredGames
-  ), [aftermarketMode, filteredGames]);
-
-  // Current game and cards for cross view
-  const currentCrossGame = displayGames[activeGameIndex];
-  const currentCrossCards = useMemo(
-    () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
-    [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
-  );
-  useEffect(() => {
-  if (aftermarketMode) {
-    setAftermarketAll(true);
-    setActiveGameIndex(0); // snap to the first (Black Market Store) tile
-    setActiveCardIndex(0);
-  } else {
-    setAftermarketAll(false);
-  }
-}, [aftermarketMode]);
-  const activeCard = currentCrossCards[activeCardIndex];
+  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards, generateCardsForGame]);
 
   // Constants for positioning
   const ITEM_HEIGHT = 80;
