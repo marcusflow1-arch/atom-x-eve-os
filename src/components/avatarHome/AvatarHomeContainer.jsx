@@ -22,18 +22,26 @@ export default function AvatarHomeContainer({ mode, avatarUserId, entryContext }
       try {
         const me = await base44.auth.me();
         const isSelf = mode === 'self' || !avatarUserId || avatarUserId === me?.id;
+        const targetId = isSelf ? me?.id : avatarUserId;
 
-        // Basic header
-        const headerName = isSelf ? (me?.full_name || me?.email?.split('@')[0] || 'You') : 'Friend';
+        // Try unified AvatarHomeState first
+        const records = await base44.entities.AvatarHomeState.filter({ avatarId: targetId });
+        const home = records?.[0];
 
+        const headerName = isSelf ? (me?.full_name || me?.email?.split('@')[0] || 'You') : (home?.name || 'Friend');
+
+        // Fallback content
         const ach = await base44.entities.Achievement.list('-created_date', 6);
         const games = await base44.entities.Game.list('-created_date', 6);
 
         setState(s => ({
           ...s,
           name: headerName,
-          achievements: ach || [],
-          games: games || []
+          level: home?.level ?? s.level,
+          mood: home?.mood ?? s.mood,
+          catchphrase: home?.catchphrase ?? s.catchphrase,
+          achievements: (home?.achievements && home.achievements.length > 0) ? home.achievements : (ach || []),
+          games: (home?.games && home.games.length > 0) ? home.games : (games || []),
         }));
       } catch (e) {
         console.error('AvatarHomeContainer load failed', e);

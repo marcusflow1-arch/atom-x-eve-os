@@ -80,6 +80,10 @@ export default function AvatarHome() {
     load();
   }, [user?.id]);
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetUserId = urlParams.get('userId');
+  const isSelf = !targetUserId || targetUserId === user?.id;
+
   return (
     <div className="min-h-screen w-full text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Ambient blobs */}
