@@ -407,24 +407,8 @@ export default function CommunityPage() {
                             {/* Center: Feed (7/12) */}
                             <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden">
                                 
-                                {/* Game Header Area (Sticky or static at top of column) */}
-                                <div className="mb-6 space-y-6">
-                                    {/* 1. Game Title & Icon */}
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg">
-                                            <Gamepad2 className="w-6 h-6 text-cyan-400" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-black text-white tracking-tight">{activeGame.title}</h2>
-                                            <div className="flex items-center gap-2 text-xs text-white/40">
-                                                <Badge variant="outline" className="border-white/10 text-white/50 h-5 px-1.5">{activeGame.genre}</Badge>
-                                                <span>•</span>
-                                                <span>Official Game Forum</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 2. Controls Toolbar: [Back] [Label] [Search] ... [New Post] [Sort] */}
+                                {/* Controls Toolbar: Back, Search, New Post, Sort */}
+                                <div className="mb-6">
                                     <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                                         <Button 
                                             variant="ghost" 
@@ -455,7 +439,7 @@ export default function CommunityPage() {
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                                         </div>
 
-                                        <div className="flex-1" /> {/* Spacer */}
+                                        <div className="flex-1" />
 
                                         <div className="flex items-center gap-3">
                                             <Button 
