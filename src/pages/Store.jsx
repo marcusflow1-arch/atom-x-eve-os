@@ -1266,7 +1266,7 @@ export default function Store() {
                                                         </motion.button>
                                                     );
                                                 })}
-                                            </div>
+                                            </motion.div>
                                         </div>
                                     </div>
 
