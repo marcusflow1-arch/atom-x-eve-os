@@ -1425,9 +1425,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 {/* Center Content: Achievements Grid (Cards) */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
                   {(skillTreeMode || aftermarketMode) ? (
-                  <div className="flex-1" />
-                ) : (selectedGame ?
-                <>
+                    <div className="flex-1" />
+                  ) : (
+                    selectedGame ? (
+                      <>
                       {/* Tab Toggle: Cards / Peer Reviews */}
                       <div className="flex items-center gap-2 mb-4">
                         <button
@@ -1622,9 +1623,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
                       <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
                       <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
-                    </div>
-                )}
-                </div>
+                      </div>
+                      )
+                      )}
+                      </div>
 
               </div>
             </div>
