@@ -1236,23 +1236,16 @@ export default function Store() {
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
                                     <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                        {/* Store label with arrow and top line */}
-                                        <div className="mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-px flex-1 bg-white/10" />
-                                                <div className="flex items-center gap-2 text-white/60 text-sm font-semibold uppercase tracking-wider">
-                                                    <Gamepad2 className="w-4 h-4" />
-                                                    <span>Store</span>
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </div>
-                                            </div>
+                                        {/* Store label with arrow - left aligned */}
+                                        <div className="mb-3 flex items-center gap-2">
+                                            <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
+                                            <ChevronRight className="w-4 h-4 text-white/60" />
                                         </div>
 
                                         {/* Vertical genre list with subtle out-dent on scroll */}
                                         <div className="relative">
-                                            {/* Vertical divider between genres and cards */}
-                                            <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />
-                                            <div className="flex flex-col gap-2 pr-3">
+
+                                            <div className="flex flex-col gap-2 pl-6 pr-3">
                                                 {genreData.map((genre, idx) => {
                                                     const Icon = genre.icon;
                                                     const isActive = idx === activeGenreIndex;
