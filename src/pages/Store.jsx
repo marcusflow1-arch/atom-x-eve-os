@@ -393,6 +393,22 @@ export default function Store() {
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
 
+    // Cross-scroll: wheel on left genre menu changes active genre
+    const wheelTsRef = useRef(0);
+    const handleGenreWheel = (e) => {
+        if (!genreData || genreData.length === 0) return;
+        e.preventDefault();
+        const now = Date.now();
+        if (now - wheelTsRef.current < 180) return; // throttle
+        wheelTsRef.current = now;
+        if (e.deltaY < 0) {
+            setActiveGenreIndex(prev => Math.max(0, prev - 1));
+        } else {
+            setActiveGenreIndex(prev => Math.min(genreData.length - 1, prev + 1));
+        }
+        setActiveSubCategoryIndex(0);
+    };
+
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
         setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
@@ -1235,7 +1251,7 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
-                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef} onWheel={handleGenreWheel}>
                                         {/* Store label with arrow - left aligned + active genre pill on scroll up */}
                                         <div className="mb-3 flex items-center gap-2">
                                             <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
@@ -1251,6 +1267,8 @@ export default function Store() {
                                                     >
                                                         <currentNavGenre.icon className="w-4 h-4 text-cyan-400" />
                                                         <span className="text-sm uppercase tracking-wider text-cyan-400 font-black">{currentNavGenre.label}</span>
+                                                        <span className="text-white/30 text-xs">•</span>
+                                                        <span className="text-[11px] uppercase tracking-wider text-white/60">{activeSubCategory}</span>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
