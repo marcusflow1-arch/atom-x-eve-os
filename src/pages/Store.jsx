@@ -540,11 +540,18 @@ export default function Store() {
         }
     }, [activeGenreIndex, viewMode]);
 
-    // Header fade on scroll effect
+    // Header fade on scroll effect + detect scroll direction for left genre nudge
     useEffect(() => {
-        const handleScroll = () => {
+        const handleScroll = (e) => {
             setIsScrolling(true);
             setHeaderOpacity(0.3);
+
+            const el = contentScrollRef.current;
+            if (el) {
+                const st = el.scrollTop;
+                setScrollDir(st > lastScrollTopRef.current ? 'down' : 'up');
+                lastScrollTopRef.current = st <= 0 ? 0 : st;
+            }
             
             if (scrollTimeoutRef.current) {
                 clearTimeout(scrollTimeoutRef.current);
@@ -556,9 +563,10 @@ export default function Store() {
             }, 150);
         };
 
-        window.addEventListener('scroll', handleScroll, true);
+        const el = contentScrollRef.current || window;
+        el.addEventListener('scroll', handleScroll, true);
         return () => {
-            window.removeEventListener('scroll', handleScroll, true);
+            el.removeEventListener('scroll', handleScroll, true);
             if (scrollTimeoutRef.current) {
                 clearTimeout(scrollTimeoutRef.current);
             }
