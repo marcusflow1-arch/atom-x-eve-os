@@ -218,11 +218,11 @@ export default function ClanTreasuryPage({ clan }) {
             </>)}
             {tab === 'inventory' && (
               <div className="h-full">
-                <div className="grid grid-cols-12 gap-4 h-full">
-                  <div className="col-span-12 lg:col-span-3 h-full">
+                <div className="grid grid-cols-12 gap-4 h-full min-h-0">
+                  <div className="col-span-12 lg:col-span-3 h-full min-h-0">
                     <ProFilterSidebar filters={filters} setFilters={setFilters} />
                   </div>
-                  <div className="col-span-12 lg:col-span-9 h-full">
+                  <div className="col-span-12 lg:col-span-9 h-full min-h-0 overflow-hidden">
                     <VirtualizedTradeGrid items={filteredClanItems} onSelectItem={() => {}} />
                   </div>
                 </div>
