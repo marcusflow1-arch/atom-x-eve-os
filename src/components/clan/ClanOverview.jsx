@@ -363,6 +363,17 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
             </AnimatePresence>
 
             {/* MAIN CONTENT AREA - Chat, Roster, Activity */}
+            {/* Inventory Toolbar */}
+            <div className="px-4 pt-3 flex justify-end">
+                <Button
+                    size="sm"
+                    className="bg-white/10 hover:bg-white/20 border border-white/10 h-8 px-3 text-xs"
+                    onClick={() => setInventoryOpen(true)}
+                    title="Open Clan Inventory"
+                >
+                    <Grid3X3 className="w-4 h-4 mr-1" /> Inventory
+                </Button>
+            </div>
             <div className="flex-1 overflow-hidden px-4 pb-4 pt-2 flex gap-4">
                 {/* LEFT PANEL */}
                 <div className={`h-full transition-all duration-300 ${layoutSwapped ? 'w-[55%]' : 'w-[25%]'}`}>
