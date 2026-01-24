@@ -1428,7 +1428,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     <div className="flex-1" />
                   ) : (
                     selectedGame ? (
-                      <>
+                      <div>
                       {/* Tab Toggle: Cards / Peer Reviews */}
                       <div className="flex items-center gap-2 mb-4">
                         <button
@@ -1617,7 +1617,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                           </motion.div>
                     }
                       </AnimatePresence>
-                    </>) : (
+                    </div>) : (
 
                 <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
