@@ -447,13 +447,7 @@ export default function Store() {
         return () => el.removeEventListener('scroll', onScroll);
     }, [genreData]);
 
-    // Ensure keyboard/selection moves keep the focused genre centered
-    useEffect(() => {
-        const node = leftGenreRefs.current[activeGenreIndex];
-        if (node && genreScrollRef.current) {
-            node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, [activeGenreIndex]);
+
 
     // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
@@ -577,6 +571,9 @@ export default function Store() {
     useEffect(() => {
         if (viewMode === 'classic' && genreRefs.current[activeGenreIndex]) {
             genreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (viewMode === 'cross' && leftGenreRefs.current[activeGenreIndex]) {
+            leftGenreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [activeGenreIndex, viewMode]);
 
