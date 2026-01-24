@@ -22,6 +22,23 @@ Deno.serve(async (req) => {
             });
         }
 
+        // --- RESOLVE ENTRY (determine where to send user) ---
+        if (action === 'resolve_entry') {
+            // Check if the user is a member of any clan
+            const myMemberships = await base44.entities.ClanMember.filter({ user_id: user.id });
+            if (!myMemberships || myMemberships.length === 0) {
+                return new Response(JSON.stringify({ state: 'intro' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            // Prefer the most recently updated membership if multiple
+            let selected = myMemberships[0];
+            try {
+                selected = myMemberships.sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date))[0];
+            } catch (_) {}
+
+            return new Response(JSON.stringify({ state: 'clan', clanId: selected.clan_id }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         // --- CREATE CLAN ---
         if (action === 'create_clan') {
             const { name, description, icon, banner, gameTags, isPrivate } = data;
