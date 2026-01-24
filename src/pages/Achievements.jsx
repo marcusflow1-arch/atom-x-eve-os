@@ -376,6 +376,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [userReactions, setUserReactions] = useState({});
   const [showReviewPanel, setShowReviewPanel] = useState(false);
 
+  // Purchased counts per game (for Black Market mode indicators)
+  const [purchasedCountsByGame, setPurchasedCountsByGame] = useState({});
+  const purchasedTotalCount = useMemo(() => Object.values(purchasedCountsByGame || {}).reduce((a, b) => a + b, 0), [purchasedCountsByGame]);
+
   useEffect(() => {
     const fetchUserCards = async () => {
       if (!user || !selectedGame) return;
@@ -413,40 +417,42 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     fetchReviews();
   }, [selectedGame]);
 
-  // Fetch aftermarket (Black Market) cards (all or per selected game)
+  // Fetch aftermarket (Black Market) inventory: only the user's purchased marketplace cards
   useEffect(() => {
     if (!aftermarketMode) {
       setAftermarketCards([]);
       return;
     }
-    const fetchListings = async () => {
+    const fetchPurchasedInventory = async () => {
       try {
-        let listings = [];
+        if (!user) { setAftermarketCards([]); return; }
+        let purchased = [];
         if (aftermarketAll) {
-          listings = await base44.entities.TradeOffer.filter({ status: 'active' }, '-created_date');
+          purchased = await base44.entities.UserCard.filter({ user_id: user.id, acquisition_method: 'purchased' }, '-created_date');
         } else if (selectedGame) {
-          listings = await base44.entities.TradeOffer.filter({ game_name: selectedGame.title, status: 'active' }, '-created_date');
+          purchased = await base44.entities.UserCard.filter({ user_id: user.id, game_name: selectedGame.title, acquisition_method: 'purchased' }, '-created_date');
         } else {
           setAftermarketCards([]);
           return;
         }
-        const mapped = listings.map((l) => ({
-          id: l.id,
-          title: l.item_name,
-          series: l.game_name,
-          rarity: l.item_rarity || 'Common',
-          image: l.item_image || undefined,
-          description: l.item_description || 'Aftermarket card',
-          stats: { power: l.item_power, level: l.item_level }
+        const mapped = (purchased || []).map((c) => ({
+          id: c.id,
+          title: c.card_name || c.title || 'Card',
+          series: c.game_name,
+          rarity: c.rarity || c.item_rarity || 'Common',
+          image: c.image_url || undefined,
+          description: c.description || c.item_description || 'Purchased card',
+          stats: c.stats || { power: c.item_power, level: c.item_level },
+          isPurchased: true
         }));
         setAftermarketCards(mapped);
       } catch (e) {
-        console.error('Failed to fetch aftermarket cards:', e);
+        console.error('Failed to fetch purchased inventory:', e);
         setAftermarketCards([]);
       }
     };
-    fetchListings();
-  }, [aftermarketMode, aftermarketAll, selectedGame]);
+    fetchPurchasedInventory();
+  }, [aftermarketMode, aftermarketAll, selectedGame, user]);
 
   // Fetch user reactions
   useEffect(() => {
@@ -836,6 +842,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   <DollarSign className="w-5 h-5" />
                   <span className="text-[11px] font-semibold uppercase tracking-wider">Black Market Cards</span>
                 </button>
+                {aftermarketMode && (
+                  <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
+                    {currentCrossCards.length > 0 ? `${currentCrossCards.length} cards` : 'Empty cards'}
+                  </Badge>
+                )}>
 
                 {/* Skill Tree Mode Toggle */}
                 <button
@@ -898,7 +909,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       className="flex flex-col items-center gap-2 cursor-pointer w-32">
 
                         <div className={`
-                          w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300
+                          w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300 relative
                           ${isActive ?
                       'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40' :
                       'border border-white/10'}
@@ -914,7 +925,13 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                               alt={game.title}
                               className="w-full h-full object-cover" />
                           )}
-
+                          {aftermarketMode && (
+                            <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[9px] border backdrop-blur-md ${((game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0)) > 0) ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' : 'bg-white/10 text-white/60 border-white/20'}`}>
+                              {((game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0)) > 0)
+                                ? (game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0))
+                                : 'Empty'}
+                            </div>
+                          )}
                         </div>
                         <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
                           {game.title}
