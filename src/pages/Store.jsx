@@ -1226,11 +1226,47 @@ export default function Store() {
 
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
-                                    
+                                    {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
+                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                        {/* Store label with arrow and top line */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-px flex-1 bg-white/10" />
+                                                <div className="flex items-center gap-2 text-white/60 text-sm font-semibold uppercase tracking-wider">
+                                                    <Gamepad2 className="w-4 h-4" />
+                                                    <span>Store</span>
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                        </div>
 
+                                        {/* Vertical genre list with subtle out-dent on scroll */}
+                                        <div className="relative">
+                                            {/* Vertical divider between genres and cards */}
+                                            <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />
+                                            <div className="flex flex-col gap-2 pr-3">
+                                                {genreData.map((genre, idx) => {
+                                                    const Icon = genre.icon;
+                                                    const isActive = idx === activeGenreIndex;
+                                                    return (
+                                                        <motion.button
+                                                            key={genre.id}
+                                                            onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
+                                                            className="group flex items-center gap-2 text-left py-2 pl-0 pr-2"
+                                                            animate={{ x: isActive ? 6 : 0 }}
+                                                            whileHover={{ x: 6 }}
+                                                        >
+                                                            <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
+                                                            <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
+                                                        </motion.button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {/* 2. RIGHT CONTENT AREA (Sub-Cats + Games) */}
-                                    <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-14">
+                                    <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-14" ref={contentScrollRef}>
                                         
                                         {/* Header / Tools Section */}
                                         <div className="flex flex-col gap-6 mb-8">
