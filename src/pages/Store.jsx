@@ -1134,7 +1134,7 @@ export default function Store() {
                                                     key={game.id}
                                                     whileHover={{ scale: 1.02, y: -5 }}
                                                     onClick={() => handleNavigateToGame(game.id)}
-                                                    className="w-[285px] flex-shrink-0 aspect-video rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
+                                                    className="w-[160px] flex-shrink-0 aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
                                                 >
                                                     <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90" />
@@ -1174,7 +1174,7 @@ export default function Store() {
                                                     <span className="text-white/20 text-sm ml-auto">{genre.items.length} titles</span>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
+                                                <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
                                                     {genre.items.map((game, itemIdx) => {
                                                         const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
                                                         return (
@@ -1405,7 +1405,7 @@ export default function Store() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3 }}
-                                            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
+                                            className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4"
                                         >
                                             {displayedGames.map((game, idx) => (
                                                 <motion.div
