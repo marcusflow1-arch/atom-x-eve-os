@@ -615,27 +615,27 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
 
-      // Up/Down: Change game
-      if (key === 'arrowup' || key === 'w') {
+      // Left/Right: Change game (horizontal now)
+      if (key === 'arrowleft' || key === 'a') {
         e.preventDefault();
         if (activeGameIndex > 0) {
           setActiveGameIndex((prev) => prev - 1);
           setActiveCardIndex(0);
         }
-      } else if (key === 'arrowdown' || key === 's') {
+      } else if (key === 'arrowright' || key === 'd') {
         e.preventDefault();
         if (activeGameIndex < displayGames.length - 1) {
           setActiveGameIndex((prev) => prev + 1);
           setActiveCardIndex(0);
         }
       }
-      // Left/Right: Change card
-      else if (key === 'arrowleft' || key === 'a') {
+      // Up/Down: Change card (vertical list)
+      else if (key === 'arrowup' || key === 'w') {
         e.preventDefault();
         if (activeCardIndex > 0) {
           setActiveCardIndex((prev) => prev - 1);
         }
-      } else if (key === 'arrowright' || key === 'd') {
+      } else if (key === 'arrowdown' || key === 's') {
         e.preventDefault();
         const currentGame = displayGames[activeGameIndex];
         const cards = aftermarketMode ? currentCrossCards : generateCardsForGame(currentGame);
@@ -661,30 +661,30 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       const now = Date.now();
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
 
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
-        // Horizontal (Cards)
+      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) || !e.shiftKey) {
+        // Vertical (Cards)
         const currentGame = displayGames[activeGameIndex];
         const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
-        if (e.deltaX > 0 || (e.shiftKey && e.deltaY > 0)) {
+        if (e.deltaY > 0) {
           if (activeCardIndex < totalCards - 1) {
             setActiveCardIndex((prev) => prev + 1);
             lastWheelTime = now;
           }
-        } else if (e.deltaX < 0 || (e.shiftKey && e.deltaY < 0)) {
+        } else if (e.deltaY < 0) {
           if (activeCardIndex > 0) {
             setActiveCardIndex((prev) => prev - 1);
             lastWheelTime = now;
           }
         }
       } else {
-        // Vertical (Games)
-        if (e.deltaY > 0) {
+        // Horizontal (Games) when holding Shift (or horizontal wheel)
+        if (e.deltaX > 0) {
           if (activeGameIndex < displayGames.length - 1) {
             setActiveGameIndex((prev) => prev + 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
           }
-        } else if (e.deltaY < 0) {
+        } else if (e.deltaX < 0) {
           if (activeGameIndex > 0) {
             setActiveGameIndex((prev) => prev - 1);
             setActiveCardIndex(0);
@@ -942,14 +942,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 </motion.div>
               </div>
 
-              {/* HORIZONTAL AXIS (Cards) */}
-              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
-                <motion.div
-                className="flex items-center gap-8 pl-64 pointer-events-auto"
-                animate={{
-                  x: -activeCardIndex * (200 + 32)
-                }}
-                transition={{ type: "spring", stiffness: 250, damping: 25 }}>
+              {/* CARDS GRID (Vertical scroll) */}
+              <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-[48vh] z-10 flex items-center pointer-events-none">
+                <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
 
                   {currentCrossCards.map((card, idx) => {
                   const isActive = idx === activeCardIndex;
@@ -974,7 +970,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                         y: isActive ? 0 : 20
                       }}
                       className={`
-                          w-[200px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
+                          w-[180px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
                           border transition-all duration-300 shadow-2xl
                           ${isActive ?
                       'border-white/40 shadow-blue-500/20' :
@@ -1014,7 +1010,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       </motion.div>);
 
                 })}
-                </motion.div>
+                  </div>
+                </div>
               </div>
 
               {/* ACTIVE CARD DETAILS */}
