@@ -1222,7 +1222,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                          </div>
                          <div className="flex-1 text-left overflow-hidden">
                            <h3 className={`font-bold text-sm truncate ${aftermarketAll ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>Black Market Cards</h3>
-                           <p className="text-xs text-slate-500 truncate">All aftermarket listings</p>
+                           <p className="text-xs text-slate-500 truncate">All purchased marketplace cards</p>
+                         </div>
+                         <div className="ml-auto text-right">
+                           <span className="text-[11px] text-white/60">{purchasedTotalCount > 0 ? `${purchasedTotalCount} owned` : 'Empty cards'}</span>
                          </div>
                        </button>
                      )}
@@ -1259,6 +1262,11 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                             </h3>
                             <p className="text-xs text-slate-500 truncate">{game.genre}</p>
                           </div>
+                          {aftermarketMode && (
+                            <div className="ml-auto text-right">
+                              <span className="text-[11px] text-white/60">{(purchasedCountsByGame[game.title] || 0) > 0 ? `${purchasedCountsByGame[game.title]} owned` : 'Empty cards'}</span>
+                            </div>
+                          )}
 
                           {selectedGame?.id === game.id &&
                       <div className="w-1 h-8 bg-blue-500 rounded-full" />
