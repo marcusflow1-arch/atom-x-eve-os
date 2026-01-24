@@ -436,6 +436,7 @@ export default function Store() {
         if (!(isGenreHovering || genrePanelFocused)) return;
         const key = e.key.toLowerCase();
         if (['w','a','s','d'].includes(key)) e.preventDefault();
+        if (!genreData || genreData.length === 0) return;
         if (key === 'w' || key === 'a') {
           setActiveGenreIndex(prev => Math.max(0, prev - 1));
           setActiveSubCategoryIndex(0);
@@ -446,7 +447,7 @@ export default function Store() {
       };
       window.addEventListener('keydown', onKey);
       return () => window.removeEventListener('keydown', onKey);
-    }, [isGenreHovering, genrePanelFocused, genreData.length]);
+    }, [isGenreHovering, genrePanelFocused]);
 
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
