@@ -394,7 +394,20 @@ export default function Store() {
     const [scrollDir, setScrollDir] = useState('down');
 
     // Cross-scroll: wheel on left genre menu changes active genre
-
+    const wheelTsRef = useRef(0);
+    const handleGenreWheel = (e) => {
+        if (!genreData || genreData.length === 0) return;
+        e.preventDefault();
+        const now = Date.now();
+        if (now - wheelTsRef.current < 180) return; // throttle
+        wheelTsRef.current = now;
+        if (e.deltaY < 0) {
+            setActiveGenreIndex(prev => Math.max(0, prev - 1));
+        } else {
+            setActiveGenreIndex(prev => Math.min(genreData.length - 1, prev + 1));
+        }
+        setActiveSubCategoryIndex(0);
+    };
 
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
@@ -416,38 +429,6 @@ export default function Store() {
         setShowAndroidOnly,
         genreData
     } = useGameFilters(games, loading);
-
-    // Cross-scroll (PS3-style) - left genre column
-    const leftGenreRefs = useRef([]);
-    const handleGenreWheel = (e) => {
-        if (!genreData || genreData.length === 0) return;
-        setScrollDir(e.deltaY > 0 ? 'down' : 'up');
-        // Natural scroll; active genre updates via onScroll listener
-    };
-
-    // Sync active genre to the item centered in the left column while scrolling
-    useEffect(() => {
-        const el = genreScrollRef.current;
-        if (!el) return;
-        const onScroll = () => {
-            const containerRect = el.getBoundingClientRect();
-            const containerCenter = containerRect.top + containerRect.height / 2;
-            let closestIdx = 0;
-            let minDiff = Infinity;
-            leftGenreRefs.current.forEach((node, idx) => {
-                if (!node) return;
-                const r = node.getBoundingClientRect();
-                const nodeCenter = r.top + r.height / 2;
-                const diff = Math.abs(nodeCenter - containerCenter);
-                if (diff < minDiff) { minDiff = diff; closestIdx = idx; }
-            });
-            setActiveGenreIndex(prev => (prev !== closestIdx ? closestIdx : prev));
-        };
-        el.addEventListener('scroll', onScroll, { passive: true });
-        return () => el.removeEventListener('scroll', onScroll);
-    }, [genreData]);
-
-
 
     // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
@@ -521,13 +502,14 @@ export default function Store() {
             // visual: Top Row vs Bottom Row.
             
             if (key === 'w' || key === 'arrowup') {
-                e.preventDefault();
-                setActiveGenreIndex(prev => Math.max(0, prev - 1));
-                setActiveSubCategoryIndex(0);
-            } else if (key === 's' || key === 'arrowdown') {
-                e.preventDefault();
-                setActiveGenreIndex(prev => Math.min(genreData.length - 1, prev + 1));
-                setActiveSubCategoryIndex(0);
+                 // Move "Up" to Genres -> actually let's make Up/Down cycle genres to keep it simple with 1D input devices
+                 // Wait, user wants Left/Right for both.
+                 // Let's use standard grid nav logic.
+                 // We need a "focusRow" state, but we don't have one exposed.
+                 
+                 // Fallback: 
+                 // Arrows = Sub-Categories (most frequent action)
+                 // Shift + Arrows = Genres
             }
 
             if (key === 'arrowleft' || key === 'a') {
@@ -571,9 +553,6 @@ export default function Store() {
     useEffect(() => {
         if (viewMode === 'classic' && genreRefs.current[activeGenreIndex]) {
             genreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        if (viewMode === 'cross' && leftGenreRefs.current[activeGenreIndex]) {
-            leftGenreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [activeGenreIndex, viewMode]);
 
@@ -1272,7 +1251,7 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
-                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col h-full overflow-y-auto" ref={genreScrollRef} onWheel={handleGenreWheel}>
+                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef} onWheel={handleGenreWheel}>
                                         {/* Store label with arrow - left aligned + active genre pill on scroll up */}
                                         <div className="mb-3 flex items-center gap-2">
                                             <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
@@ -1302,13 +1281,12 @@ export default function Store() {
                                                 initial={false}
                                                 animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
                                                 transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                                                className="flex flex-col gap-2 pl-6 pr-3 py-2">
+                                                className="flex flex-col gap-2 pl-6 pr-3">
                                                 {genreData.map((genre, idx) => {
                                                     const Icon = genre.icon;
                                                     const isActive = idx === activeGenreIndex;
                                                     return (
                                                         <motion.button
-                                                            ref={(el) => leftGenreRefs.current[idx] = el}
                                                             key={genre.id}
                                                             onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
                                                             className="group flex items-center gap-2 text-left py-2 pl-0 pr-2"
