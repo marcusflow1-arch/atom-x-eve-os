@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, Mic, Volume2, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
-  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
+  ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer, Tag,
   MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
   Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
 'lucide-react';
@@ -217,6 +217,10 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Blacksmith Mode toggle
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
+
+  // Aftermarket Mode
+  const [aftermarketMode, setAftermarketMode] = useState(false);
+  const [isHoveringAftermarket, setIsHoveringAftermarket] = useState(false);
 
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
@@ -575,6 +579,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     const handleWheel = (e) => {
       const now = Date.now();
+      if (aftermarketMode && isHoveringAftermarket) return;
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
 
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey) {
@@ -617,7 +622,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading]);
+  }, [viewMode, activeGameIndex, activeCardIndex, filteredGames, isLoading, aftermarketMode, isHoveringAftermarket]);
 
   // Helper to generate cards for a game
   const generateCardsForGame = useCallback((game) => {
@@ -765,19 +770,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {currentCrossGame?.title || 'Select a Game'}
                 </span>
                 
-                {/* Grid View Toggle - 4 small squares */}
-                <button
-                onClick={() => setViewMode('classic')}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 transition-all"
-                title="Switch to Grid View">
 
-                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                    <div className="bg-white/60 hover:bg-white rounded-[2px]" />
-                  </div>
-                </button>
 
                 {/* Skill Tree Mode Toggle */}
                 <button
@@ -794,7 +787,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Blacksmith Mode Toggle */}
                 <button
-                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false); setAftermarketMode(false);}}
                 className={`p-2 rounded-lg border transition-all ${
                 blacksmithMode ?
                 'bg-orange-500/30 border-orange-400/50 text-orange-300' :
@@ -803,6 +796,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
 
                   <Hammer className="w-5 h-5" />
+                </button>
+
+                {/* Aftermarket Cards Toggle */}
+                <button
+                  onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
+                  className={`p-2 rounded-lg border transition-all ${aftermarketMode ? 'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`}
+                  title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
+                >
+                  <Tag className="w-5 h-5" />
                 </button>
               </div>
 
@@ -854,6 +856,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               </div>
 
               {/* HORIZONTAL AXIS (Cards) */}
+              {!aftermarketMode && (
               <div className="absolute left-0 right-0 top-[40vh] -translate-y-1/2 h-80 z-10 flex items-center pointer-events-none">
                 <motion.div
                 className="flex items-center gap-8 pl-64 pointer-events-auto"
@@ -927,6 +930,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 })}
                 </motion.div>
               </div>
+              )}
 
               {/* ACTIVE CARD DETAILS */}
               <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
@@ -996,21 +1000,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       Achievements
                     </h1>
                     
-                    {/* Cross View Toggle - 4 small squares grid icon */}
-                    <motion.button
-                    onClick={() => setViewMode('cross')}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                    title="Switch to Cross View">
 
-                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                      </div>
-                    </motion.button>
 
                     {/* Skill Tree Mode Toggle */}
                     <motion.button
@@ -1029,7 +1019,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                     {/* Blacksmith Mode Toggle */}
                     <motion.button
-                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false); setAftermarketMode(false);}}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
@@ -1040,6 +1030,21 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                     title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
 
                       <Hammer className="w-4 h-4" />
+                    </motion.button>
+
+                    {/* Aftermarket Cards Toggle */}
+                    <motion.button
+                      onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                        aftermarketMode ?
+                        'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' :
+                        'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
+                      }
+                      title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
+                    >
+                      <Tag className="w-4 h-4" />
                     </motion.button>
 
                     {/* Filter Drawer Trigger - New Feature */}
