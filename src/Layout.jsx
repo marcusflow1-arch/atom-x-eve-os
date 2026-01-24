@@ -19,10 +19,23 @@ import DevTools from './components/dev/DevTools';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
-  * {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+        :root {
+          --glass-bg: rgba(255, 255, 255, 0.06);
+          --glass-bg-strong: rgba(255, 255, 255, 0.10);
+          --glass-border: rgba(255, 255, 255, 0.10);
+          --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+          --glass-blur: 16px;
+          --ink-900: #0f1419;
+          --ink-800: #1a1f2e;
+          --ink-700: #0d1117;
+          --text-primary: #ffffff;
+          --text-secondary: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
   
   *::-webkit-scrollbar {
     display: none;
