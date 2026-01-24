@@ -539,27 +539,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     return cards;
   }, [selectedGame, localAchievements, userCards, user]);
 
-  // Group cards by developer/company (fallback to series/game name)
-  const cardsByDev = useMemo(() => {
-    const groups = {};
-    const source = userAllCards && userAllCards.length > 0
-      ? userAllCards.map((c, i) => ({
-          id: c.id || `usercard-${i}`,
-          title: c.card_name || c.title || 'Card',
-          series: c.game_name || c.series || 'Unknown Studio',
-          rarity: c.rarity || 'Rare',
-          image: c.image || selectedGame?.cover_image || selectedGame?.cover,
-        }))
-      : currentCrossCards;
 
-    source.forEach((card) => {
-      const dev = card.series || 'Unknown Studio';
-      if (!groups[dev]) groups[dev] = [];
-      groups[dev].push(card);
-    });
-
-    return groups;
-  }, [userAllCards, currentCrossCards, selectedGame]);
 
   const genres = useMemo(() => {
     const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
@@ -680,6 +660,28 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const currentCrossGame = filteredGames[activeGameIndex];
   const currentCrossCards = useMemo(() => generateCardsForGame(currentCrossGame), [currentCrossGame, generateCardsForGame]);
   const activeCard = currentCrossCards[activeCardIndex];
+
+  // Group cards by developer/company (fallback to series/game name)
+  const cardsByDev = useMemo(() => {
+    const groups = {};
+    const source = userAllCards && userAllCards.length > 0
+      ? userAllCards.map((c, i) => ({
+          id: c.id || `usercard-${i}`,
+          title: c.card_name || c.title || 'Card',
+          series: c.game_name || c.series || 'Unknown Studio',
+          rarity: c.rarity || 'Rare',
+          image: c.image || currentCrossGame?.cover_image || currentCrossGame?.cover,
+        }))
+      : currentCrossCards;
+
+    (source || []).forEach((card) => {
+      const dev = card.series || 'Unknown Studio';
+      if (!groups[dev]) groups[dev] = [];
+      groups[dev].push(card);
+    });
+
+    return groups;
+  }, [userAllCards, currentCrossCards, currentCrossGame]);
 
   // Constants for positioning
   const ITEM_HEIGHT = 80;
