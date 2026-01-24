@@ -384,7 +384,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [hoverZone, setHoverZone] = useState(null); // 'cards' | 'games' | null
   const cardsGridRef = useRef(null);
   const gamesListRef = useRef(null);
-  const gamesListRef = useRef(null);
   const getCardsPerRow = useCallback(() => {
     const w = window.innerWidth;
     if (w >= 1280) return 6; // xl
@@ -621,91 +620,76 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 }, [aftermarketMode]);
   const activeCard = currentCrossCards[activeCardIndex];
 
-  // Keyboard and wheel navigation for cross interface (moved after displayGames init)
+  // Separate hover scrolling for games (left) and cards (right). WASD only for cards when hovered.
   useEffect(() => {
     if (viewMode !== 'cross' || isLoading || displayGames.length === 0) return;
 
     const handleKeyDown = (e) => {
+      if (hoverZone !== 'cards') return; // only when hovering cards area
       const key = e.key.toLowerCase();
+      if (!['w','a','s','d'].includes(key)) return; // WASD only
+      e.preventDefault();
 
-      // Left/Right: Change game (horizontal now)
-      if (key === 'arrowleft' || key === 'a') {
-        e.preventDefault();
-        if (activeGameIndex > 0) {
-          setActiveGameIndex((prev) => prev - 1);
-          setActiveCardIndex(0);
-        }
-      } else if (key === 'arrowright' || key === 'd') {
-        e.preventDefault();
-        if (activeGameIndex < displayGames.length - 1) {
-          setActiveGameIndex((prev) => prev + 1);
-          setActiveCardIndex(0);
-        }
-      }
-      // Up/Down: Change card (vertical list)
-      else if (key === 'arrowup' || key === 'w') {
-        e.preventDefault();
-        if (activeCardIndex > 0) {
-          setActiveCardIndex((prev) => prev - 1);
-        }
-      } else if (key === 'arrowdown' || key === 's') {
-        e.preventDefault();
-        const currentGame = displayGames[activeGameIndex];
-        const cards = aftermarketMode ? currentCrossCards : generateCardsForGame(currentGame);
-        if (activeCardIndex < cards.length - 1) {
-          setActiveCardIndex((prev) => prev + 1);
-        }
-      }
-      // Enter: Select card
-      else if (key === 'enter') {
-        e.preventDefault();
-        const currentGame = displayGames[activeGameIndex];
-        const cards = aftermarketMode ? currentCrossCards : generateCardsForGame(currentGame);
-        if (cards[activeCardIndex]) {
-          setSelectedCard(cards[activeCardIndex]);
-        }
-      }
+      const perRow = getCardsPerRow();
+      const currentGame = displayGames[activeGameIndex];
+      const total = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
+
+      setActiveCardIndex((prev) => {
+        let next = prev;
+        if (key === 'w') next = Math.max(prev - perRow, 0);
+        if (key === 's') next = Math.min(prev + perRow, total - 1);
+        if (key === 'a') next = Math.max(prev - 1, 0);
+        if (key === 'd') next = Math.min(prev + 1, total - 1);
+        return next;
+      });
     };
 
     let lastWheelTime = 0;
-    const WHEEL_COOLDOWN = 150;
+    const WHEEL_COOLDOWN = 120;
 
-    const handleWheel = (e) => {
+    const handleCardsWheel = (e) => {
+      if (hoverZone !== 'cards') return;
       const now = Date.now();
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
       e.preventDefault();
-
-      // Only affect the cards grid (row-by-row)
       const perRow = getCardsPerRow();
       const currentGame = displayGames[activeGameIndex];
-      const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
-
+      const total = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
       if (e.deltaY > 0) {
-        if (activeCardIndex < totalCards - 1) {
-          setActiveCardIndex((prev) => Math.min(prev + perRow, totalCards - 1));
-          lastWheelTime = now;
-        }
+        setActiveCardIndex((prev) => Math.min(prev + perRow, total - 1));
       } else if (e.deltaY < 0) {
-        if (activeCardIndex > 0) {
-          setActiveCardIndex((prev) => Math.max(prev - perRow, 0));
-          lastWheelTime = now;
-        }
+        setActiveCardIndex((prev) => Math.max(prev - perRow, 0));
       }
+      lastWheelTime = now;
+    };
+
+    const handleGamesWheel = (e) => {
+      if (hoverZone !== 'games') return;
+      const now = Date.now();
+      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
+      e.preventDefault();
+      if (e.deltaY > 0) {
+        setActiveGameIndex((prev) => Math.min(prev + 1, displayGames.length - 1));
+        setActiveCardIndex(0);
+      } else if (e.deltaY < 0) {
+        setActiveGameIndex((prev) => Math.max(prev - 1, 0));
+        setActiveCardIndex(0);
+      }
+      lastWheelTime = now;
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    const targetEl = cardsGridRef.current;
-    if (targetEl) {
-      targetEl.addEventListener('wheel', handleWheel, { passive: false });
-    }
+    const cardsEl = cardsGridRef.current;
+    const gamesEl = gamesListRef.current;
+    if (cardsEl) cardsEl.addEventListener('wheel', handleCardsWheel, { passive: false });
+    if (gamesEl) gamesEl.addEventListener('wheel', handleGamesWheel, { passive: false });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (targetEl) {
-        targetEl.removeEventListener('wheel', handleWheel);
-      }
+      if (cardsEl) cardsEl.removeEventListener('wheel', handleCardsWheel);
+      if (gamesEl) gamesEl.removeEventListener('wheel', handleGamesWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards, generateCardsForGame, hoverZone, getCardsPerRow]);
+  }, [viewMode, isLoading, displayGames.length, activeGameIndex, aftermarketMode, currentCrossCards, generateCardsForGame, hoverZone, getCardsPerRow]);
 
   // Constants for positioning
   const ITEM_HEIGHT = 80;
@@ -883,6 +867,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
 
                 <motion.div
+                ref={gamesListRef}
                 className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
                 onMouseEnter={() => setHoverZone('games')}
                 onMouseLeave={() => setHoverZone(null)}
