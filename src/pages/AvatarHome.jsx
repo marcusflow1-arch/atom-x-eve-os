@@ -115,24 +115,13 @@ export default function AvatarHome() {
                 <div className="w-full h-full flex items-center justify-center text-2xl font-bold">{display.name?.charAt(0) || 'A'}</div>
               )}
             </div>
-            <div>
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-black tracking-tight">{display.name}</h1>
-              <div className="mt-1 flex items-center gap-2">
-                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">Level 12</Badge>
-                <Badge variant="outline" className="border-white/10 text-white/60">{display.mood}</Badge>
-              </div>
+              <span className="text-white/70 italic">“{display.catchphrase}”</span>
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="md:justify-self-end w-full md:w-auto">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-start gap-3">
-              <Quote className="w-4 h-4 text-cyan-400 mt-1" />
-              <div>
-                <div className="text-white/70 text-sm">Catchphrase</div>
-                <div className="text-white font-semibold">{display.catchphrase}</div>
-              </div>
-            </div>
-          </motion.div>
+
         </div>
 
         {/* 2D Home Scene (sections as objects) */}

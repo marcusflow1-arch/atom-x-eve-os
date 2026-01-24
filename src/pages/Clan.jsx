@@ -43,6 +43,9 @@ export default function ClanPage() {
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
     const [initialZone, setInitialZone] = useState(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    // Entry gate state (authoritative)
+    const [entryState, setEntryState] = useState('pending'); // 'pending' | 'intro' | 'clan'
+    const [preselectedClanId, setPreselectedClanId] = useState(null);
 
     // Removed: do not persist activeClanId to localStorage
 
@@ -92,6 +95,33 @@ export default function ClanPage() {
     };
 
     // Transition completion handled inside handleClanEntry polling
+
+    // Authoritative entry resolution
+    useEffect(() => {
+        let cancelled = false;
+        const resolve = async () => {
+            if (!user) { setEntryState('intro'); return; }
+            try {
+                const res = await base44.functions.invoke('clanSystem', { action: 'resolve_entry' });
+                const payload = res.data || res;
+                if (cancelled) return;
+                if (payload.state === 'intro') {
+                    setEntryState('intro');
+                    setPreselectedClanId(null);
+                } else if (payload.state === 'clan') {
+                    setEntryState('clan');
+                    setPreselectedClanId(payload.clanId);
+                    setActiveClanId(payload.clanId);
+                } else {
+                    setEntryState('intro');
+                }
+            } catch (e) {
+                setEntryState('intro');
+            }
+        };
+        resolve();
+        return () => { cancelled = true; };
+    }, [user?.id]);
 
     // Re-validate membership when page becomes visible (tab switch, etc.)
     useEffect(() => {
@@ -268,13 +298,19 @@ export default function ClanPage() {
         );
     }
 
-    // User not authenticated - show intro to prompt login
-    if (!user) {
-        return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
+    // Entry Gate - obey backend authority
+    if (entryState === 'pending') {
+        return (
+            <div className="h-screen flex items-center justify-center bg-[#0a0c10] text-white">
+                <div className="text-center">
+                    <Shield className="w-16 h-16 text-cyan-400 mb-4 animate-pulse" />
+                    <p className="text-white/50">Validating access...</p>
+                </div>
+            </div>
+        );
     }
 
-    // User authenticated but not in any clan - show intro (backend source of truth)
-    if (!isTransitioning && memberships && memberships.length === 0) {
+    if (entryState === 'intro') {
         return <ClanIntro onClanCreated={handleClanEntry} onClanJoined={handleClanEntry} />;
     }
 
