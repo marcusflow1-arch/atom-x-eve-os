@@ -4,12 +4,43 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import { Coins, Gem, Star, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Clock, Users, Trophy, Target } from 'lucide-react';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
-import ClanInventoryGrid from './ClanInventoryGrid';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import ProFilterSidebar from '@/components/clan/ProFilterSidebar';
+import VirtualizedTradeGrid from '@/components/store/VirtualizedTradeGrid';
 
 export default function ClanTreasuryPage({ clan }) {
     const [tab, setTab] = React.useState('overview');
+    // ProGrid filters for clan inventory
+    const [filters, setFilters] = React.useState({ category: 'all', rarity: [], priceRange: [0, 10000] });
+
+    // Sample clan inventory mapped to Trading Post grid shape (replace with real data later)
+    const sampleClanInventory = React.useMemo(() => ([
+        { id: 'ci1', name: 'Void Emperor Helm', type: 'Armor', rarity: 'Mythic', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 4800 },
+        { id: 'ci2', name: 'Cyber Katana', type: 'Weapon', rarity: 'Epic', image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 3200 },
+        { id: 'ci3', name: 'Void Crystal (x100)', type: 'Materials', rarity: 'Rare', image: 'https://images.unsplash.com/photo-1520975922218-7e8f3f6a31f1?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 1200 },
+        { id: 'ci4', name: 'Elixir of Focus', type: 'Consumables', rarity: 'Uncommon', image: 'https://images.unsplash.com/photo-1563206767-5b18f218e8a6?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 450 },
+        { id: 'ci5', name: 'Arcane Tome', type: 'Ability', rarity: 'Epic', image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 2600 },
+        { id: 'ci6', name: 'Quantum Core', type: 'Tech', rarity: 'Legendary', image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=300&h=300&fit=crop', game: clan?.name || 'Clan Vault', marketPrice: 5200 },
+    ]), [clan?.name]);
+
+    const filteredClanItems = React.useMemo(() => {
+        return sampleClanInventory.filter(item => {
+            const cat = filters.category;
+            if (cat !== 'all' && cat !== 'global') {
+                if (cat === 'weapon' && item.type !== 'Weapon') return false;
+                if (cat === 'armor' && item.type !== 'Armor') return false;
+                if (cat === 'consumable' && item.type !== 'Consumables') return false;
+                if (cat === 'material' && item.type !== 'Materials') return false;
+                if (cat === 'magic' && item.type !== 'Ability') return false;
+                if (cat === 'tech' && item.type !== 'Tech') return false;
+                if (cat === 'blueprint' && item.type !== 'Blueprint') return false;
+            }
+            if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
+            if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
+            return true;
+        });
+    }, [sampleClanInventory, filters]);
     // Mock treasury data
     const clanResources = { 
         gold: 14500, 
@@ -186,7 +217,16 @@ export default function ClanTreasuryPage({ clan }) {
             </div>
             </>)}}
             {tab === 'inventory' && (
-              <ClanInventoryGrid />
+              <div className="h-full">
+                <div className="grid grid-cols-12 gap-4 h-full">
+                  <div className="col-span-12 lg:col-span-3 h-full">
+                    <ProFilterSidebar filters={filters} setFilters={setFilters} />
+                  </div>
+                  <div className="col-span-12 lg:col-span-9 h-full">
+                    <VirtualizedTradeGrid items={filteredClanItems} onSelectItem={() => {}} />
+                  </div>
+                </div>
+              </div>
             )}
         </div>
     );
