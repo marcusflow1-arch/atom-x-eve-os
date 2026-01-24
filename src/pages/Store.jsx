@@ -1327,6 +1327,9 @@ export default function Store() {
                                             </div>
                                         </div>
 
+                                        {/* Vertical divider between cards and left menu */}
+                                        <div className="hidden xl:block absolute left-[260px] top-0 bottom-0 w-px bg-white/10" />
+
                                         {/* Game Grid */}
                                         <motion.div 
                                             key={`${activeGenreIndex}-${activeSubCategoryIndex}`}
