@@ -1485,7 +1485,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                                                    <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
                                                        <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                       {card.isPurchased && !card.isUnlocked &&
+                                                       {card.isPurchased && !card.isUnlocked && (
                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
                                                            <DollarSign className="w-4 h-4 text-white" />
                                                          </div>
