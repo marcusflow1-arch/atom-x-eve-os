@@ -858,21 +858,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
               {/* VERTICAL AXIS (Games) */}
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
-                {/* Default Black Market Box (only in Aftermarket mode) */}
-                {aftermarketMode && (
-                  <div className="pt-6 pointer-events-auto">
-                    <button
-                      onClick={() => { setAftermarketAll(true); setActiveCardIndex(0); }}
-                      className={`w-40 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
-                        aftermarketAll ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
-                      }`}
-                      title="Black Market Cards"
-                    >
-                      <DollarSign className="w-4 h-4" />
-                      Black Market Cards
-                    </button>
-                  </div>
-                )}
+
                 <motion.div
                 className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
                 animate={{
