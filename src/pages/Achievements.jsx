@@ -687,6 +687,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   useEffect(() => {
   if (aftermarketMode) {
     setAftermarketAll(true);
+    setActiveGameIndex(0); // snap to the first (Black Market Store) tile
     setActiveCardIndex(0);
   } else {
     setAftermarketAll(false);
