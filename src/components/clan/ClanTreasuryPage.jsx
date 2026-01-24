@@ -93,7 +93,7 @@ export default function ClanTreasuryPage({ clan }) {
             </div>
             {tab === 'overview' && (<>
             {/* Resource Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <LiquidGlassCard className="p-6">
                     <div className="flex items-start justify-between">
                         <div>
@@ -144,9 +144,9 @@ export default function ClanTreasuryPage({ clan }) {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Transactions - Takes 2 columns */}
-                <LiquidGlassCard className="col-span-2 p-6">
+                <LiquidGlassCard className="lg:col-span-2 p-6">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <Clock className="w-5 h-5 text-cyan-400" /> Recent Transactions
                     </h3>
