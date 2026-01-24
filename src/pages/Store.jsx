@@ -600,38 +600,22 @@ export default function Store() {
         }
     }, [activeGenreIndex, viewMode]);
 
-    // Header fade on scroll effect + detect scroll direction for left genre nudge
+    // Track scroll direction only (no header fade or pointer blocking)
     useEffect(() => {
-        const handleScroll = (e) => {
-            setIsScrolling(true);
-            setHeaderOpacity(0.3);
-
+        const handleScroll = () => {
             const el = contentScrollRef.current;
             if (el) {
                 const st = el.scrollTop;
                 setScrollDir(st > lastScrollTopRef.current ? 'down' : 'up');
                 lastScrollTopRef.current = st <= 0 ? 0 : st;
             }
-            
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-            
-            scrollTimeoutRef.current = setTimeout(() => {
-                setIsScrolling(false);
-                setHeaderOpacity(1);
-            }, 150);
         };
-
         const el = contentScrollRef.current || window;
         el.addEventListener('scroll', handleScroll, true);
         return () => {
             el.removeEventListener('scroll', handleScroll, true);
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
         };
-        }, []);
+    }, []);
 
         // Regular Voice Input for Store
     const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
@@ -689,8 +673,8 @@ export default function Store() {
                 className="absolute top-0 left-0 right-0 z-50 flex flex-col transition-opacity duration-200" 
                 style={{ 
                     background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)',
-                    opacity: headerOpacity,
-                    pointerEvents: isScrolling ? 'none' : 'auto'
+                    opacity: 1,
+                    pointerEvents: 'auto'
                 }}>
                 
                 <div className="h-16 flex items-center justify-between px-6">
@@ -1360,19 +1344,9 @@ export default function Store() {
                                         {/* Header / Tools Section */}
                                         <div className="flex flex-col gap-6 mb-8">
                                             
-                                            {/* Genre Header moved to left panel; keep tools on the right */}
-                                            <div className="flex items-center justify-end">
-                                                {/* Tools (Right Aligned) */}
-                                                <div className="flex items-center gap-3 ml-4">
-                                                    <button 
-                                                        onClick={() => setShowAndroidOnly(!showAndroidOnly)}
-                                                        className={`p-2 rounded-lg border transition-all ${
-                                                            showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
-                                                        }`}
-                                                    >
-                                                        <Smartphone className="w-4 h-4" />
-                                                    </button>
-                                                    
+                                            {/* Tools moved to top-left above Sub-Categories */}
+                                            <div className="flex items-center justify-start">
+                                                <div className="flex items-center gap-3">
                                                     <div className="relative group/search">
                                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                                                         <input 
@@ -1380,11 +1354,19 @@ export default function Store() {
                                                             value={searchTerm}
                                                             onChange={(e) => setSearchTerm(e.target.value)}
                                                             placeholder="Search..." 
-                                                            className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-9 pr-4 py-1.5 text-sm text-white w-32 focus:w-48 transition-all outline-none"
+                                                            className="bg-white/5 hover:bg-white/10 focus:bg-white/10 border border-white/10 focus:border-white/30 rounded-full pl-9 pr-4 py-1.5 text-sm text-white w-32 focus:w-56 transition-all outline-none"
                                                         />
                                                     </div>
-
-                                                    <button onClick={() => setViewMode('classic')} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-all">
+                                                    <button 
+                                                        onClick={() => setShowAndroidOnly(!showAndroidOnly)}
+                                                        className={`p-2 rounded-lg border transition-all ${
+                                                            showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                                                        }`}
+                                                        title="Android Games"
+                                                    >
+                                                        <Smartphone className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => setViewMode('classic')} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-all" title="Grid View">
                                                         <LayoutGrid className="w-4 h-4" />
                                                     </button>
                                                 </div>
