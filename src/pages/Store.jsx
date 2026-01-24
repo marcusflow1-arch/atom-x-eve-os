@@ -1271,47 +1271,8 @@ export default function Store() {
                                         {/* Header / Tools Section */}
                                         <div className="flex flex-col gap-6 mb-8">
                                             
-                                            {/* Genre Filter Bar (Community Style) */}
-                                            <div className="flex items-center justify-between">
-                                                <div 
-                                                    ref={genreScrollRef}
-                                                    onWheel={(e) => {
-                                                        if (genreScrollRef.current) {
-                                                            genreScrollRef.current.scrollLeft += e.deltaY;
-                                                        }
-                                                    }}
-                                                    className="flex-1 flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
-                                                >
-                                                    {/* Store Label (Replaces first All) */}
-                                                    <div className="flex items-center gap-2 text-white/50 text-sm font-medium tracking-wider uppercase select-none">
-                                                        <Gamepad2 className="w-4 h-4" />
-                                                        <span>Store</span>
-                                                        <ChevronRight className="w-4 h-4" />
-                                                    </div>
-
-                                                    <div className="w-px h-6 bg-white/10 mx-2" />
-
-                                                    {/* Static All Button Removed */}
-
-                                                    {/* Scrollable Genres */}
-                                                    {genreData.map((genre, idx) => {
-                                                        const Icon = genre.icon;
-                                                        const isActive = idx === activeGenreIndex;
-                                                        return (
-                                                            <motion.button
-                                                                key={genre.id}
-                                                                onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
-                                                                whileHover={{ scale: 1.05 }}
-                                                                whileTap={{ scale: 0.95 }}
-                                                                className={`flex items-center gap-2 py-2 whitespace-nowrap transition-all ${isActive ? 'text-cyan-400 scale-105 font-black' : 'text-white/60 hover:text-white font-medium'}`}
-                                                            >
-                                                                <Icon className="w-4 h-4" />
-                                                                <span className="text-sm uppercase tracking-wide">{genre.label}</span>
-                                                            </motion.button>
-                                                        );
-                                                    })}
-                                                </div>
-
+                                            {/* Genre Header moved to left panel; keep tools on the right */}
+                                            <div className="flex items-center justify-end">
                                                 {/* Tools (Right Aligned) */}
                                                 <div className="flex items-center gap-3 ml-4">
                                                     <button 
