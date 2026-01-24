@@ -819,7 +819,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Skill Tree Mode Toggle */}
                 <button
-                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
+                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);} }
                 className={`p-2 rounded-lg border transition-all ${
                 skillTreeMode ?
                 'bg-purple-500/30 border-purple-400/50 text-purple-300' :
@@ -832,7 +832,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 {/* Blacksmith Mode Toggle */}
                 <button
-                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
+                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);} }
                 className={`p-2 rounded-lg border transition-all ${
                 blacksmithMode ?
                 'bg-orange-500/30 border-orange-400/50 text-orange-300' :
