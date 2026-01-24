@@ -83,6 +83,7 @@ export default function ClanPage() {
     // Handle Clan Entry (Success from Intro) - wait for backend confirmation
     const handleClanEntry = async (clanId) => {
         setIsTransitioning(true);
+        let elapsed = 0;
         const interval = setInterval(async () => {
             const result = await refetchMemberships();
             const confirmed = result.data?.some(m => m.divisionId === clanId);
@@ -90,6 +91,15 @@ export default function ClanPage() {
                 setActiveClanId(clanId);
                 setIsTransitioning(false);
                 clearInterval(interval);
+            }
+        }, 500);
+        const timeout = setInterval(() => {
+            elapsed += 500;
+            if (elapsed >= 10000) {
+                clearInterval(interval);
+                clearInterval(timeout);
+                setIsTransitioning(false);
+                alert('We could not confirm your clan membership yet. Please try again.');
             }
         }, 500);
     };
