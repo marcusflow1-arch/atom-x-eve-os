@@ -108,12 +108,25 @@ export default function AvatarHome() {
         {/* Header / Avatar Presence */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center mb-10">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 md:col-span-2">
-            <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/10 overflow-hidden flex items-center justify-center">
-              {display.avatar_url ? (
-                <img src={display.avatar_url} alt={display.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-2xl font-bold">{display.name?.charAt(0) || 'A'}</div>
-              )}
+            <div className="flex items-center">
+              <div className="w-14 h-14 rounded-xl bg-white/10 border border-white/10 overflow-hidden flex items-center justify-center">
+                {display.avatar_url ? (
+                  <img src={display.avatar_url} alt={display.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xl font-bold">
+                    {display.name?.charAt(0) || 'A'}
+                  </div>
+                )}
+              </div>
+              <div className="-ml-3 w-14 h-14 rounded-xl bg-white/10 border border-white/10 overflow-hidden flex items-center justify-center">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.full_name || 'You'} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xl font-bold">
+                    {(user?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-black tracking-tight">{display.name}</h1>
