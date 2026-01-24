@@ -264,7 +264,7 @@ export default function CommunityPage() {
     return (
         <PageErrorBoundary pageName="Community">
         <div 
-            className="min-h-screen text-white p-4 sm:p-8 pt-32 overflow-hidden"
+            className="min-h-screen text-white p-4 sm:p-8 pt-40 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             {/* Ambient Background */}

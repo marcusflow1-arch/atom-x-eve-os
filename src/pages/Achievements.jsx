@@ -672,35 +672,38 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       const now = Date.now();
       if (now - lastWheelTime < WHEEL_COOLDOWN) return;
 
-      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) || !e.shiftKey) {
-        // Vertical (Cards)
-        const currentGame = displayGames[activeGameIndex];
-        const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
+      // If hovering over the games list, scroll games only
+      if (hoverZone === 'games') {
         if (e.deltaY > 0) {
-          if (activeCardIndex < totalCards - 1) {
-            setActiveCardIndex((prev) => prev + 1);
-            lastWheelTime = now;
-          }
-        } else if (e.deltaY < 0) {
-          if (activeCardIndex > 0) {
-            setActiveCardIndex((prev) => prev - 1);
-            lastWheelTime = now;
-          }
-        }
-      } else {
-        // Horizontal (Games) when holding Shift (or horizontal wheel)
-        if (e.deltaX > 0) {
           if (activeGameIndex < displayGames.length - 1) {
             setActiveGameIndex((prev) => prev + 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
           }
-        } else if (e.deltaX < 0) {
+        } else if (e.deltaY < 0) {
           if (activeGameIndex > 0) {
             setActiveGameIndex((prev) => prev - 1);
             setActiveCardIndex(0);
             lastWheelTime = now;
           }
+        }
+        return;
+      }
+
+      // Default: cards grid scrolls by full rows
+      const perRow = getCardsPerRow();
+      const currentGame = displayGames[activeGameIndex];
+      const totalCards = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
+
+      if (e.deltaY > 0) {
+        if (activeCardIndex < totalCards - 1) {
+          setActiveCardIndex((prev) => Math.min(prev + perRow, totalCards - 1));
+          lastWheelTime = now;
+        }
+      } else if (e.deltaY < 0) {
+        if (activeCardIndex > 0) {
+          setActiveCardIndex((prev) => Math.max(prev - perRow, 0));
+          lastWheelTime = now;
         }
       }
     };
@@ -712,7 +715,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards, generateCardsForGame]);
+  }, [viewMode, activeGameIndex, activeCardIndex, displayGames, isLoading, aftermarketMode, currentCrossCards, generateCardsForGame, hoverZone, getCardsPerRow]);
 
   // Constants for positioning
   const ITEM_HEIGHT = 80;
@@ -857,7 +860,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
                     {currentCrossCards.length > 0 ? `${currentCrossCards.length} cards` : 'Empty cards'}
                   </Badge>
-                )}>
+                )}
 
                 {/* Skill Tree Mode Toggle */}
                 <button
@@ -891,6 +894,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                 <motion.div
                 className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
+                onMouseEnter={() => setHoverZone('games')}
+                onMouseLeave={() => setHoverZone(null)}
                 animate={{
                   y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + 24)}px - ${ITEM_HEIGHT / 2}px)`
                 }}
