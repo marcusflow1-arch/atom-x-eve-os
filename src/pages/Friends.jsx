@@ -18,6 +18,7 @@ export default function Friends() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFriendRequests, setShowFriendRequests] = useState(false);
+  const seededRef = React.useRef(false);
 
   const [stats, setStats] = useState({
     friends: 0,
@@ -49,6 +50,29 @@ export default function Friends() {
 
     try {
       const friendsList = await base44.entities.Friend.filter({ user_id: user.id });
+      // Seed a couple of temp friends for preview if none exist
+      if (friendsList.length === 0 && !seededRef.current) {
+        await base44.entities.Friend.bulkCreate([
+          {
+            user_id: user.id,
+            friend_id: 'temp_logan',
+            friend_name: 'Logan',
+            friend_avatar: 'https://i.pravatar.cc/150?u=logan',
+            status: 'online',
+            current_game: 'Neon Racer'
+          },
+          {
+            user_id: user.id,
+            friend_id: 'temp_ariana',
+            friend_name: 'Ariana',
+            friend_avatar: 'https://i.pravatar.cc/150?u=ariana',
+            status: 'away',
+            current_game: 'Galactic Empire'
+          }
+        ]);
+        seededRef.current = true;
+        return loadData();
+      }
       setFriends(friendsList);
 
       const requests = await base44.entities.FriendRequest.filter({ 
