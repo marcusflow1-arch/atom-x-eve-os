@@ -425,10 +425,7 @@ export default function Store() {
       });
     };
 
-    useEffect(() => {
-      if (viewMode !== 'cross') return;
-      scrollGenreIntoView(activeGenreIndex);
-    }, [activeGenreIndex, viewMode]);
+    // moved: scroll active genre into view (defined after activeGenreIndex)
 
     useEffect(() => {
       const onKey = (e) => {
@@ -494,6 +491,12 @@ export default function Store() {
     }, [currentNavGenre]);
 
     const activeSubCategory = SUB_CATEGORIES[activeSubCategoryIndex] || SUB_CATEGORIES[0];
+
+    // Ensure active genre stays visible in the left list when it changes
+    useEffect(() => {
+      if (viewMode !== 'cross') return;
+      scrollGenreIntoView(activeGenreIndex);
+    }, [activeGenreIndex, viewMode]);
 
     // Filtered Games based on Genre + Mock Sub-Category logic
     // (In a real app, we would filter by actual tags. Here we simulate "showing a list of games")
