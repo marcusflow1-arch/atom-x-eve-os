@@ -4,6 +4,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import VirtualizedTradeGrid from "@/components/store/VirtualizedTradeGrid";
+import ProFilterSidebar from "@/components/clan/ProFilterSidebar";
 import { X, Gamepad2, Shield, Zap, Gem, FlaskConical, Package, Info } from "lucide-react";
 
 const rarityStyles = {
@@ -43,12 +45,47 @@ export default function ClanInventoryModal({ open, onOpenChange, items }) {
   const [cols, setCols] = useState(8);
   const gridRef = useRef(null);
 
+  const [filters, setFilters] = useState({ category: 'all', rarity: [], priceRange: [0, 10000] });
+
   const data = items && items.length ? items : sampleItems;
 
   const visibleItems = useMemo(() => {
     if (activeTab === "all") return data;
     return data.filter((i) => i.type === activeTab);
   }, [data, activeTab]);
+
+  const gridItems = useMemo(() => {
+    return visibleItems.map((i, idx) => ({
+      id: i.id || String(idx),
+      name: i.name,
+      type: i.type,
+      rarity: i.rarity,
+      image: i.image || "https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=600&fit=crop",
+      game: i.game || "Clan Supply",
+      marketPrice: i.stats?.Power || i.stats?.Attack || i.stats?.Defense || i.qty * 100 || 500
+    }));
+  }, [visibleItems]);
+
+  const filteredGridItems = useMemo(() => {
+    const cat = filters.category;
+    return gridItems.filter((item) => {
+      // Category
+      if (cat !== 'all' && cat !== 'global') {
+        if (cat === 'weapon' && item.type !== 'Gear' && !/sword|katana|rifle|weapon/i.test(item.name)) return false;
+        if (cat === 'armor' && item.type !== 'Gear' && !/armor|shield/i.test(item.name)) return false;
+        if (cat === 'consumable' && item.type !== 'Consumables') return false;
+        if (cat === 'material' && item.type !== 'Materials') return false;
+        if (cat === 'magic' && !/spell|tome|arcane|magic/i.test(item.name)) return false;
+        if (cat === 'tech' && !/cyber|quantum|core|tech/i.test(item.name)) return false;
+        if (cat === 'blueprint' && !/blueprint|schematic/i.test(item.name)) return false;
+      }
+      // Rarity
+      if (filters.rarity.length > 0 && !filters.rarity.includes(item.rarity)) return false;
+      // Value
+      if (item.marketPrice < filters.priceRange[0] || item.marketPrice > filters.priceRange[1]) return false;
+      return true;
+    });
+  }, [gridItems, filters]);
 
   // Determine columns by viewport width for controller navigation
   useEffect(() => {
@@ -124,60 +161,16 @@ export default function ClanInventoryModal({ open, onOpenChange, items }) {
           </Tabs>
         </div>
 
-        {/* Grid */}
+        {/* ProGrid Layout: Filters + Virtualized Grid */}
         <div className="flex-1 overflow-hidden p-5">
-          <TooltipProvider delayDuration={100}>
-            <div
-              ref={gridRef}
-              className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
-              role="grid"
-            >
-              {visibleItems.map((item, idx) => {
-                const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
-                const isSelected = idx === selectedIndex;
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <button
-                        role="gridcell"
-                        tabIndex={isSelected ? 0 : -1}
-                        onMouseEnter={() => setSelectedIndex(idx)}
-                        className={`relative aspect-square rounded-xl border border-white/10 bg-white/5 overflow-hidden ring-2 ${
-                          isSelected ? rarity.ring : "ring-transparent"
-                        } focus:outline-none focus:ring-2 focus:${rarity.ring} transition-all`}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center text-3xl select-none">
-                          {item.icon}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                          <div className="flex items-center justify-between">
-                            <p className={`text-[11px] font-semibold truncate ${rarity.text}`}>{item.name}</p>
-                            {item.qty != null && (
-                              <Badge className="bg-white/10 border-white/10 text-[10px] px-1.5 h-5">x{item.qty}</Badge>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900/95 text-white border-white/10">
-                      <div className="text-sm font-bold mb-1">{item.name}</div>
-                      <div className="text-xs text-white/60 mb-2">{item.type} • {item.rarity}</div>
-                      {item.stats && (
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-                          {Object.entries(item.stats).map(([k,v]) => (
-                            <div key={k} className="flex items-center justify-between gap-4">
-                              <span className="text-white/50">{k}</span>
-                              <span className="text-white font-medium">{v}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+          <div className="h-full grid grid-cols-12 gap-5">
+            <div className="col-span-12 lg:col-span-3">
+              <ProFilterSidebar filters={filters} setFilters={setFilters} />
             </div>
-          </TooltipProvider>
+            <div className="col-span-12 lg:col-span-9 h-full">
+              <VirtualizedTradeGrid items={filteredGridItems} onSelectItem={() => {}} />
+            </div>
+          </div>
         </div>
 
         {/* Footer legend */}
