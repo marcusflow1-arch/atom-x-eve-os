@@ -1616,14 +1616,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                           </motion.div>
                     }
                       </AnimatePresence>
-                    </> ) :
+                    </> ) : (
 
                 <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
                       <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
                       <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
                     </div>
-                }
+                )}
                 </div>
 
               </div>
