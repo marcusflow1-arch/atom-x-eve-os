@@ -1489,7 +1489,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
                                                            <DollarSign className="w-4 h-4 text-white" />
                                                          </div>
-                                }
+                                                         )}
                                                    </div>
                                                    <div className="flex-1 flex flex-col justify-between">
                                                        <div>
@@ -1616,7 +1616,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                           </motion.div>
                     }
                       </AnimatePresence>
-                    </> ) : (
+                    </> : ( (
 
                 <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
                       <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
