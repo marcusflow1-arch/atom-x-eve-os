@@ -371,6 +371,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   }, [selectedGame, localAchievements]);
 
   const [userCards, setUserCards] = useState([]);
+  const [userAllCards, setUserAllCards] = useState([]);
   const [gameReviews, setGameReviews] = useState([]);
   const [userReactions, setUserReactions] = useState({});
   const [showReviewPanel, setShowReviewPanel] = useState(false);
@@ -392,6 +393,21 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     fetchUserCards();
   }, [user, selectedGame]);
+
+  // Fetch all purchased/user cards for Black Market view
+  useEffect(() => {
+    const fetchAllUserCards = async () => {
+      if (!user || !aftermarketMode) return;
+      try {
+        const all = await base44.entities.UserCard.filter({ user_id: user.id });
+        setUserAllCards(all);
+      } catch (error) {
+        console.error('Failed to fetch all user cards:', error);
+        setUserAllCards([]);
+      }
+    };
+    fetchAllUserCards();
+  }, [user, aftermarketMode]);
 
   // Fetch reviews for selected game
   useEffect(() => {
@@ -522,6 +538,28 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
     return cards;
   }, [selectedGame, localAchievements, userCards, user]);
+
+  // Group cards by developer/company (fallback to series/game name)
+  const cardsByDev = useMemo(() => {
+    const groups = {};
+    const source = userAllCards && userAllCards.length > 0
+      ? userAllCards.map((c, i) => ({
+          id: c.id || `usercard-${i}`,
+          title: c.card_name || c.title || 'Card',
+          series: c.game_name || c.series || 'Unknown Studio',
+          rarity: c.rarity || 'Rare',
+          image: c.image || selectedGame?.cover_image || selectedGame?.cover,
+        }))
+      : currentCrossCards;
+
+    source.forEach((card) => {
+      const dev = card.series || 'Unknown Studio';
+      if (!groups[dev]) groups[dev] = [];
+      groups[dev].push(card);
+    });
+
+    return groups;
+  }, [userAllCards, currentCrossCards, selectedGame]);
 
   const genres = useMemo(() => {
     const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
@@ -802,7 +840,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 <button
                   onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
                   className={`p-2 rounded-lg border transition-all ${aftermarketMode ? 'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`}
-                  title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
+                  title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
                 >
                   <Tag className="w-5 h-5" />
                 </button>
@@ -1041,6 +1079,117 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             </div>
 
             <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-32">
+
+                {/* Right-side subpage divider and panel (Black Market Cards) */}
+                {aftermarketMode && viewMode === 'classic' && (
+                  <>
+                    {/* Vertical line divider */}
+                    <div className="absolute top-28 bottom-8 right-[460px] w-px bg-white/20 z-30" />
+
+                    {/* Subpage Panel */}
+                    <div
+                      className="absolute top-24 right-8 w-[420px] z-30"
+                      onMouseEnter={() => setIsHoveringAftermarket(true)}
+                      onMouseLeave={() => setIsHoveringAftermarket(false)}
+                    >
+                      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl h-[calc(100vh-12rem)] overflow-hidden flex flex-col">
+                        {/* Header */}
+                        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                          <h3 className="text-white font-bold">Black Market Cards</h3>
+                          <button
+                            onClick={() => setAftermarketMode(false)}
+                            className="text-white/60 hover:text-white text-sm"
+                          >Back</button>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/15">
+                              All
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <button
+                              onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); }}
+                              className={`px-3 py-1.5 rounded-lg text-xs border ${
+                                skillTreeMode
+                                  ? 'bg-purple-500/30 border-purple-400/50 text-purple-300'
+                                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                              }`}
+                            >
+                              Skill Tree
+                            </button>
+                            <button
+                              onClick={() => { setBlacksmithMode(!blacksmithMode); setSkillTreeMode(false); }}
+                              className={`px-3 py-1.5 rounded-lg text-xs border ${
+                                blacksmithMode
+                                  ? 'bg-orange-500/30 border-orange-400/50 text-orange-300'
+                                  : 'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'
+                              }`}
+                            >
+                              Blacksmith
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
+                          {Object.keys(cardsByDev).length === 0 && (
+                            <div className="h-40 flex items-center justify-center text-white/40 text-sm">
+                              No purchased cards found
+                            </div>
+                          )}
+
+                          {Object.entries(cardsByDev).map(([dev, cards]) => (
+                            <div key={dev} className="mb-6">
+                              <div className="flex flex-col items-center mb-3">
+                                <div className="w-16 h-16 rounded-xl bg-black/40 border border-white/10" />
+                                <div className="mt-2 text-xs text-white/70 font-semibold">{dev}</div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                {cards.map((card, idx) => (
+                                  <div key={card.id} className="aspect-[2.5/3.5]">
+                                    <ShinyCard index={idx} onClick={() => {
+                                      if (skillTreeMode) {
+                                        setSkillTreeCard(card);
+                                      } else if (blacksmithMode) {
+                                        setBlacksmithCard(card);
+                                      } else {
+                                        setSelectedCard(card);
+                                      }
+                                    }}>
+                                      <div className="absolute inset-0 flex flex-col p-3">
+                                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-between">
+                                          <div>
+                                            <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                              'border-slate-500/50 text-slate-400'
+                                            }`}>
+                                              {card.rarity}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </ShinyCard>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               
               {/* Main Layout: 2 Columns */}
               <div className="flex gap-8 h-full overflow-hidden">
@@ -1096,7 +1245,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                         'bg-cyan-500/30 border-cyan-400/50 text-cyan-300' :
                         'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
                       }
-                      title={aftermarketMode ? 'Exit Aftermarket Cards' : 'Aftermarket Cards'}
+                      title={aftermarketMode ? 'Exit Black Market Cards' : 'Black Market Cards'}
                     >
                       <Tag className="w-4 h-4" />
                     </motion.button>
