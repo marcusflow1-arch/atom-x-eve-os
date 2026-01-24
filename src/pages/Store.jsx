@@ -393,21 +393,59 @@ export default function Store() {
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
 
-    // Cross-scroll: wheel on left genre menu changes active genre
+    // Cross-scroll: scrollable genre list with wheel + WASD support
     const wheelTsRef = useRef(0);
-    const handleGenreWheel = (e) => {
-        if (!genreData || genreData.length === 0) return;
-        e.preventDefault();
-        const now = Date.now();
-        if (now - wheelTsRef.current < 180) return; // throttle
-        wheelTsRef.current = now;
-        if (e.deltaY < 0) {
-            setActiveGenreIndex(prev => Math.max(0, prev - 1));
-        } else {
-            setActiveGenreIndex(prev => Math.min(genreData.length - 1, prev + 1));
-        }
-        setActiveSubCategoryIndex(0);
+    const genreListRef = useRef(null);
+    const [isGenreHovering, setIsGenreHovering] = useState(false);
+    const [genrePanelFocused, setGenrePanelFocused] = useState(false);
+
+    const scrollGenreIntoView = (index) => {
+      const listEl = genreListRef.current;
+      if (!listEl) return;
+      const items = listEl.querySelectorAll('[data-genre-item]');
+      const target = items[index];
+      if (target && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
     };
+
+    const handleGenreWheel = (e) => {
+      if (!genreData || genreData.length === 0) return;
+      const now = Date.now();
+      if (now - wheelTsRef.current < 120) return; // throttle
+      wheelTsRef.current = now;
+      const direction = e.deltaY < 0 ? -1 : 1;
+      setActiveGenreIndex(prev => {
+        const next = Math.min(genreData.length - 1, Math.max(0, prev + direction));
+        if (next !== prev) {
+          setActiveSubCategoryIndex(0);
+          queueMicrotask(() => scrollGenreIntoView(next));
+        }
+        return next;
+      });
+    };
+
+    useEffect(() => {
+      if (viewMode !== 'cross') return;
+      scrollGenreIntoView(activeGenreIndex);
+    }, [activeGenreIndex, viewMode]);
+
+    useEffect(() => {
+      const onKey = (e) => {
+        if (!(isGenreHovering || genrePanelFocused)) return;
+        const key = e.key.toLowerCase();
+        if (['w','a','s','d'].includes(key)) e.preventDefault();
+        if (key === 'w' || key === 'a') {
+          setActiveGenreIndex(prev => Math.max(0, prev - 1));
+          setActiveSubCategoryIndex(0);
+        } else if (key === 's' || key === 'd') {
+          setActiveGenreIndex(prev => Math.min(genreData.length - 1, prev + 1));
+          setActiveSubCategoryIndex(0);
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, [isGenreHovering, genrePanelFocused, genreData.length]);
 
     // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
@@ -1251,7 +1289,7 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
-                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef} onWheel={handleGenreWheel}>
+                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
                                         {/* Store label with arrow - left aligned + active genre pill on scroll up */}
                                         <div className="mb-3 flex items-center gap-2">
                                             <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
@@ -1278,17 +1316,25 @@ export default function Store() {
                                         <div className="relative">
 
                                             <motion.div
+                                                ref={genreListRef}
+                                                onWheel={handleGenreWheel}
+                                                onMouseEnter={() => setIsGenreHovering(true)}
+                                                onMouseLeave={() => setIsGenreHovering(false)}
+                                                onFocus={() => setGenrePanelFocused(true)}
+                                                onBlur={() => setGenrePanelFocused(false)}
+                                                tabIndex={0}
                                                 initial={false}
                                                 animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
                                                 transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                                                className="flex flex-col gap-2 pl-6 pr-3">
+                                                className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
                                                 {genreData.map((genre, idx) => {
                                                     const Icon = genre.icon;
                                                     const isActive = idx === activeGenreIndex;
                                                     return (
                                                         <motion.button
+                                                            data-genre-item
                                                             key={genre.id}
-                                                            onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); }}
+                                                            onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }}
                                                             className="group flex items-center gap-2 text-left py-2 pl-0 pr-2"
                                                             animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }}
                                                             whileHover={{ x: 8 }}
