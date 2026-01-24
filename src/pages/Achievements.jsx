@@ -221,6 +221,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   // Aftermarket Mode (Black Market Cards)
   const [aftermarketMode, setAftermarketMode] = useState(false);
   const [aftermarketCards, setAftermarketCards] = useState([]);
+  const [aftermarketAll, setAftermarketAll] = useState(false);
 
   // Cross Interface Navigation State
   const [activeGameIndex, setActiveGameIndex] = useState(0);
@@ -412,25 +413,29 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     fetchReviews();
   }, [selectedGame]);
 
-  // Fetch aftermarket (Black Market) cards for selected game
+  // Fetch aftermarket (Black Market) cards (all or per selected game)
   useEffect(() => {
     if (!aftermarketMode) {
       setAftermarketCards([]);
       return;
     }
-    if (!selectedGame) return;
     const fetchListings = async () => {
       try {
-        const listings = await base44.entities.TradeOffer.filter({
-          game_name: selectedGame.title,
-          status: 'active'
-        }, '-created_date');
+        let listings = [];
+        if (aftermarketAll) {
+          listings = await base44.entities.TradeOffer.filter({ status: 'active' }, '-created_date');
+        } else if (selectedGame) {
+          listings = await base44.entities.TradeOffer.filter({ game_name: selectedGame.title, status: 'active' }, '-created_date');
+        } else {
+          setAftermarketCards([]);
+          return;
+        }
         const mapped = listings.map((l) => ({
           id: l.id,
           title: l.item_name,
           series: l.game_name,
           rarity: l.item_rarity || 'Common',
-          image: l.item_image || (selectedGame.cover_image || selectedGame.cover),
+          image: l.item_image || undefined,
           description: l.item_description || 'Aftermarket card',
           stats: { power: l.item_power, level: l.item_level }
         }));
@@ -441,7 +446,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       }
     };
     fetchListings();
-  }, [aftermarketMode, selectedGame]);
+  }, [aftermarketMode, aftermarketAll, selectedGame]);
 
   // Fetch user reactions
   useEffect(() => {
@@ -674,7 +679,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
     [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
   );
-  useEffect(() => { setActiveCardIndex(0); }, [aftermarketMode]);
+  useEffect(() => {
+  if (aftermarketMode) {
+    setAftermarketAll(true);
+    setActiveCardIndex(0);
+  } else {
+    setAftermarketAll(false);
+  }
+}, [aftermarketMode]);
   const activeCard = currentCrossCards[activeCardIndex];
 
   // Constants for positioning
@@ -846,6 +858,21 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
               {/* VERTICAL AXIS (Games) */}
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
+                {/* Default Black Market Box (only in Aftermarket mode) */}
+                {aftermarketMode && (
+                  <div className="pt-6 pointer-events-auto">
+                    <button
+                      onClick={() => { setAftermarketAll(true); setActiveCardIndex(0); }}
+                      className={`w-40 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
+                        aftermarketAll ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                      }`}
+                      title="Black Market Cards"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      Black Market Cards
+                    </button>
+                  </div>
+                )}
                 <motion.div
                 className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
                 animate={{
@@ -861,6 +888,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       onClick={() => {
                         setActiveGameIndex(idx);
                         setActiveCardIndex(0);
+                        if (aftermarketMode) setAftermarketAll(false);
                       }}
                       animate={{
                         scale: isActive ? 1.2 : 0.9,
@@ -1160,12 +1188,28 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                     {/* Game List */}
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                      {filteredGames.map((game) =>
+                     {aftermarketMode && (
+                       <button
+                         onClick={() => { setAftermarketAll(true); }}
+                         className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${aftermarketAll ? 'shadow-lg border-emerald-400/30' : 'hover:border-emerald-400/20 border-transparent'}`}
+                         style={aftermarketAll ? { background: 'rgba(16, 185, 129, 0.12)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)' } : { background: 'transparent' }}
+                       >
+                         <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center">
+                           <DollarSign className="w-5 h-5 text-emerald-300" />
+                         </div>
+                         <div className="flex-1 text-left overflow-hidden">
+                           <h3 className={`font-bold text-sm truncate ${aftermarketAll ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>Black Market Cards</h3>
+                           <p className="text-xs text-slate-500 truncate">All aftermarket listings</p>
+                         </div>
+                       </button>
+                     )}
+                     {filteredGames.map((game) =>
                     <motion.button
                       key={game.id}
                       onClick={() => {
                         setSelectedGame(game);
                         setSelectedAchievement(null);
+                        if (aftermarketMode) setAftermarketAll(false);
                       }}
                       className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
                       selectedGame?.id === game.id ?
@@ -1209,17 +1253,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 <>
                       {/* Tab Toggle: Cards / Peer Reviews */}
                       <div className="flex items-center gap-3 mb-4">
-                       {/* Aftermarket Toggle (classic view too) */}
-                       <button
-                         onClick={() => setAftermarketMode(!aftermarketMode)}
-                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all border ${
-                           aftermarketMode ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
-                         }`}
-                         title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}
-                       >
-                         <DollarSign className="w-4 h-4" />
-                         Black Market Cards
-                       </button>
+                        {/* Aftermarket Toggle (classic view too) */}
+                        <button
+                          onClick={() => setAftermarketMode(!aftermarketMode)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all border ${
+                            aftermarketMode ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                          }`}
+                          title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          Black Market Cards
+                        </button>
                         <button
                       onClick={() => setShowReviewPanel(false)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
