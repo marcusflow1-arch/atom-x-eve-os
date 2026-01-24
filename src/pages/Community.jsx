@@ -19,6 +19,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import HotTopicsSidebar from '../components/community/HotTopicsSidebar';
 
 // Mock Genres configuration matching Store/Marketplace
 const GENRE_CONFIG = [
@@ -56,6 +57,7 @@ export default function CommunityPage() {
     // Initialize activeGame from navigation state if available
     const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null); 
     const [sortBy, setSortBy] = useState('newest');
+    const [hotFilter, setHotFilter] = useState('none');
 
     // Sync activeGame when location state changes (e.g. from Clan navigation)
     useEffect(() => {
@@ -154,7 +156,7 @@ export default function CommunityPage() {
             let filter = {};
             let sort = '-created_date';
 
-            if (sortBy === 'popular') sort = '-score';
+            if (sortBy === 'popular' || hotFilter === 'hot' || hotFilter === 'trending') sort = '-score';
 
             if (activeGame) {
                 filter.game_title = activeGame.title;
@@ -162,6 +164,12 @@ export default function CommunityPage() {
                 // Otherwise filter by specific type (review, discussion, etc)
                 if (activeSection !== 'all') {
                     filter.type = activeSection;
+                }
+                // Hot Topics mappings to community categories
+                if (hotFilter === 'to_know') {
+                    filter.community = 'guide';
+                } else if (hotFilter === 'tips') {
+                    filter.community = 'tips';
                 }
             }
 
@@ -184,7 +192,7 @@ export default function CommunityPage() {
         } finally {
             setLoading(false);
         }
-    }, [activeSection, activeGame, sortBy, searchQuery]);
+    }, [activeSection, activeGame, sortBy, searchQuery, hotFilter]);
 
     const fetchComments = useCallback(async (postId) => {
         if (!postId) return;
@@ -384,8 +392,20 @@ export default function CommunityPage() {
                     {/* FORUM VIEW: Feed + Sidebar */}
                     {activeGame && (
                         <>
-                            {/* Left Column: Feed (9/12) */}
-                            <div className="col-span-12 lg:col-span-9 flex flex-col h-full overflow-hidden">
+                            {/* Left Rail: Hot Topics (2/12) */}
+                            <div className="hidden lg:flex col-span-2 flex-col gap-4 pr-4 border-r border-white/5 pt-[7.75rem]">
+                                <HotTopicsSidebar
+                                  selected={hotFilter}
+                                  onSelect={(id) => {
+                                    setHotFilter(id);
+                                    setSelectedPost(null);
+                                    setActiveSection('all');
+                                    if (id === 'hot' || id === 'trending') setSortBy('popular');
+                                  }}
+                                />
+                            </div>
+                            {/* Center: Feed (7/12) */}
+                            <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden">
                                 
                                 {/* Game Header Area (Sticky or static at top of column) */}
                                 <div className="mb-6 space-y-6">
