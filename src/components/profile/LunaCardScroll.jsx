@@ -379,27 +379,35 @@ export default function LunaCardScroll({ onExpand, onCardClick }) {
                               {/* Control Icons on the Line */}
                               <div className="absolute top-2 -translate-y-full right-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button 
-                                  onClick={() => toggleViewMode(genre)}
-                                  className={`transition-colors ${viewMode === 'games' ? 'text-blue-400' : 'text-white/40 hover:text-white'}`}
-                                  title={viewMode === 'cards' ? "View Games" : "View Cards"}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleViewMode(genre);
+                                  }}
+                                  className={`p-1.5 rounded-md transition-all ${viewMode === 'games' ? 'text-blue-400 bg-blue-400/20' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+                                  title={viewMode === 'cards' ? "Select Game to Filter Cards" : "Back to Cards"}
                                 >
-                                  <Gamepad2 className="w-3 h-3" />
+                                  <Gamepad2 className="w-4 h-4" />
                                 </button>
 
                                 <button 
-                                  onClick={() => onExpand && onExpand(genre)}
-                                  className="text-white/40 hover:text-white transition-colors"
-                                  title="Expand View"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onExpand) {
+                                      onExpand(genre);
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-md text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                                  title="Expand to Full Inventory View"
                                 >
-                                  <Maximize2 className="w-3 h-3" />
+                                  <Maximize2 className="w-4 h-4" />
                                 </button>
                                 
                                 {/* Drag Handle */}
                                 <div 
                                   {...providedDrag.dragHandleProps}
-                                  className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/5 rounded"
+                                  className="cursor-grab active:cursor-grabbing p-1.5 hover:bg-white/5 rounded-md"
                                 >
-                                  <GripVertical className="w-3 h-3 text-white/30 hover:text-white/60" />
+                                  <GripVertical className="w-4 h-4 text-white/30 hover:text-white/60" />
                                 </div>
                               </div>
 
