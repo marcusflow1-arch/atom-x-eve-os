@@ -390,7 +390,7 @@ export default function EntertainmentHub() {
                 {/* Section 4: Browse By Service */}
                 <section className="pb-12">
                    <h2 className="text-xl font-bold text-white mb-6">Browse by Service</h2>
-                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                   <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                      {STREAMING_APPS.map((app) => (
                        <button
                          key={app.id}

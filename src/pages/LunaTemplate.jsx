@@ -2252,7 +2252,7 @@ export default function LunaTemplate() {
                             initial={{ opacity: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.4 }}
-                            className="flex flex-wrap gap-4">
+                            className="grid grid-cols-4 gap-4">
 
                             {[
                               { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
