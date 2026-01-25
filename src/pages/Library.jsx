@@ -729,7 +729,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
             >
               <div className="p-1">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-bold text-lg">Community Discussion</h3>
+                  <h3 className="text-white font-bold text-lg">Discussion</h3>
                   <Button size="sm" className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30">
                     <MessageSquare className="w-4 h-4 mr-2" />
                     New Post
