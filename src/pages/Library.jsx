@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
 import DigitalAchievementCard from '@/components/achievements/DigitalAchievementCard';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronLeft, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronUp, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import VirtualizedGameList from '@/components/library/VirtualizedGameList';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
@@ -277,74 +277,66 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay, index }) => {
   );
   };
 
-  // New HorizontalGameScroller (left strip with horizontal scroll)
-  const HorizontalGameScroller = ({ games, selectedGame, onSelect, onPlay }) => {
-    const rowRef = useRef(null);
+  // New VerticalGameScroller (left strip with vertical scroll)
+  const VerticalGameScroller = ({ games, selectedGame, onSelect, onPlay }) => {
+    const colRef = useRef(null);
     const scrollBy = (delta) => {
-      if (rowRef.current) rowRef.current.scrollBy({ left: delta, behavior: 'smooth' });
+      if (colRef.current) colRef.current.scrollBy({ top: delta, behavior: 'smooth' });
     };
     return (
-      <div className="relative">
+      <div className="relative h-full">
         <button
-          onClick={() => scrollBy(-360)}
-          className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md hidden xl:flex items-center justify-center"
-          aria-label="Scroll left"
+          onClick={() => scrollBy(-280)}
+          className="absolute left-1/2 -translate-x-1/2 -top-3 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center"
+          aria-label="Scroll up"
         >
-          <ChevronLeft className="w-4 h-4 text-white" />
+          <ChevronUp className="w-4 h-4 text-white" />
         </button>
         <div
-          ref={rowRef}
-          className="flex gap-4 overflow-x-auto pb-2 pr-6"
-          style={{ scrollbarWidth: 'none' }}
+          ref={colRef}
+          className="flex flex-col gap-3 overflow-y-auto pr-2"
+          style={{ scrollbarWidth: 'none', maxHeight: '100%' }}
         >
           {games.map((game, i) => {
             const isActive = selectedGame?.id === game.id;
             return (
               <motion.div
                 key={game.id || i}
-                whileHover={{ y: -4, scale: 1.02 }}
-                className={`relative flex-shrink-0 w-40 group`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                whileHover={{ x: 4 }}
+                className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer border ${
+                  isActive ? 'border-cyan-400/30 bg-cyan-400/10 shadow-[0_0_24px_rgba(34,211,238,0.15)]' : 'border-white/10 hover:border-white/20'
+                }`}
                 onClick={() => onSelect(game)}
               >
-                <div
-                  className={`aspect-[3/4] rounded-xl overflow-hidden border ${isActive ? 'border-cyan-400/40 shadow-[0_0_0_2px_rgba(34,211,238,0.2)]' : 'border-white/10'}`}
-                  style={{ boxShadow: isActive ? '0 0 24px rgba(34,211,238,0.2)' : '0 8px 24px rgba(0,0,0,0.4)' }}
-                >
+                <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-black/50">
                   <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                  <AnimatePresence>
-                    {isActive && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 ring-2 ring-cyan-400/40 rounded-xl pointer-events-none"
-                      />
-                    )}
-                  </AnimatePresence>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-70" />
                 </div>
-                <div className="mt-2">
-                  <p className="text-white text-sm font-medium truncate">{game.title}</p>
-                  <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+                <div className="min-w-0 flex-1">
+                  <p className={`font-semibold text-sm truncate ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{game.title}</p>
+                  <p className="text-white/40 text-xs capitalize truncate">{game.genre}</p>
                 </div>
                 <motion.button
                   onClick={(e) => { e.stopPropagation(); onPlay(game); }}
-                  className="absolute bottom-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-black hidden group-hover:flex items-center justify-center"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <Play className="w-4 h-4 fill-black" />
+                  <Play className="w-3.5 h-3.5" />
                 </motion.button>
               </motion.div>
             );
           })}
         </div>
         <button
-          onClick={() => scrollBy(360)}
-          className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md hidden xl:flex items-center justify-center"
-          aria-label="Scroll right"
+          onClick={() => scrollBy(280)}
+          className="absolute left-1/2 -translate-x-1/2 -bottom-3 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center"
+          aria-label="Scroll down"
         >
-          <ChevronRight className="w-4 h-4 text-white" />
+          <ChevronDown className="w-4 h-4 text-white" />
         </button>
       </div>
     );
@@ -1119,7 +1111,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                   <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
                   <div className="text-white/40 text-xs">{filteredGames.length} games</div>
                 </div>
-                <HorizontalGameScroller
+                <VerticalGameScroller
                   games={filteredGames}
                   selectedGame={selectedGame}
                   onSelect={setSelectedGame}
