@@ -1278,29 +1278,9 @@ export default function Store() {
 
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
-                                    {/* LEFT: Crossroad Menu (Genres + Store label with arrow) */}
+                                    {/* LEFT: Crossroad Menu (Genres) */}
                                     <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                        {/* Store label with arrow - left aligned + active genre pill on scroll up */}
-                                        <div className="mb-3 flex items-center gap-2">
-                                            <span className="text-white/60 text-sm font-semibold uppercase tracking-wider">Store</span>
-                                            <ChevronRight className="w-4 h-4 text-white/60" />
-                                            <AnimatePresence>
-                                                {scrollDir === 'up' && currentNavGenre && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, x: -8 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: -8 }}
-                                                        transition={{ duration: 0.2 }}
-                                                        className="flex items-center gap-2"
-                                                    >
-                                                        <currentNavGenre.icon className="w-4 h-4 text-cyan-400" />
-                                                        <span className="text-sm uppercase tracking-wider text-cyan-400 font-black">{currentNavGenre.label}</span>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-
-                                        {/* Vertical genre list with cross-scroll shift on scroll up */}
+                                        {/* Vertical genre list */}
                                         <div className="relative">
 
                                             <motion.div
