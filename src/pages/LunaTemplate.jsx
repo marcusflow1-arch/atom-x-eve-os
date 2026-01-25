@@ -1877,10 +1877,24 @@ export default function LunaTemplate() {
 
                   <AnimatePresence mode="wait">
                   {expandedGenre ?
-                    <ExpandedGenreView
-                      genre={expandedGenre}
-                      onClose={() => setExpandedGenre(null)}
-                      onCardClick={setSelectedCardForUpgrade} /> :
+                    <motion.div
+                      key="expanded-genre"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[70] p-8"
+                      style={{
+                        background: 'rgba(11, 11, 11, 0.95)',
+                        backdropFilter: 'blur(40px)',
+                        WebkitBackdropFilter: 'blur(40px)'
+                      }}
+                    >
+                      <ExpandedGenreView
+                        genre={expandedGenre}
+                        onClose={() => setExpandedGenre(null)}
+                        onCardClick={setSelectedCardForUpgrade}
+                      />
+                    </motion.div> :
 
                     showInventory ?
                       <motion.div
