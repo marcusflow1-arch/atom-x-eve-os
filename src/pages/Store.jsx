@@ -693,7 +693,7 @@ export default function Store() {
 
                     {/* Title */}
                     <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                        {storeMode === 'store' && storeSubView === 'achievements' ? 'Atom X Eve Achievement' : storeMode === 'store' && storeSubView === 'library' ? 'Atom X Eve Library' : 'ATOM - Store'}
+                        {storeMode === 'store' && storeSubView === 'achievements' ? 'Atom X Eve Achievement' : storeMode === 'store' && storeSubView === 'library' ? 'Atom X Eve Library' : 'Atom X Eve Store'}
                     </span>
 
                     {/* Divider */}
