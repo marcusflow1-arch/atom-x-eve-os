@@ -747,14 +747,6 @@ function LayoutContent({ children, currentPageName }) {
                             Aura
                           </button>
 
-                          {/* Aura (Blank Subpage) */}
-                          <button
-                            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=aura')}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white"
-                          >
-                            Aura
-                          </button>
-
                           {/* Discord */}
                           <a
                             href="https://discord.gg/VJQQNxAa"
