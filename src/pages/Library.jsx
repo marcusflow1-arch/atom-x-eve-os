@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
 import DigitalAchievementCard from '@/components/achievements/DigitalAchievementCard';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronLeft, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import VirtualizedGameList from '@/components/library/VirtualizedGameList';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
@@ -275,9 +275,82 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay, index }) => {
       </div>
     </motion.div>
   );
-};
+  };
 
-// Luna Sidebar Item
+  // New HorizontalGameScroller (left strip with horizontal scroll)
+  const HorizontalGameScroller = ({ games, selectedGame, onSelect, onPlay }) => {
+    const rowRef = useRef(null);
+    const scrollBy = (delta) => {
+      if (rowRef.current) rowRef.current.scrollBy({ left: delta, behavior: 'smooth' });
+    };
+    return (
+      <div className="relative">
+        <button
+          onClick={() => scrollBy(-360)}
+          className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md hidden xl:flex items-center justify-center"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 text-white" />
+        </button>
+        <div
+          ref={rowRef}
+          className="flex gap-4 overflow-x-auto pb-2 pr-6"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {games.map((game, i) => {
+            const isActive = selectedGame?.id === game.id;
+            return (
+              <motion.div
+                key={game.id || i}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className={`relative flex-shrink-0 w-40 group`}
+                onClick={() => onSelect(game)}
+              >
+                <div
+                  className={`aspect-[3/4] rounded-xl overflow-hidden border ${isActive ? 'border-cyan-400/40 shadow-[0_0_0_2px_rgba(34,211,238,0.2)]' : 'border-white/10'}`}
+                  style={{ boxShadow: isActive ? '0 0 24px rgba(34,211,238,0.2)' : '0 8px 24px rgba(0,0,0,0.4)' }}
+                >
+                  <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 ring-2 ring-cyan-400/40 rounded-xl pointer-events-none"
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+                <div className="mt-2">
+                  <p className="text-white text-sm font-medium truncate">{game.title}</p>
+                  <p className="text-white/40 text-xs capitalize">{game.genre}</p>
+                </div>
+                <motion.button
+                  onClick={(e) => { e.stopPropagation(); onPlay(game); }}
+                  className="absolute bottom-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-black hidden group-hover:flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Play className="w-4 h-4 fill-black" />
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => scrollBy(360)}
+          className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md hidden xl:flex items-center justify-center"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 text-white" />
+        </button>
+      </div>
+    );
+  };
+
+  // Luna Sidebar Item
 const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) => (
   <motion.div
     initial={{ opacity: 0, x: -20 }}
