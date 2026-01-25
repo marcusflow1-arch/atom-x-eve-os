@@ -1374,13 +1374,13 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                                <MessageSquare className="w-16 h-16 text-white/20 mb-4" />
                                <h3 className="text-xl font-bold text-white mb-2">Join the Conversation</h3>
                                <p className="text-white/50 max-w-md mb-6">
-                                 Connect with other players, share strategies, and find groups in the dedicated Farm Page for {selectedGame.title}.
+                                 Connect with other players, share strategies, and find groups in the Community Forum for {selectedGame.title}.
                                </p>
                                <Button 
                                  className="bg-blue-600 hover:bg-blue-500 rounded-full px-8 py-6 text-lg"
-                                 onClick={() => navigate(createPageUrl('Farm') + `?gameId=g4`)} // Mocking ID g4 for demo
+                                 onClick={() => navigate(createPageUrl('Community') + `?game=${encodeURIComponent(selectedGame.title)}`)}
                                >
-                                 Enter Farm Page
+                                 Enter Forum
                                </Button>
                              </div>
                           </motion.div>
