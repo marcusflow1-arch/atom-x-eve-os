@@ -1058,7 +1058,7 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
 
-    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum' || panel === 'aura') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -2557,6 +2557,7 @@ export default function LunaTemplate() {
               {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
+              {activeSubTab === 'aura' && <div className="w-full h-full flex items-center justify-center text-white/40 text-xl">Aura (Blank Page)</div>}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
           </motion.div>
