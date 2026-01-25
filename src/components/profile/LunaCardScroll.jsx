@@ -455,7 +455,8 @@ export default function LunaCardScroll({ onExpand, onCardClick, onSelectGame }) 
                               {viewMode === 'games' ? (
                                 <GamesCarousel 
                                   games={gamesList} 
-                                  onSelectGame={(game) => selectGame(genre, game)} 
+                                  onSelectGame={(game) => selectGame(genre, game)}
+                                  genreName={genre}
                                 />
                               ) : (
                                 <CardsCarousel 
