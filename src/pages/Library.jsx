@@ -394,9 +394,10 @@ const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) =>
   </motion.div>
 );
 
-// Achievement Cards Section with Category Filters
+// Achievement Cards Section with Category Filters - Uses same UI as Achievements page
 const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [selectedCard, setSelectedCard] = useState(null);
   
   const categories = [
     { id: 'all', label: 'All' },
@@ -408,16 +409,16 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
 
   // Mock achievement cards data with categories
   const achievementCards = [
-    { id: 1, title: 'Plasma Shield', category: 'equipment', rarity: 'Rare', unlocked: true, icon: '🛡️', xp: 500 },
-    { id: 2, title: 'Neural Blade', category: 'equipment', rarity: 'Epic', unlocked: true, icon: '⚔️', xp: 1000 },
-    { id: 3, title: 'Void Armor', category: 'equipment', rarity: 'Legendary', unlocked: false, icon: '🛡️', xp: 2000 },
-    { id: 4, title: 'Fireball', category: 'abilities', rarity: 'Common', unlocked: true, icon: '🔥', xp: 250 },
-    { id: 5, title: 'Time Warp', category: 'abilities', rarity: 'Epic', unlocked: false, icon: '⏰', xp: 1500 },
-    { id: 6, title: 'Shadow Strike', category: 'abilities', rarity: 'Rare', unlocked: true, icon: '👤', xp: 750 },
-    { id: 7, title: 'Phoenix', category: 'companions', rarity: 'Legendary', unlocked: false, icon: '🦅', xp: 3000 },
-    { id: 8, title: 'Wolf Spirit', category: 'companions', rarity: 'Rare', unlocked: true, icon: '🐺', xp: 800 },
-    { id: 9, title: 'Master Yun', category: 'teacher', rarity: 'Epic', unlocked: false, icon: '👨‍🏫', xp: 1200 },
-    { id: 10, title: 'Sage Aria', category: 'teacher', rarity: 'Legendary', unlocked: false, icon: '📚', xp: 2500 },
+    { id: 1, title: 'Plasma Shield', category: 'equipment', rarity: 'Rare', unlocked: true, description: 'A powerful energy shield that absorbs incoming damage.', stats: { defense: 25, energy: 15 }, series: 'Cyberpunk Collection' },
+    { id: 2, title: 'Neural Blade', category: 'equipment', rarity: 'Epic', unlocked: true, description: 'A blade connected directly to your neural interface.', stats: { attack: 40, speed: 20 }, series: 'Cyberpunk Collection' },
+    { id: 3, title: 'Void Armor', category: 'equipment', rarity: 'Legendary', unlocked: false, description: 'Armor forged in the void between dimensions.', stats: { defense: 60, magic: 30 }, series: 'Dark Souls Collection' },
+    { id: 4, title: 'Fireball', category: 'abilities', rarity: 'Common', unlocked: true, description: 'Launch a devastating ball of fire at your enemies.', stats: { damage: 150, cooldown: 8 }, series: 'Elemental Series' },
+    { id: 5, title: 'Time Warp', category: 'abilities', rarity: 'Epic', unlocked: false, description: 'Bend time itself to your will.', stats: { duration: 5, cooldown: 60 }, series: 'Temporal Series' },
+    { id: 6, title: 'Shadow Strike', category: 'abilities', rarity: 'Rare', unlocked: true, description: 'Strike from the shadows with deadly precision.', stats: { damage: 200, critChance: 35 }, series: 'Assassin Series' },
+    { id: 7, title: 'Phoenix', category: 'companions', rarity: 'Legendary', unlocked: false, description: 'A majestic phoenix that rises from the ashes.', stats: { fireDamage: 30, healBoost: 20 }, series: 'Mythical Beasts' },
+    { id: 8, title: 'Wolf Spirit', category: 'companions', rarity: 'Rare', unlocked: true, description: 'A loyal wolf spirit that fights by your side.', stats: { speed: 25, tracking: 40 }, series: 'Spirit Animals' },
+    { id: 9, title: 'Master Yun', category: 'teacher', rarity: 'Epic', unlocked: false, description: 'Ancient master of martial arts and wisdom.', stats: { xpBoost: 15, skillRate: 10 }, series: 'Legendary Teachers' },
+    { id: 10, title: 'Sage Aria', category: 'teacher', rarity: 'Legendary', unlocked: false, description: 'A sage who has mastered the arcane arts.', stats: { magicBoost: 25, manaRegen: 15 }, series: 'Legendary Teachers' },
   ];
 
   const filteredCards = activeCategory === 'all' 
@@ -449,7 +450,7 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
         ))}
       </div>
 
-      {/* Cards Grid using DigitalAchievementCard */}
+      {/* Cards Grid using ShinyCard (same as Achievements page) */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {filteredCards.map((card, i) => (
           <motion.div
@@ -457,21 +458,39 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.03 }}
+            className="aspect-[2.5/3.5]"
           >
             {card.unlocked ? (
-              <DigitalAchievementCard 
-                title={card.title}
-                icon={card.icon}
-                rarity={card.rarity}
-                unlocked={card.unlocked}
-                xp={card.xp}
-                onClick={onShowAchievementsOverlay}
-              />
+              <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
+                <div className="absolute inset-0 flex flex-col p-3">
+                  <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900">
+                    <div className="absolute inset-0 flex items-center justify-center text-4xl">
+                      {card.category === 'equipment' ? '⚔️' : 
+                       card.category === 'abilities' ? '✨' : 
+                       card.category === 'companions' ? '🐾' : '📚'}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
+                      <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                        card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                        card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                        card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                        'border-slate-500/50 text-slate-400'
+                      }`}>
+                        {card.rarity}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </ShinyCard>
             ) : (
-              /* Locked Card - Question Mark using same card style */
+              /* Locked Card - Question Mark */
               <div 
-                onClick={onShowAchievementsOverlay}
-                className="aspect-[3/4] rounded-xl bg-slate-900/40 backdrop-blur-md border border-white/10 overflow-hidden cursor-pointer group transition-all hover:scale-105 flex flex-col items-center justify-center"
+                onClick={() => setSelectedCard(card)}
+                className="w-full h-full rounded-xl bg-slate-900/40 backdrop-blur-md border border-white/10 overflow-hidden cursor-pointer group transition-all hover:scale-105 flex flex-col items-center justify-center"
               >
                 <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2">
                   <span className="text-2xl font-bold text-white/20">?</span>
@@ -488,8 +507,7 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
             {[1, 2, 3, 4].map(i => (
               <div
                 key={`empty-${i}`}
-                onClick={onShowAchievementsOverlay}
-                className="aspect-[3/4] rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-all"
+                className="aspect-[2.5/3.5] rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-all"
               >
                 <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2">
                   <span className="text-2xl font-bold text-white/20">?</span>
@@ -500,6 +518,16 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
           </>
         )}
       </div>
+
+      {/* Card Enhancement Overlay (same UI as Achievements page) */}
+      <AnimatePresence>
+        {selectedCard && (
+          <CardEnhancementOverlay
+            card={selectedCard}
+            onClose={() => setSelectedCard(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
