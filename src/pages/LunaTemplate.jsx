@@ -2557,7 +2557,7 @@ export default function LunaTemplate() {
               {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
-              {activeSubTab === 'aura' && <div className="w-full h-full flex items-center justify-center text-white/40 text-xl">Aura (Blank Page)</div>}
+              {activeSubTab === 'aura' && <div className="w-full h-full"></div>}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
           </motion.div>
