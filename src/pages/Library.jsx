@@ -850,7 +850,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('list');
   const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [activeGenre, setActiveGenre] = useState('All');
@@ -1111,57 +1111,36 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         )}
 
         {viewMode === 'grid' ? (
-          <div className="flex flex-col">
-            {/* Genre bar */}
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center gap-2">
-                {["All", ...Object.keys(gamesByGenre)]?.map((genre) => (
-                  <button
-                    key={genre}
-                    onClick={() => { setActiveGenre(genre); setSectionView('grid'); }}
-                    className={`px-4 py-2 rounded-full border transition-all text-sm ${activeGenre === genre ? 'bg-white/15 text-white border-white/30' : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'}`}
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-4 h-px w-full bg-white/10" />
+          <div className="flex gap-6">
+            {/* Left Sidebar - Game List */}
+            <div className="w-80 flex-shrink-0">
+              <ShinySidebarBox className="p-4 h-full">
+                <div className="mb-4">
+                  <p className="text-white/40 text-xs font-medium uppercase tracking-wider">Your Games</p>
+                </div>
+                <div className="max-h-[calc(100vh-300px)] pr-2">
+                  <VirtualizedGameList
+                    games={filteredGames}
+                    selectedGame={selectedGame}
+                    streamingGameId={streamingGameId}
+                    onSelect={setSelectedGame}
+                    onPlay={handleLaunchGame}
+                  />
+                </div>
+              </ShinySidebarBox>
             </div>
 
-            {/* Below-the-line content */}
-            {sectionView === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-                {filteredGames.map((game, i) => (
-                  <LunaGameCard
-                    key={game.id || i}
-                    game={game}
-                    isStreaming={game.id === streamingGameId}
-                    onSelect={(g) => { setSelectedGame(g); setSectionView('details'); }}
-                    onPlay={handleLaunchGame}
-                    index={i}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={() => setSectionView('grid')}
-                    className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
-                  >
-                    Back to Library
-                  </button>
-                </div>
-                <LunaGamePanel
-                  game={selectedGame}
-                  isStreaming={selectedGame?.id === streamingGameId}
-                  onPlay={handleLaunchGame}
-                  onStream={handleStreamGame}
-                  onShowAchievements={() => setShowAchievementsOverlay(true)}
-                  onShowGameDetails={() => setShowGameDetailsOverlay(true)}
-                />
-              </div>
-            )}
+            {/* Game Detail Panel */}
+            <div className="flex-1 min-h-[calc(100vh-200px)]">
+              <LunaGamePanel
+                game={selectedGame}
+                isStreaming={selectedGame?.id === streamingGameId}
+                onPlay={handleLaunchGame}
+                onStream={handleStreamGame}
+                onShowAchievements={() => setShowAchievementsOverlay(true)}
+                onShowGameDetails={() => setShowGameDetailsOverlay(true)}
+              />
+            </div>
           </div>
         ) : (
           <div className="flex gap-6">
