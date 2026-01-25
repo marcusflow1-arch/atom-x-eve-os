@@ -250,7 +250,7 @@ const CardsCarousel = ({ genre, activeGame, onCardClick, filter }) => {
   );
 };
 
-export default function LunaCardScroll({ onExpand, onCardClick }) {
+export default function LunaCardScroll({ onExpand, onCardClick, onSelectGame }) {
   // State for pagination per genre
   const [pages, setPages] = useState({});
   // State for order of genres
