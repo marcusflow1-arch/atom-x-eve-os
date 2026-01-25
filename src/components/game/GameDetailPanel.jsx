@@ -598,22 +598,25 @@ export default function GameDetailPanel({ gameId, onClose }) {
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-20 p-8 flex justify-end items-start"
+        className="relative z-20 p-8 flex justify-between items-start pointer-events-auto"
       >
+        <div className="flex-1">
+          <span className="inline-block px-3 py-1.5 rounded-full text-sm font-bold tracking-wider text-white/80 bg-black/30 border border-white/10">ATOM - Store</span>
+        </div>
         {/* Tabs Switcher */}
-        <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+        <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full gap-1">
           <button 
             onClick={() => setActiveTab('system')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'
+            className={`inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             System Core
           </button>
           <button 
             onClick={() => setActiveTab('specs')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'
+            className={`inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
           >
             Tech Specs
