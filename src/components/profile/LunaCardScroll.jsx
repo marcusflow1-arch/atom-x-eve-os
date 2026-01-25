@@ -45,7 +45,7 @@ const MOCK_GAMES = INITIAL_GENRES.reduce((acc, genre) => {
   return acc;
 }, { default: generateGames('Game', 40) });
 
-const GamesCarousel = ({ games, onSelectGame }) => {
+const GamesCarousel = ({ games, onSelectGame, genreName }) => {
   const scrollRef = useRef(null);
   const navigate = useNavigate();
 
@@ -62,6 +62,13 @@ const GamesCarousel = ({ games, onSelectGame }) => {
 
   return (
     <div className="relative group/carousel">
+      {/* Instruction Text */}
+      <div className="text-center mb-3">
+        <p className="text-[10px] text-cyan-400/70 italic">
+          Select a game to view cards from that game
+        </p>
+      </div>
+      
       <motion.div
         key="games-view"
         ref={scrollRef}
@@ -76,7 +83,7 @@ const GamesCarousel = ({ games, onSelectGame }) => {
             onClick={() => onSelectGame(game)}
             className="flex-shrink-0 w-24 flex flex-col gap-2 cursor-pointer group/game"
           >
-            <div className="w-24 h-32 rounded-lg bg-slate-800 border border-white/10 overflow-hidden relative group-hover/game:border-blue-400/50 transition-colors">
+            <div className="w-24 h-32 rounded-lg bg-slate-800 border border-white/10 overflow-hidden relative group-hover/game:border-blue-400/50 group-hover/game:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all">
               {game.image ? (
                 <img src={game.image} alt={game.title} className="w-full h-full object-cover opacity-60 group-hover/game:opacity-100 transition-opacity" />
               ) : (
@@ -89,22 +96,18 @@ const GamesCarousel = ({ games, onSelectGame }) => {
                 {game.title}
               </div>
               
-              {/* Hover Overlay for Achievements */}
+              {/* Click indicator overlay */}
               <div 
-                className="absolute inset-0 bg-black/60 opacity-0 group-hover/game:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(createPageUrl('Achievements') + '?gameId=' + game.id);
-                }}
+                className="absolute inset-0 bg-blue-500/0 group-hover/game:bg-blue-500/20 transition-colors flex items-center justify-center"
               >
-                <div className="flex flex-col items-center gap-1 text-yellow-400 hover:scale-110 transition-transform">
-                  <Trophy size={20} />
-                  <span className="text-[8px] font-bold uppercase tracking-wider">Achievements</span>
+                <div className="flex flex-col items-center gap-1 text-white opacity-0 group-hover/game:opacity-100 transition-opacity">
+                  <Gamepad2 size={16} />
+                  <span className="text-[8px] font-bold uppercase tracking-wider">Select</span>
                 </div>
               </div>
             </div>
             <div className="text-[9px] text-cyan-400/80 text-center mt-1 font-mono opacity-0 group-hover/game:opacity-100 transition-opacity">
-              AI_SYNERGY: HIGH
+              Click to view cards
             </div>
           </div>
         ))}
@@ -113,7 +116,7 @@ const GamesCarousel = ({ games, onSelectGame }) => {
       {/* Left Arrow */}
       <button 
         onClick={(e) => { e.stopPropagation(); scroll('left'); }}
-        className="absolute -left-2 top-16 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
+        className="absolute -left-2 top-20 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
       >
         <ChevronLeft size={14} />
       </button>
@@ -121,7 +124,7 @@ const GamesCarousel = ({ games, onSelectGame }) => {
       {/* Right Arrow */}
       <button 
         onClick={(e) => { e.stopPropagation(); scroll('right'); }}
-        className="absolute -right-2 top-16 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
+        className="absolute -right-2 top-20 -translate-y-1/2 z-20 w-6 h-6 bg-black/80 border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-blue-600 hover:border-blue-400 text-white shadow-lg"
       >
         <ChevronRight size={14} />
       </button>
