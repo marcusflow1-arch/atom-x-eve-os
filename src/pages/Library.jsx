@@ -425,6 +425,25 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
     ? achievementCards 
     : achievementCards.filter(c => c.category === activeCategory);
 
+  const getRarityStyles = (rarity) => {
+    switch(rarity) {
+      case 'Legendary': return 'border-orange-500/50 text-orange-400 bg-orange-500/10';
+      case 'Epic': return 'border-purple-500/50 text-purple-400 bg-purple-500/10';
+      case 'Rare': return 'border-blue-500/50 text-blue-400 bg-blue-500/10';
+      default: return 'border-slate-500/50 text-slate-400 bg-slate-500/10';
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'equipment': return '⚔️';
+      case 'abilities': return '✨';
+      case 'companions': return '🐾';
+      case 'teacher': return '📚';
+      default: return '🏆';
+    }
+  };
+
   return (
     <motion.div 
       key="achievements" 
@@ -450,48 +469,45 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
         ))}
       </div>
 
-      {/* Cards Grid using ShinyCard (same as Achievements page) */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+      {/* Cards Grid - Consistent sizing */}
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4">
         {filteredCards.map((card, i) => (
           <motion.div
             key={card.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.03 }}
-            className="aspect-[2.5/3.5]"
+            onClick={() => setSelectedCard(card)}
+            className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group transition-all hover:scale-105"
           >
             {card.unlocked ? (
-              <ShinyCard index={i} onClick={() => setSelectedCard(card)}>
+              /* Unlocked Card */
+              <div className={`w-full h-full relative border ${getRarityStyles(card.rarity)} rounded-xl overflow-hidden`}
+                   style={{ background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)' }}>
+                {/* Card Content */}
                 <div className="absolute inset-0 flex flex-col p-3">
-                  <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900">
-                    <div className="absolute inset-0 flex items-center justify-center text-4xl">
-                      {card.category === 'equipment' ? '⚔️' : 
-                       card.category === 'abilities' ? '✨' : 
-                       card.category === 'companions' ? '🐾' : '📚'}
+                  {/* Icon Area */}
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-3xl">
+                      {getCategoryIcon(card.category)}
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                      <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                        card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                        card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                        card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                        'border-slate-500/50 text-slate-400'
-                      }`}>
-                        {card.rarity}
-                      </Badge>
-                    </div>
+                  
+                  {/* Card Info */}
+                  <div className="text-center">
+                    <h3 className="text-white font-bold text-xs leading-tight mb-1 truncate">{card.title}</h3>
+                    <Badge variant="outline" className={`text-[9px] h-4 px-1.5 border ${getRarityStyles(card.rarity)}`}>
+                      {card.rarity}
+                    </Badge>
                   </div>
                 </div>
-              </ShinyCard>
+                
+                {/* Hover Shine */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
             ) : (
               /* Locked Card - Question Mark */
-              <div 
-                onClick={() => setSelectedCard(card)}
-                className="w-full h-full rounded-xl bg-slate-900/40 backdrop-blur-md border border-white/10 overflow-hidden cursor-pointer group transition-all hover:scale-105 flex flex-col items-center justify-center"
-              >
+              <div className="w-full h-full rounded-xl bg-slate-800/60 border border-white/10 flex flex-col items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2">
                   <span className="text-2xl font-bold text-white/20">?</span>
                 </div>
@@ -500,23 +516,6 @@ const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
             )}
           </motion.div>
         ))}
-
-        {/* Empty State Placeholder Cards */}
-        {filteredCards.length === 0 && (
-          <>
-            {[1, 2, 3, 4].map(i => (
-              <div
-                key={`empty-${i}`}
-                className="aspect-[2.5/3.5] rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-all"
-              >
-                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2">
-                  <span className="text-2xl font-bold text-white/20">?</span>
-                </div>
-                <p className="text-white/20 text-xs">Undiscovered</p>
-              </div>
-            ))}
-          </>
-        )}
       </div>
 
       {/* Card Enhancement Overlay (same UI as Achievements page) */}
