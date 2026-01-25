@@ -6,6 +6,8 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
 import DigitalAchievementCard from '@/components/achievements/DigitalAchievementCard';
+import CardEnhancementOverlay from '@/components/profile/CardEnhancementOverlay';
+import ShinyCard from '@/components/shared/ShinyCard';
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronUp, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic } from 'lucide-react';
 import VirtualizedGameList from '@/components/library/VirtualizedGameList';
