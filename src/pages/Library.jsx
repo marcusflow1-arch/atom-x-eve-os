@@ -1247,34 +1247,9 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                         )}
                         
                         {activeDetailTab === 'achievements' && (
-                          <motion.div 
-                            key="achievements" 
-                            initial={{ opacity: 0, y: 10 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            exit={{ opacity: 0, y: -10 }}
-                            className="flex flex-wrap gap-3"
-                          >
-                            {[
-                              { title: 'First Blood', desc: 'Get your first kill', xp: 500, unlocked: true },
-                              { title: 'Master Explorer', desc: 'Discover all locations', xp: 1000, unlocked: false },
-                              { title: 'Speed Demon', desc: 'Complete level 1 in under 5 mins', xp: 750, unlocked: true },
-                              { title: 'Collector', desc: 'Find all hidden items', xp: 2000, unlocked: false },
-                              { title: 'Champion', desc: 'Win 10 matches', xp: 1500, unlocked: false },
-                              { title: 'Perfectionist', desc: 'Complete all side quests', xp: 3000, unlocked: false },
-                              { title: 'Veteran', desc: 'Play for 100 hours', xp: 2500, unlocked: true },
-                              { title: 'Boss Slayer', desc: 'Defeat all bosses', xp: 2000, unlocked: false },
-                            ].map((ach, i) => (
-                              <DigitalAchievementCard 
-                                key={i}
-                                title={ach.title}
-                                icon="🏆"
-                                rarity={ach.unlocked ? 'Legendary' : 'Epic'}
-                                unlocked={ach.unlocked}
-                                xp={ach.xp}
-                                size="small"
-                              />
-                            ))}
-                          </motion.div>
+                          <AchievementCardsSection 
+                            onShowAchievementsOverlay={() => setShowAchievementsOverlay(true)}
+                          />
                         )}
 
                         {['streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
