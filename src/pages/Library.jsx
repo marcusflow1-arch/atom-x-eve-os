@@ -394,6 +394,124 @@ const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) =>
   </motion.div>
 );
 
+// Game Discussion Section - Shows recent forum posts for a game
+const GameDiscussionSection = ({ game, onNavigateToForum }) => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGamePosts = async () => {
+      if (!game) return;
+      setLoading(true);
+      try {
+        // Fetch posts related to this game from the Community/Forum
+        const gamePosts = await base44.entities.Post.filter({
+          game_title: game.title
+        }, '-created_date', 5);
+        setPosts(gamePosts || []);
+      } catch (error) {
+        console.error('Failed to fetch game posts:', error);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGamePosts();
+  }, [game]);
+
+  if (loading) {
+    return (
+      <motion.div key="discussion" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div key="discussion" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold text-white">Recent Discussions</h3>
+        <Button 
+          variant="outline"
+          className="border-white/20 hover:bg-white/10 text-white"
+          onClick={onNavigateToForum}
+        >
+          <MessageSquare className="w-4 h-4 mr-2" />
+          View All in Forum
+        </Button>
+      </div>
+
+      {posts.length > 0 ? (
+        <div className="space-y-3">
+          {posts.map((post) => (
+            <div 
+              key={post.id}
+              onClick={onNavigateToForum}
+              className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer transition-all group"
+            >
+              <div className="flex items-start gap-4">
+                {/* Author Avatar */}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {post.created_by?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  {/* Post Title */}
+                  <h4 className="text-white font-medium group-hover:text-blue-400 transition-colors truncate">
+                    {post.title}
+                  </h4>
+                  
+                  {/* Post Preview */}
+                  <p className="text-white/50 text-sm mt-1 line-clamp-2">
+                    {post.content?.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                  </p>
+                  
+                  {/* Meta */}
+                  <div className="flex items-center gap-4 mt-2 text-xs text-white/40">
+                    <span>{post.created_by?.split('@')[0] || 'Anonymous'}</span>
+                    <span>•</span>
+                    <span>{new Date(post.created_date).toLocaleDateString()}</span>
+                    {post.community && (
+                      <>
+                        <span>•</span>
+                        <Badge variant="outline" className="text-[10px] border-white/20 text-white/50">
+                          {post.community}
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Arrow */}
+                <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 rounded-2xl border border-white/10">
+          <MessageSquare className="w-16 h-16 text-white/20 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">No Discussions Yet</h3>
+          <p className="text-white/50 max-w-md mb-6">
+            Be the first to start a conversation about {game?.title} in the Community Forum.
+          </p>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-500 rounded-full px-8 py-3"
+            onClick={onNavigateToForum}
+          >
+            Start a Discussion
+          </Button>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 // Achievement Cards Section with Category Filters - Uses same UI as Achievements page
 const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
   const [activeCategory, setActiveCategory] = useState('all');
