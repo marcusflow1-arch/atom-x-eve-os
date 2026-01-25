@@ -601,19 +601,19 @@ export default function GameDetailPanel({ gameId, onClose }) {
         className="relative z-20 p-8 flex justify-end items-start"
       >
         {/* Tabs Switcher */}
-        <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+        <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
           <button 
             onClick={() => setActiveTab('system')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'
+            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
             }`}
           >
             System Core
           </button>
           <button 
             onClick={() => setActiveTab('specs')}
-            className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'
+            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
             }`}
           >
             Tech Specs
