@@ -852,6 +852,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [viewMode, setViewMode] = useState('grid');
   const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
+  const [activeGenre, setActiveGenre] = useState('All');
+  const [sectionView, setSectionView] = useState('grid'); // 'grid' | 'details'
   const [selectedGame, setSelectedGame] = useState(null);
   const [showRecentlyAchieved, setShowRecentlyAchieved] = useState(false);
   const [showAchievementsOverlay, setShowAchievementsOverlay] = useState(false);
@@ -946,6 +948,10 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
     }
     if (minRating > 0) {
         games = games.filter(game => (game.rating || 0) >= minRating);
+    }
+
+    if (activeGenre !== 'All') {
+        games = games.filter(game => (game.genre || 'Uncategorized') === activeGenre);
     }
 
     if (searchTerm) {
