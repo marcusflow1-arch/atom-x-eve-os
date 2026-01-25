@@ -1114,71 +1114,17 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         {viewMode === 'grid' ? (
           <div className="flex h-full">
               {/* LEFT SIDEBAR - SHINY BOX */}
-              <div className="w-[300px] flex-shrink-0 h-[calc(100vh-140px)] pr-6 overflow-y-auto custom-scrollbar hidden lg:block sticky top-24">
-                  <ShinySidebarBox className="p-6 min-h-full">
-                      {/* Categories (Mapped to Tabs for Library) */}
-                      <div className="mb-8">
-                          <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                              <LayoutGrid className="w-3 h-3" /> Library
-                          </h3>
-                          <div className="space-y-1 mb-6">
-                              {['all', 'installed', 'favorites'].map((item) => (
-                                  <button 
-                                      key={item}
-                                      onClick={() => setActiveTab(item)}
-                                      className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex items-center justify-between group capitalize ${
-                                          activeTab === item ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                      }`}
-                                  >
-                                      <span>{item} Games</span>
-                                      {activeTab === item && <ChevronRight className="w-3 h-3" />}
-                                  </button>
-                              ))}
-                          </div>
-
-                          {/* Genre Dropdown with Games */}
-                          <div className="mt-6">
-                              <button
-                                  onClick={() => setIsGenreOpen(!isGenreOpen)}
-                                  className="w-full flex items-center justify-between text-white/40 text-xs font-bold uppercase tracking-widest mb-4 hover:text-white transition-colors px-1"
-                              >
-                                  <span>Genre Categories</span>
-                                  {isGenreOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                              </button>
-
-                              <AnimatePresence>
-                                  {isGenreOpen && (
-                                      <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{ height: 'auto', opacity: 1 }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          className="overflow-hidden"
-                                      >
-                                          <div className="space-y-6 pl-2">
-                                              {Object.entries(gamesByGenre).map(([genre, games]) => (
-                                                  <div key={genre}>
-                                                      <h4 className="text-white/60 text-xs font-semibold mb-2 flex items-center gap-2">
-                                                          <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                                                          {genre}
-                                                      </h4>
-                                                      <div className="border-l border-white/5 pl-2 ml-0.5 max-h-[300px]">
-                                                         <VirtualizedGameList
-                                                           games={games}
-                                                           selectedGame={selectedGame}
-                                                           streamingGameId={streamingGameId}
-                                                           onSelect={setSelectedGame}
-                                                           onPlay={handleLaunchGame}
-                                                         />
-                                                      </div>
-                                                  </div>
-                                              ))}
-                                          </div>
-                                      </motion.div>
-                                  )}
-                              </AnimatePresence>
-                          </div>
-                      </div>
-                  </ShinySidebarBox>
+              <div className="w-[460px] flex-shrink-0 h-[calc(100vh-140px)] pr-6 hidden lg:flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
+                  <div className="text-white/40 text-xs">{filteredGames.length} games</div>
+                </div>
+                <HorizontalGameScroller
+                  games={filteredGames}
+                  selectedGame={selectedGame}
+                  onSelect={setSelectedGame}
+                  onPlay={handleLaunchGame}
+                />
               </div>
 
               {/* RIGHT CONTENT AREA - GAME DETAILS */}
