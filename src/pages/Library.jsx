@@ -392,6 +392,166 @@ const LunaSidebarItem = ({ game, isSelected, isStreaming, onSelect, onPlay }) =>
   </motion.div>
 );
 
+// Achievement Cards Section with Category Filters
+const AchievementCardsSection = ({ onShowAchievementsOverlay }) => {
+  const [activeCategory, setActiveCategory] = useState('all');
+  
+  const categories = [
+    { id: 'all', label: 'All', icon: LayoutGrid },
+    { id: 'equipment', label: 'Equipment', icon: Shield },
+    { id: 'abilities', label: 'Abilities', icon: Zap },
+    { id: 'companions', label: 'Companions', icon: Users },
+    { id: 'teacher', label: 'Teacher', icon: Bot },
+  ];
+
+  // Mock achievement cards data with categories
+  const achievementCards = [
+    { id: 1, title: 'Plasma Shield', category: 'equipment', rarity: 'Rare', unlocked: true, stats: 'Defense +15' },
+    { id: 2, title: 'Neural Blade', category: 'equipment', rarity: 'Epic', unlocked: true, stats: 'Attack +25' },
+    { id: 3, title: 'Void Armor', category: 'equipment', rarity: 'Legendary', unlocked: false, stats: 'Defense +40' },
+    { id: 4, title: 'Fireball', category: 'abilities', rarity: 'Common', unlocked: true, stats: 'DMG: 150' },
+    { id: 5, title: 'Time Warp', category: 'abilities', rarity: 'Epic', unlocked: false, stats: 'Cooldown: 60s' },
+    { id: 6, title: 'Shadow Strike', category: 'abilities', rarity: 'Rare', unlocked: true, stats: 'DMG: 200' },
+    { id: 7, title: 'Phoenix', category: 'companions', rarity: 'Legendary', unlocked: false, stats: 'Fire DMG +30%' },
+    { id: 8, title: 'Wolf Spirit', category: 'companions', rarity: 'Rare', unlocked: true, stats: 'Speed +20%' },
+    { id: 9, title: 'Master Yun', category: 'teacher', rarity: 'Epic', unlocked: false, stats: 'XP Boost +15%' },
+    { id: 10, title: 'Sage Aria', category: 'teacher', rarity: 'Legendary', unlocked: false, stats: 'Skill Rate +10%' },
+  ];
+
+  const filteredCards = activeCategory === 'all' 
+    ? achievementCards 
+    : achievementCards.filter(c => c.category === activeCategory);
+
+  const getRarityColor = (rarity) => {
+    switch(rarity) {
+      case 'Legendary': return 'from-orange-500/20 to-yellow-500/20 border-orange-500/40 text-orange-400';
+      case 'Epic': return 'from-purple-500/20 to-pink-500/20 border-purple-500/40 text-purple-400';
+      case 'Rare': return 'from-blue-500/20 to-cyan-500/20 border-blue-500/40 text-blue-400';
+      default: return 'from-slate-500/20 to-slate-400/20 border-slate-500/40 text-slate-400';
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'equipment': return Shield;
+      case 'abilities': return Zap;
+      case 'companions': return Users;
+      case 'teacher': return Bot;
+      default: return Sparkles;
+    }
+  };
+
+  return (
+    <motion.div 
+      key="achievements" 
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -10 }}
+      className="space-y-6"
+    >
+      {/* Category Filter Tabs */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {categories.map(cat => {
+          const Icon = cat.icon;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
+                activeCategory === cat.id
+                  ? 'bg-white/15 text-white border-white/30 shadow-lg'
+                  : 'text-white/50 hover:text-white hover:bg-white/5 border-white/10'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {cat.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {filteredCards.map((card, i) => {
+          const CategoryIcon = getCategoryIcon(card.category);
+          const rarityClass = getRarityColor(card.rarity);
+          
+          return (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={onShowAchievementsOverlay}
+              className={`aspect-[3/4] rounded-xl border cursor-pointer group transition-all hover:scale-105 hover:shadow-xl overflow-hidden relative bg-gradient-to-br ${rarityClass}`}
+            >
+              {card.unlocked ? (
+                <>
+                  {/* Card Content */}
+                  <div className="absolute inset-0 p-3 flex flex-col justify-between">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <Badge variant="outline" className={`text-[9px] border-current ${rarityClass.split(' ').pop()}`}>
+                        {card.rarity}
+                      </Badge>
+                      <CategoryIcon className="w-4 h-4 opacity-60" />
+                    </div>
+                    
+                    {/* Center Icon */}
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                        <CategoryIcon className="w-6 h-6" />
+                      </div>
+                    </div>
+                    
+                    {/* Footer */}
+                    <div className="text-center">
+                      <h4 className="text-white font-bold text-sm truncate">{card.title}</h4>
+                      <p className="text-white/50 text-[10px] mt-0.5">{card.stats}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Hover Shine */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </>
+              ) : (
+                /* Locked Card - Question Mark */
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-800/50">
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+                    <span className="text-3xl font-bold text-white/20">?</span>
+                  </div>
+                  <p className="text-white/30 text-xs font-medium">Locked</p>
+                  <Badge variant="outline" className={`mt-2 text-[9px] border-current opacity-50 ${rarityClass.split(' ').pop()}`}>
+                    {card.rarity}
+                  </Badge>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+
+        {/* Empty State Placeholder Cards */}
+        {filteredCards.length === 0 && (
+          <>
+            {[1, 2, 3, 4].map(i => (
+              <div
+                key={`empty-${i}`}
+                onClick={onShowAchievementsOverlay}
+                className="aspect-[3/4] rounded-xl border border-white/10 bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-all"
+              >
+                <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-2">
+                  <span className="text-2xl font-bold text-white/20">?</span>
+                </div>
+                <p className="text-white/20 text-xs">Undiscovered</p>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 // Luna Game Detail Panel
 const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements, onShowGameDetails }) => {
   const [activeTab, setActiveTab] = useState('overview');
