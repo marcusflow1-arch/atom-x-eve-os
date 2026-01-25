@@ -431,9 +431,10 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Eye },
-    { id: 'cards_abilities', label: 'Cards & Abilities', icon: Sparkles },
+    { id: 'discussion', label: 'Discussion', icon: MessageSquare },
+    { id: 'guide', label: 'Guide', icon: Star },
+    { id: 'support', label: 'Support', icon: Shield },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
-    { id: 'community', label: 'Community', icon: Users },
     { id: 'streamer_affiliate', label: 'Streamer Affiliate', icon: Radio },
   ];
 
@@ -718,7 +719,7 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
             </motion.div>
           )}
 
-          {activeTab === 'community' && (
+          {activeTab === 'discussion' && (
             <motion.div 
               key="community"
               initial={{ opacity: 0, y: 20 }}
@@ -812,16 +813,16 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
             </motion.div>
           )}
 
-          {activeTab === 'streamer_affiliate' && (
+          {['guide','support','streamer_affiliate'].includes(activeTab) && (
             <motion.div 
-              key="streamer_affiliate"
+              key={activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center h-64 text-white/30"
             >
               <Radio className="w-12 h-12 mb-4 opacity-50" />
-              <p>Streamer Affiliate content coming soon</p>
+              <p>{activeTab === 'guide' ? 'Guide content coming soon' : activeTab === 'support' ? 'Support content coming soon' : 'Streamer Affiliate content coming soon'}</p>
             </motion.div>
           )}
         </AnimatePresence>
