@@ -675,11 +675,6 @@ function LayoutContent({ children, currentPageName }) {
                       </div>
                     </button>
 
-                    {!showLunaHeaderBar && headerConfig.title && (
-                      <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-4">
-                        {headerConfig.title}
-                      </span>
-                    )}
 
                     {showLunaHeaderBar && (
                       <>
