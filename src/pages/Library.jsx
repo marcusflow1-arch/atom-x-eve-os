@@ -280,22 +280,12 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay, index }) => {
   // New VerticalGameScroller (left strip with vertical scroll)
   const VerticalGameScroller = ({ games, selectedGame, onSelect, onPlay }) => {
     const colRef = useRef(null);
-    const scrollBy = (delta) => {
-      if (colRef.current) colRef.current.scrollBy({ top: delta, behavior: 'smooth' });
-    };
     return (
       <div className="relative h-full">
-        <button
-          onClick={() => scrollBy(-280)}
-          className="absolute left-1/2 -translate-x-1/2 -top-3 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center"
-          aria-label="Scroll up"
-        >
-          <ChevronUp className="w-4 h-4 text-white" />
-        </button>
         <div
           ref={colRef}
-          className="flex flex-col gap-3 overflow-y-auto pr-2"
-          style={{ scrollbarWidth: 'none', maxHeight: '100%' }}
+          className="flex flex-col gap-3 overflow-y-auto pr-2 h-full"
+          style={{ scrollbarWidth: 'none' }}
         >
           {games.map((game, i) => {
             const isActive = selectedGame?.id === game.id;
@@ -331,13 +321,6 @@ const LunaGameCard = ({ game, isStreaming, onSelect, onPlay, index }) => {
             );
           })}
         </div>
-        <button
-          onClick={() => scrollBy(280)}
-          className="absolute left-1/2 -translate-x-1/2 -bottom-3 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center"
-          aria-label="Scroll down"
-        >
-          <ChevronDown className="w-4 h-4 text-white" />
-        </button>
       </div>
     );
   };
