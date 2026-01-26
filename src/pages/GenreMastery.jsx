@@ -581,6 +581,16 @@ export default function GenreMastery({ onClose }) {
 
 
 
+      {/* Left Rail: Vertical line and level markers */}
+      <div className="fixed left-0 top-0 h-screen w-px bg-white/20 z-[25]" />
+      <div className="fixed left-0 top-20 bottom-0 w-[10%] z-[26]">
+        <div className="h-full flex flex-col justify-between items-center text-[10px] text-white/60 select-none">
+          {Array.from({ length: 50 }, (_, i) => i + 1).map((n) => (
+            <div key={n} className="leading-none">{n}</div>
+          ))}
+        </div>
+      </div>
+
       {/* LEFT SIDEBAR + MAIN CONTENT WRAPPER */}
       <div className="relative z-20 flex flex-1 min-h-0">
         <GenreSelector 
