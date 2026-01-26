@@ -261,6 +261,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       name: 'Standard Edition',
       description: 'The base game experience with all core features and content.',
       offers: ['Base Game Content', 'Core Story Campaign', 'Standard Abilities', 'Base Card Collection'],
+      price: 0,
       stats: {},
       achievements: [],
       abilities: []
@@ -270,6 +271,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       name: 'Neural Expansion Pack',
       description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
       offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
+      price: 14.99,
       stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
       achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
       abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst']
@@ -279,6 +281,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       name: 'Void Walker Arsenal',
       description: 'Gain access to stealth-focused equipment and void manipulation powers.',
       offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
+      price: 9.99,
       stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
       achievements: ['Shadow Master', 'Void Walker'],
       abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation']
@@ -288,6 +291,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       name: 'Season Pass: Year One',
       description: 'All future DLC releases for the first year, plus exclusive seasonal rewards.',
       offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
+      price: 29.99,
       stats: { dlcAccess: 'unlimited', genreXP: 50 },
       achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
       abilities: ['All DLC Abilities']
@@ -482,6 +486,22 @@ export default function GameDetailPanel({ gameId, onClose }) {
         price: game.price,
         image: game.cover_image,
         genre: game.genre
+    });
+  };
+
+  const handleAddDLCToCart = (dlc) => {
+    if (!isAuthenticated) {
+        alert("Authentication Required: Identity Protocol.");
+        return;
+    }
+    addToCart({
+        id: dlc.id,
+        type: 'dlc',
+        title: dlc.name,
+        price: dlc.price,
+        image: game.cover_image,
+        gameTitle: game.title,
+        gameId: game.id
     });
   };
 
@@ -858,20 +878,32 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                       {/* Abilities Included */}
                       {selectedDLC.abilities && selectedDLC.abilities.length > 0 && (
-                        <div>
-                          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">Abilities Included:</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedDLC.abilities.map((ability, i) => (
-                              <div key={i} className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-300 text-xs font-medium">
-                                {ability}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                      <div>
+                      <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-2">Abilities Included:</h3>
+                      <div className="flex flex-wrap gap-2">
+                      {selectedDLC.abilities.map((ability, i) => (
+                      <div key={i} className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-cyan-300 text-xs font-medium">
+                        {ability}
+                      </div>
+                      ))}
+                      </div>
+                      </div>
                       )}
-                    </div>
-                  )}
-                </div>
+
+                      {/* Add DLC to Cart Button */}
+                      <button
+                      onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddDLCToCart(selectedDLC);
+                      }}
+                      className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-xl text-cyan-300 font-bold text-sm transition-all hover:scale-[1.02]"
+                      >
+                      <Download className="w-4 h-4" />
+                      Add to Cart • ${selectedDLC.price?.toFixed(2)}
+                      </button>
+                      </div>
+                      )}
+                      </div>
 
                 {/* System Stats Preview */}
                 <div className="grid grid-cols-3 gap-4">
