@@ -16,7 +16,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
   // Default global chat pseudo-game
   const defaultChatGame = {
       id: 'global_chat',
-      title: 'Adam X Eve',
+      title: 'ATOM X EVE',
       genre: 'Social',
       cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
       isGlobalChat: true
@@ -161,7 +161,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
                         <div className="absolute inset-0 px-4 flex flex-col justify-center">
-                            <h2 className="text-xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">ADAM X EVE</h2>
+                            <h2 className="text-xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">ATOM X EVE</h2>
                             <p className="text-[10px] text-white/50 font-medium tracking-wider uppercase">Global Division Comms</p>
                         </div>
                     </div>

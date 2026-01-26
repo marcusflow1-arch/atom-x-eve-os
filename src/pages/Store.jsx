@@ -1006,92 +1006,70 @@ export default function Store() {
                             </div>
 
                             <div className="flex h-full max-w-[1920px] mx-auto">
-                                {/* LEFT SIDEBAR - SHINY BOX */}
-                                <div className="w-[300px] flex-shrink-0 h-full p-6 overflow-y-auto custom-scrollbar hidden lg:block">
-                                    <ShinySidebarBox className="p-6 h-full min-h-[80vh]">
-                                        {/* Categories */}
-                                        <div className="mb-8">
-                                            <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                <LayoutGrid className="w-3 h-3" /> Categories
-                                            </h3>
-                                            <div className="space-y-1">
-                                                {['All Games', 'Trending Now', 'New Releases', 'Top Rated', 'AI Enhanced', 'On Sale'].map((item) => (
-                                                    <button 
-                                                        key={item}
-                                                        onClick={() => setActiveCategory(item)}
-                                                        className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex items-center justify-between group ${
-                                                            activeCategory === item ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                                        }`}
-                                                    >
-                                                        <span>{item}</span>
-                                                        {activeCategory === item && <ChevronRight className="w-3 h-3" />}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="h-px bg-white/10 mb-8" />
-
-                                        {/* Genre Filters */}
-                                        <div className="mb-8">
-                                            <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Genre</h3>
-                                            <div className="space-y-3">
-                                                {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation'].map((g) => (
-                                                    <label key={g} className="flex items-center gap-3 cursor-pointer group">
-                                                        <Checkbox 
-                                                                        className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 rounded" 
-                                                                        checked={selectedGenres.includes(g)}
-                                                                        onCheckedChange={() => toggleGenre(g)}
-                                                                    />
-                                                        <span className="text-sm text-slate-400 group-hover:text-white transition-colors">{g}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="h-px bg-white/10 mb-8" />
-
-                                        {/* Price Range */}
-                                        <div className="mb-8">
-                                            <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Price Range</h3>
-                                            <Slider 
-                                                defaultValue={[0, 100]} 
-                                                max={100} 
-                                                step={1} 
-                                                value={priceRange}
-                                                onValueChange={setPriceRange}
-                                                className="mb-3"
+                                {/* LEFT SIDEBAR - UPDATED LAYOUT */}
+                                <div className="w-[300px] flex-shrink-0 h-full p-6 border-r border-white/10 flex flex-col hidden lg:flex">
+                                    {/* Store Card */}
+                                    <div className="mb-4 flex-shrink-0">
+                                        <div className="group relative h-20 rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all">
+                                            <img 
+                                                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80" 
+                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                alt="Store"
                                             />
-                                            <div className="flex items-center justify-between text-xs text-white/60 font-mono">
-                                                <span>${priceRange[0]}</span>
-                                                <span>${priceRange[1]}</span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
+                                            <div className="absolute inset-0 px-4 flex flex-col justify-center">
+                                                <h2 className="text-xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">STORE</h2>
+                                                <p className="text-[10px] text-white/50 font-medium tracking-wider uppercase">Browse Catalog</p>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        {/* Customer Rating */}
-                                        <div className="mb-6">
-                                            <h3 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Customer Rating</h3>
-                                            <div className="space-y-2">
-                                                {[4, 3, 2, 1].map((rating) => (
-                                                    <button 
-                                                        key={rating} 
-                                                        onClick={() => setMinRating(rating)}
-                                                        className={`flex items-center gap-2 w-full text-sm ${minRating === rating ? 'text-white' : 'text-slate-400 hover:text-white'}`}
-                                                    >
-                                                        <div className="flex">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star 
-                                                                    key={i} 
-                                                                    className={`w-3.5 h-3.5 ${i < rating ? 'text-yellow-500 fill-current' : 'text-slate-700'}`} 
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-xs">& Up</span>
-                                                    </button>
-                                                ))}
+                                    {/* Divider */}
+                                    <div className="flex items-center gap-4 mb-4 flex-shrink-0">
+                                        <div className="h-px flex-1 bg-white/10" />
+                                        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">Genres</span>
+                                        <div className="h-px flex-1 bg-white/10" />
+                                    </div>
+
+                                    {/* Genre List */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                        {/* All Games Option */}
+                                        <button 
+                                            onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} // Clear genres to show all
+                                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border group ${
+                                                activeCategory === 'All Games' && selectedGenres.length === 0
+                                                    ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.1)]' 
+                                                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500/20'
+                                            }`}
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-white/20 transition-colors">
+                                                <LayoutGrid className={`w-5 h-5 ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'text-cyan-400' : 'text-white/50 group-hover:text-white'}`} />
                                             </div>
-                                        </div>
-                                    </ShinySidebarBox>
+                                            <span className={`text-sm font-bold ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>All Games</span>
+                                        </button>
+
+                                        {/* Individual Genres */}
+                                        {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
+                                            const Icon = GENRE_ICONS[g] || Gamepad2;
+                                            const isSelected = selectedGenres.includes(g);
+                                            return (
+                                                <button 
+                                                    key={g} 
+                                                    onClick={() => toggleGenre(g)}
+                                                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border group ${
+                                                        isSelected
+                                                            ? 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.1)]' 
+                                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500/20'
+                                                    }`}
+                                                >
+                                                    <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-white/20 transition-colors">
+                                                        <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-400' : 'text-white/50 group-hover:text-white'}`} />
+                                                    </div>
+                                                    <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>{g}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {/* RIGHT CONTENT AREA */}
