@@ -25,31 +25,13 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     const [isLeaveOpen, setIsLeaveOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
-    
-    // Layout swap state: false = chat left/roster right, true = roster left/chat right
-    const [layoutSwapped, setLayoutSwapped] = useState(false);
-    
-    // Announcements dropdown state
-    const [showAnnouncements, setShowAnnouncements] = useState(false);
+    const [activeTab, setActiveTab] = useState('feed'); // 'feed' | 'roster' | 'events'
     const [inventoryOpen, setInventoryOpen] = useState(false);
-    
-    // Listen for toggle event from parent
-    useEffect(() => {
-        const handleToggle = (e) => {
-            if (e.detail === 'announcements') {
-                setShowAnnouncements(prev => !prev);
-            }
-        };
-        window.addEventListener('toggleClanPanel', handleToggle);
-        return () => window.removeEventListener('toggleClanPanel', handleToggle);
-    }, []);
 
-    const { data: upcomingEvents } = useQuery({
-        queryKey: ['clanOverviewEvents', clan.id],
-        queryFn: async () => {
-            const events = await base44.entities.ClanEvent.filter({ divisionId: clan.id });
-            return events.sort((a,b) => new Date(a.startTime) - new Date(b.startTime)).slice(0, 10);
-        },
+    // Fetch essential data
+    const { data: members } = useQuery({
+        queryKey: ['clanMembersList', clan.id],
+        queryFn: async () => base44.entities.ClanMember.filter({ clan_id: clan.id }),
         enabled: !!clan.id
     });
 
@@ -62,47 +44,48 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
         enabled: !!clan.id && !!user
     });
 
-    const { data: members } = useQuery({
-        queryKey: ['clanMembersList', clan.id],
-        queryFn: async () => {
-            return await base44.entities.ClanMember.filter({ clan_id: clan.id });
-        },
-        enabled: !!clan.id
-    });
+    const isLeader = myMemberRecord?.role === 'leader';
+    const isOfficer = myMemberRecord?.role === 'officer' || isLeader;
 
-    const { data: recentMessages } = useQuery({
-        queryKey: ['clanRecentMessages', clan.id],
-        queryFn: async () => {
-            const messages = await base44.entities.ClanMessage.filter({ divisionId: clan.id });
-            return (messages || []).sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0)).slice(0, 15);
-        },
-        enabled: !!clan.id
-    });
+    // --- Mock / Derived Data for High Fidelity UI ---
+    // Clan Progression
+    const levelProgress = ((clan.xp || 0) / 10000) * 100;
+    const currentSeasonRank = "Gold III"; // Mocked
+    const reputationScore = clan.reputation || 0;
+    
+    // Clan Economy (Mocked for now until entity update)
+    const clanWealth = {
+        credits: 1450000,
+        energy: 85, // % capacity
+        materials: 3240
+    };
 
-    const leaveMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'leave_clan', data: { divisionId: clan.id } }),
-        onSuccess: (res) => {
-            if (res.data?.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-            } else {
-                alert(res.data?.error || 'Failed to leave clan');
-            }
-        },
-        onError: () => alert('Failed to leave clan. Please try again.')
-    });
+    // Clan Stats (Mocked)
+    const clanStats = {
+        memberStrength: Math.floor((members?.length || 1) * 1250), // Approx power
+        winRate: "68%",
+        raidsCompleted: 42,
+        territoryCount: 3
+    };
 
-    const dismantleMutation = useMutation({
-        mutationFn: () => base44.functions.invoke('clanSystem', { action: 'delete_clan', data: { divisionId: clan.id } }),
-        onSuccess: (res) => {
-            if (res.data?.success) {
-                queryClient.invalidateQueries(['myClanMemberships']);
-            } else {
-                alert(res.data?.error || 'Failed to dismantle clan');
-            }
-        },
-        onError: () => alert('Failed to dismantle clan. Please try again.')
-    });
+    // Activity Identity (Badges)
+    const guildSpecialties = [
+        { id: 'pve', label: 'PvE Raiders', icon: Sword, level: 5, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+        { id: 'farm', label: 'Resource Ops', icon: Pickaxe, level: 3, color: 'text-green-400', bg: 'bg-green-500/10' },
+        { id: 'tech', label: 'Tech Crafting', icon: Cpu, level: 4, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+        { id: 'ach', label: 'Completionists', icon: Trophy, level: 2, color: 'text-purple-400', bg: 'bg-purple-500/10' }
+    ];
 
+    // Mock Feed
+    const feedItems = [
+        { id: 1, type: 'convoy', text: "Convoy Operation 'Silent Night' completed successfully.", time: "10m ago", icon: Truck, color: "text-green-400" },
+        { id: 2, type: 'achievement', text: "Guild unlocked 'Apex Predator' achievement.", time: "45m ago", icon: Trophy, color: "text-yellow-400" },
+        { id: 3, type: 'pvp', text: "Victory in Sector 7 skirmish against [RIVAL].", time: "2h ago", icon: Crosshair, color: "text-red-400" },
+        { id: 4, type: 'upgrade', text: "Guild Vault expansion Tier 2 unlocked.", time: "5h ago", icon: Box, color: "text-blue-400" },
+        { id: 5, type: 'join', text: "Agent 'Viper' has joined the division.", time: "1d ago", icon: UserPlus, color: "text-white" }
+    ];
+
+    // --- Mutations ---
     const inviteMutation = useMutation({
         mutationFn: () => base44.functions.invoke('clanSystem', { action: 'invite_member', data: { divisionId: clan.id, inviteeEmail: inviteEmail } }),
         onSuccess: (res) => {
@@ -113,331 +96,310 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
             } else {
                 alert(res.data?.error || "Failed to invite user");
             }
-        },
-        onError: () => alert('Failed to send invite. Please try again.')
-    });
-
-    const progress = ((clan.xp || 0) / 10000) * 100;
-    const isLeader = myMemberRecord?.role === 'leader';
-    const isOfficer = myMemberRecord?.role === 'officer' || isLeader;
-
-    // Nickname & Title editing
-    const [editingMemberId, setEditingMemberId] = useState(null);
-    const [editNickname, setEditNickname] = useState('');
-    const [editTitle, setEditTitle] = useState('');
-
-    const updateMemberMutation = useMutation({
-        mutationFn: ({ id, updates }) => base44.entities.ClanMember.update(id, updates),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['clanMembersList', clan.id]);
-            setEditingMemberId(null);
         }
     });
+    
+    // --- Render Components ---
 
-    const clanResources = { gold: 14500, gems: 320, influence: clan.reputation || 0 };
-
-    // Mock activity feed
-    const mockActivityFeed = [
-        { id: 1, type: 'farm', user: 'ShadowBlade', action: 'completed a farming route', game: 'Elden Ring', time: '12m ago', icon: TrendingUp, color: 'text-green-400' },
-        { id: 2, type: 'achievement', user: 'NightHawk', action: 'unlocked', item: 'Dragon Slayer', time: '25m ago', icon: Award, color: 'text-yellow-400' },
-        { id: 3, type: 'pvp', user: 'CrimsonWolf', action: 'won a PvP match', game: 'Valorant', time: '1h ago', icon: Sword, color: 'text-red-400' },
-        { id: 4, type: 'join', user: 'NewPlayer42', action: 'joined the clan', time: '2h ago', icon: UserPlus, color: 'text-cyan-400' },
-        { id: 5, type: 'quest', user: 'PhantomX', action: 'completed clan quest', item: 'Weekly Raid', time: '3h ago', icon: Target, color: 'text-purple-400' },
-        { id: 6, type: 'farm', user: 'BladeRunner', action: 'farmed 500 gold', game: 'Diablo IV', time: '4h ago', icon: Coins, color: 'text-yellow-400' },
-        { id: 7, type: 'pvp', user: 'StormBreaker', action: 'ranked up to Diamond', game: 'Valorant', time: '5h ago', icon: Trophy, color: 'text-purple-400' },
-    ];
-
-    // Mock announcements
-    const mockAnnouncements = [
-        { id: 1, title: 'Weekly Raid Schedule', content: 'Raids will be held every Saturday at 8PM EST. Make sure to sign up!', date: new Date(), author: 'Leader' },
-        { id: 2, title: 'New Members Welcome', content: 'Please welcome our new recruits this week. Help them get oriented.', date: new Date(Date.now() - 86400000), author: 'Officer' },
-        { id: 3, title: 'Clan Tournament', content: 'We are entering the regional tournament. Practice sessions start Monday.', date: new Date(Date.now() - 172800000), author: 'Leader' },
-    ];
-
-    const mockOnlineStatus = members?.map((m, i) => ({
-        ...m,
-        isOnline: i < 5,
-        currentGame: i < 3 ? ['Elden Ring', 'Valorant', 'Diablo IV'][i] : null,
-        status: i < 3 ? 'In Game' : i < 5 ? 'Online' : 'Offline'
-    })) || [];
-
-    // Components for swappable panels
-    const ChatPanel = ({ expanded }) => (
-        <LiquidGlassCard className="p-4 h-full flex flex-col relative">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <MessageSquare className="w-4 h-4 text-blue-400" /> Clan Chat
-                </h3>
-                <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10"
-                    onClick={() => setLayoutSwapped(!layoutSwapped)}
-                    title="Swap Layout"
-                >
-                    <Grid3X3 className="w-4 h-4" />
-                </Button>
+    const StatCard = ({ label, value, subtext, icon: Icon, colorClass, delay = 0 }) => (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.4 }}
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur-md p-4 group hover:border-white/20 transition-all"
+        >
+            <div className={`absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity ${colorClass}`}>
+                <Icon className="w-12 h-12" />
             </div>
-            
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
-                {recentMessages?.length > 0 ? recentMessages.map((msg) => (
-                    <div key={msg.id} className="flex gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-[10px] font-bold text-white/60 flex-shrink-0">
-                            {msg.author?.slice(0,2).toUpperCase() || 'U'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-cyan-400">{msg.authorAvatar || `Agent ${msg.author?.slice(0,4)}`}</span>
-                                <span className="text-[10px] text-white/30">{formatDistanceToNow(new Date(msg.created_date), { addSuffix: true })}</span>
-                            </div>
-                            <p className="text-sm text-white/70 break-words">{msg.content}</p>
-                        </div>
-                    </div>
-                )) : (
-                    <div className="flex-1 flex items-center justify-center text-white/30 text-sm">
-                        No messages yet. Start the conversation!
-                    </div>
-                )}
+            <div className="relative z-10">
+                <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">{label}</div>
+                <div className="text-2xl font-black text-white tracking-tight">{value}</div>
+                {subtext && <div className={`text-xs mt-1 font-medium ${colorClass}`}>{subtext}</div>}
             </div>
-            
-            <div className="pt-3 mt-2 border-t border-white/5 flex gap-2">
-                <Input 
-                    placeholder="Type a message..." 
-                    className="bg-white/5 border-white/10 text-white text-sm h-9"
+            {/* Animated Bar at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    transition={{ delay: delay + 0.2, duration: 1 }}
+                    className={`h-full opacity-50 ${colorClass.replace('text-', 'bg-')}`} 
                 />
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-500 h-9 px-3">
-                    <Send className="w-4 h-4" />
-                </Button>
             </div>
-        </LiquidGlassCard>
+        </motion.div>
     );
 
-    const RosterPanel = ({ expanded }) => (
-        <LiquidGlassCard className="p-4 h-full flex flex-col relative">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                    <Users className="w-4 h-4 text-cyan-400" /> Clan Roster
-                </h3>
-                <div className="flex items-center gap-2">
-                    <Badge className="bg-green-500/20 text-green-300 border-none text-xs">
-                        {mockOnlineStatus.filter(m => m.isOnline).length} Online
-                    </Badge>
-                    <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10"
-                        onClick={() => setLayoutSwapped(!layoutSwapped)}
-                        title="Swap Layout"
-                    >
-                        <Grid3X3 className="w-4 h-4" />
-                    </Button>
-                </div>
+    const IdentityBadge = ({ spec }) => (
+        <div className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors group cursor-default">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${spec.bg} border border-white/5 group-hover:border-white/20 transition-all`}>
+                <spec.icon className={`w-5 h-5 ${spec.color}`} />
             </div>
-            
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-1">
-                {mockOnlineStatus.map((member) => (
-                    <motion.div 
-                        key={member.id} 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className={`flex items-center gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
-                            member.isOnline ? 'bg-white/5 hover:bg-white/10' : 'opacity-50 hover:opacity-70'
-                        }`}
-                    >
-                        <div className="relative">
-                            <div className={`w-9 h-9 rounded-full overflow-hidden border-2 ${
-                                member.role === 'leader' ? 'border-yellow-500' : 
-                                member.role === 'officer' ? 'border-purple-500' : 'border-white/20'
-                            }`}>
-                                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-sm font-bold text-white/70">
-                                    {member.user_id?.slice(0,2).toUpperCase() || 'U'}
-                                </div>
-                            </div>
-                            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#12141a] ${
-                                member.isOnline ? 'bg-green-500' : 'bg-slate-600'
-                            }`} />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <p className="text-sm font-bold text-white truncate">
-                                        {member.nickname || `Agent ${member.user_id?.slice(0,6) || 'Unknown'}`}
-                                    </p>
-                                    {member.title && (
-                                        <Badge className="bg-white/10 text-white/70 border-none text-[10px]">
-                                            {member.title}
-                                        </Badge>
-                                    )}
-                                    {member.role === 'leader' && <Crown className="w-3.5 h-3.5 text-yellow-400" />}
-                                    {member.role === 'officer' && <Star className="w-3.5 h-3.5 text-purple-400" />}
-                                </div>
-                                {isOfficer && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 text-white/40 hover:text-white hover:bg-white/10"
-                                      onClick={() => { setEditingMemberId(member.id); setEditNickname(member.nickname || ''); setEditTitle(member.title || ''); }}
-                                      title="Edit nickname/title"
-                                    >
-                                      <Settings className="w-4 h-4" />
-                                    </Button>
-                                )}
-                            </div>
-                            <p className="text-[11px] text-white/40 truncate">
-                                {member.currentGame ? (
-                                    <span className="text-green-400 flex items-center gap-1">
-                                        <Gamepad2 className="w-3 h-3" /> {member.currentGame}
-                                    </span>
-                                ) : (
-                                    member.status
-                                )}
-                            </p>
-                            {isOfficer && editingMemberId === member.id && (
-                                <div className="mt-2 flex items-center gap-2">
-                                    <Input
-                                      value={editNickname}
-                                      onChange={(e) => setEditNickname(e.target.value)}
-                                      placeholder="Nickname"
-                                      className="h-8 bg-white/5 border-white/10 text-white"
-                                    />
-                                    <Input
-                                      value={editTitle}
-                                      onChange={(e) => setEditTitle(e.target.value)}
-                                      placeholder="Title"
-                                      className="h-8 bg-white/5 border-white/10 text-white"
-                                    />
-                                    <Button
-                                      size="sm"
-                                      onClick={() => updateMemberMutation.mutate({ id: member.id, updates: { nickname: editNickname, title: editTitle } })}
-                                      className="h-8 px-3"
-                                    >
-                                      Save
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-8 px-3" onClick={() => setEditingMemberId(null)}>Cancel</Button>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                ))}
+            <div className="text-center">
+                <div className="text-xs font-bold text-white/90">{spec.label}</div>
+                <div className="text-[10px] text-white/40">Tier {spec.level}</div>
             </div>
-        </LiquidGlassCard>
+        </div>
     );
 
     return (
-        <div className="h-full overflow-hidden flex flex-col">
+        <div className="h-full w-full overflow-y-auto custom-scrollbar p-6 lg:p-10 pb-24">
             
-            {/* ANNOUNCEMENTS DROPDOWN - Pushed down content when open */}
-            <AnimatePresence>
-                {showAnnouncements && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-b border-white/10 bg-amber-500/5"
+            {/* 1. GUILD IDENTITY HEADER */}
+            <div className="relative w-full mb-10">
+                {/* Holographic Banner BG */}
+                <div className="absolute inset-0 -z-10 rounded-3xl overflow-hidden opacity-50">
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent" />
+                    {/* Animated Grid Line */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+                </div>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10 p-6">
+                    {/* Emblem */}
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/10 bg-black/60 backdrop-blur-xl flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden group"
                     >
-                        <div className="p-4 max-h-64 overflow-y-auto">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
-                                    <Megaphone className="w-4 h-4" /> Clan Announcements
-                                </h3>
-                                <button onClick={() => setShowAnnouncements(false)} className="text-white/40 hover:text-white">
-                                    <ChevronUp className="w-4 h-4" />
-                                </button>
+                        {clan.icon ? (
+                            <img src={clan.icon} className="w-full h-full object-cover" />
+                        ) : (
+                            <Shield className="w-16 h-16 text-white/20" />
+                        )}
+                        <div className="absolute inset-0 rounded-full border border-white/10" />
+                        {/* Rotating ring effect */}
+                        <div className="absolute inset-0 rounded-full border-t border-cyan-500/50 animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </motion.div>
+
+                    {/* Info */}
+                    <div className="flex-1">
+                        <motion.div 
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            className="flex items-center gap-4 mb-2"
+                        >
+                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase">
+                                {clan.name}
+                            </h1>
+                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-1 text-xs font-bold tracking-widest">
+                                LVL {clan.level || 1}
+                            </Badge>
+                        </motion.div>
+                        
+                        <motion.div 
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-lg text-white/60 font-light max-w-2xl leading-relaxed mb-6"
+                        >
+                            {clan.description || "A Division dedicated to excellence and conquest within the Atom x Eve ecosystem. Operations focused on tactical dominance and economic growth."}
+                        </motion.div>
+
+                        {/* Badges Row */}
+                        <div className="flex flex-wrap gap-3">
+                            {guildSpecialties.map((spec, i) => (
+                                <Badge key={i} variant="outline" className={`bg-white/5 border-white/10 ${spec.color} flex items-center gap-1.5 py-1 px-3`}>
+                                    <spec.icon className="w-3 h-3" />
+                                    {spec.label}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Command Actions (Top Right) */}
+                    <div className="flex flex-col gap-3 md:self-start mt-4 md:mt-0">
+                        {isOfficer && (
+                            <Button onClick={() => setIsInviteOpen(true)} className="bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg shadow-cyan-900/20">
+                                <UserPlus className="w-4 h-4 mr-2" /> Invite Agent
+                            </Button>
+                        )}
+                        <Button variant="outline" onClick={() => setInventoryOpen(true)} className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
+                            <Box className="w-4 h-4 mr-2" /> Inventory
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. MAIN DASHBOARD GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                
+                {/* LEFT COLUMN: STATUS PANELS (2/3 width) */}
+                <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Status Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <StatCard 
+                            label="Members" 
+                            value={`${members?.length || 0} / 50`} 
+                            subtext="Highly Active" 
+                            icon={Users} 
+                            colorClass="text-cyan-400" 
+                            delay={0.1}
+                        />
+                        <StatCard 
+                            label="Power Score" 
+                            value={clanStats.memberStrength.toLocaleString()} 
+                            subtext="Top 5% Regional" 
+                            icon={Zap} 
+                            colorClass="text-yellow-400" 
+                            delay={0.2}
+                        />
+                        <StatCard 
+                            label="Momentum" 
+                            value="+12.5%" 
+                            subtext="Weekly Growth" 
+                            icon={Activity} 
+                            colorClass="text-green-400" 
+                            delay={0.3}
+                        />
+                    </div>
+
+                    {/* Economy & Progress Section */}
+                    <LiquidGlassCard className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                <Coins className="w-4 h-4 text-amber-400" /> Guild Economy
+                            </h3>
+                            <div className="text-xs text-white/40">Next Payout: 14h 30m</div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-8 mb-8">
+                            <div className="text-center">
+                                <div className="text-xs text-white/40 mb-1">Treasury Funds</div>
+                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.credits.toLocaleString()} <span className="text-xs text-amber-400">CR</span></div>
                             </div>
-                            <div className="space-y-2">
-                                {mockAnnouncements.map((ann) => (
-                                    <div key={ann.id} className="bg-white/5 rounded-lg p-3 border border-white/5">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <h4 className="font-bold text-white text-sm">{ann.title}</h4>
-                                            <Badge className="bg-amber-500/20 text-amber-300 border-none text-[10px]">{ann.author}</Badge>
-                                        </div>
-                                        <p className="text-xs text-white/60">{ann.content}</p>
-                                        <p className="text-[10px] text-white/30 mt-1">{format(ann.date, 'MMM d, yyyy')}</p>
-                                    </div>
-                                ))}
+                            <div className="text-center">
+                                <div className="text-xs text-white/40 mb-1">Operations Energy</div>
+                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.energy}%</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-xs text-white/40 mb-1">Raw Materials</div>
+                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.materials.toLocaleString()}</div>
                             </div>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
-            {/* MAIN CONTENT AREA - Chat, Roster, Activity */}
-            {/* Inventory Toolbar */}
-            <div className="px-4 pt-3 flex justify-end">
-                <Button
-                    size="sm"
-                    className="bg-white/10 hover:bg-white/20 border border-white/10 h-8 px-3 text-xs"
-                    onClick={() => setInventoryOpen(true)}
-                    title="Open Clan Inventory"
-                >
-                    <Grid3X3 className="w-4 h-4 mr-1" /> Inventory
-                </Button>
-            </div>
-            <div className="flex-1 overflow-hidden px-4 pb-4 pt-2 grid grid-cols-12 gap-4">
-                {/* LEFT PANEL */}
-                <div className={`h-full transition-all duration-300 col-span-12 lg:col-span-3 ${layoutSwapped ? 'order-2' : 'order-1'}`}>
-                    {layoutSwapped ? <RosterPanel expanded /> : <ChatPanel />}
+                        {/* Upgrade Path Progress */}
+                        <div className="space-y-4">
+                            <div>
+                                <div className="flex justify-between text-xs mb-2">
+                                    <span className="text-white font-medium">Command Center Upgrade (Tier 3)</span>
+                                    <span className="text-cyan-400">72%</span>
+                                </div>
+                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: '72%' }}
+                                        transition={{ duration: 1.5, ease: "easeOut" }}
+                                        className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex justify-between text-xs mb-2">
+                                    <span className="text-white font-medium">Vehicle Bay Expansion</span>
+                                    <span className="text-orange-400">45%</span>
+                                </div>
+                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: '45%' }}
+                                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                                        className="h-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </LiquidGlassCard>
+
+                    {/* Activity Identity Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {guildSpecialties.map((spec) => (
+                            <IdentityBadge key={spec.id} spec={spec} />
+                        ))}
+                    </div>
                 </div>
 
-                {/* CENTER PANEL (Roster or Chat based on swap) */}
-                <div className={`h-full transition-all duration-300 col-span-12 lg:col-span-6 ${layoutSwapped ? 'order-1' : 'order-2'}`}>
-                    {layoutSwapped ? <ChatPanel /> : <RosterPanel expanded />}
-                </div>
+                {/* RIGHT COLUMN: FEED & ROSTER (1/3 width) */}
+                <div className="lg:col-span-1 flex flex-col gap-6">
+                    
+                    <LiquidGlassCard className="flex-1 flex flex-col min-h-[500px]">
+                        {/* Tabs */}
+                        <div className="flex border-b border-white/10">
+                            <button 
+                                onClick={() => setActiveTab('feed')}
+                                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'feed' ? 'text-white border-b-2 border-cyan-500 bg-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Live Feed
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('roster')}
+                                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'roster' ? 'text-white border-b-2 border-cyan-500 bg-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Roster ({members?.length || 0})
+                            </button>
+                        </div>
 
-                {/* RIGHT PANEL - Activity Log */}
-                <div className="h-full col-span-12 lg:col-span-3 order-3">
-                    <LiquidGlassCard className="p-4 h-full flex flex-col">
-                        <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
-                            <Activity className="w-3.5 h-3.5 text-orange-400" /> Activity
-                        </h3>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
-                            {mockActivityFeed.map((activity) => (
-                                <motion.div 
-                                    key={activity.id}
-                                    initial={{ opacity: 0, x: 10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="flex items-start gap-2 p-2 rounded-lg bg-white/[0.02] hover:bg-white/5 transition-colors"
-                                >
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center bg-white/5 flex-shrink-0 ${activity.color}`}>
-                                        <activity.icon className="w-3 h-3" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[11px] text-white/70 leading-tight">
-                                            <span className="font-bold text-white">{activity.user}</span>
-                                            {' '}{activity.action}
-                                            {activity.item && <span className="text-cyan-400"> {activity.item}</span>}
-                                        </p>
-                                        <span className="text-[9px] text-white/30">{activity.time}</span>
-                                    </div>
-                                </motion.div>
-                            ))}
+                        {/* Content Area */}
+                        <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+                            
+                            {activeTab === 'feed' && (
+                                <div className="space-y-4">
+                                    {feedItems.map((item, idx) => (
+                                        <motion.div 
+                                            key={item.id}
+                                            initial={{ opacity: 0, x: 10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className="relative pl-6 pb-4 border-l border-white/10 last:border-0 last:pb-0"
+                                        >
+                                            <div className={`absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-slate-900 border ${item.color.replace('text-', 'border-')}`} />
+                                            <div className="text-[10px] text-white/30 mb-1">{item.time}</div>
+                                            <div className="text-sm text-white/80 leading-snug">
+                                                <span className={`font-bold ${item.color} mr-1`}>[{item.type.toUpperCase()}]</span>
+                                                {item.text}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {activeTab === 'roster' && (
+                                <div className="space-y-2">
+                                    {/* Leaders */}
+                                    <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 mt-1">Command</div>
+                                    {members?.filter(m => m.role === 'leader' || m.role === 'officer').map(m => (
+                                        <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-xs font-bold border border-white/10">
+                                                {m.user_id?.slice(0,2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-bold text-white">{m.nickname || 'Agent'}</div>
+                                                <div className="text-[10px] text-amber-400">{m.role.toUpperCase()}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Members */}
+                                    <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 mt-4">Agents</div>
+                                    {members?.filter(m => m.role !== 'leader' && m.role !== 'officer').map(m => (
+                                        <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white/30">
+                                                {m.user_id?.slice(0,2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-medium text-white/70">{m.nickname || 'Agent'}</div>
+                                                <div className="text-[10px] text-white/30">{m.title || 'Member'}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                         </div>
                     </LiquidGlassCard>
                 </div>
             </div>
 
-
-
-            {/* Inventory Modal */}
+            {/* Modals */}
             <ClanInventoryModal open={inventoryOpen} onOpenChange={setInventoryOpen} />
-
-            {/* Dialogs */}
-            <Dialog open={isDismantleOpen} onOpenChange={setIsDismantleOpen}>
-                <DialogContent className="bg-slate-900 border-white/10 text-white">
-                    <DialogHeader>
-                        <DialogTitle>Dismantle Division?</DialogTitle>
-                        <DialogDescription className="text-white/60">
-                            This action cannot be undone. This will permanently delete the clan.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsDismantleOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={() => dismantleMutation.mutate()}>Confirm</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
             <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
                 <DialogContent className="bg-slate-900 border-white/10 text-white">
                     <DialogHeader>
@@ -451,22 +413,13 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
                     />
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
-                        <Button onClick={() => inviteMutation.mutate()} disabled={!inviteEmail}>Send</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isLeaveOpen} onOpenChange={setIsLeaveOpen}>
-                <DialogContent className="bg-slate-900 border-white/10 text-white">
-                    <DialogHeader>
-                        <DialogTitle>Leave {clan.name}?</DialogTitle>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsLeaveOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={() => { leaveMutation.mutate(); setIsLeaveOpen(false); }}>Leave</Button>
+                        <Button onClick={() => inviteMutation.mutate()} disabled={!inviteEmail}>Send Invite</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
     );
 }
+
+// Additional Icon Imports needed for the new UI
+import { Box, Truck, Crosshair, Pickaxe, Cpu } from 'lucide-react';
