@@ -1288,7 +1288,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
             {/* Achievements Link */}
             <button
-              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
+              onClick={() => navigate(createPageUrl('Achievements'))}
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <Trophy className="w-5 h-5 text-yellow-400" />

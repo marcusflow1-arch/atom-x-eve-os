@@ -765,18 +765,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
               {/* Header */}
               <div className="absolute top-8 left-8 z-50 flex items-center gap-6">
-                {/* Menu Button */}
-                <button
-                  onClick={() => navigate(createPageUrl('LunaTemplate'))}
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
-                >
-                  <div className="flex flex-col gap-[3px]">
-                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
-                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
-                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
-                  </div>
-                </button>
-
                 <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Achievements</h1>
                 <div className="h-6 w-px bg-white/10" />
 
