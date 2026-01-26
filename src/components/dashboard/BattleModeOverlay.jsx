@@ -385,36 +385,44 @@ export default function BattleModeOverlay({ onClose }) {
       case 'tournaments': return <TournamentsView />;
       case 'world': return <WorldEventsView />;
       default: return (
-        <div className="flex flex-col items-center text-center max-w-6xl w-full px-6 py-12">
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
           {/* Main Menu Content */}
-          <div className="w-24 h-24 rounded-full bg-orange-600 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(234,88,12,0.4)]">
-            <Swords className="w-10 h-10 text-white" />
+          <div className="mb-12 text-center">
+            <h1 className="text-5xl font-thin text-white mb-2 tracking-widest uppercase">Battle Mode</h1>
+            <div className="h-px w-24 bg-white/30 mx-auto mb-6" />
+            <p className="text-white/40 text-sm max-w-lg mx-auto leading-relaxed tracking-wide">
+              Select your engagement protocol. Compete, explore, or conquer.
+            </p>
           </div>
-          <h1 className="text-6xl font-black text-white mb-4 tracking-tight">BATTLE MODE</h1>
-          <p className="text-slate-300 text-lg max-w-2xl mb-16 leading-relaxed">
-            Choose your arena. Fight for glory, explore the world, or compete for real prizes.
-          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl w-full h-[400px]">
             {[
-              { id: 'pvp', title: 'PvP Arena', desc: 'Select Fighting or Shooting styles', icon: Swords, color: 'bg-orange-500' },
-              { id: 'pve', title: 'PvE & Explore', desc: 'Fight AI or find chests IRL', icon: MapIcon, color: 'bg-blue-500' },
-              { id: 'tournaments', title: 'Tournaments', desc: 'Win real money prizes', icon: Trophy, color: 'bg-yellow-500' },
-              { id: 'world', title: 'World Events', desc: 'Global Raids & Events', icon: Globe, color: 'bg-purple-500' },
-            ].map((mode) => (
+              { id: 'pvp', title: 'PvP Arena', desc: 'Fighting & Shooting', icon: Swords, accent: 'group-hover:text-orange-400', border: 'group-hover:border-orange-500/30' },
+              { id: 'pve', title: 'PvE & Explore', desc: 'AI Combat & GPS', icon: MapIcon, accent: 'group-hover:text-blue-400', border: 'group-hover:border-blue-500/30' },
+              { id: 'tournaments', title: 'Tournaments', desc: 'Cash Prize Events', icon: Trophy, accent: 'group-hover:text-yellow-400', border: 'group-hover:border-yellow-500/30' },
+              { id: 'world', title: 'World Events', desc: 'Global Raids', icon: Globe, accent: 'group-hover:text-purple-400', border: 'group-hover:border-purple-500/30' },
+            ].map((mode, i) => (
               <motion.button
                 key={mode.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
                 onClick={() => setActiveView(mode.id)}
-                whileHover={{ y: -5 }}
-                className="bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col items-start text-left h-72 relative overflow-hidden group hover:bg-white/10 hover:border-white/20 transition-all"
+                className={`group relative h-full bg-white/[0.02] backdrop-blur-md border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 hover:bg-white/[0.05] hover:scale-[1.02] ${mode.border}`}
               >
-                <div className={`w-12 h-12 rounded-xl ${mode.color} flex items-center justify-center mb-auto shadow-lg`}>
-                  <mode.icon className="w-6 h-6 text-white" />
+                <div className={`mb-8 p-4 rounded-full bg-white/[0.03] border border-white/5 transition-all duration-500 group-hover:scale-110 group-hover:bg-white/[0.08]`}>
+                  <mode.icon className={`w-8 h-8 text-white/60 transition-colors duration-300 ${mode.accent}`} />
                 </div>
-                <div className="relative z-10 mt-4">
-                  <h3 className="text-xl font-black text-white mb-2">{mode.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{mode.desc}</p>
-                </div>
+                
+                <h3 className="text-xl font-light text-white mb-2 tracking-wider group-hover:text-white transition-colors">
+                  {mode.title}
+                </h3>
+                <p className="text-white/30 text-xs font-light tracking-wide group-hover:text-white/50 transition-colors">
+                  {mode.desc}
+                </p>
+
+                {/* Subtle Hover Glow */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               </motion.button>
             ))}
           </div>
@@ -428,20 +436,23 @@ export default function BattleModeOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050505]"
     >
-      {/* Background Gradient */}
+      {/* Sleek Background Gradient */}
       <div 
-        className="absolute inset-0 opacity-40 pointer-events-none"
+        className="absolute inset-0 opacity-30 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle at center, #ef4444 0%, #7f1d1d 40%, #450a0a 80%, #000000 100%)'
+          background: 'radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000000 100%)'
         }}
       />
+      
+      {/* Animated Particles/Noise (Simulated) */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none" />
 
       {/* Close Button */}
       <button 
         onClick={onClose}
-        className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+        className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/[0.03] hover:bg-white/[0.1] border border-white/5 hover:border-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all duration-300"
       >
         <X className="w-5 h-5" />
       </button>
@@ -450,9 +461,9 @@ export default function BattleModeOverlay({ onClose }) {
       {activeView !== 'menu' && (
         <button 
           onClick={() => setActiveView('menu')}
-          className="absolute top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+          className="absolute top-8 left-8 z-50 flex items-center gap-3 px-6 py-3 bg-white/[0.03] hover:bg-white/[0.1] border border-white/5 hover:border-white/20 rounded-full text-white/60 hover:text-white transition-all duration-300 text-sm tracking-widest uppercase"
         >
-          <ChevronLeft className="w-4 h-4" /> Main Menu
+          <ChevronLeft className="w-4 h-4" /> Back
         </button>
       )}
 
