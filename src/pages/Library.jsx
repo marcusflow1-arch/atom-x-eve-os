@@ -1271,15 +1271,29 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Library</h1>
-            <div className="h-6 w-px bg-white/10" />
+            {/* Menu Button - circular like Luna Dashboard */}
             <button
-                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
-              >
-                <Trophy className="w-4 h-4 text-yellow-400" />
-                <span>Achievements</span>
-              </button>
+              onClick={() => navigate(createPageUrl('LunaTemplate'))}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
+            >
+              <div className="flex flex-col gap-[3px]">
+                <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+              </div>
+            </button>
+
+            {/* Achievements Link */}
+            <button
+              onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+            >
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              <span className="text-lg font-semibold">Achievements</span>
+            </button>
+
+            <div className="h-6 w-px bg-white/10" />
+            <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Library</h1>
           </div>
 
           <div className="flex items-center gap-4">
