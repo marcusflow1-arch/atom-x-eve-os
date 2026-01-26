@@ -769,6 +769,17 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 <div className="flex items-center gap-4">
+                  {/* Library Link */}
+                  <motion.button
+                    onClick={() => navigate(createPageUrl('Library'))}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white"
+                  >
+                    <Gamepad2 className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Library</span>
+                  </motion.button>
+
                   {/* All Games Option */}
                   <motion.button
                     onClick={() => { setActiveGenre('All'); setActiveGameIndex(0); setActiveCardIndex(0); }}
