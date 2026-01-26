@@ -562,7 +562,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
-    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex flex-col">
+    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[80] flex flex-col">
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
       </div>
@@ -581,17 +581,16 @@ export default function GenreMastery({ onClose }) {
 
 
 
-      {/* LEFT SIDEBAR: Genre Selection (New Component) */}
-      <div className="relative z-20">
+      {/* LEFT SIDEBAR + MAIN CONTENT WRAPPER */}
+      <div className="relative z-20 flex flex-1 min-h-0">
         <GenreSelector 
           genres={GENRES} 
           selectedGenre={selectedGenre} 
           onSelect={setSelectedGenre} 
         />
-      </div>
 
-      {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
-      <div className="flex-1 flex flex-col z-30 relative overflow-hidden">
+        {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
+        <div className="flex-1 flex flex-col z-[90] relative overflow-visible">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
@@ -834,9 +833,10 @@ export default function GenreMastery({ onClose }) {
             </div>
           )}
         </AnimatePresence>
+        </div>
       </div>
 
-      {/* Reward Detail Overlay */}
+      {/* Reward Detail Overlay */
       <AnimatePresence>
         {viewingLevel && (
           <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
