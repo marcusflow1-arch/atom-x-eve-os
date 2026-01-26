@@ -689,6 +689,47 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 
                 {/* Left: Media Area */}
                 <div className="flex-[2] min-w-0 flex flex-col gap-4">
+                  {/* Actions (Buy/Play) - Moved to Top of Left Column */}
+                  <div className="bg-gradient-to-r from-gray-900 to-black/80 rounded-xl p-4 border border-white/10 flex flex-col gap-3">
+                    {!owned ? (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-white/60">Buy {game.title}</span>
+                          {/* Platform Icons (Mock) */}
+                          <div className="flex gap-1 opacity-50">
+                            <div className="w-4 h-4 bg-white/20 rounded-sm" />
+                            <div className="w-4 h-4 bg-white/20 rounded-sm" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="bg-black/60 px-3 py-2 rounded-lg text-white font-bold text-sm border border-white/10">
+                            ${game.price?.toFixed(2) || '0.00'}
+                          </div>
+                          <button 
+                            onClick={handleAddToCart}
+                            className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-2 rounded-lg text-sm shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-green-400 bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20">
+                          <Check className="w-4 h-4" />
+                          <span className="text-xs font-semibold">In Library</span>
+                        </div>
+                        <button 
+                          onClick={handlePlay}
+                          className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Play className="w-4 h-4 fill-white" />
+                          Play Now
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Media Preview Box */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
                     <img 
@@ -754,51 +795,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                 {/* Right: Game Info Sidebar */}
                 <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                  {/* Actions (Buy/Play) - Moved to Top */}
-                  <div className="bg-gradient-to-r from-gray-900 to-black/80 rounded-xl p-4 border border-white/10 flex flex-col gap-3">
-                    {!owned ? (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-white/60">Buy {game.title}</span>
-                          {/* Platform Icons (Mock) */}
-                          <div className="flex gap-1 opacity-50">
-                            <div className="w-4 h-4 bg-white/20 rounded-sm" />
-                            <div className="w-4 h-4 bg-white/20 rounded-sm" />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="bg-black/60 px-3 py-2 rounded-lg text-white font-bold text-sm border border-white/10">
-                            ${game.price?.toFixed(2) || '0.00'}
-                          </div>
-                          <button 
-                            onClick={handleAddToCart}
-                            className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-2 rounded-lg text-sm shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2"
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-2 text-green-400 bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20">
-                          <Check className="w-4 h-4" />
-                          <span className="text-xs font-semibold">In Library</span>
-                        </div>
-                        <button 
-                          onClick={handlePlay}
-                          className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2"
-                        >
-                          <Play className="w-4 h-4 fill-white" />
-                          Play Now
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Info Box */}
                   <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
-                    {/* Header Image (Capsule) */}
-                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                    {/* Header Image (Capsule) - Reduced to 30% */}
+                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
                       <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
                     </div>
 
@@ -809,11 +809,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                     {/* Metadata Table */}
                     <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Reviews:</span>
-                        <span className="text-cyan-400 font-semibold">Very Positive</span>
-                        <span className="text-white/30">(1,245)</span>
-                      </div>
                       <div className="flex gap-2">
                         <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
                         <span className="text-white/80">{game.original_year || '2025'}</span>
@@ -841,130 +836,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Lower Section: Collectibles, Community & Content */}
-              <div className="space-y-12 border-t border-white/10 pt-8">
-                
-                {/* 1. Collectibles (Horizontal Scroll - Restored) */}
-                <div className="space-y-4">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Database className="w-4 h-4 text-cyan-400" />
-                    Achievement Cards
-                  </h3>
-
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('card-scroll-container');
-                        container.scrollBy({ left: -200, behavior: 'smooth' });
-                      }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
-                    >
-                      <ChevronRight className="w-4 h-4 text-white rotate-180" />
-                    </button>
-
-                    <div id="card-scroll-container" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide px-10">
-                    {achievementCards.map((card, i) => (
-                      <motion.div
-                        key={i}
-                        onClick={() => setSelectedCard(card)}
-                        className="relative group perspective-1000 flex-shrink-0 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        onMouseMove={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = (e.clientX - rect.left) / rect.width - 0.5;
-                          const y = (e.clientY - rect.top) / rect.height - 0.5;
-                          e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
-                        }}
-                        style={{
-                          transformStyle: 'preserve-3d',
-                          transition: 'transform 0.1s ease-out',
-                          width: '160px'
-                        }}
-                      >
-                        <div className="space-y-2">
-                          <div className="text-center">
-                            <p className="text-white font-bold text-xs mb-0.5">{card.name}</p>
-                            <p className="text-cyan-400/70 text-[9px]">{card.edition}</p>
-                          </div>
-
-                          <div 
-                            className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/30"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-                              backdropFilter: 'blur(20px) saturate(180%)',
-                              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                               {card.type === 'Ability' && <Zap className="w-12 h-12 text-white/20" />}
-                               {card.type === 'Equipment' && <Shield className="w-12 h-12 text-white/20" />}
-                               {card.type === 'Companion' && <User className="w-12 h-12 text-white/20" />}
-                               {card.type === 'Teacher' && <Database className="w-12 h-12 text-white/20" />}
-                            </div>
-                          </div>
-
-                          <div className="text-center space-y-0.5">
-                            <p className="text-cyan-300 text-[10px] font-semibold">{card.type}</p>
-                            <p className="text-white/60 text-[9px] leading-tight truncate">{card.description}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('card-scroll-container');
-                        container.scrollBy({ left: 200, behavior: 'smooth' });
-                      }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
-                    >
-                      <ChevronRight className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. Community Rating */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">Community Rating</h3>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-cyan-400 leading-none">4.8</div>
-                        <div className="text-xs text-white/60 mt-1">Based on {reviews.length} reviews</div>
-                      </div>
-                      <div className="flex gap-1">
-                        {[1,2,3,4,5].map(i => <Star key={i} className="w-5 h-5 text-cyan-400 fill-cyan-400" />)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {reviews.slice(0, 3).map((review) => (
-                      <div key={review.id} className="bg-black/20 p-4 rounded-lg border border-white/5 text-sm hover:border-cyan-400/30 transition-colors">
-                        <div className="flex justify-between mb-2">
-                          <span className="font-bold text-white/90">{review.created_by}</span>
-                          <span className="text-white/40 text-xs">{new Date(review.created_date).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-white/70 line-clamp-3 italic">"{review.content}"</p>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <button className="w-full mt-6 py-3 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-bold transition-colors border border-white/10">
-                    Read All Reviews
-                  </button>
-                </div>
-
-                {/* 3. DLC Content & About (Grid) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Left: DLCs */}
-                  <div className="lg:col-span-2 space-y-6">
+              {/* Lower Section: Content & Achievement Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/10 pt-8">
+                {/* Left: Content For This Game (DLCs & About) */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* DLC Section */}
+                  <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold text-white">Content For This Game</h3>
                       <button className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full transition-colors">Browse All DLC</button>
@@ -999,22 +876,56 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         </div>
                       ))}
                     </div>
-
-                    {/* About This Game */}
-                    <div className="space-y-4 pt-8">
-                      <h3 className="text-xl font-bold text-white border-b border-white/10 pb-2">About This Game</h3>
-                      <p className="text-white/70 leading-relaxed text-sm">
-                        {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
-                      </p>
-                      <p className="text-white/70 leading-relaxed text-sm">
-                        Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
-                      </p>
-                    </div>
                   </div>
 
-                  {/* Right: Empty for now (or could hold metadata/tags again if needed, but left clean) */}
-                  <div className="space-y-6">
-                     {/* Placeholder for future sidebar content */}
+                  {/* About This Game */}
+                  <div className="space-y-4 pt-4">
+                    <h3 className="text-xl font-bold text-white border-b border-white/10 pb-2">About This Game</h3>
+                    <p className="text-white/70 leading-relaxed text-sm">
+                      {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
+                    </p>
+                    <p className="text-white/70 leading-relaxed text-sm">
+                      Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Achievement Cards (Restored Vertical Layout) */}
+                <div className="space-y-6">
+                   <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <Database className="w-4 h-4 text-cyan-400" />
+                    Achievement Cards
+                  </h3>
+                  
+                  <div className="space-y-6 pr-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    {['Ability', 'Equipment', 'Companion', 'Teacher'].map(type => {
+                      const typeCards = achievementCards.filter(c => c.type === type);
+                      if (typeCards.length === 0) return null;
+                      
+                      return (
+                        <div key={type} className="space-y-2">
+                          <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider sticky top-0 bg-[#0d0d0d] z-10 py-1">{type}</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {typeCards.map((card, i) => (
+                              <motion.div
+                                key={i}
+                                onClick={() => setSelectedCard(card)}
+                                className="group cursor-pointer p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all hover:scale-105"
+                              >
+                                <div className="aspect-[3/4] rounded-md overflow-hidden bg-black/20 mb-2 flex items-center justify-center border border-white/5 group-hover:border-cyan-400/30">
+                                   {card.type === 'Ability' && <Zap className="w-6 h-6 text-white/20 group-hover:text-cyan-400 transition-colors" />}
+                                   {card.type === 'Equipment' && <Shield className="w-6 h-6 text-white/20 group-hover:text-purple-400 transition-colors" />}
+                                   {card.type === 'Companion' && <User className="w-6 h-6 text-white/20 group-hover:text-green-400 transition-colors" />}
+                                   {card.type === 'Teacher' && <Database className="w-6 h-6 text-white/20 group-hover:text-yellow-400 transition-colors" />}
+                                </div>
+                                <p className="text-[10px] font-bold text-white truncate">{card.name}</p>
+                                <p className="text-[9px] text-white/40 truncate">{card.edition}</p>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
