@@ -601,6 +601,17 @@ export default function GenreMastery({ onClose }) {
               className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[220]"
             >
                <div className="p-8 md:p-12 pb-32">
+                 {/* Back Navigation */}
+                 <div className="mb-6">
+                   <Button
+                     variant="ghost"
+                     size="sm"
+                     className="gap-2 px-3 py-1 text-white/80 hover:text-white"
+                     onClick={() => (onClose ? onClose() : navigate(createPageUrl('LunaTemplate')))}
+                   >
+                     <ArrowLeft className="w-4 h-4" /> Back
+                   </Button>
+                 </div>
                  {/* HEADER: Similar to Seasonal Pass */}
                  <div className="mb-12">
                    <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
@@ -657,6 +668,27 @@ export default function GenreMastery({ onClose }) {
                        animate={{ width: `${selectedGenre.xp}%` }}
                        transition={{ duration: 1.5, ease: "circOut" }}
                      />
+                   </div>
+                 </div>
+
+                 {/* Genre Tabs under page title */}
+                 <div className="mb-8 -mt-2">
+                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 pr-2">
+                     {GENRES.map((g) => (
+                       <button
+                         key={g.id}
+                         onClick={() => setSelectedGenre(g)}
+                         className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap border transition-all hover:bg-white/10 hover:border-white/20 ${
+                           selectedGenre?.id === g.id
+                             ? 'bg-white/15 border-white/30 text-white'
+                             : 'bg-white/5 border-white/10 text-white/70'
+                         }`}
+                         title={`${g.name} Skill Tree`}
+                       >
+                         {g.icon && React.createElement(g.icon, { className: 'w-4 h-4' })}
+                         <span className="text-sm font-semibold">{g.name}</span>
+                       </button>
+                     ))}
                    </div>
                  </div>
 
