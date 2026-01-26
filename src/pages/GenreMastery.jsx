@@ -484,7 +484,7 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
 
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
-  const [selectedGenre, setSelectedGenre] = useState(null);
+  const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [progressionData, setProgressionData] = useState([]);
   const [viewingLevel, setViewingLevel] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -563,7 +563,9 @@ export default function GenreMastery({ onClose }) {
 
   return (
     <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex flex-col">
-      <MiniLunaNav title="Skill Tree" />
+      <div className="relative z-30">
+        <MiniLunaNav title="Skill Tree" />
+      </div>
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
@@ -580,14 +582,16 @@ export default function GenreMastery({ onClose }) {
 
 
       {/* LEFT SIDEBAR: Genre Selection (New Component) */}
-      <GenreSelector 
-        genres={GENRES} 
-        selectedGenre={selectedGenre} 
-        onSelect={setSelectedGenre} 
-      />
+      <div className="relative z-20">
+        <GenreSelector 
+          genres={GENRES} 
+          selectedGenre={selectedGenre} 
+          onSelect={setSelectedGenre} 
+        />
+      </div>
 
       {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
-      <div className="flex-1 flex flex-col z-10 relative overflow-hidden">
+      <div className="flex-1 flex flex-col z-20 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
