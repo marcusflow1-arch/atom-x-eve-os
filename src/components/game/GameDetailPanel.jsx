@@ -880,79 +880,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   <DataPoint label="Compatibility" value="High" icon={Cpu} color="text-green-400" />
                 </div>
 
-                {/* Categorized Achievement Cards */}
-                <div className="pt-8 space-y-8">
-                  <h3 className="text-white font-bold text-lg uppercase tracking-wider flex items-center gap-2">
-                    <Database className="w-5 h-5 text-cyan-400" />
-                    Cards & Achievements
-                  </h3>
-
-                  {['Ability', 'Equipment', 'Companion', 'Teacher'].map(category => {
-                    // Filter cards for this category
-                    const categoryCards = achievementCards.filter(c => c.type === category);
-                    if (categoryCards.length === 0) return null;
-
-                    return (
-                      <div key={category} className="space-y-4">
-                        <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                          <span className="text-white/70 text-sm font-bold uppercase tracking-wider">{category === 'Ability' ? 'Abilities' : category === 'Teacher' ? 'Teachers' : category === 'Companion' ? 'Companions' : 'Equipment'}</span>
-                          <span className="text-white/20 text-xs">({categoryCards.length})</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-4 gap-6">
-                          {categoryCards.map((card, i) => (
-                            <motion.div
-                              key={i}
-                              onClick={() => setSelectedCard(card)}
-                              className="relative group perspective-1000 cursor-pointer"
-                              whileHover={{ scale: 1.05 }}
-                              onMouseMove={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const x = (e.clientX - rect.left) / rect.width - 0.5;
-                                const y = (e.clientY - rect.top) / rect.height - 0.5;
-                                e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.05)`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
-                              }}
-                              style={{
-                                transformStyle: 'preserve-3d',
-                                transition: 'transform 0.1s ease-out'
-                              }}
-                            >
-                              <div className="space-y-3">
-                                {/* Card Graphic */}
-                                <div 
-                                  className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/20 group-hover:border-cyan-400/50 transition-colors"
-                                  style={{
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
-                                    backdropFilter: 'blur(20px)',
-                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-                                  }}
-                                >
-                                  {/* Holographic Shine */}
-                                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    {category === 'Ability' && <Zap className="w-12 h-12 text-white/20" />}
-                                    {category === 'Equipment' && <Shield className="w-12 h-12 text-white/20" />}
-                                    {category === 'Companion' && <User className="w-12 h-12 text-white/20" />}
-                                    {category === 'Teacher' && <Database className="w-12 h-12 text-white/20" />}
-                                  </div>
-                                </div>
-
-                                {/* Card Info */}
-                                <div className="text-center">
-                                  <p className="text-white font-bold text-sm mb-1">{card.name}</p>
-                                  <p className="text-white/40 text-[10px] uppercase tracking-wide">{card.edition}</p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* Achievement Cards (moved to right) */}
 
                 {/* Developer Review Section */}
                 {devReview && (
@@ -1114,7 +1042,56 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* Achievement Cards moved to main panel */}
+                {/* Achievement Cards & Collectibles */}
+                <div className="space-y-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Database className="w-4 h-4 text-cyan-400" />
+                    Collectibles
+                  </h3>
+
+                  {['Ability', 'Equipment', 'Companion', 'Teacher'].map(category => {
+                    const categoryCards = achievementCards.filter(c => c.type === category);
+                    if (categoryCards.length === 0) return null;
+
+                    return (
+                      <div key={category} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest">{category === 'Ability' ? 'Abilities' : category === 'Teacher' ? 'Teachers' : category === 'Companion' ? 'Companions' : 'Equipment'}</span>
+                          <div className="h-px flex-1 bg-white/10" />
+                        </div>
+                        
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                          {categoryCards.map((card, i) => (
+                            <motion.div
+                              key={i}
+                              onClick={() => setSelectedCard(card)}
+                              className="relative flex-shrink-0 cursor-pointer group"
+                              whileHover={{ scale: 1.05 }}
+                              style={{ width: '80px' }}
+                            >
+                              {/* Mini Card */}
+                              <div 
+                                className="relative w-full aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/20 group-hover:border-cyan-400/50 transition-colors"
+                                style={{
+                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
+                                  backdropFilter: 'blur(10px)',
+                                }}
+                              >
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  {category === 'Ability' && <Zap className="w-6 h-6 text-white/20" />}
+                                  {category === 'Equipment' && <Shield className="w-6 h-6 text-white/20" />}
+                                  {category === 'Companion' && <User className="w-6 h-6 text-white/20" />}
+                                  {category === 'Teacher' && <Database className="w-6 h-6 text-white/20" />}
+                                </div>
+                              </div>
+                              <p className="text-[9px] text-white/60 text-center mt-1 truncate group-hover:text-white transition-colors">{card.name}</p>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
 
               </div>
