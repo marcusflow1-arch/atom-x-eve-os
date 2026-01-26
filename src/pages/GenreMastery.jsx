@@ -814,7 +814,7 @@ export default function GenreMastery({ onClose }) {
                        }}
                      >
                        <div className="flex items-center gap-3 mb-2">
-                         <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                         {React.createElement(stat.icon, { className: `w-5 h-5 ${stat.color}` })}
                          <span className="text-sm text-slate-500 font-bold uppercase tracking-wider">{stat.label}</span>
                        </div>
                        <div className="text-2xl font-black text-white">{stat.value}</div>
