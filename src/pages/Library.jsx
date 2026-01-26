@@ -1284,7 +1284,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               </div>
             </button>
             <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Library</h1>
-            <div className="h-6 w-px bg-white/10" />
+            <div className="h-8 w-px bg-white/10" />
 
             {/* Achievements Link */}
             <button
