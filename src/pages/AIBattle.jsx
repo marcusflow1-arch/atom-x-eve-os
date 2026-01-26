@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 export default function AIBattle() {
   const navigate = useNavigate();

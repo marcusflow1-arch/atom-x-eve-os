@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 export default function AIStory() {
   const navigate = useNavigate();

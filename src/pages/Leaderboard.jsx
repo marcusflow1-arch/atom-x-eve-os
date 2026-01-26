@@ -211,7 +211,7 @@ export default function Leaderboard() {
 
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
-        {/* Header */}
+        {/* Header (moved down to avoid overlap) */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30">

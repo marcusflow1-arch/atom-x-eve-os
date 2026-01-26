@@ -4,6 +4,7 @@ import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AIStory from './pages/AIStory';
 import AbilityAchievements from './pages/AbilityAchievements';
+import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
@@ -31,6 +32,7 @@ import Ideals from './pages/Ideals';
 import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
 import Leaderboard from './pages/Leaderboard';
+import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
@@ -48,8 +50,6 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Achievements from './pages/Achievements';
-import Library from './pages/Library';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +60,7 @@ export const PAGES = {
     "AINews": AINews,
     "AIStory": AIStory,
     "AbilityAchievements": AbilityAchievements,
+    "Achievements": Achievements,
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
@@ -87,6 +88,7 @@ export const PAGES = {
     "InstallApp": InstallApp,
     "Launcher": Launcher,
     "Leaderboard": Leaderboard,
+    "Library": Library,
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
@@ -104,8 +106,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Achievements": Achievements,
-    "Library": Library,
 }
 
 export const pagesConfig = {

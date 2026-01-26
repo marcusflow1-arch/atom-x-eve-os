@@ -11,6 +11,7 @@ import {
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 import { Button } from '@/components/ui/button';
 import ShinyCard from '@/components/shared/ShinyCard';
 
@@ -576,6 +577,8 @@ export default function GenreMastery({ onClose }) {
       </div>
 
 
+
+      </div>
 
       {/* LEFT SIDEBAR: Genre Selection (New Component) */}
       <GenreSelector 

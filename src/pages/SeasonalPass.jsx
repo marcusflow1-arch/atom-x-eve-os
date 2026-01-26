@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 export default function SeasonalPass() {
   const navigate = useNavigate();
