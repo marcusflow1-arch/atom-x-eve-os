@@ -27,9 +27,29 @@ export default function BlankTransition() {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
         <div className={`absolute inset-0 bg-gradient-to-r ${currentGenre.color} blur-[150px] opacity-20`} />
       </div>
-      <div className="relative z-10">
+      {/* Left Rail: Vertical line and level markers */}
+      <div className="fixed left-0 top-0 h-screen w-px bg-white/20 z-[25]" />
+      <div className="fixed left-0 top-20 bottom-0 w-[10%] z-[26] overflow-y-auto">
+        <div className="py-2 flex flex-col items-center gap-0 select-none">
+          {Array.from({ length: 50 }, (_, i) => i + 1).map((n) => (
+            <div
+              key={n}
+              className="h-[5vh] w-full flex items-center justify-center text-white/90 text-2xl cursor-pointer hover:text-white"
+              onClick={() => navigate(createPageUrl(`BlankTransition?genre=${genreId}&level=${n}`))}
+            >
+              {n}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main content shifted right to accommodate rail */}
+      <div className="relative z-10 pl-[10%]">
         <MiniLunaNav title="Skill Tree" />
       </div>
+
+      {/* Header */}
+      <MiniLunaNav title="Skill Tree" />
 
       {/* Sub-pages (genre tabs) */}
       <div className="px-6 md:px-8 mt-2">
@@ -51,6 +71,8 @@ export default function BlankTransition() {
       {/* Blank transitional body */}
       <div className="px-6 md:px-8 py-12">
         <div className="h-[40vh] rounded-2xl border border-white/10 bg-white/5" />
+      </div>
+
       </div>
 
       <style>{`
