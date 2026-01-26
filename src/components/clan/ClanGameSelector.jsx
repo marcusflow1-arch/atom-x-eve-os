@@ -150,19 +150,19 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             {/* LEFT COLUMN: ADAM X EVE & OWNED GAMES */}
             <div className="w-80 flex flex-col border-r border-white/10 pr-6 mr-6 overflow-hidden">
                 {/* Adam X Eve (Global Chat) */}
-                <div className="mb-6 flex-shrink-0">
+                <div className="mb-4 flex-shrink-0">
                     <div 
                         onClick={() => onSelectGame(defaultChatGame)}
-                        className="group relative h-32 rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all"
+                        className="group relative h-20 rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all"
                     >
                         <img 
                             src={defaultChatGame.cover_image} 
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
-                        <div className="absolute inset-0 p-5 flex flex-col justify-center">
-                            <h2 className="text-2xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">ADAM X EVE</h2>
-                            <p className="text-xs text-white/50 font-medium tracking-wider uppercase">Global Division Comms</p>
+                        <div className="absolute inset-0 px-4 flex flex-col justify-center">
+                            <h2 className="text-xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">ADAM X EVE</h2>
+                            <p className="text-[10px] text-white/50 font-medium tracking-wider uppercase">Global Division Comms</p>
                         </div>
                     </div>
                 </div>
@@ -231,7 +231,7 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
 
                 {/* Directory Grid */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-8">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 pb-8">
                         <AnimatePresence mode="popLayout">
                             {filteredDirectoryGames.map((game, idx) => (
                                 <motion.div
