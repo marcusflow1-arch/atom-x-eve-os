@@ -687,8 +687,9 @@ function LayoutContent({ children, currentPageName }) {
                         
                         <Link 
                           to={createPageUrl('Library')}
-                          className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+                          className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
                         >
+                          <Gamepad2 className="w-4 h-4" />
                           Library
                         </Link>
                       </>
