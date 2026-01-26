@@ -211,7 +211,7 @@ export default function Leaderboard() {
 
 
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
+      <div className="relative z-10 w-full px-6 py-8">
         <MiniLunaNav title="Leaderboard" />
         {/* Header (moved down to avoid overlap) */}
         <div className="mb-8">
@@ -227,7 +227,7 @@ export default function Leaderboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex flex-wrap gap-2 mb-6 pb-2" style={{ scrollbarWidth: 'none' }}>
           {LEADERBOARD_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
