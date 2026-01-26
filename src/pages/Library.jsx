@@ -11,7 +11,6 @@ import ShinyCard from '@/components/shared/ShinyCard';
 import { Badge } from '@/components/ui/badge';
 import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Grid, List, Heart, Clock, Eye, Bot, Sparkles, Users, MessageSquare, ChevronUp, ChevronRight, ChevronDown, Star, Zap, Trophy, X, Download, Settings, MoreHorizontal, Shield, Monitor, Car, Skull, Crosshair, Music, LayoutGrid, Flame, Mic, Layers, Rocket, Swords, Crown } from 'lucide-react';
 import VirtualizedGameList from '@/components/library/VirtualizedGameList';
-import { Home } from 'lucide-react';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -1289,14 +1288,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
             {/* Mini Luna Nav */}
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => navigate(createPageUrl('LunaTemplate'))}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-              >
-                <Home className="w-4 h-4" />
-                Home
-              </button>
-
               <button
                 onClick={() => navigate(createPageUrl('Achievements'))}
                 className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"

@@ -28,7 +28,6 @@ import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Library as LibraryIcon } from 'lucide-react';
 
 // Icon mapping for genres
 const GENRE_ICONS = {
@@ -724,24 +723,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   return (
     <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       
-      {/* Mini Nav: Home + Library */}
-      <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
-        <button
-          onClick={() => navigate(createPageUrl('LunaTemplate'))}
-          className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-        >
-          <Home className="w-4 h-4" />
-          Home
-        </button>
-        <button
-          onClick={() => navigate(createPageUrl('Library'))}
-          className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-        >
-          <LibraryIcon className="w-4 h-4" />
-          Library
-        </button>
-      </div>
-
       <AnimatePresence mode="wait">
         {viewMode === 'cross' ? (
         /* CROSS INTERFACE VIEW */
