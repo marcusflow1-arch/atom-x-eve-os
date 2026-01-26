@@ -1274,12 +1274,12 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
             <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Library</h1>
             <div className="h-6 w-px bg-white/10" />
             <button
-              onClick={() => (onSwitchToAchievements ? onSwitchToAchievements() : setEmbeddedView('achievements'))}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
-            >
-              <Trophy className="w-4 h-4 text-yellow-400" />
-              <span>Achievements</span>
-            </button>
+                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=achievements')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
+              >
+                <Trophy className="w-4 h-4 text-yellow-400" />
+                <span>Achievements</span>
+              </button>
           </div>
 
           <div className="flex items-center gap-4">
