@@ -48,8 +48,6 @@ export default function BlankTransition() {
         <MiniLunaNav title="Skill Tree" />
       </div>
 
-      {/* Header */}
-      <MiniLunaNav title="Skill Tree" />
 
       {/* Sub-pages (genre tabs) */}
       <div className="px-6 md:px-8 mt-2">
@@ -71,8 +69,6 @@ export default function BlankTransition() {
       {/* Blank transitional body */}
       <div className="px-6 md:px-8 py-12">
         <div className="h-[40vh] rounded-2xl border border-white/10 bg-white/5" />
-      </div>
-
       </div>
 
       <style>{`
