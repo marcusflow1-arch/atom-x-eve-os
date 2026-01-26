@@ -562,7 +562,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
-    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[200] flex flex-col">
+    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[200] flex flex-col pl-[10%]">
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
       </div>
@@ -601,17 +601,7 @@ export default function GenreMastery({ onClose }) {
               className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[220]"
             >
                <div className="p-8 md:p-12 pb-32">
-                 {/* Back Navigation */}
-                 <div className="mb-6">
-                   <Button
-                     variant="ghost"
-                     size="sm"
-                     className="gap-2 px-3 py-1 text-white/80 hover:text-white"
-                     onClick={() => (onClose ? onClose() : navigate(createPageUrl('LunaTemplate')))}
-                   >
-                     <ArrowLeft className="w-4 h-4" /> Back
-                   </Button>
-                 </div>
+
                  {/* HEADER: Similar to Seasonal Pass */}
                  <div className="mb-12">
                    <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
@@ -696,7 +686,7 @@ export default function GenreMastery({ onClose }) {
                  <div className="mb-12">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-                        <Sparkles className="w-6 h-6 text-yellow-400" />
+                        <Sparkles className="w-5 h-5 text-yellow-400" />
                         Exclusive Season Rewards
                       </h2>
                       <div className="text-sm text-slate-500 font-medium">
@@ -780,7 +770,7 @@ export default function GenreMastery({ onClose }) {
                  {/* PROGRESS TRACK HEADER */}
                  <div className="mb-6">
                    <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-                     <Trophy className="w-6 h-6 text-blue-500" />
+                     <Trophy className="w-5 h-5 text-blue-500" />
                      Progression Track
                    </h2>
                    
