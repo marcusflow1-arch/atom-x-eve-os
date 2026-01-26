@@ -592,7 +592,7 @@ export default function GenreMastery({ onClose }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.6 }}
               className="h-[5vh] w-full flex items-center justify-center text-white/90 text-2xl cursor-pointer hover:text-white"
-              onClick={() => navigate(createPageUrl('BlankTransition'))}
+              onClick={() => navigate(createPageUrl(`BlankTransition?genre=${selectedGenre.id}&level=${n}`))}
             >
               {n}
             </motion.div>
@@ -832,8 +832,8 @@ export default function GenreMastery({ onClose }) {
                         key={level.level}
                         levelData={level} 
                         isActive={level.level === 36} // Mock active state
-                        onClick={() => navigate(createPageUrl('BlankTransition'))} 
-                      />
+                        onClick={() => navigate(createPageUrl(`BlankTransition?genre=${selectedGenre.id}&level=${level.level}`))} 
+                        />
                     ))}
                  </div>
 

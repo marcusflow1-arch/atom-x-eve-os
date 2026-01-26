@@ -5,20 +5,28 @@ import { createPageUrl } from '@/utils';
 import { Globe, Rocket, Crown, Swords, Crosshair, Map, Ghost, Monitor } from 'lucide-react';
 
 const GENRES = [
-  { id: 'mmorpg', name: 'MMORPG', icon: Globe },
-  { id: 'scifi', name: 'Sci-Fi', icon: Rocket },
-  { id: 'fantasy', name: 'Fantasy', icon: Crown },
-  { id: 'action', name: 'Action', icon: Swords },
-  { id: 'shooter', name: 'Shooter', icon: Crosshair },
-  { id: 'adventure', name: 'Adventure', icon: Map },
-  { id: 'fear', name: 'Fear', icon: Ghost },
-  { id: 'simulation', name: 'Simulation', icon: Monitor },
+  { id: 'mmorpg', name: 'MMORPG', icon: Globe, color: 'from-purple-500 to-indigo-600' },
+  { id: 'scifi', name: 'Sci-Fi', icon: Rocket, color: 'from-cyan-500 to-blue-600' },
+  { id: 'fantasy', name: 'Fantasy', icon: Crown, color: 'from-amber-400 to-orange-500' },
+  { id: 'action', name: 'Action', icon: Swords, color: 'from-red-500 to-rose-600' },
+  { id: 'shooter', name: 'Shooter', icon: Crosshair, color: 'from-emerald-500 to-green-600' },
+  { id: 'adventure', name: 'Adventure', icon: Map, color: 'from-yellow-400 to-orange-400' },
+  { id: 'fear', name: 'Fear', icon: Ghost, color: 'from-slate-800 to-gray-900' },
+  { id: 'simulation', name: 'Simulation', icon: Monitor, color: 'from-blue-400 to-indigo-400' },
 ];
 
 export default function BlankTransition() {
   const navigate = useNavigate();
+  const params = new URLSearchParams(window.location.search);
+  const genreId = params.get('genre') || 'mmorpg';
+  const level = Number(params.get('level') || 1);
+  const currentGenre = GENRES.find(g => g.id === genreId) || GENRES[0];
   return (
-    <div className="min-h-screen w-full bg-black text-white">
+    <div className="relative min-h-screen w-full bg-black text-white overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
+        <div className={`absolute inset-0 bg-gradient-to-r ${currentGenre.color} blur-[150px] opacity-20`} />
+      </div>
       <div className="relative z-10">
         <MiniLunaNav title="Skill Tree" />
       </div>
