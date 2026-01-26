@@ -583,10 +583,18 @@ export default function GenreMastery({ onClose }) {
 
       {/* Left Rail: Vertical line and level markers */}
       <div className="fixed left-0 top-0 h-screen w-px bg-white/20 z-[25]" />
-      <div className="fixed left-0 top-20 bottom-0 w-[10%] z-[26]">
-        <div className="h-full flex flex-col justify-between items-center text-[10px] text-white/60 select-none">
+      <div className="fixed left-0 top-20 bottom-0 w-[10%] z-[26] overflow-y-auto">
+        <div className="py-4 flex flex-col items-center gap-2 select-none">
           {Array.from({ length: 50 }, (_, i) => i + 1).map((n) => (
-            <div key={n} className="leading-none">{n}</div>
+            <motion.div
+              key={n}
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.6 }}
+              className="h-10 w-full flex items-center justify-center text-white/80 text-lg"
+            >
+              {n}
+            </motion.div>
           ))}
         </div>
       </div>
