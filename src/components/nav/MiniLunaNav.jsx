@@ -12,7 +12,7 @@ export default function MiniLunaNav({ title }) {
 
   return (
     <div className="w-full px-8 py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-start gap-6 flex-wrap">
         <div className="flex items-center gap-6">
           <button onClick={openDrawer} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10">
             <div className="flex flex-col gap-[3px]">
