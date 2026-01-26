@@ -106,295 +106,263 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay, duration: 0.4 }}
-            className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 backdrop-blur-md p-4 group hover:border-white/20 transition-all"
+            className="bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl p-6 transition-all group relative overflow-hidden"
         >
-            <div className={`absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity ${colorClass}`}>
-                <Icon className="w-12 h-12" />
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-2.5 rounded-xl bg-white/[0.03] border border-white/5 group-hover:bg-white/[0.05] transition-colors`}>
+                    <Icon className={`w-5 h-5 ${colorClass}`} />
+                </div>
+                {subtext && <div className="text-[10px] font-medium px-2 py-1 rounded-full bg-white/[0.03] text-white/40 border border-white/5">{subtext}</div>}
             </div>
-            <div className="relative z-10">
-                <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">{label}</div>
-                <div className="text-2xl font-black text-white tracking-tight">{value}</div>
-                {subtext && <div className={`text-xs mt-1 font-medium ${colorClass}`}>{subtext}</div>}
-            </div>
-            {/* Animated Bar at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5">
-                <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    transition={{ delay: delay + 0.2, duration: 1 }}
-                    className={`h-full opacity-50 ${colorClass.replace('text-', 'bg-')}`} 
-                />
-            </div>
+            
+            <div className="text-2xl font-light text-white tracking-wide mb-1">{value}</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-white/30">{label}</div>
+            
+            {/* Hover Glow */}
+            <div className={`absolute -bottom-10 -right-10 w-32 h-32 blur-[60px] rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${colorClass.replace('text-', 'bg-')}`} />
         </motion.div>
     );
 
-    const IdentityBadge = ({ spec }) => (
-        <div className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors group cursor-default">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${spec.bg} border border-white/5 group-hover:border-white/20 transition-all`}>
-                <spec.icon className={`w-5 h-5 ${spec.color}`} />
-            </div>
-            <div className="text-center">
-                <div className="text-xs font-bold text-white/90">{spec.label}</div>
-                <div className="text-[10px] text-white/40">Tier {spec.level}</div>
-            </div>
+    // Modern Glass Card replacement for LiquidGlassCard
+    const ModernGlassCard = ({ children, className = "" }) => (
+        <div className={`bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl p-8 ${className}`}>
+            {children}
         </div>
     );
 
     return (
-        <div className="h-full w-full overflow-y-auto custom-scrollbar p-6 lg:p-10 pb-24">
+        <div className="h-full w-full overflow-y-auto custom-scrollbar p-8 lg:p-12 pb-32">
             
             {/* 1. GUILD IDENTITY HEADER */}
-            <div className="relative w-full mb-10">
-                {/* Holographic Banner BG */}
-                <div className="absolute inset-0 -z-10 rounded-3xl overflow-hidden opacity-50">
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent" />
-                    {/* Animated Grid Line */}
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-                </div>
-
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-8 relative z-10 p-6">
+            <div className="relative w-full mb-12">
+                <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
                     {/* Emblem */}
-                    <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/10 bg-black/60 backdrop-blur-xl flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden group"
-                    >
-                        {clan.icon ? (
-                            <img src={clan.icon} className="w-full h-full object-cover" />
-                        ) : (
-                            <Shield className="w-16 h-16 text-white/20" />
-                        )}
-                        <div className="absolute inset-0 rounded-full border border-white/10" />
-                        {/* Rotating ring effect */}
-                        <div className="absolute inset-0 rounded-full border-t border-cyan-500/50 animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </motion.div>
-
-                    {/* Info */}
-                    <div className="flex-1">
+                    <div className="relative group">
                         <motion.div 
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            className="flex items-center gap-4 mb-2"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="w-32 h-32 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center relative overflow-hidden"
                         >
-                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase">
-                                {clan.name}
-                            </h1>
-                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-3 py-1 text-xs font-bold tracking-widest">
-                                LVL {clan.level || 1}
-                            </Badge>
+                            {clan.icon ? (
+                                <img src={clan.icon} className="w-full h-full object-cover" />
+                            ) : (
+                                <Shield className="w-12 h-12 text-white/20" />
+                            )}
                         </motion.div>
-                        
-                        <motion.div 
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-lg text-white/60 font-light max-w-2xl leading-relaxed mb-6"
-                        >
-                            {clan.description || "A Division dedicated to excellence and conquest within the Atom x Eve ecosystem. Operations focused on tactical dominance and economic growth."}
-                        </motion.div>
-
-                        {/* Badges Row */}
-                        <div className="flex flex-wrap gap-3">
-                            {guildSpecialties.map((spec, i) => (
-                                <Badge key={i} variant="outline" className={`bg-white/5 border-white/10 ${spec.color} flex items-center gap-1.5 py-1 px-3`}>
-                                    <spec.icon className="w-3 h-3" />
-                                    {spec.label}
-                                </Badge>
-                            ))}
-                        </div>
+                        <div className="absolute -inset-4 bg-cyan-500/20 blur-[40px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10" />
                     </div>
 
-                    {/* Command Actions (Top Right) */}
-                    <div className="flex flex-col gap-3 md:self-start mt-4 md:mt-0">
+                    {/* Info */}
+                    <div className="flex-1 text-center md:text-left">
+                        <motion.div 
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="flex flex-col md:flex-row items-center gap-4 mb-4"
+                        >
+                            <h1 className="text-5xl font-thin text-white tracking-widest uppercase">
+                                {clan.name}
+                            </h1>
+                            <div className="flex gap-2">
+                                <span className="px-3 py-1 bg-white/[0.05] border border-white/10 rounded-full text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                                    LVL {clan.level || 1}
+                                </span>
+                                <span className="px-3 py-1 bg-white/[0.05] border border-white/10 rounded-full text-[10px] font-bold tracking-widest text-cyan-400 uppercase">
+                                    {members?.length || 0} Members
+                                </span>
+                            </div>
+                        </motion.div>
+                        
+                        <motion.p 
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-white/40 font-light max-w-2xl leading-relaxed text-sm tracking-wide"
+                        >
+                            {clan.description || "Dedicated to excellence and conquest. Operations focused on tactical dominance."}
+                        </motion.p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
                         {isOfficer && (
-                            <Button onClick={() => setIsInviteOpen(true)} className="bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg shadow-cyan-900/20">
-                                <UserPlus className="w-4 h-4 mr-2" /> Invite Agent
+                            <Button onClick={() => setIsInviteOpen(true)} variant="outline" className="border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-white text-xs uppercase tracking-wider h-10 px-6">
+                                <UserPlus className="w-3 h-3 mr-2" /> Invite
                             </Button>
                         )}
-                        <Button variant="outline" onClick={() => setInventoryOpen(true)} className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
-                            <Box className="w-4 h-4 mr-2" /> Inventory
+                        <Button variant="outline" onClick={() => setInventoryOpen(true)} className="border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-white text-xs uppercase tracking-wider h-10 px-6">
+                            <Box className="w-3 h-3 mr-2" /> Storage
                         </Button>
                     </div>
                 </div>
             </div>
 
-            {/* 2. MAIN DASHBOARD GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* 2. MAIN CONTENT GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                 
-                {/* LEFT COLUMN: STATUS PANELS (2/3 width) */}
-                <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* Status Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <StatCard 
-                            label="Members" 
-                            value={`${members?.length || 0} / 50`} 
-                            subtext="Highly Active" 
-                            icon={Users} 
-                            colorClass="text-cyan-400" 
-                            delay={0.1}
-                        />
-                        <StatCard 
-                            label="Power Score" 
-                            value={clanStats.memberStrength.toLocaleString()} 
-                            subtext="Top 5% Regional" 
-                            icon={Zap} 
-                            colorClass="text-yellow-400" 
-                            delay={0.2}
-                        />
-                        <StatCard 
-                            label="Momentum" 
-                            value="+12.5%" 
-                            subtext="Weekly Growth" 
-                            icon={Activity} 
-                            colorClass="text-green-400" 
-                            delay={0.3}
-                        />
-                    </div>
-
-                    {/* Economy & Progress Section */}
-                    <LiquidGlassCard className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                                <Coins className="w-4 h-4 text-amber-400" /> Guild Economy
-                            </h3>
-                            <div className="text-xs text-white/40">Next Payout: 14h 30m</div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-8 mb-8">
-                            <div className="text-center">
-                                <div className="text-xs text-white/40 mb-1">Treasury Funds</div>
-                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.credits.toLocaleString()} <span className="text-xs text-amber-400">CR</span></div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-xs text-white/40 mb-1">Operations Energy</div>
-                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.energy}%</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-xs text-white/40 mb-1">Raw Materials</div>
-                                <div className="text-2xl font-bold text-white tracking-tight">{clanWealth.materials.toLocaleString()}</div>
-                            </div>
-                        </div>
-
-                        {/* Upgrade Path Progress */}
-                        <div className="space-y-4">
-                            <div>
-                                <div className="flex justify-between text-xs mb-2">
-                                    <span className="text-white font-medium">Command Center Upgrade (Tier 3)</span>
-                                    <span className="text-cyan-400">72%</span>
-                                </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: '72%' }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                        className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-xs mb-2">
-                                    <span className="text-white font-medium">Vehicle Bay Expansion</span>
-                                    <span className="text-orange-400">45%</span>
-                                </div>
-                                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <motion.div 
-                                        initial={{ width: 0 }}
-                                        animate={{ width: '45%' }}
-                                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-                                        className="h-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" 
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </LiquidGlassCard>
-
-                    {/* Activity Identity Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {guildSpecialties.map((spec) => (
-                            <IdentityBadge key={spec.id} spec={spec} />
-                        ))}
-                    </div>
+                {/* STATS ROW (Spans full width initially) */}
+                <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-6 mb-2">
+                    <StatCard 
+                        label="Total Roster" 
+                        value={`${members?.length || 0}/50`} 
+                        subtext="Online: 12" 
+                        icon={Users} 
+                        colorClass="text-cyan-400" 
+                        delay={0.1}
+                    />
+                    <StatCard 
+                        label="Power Index" 
+                        value={clanStats.memberStrength.toLocaleString()} 
+                        subtext="Regional: #42" 
+                        icon={Zap} 
+                        colorClass="text-yellow-400" 
+                        delay={0.2}
+                    />
+                    <StatCard 
+                        label="Weekly XP" 
+                        value="+12.5k" 
+                        subtext="Momentum: High" 
+                        icon={Activity} 
+                        colorClass="text-green-400" 
+                        delay={0.3}
+                    />
+                    <StatCard 
+                        label="Treasury" 
+                        value={`${(clanWealth.credits / 1000).toFixed(1)}k`} 
+                        subtext="Capacity: 85%" 
+                        icon={Coins} 
+                        colorClass="text-amber-400" 
+                        delay={0.4}
+                    />
                 </div>
 
-                {/* RIGHT COLUMN: FEED & ROSTER (1/3 width) */}
-                <div className="lg:col-span-1 flex flex-col gap-6">
-                    
-                    <LiquidGlassCard className="flex-1 flex flex-col min-h-[500px]">
-                        {/* Tabs */}
-                        <div className="flex border-b border-white/10">
+                {/* LEFT: Economy & Quests (2 cols) */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Active Quests */}
+                    <ModernGlassCard>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                <Target className="w-4 h-4 text-red-400" /> Active Operations
+                            </h3>
+                            <span className="text-[10px] text-white/30 uppercase tracking-wider">Reset: 14h</span>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { title: "Sector 7 Domination", progress: 8, total: 20, reward: "Gladiator Title", type: "PvP", color: "from-red-500 to-orange-500" },
+                                { title: "Resource Extraction", progress: 450, total: 1000, reward: "+500 Guild XP", type: "Farm", color: "from-green-500 to-emerald-500" },
+                                { title: "Void Boss Raid", progress: 1, total: 1, reward: "Legendary Cache", type: "Raid", color: "from-purple-500 to-indigo-500" }
+                            ].map((quest, i) => (
+                                <div key={i} className="group bg-white/[0.03] border border-white/5 p-4 rounded-xl hover:bg-white/[0.05] transition-all">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-sm font-medium text-white group-hover:text-white transition-colors">{quest.title}</span>
+                                        <span className="text-[10px] font-bold px-2 py-1 rounded bg-white/[0.05] text-white/50">{quest.type}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-white/[0.05] rounded-full overflow-hidden mb-2">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${(quest.progress / quest.total) * 100}%` }}
+                                            className={`h-full bg-gradient-to-r ${quest.color}`}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="text-white/30">{quest.progress} / {quest.total}</span>
+                                        <span className="text-amber-400">{quest.reward}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </ModernGlassCard>
+
+                    {/* Upgrades */}
+                    <ModernGlassCard>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                <TrendingUp className="w-4 h-4 text-blue-400" /> Research & Upgrades
+                            </h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                                <div className="text-xs text-white/50 mb-2">Command Center</div>
+                                <div className="text-lg font-bold text-white mb-3">Tier 3</div>
+                                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <div className="h-full w-[72%] bg-blue-500" />
+                                </div>
+                            </div>
+                            <div className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                                <div className="text-xs text-white/50 mb-2">Armory</div>
+                                <div className="text-lg font-bold text-white mb-3">Tier 2</div>
+                                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <div className="h-full w-[45%] bg-orange-500" />
+                                </div>
+                            </div>
+                        </div>
+                    </ModernGlassCard>
+                </div>
+
+                {/* RIGHT: Feed & Roster (2 cols) */}
+                <div className="lg:col-span-2">
+                    <ModernGlassCard className="h-full flex flex-col">
+                        <div className="flex items-center gap-6 border-b border-white/5 pb-4 mb-6">
                             <button 
                                 onClick={() => setActiveTab('feed')}
-                                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'feed' ? 'text-white border-b-2 border-cyan-500 bg-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                className={`text-xs font-bold uppercase tracking-wider pb-4 -mb-4 border-b-2 transition-colors ${activeTab === 'feed' ? 'text-white border-white' : 'text-white/30 border-transparent hover:text-white/60'}`}
                             >
                                 Live Feed
                             </button>
                             <button 
                                 onClick={() => setActiveTab('roster')}
-                                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'roster' ? 'text-white border-b-2 border-cyan-500 bg-white/5' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                className={`text-xs font-bold uppercase tracking-wider pb-4 -mb-4 border-b-2 transition-colors ${activeTab === 'roster' ? 'text-white border-white' : 'text-white/30 border-transparent hover:text-white/60'}`}
                             >
-                                Roster ({members?.length || 0})
+                                Roster
                             </button>
                         </div>
 
-                        {/* Content Area */}
-                        <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-                            
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2">
                             {activeTab === 'feed' && (
-                                <div className="space-y-4">
-                                    {feedItems.map((item, idx) => (
-                                        <motion.div 
-                                            key={item.id}
-                                            initial={{ opacity: 0, x: 10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.1 }}
-                                            className="relative pl-6 pb-4 border-l border-white/10 last:border-0 last:pb-0"
-                                        >
-                                            <div className={`absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-slate-900 border ${item.color.replace('text-', 'border-')}`} />
-                                            <div className="text-[10px] text-white/30 mb-1">{item.time}</div>
-                                            <div className="text-sm text-white/80 leading-snug">
-                                                <span className={`font-bold ${item.color} mr-1`}>[{item.type.toUpperCase()}]</span>
-                                                {item.text}
+                                <div className="space-y-6">
+                                    {feedItems.concat([
+                                        { id: 6, type: 'rank', text: "Guild rank increased to #42 Regional.", time: "1d ago", icon: TrendingUp, color: "text-cyan-400" },
+                                        { id: 7, type: 'system', text: "Weekly maintenance scheduled for 03:00 UTC.", time: "2d ago", icon: Settings, color: "text-white/40" }
+                                    ]).map((item, idx) => (
+                                        <div key={item.id} className="flex gap-4 group">
+                                            <div className="flex flex-col items-center">
+                                                <div className={`w-2 h-2 rounded-full ${item.color.replace('text-', 'bg-')} group-hover:scale-125 transition-transform`} />
+                                                <div className="w-px h-full bg-white/5 my-1 group-last:hidden" />
                                             </div>
-                                        </motion.div>
+                                            <div className="pb-4">
+                                                <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1">{item.time}</div>
+                                                <div className="text-sm text-white/80 font-light leading-relaxed">
+                                                    <span className={`font-medium ${item.color} mr-2`}>[{item.type.toUpperCase()}]</span>
+                                                    {item.text}
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             )}
 
                             {activeTab === 'roster' && (
-                                <div className="space-y-2">
-                                    {/* Leaders */}
-                                    <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 mt-1">Command</div>
-                                    {members?.filter(m => m.role === 'leader' || m.role === 'officer').map(m => (
-                                        <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/10">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-xs font-bold border border-white/10">
-                                                {m.user_id?.slice(0,2).toUpperCase()}
+                                <div className="grid grid-cols-1 gap-2">
+                                    {members?.map((m) => (
+                                        <div key={m.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-800 to-black border border-white/10 flex items-center justify-center text-[10px] font-bold text-white/40">
+                                                    {m.user_id?.slice(0,2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium text-white">{m.nickname || 'Unknown Agent'}</div>
+                                                    <div className="text-[10px] text-white/30 uppercase tracking-wider">{m.role}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-bold text-white">{m.nickname || 'Agent'}</div>
-                                                <div className="text-[10px] text-amber-400">{m.role.toUpperCase()}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {/* Members */}
-                                    <div className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2 mt-4">Agents</div>
-                                    {members?.filter(m => m.role !== 'leader' && m.role !== 'officer').map(m => (
-                                        <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white/30">
-                                                {m.user_id?.slice(0,2).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-white/70">{m.nickname || 'Agent'}</div>
-                                                <div className="text-[10px] text-white/30">{m.title || 'Member'}</div>
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${m.role === 'leader' ? 'bg-green-500' : 'bg-slate-600'}`} />
+                                                <span className="text-[10px] text-white/30">{m.role === 'leader' ? 'Online' : 'Offline'}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
-
                         </div>
-                    </LiquidGlassCard>
+                    </ModernGlassCard>
                 </div>
             </div>
 
