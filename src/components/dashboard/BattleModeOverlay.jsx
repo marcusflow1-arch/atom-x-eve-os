@@ -382,38 +382,59 @@ const PvEView = ({ onBack }) => {
 };
 
 const TournamentsView = () => (
-  <div className="w-full h-full p-8 overflow-y-auto">
+  <div className="w-full h-full p-12 overflow-y-auto">
     <div className="max-w-5xl mx-auto">
-      <h2 className="text-4xl font-black text-white mb-2">Active Tournaments</h2>
-      <p className="text-white/50 mb-8">Compete for real cash prizes and glory.</p>
+      <div className="flex justify-between items-end mb-12">
+        <div>
+          <h2 className="text-3xl font-thin text-white mb-2 tracking-[0.2em] uppercase">Competitive Events</h2>
+          <p className="text-white/30 text-xs font-light tracking-wide">Official Sanctioned Tournaments</p>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-light text-yellow-400">$30,500</div>
+          <div className="text-white/20 text-xs uppercase tracking-widest">Total Active Prize Pool</div>
+        </div>
+      </div>
 
-      <div className="grid gap-4">
-        {TOURNAMENTS.map((t) => (
-          <div key={t.id} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex items-center justify-between hover:bg-white/[0.08] transition-colors">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-yellow-600/20 rounded-xl flex items-center justify-center border border-yellow-600/30">
-                <Trophy className="w-8 h-8 text-yellow-500" />
+      <div className="space-y-4">
+        {TOURNAMENTS.map((t, i) => (
+          <motion.div 
+            key={t.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="group relative bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-xl p-6 flex items-center justify-between transition-all duration-300 overflow-hidden"
+          >
+            {/* Hover Glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            <div className="flex items-center gap-8 relative z-10">
+              <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:text-yellow-400 group-hover:border-yellow-500/30 transition-all duration-300">
+                <Trophy className="w-6 h-6" />
               </div>
+              
               <div>
-                <h3 className="text-xl font-bold text-white">{t.name}</h3>
-                <div className="flex items-center gap-4 text-sm text-white/50 mt-1">
-                  <span>{t.game}</span>
+                <h3 className="text-xl font-light text-white mb-1 tracking-wide">{t.name}</h3>
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="text-white/40 uppercase tracking-wider">{t.game}</span>
                   <span className="w-1 h-1 bg-white/20 rounded-full" />
-                  <span className={t.status === 'Live' ? 'text-red-400 font-bold animate-pulse' : ''}>{t.status}</span>
+                  <span className={`${t.status === 'Live' ? 'text-red-400 animate-pulse' : 'text-white/40'} uppercase tracking-wider`}>
+                    {t.status}
+                  </span>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-12 relative z-10">
               <div className="text-right">
-                <p className="text-white/40 text-xs uppercase tracking-wider">Prize Pool</p>
-                <p className="text-2xl font-black text-green-400">{t.prize}</p>
+                <p className="text-white/20 text-[10px] uppercase tracking-widest mb-1">Prize Pool</p>
+                <p className="text-xl font-light text-white tracking-wide">{t.prize}</p>
               </div>
-              <button className="px-6 py-3 bg-white text-black font-bold rounded-lg hover:scale-105 transition-transform">
-                {t.status === 'Live' ? 'Watch' : 'Enter'}
+              
+              <button className="px-8 py-3 border border-white/10 hover:bg-white text-white hover:text-black text-xs font-medium tracking-widest uppercase rounded-full transition-all duration-300">
+                {t.status === 'Live' ? 'Spectate' : 'Register'}
               </button>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -421,29 +442,53 @@ const TournamentsView = () => (
 );
 
 const WorldEventsView = () => (
-  <div className="w-full h-full p-8 overflow-y-auto">
-    <div className="max-w-5xl mx-auto">
-      <h2 className="text-4xl font-black text-white mb-2">World Events</h2>
-      <p className="text-white/50 mb-8">Global challenges and limited-time modes.</p>
+  <div className="w-full h-full p-12 overflow-y-auto">
+    <div className="max-w-6xl mx-auto">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-thin text-white mb-3 tracking-[0.2em] uppercase">Global Conflict</h2>
+        <div className="h-px w-20 bg-white/20 mx-auto" />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {WORLD_EVENTS.map((evt) => (
-          <div key={evt.id} className="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10 hover:border-purple-500 transition-colors">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {WORLD_EVENTS.map((evt, i) => (
+          <motion.div 
+            key={evt.id} 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="group relative h-80 rounded-2xl overflow-hidden cursor-pointer border border-white/5 hover:border-purple-500/30 transition-all duration-500"
+          >
             {/* Background Image Placeholder */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-black" />
-            <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500" />
+            <div className="absolute inset-0 bg-[#0a0a0a]" />
             
-            <div className="absolute bottom-0 left-0 p-6 w-full">
-              <div className="flex justify-between items-start mb-2">
-                <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full uppercase">
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
+            
+            {/* Hover Effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Content */}
+            <div className="absolute inset-0 p-8 flex flex-col justify-between relative z-10">
+              <div className="flex justify-between items-start">
+                <span className="px-4 py-1.5 bg-white/5 backdrop-blur-md border border-white/10 text-white/60 text-[10px] font-medium tracking-widest uppercase rounded-full group-hover:bg-purple-500/20 group-hover:text-purple-200 group-hover:border-purple-500/30 transition-all">
                   {evt.type}
                 </span>
-                <span className="text-white/70 text-sm font-mono">{evt.status}</span>
+                <span className="flex items-center gap-2 text-white/40 text-xs font-mono tracking-wider">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  {evt.status}
+                </span>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-1">{evt.name}</h3>
-              <p className="text-purple-300 text-sm">Reward: {evt.reward}</p>
+              
+              <div>
+                <h3 className="text-3xl font-thin text-white mb-2 tracking-wide group-hover:translate-x-2 transition-transform duration-500">{evt.name}</h3>
+                <div className="h-px w-full bg-white/10 mb-4 group-hover:bg-purple-500/50 transition-colors duration-500" />
+                <div className="flex items-center gap-2 text-white/60 text-xs font-light tracking-wide">
+                  <span className="text-purple-400">REWARD:</span>
+                  {evt.reward}
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
