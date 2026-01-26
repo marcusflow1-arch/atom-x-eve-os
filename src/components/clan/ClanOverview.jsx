@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Crown, Trophy, Target, Calendar, ArrowRight, Sword, LogOut, Trash2, 
     Settings, MessageSquare, Mic, UserPlus, Users, Scroll, Activity, 
-    Coins, Gem, ShieldAlert, Star, CircleDot, Gamepad2, Clock, 
+    Coins, Gem, ShieldAlert, Shield, Star, CircleDot, Gamepad2, Clock, 
     TrendingUp, Flame, Zap, Award, ChevronRight, Send, X, Grid3X3,
     Bell, Megaphone, ArrowLeft, ChevronDown, ChevronUp
 } from 'lucide-react';
