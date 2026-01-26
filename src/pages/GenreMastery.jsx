@@ -567,7 +567,7 @@ export default function GenreMastery({ onClose }) {
         <MiniLunaNav title="Skill Tree" />
       </div>
       {/* Background Ambience */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
         {selectedGenre && (
@@ -591,7 +591,7 @@ export default function GenreMastery({ onClose }) {
       </div>
 
       {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
-      <div className="flex-1 flex flex-col z-20 relative overflow-hidden">
+      <div className="flex-1 flex flex-col z-30 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
@@ -608,7 +608,7 @@ export default function GenreMastery({ onClose }) {
                      <div>
                        <div className="flex items-center gap-3 mb-2">
                          <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
-                           <selectedGenre.icon className="w-3 h-3 mr-2" />
+                           {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: "w-3 h-3 mr-2" })}
                            {selectedGenre.rank}
                          </Badge>
                          <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
