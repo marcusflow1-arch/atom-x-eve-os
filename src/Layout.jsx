@@ -612,9 +612,7 @@ function LayoutContent({ children, currentPageName }) {
                                     } else if (p.includes('/genremastery')) {
                                       headerConfig.hidden = true;
                                     } else if (p.includes('/library')) {
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
+          headerConfig.hidden = true;
         } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
