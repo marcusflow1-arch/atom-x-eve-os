@@ -20,6 +20,7 @@ export default function BlankTransition() {
   const genreId = params.get('genre') || 'mmorpg';
   const level = Number(params.get('level') || 1);
   const currentGenre = GENRES.find(g => g.id === genreId) || GENRES[0];
+  React.useEffect(() => { window.scrollTo(0, 0); }, [genreId, level]);
 
   React.useEffect(() => { window.scrollTo(0, 0); }, [genreId, level]);
 
