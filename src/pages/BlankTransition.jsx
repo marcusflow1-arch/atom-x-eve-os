@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Globe, Rocket, Crown, Swords, Crosshair, Map, Ghost, Monitor, ArrowLeft } from 'lucide-react';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', icon: Globe, color: 'from-purple-500 to-indigo-600' },
@@ -61,7 +62,7 @@ export default function BlankTransition() {
           >
             <ArrowLeft className="w-6 h-6" />
           </div>
-          {Array.from({ length: 50 }, (_, i) => i + 1).map((n) => (
+          {Array.from({ length: 50 }, (_, i) => 50 - i).map((n) => (
             <div
               key={n}
               className="h-[5vh] w-full flex items-center justify-center text-white/90 text-2xl cursor-pointer hover:text-white"
@@ -75,8 +76,8 @@ export default function BlankTransition() {
       </div>
 
       {/* Page header fixed at top */}
-      <div className="fixed top-0 left-[10%] right-0 z-30 px-6 py-4">
-        <h1 className="text-2xl font-bold">Skill Tree</h1>
+      <div className="fixed top-0 left-[10%] right-0 z-30">
+        <MiniLunaNav title="Skill Tree" />
       </div>
 
 
@@ -84,7 +85,7 @@ export default function BlankTransition() {
       {/* Reward preview for selected level - aligned with selected number */}
       <div
         className="fixed z-10 px-6"
-        style={{ top: `calc(80px + ${(level - 0.5) * 5}vh)`, left: '12%', right: '24px', transform: 'translateY(-50%)' }}
+        style={{ top: `calc(80px + ${(50 - level + 0.5) * 5}vh)`, left: '12%', right: '24px', transform: 'translateY(-50%)' }}
       >
         <div
           className="rounded-3xl p-8 md:p-10 relative overflow-hidden"

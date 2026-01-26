@@ -12,6 +12,7 @@ import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
+import BlankTransition from './pages/BlankTransition';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
@@ -50,7 +51,6 @@ import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import BlankTransition from './pages/BlankTransition';
 import __Layout from './Layout.jsx';
 
 
@@ -69,6 +69,7 @@ export const PAGES = {
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
+    "BlankTransition": BlankTransition,
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
@@ -107,7 +108,6 @@ export const PAGES = {
     "Streaming": Streaming,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "BlankTransition": BlankTransition,
 }
 
 export const pagesConfig = {

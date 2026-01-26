@@ -610,8 +610,10 @@ function LayoutContent({ children, currentPageName }) {
                       } else if (p.includes('/friends')) {
                                       headerConfig.hidden = true;
                                     } else if (p.includes('/genremastery')) {
-                                      headerConfig.hidden = true;
-                                    } else if (p.includes('/library')) {
+                                                                headerConfig.hidden = true;
+                                                              } else if (p.includes('/blanktransition')) {
+                                                                headerConfig.hidden = true;
+                                                              } else if (p.includes('/library')) {
           headerConfig.hidden = true;
         } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = false;
