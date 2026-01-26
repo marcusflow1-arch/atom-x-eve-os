@@ -1,5 +1,4 @@
 import React from 'react';
-import MiniLunaNav from '../components/nav/MiniLunaNav';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Globe, Rocket, Crown, Swords, Crosshair, Map, Ghost, Monitor, ArrowLeft } from 'lucide-react';
@@ -21,6 +20,8 @@ export default function BlankTransition() {
   const genreId = params.get('genre') || 'mmorpg';
   const level = Number(params.get('level') || 1);
   const currentGenre = GENRES.find(g => g.id === genreId) || GENRES[0];
+
+  React.useEffect(() => { window.scrollTo(0, 0); }, [genreId, level]);
 
   const getRarity = (lvl) => {
     if (lvl >= 50) return 'Godlike';
@@ -72,31 +73,15 @@ export default function BlankTransition() {
         <div className="absolute right-1 top-1/2 -translate-y-1/2 text-white/50 text-xs tracking-widest">LVL</div>
       </div>
 
-      {/* Main content shifted right to accommodate rail */}
-      <div className="relative z-10 pl-[10%]">
-        <MiniLunaNav title="Skill Tree" />
+      {/* Page header */}
+      <div className="relative z-10 pl-[10%] px-6 pt-6">
+        <h1 className="text-2xl font-bold">Skill Tree</h1>
       </div>
 
 
-      {/* Sub-pages (genre tabs) */}
-      <div className="px-6 md:px-8 mt-2">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 pr-2">
-          {GENRES.map((g) => (
-            <button
-              key={g.id}
-              onClick={() => navigate(createPageUrl('GenreMastery'))}
-              className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap border transition-all bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
-              title={`${g.name} Skill Tree`}
-            >
-              {g.icon && React.createElement(g.icon, { className: 'w-4 h-4' })}
-              <span className="text-sm font-semibold">{g.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Reward preview for selected level */}
-      <div className="px-6 md:px-8 py-12">
+      <div className="fixed top-1/2 left-[12%] right-6 -translate-y-1/2 px-6 z-10">
         <div
           className="rounded-3xl p-8 md:p-10 relative overflow-hidden"
           style={{
