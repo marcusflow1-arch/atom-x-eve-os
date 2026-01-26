@@ -4,7 +4,7 @@ import GenreSelector from '@/components/profile/GenreSelector';
 import { 
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
-  Trophy, Flame, Sparkles, Orbit, ArrowLeft,
+  Trophy, Flame, Sparkles, Orbit, 
   Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
   Check, Play, RotateCw, TrendingUp, Clock, Users, Target, User
 } from 'lucide-react';
@@ -159,7 +159,7 @@ const generateProgressionLevels = (genreId, genreName) => {
     return `https://source.unsplash.com/random/500x500?${id},weapon,armor,transparent&sig=${level}`;
   };
   
-  for (let i = 1; i <= 20; i++) {
+  for (let i = 1; i <= 30; i++) {
     const rarity = i === 20 ? 'Godlike' : 
                    i === 15 ? 'Mythical' :
                    i === 10 ? 'Legendary' :
@@ -581,8 +581,32 @@ export default function GenreMastery({ onClose }) {
 
 
 
+      {/* Center vertical guide line */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[50vh] w-px bg-white/20 z-[180]" />
+
+      {/* Level rail to the right of the line */}
+      <div className="absolute top-1/2 left-1/2 -translate-y-1/2 ml-6 z-[190] max-h-[50vh] overflow-y-auto pr-2 scrollbar-hide">
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => {
+            const lvl = progressionData.find(p => p.level === n);
+            const isActive = viewingLevel?.level === n;
+            const unlocked = lvl?.isUnlocked || (n <= (selectedGenre?.level || 0));
+            return (
+              <button
+                key={n}
+                onClick={() => setViewingLevel(lvl || { level: n, season: 0, isUnlocked: unlocked, cardReward: { name: `${selectedGenre?.name || 'Genre'} Reward ${n}`, type: 'Ability Reward', rarity: n === 30 ? 'Godlike' : n >= 25 ? 'Mythical' : n >= 20 ? 'Legendary' : n % 5 === 0 ? 'Epic' : n % 2 === 0 ? 'Rare' : 'Common', image: `https://source.unsplash.com/random/400x400?${selectedGenre?.id || 'game'},reward&sig=${n}` }, equipmentReward: { name: `Elite Gear Tier ${n}`, type: 'Equipment', rarity: 'Rare', image: `https://source.unsplash.com/random/300x300?armor,weapon,tech&sig=${n}`, description: `Equipment unlocked at level ${n}.` } })}
+                className={`text-xs font-bold rounded-full px-3 py-1 border transition-all ${isActive ? 'bg-white text-black border-white' : unlocked ? 'bg-white/15 text-white border-white/30 hover:bg-white/20' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10'}`}
+                title={`Level ${n}`}
+              >
+                Level {n}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* LEFT SIDEBAR + MAIN CONTENT WRAPPER */}
-      <div className="relative z-20 flex flex-1 min-h-0">
+      <div className="relative z-20 flex flex-1 min-h-0 pl-[10%]">
         <GenreSelector 
           genres={GENRES} 
           selectedGenre={selectedGenre} 
