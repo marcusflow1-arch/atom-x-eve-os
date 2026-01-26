@@ -95,20 +95,27 @@ const PvPView = ({ onBack }) => {
   if (inQueue) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <div className="w-24 h-24 relative mb-8">
-          <div className="absolute inset-0 rounded-full border-4 border-orange-500/30 animate-ping" />
-          <div className="absolute inset-0 rounded-full border-4 border-t-orange-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-          <Swords className="absolute inset-0 m-auto text-orange-500 w-8 h-8" />
+        <div className="w-32 h-32 relative mb-12">
+          <div className="absolute inset-0 rounded-full border border-white/10 animate-ping opacity-20" />
+          <div className="absolute inset-0 rounded-full border border-white/20 animate-spin opacity-40" style={{ borderTopColor: 'transparent', borderLeftColor: 'transparent' }} />
+          <div className="absolute inset-4 rounded-full border border-orange-500/20 animate-reverse-spin opacity-60" style={{ borderTopColor: 'transparent', borderRightColor: 'transparent' }} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Swords className="w-8 h-8 text-white/80 animate-pulse" />
+          </div>
         </div>
-        <h2 className="text-3xl font-bold text-white mb-2">Searching for Opponent...</h2>
-        <p className="text-white/60 mb-8">
-          Mode: <span className="text-orange-400">{selectedStyle.name}</span> ({selectedGenre.name})
+        
+        <h2 className="text-2xl font-light text-white mb-2 tracking-wider uppercase">Searching for Opponent</h2>
+        <div className="h-px w-16 bg-gradient-to-r from-transparent via-orange-500/50 to-transparent mb-6" />
+        
+        <p className="text-white/40 text-sm mb-12 font-light">
+          Protocol: <span className="text-orange-400 font-normal">{selectedStyle.name}</span> <span className="text-white/20 mx-2">|</span> {selectedGenre.name}
         </p>
+        
         <button 
           onClick={() => setInQueue(false)}
-          className="px-8 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-600/50 rounded-lg transition-colors font-bold"
+          className="px-10 py-3 bg-white/[0.03] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/10 hover:border-red-500/30 rounded-full transition-all duration-300 text-xs tracking-widest uppercase"
         >
-          Cancel Queue
+          Abort Sequence
         </button>
       </div>
     );
@@ -116,40 +123,66 @@ const PvPView = ({ onBack }) => {
 
   if (selectedGenre) {
     return (
-      <div className="w-full h-full flex flex-col p-8">
-        <button onClick={() => setSelectedGenre(null)} className="flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors self-start">
-          <ChevronLeft className="w-5 h-5" /> Back to Genres
-        </button>
-        
-        <h2 className="text-4xl font-black text-white mb-2">{selectedGenre.name} Styles</h2>
-        <p className="text-white/60 mb-8">Select your preferred fighting ruleset</p>
+      <div className="w-full h-full flex flex-col p-12">
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <h2 className="text-4xl font-thin text-white mb-2 tracking-wide uppercase">{selectedGenre.name}</h2>
+            <p className="text-white/40 font-light tracking-wide text-sm">Select Combat Style</p>
+          </div>
+          <button onClick={() => setSelectedGenre(null)} className="text-white/40 hover:text-white transition-colors text-xs tracking-widest uppercase">
+            Cancel Selection
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {selectedGenre.styles.map((style) => (
-            <div 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {selectedGenre.styles.map((style, i) => (
+            <motion.div 
               key={style.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
               onClick={() => setSelectedStyle(style)}
-              className={`relative h-96 rounded-2xl overflow-hidden cursor-pointer group border-2 transition-all ${selectedStyle?.id === style.id ? 'border-orange-500 scale-105 shadow-[0_0_30px_rgba(249,115,22,0.4)]' : 'border-transparent hover:border-white/30'}`}
+              className={`group relative h-[450px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${selectedStyle?.id === style.id ? 'ring-1 ring-white/50 scale-[1.02]' : 'hover:ring-1 hover:ring-white/20'}`}
             >
-              <img src={style.image} alt={style.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-              
-              <div className="absolute bottom-0 left-0 p-6 w-full">
-                <h3 className="text-2xl font-bold text-white mb-2">{style.name}</h3>
-                <p className="text-white/70 text-sm">{style.description}</p>
-                {selectedStyle?.id === style.id && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setInQueue(true);
-                    }}
-                    className="mt-4 w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Swords className="w-4 h-4" /> Enter Queue
-                  </button>
-                )}
+              {/* Background Image with Overlay */}
+              <div className="absolute inset-0 bg-black">
+                <img 
+                  src={style.image} 
+                  alt={style.name} 
+                  className={`w-full h-full object-cover transition-all duration-700 opacity-60 group-hover:opacity-80 group-hover:scale-110 ${selectedStyle?.id === style.id ? 'scale-110 opacity-80' : 'grayscale'}`} 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               </div>
-            </div>
+              
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 p-8 w-full">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-light text-white mb-2 tracking-wide">{style.name}</h3>
+                  <div className="h-0.5 w-12 bg-white/20 mb-3 group-hover:w-full transition-all duration-500" />
+                  <p className="text-white/60 text-xs font-light leading-relaxed">{style.description}</p>
+                </div>
+                
+                <AnimatePresence>
+                  {selectedStyle?.id === style.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInQueue(true);
+                        }}
+                        className="mt-4 w-full py-4 bg-white text-black font-medium tracking-widest text-xs uppercase rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
+                      >
+                        <Swords className="w-4 h-4" /> Engage
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -158,21 +191,32 @@ const PvPView = ({ onBack }) => {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8">
-      <h2 className="text-4xl font-black text-white mb-12">Select PvP Genre</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        {PVP_GENRES.map((genre) => (
-          <button
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-thin text-white mb-3 tracking-[0.2em] uppercase">Combat Discipline</h2>
+        <div className="h-px w-20 bg-white/20 mx-auto" />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
+        {PVP_GENRES.map((genre, i) => (
+          <motion.button
             key={genre.id}
+            initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             onClick={() => setSelectedGenre(genre)}
-            className="group relative h-64 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-orange-500/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all overflow-hidden"
+            className="group relative h-80 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-white/20 rounded-3xl overflow-hidden transition-all duration-500"
           >
-            <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <genre.icon className="w-10 h-10 text-orange-500" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+              <div className="w-24 h-24 rounded-full bg-white/[0.02] border border-white/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                <genre.icon className="w-10 h-10 text-white/40 group-hover:text-white transition-colors duration-300" />
+              </div>
+              <h3 className="text-2xl font-light text-white mb-2 tracking-widest uppercase group-hover:text-orange-200 transition-colors">{genre.name}</h3>
+              <p className="text-white/30 text-xs font-light tracking-wide">{genre.description}</p>
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">{genre.name}</h3>
-            <p className="text-white/50">{genre.description}</p>
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
+            
+            {/* Hover Effect Background */}
+            <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          </motion.button>
         ))}
       </div>
     </div>
