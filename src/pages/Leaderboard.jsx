@@ -213,7 +213,7 @@ export default function Leaderboard() {
 
       <div className="relative z-10 w-full px-6 py-8">
         <MiniLunaNav title="Leaderboard" />
-        <div className="mt-2 mb-3">
+        <div className="mt-1 mb-2">
           <p className="text-white/50 text-sm">Compete with players worldwide</p>
         </div>
 
