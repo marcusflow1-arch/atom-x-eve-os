@@ -28,6 +28,7 @@ import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { Home, Library as LibraryIcon } from 'lucide-react';
 
 // Icon mapping for genres
 const GENRE_ICONS = {
