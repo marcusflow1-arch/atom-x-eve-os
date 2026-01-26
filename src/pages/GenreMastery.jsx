@@ -625,17 +625,7 @@ export default function GenreMastery({ onClose }) {
               className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[220]"
             >
                <div className="p-8 md:p-12 pb-32">
-                 {/* Back Navigation */}
-                 <div className="mb-6">
-                   <Button
-                     variant="ghost"
-                     size="sm"
-                     className="gap-2 px-3 py-1 text-white/80 hover:text-white"
-                     onClick={() => (onClose ? onClose() : navigate(createPageUrl('LunaTemplate')))}
-                   >
-                     <ArrowLeft className="w-4 h-4" /> Back
-                   </Button>
-                 </div>
+
                  {/* HEADER: Similar to Seasonal Pass */}
                  <div className="mb-12">
                    <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
@@ -646,7 +636,7 @@ export default function GenreMastery({ onClose }) {
                            {selectedGenre.rank}
                          </Badge>
                          <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
-                           Level {selectedGenre.level} / 20
+                                                     Level {selectedGenre.level} / 30
                          </Badge>
                          <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
                            SEASON 0
@@ -656,7 +646,7 @@ export default function GenreMastery({ onClose }) {
                        <h1 className="text-5xl md:text-7xl font-black mb-2 bg-gradient-to-r from-white via-slate-300 to-slate-500 bg-clip-text text-transparent uppercase tracking-tighter">
                          {selectedGenre.name} Mastery
                        </h1>
-                       <p className="text-slate-400 text-lg">Level {selectedGenre.level} / 20 • Season 0 Pass</p>
+                       <p className="text-slate-400 text-lg">Level {selectedGenre.level} / 30 • Season 0 Pass</p>
                      </div>
                      
                      <div className="flex items-center gap-4">
@@ -819,7 +809,7 @@ export default function GenreMastery({ onClose }) {
                        <ChevronLeft className="w-5 h-5" />
                      </Button>
                      <div className="flex-1 text-center text-sm text-slate-400 font-medium">
-                       Navigate through 20 Levels of {selectedGenre.name} Mastery
+                       Navigate through 30 Levels of {selectedGenre.name} Mastery
                      </div>
                      <Button 
                        variant="ghost" 
