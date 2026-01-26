@@ -1257,7 +1257,7 @@ export default function Store() {
                                 {/* Interface Layer */}
                                 <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres) */}
-                                    <div className="w-[260px] flex-shrink-0 pt-14 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                    <div className="w-[260px] flex-shrink-0 pt-32 hidden xl:flex flex-col" ref={genreScrollRef}>
                                         {/* Vertical genre list */}
                                         <div className="relative">
 
