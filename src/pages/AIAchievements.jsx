@@ -467,7 +467,7 @@ function AIAchievementsView({ onClosePage }) {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-32">
+      <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-24">
         
         {/* Main Layout: 2 Columns */}
         <div className="flex gap-6 flex-1 overflow-hidden">
