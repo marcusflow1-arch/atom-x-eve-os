@@ -239,6 +239,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
     { name: 'Data Stream', icon: '📡' },
   ];
 
+  const achievementCards = [
+    { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
+    { name: 'Cyber Metabolism', type: 'Ability', description: '+10% Regeneration', edition: 'Standard Edition' },
+    { name: 'Void Walker Set', type: 'Equipment', description: 'Stealth Bonus', edition: 'Neural Expansion' },
+    { name: 'Tactical Mind', type: 'Teacher', description: 'AI Behavior Mod', edition: 'Digital Edition' },
+    { name: 'Data Stream', type: 'Ability', description: 'Hack networks', edition: 'Void Arsenal DLC' },
+    { name: 'Shadow Clone', type: 'Ability', description: 'Create decoys', edition: 'Void Arsenal DLC' },
+    { name: 'Drone Companion', type: 'Companion', description: 'Automated support unit', edition: 'Standard Edition' },
+    { name: 'Master Swordsman', type: 'Teacher', description: 'Learn advanced combat', edition: 'Dojo Pack' },
+    { name: 'Heavy Armor', type: 'Equipment', description: 'Increased defense', edition: 'Standard Edition' },
+    { name: 'Stealth Suit', type: 'Equipment', description: 'Invisible to cameras', edition: 'Void Arsenal DLC' },
+    { name: 'Hacking Tool', type: 'Equipment', description: 'Speed up hacking', edition: 'Standard Edition' },
+    { name: 'Combat Drone', type: 'Companion', description: 'Fights alongside you', edition: 'Standard Edition' },
+  ];
+
   // Mock DLC data
   const dlcList = [
     {
@@ -865,6 +880,80 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   <DataPoint label="Compatibility" value="High" icon={Cpu} color="text-green-400" />
                 </div>
 
+                {/* Categorized Achievement Cards */}
+                <div className="pt-8 space-y-8">
+                  <h3 className="text-white font-bold text-lg uppercase tracking-wider flex items-center gap-2">
+                    <Database className="w-5 h-5 text-cyan-400" />
+                    Cards & Achievements
+                  </h3>
+
+                  {['Ability', 'Equipment', 'Companion', 'Teacher'].map(category => {
+                    // Filter cards for this category
+                    const categoryCards = achievementCards.filter(c => c.type === category);
+                    if (categoryCards.length === 0) return null;
+
+                    return (
+                      <div key={category} className="space-y-4">
+                        <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                          <span className="text-white/70 text-sm font-bold uppercase tracking-wider">{category === 'Ability' ? 'Abilities' : category === 'Teacher' ? 'Teachers' : category === 'Companion' ? 'Companions' : 'Equipment'}</span>
+                          <span className="text-white/20 text-xs">({categoryCards.length})</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-4 gap-6">
+                          {categoryCards.map((card, i) => (
+                            <motion.div
+                              key={i}
+                              onClick={() => setSelectedCard(card)}
+                              className="relative group perspective-1000 cursor-pointer"
+                              whileHover={{ scale: 1.05 }}
+                              onMouseMove={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                                e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.05)`;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+                              }}
+                              style={{
+                                transformStyle: 'preserve-3d',
+                                transition: 'transform 0.1s ease-out'
+                              }}
+                            >
+                              <div className="space-y-3">
+                                {/* Card Graphic */}
+                                <div 
+                                  className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/20 group-hover:border-cyan-400/50 transition-colors"
+                                  style={{
+                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
+                                    backdropFilter: 'blur(20px)',
+                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                                  }}
+                                >
+                                  {/* Holographic Shine */}
+                                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    {category === 'Ability' && <Zap className="w-12 h-12 text-white/20" />}
+                                    {category === 'Equipment' && <Shield className="w-12 h-12 text-white/20" />}
+                                    {category === 'Companion' && <User className="w-12 h-12 text-white/20" />}
+                                    {category === 'Teacher' && <Database className="w-12 h-12 text-white/20" />}
+                                  </div>
+                                </div>
+
+                                {/* Card Info */}
+                                <div className="text-center">
+                                  <p className="text-white font-bold text-sm mb-1">{card.name}</p>
+                                  <p className="text-white/40 text-[10px] uppercase tracking-wide">{card.edition}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {/* Developer Review Section */}
                 {devReview && (
                   <div className="pt-8 space-y-4">
@@ -1025,100 +1114,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </button>
                 )}
 
-                {/* Achievement Cards */}
-                <div className="space-y-3">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Database className="w-4 h-4 text-cyan-400" />
-                    Achievement Cards
-                  </h3>
-
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('card-scroll-container');
-                        container.scrollBy({ left: -200, behavior: 'smooth' });
-                      }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
-                    >
-                      <ChevronRight className="w-4 h-4 text-white rotate-180" />
-                    </button>
-
-                    <div id="card-scroll-container" className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide px-10">
-                    {[
-                      { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
-                      { name: 'Cyber Metabolism', type: 'Passive', description: '+10% Regeneration', edition: 'Standard Edition' },
-                      { name: 'Void Walker Set', type: 'Equipment', description: 'Stealth Bonus', edition: 'Neural Expansion' },
-                      { name: 'Tactical Mind', type: 'Trait', description: 'AI Behavior Mod', edition: 'Digital Edition' },
-                      { name: 'Data Stream', type: 'Ability', description: 'Hack networks', edition: 'Void Arsenal DLC' },
-                      { name: 'Shadow Clone', type: 'Ability', description: 'Create decoys', edition: 'Void Arsenal DLC' },
-                    ].map((card, i) => (
-                      <motion.div
-                        key={i}
-                        onClick={() => setSelectedCard(card)}
-                        className="relative group perspective-1000 flex-shrink-0 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        onMouseMove={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = (e.clientX - rect.left) / rect.width - 0.5;
-                          const y = (e.clientY - rect.top) / rect.height - 0.5;
-                          e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
-                        }}
-                        style={{
-                          transformStyle: 'preserve-3d',
-                          transition: 'transform 0.1s ease-out',
-                          width: '160px'
-                        }}
-                      >
-                        <div className="space-y-2">
-                          {/* Card Name + Edition */}
-                          <div className="text-center">
-                            <p className="text-white font-bold text-xs mb-0.5">{card.name}</p>
-                            <p className="text-cyan-400/70 text-[9px]">{card.edition}</p>
-                          </div>
-
-                          {/* Crystal Clear Card */}
-                          <div 
-                            className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/30"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-                              backdropFilter: 'blur(20px) saturate(180%)',
-                              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            }}
-                          >
-                            {/* Shine effect */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                            
-                            {/* Mystery content */}
-                            <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">
-                              ?
-                            </div>
-                          </div>
-
-                          {/* Card Info */}
-                          <div className="text-center space-y-0.5">
-                            <p className="text-cyan-300 text-[10px] font-semibold">{card.type}</p>
-                            <p className="text-white/60 text-[9px] leading-tight">{card.description}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('card-scroll-container');
-                        container.scrollBy({ left: 200, behavior: 'smooth' });
-                      }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 transition-all"
-                    >
-                      <ChevronRight className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </div>
+                {/* Achievement Cards moved to main panel */}
 
 
               </div>
