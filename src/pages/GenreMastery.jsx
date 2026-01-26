@@ -563,6 +563,7 @@ export default function GenreMastery({ onClose }) {
 
   return (
     <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
+      <MiniLunaNav title="Skill Tree" />
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
@@ -577,8 +578,6 @@ export default function GenreMastery({ onClose }) {
       </div>
 
 
-
-      </div>
 
       {/* LEFT SIDEBAR: Genre Selection (New Component) */}
       <GenreSelector 

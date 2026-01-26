@@ -23,6 +23,7 @@ export default function AIStory() {
       className="min-h-screen w-full"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
     >
+      <MiniLunaNav title="AI Story" />
       <AIStoryOverlay onClose={() => navigate(createPageUrl('LunaTemplate'))} />
     </div>
   );

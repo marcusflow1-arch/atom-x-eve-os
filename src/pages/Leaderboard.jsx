@@ -10,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import UserProfileOverlay from '@/components/profile/UserProfileOverlay';
+import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 // Leaderboard Categories
 const LEADERBOARD_TABS = [
@@ -211,6 +212,7 @@ export default function Leaderboard() {
 
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-8">
+        <MiniLunaNav title="Leaderboard" />
         {/* Header (moved down to avoid overlap) */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
