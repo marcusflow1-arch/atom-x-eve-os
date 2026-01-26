@@ -1274,7 +1274,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
 
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('openAppDrawer')))
+              onClick={() => window.dispatchEvent(new CustomEvent('openAppDrawer'))}
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
             >
               <div className="flex flex-col gap-[3px]">
