@@ -562,7 +562,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
-    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex">
+    <div className="h-full w-full bg-black text-white font-sans overflow-hidden relative flex flex-col">
       <MiniLunaNav title="Skill Tree" />
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
@@ -830,6 +830,8 @@ export default function GenreMastery({ onClose }) {
             </div>
           )}
         </AnimatePresence>
+      </div>
+
       </div>
 
       {/* Reward Detail Overlay */}
