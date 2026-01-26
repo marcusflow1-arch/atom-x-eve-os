@@ -801,6 +801,18 @@ function LayoutContent({ children, currentPageName }) {
                             </div>
                           </div>
 
+                          {/* Library */}
+                          <button
+                            onClick={() => navigate(createPageUrl('Library'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/library')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Library
+                          </button>
+
                           {/* Clan */}
                           <button
                             onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
