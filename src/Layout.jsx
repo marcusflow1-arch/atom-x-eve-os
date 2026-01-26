@@ -682,16 +682,6 @@ function LayoutContent({ children, currentPageName }) {
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           Atom X Eve Achievements
                         </span>
-                        
-                        <div className="h-6 w-px bg-white/20 mx-4"></div>
-                        
-                        <Link 
-                          to={createPageUrl('Library')}
-                          className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                        >
-                          <Gamepad2 className="w-4 h-4" />
-                          Library
-                        </Link>
                       </>
                     )}
 
