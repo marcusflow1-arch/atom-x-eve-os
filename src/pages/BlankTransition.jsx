@@ -69,6 +69,7 @@ export default function BlankTransition() {
             </div>
           ))}
         </div>
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 text-white/50 text-xs tracking-widest">LVL</div>
       </div>
 
       {/* Main content shifted right to accommodate rail */}
