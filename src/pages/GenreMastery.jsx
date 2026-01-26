@@ -285,7 +285,7 @@ const RewardModal = ({ level, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center p-8"
+      className="fixed inset-0 bg-black/30 backdrop-blur-md z-[500] flex items-center justify-center p-8"
       onClick={onClose}
     >
       <motion.div
@@ -562,7 +562,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
-    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[80] flex flex-col">
+    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[200] flex flex-col">
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
       </div>
@@ -590,7 +590,7 @@ export default function GenreMastery({ onClose }) {
         />
 
         {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
-        <div className="flex-1 flex flex-col z-[90] relative overflow-visible">
+        <div className="flex-1 flex flex-col z-[210] relative overflow-visible">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
@@ -598,7 +598,7 @@ export default function GenreMastery({ onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[95]"
+              className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[220]"
             >
                <div className="p-8 md:p-12 pb-32">
                  {/* HEADER: Similar to Seasonal Pass */}
