@@ -74,15 +74,18 @@ export default function BlankTransition() {
         <div className="absolute right-1 top-1/2 -translate-y-1/2 text-white/50 text-xs tracking-widest">LVL</div>
       </div>
 
-      {/* Page header */}
-      <div className="relative z-10 pl-[10%] px-6 pt-6">
+      {/* Page header fixed at top */}
+      <div className="fixed top-0 left-[10%] right-0 z-30 px-6 py-4">
         <h1 className="text-2xl font-bold">Skill Tree</h1>
       </div>
 
 
 
-      {/* Reward preview for selected level */}
-      <div className="fixed top-1/2 left-[12%] right-6 -translate-y-1/2 px-6 z-10">
+      {/* Reward preview for selected level - aligned with selected number */}
+      <div
+        className="fixed z-10 px-6"
+        style={{ top: `calc(80px + ${(level - 0.5) * 5}vh)`, left: '12%', right: '24px', transform: 'translateY(-50%)' }}
+      >
         <div
           className="rounded-3xl p-8 md:p-10 relative overflow-hidden"
           style={{
