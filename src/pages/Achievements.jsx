@@ -763,23 +763,39 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             {/* Interface Layer */}
             <div className="relative z-10 w-full h-full">
 
+              {/* Header */}
+              <div className="absolute top-8 left-8 z-50 flex items-center gap-6">
+                {/* Menu Button */}
+                <button
+                  onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
+                >
+                  <div className="flex flex-col gap-[3px]">
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                    <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
+                  </div>
+                </button>
+
+                <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Achievements</h1>
+                <div className="h-6 w-px bg-white/10" />
+
+                {/* Library Link */}
+                <button
+                  onClick={() => navigate(createPageUrl('Library'))}
+                  className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+                >
+                  <Gamepad2 className="w-5 h-5 text-cyan-400" />
+                  <span className="text-lg font-semibold">Library</span>
+                </button>
+              </div>
+
               {/* HORIZONTAL GENRE FILTER (Top) */}
               <div 
-                className="absolute top-20 left-0 right-0 z-40 h-20 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
+                className="absolute top-24 left-0 right-0 z-40 h-20 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 <div className="flex items-center gap-4">
-                  {/* Library Link */}
-                  <motion.button
-                    onClick={() => navigate(createPageUrl('Library'))}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white"
-                  >
-                    <Gamepad2 className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Library</span>
-                  </motion.button>
-
                   {/* All Games Option */}
                   <motion.button
                     onClick={() => { setActiveGenre('All'); setActiveGameIndex(0); setActiveCardIndex(0); }}
