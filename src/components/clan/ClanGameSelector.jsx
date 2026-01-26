@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { allMockGames } from '../store/mockData';
 
 export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
     const { user } = useAuth();
@@ -40,14 +41,11 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
             );
             const assignedGameIds = myAssignments.map(a => a.targetId);
 
-            // 3. Fetch All Games (Optimization: In a real large app, we would fetch only by IDs)
-            // For now, we fetch a reasonable list or all to filter on client
-            const allGames = await base44.entities.Game.list();
+            // 3. Use All Mock Games from Store
+            const allStoreGames = Object.values(allMockGames);
 
-            // 4. Merge and Filter
-            const relevantGames = allGames.filter(g => 
-                ownedIds.includes(g.id) || assignedGameIds.includes(g.id)
-            ).map(g => {
+            // 4. Merge and Map
+            const relevantGames = allStoreGames.map(g => {
                 const assignment = myAssignments.find(a => a.targetId === g.id);
                 // Mock statuses for demonstration
                 const activePlayers = Math.floor(Math.random() * 25);
@@ -65,11 +63,11 @@ export default function ClanGameSelector({ clanId, userId, onSelectGame }) {
                 };
             });
 
-            // Sort: Assigned first, then owned
+            // Sort: Assigned first, then by title
             return relevantGames.sort((a, b) => {
                 if (a.isAssigned && !b.isAssigned) return -1;
                 if (!a.isAssigned && b.isAssigned) return 1;
-                return 0;
+                return a.title.localeCompare(b.title);
             });
         },
         enabled: !!user && !!clanId
