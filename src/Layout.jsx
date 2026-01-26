@@ -694,6 +694,14 @@ function LayoutContent({ children, currentPageName }) {
 
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
+                            onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                          >
+                            <Home className="w-4 h-4" />
+                            Luna
+                          </button>
+
+                          <button
                             onClick={() => navigate(createPageUrl('Library'))}
                             className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
                           >
