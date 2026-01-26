@@ -213,17 +213,8 @@ export default function Leaderboard() {
 
       <div className="relative z-10 w-full px-6 py-8">
         <MiniLunaNav title="Leaderboard" />
-        {/* Header (moved down to avoid overlap) */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30">
-              <Trophy className="w-8 h-8 text-amber-400" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black tracking-tight">Leaderboard</h1>
-              <p className="text-white/50">Compete with players worldwide</p>
-            </div>
-          </div>
+        <div className="mt-2 mb-3">
+          <p className="text-white/50 text-sm">Compete with players worldwide</p>
         </div>
 
         {/* Tabs */}

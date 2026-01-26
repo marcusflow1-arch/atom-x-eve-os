@@ -26,7 +26,12 @@ export default function MiniLunaNav({ title }) {
           </button>
 
           {title && (
-            <span className="text-2xl font-bold text-white tracking-wide">{title}</span>
+            <div className="flex items-center gap-2">
+              {title === 'Leaderboard' && (
+                <Trophy className="w-5 h-5 text-amber-400" />
+              )}
+              <span className="text-2xl font-bold text-white tracking-wide">{title}</span>
+            </div>
           )}
 
           <div className="h-8 w-px bg-white/10" />
